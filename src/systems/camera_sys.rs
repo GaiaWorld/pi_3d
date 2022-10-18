@@ -6,7 +6,7 @@ use pi_scene_math::{coordiante_system::CoordinateSytem3, Number};
 use pi_slotmap_tree::Storage;
 use log::trace;
 
-use crate::{transforms::transform_node::{LocalTransform, GlobalTransform}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam, camera::{ViewMatrix, CameraGlobalPosition, ProjectionMatrix, CameraParam, TransformMatrix}, free_camera::FreeCameraParam}, shaders::*};
+use crate::{transforms::transform_node::{LocalTransform, GlobalTransform}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam, camera::{CameraParam, CameraRenderData}, free_camera::FreeCameraParam}, shaders::*};
 
 pub struct TargetCameraEffectLocalRotation;
 #[setup]
@@ -39,13 +39,13 @@ pub struct TargetCameraViewMatrixCacl;
 impl TargetCameraViewMatrixCacl {
     #[system]
     pub fn cacl(
-        mut query_cameras: Query<GameObject, (ObjectID, &TargetCameraParam, &LocalTransform, Option<&mut CameraGlobalPosition>, &mut ViewMatrix)>,
+        mut query_cameras: Query<GameObject, (ObjectID, &TargetCameraParam, &LocalTransform, &mut CameraRenderData)>,
         query_transforms: Query<GameObject, &GlobalTransform>,
         idtree: EntityTree<GameObject>,
     ) {
         println!("View Matrix Cacl:");
         let coordsys = CoordinateSytem3::left();
-        for (entity, target_camera, l_transform, c_g_p, mut c_v_m) in query_cameras.iter_mut() {
+        for (entity, target_camera, l_transform, mut camera_data) in query_cameras.iter_mut() {
             let (p_m, p_iso) = match idtree.get_up(entity) {
                 Some(parent) => {
                     let parent = query_transforms.get(parent.parent());
@@ -57,16 +57,8 @@ impl TargetCameraViewMatrixCacl {
                 },
                 None => (None, None),
             };
-            let mut temp = CameraGlobalPosition::default();
-            match c_g_p {
-                Some(mut c_g_p) => {
-                    target_camera.view_matrix(&coordsys, &mut c_g_p, &mut c_v_m, &l_transform.position, p_m.as_ref(), p_iso.as_ref());
-                },
-                None => {
-                    target_camera.view_matrix(&coordsys, &mut temp, &mut c_v_m, &l_transform.position, p_m.as_ref(), p_iso.as_ref());
-                },
-            }; 
-            println!("{}", c_v_m.0);
+            target_camera.view_matrix(&coordsys, &mut camera_data, &l_transform.position, p_m.as_ref(), p_iso.as_ref());
+            println!("{}", camera_data.view_matrix);
         }
     }
     // #[system]
@@ -100,12 +92,12 @@ pub struct FreeCameraProjectionCacl;
 impl FreeCameraProjectionCacl {
     #[system]
     pub fn cacl(
-        mut query_cameras: Query<GameObject, (&CameraParam, &FreeCameraParam, &mut ProjectionMatrix)>,
+        mut query_cameras: Query<GameObject, (&CameraParam, &FreeCameraParam, &mut CameraRenderData)>,
     ) {
         println!("Projection Matrix Cacl:");
         query_cameras.iter_mut().for_each(|(camera, free_camera, mut c_p_m)| {
             free_camera.project_matrix(camera, &mut c_p_m, 1.0);
-            println!("{}", c_p_m.0);
+            println!("{}", c_p_m.project_matrix);
         });
     }
 }
@@ -115,13 +107,13 @@ pub struct CameraTransformMatricCacl;
 impl CameraTransformMatricCacl {
     #[system]
     pub fn cacl(
-        mut query_cameras: Query<GameObject, (&ViewMatrix, &ProjectionMatrix, &mut TransformMatrix)>,
+        mut query_cameras: Query<GameObject, &mut CameraRenderData>,
     ) {
         println!("Transform Matrix Cacl:");
-        query_cameras.iter_mut().for_each(| (view_matrix, project_matrix, mut transform_matrix)| {
+        query_cameras.iter_mut().for_each(| mut camera | {
             // transform matrix
-            view_matrix.0.mul_to(&project_matrix.0.clone(), &mut transform_matrix.0);
-            println!("{}", transform_matrix.0);
+            camera.view_matrix.clone().mul_to(&camera.project_matrix.clone(), &mut camera.transform_matrix);
+            println!("{}", camera.transform_matrix);
         });
     }
 }

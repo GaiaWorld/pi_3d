@@ -1,8 +1,9 @@
 use std::{sync::Arc, any::TypeId};
 
-use pi_3d::{object::GameObject, flags::{SceneID01, SceneCameraID01}, scene::SceneParam, cameras::{camera::{Camera, CameraParam, CameraGlobalPosition, ViewMatrix, ProjectionMatrix, TransformMatrix}, target_camera::TargetCameraParam, free_camera::FreeCameraParam}, transforms::transform_node::{TransformNode, LocalTransform, GlobalTransform, TransformDirty}, systems::init_stage};
+use pi_3d::{object::GameObject, flags::{SceneID01, SceneCameraID01}, scene::SceneParam, cameras::{camera::{Camera, CameraParam, CameraRenderData}, target_camera::TargetCameraParam, free_camera::FreeCameraParam}, transforms::transform_node::{TransformNode, LocalTransform, GlobalTransform, TransformDirty}, systems::init_stage};
 use pi_async::rt::{multi_thread::{MultiTaskRuntimeBuilder, StealableTaskPool}, AsyncRuntime};
 use pi_ecs::prelude::{World, StageBuilder, IntoSystem, SingleDispatcher, Dispatcher, Query};
+use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, Vector3};
 
 // mod context;
@@ -12,6 +13,8 @@ pub fn main() {
 
     let mut world = World::new();
     // let mut demo = Demo::new(&mut world);
+
+    let mut dynbuffer = DynUniformBuffer::new(Some("DynamicBindBUffer".to_string()), 16);
 
     world.new_archetype::<GameObject>().create(); // 创建Node原型
     
@@ -59,14 +62,13 @@ pub fn main() {
     camera01.insert(CameraParam::default());
     camera01.insert(TargetCameraParam::default());
     camera01.insert(FreeCameraParam::default());
-    camera01.insert(CameraGlobalPosition::default());
-    camera01.insert(ViewMatrix::default());
-    camera01.insert(ProjectionMatrix::default());
-    camera01.insert(TransformMatrix::default());
+    camera01.insert(CameraRenderData::new(&mut dynbuffer));
 
     println!("Run:");
 	// 运行派发器，通常每帧推动
 	dispatcher.run();
+
+    world.insert_resource(dynbuffer);
 
     rt.spawn(rt.alloc(), async move {
         dispatcher.run().await;

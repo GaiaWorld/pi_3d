@@ -18,27 +18,31 @@ impl DefaultShader {
     pub const A_POSITION_SLOT: u32                      = 0;
     pub const A_POSITION_SIZE: u32                      = 3 * 4;
     pub const U_EMISSIVE: MBKK                          = BuildinShaderDefined::MBKK_START_FOR_OTHER + 01 as MBKK;
-    pub const BIND_DESC: Vec<BindingDesc<MBKK>> = vec![
-        BindingDesc {
-            uniforms: vec![
-                UniformDesc {
-                    kind: Self::U_EMISSIVE,
-                    bind: 1,
-                    format: EUniformDataFormat::Color4,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    byte_offset_in_bind: 0,
-                }
-            ],
-            size: 4 * 4,
-            id: 1
-        }
-    ];
-    pub const ATTRIBUTES_DESC: Vec<GeometryBufferDesc<VDK>> = vec![
-        GeometryBufferDesc {
-            slot: Self::A_POSITION_SLOT,
-            format: EVertexDataFormat::F32,
-            kind: Self::A_POSITION,
-            size_per_vertex: Self::A_POSITION_SIZE as usize,
-        }
-    ];
+    pub fn bind_desc() -> Vec<BindingDesc<MBKK>> {
+        vec![
+            BindingDesc {
+                uniforms: vec![
+                    UniformDesc {
+                        kind: Self::U_EMISSIVE,
+                        bind: 1,
+                        format: EUniformDataFormat::Color4,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        byte_offset_in_bind: 0,
+                    }
+                ],
+                size: 4 * 4,
+                id: 1
+            }
+        ]
+    }
+    pub fn attributes_desc() -> Vec<GeometryBufferDesc<VDK>> {
+        vec![
+            GeometryBufferDesc {
+                slot: Self::A_POSITION_SLOT,
+                format: EVertexDataFormat::F32,
+                kind: Self::A_POSITION,
+                size_per_vertex: Self::A_POSITION_SIZE as usize,
+            }
+        ]
+    }
 }

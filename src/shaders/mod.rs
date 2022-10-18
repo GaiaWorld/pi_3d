@@ -83,12 +83,11 @@ pub trait VertexAttributeMeta {
     const SLOT: u32;
     const SIZE: u32;
     const STEP_MODE: wgpu::VertexStepMode;
-    const ATTRIBUTES: Vec<wgpu::VertexAttribute>;
-    fn layout<'a>() -> wgpu::VertexBufferLayout<'a> {
+    fn layout<'a>(attributes: &'a [wgpu::VertexAttribute]) -> wgpu::VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: Self::SIZE as wgpu::BufferAddress,
             step_mode: Self::STEP_MODE,
-            attributes: &Self::ATTRIBUTES,
+            attributes,
         }
     }
     fn set();

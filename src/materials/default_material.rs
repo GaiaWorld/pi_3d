@@ -3,7 +3,7 @@ use pi_render::rhi::{dyn_uniform_buffer::{Bind, BindOffset, DynUniformBuffer, Un
 use pi_scene_math::{Color4, Matrix};
 use render_material::material::{Material, UnifromData};
 
-use crate::shaders::{default::DefaultShader, BuildinShaderDefined, buildin_uniforms::{BuildinCameraBind, BuildinModelBind, BuildinFogBind, BuildinTimeBind, BuildinAmbientLightBind, bind_group_entry_buffer}, FragmentUniformBind, buildin_attributes::{BuildinAttributePosition, BuildinAttributeColor4}, VertexAttributeMeta };
+use crate::{shaders::{default::DefaultShader, BuildinShaderDefined, buildin_uniforms::{BuildinModelBind, bind_group_entry_buffer}, FragmentUniformBind, buildin_attributes::{BuildinAttributePosition, BuildinAttributeColor4}, VertexAttributeMeta }, cameras::camera::CameraRenderData, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::SceneTime};
 
 use super::{MBKK, bytes_write_to_memory};
 
@@ -34,7 +34,7 @@ impl DefaultMaterial {
     pub fn init(
         &mut self,
     ) {
-        self.material.init(&DefaultShader::BIND_DESC);
+        self.material.init(&DefaultShader::bind_desc());
     }
 
     pub fn apply(
@@ -175,10 +175,10 @@ impl DefaultMaterialPipeline {
                 &wgpu::BindGroupLayoutDescriptor {
                     label: Some("Default"),
                     entries: &[
-                        BuildinCameraBind::ENTRY,
-                        BuildinFogBind::ENTRY,
-                        BuildinTimeBind::ENTRY,
-                        BuildinAmbientLightBind::ENTRY,
+                        CameraRenderData::ENTRY,
+                        SceneFog::ENTRY,
+                        SceneTime::ENTRY,
+                        AmbientLight::ENTRY,
                     ],
                 }
             )
@@ -197,8 +197,8 @@ impl DefaultMaterialPipeline {
         );
 
         let vertex_layouts = vec![
-            BuildinAttributePosition::layout(),
-            BuildinAttributeColor4::layout(),
+            BuildinAttributePosition::layout(&BuildinAttributePosition::ATTRIBUTES),
+            BuildinAttributeColor4::layout(&BuildinAttributeColor4::ATTRIBUTES),
         ];
         
         let vs_state = wgpu::VertexState {

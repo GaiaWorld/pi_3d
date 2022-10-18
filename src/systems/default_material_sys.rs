@@ -3,7 +3,7 @@ use pi_ecs_macros::setup;
 use pi_render::rhi::{bind_group::BindGroup, dyn_uniform_buffer::DynUniformBuffer, device::RenderDevice};
 use render_data_container::GeometryBufferPool;
 
-use crate::{object::GameObject, transforms::transform_node::GlobalTransform, cameras::camera::{ViewMatrix, ProjectionMatrix, CameraBindGroup}, flags::{SceneID01, SceneCameraID01}, scene::SceneTime, environment::fog::SceneFog, materials::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype}, shaders::{buildin_attributes::{BuildinAttributePosition, BuildinAttributeColor4, BuildinAttributeIndices}, VertexAttributeMeta}, geometry::SingleGeometryBufferPool};
+use crate::{object::GameObject, transforms::transform_node::GlobalTransform, cameras::camera::{MainCameraBindGroup}, flags::{SceneID01, SceneCameraID01}, scene::SceneTime, environment::fog::SceneFog, materials::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype}, shaders::{buildin_attributes::{BuildinAttributePosition, BuildinAttributeColor4, BuildinAttributeIndices}, VertexAttributeMeta}, geometry::SingleGeometryBufferPool};
 
 
 pub struct DefaultMaterialUniformTickUpdate;
@@ -13,11 +13,11 @@ impl DefaultMaterialUniformTickUpdate {
     pub fn tick(
         mut query_materials: Query<GameObject, (&GlobalTransform, &DefaultMaterialPropertype, &mut DefaultMaterialMeta)>,
         device: Res<RenderDevice>,
-        dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<DynUniformBuffer>,
     ) {
         query_materials.iter_mut().for_each(|(transform, value_bind, mut material)| {
             material.init(&device, &mut dynbuffer);
-            dynbuffer.set_uniform::<GlobalTransform>(&material.model_bind_offset.unwrap(), transform);
+            dynbuffer.set_uniform::<GlobalTransform>(material.model_bind_offset.as_ref().unwrap(), transform);
             dynbuffer.set_uniform::<DefaultMaterialPropertype>(&value_bind.bind_offset, value_bind);
         });
     }
@@ -28,7 +28,7 @@ pub struct DefaultMaterialTickRender;
 impl DefaultMaterialTickRender {
     #[system]
     pub fn tick(
-        query_camera: Query<GameObject, (&CameraBindGroup, &SceneID01, &SceneCameraID01)>,
+        query_camera: Query<GameObject, (&MainCameraBindGroup, &SceneID01, &SceneCameraID01)>,
         query_materials: Query<GameObject, (&GlobalTransform, &SceneID01, &SceneCameraID01)>,
 
     ) {
@@ -40,7 +40,7 @@ impl DefaultMaterialTickRender {
 
 fn render_scene_camera<'a>(
     renderpass: &mut wgpu::RenderPass<'a>,
-    camera: &'a CameraBindGroup,
+    camera: &'a MainCameraBindGroup,
 ) {
     match camera.bind_group.as_ref() {
         Some(bind_group) => {

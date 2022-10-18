@@ -1,6 +1,6 @@
 use pi_ecs::{prelude::{StageBuilder, Setup}, world::World};
 
-use self::{transform_node_sys::{LocalRotationMatrixCacl, LocalMatrixCacl, WorldMatrixCacl}, camera_sys::{TargetCameraEffectLocalRotation, TargetCameraViewMatrixCacl, CameraTransformMatricCacl, FreeCameraProjectionCacl}};
+use self::{transform_node_sys::{LocalRotationMatrixCacl, LocalMatrixCacl, WorldMatrixCacl}, camera_sys::{TargetCameraEffectLocalRotation, TargetCameraViewMatrixCacl, CameraTransformMatricCacl, FreeCameraProjectionCacl}, uniform_scene_sys::SceneUniformTickUpdate, uniform_camera_sys::CameraUniformTickUpdate, default_material_sys::DefaultMaterialUniformTickUpdate};
 
 pub mod scene_sys;
 pub mod camera_sys;
@@ -34,6 +34,19 @@ pub fn init_stage(world: &mut World) -> Vec<StageBuilder>  {
     //                                             .order(camera_project_free, camera_transform);
 
     stages.push(transform_node_stage);
+
+    // Buildin Uniform 处理阶段
+    let mut buildin_uniform_stage = StageBuilder::new();
+    SceneUniformTickUpdate::setup(world, &mut buildin_uniform_stage);
+    CameraUniformTickUpdate::setup(world, &mut buildin_uniform_stage);
+    
+    stages.push(buildin_uniform_stage);
+
+    // DefaultMaterial Uniform 处理阶段
+    let mut default_material_uniform_stage = StageBuilder::new();
+    // DefaultMaterialUniformTickUpdate::setup(world, &mut default_material_uniform_stage);
+    
+    stages.push(default_material_uniform_stage);
 
     stages
 }

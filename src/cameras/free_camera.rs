@@ -1,6 +1,6 @@
 use pi_scene_math::{Vector3, Number, Perspective3, Orthographic3, Matrix};
 
-use super::{camera::{Camera, CameraParam, ProjectionMatrix}, target_camera::TargetCameraParam};
+use super::{camera::{Camera, CameraParam, CameraRenderData}, target_camera::TargetCameraParam};
 
 pub enum EFovMode {
     VerticalFixed,
@@ -48,7 +48,7 @@ impl FreeCameraParam {
 
     ///
     /// * `aspect` width / height pixels ratio
-    pub fn project_matrix(&self, camera: &CameraParam, c_p_m: &mut ProjectionMatrix, aspect: Number) {
+    pub fn project_matrix(&self, camera: &CameraParam, c_p_m: &mut CameraRenderData, aspect: Number) {
         let fovy = match self.fov_mode {
             EFovMode::VerticalFixed => self.fov,
             EFovMode::HorizontalFixed => self.fov / aspect,
@@ -56,11 +56,11 @@ impl FreeCameraParam {
         match self.mode {
             EFreeCameraMode::Perspective => {
                 let p = Perspective3::new(aspect, fovy, camera.minz, camera.maxz);
-                c_p_m.0.copy_from(p.as_matrix());
+                c_p_m.project_matrix.copy_from(p.as_matrix());
             },
             EFreeCameraMode::Orthograhic => {
                 let p = Orthographic3::new(self.left, self.right, self.bottom, self.top, camera.minz, camera.maxz);
-                c_p_m.0.copy_from(p.as_matrix());
+                c_p_m.project_matrix.copy_from(p.as_matrix());
             },
         };
     }
