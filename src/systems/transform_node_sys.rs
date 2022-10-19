@@ -116,6 +116,7 @@ impl WorldMatrixCacl {
     ) {
         println!("World Matrix Cacl:");
         for (root, _) in query_scenes.iter() {
+            println!("Get Scene {:?}", root);
             let mut temp_ids = vec![];
             tree.iter(root).for_each(|v| {
                 match query_ms.get_mut(v) {
@@ -137,26 +138,39 @@ impl WorldMatrixCacl {
             let max = 4096;
             let mut i = 0;
             loop {
+                println!("temp_ids {}", temp_ids.len());
                 let mut temp = vec![];
                 if temp_ids.len() > 0 && i < max {
                     temp_ids.into_iter().for_each(|(p_id, p_dirty, p_m)| {
-                        let p_dirty = p_dirty;
-                        tree.iter(p_id).for_each(|entity| {
-                            match query_ms.get_mut(entity) {
-                                Some((mut dirty, l_transform, mut g_transform)) => {
-                                    if dirty.0 || p_dirty {
-                                        g_transform.cacl(p_m, l_transform);
-                                        temp.push((entity, true, Some(g_transform.matrix.clone())));
-                                    } else {
-                                        temp.push((entity, false, Some(g_transform.matrix.clone())));
-                                    }
-                                    dirty.0 = false;
+                        println!("Parent {:?}", p_id);
 
-                                    println!("{}", g_transform.matrix);
-                                },
-                                None => {},
-                            }
-                        }); 
+                        match tree.get_down(p_id) {
+                            Some(node_children_head) => {
+                                let node_children_head = node_children_head.head;
+                                tree.iter(node_children_head).for_each(|entity| {
+                                    println!("Child {:?}", entity);
+
+                                    match query_ms.get_mut(entity) {
+                                        Some((mut dirty, l_transform, mut g_transform)) => {
+                                            let real_dirty = dirty.0 || p_dirty;
+                                            if real_dirty {
+                                                g_transform.cacl(p_m, l_transform);
+                                                temp.push((entity, true, Some(g_transform.matrix.clone())));
+                                            } else {
+                                                temp.push((entity, false, Some(g_transform.matrix.clone())));
+                                            }
+                                            dirty.0 = false;
+
+                                            println!("{}", g_transform.matrix);
+                                        },
+                                        None => {
+                                            println!("Child Not Found {:?}", entity);
+                                        },
+                                    }
+                                }); 
+                            },
+                            None => {},
+                        }
                     });
                     i += 1;
                 } else {

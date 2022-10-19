@@ -36,6 +36,7 @@ pub fn main() {
     let scene01 = engine.new_scene();
     let node01 = engine.new_transform_node(scene01);
     let camera01 = engine.new_free_camera(scene01);
+    engine.set_parent(camera01, scene01, Some(node01));
 
     println!("Run:");
 	// 运行派发器，通常每帧推动
