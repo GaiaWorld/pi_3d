@@ -1,6 +1,6 @@
 use std::{sync::Arc, any::TypeId};
 
-use pi_3d::{object::GameObject, flags::{SceneID01, SceneCameraID01}, scene::SceneParam, cameras::{camera::{Camera, CameraParam, CameraRenderData}, target_camera::TargetCameraParam, free_camera::FreeCameraParam}, transforms::transform_node::{TransformNode, LocalTransform, GlobalTransform, TransformDirty}, systems::init_stage, materials::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype}};
+use pi_3d::{object::GameObject, flags::{SceneID01, SceneCameraID01}, scene::SceneParam, cameras::{camera::{Camera, CameraParam, CameraRenderData}, target_camera::TargetCameraParam, free_camera::FreeCameraParam}, transforms::transform_node::{TransformNode, LocalTransform, GlobalTransform, TransformDirty}, systems::init_stage, materials::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype}, engine::Engine};
 use pi_async::rt::{multi_thread::{MultiTaskRuntimeBuilder, StealableTaskPool}, AsyncRuntime};
 use pi_ecs::prelude::{World, StageBuilder, IntoSystem, SingleDispatcher, Dispatcher, Query};
 use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
@@ -16,11 +16,8 @@ pub fn main() {
 
     let mut dynbuffer = DynUniformBuffer::new(Some("DynamicBindBUffer".to_string()), 16);
 
-    world.new_archetype::<GameObject>().create(); // 创建Node原型
-    
-    let node_archetype_id = world.archetypes().get_id_by_ident(TypeId::of::<GameObject>()).unwrap().clone();
-
-    let stage_builders = init_stage(&mut world);
+    let mut engine = Engine::new(&mut world);
+    let stage_builders = engine.init(0, 0, 100, 100);
     
 	// 创建一个运行时
 	let pool = MultiTaskRuntimeBuilder::<(), StealableTaskPool<()>>::default();
@@ -36,35 +33,9 @@ pub fn main() {
     });
 	dispatcher.init(stages, &world);
 
-    // 
-    let mut scene01 = world.spawn::<GameObject>();
-    scene01.insert(SceneID01);
-    scene01.insert(SceneParam { coordsys: CoordinateSytem3::left() });
-
-    let mut node01 = world.spawn::<GameObject>();
-    node01.insert(SceneID01);
-    node01.insert(TransformNode);
-    let mut lt = LocalTransform::default();
-    lt.position = Vector3::new(1., 10., 100.);
-    lt.euler = Vector3::new(0., (90.0f32).to_radians(), 0.);
-    lt.scaling = Vector3::new(10., 10., 10.);
-    node01.insert(lt);
-    node01.insert(GlobalTransform::default());
-    node01.insert(TransformDirty::default());
-    node01.insert(DefaultMaterialPropertype::new(&mut dynbuffer));
-    node01.insert(DefaultMaterialMeta::new(&mut dynbuffer));
-
-    let mut camera01 = world.spawn::<GameObject>();
-    camera01.insert(SceneID01);
-    camera01.insert(TransformNode);
-    camera01.insert(TransformDirty::default());
-    camera01.insert(LocalTransform::default());
-    camera01.insert(GlobalTransform::default());
-    camera01.insert(SceneCameraID01);
-    camera01.insert(CameraParam::default());
-    camera01.insert(TargetCameraParam::default());
-    camera01.insert(FreeCameraParam::default());
-    camera01.insert(CameraRenderData::new(&mut dynbuffer));
+    let scene01 = engine.new_scene();
+    let node01 = engine.new_transform_node(scene01);
+    let camera01 = engine.new_free_camera(scene01);
 
     println!("Run:");
 	// 运行派发器，通常每帧推动
@@ -73,6 +44,7 @@ pub fn main() {
     world.insert_resource(dynbuffer);
 
     rt.spawn(rt.alloc(), async move {
+        engine.tick_run();
         dispatcher.run().await;
     });
     loop {}

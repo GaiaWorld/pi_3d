@@ -1,11 +1,11 @@
 use pi_ecs::{prelude::{StageBuilder, Setup}, world::World};
 
-use self::{transform_node_sys::{LocalRotationMatrixCacl, LocalMatrixCacl, WorldMatrixCacl}, camera_sys::{TargetCameraEffectLocalRotation, TargetCameraViewMatrixCacl, CameraTransformMatricCacl, FreeCameraProjectionCacl}, uniform_scene_sys::SceneUniformTickUpdate, uniform_camera_sys::CameraUniformTickUpdate, default_material_sys::DefaultMaterialUniformTickUpdate};
+use self::{transform_node_sys::{LocalRotationMatrixCacl, LocalMatrixCacl, WorldMatrixCacl}, camera_sys::{TargetCameraEffectLocalRotation, TargetCameraViewMatrixCacl, CameraTransformMatricCacl, FreeCameraProjectionCacl}, uniform_scene_sys::SceneUniformTickUpdate, uniform_camera_sys::CameraUniformTickUpdate, default_material_sys::DefaultMaterialUniformTickUpdate, command_sys::UserCommandTick};
 
 pub mod scene_sys;
 pub mod camera_sys;
 pub mod obj_sys;
-pub mod tree_sys;
+pub mod command_sys;
 pub mod transform_node_sys;
 pub mod pipeline_sys;
 pub mod default_material_sys;
@@ -15,6 +15,12 @@ pub mod attribute_position_sys;
 
 pub fn init_stage(world: &mut World) -> Vec<StageBuilder>  {
     let mut stages = Vec::new();
+
+    // UserCommand 阶段
+    let mut command_stage = StageBuilder::new();
+    UserCommandTick::setup(world, &mut command_stage);
+
+    stages.push(command_stage);
 
     // 节点属性计算阶段
     let mut transform_node_stage = StageBuilder::new();

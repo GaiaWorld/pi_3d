@@ -2,7 +2,7 @@ use std::{any::TypeId, mem::replace};
 
 use pi_ecs::{world::World, prelude::{ArchetypeId, StageBuilder}};
 
-use crate::{resources::command::{UserCommands, TransformNodeCommand}, object::{GameObject, ObjectID}, systems::init_stage};
+use crate::{resources::command::{UserCommands, TransformNodeTreeCommand, ObjectNewCommand}, object::{GameObject, ObjectID}, systems::init_stage};
 
 pub struct Engine {
     world: World,
@@ -48,6 +48,7 @@ impl Engine {
         &mut self,
     ) -> ObjectID {
         let entity = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
+        self.commands.new_objects.push(ObjectNewCommand::NewScene(entity));
 
         entity
     }
@@ -56,7 +57,7 @@ impl Engine {
         &mut self,
         scene: ObjectID,
     ) {
-        self.commands.tree.push(TransformNodeCommand::Destroy(scene));
+        self.commands.tree.push(TransformNodeTreeCommand::Destroy(scene));
     }
 
     pub fn new_transform_node(
@@ -64,31 +65,42 @@ impl Engine {
         scene: ObjectID,
     ) -> ObjectID {
         let entity = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
-        
-        self.commands.tree.push(TransformNodeCommand::Append(entity, scene));
+        self.commands.new_objects.push(ObjectNewCommand::NewTransformNode(entity));
+        self.commands.tree.push(TransformNodeTreeCommand::Append(entity, scene));
 
         entity
     }
 
-    pub fn transform_node_parent(
+    pub fn set_parent(
         &mut self,
         node: ObjectID,
         scene: ObjectID,
         parent: Option<ObjectID>,
     ) {
-        self.commands.tree.push(TransformNodeCommand::Remove(node));
+        self.commands.tree.push(TransformNodeTreeCommand::Remove(node));
         let parent = match parent {
             Some(parent) => parent,
             None => scene,
         };
-        self.commands.tree.push(TransformNodeCommand::Append(node, parent));
+        self.commands.tree.push(TransformNodeTreeCommand::Append(node, parent));
     }
 
     pub fn destroy_transform_node(
         &mut self,
         node: ObjectID,
     ) {
-        self.commands.tree.push(TransformNodeCommand::Destroy(node));
+        self.commands.tree.push(TransformNodeTreeCommand::Destroy(node));
+    }
+
+    pub fn new_free_camera(
+        &mut self,
+        scene: ObjectID,
+    ) -> ObjectID {
+        let entity = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
+        self.commands.new_objects.push(ObjectNewCommand::NewTransformNode(entity));
+        self.commands.new_objects.push(ObjectNewCommand::NewFreeCamera(entity));
+        self.commands.tree.push(TransformNodeTreeCommand::Append(entity, scene));
+        entity
     }
 
     pub fn tick_run(
