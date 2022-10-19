@@ -46,6 +46,7 @@ fn cmd_new_object(
             ObjectNewCommand::NewScene(id) => {
                 match scene_query.get_mut(id) {
                     Some(mut write) => {
+                        println!("new Scene {:?}", id);
                         write.insert_no_notify(SceneParam { coordsys: CoordinateSytem3::left() });
                     },
                     None => {},

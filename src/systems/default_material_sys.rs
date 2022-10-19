@@ -107,6 +107,7 @@ fn render_draw<'a>(
     let vertices = gbp.get_size(&position.buffer_id) as u32;
     renderpass.draw(0..vertices, 0..1);
 }
+
 fn render_draw_indexed<'a>(
     renderpass: &mut wgpu::RenderPass<'a>,
     indices: & BuildinAttributeIndices,

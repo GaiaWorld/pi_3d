@@ -19,7 +19,7 @@ pi_spatialtree = { git = "https://github.com/GaiaWorld/pi_spatialtree.git" }
 ncollide3d = "0.27"
 
 approx = "0.5"
-naga = { version = "0.8", features = [
+naga = { version = "0.9", features = [
     "glsl-in",
     "spv-in",
     "spv-out",

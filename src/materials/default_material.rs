@@ -115,6 +115,7 @@ impl DefaultMaterialMeta {
         }
     }
 }
+
 pub struct DefaultMaterialPropertype {
     pub bind_offset: BindOffset,
     pub emissive_color: (f32, f32, f32),
@@ -163,7 +164,6 @@ impl DefaultMaterialPipeline {
     pub const ID: usize = 00;
     pub fn build(
         device: &RenderDevice,
-        dynbuffer: &mut DynUniformBuffer,
         shader: &DefaultShader,
         targets: &[Option<wgpu::ColorTargetState>],
         depth_stencil: Option<wgpu::DepthStencilState>,
