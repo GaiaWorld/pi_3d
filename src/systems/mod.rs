@@ -44,7 +44,7 @@ pub fn init_stage(world: &mut World) -> Vec<StageBuilder>  {
 
     // DefaultMaterial Uniform 处理阶段
     let mut default_material_uniform_stage = StageBuilder::new();
-    // DefaultMaterialUniformTickUpdate::setup(world, &mut default_material_uniform_stage);
+    DefaultMaterialUniformTickUpdate::setup(world, &mut default_material_uniform_stage);
     
     stages.push(default_material_uniform_stage);
 

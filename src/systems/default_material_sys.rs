@@ -5,19 +5,17 @@ use render_data_container::GeometryBufferPool;
 
 use crate::{object::GameObject, transforms::transform_node::GlobalTransform, cameras::camera::{MainCameraBindGroup}, flags::{SceneID01, SceneCameraID01}, scene::SceneTime, environment::fog::SceneFog, materials::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype}, shaders::{buildin_attributes::{BuildinAttributePosition, BuildinAttributeColor4, BuildinAttributeIndices}, VertexAttributeMeta}, geometry::SingleGeometryBufferPool};
 
-
 pub struct DefaultMaterialUniformTickUpdate;
 #[setup]
 impl DefaultMaterialUniformTickUpdate {
     #[system]
     pub fn tick(
         mut query_materials: Query<GameObject, (&GlobalTransform, &DefaultMaterialPropertype, &mut DefaultMaterialMeta)>,
-        device: Res<RenderDevice>,
         mut dynbuffer: ResMut<DynUniformBuffer>,
     ) {
+        println!("DefaultMaterial Uniform TickUpdate");
         query_materials.iter_mut().for_each(|(transform, value_bind, mut material)| {
-            material.init(&device, &mut dynbuffer);
-            dynbuffer.set_uniform::<GlobalTransform>(material.model_bind_offset.as_ref().unwrap(), transform);
+            dynbuffer.set_uniform::<GlobalTransform>(&material.model_bind_offset, transform);
             dynbuffer.set_uniform::<DefaultMaterialPropertype>(&value_bind.bind_offset, value_bind);
         });
     }

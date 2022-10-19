@@ -1,6 +1,6 @@
 use std::{sync::Arc, any::TypeId};
 
-use pi_3d::{object::GameObject, flags::{SceneID01, SceneCameraID01}, scene::SceneParam, cameras::{camera::{Camera, CameraParam, CameraRenderData}, target_camera::TargetCameraParam, free_camera::FreeCameraParam}, transforms::transform_node::{TransformNode, LocalTransform, GlobalTransform, TransformDirty}, systems::init_stage};
+use pi_3d::{object::GameObject, flags::{SceneID01, SceneCameraID01}, scene::SceneParam, cameras::{camera::{Camera, CameraParam, CameraRenderData}, target_camera::TargetCameraParam, free_camera::FreeCameraParam}, transforms::transform_node::{TransformNode, LocalTransform, GlobalTransform, TransformDirty}, systems::init_stage, materials::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype}};
 use pi_async::rt::{multi_thread::{MultiTaskRuntimeBuilder, StealableTaskPool}, AsyncRuntime};
 use pi_ecs::prelude::{World, StageBuilder, IntoSystem, SingleDispatcher, Dispatcher, Query};
 use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
@@ -51,6 +51,8 @@ pub fn main() {
     node01.insert(lt);
     node01.insert(GlobalTransform::default());
     node01.insert(TransformDirty::default());
+    node01.insert(DefaultMaterialPropertype::new(&mut dynbuffer));
+    node01.insert(DefaultMaterialMeta::new(&mut dynbuffer));
 
     let mut camera01 = world.spawn::<GameObject>();
     camera01.insert(SceneID01);

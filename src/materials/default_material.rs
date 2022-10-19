@@ -61,16 +61,20 @@ impl DefaultMaterial {
 pub struct DefaultMaterialMeta {
     pub set: u32,
     pub bind_group: Option<BindGroup>,
-    pub model_bind_offset: Option<BindOffset>,
-    pub value: Option<DefaultMaterialPropertype>,
+    pub model_bind_offset: BindOffset,
+    pub value: DefaultMaterialPropertype,
 }
 impl DefaultMaterialMeta {
-    pub fn new() -> Self {
+    pub fn new(
+        dynbuffer: &mut DynUniformBuffer,
+    ) -> Self {
+        let model_bind_offset = dynbuffer.alloc_binding::<BuildinModelBind>();
+        let value = DefaultMaterialPropertype::new(dynbuffer);
 
         Self {
             bind_group: None,
-            value: None,
-            model_bind_offset: None,
+            value,
+            model_bind_offset,
             set: 1,
         }
     }
@@ -81,8 +85,6 @@ impl DefaultMaterialMeta {
         dynbuffer: &mut DynUniformBuffer,
     ) {
         if self.bind_group.is_none() {
-            let model_bind_offset = dynbuffer.alloc_binding::<BuildinModelBind>();
-            let value = DefaultMaterialPropertype::new(dynbuffer);
     
             let bind_group_layout = BindGroupLayout::from(
                 device.create_bind_group_layout(
@@ -102,16 +104,14 @@ impl DefaultMaterialMeta {
                         label: Some("DefaultMaterial"),
                         layout: &bind_group_layout,
                         entries: &[
-                            BuildinModelBind::entry(&model_bind_offset, dynbuffer),
-                            DefaultMaterialPropertype::entry(&value.bind_offset, dynbuffer),
+                            BuildinModelBind::entry(&self.model_bind_offset, dynbuffer),
+                            DefaultMaterialPropertype::entry(&self.value.bind_offset, dynbuffer),
                         ],
                     }
                 )
             );
     
-            self.value = Some(value);
             self.bind_group = Some(bind_group);
-            self.model_bind_offset = Some(model_bind_offset);
         }
     }
 }
@@ -124,7 +124,7 @@ impl DefaultMaterialPropertype {
     pub const EMISSIVE: usize = 4;
     pub const EMISSIVE_OFFSET: usize = 0 * 4;
 
-    fn new(dynbuffer: &mut DynUniformBuffer) -> Self {
+    pub fn new(dynbuffer: &mut DynUniformBuffer) -> Self {
         Self {
             bind_offset: dynbuffer.alloc_binding::<Self>(),
             emissive_color: (1., 1., 1.),
