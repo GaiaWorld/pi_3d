@@ -12,3 +12,9 @@ pub struct SceneCameraID05;
 pub struct SceneCameraID06;
 
 pub struct CullingFlag(pub bool);
+
+pub struct RenderOpaque;
+
+pub struct RenderTransparent;
+
+pub struct RenderQueue(pub u32);
