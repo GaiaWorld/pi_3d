@@ -29,8 +29,8 @@ naga = { version = "0.8", features = [
 bytemuck = { version = "1.4", features = ["derive"] }
 
 pi_slotmap = "0.1"
-pi_hash="0.1"
-pi_share="0.4"
+pi_hash = "0.1"
+pi_share = "0.4"
 
 pi_animation = { git = "https://github.com/GaiaWorld/pi_animation" }
 
@@ -48,7 +48,7 @@ pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
 
 pi_async = "0.5"
 pi_idtree = "0.1"
-pi_slotmap_tree ="0.2"
+pi_slotmap_tree = "0.2"
 pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
 pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
@@ -67,5 +67,7 @@ pi_scene = { path = "../pi_scene" }
 
 [dev-dependencies]
 image = "0.24"
-winit = {git = "http://ser.yinengyun.com:10082/tech/winit.git"}
+winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
 pollster = "0.2"
+pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
+spin_sleep = "1.1"
