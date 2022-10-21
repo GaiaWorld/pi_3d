@@ -1,4 +1,4 @@
 
 pub struct MaterialMeta {
-    // pub desc: Vec<Material>,
+    // pub bind_grou?p
 }

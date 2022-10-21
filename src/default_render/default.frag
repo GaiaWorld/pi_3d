@@ -15,7 +15,7 @@ void main() {
 
     baseColor.rgba = v_color.rgba;
 
-    baseColor.rgb *= emissive.rgb * emissive.intensity;
+    baseColor.rgb *= emissive.rgb * emissive.a;
 
     float alpha = 1.0;
 

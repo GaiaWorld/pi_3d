@@ -3,7 +3,7 @@ use pi_idtree::IdTree;
 use pi_render::rhi::dyn_uniform_buffer::{Uniform, DynUniformBuffer, Bind, BindOffset};
 use pi_scene_math::coordiante_system;
 
-use crate::{materials::bytes_write_to_memory, shaders::{FragmentUniformBind}};
+use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory};
 
 pub struct SceneParam {
     pub coordsys: coordiante_system::CoordinateSytem3,

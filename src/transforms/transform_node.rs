@@ -1,7 +1,7 @@
 use pi_render::rhi::dyn_uniform_buffer::Uniform;
 use pi_scene_math::{transform::{Transform3}, Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, Number, vector::TToolMatrix, Translation3, Isometry3};
 
-use crate::{materials::bytes_write_to_memory, shaders::buildin_uniforms::BuildinModelBind};
+use crate::{shaders::buildin_uniforms::BuildinModelBind, bytes_write_to_memory};
 
 #[derive(Debug, Clone, Copy)]
 pub struct TransformNode;

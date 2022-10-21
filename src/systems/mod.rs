@@ -1,6 +1,8 @@
 use pi_ecs::{prelude::{StageBuilder, Setup}, world::World};
 
-use self::{transform_node_sys::{LocalRotationMatrixCacl, LocalMatrixCacl, WorldMatrixCacl}, camera_sys::{TargetCameraEffectLocalRotation, TargetCameraViewMatrixCacl, CameraTransformMatricCacl, FreeCameraProjectionCacl}, uniform_scene_sys::SceneUniformTickUpdate, uniform_camera_sys::CameraUniformTickUpdate, default_material_sys::DefaultMaterialUniformTickUpdate, command_sys::UserCommandTick};
+use crate::default_render::{default_material_sys::DefaultMaterialUniformTickUpdate, world_init_default_materail};
+
+use self::{transform_node_sys::{LocalRotationMatrixCacl, LocalMatrixCacl, WorldMatrixCacl}, camera_sys::{TargetCameraEffectLocalRotation, TargetCameraViewMatrixCacl, CameraTransformMatricCacl, FreeCameraProjectionCacl}, uniform_scene_sys::SceneUniformTickUpdate, uniform_camera_sys::CameraUniformTickUpdate, command_sys::UserCommandTick};
 
 pub mod scene_sys;
 pub mod camera_sys;
@@ -8,7 +10,6 @@ pub mod obj_sys;
 pub mod command_sys;
 pub mod transform_node_sys;
 pub mod pipeline_sys;
-pub mod default_material_sys;
 pub mod uniform_scene_sys;
 pub mod uniform_camera_sys;
 pub mod attribute_position_sys;
@@ -47,12 +48,14 @@ pub fn init_stage(world: &mut World) -> Vec<StageBuilder>  {
     CameraUniformTickUpdate::setup(world, &mut buildin_uniform_stage);
     
     stages.push(buildin_uniform_stage);
-
-    // DefaultMaterial Uniform 处理阶段
-    let mut default_material_uniform_stage = StageBuilder::new();
-    DefaultMaterialUniformTickUpdate::setup(world, &mut default_material_uniform_stage);
     
-    stages.push(default_material_uniform_stage);
+    let mut stage_uniform_update = StageBuilder::new();
+    let mut stage_before_render = StageBuilder::new();
+
+    world_init_default_materail(world, &mut stage_uniform_update, &mut stage_before_render);
+    
+    stages.push(stage_uniform_update);
+    stages.push(stage_before_render);
 
     stages
 }

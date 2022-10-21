@@ -10,7 +10,7 @@ use pi_3d::{
     },
     engine::Engine,
     flags::{SceneCameraID01, SceneID01},
-    materials::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype},
+    default_render::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype},
     object::GameObject,
     scene::SceneParam,
     systems::init_stage,

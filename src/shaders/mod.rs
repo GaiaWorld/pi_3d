@@ -5,7 +5,6 @@ use crate::{geometry::VDK, materials::MBKK};
 
 use self::buildin_uniforms::bind_group_entry_buffer;
 
-pub mod default;
 pub mod buildin_attributes;
 pub mod buildin_uniforms;
 
@@ -77,18 +76,4 @@ pub trait FragmentUniformBind {
     ) -> wgpu::BindGroupEntry<'a> {
         bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), **bind_offset, Self::SIZE as u32)
     }
-}
-
-pub trait VertexAttributeMeta {
-    const SLOT: u32;
-    const SIZE: u32;
-    const STEP_MODE: wgpu::VertexStepMode;
-    fn layout<'a>(attributes: &'a [wgpu::VertexAttribute]) -> wgpu::VertexBufferLayout<'a> {
-        wgpu::VertexBufferLayout {
-            array_stride: Self::SIZE as wgpu::BufferAddress,
-            step_mode: Self::STEP_MODE,
-            attributes,
-        }
-    }
-    fn set();
 }

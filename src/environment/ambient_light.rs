@@ -1,6 +1,6 @@
 use pi_render::rhi::dyn_uniform_buffer::{Uniform, Bind, DynUniformBuffer, BindOffset};
 
-use crate::{materials::bytes_write_to_memory, shaders::{FragmentUniformBind}};
+use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}};
 
 
 pub struct AmbientLight {

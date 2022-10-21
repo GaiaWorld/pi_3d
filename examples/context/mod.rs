@@ -84,7 +84,11 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
         let world = &mut world1;
         let options = RenderOptions::default();
         
+		// init_render
+		//   > insert_render_graph
+		//     > world.insert_resource(RenderGraph::new(w, device, queue)); // RenderGraph 在此处被创建
         let render_stages = init_render(world, options, win1.clone(), rt.clone()).await;
+
         let limits = world.get_resource::<RenderDevice>().unwrap().limits();
         let min_uniform_buffer_offset_alignment = limits.min_uniform_buffer_offset_alignment;
         world.insert_resource(pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer::new(
@@ -103,15 +107,15 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
         first_stage.add_node(IntoSystem::system(first_run, world));
         stages.push(Arc::new(first_stage.build(world)));
 
-        // 初始化gui stage
+        // 初始化 Engine stage
         let mut engine = Engine::new(world);
         let gui_stages = engine.init(0, 0, size.width, size.height);
         for stage in gui_stages.into_iter() {
             stages.push(Arc::new(stage.build(world)));
         }
         // stages.push(Arc::new(render_stages.extract_stage.build(world)));
-        stages.push(Arc::new(render_stages.prepare_stage.build(world)));
-        stages.push(Arc::new(render_stages.render_stage.build(world)));
+        // stages.push(Arc::new(render_stages.prepare_stage.build(world)));
+        // stages.push(Arc::new(render_stages.render_stage.build(world)));
 
         let mut last_stage = StageBuilder::new();
 
@@ -126,7 +130,16 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
         let mut dispatcher = SingleDispatcher::new(rt);
         dispatcher.init(stages, world);
 
+
+        // Test Code
+        let scene01 = engine.new_scene();
+        let node01 = engine.new_transform_node(scene01);
+        let camera01 = engine.new_free_camera(scene01);
+        engine.set_parent(camera01, scene01, Some(node01));
+
+
         *result1.write() = Some((engine, dispatcher));
+
     });
     loop {
         if result.read().is_some() {

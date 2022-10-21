@@ -46,6 +46,7 @@ pi_render = { path = "../pi_render" }
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
 
+pi_futures = "0.1"
 pi_async = "0.5"
 pi_idtree = "0.1"
 pi_slotmap_tree = "0.2"

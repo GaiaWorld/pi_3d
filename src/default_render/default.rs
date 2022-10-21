@@ -1,12 +1,9 @@
 use ncollide3d::na::U32;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice};
 use render_data_container::EVertexDataFormat;
-use render_geometry::geometry::GeometryBufferDesc;
 use render_material::{binding::BindingDesc, material::{UniformDesc, EUniformDataFormat}};
 
-use crate::{geometry::VDK, materials::MBKK};
-
-use super::BuildinShaderDefined;
+use crate::{geometry::VDK, materials::MBKK, shaders::BuildinShaderDefined};
 
 pub struct DefaultShader {
     pub vs_module: wgpu::ShaderModule,
@@ -57,16 +54,6 @@ impl DefaultShader {
                 ],
                 size: 4 * 4,
                 id: 1
-            }
-        ]
-    }
-    pub fn attributes_desc() -> Vec<GeometryBufferDesc<VDK>> {
-        vec![
-            GeometryBufferDesc {
-                slot: Self::A_POSITION_SLOT,
-                format: EVertexDataFormat::F32,
-                kind: Self::A_POSITION,
-                size_per_vertex: Self::A_POSITION_SIZE as usize,
             }
         ]
     }

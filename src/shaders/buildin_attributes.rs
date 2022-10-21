@@ -1,12 +1,13 @@
-use std::sync::Arc;
+
+use render_data_container::{EVertexDataFormat};
+
+use render_geometry::geometry::{VertexAttributeMeta, VertexAttributeBufferMeta};
 
 use crate::geometry::GBID;
 
-use super::VertexAttributeMeta;
-
 
 pub struct BuildinAttributePosition {
-    pub buffer_id: GBID,
+    pub meta: VertexAttributeBufferMeta<GBID>,
 }
 impl BuildinAttributePosition {
     pub const POSITION: u32 = 3;
@@ -25,17 +26,15 @@ impl BuildinAttributePosition {
 impl VertexAttributeMeta for BuildinAttributePosition {
     const SLOT: u32 = 0;
 
-    const SIZE: u32 = Self::POSITION_OFFSET + Self::POSITION * 4;
+    const SIZE_PER_VERTEX: u32 = Self::POSITION_OFFSET + Self::POSITION * 4;
 
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
 
-    fn set() {
-        todo!()
-    }
+    const FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
 }
 
 pub struct BuildinAttributeColor4 {
-    pub buffer_id: GBID,
+    pub meta: VertexAttributeBufferMeta<GBID>,
 }
 impl BuildinAttributeColor4 {
     pub const COLOR: u32 = 4;
@@ -54,18 +53,15 @@ impl BuildinAttributeColor4 {
 impl VertexAttributeMeta for BuildinAttributeColor4 {
     const SLOT: u32 = 0;
 
-    const SIZE: u32 = Self::COLOR_OFFSET + Self::COLOR * 4;
+    const SIZE_PER_VERTEX: u32 = Self::COLOR_OFFSET + Self::COLOR * 4;
 
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
-
-    fn set() {
-        todo!()
-    }
+    const FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
 }
 
 
 pub struct BuildinAttributeNormal {
-    pub buffer_id: GBID,
+    pub meta: VertexAttributeBufferMeta<GBID>,
 }
 impl BuildinAttributeNormal {
     pub const NORMAL: u32 = 3;
@@ -82,15 +78,12 @@ impl BuildinAttributeNormal {
 }
 impl VertexAttributeMeta for BuildinAttributeNormal {
     const SLOT: u32 = 0;
-    const SIZE: u32 = Self::NORMAL_OFFSET + Self::NORMAL * 4;
+    const SIZE_PER_VERTEX: u32 = Self::NORMAL_OFFSET + Self::NORMAL * 4;
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
-
-    fn set() {
-        todo!()
-    }
+    const FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
 }
 
 pub struct BuildinAttributeIndices {
-    pub buffer_id: GBID,
+    pub meta: VertexAttributeBufferMeta<GBID>,
     pub format: wgpu::IndexFormat,
 }

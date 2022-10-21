@@ -2,7 +2,7 @@ use std::{any::TypeId, mem::replace};
 
 use pi_ecs::{world::World, prelude::{ArchetypeId, StageBuilder}};
 
-use crate::{resources::command::{UserCommands, TransformNodeTreeCommand, ObjectNewCommand}, object::{GameObject, ObjectID}, systems::init_stage};
+use crate::{resources::{command::{UserCommands, TransformNodeTreeCommand, ObjectNewCommand}, SingleRenderBindGroupPool, SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, object::{GameObject, ObjectID}, systems::init_stage, default_render::default_material::DefaultMaterialPipeline, renderers::render_object::{RenderObject}};
 
 pub struct Engine {
     world: World,
@@ -19,9 +19,14 @@ impl Engine {
     pub fn new(world: &mut World) -> Self {
         // 注册原型
         world.new_archetype::<GameObject>().create();
+        world.new_archetype::<RenderObject>().create();
 
         // 注册资源管理器
-        
+
+        // 注册单例资源
+        world.insert_resource(SingleRenderBindGroupPool::default());
+        world.insert_resource(SingleRenderObjectPipelinePool::default());
+        world.insert_resource(SingleGeometryBufferPool::default());
 
         // 
         let node_archetype_id = world.archetypes().get_id_by_ident(TypeId::of::<GameObject>()).unwrap().clone();

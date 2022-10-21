@@ -1,7 +1,7 @@
 use pi_render::rhi::{dyn_uniform_buffer::{Uniform, DynUniformBuffer, BindOffset, Bind}, bind_group::BindGroup, device::RenderDevice, bind_group_layout::BindGroupLayout};
 use pi_scene_math::{Vector3, Vector4, Matrix, frustum::FrustumPlanes, plane::Plane, Point3, Isometry3, Translation3, Orthographic3};
 
-use crate::{materials::bytes_write_to_memory, shaders::{FragmentUniformBind}, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::SceneTime};
+use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::SceneTime};
 
 // #[derive(Debug, Clone)]
 // pub struct ViewMatrix(pub Matrix);
@@ -116,54 +116,6 @@ pub struct CameraParam {
 impl Default for CameraParam {
     fn default() -> Self {
         Self { up: Vector3::new(0., 1., 0.), minz: 0.01, maxz: 1000. }
-    }
-}
-
-pub struct MainCameraBindGroup {
-    pub bind_group: Option<BindGroup>,
-    pub set: u32,
-}
-impl MainCameraBindGroup {
-    pub fn init(
-        &mut self,
-        device: &RenderDevice,
-        dynbuffer: &mut DynUniformBuffer,
-    ) {
-        let camera_bind = dynbuffer.alloc_binding::<CameraRenderData>();
-        let fog_bind = dynbuffer.alloc_binding::<SceneFog>();
-        let time_bind = dynbuffer.alloc_binding::<SceneTime>();
-        let ambient_light_bind = dynbuffer.alloc_binding::<AmbientLight>();
-
-        let bind_group_0_layout = BindGroupLayout::from(
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    label: Some("BuildinBindGroup"),
-                    entries: &[
-                        CameraRenderData::ENTRY,
-                        SceneTime::ENTRY,
-                        SceneFog::ENTRY,
-                        AmbientLight::ENTRY,
-                    ],
-                }
-            )
-        );
-        
-        let bind_group_0 = BindGroup::from(
-            device.create_bind_group(
-                &wgpu::BindGroupDescriptor {
-                    label: Some("BuildinBindGroup"),
-                    layout: &bind_group_0_layout,
-                    entries: &[
-                        CameraRenderData::entry(&camera_bind, dynbuffer),
-                        SceneTime::entry(&time_bind, dynbuffer),
-                        SceneFog::entry(&fog_bind, dynbuffer),
-                        AmbientLight::entry(&ambient_light_bind, dynbuffer),
-                    ],
-                }
-            )
-        );
-
-        self.bind_group = Some(bind_group_0);
     }
 }
 
