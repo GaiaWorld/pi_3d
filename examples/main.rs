@@ -41,7 +41,7 @@ pub fn main() {
     run_window_loop(window, event_loop);
 }
 
-fn run_loop(engine: EnginShell) {
+fn run_loop(mut engine_sheel: EnginShell) {
     MULTI_MEDIA_RUNTIME
         .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
             // example.init(&mut engine, (size.width as usize, size.height as usize)).await;
@@ -50,8 +50,7 @@ fn run_loop(engine: EnginShell) {
             loop {
                 // 运行
                 // example.render(&mut engine);
-
-                engine.dispatcher.run().await;
+                engine_sheel.run().await;
 
                 let time = Instant::now();
                 // let _use_time = Instant::now() - pre_frame_time;

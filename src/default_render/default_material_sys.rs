@@ -4,7 +4,7 @@ use pi_render::{rhi::{bind_group::BindGroup, dyn_uniform_buffer::DynUniformBuffe
 use render_data_container::GeometryBufferPool;
 use render_geometry::geometry::VertexAttributeMeta;
 
-use crate::{object::{GameObject, ObjectID}, transforms::transform_node::GlobalTransform, renderers::{main_camera::{MainCameraBindGroup, MainCameraOpaqueRenderer}, render_object::{RenderObjectID, RenderObjectMeta, RenderObjectOpaqueList, RenderObject, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderLayerMask, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, scene::SceneTime, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype, DefaultMaterialPipeline}, shaders::{buildin_attributes::{BuildinAttributePosition, BuildinAttributeColor4, BuildinAttributeIndices}}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}};
+use crate::{object::{GameObject, ObjectID}, transforms::transform_node::GlobalTransform, renderers::{main_camera::{MainCameraBindGroup, MainCameraOpaqueRenderer}, render_object::{RenderObjectID, RenderObjectMeta, RenderObjectOpaqueList, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderLayerMask, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, scene::SceneTime, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype, DefaultMaterialPipeline}, shaders::{buildin_attributes::{BuildinAttributePosition, BuildinAttributeNormal, BuildinAttributeIndices}}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}};
 
 use super::default::DefaultShader;
 
@@ -13,13 +13,14 @@ pub struct DefaultMaterialUniformTickUpdate;
 impl DefaultMaterialUniformTickUpdate {
     #[system]
     pub fn tick(
-        mut query_materials: Query<GameObject, (&GlobalTransform, &DefaultMaterialPropertype, &mut DefaultMaterialMeta)>,
+        query_materials: Query<GameObject, (&GlobalTransform, & DefaultMaterialMeta)>,
         mut dynbuffer: ResMut<DynUniformBuffer>,
     ) {
         println!("DefaultMaterial Uniform TickUpdate");
-        query_materials.iter_mut().for_each(|(transform, value_bind, mut material)| {
+        query_materials.iter().for_each(|(transform, material)| {
+            println!("DefaultMaterial >>>>>>>>>>>> ");
             dynbuffer.set_uniform::<GlobalTransform>(&material.model_bind_offset, transform);
-            dynbuffer.set_uniform::<DefaultMaterialPropertype>(&value_bind.bind_offset, value_bind);
+            dynbuffer.set_uniform::<DefaultMaterialPropertype>(&material.value.bind_offset, &material.value);
         });
     }
 }
@@ -29,9 +30,9 @@ pub struct DefaultMaterialTickBeforeRender;
 impl DefaultMaterialTickBeforeRender {
     #[system]
     pub fn tick(
-        query_camera: Query<GameObject, (&RenderObjectID, &MainCameraBindGroup, &SceneID, &RenderLayerMask, &RenderSortParam, &MainCameraOpaqueRenderer)>,
-        mut query_render_opaque: Query<RenderObject, (&mut RenderObjectOpaqueList)>,
-        query_drawobj: Query<GameObject, (&DefaultMaterialMeta, &SceneID, &RenderLayerMask, &RenderSortParam, &BuildinAttributePosition, &BuildinAttributeColor4, &BuildinAttributeIndices, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil)>,
+        query_camera: Query<GameObject, (&RenderObjectID, &MainCameraBindGroup, &SceneID, &RenderLayerMask)>,
+        mut query_render_opaque: Query<GameObject, (&mut RenderObjectOpaqueList)>,
+        query_drawobj: Query<GameObject, (&DefaultMaterialMeta, &SceneID, &BuildinAttributePosition, &BuildinAttributeNormal, &BuildinAttributeIndices, &RenderLayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil)>,
         mut pipelines: ResMut<DefaultMaterialPipeline>,
         device: Res<RenderDevice>,
         queue: Res<RenderQueue>,
@@ -40,12 +41,15 @@ impl DefaultMaterialTickBeforeRender {
         mut dynbuffer: ResMut<DynUniformBuffer>,
         mut pipeline_pool: ResMut<SingleRenderObjectPipelinePool>,
     ) {
+        println!("DefaultMaterial Tick BeforeRender");
         dynbuffer.write_buffer(&device, &queue);
-        query_camera.iter().for_each(|(renderid, camera_bind_group, sceneid, layermask, sortparam, renderer)| {
+        query_camera.iter().for_each(|(renderid, camera_bind_group, sceneid, layermask)| {
+            println!("Camera >>>>>>>>>>>>>>>");
             match &camera_bind_group.bind_group {
                 Some(bind_group) => {
-                    match query_render_opaque.get_mut(*renderid) {
+                    match query_render_opaque.get_mut(renderid.0) {
                         Some(mut renderlist) => {
+                            println!("opaque List >>>>>>>>>>>>>>>");
                             renderlist.draws.clear();
                             renderlist.bind_groups.clear();
 
@@ -54,7 +58,10 @@ impl DefaultMaterialTickBeforeRender {
                             let mut opaque_list = vec![];
         
                             query_drawobj.iter().for_each(|item| {
-                                collect_opaque_normal_depth(item, &mut pipelines, &device, &queue, &shader, &gbp, &mut dynbuffer, &mut pipeline_pool, &mut opaque_list);
+                                println!("opaque draw obj >>>>>>>>>>>>>>>");
+                                if sceneid.0 == item.1.0 && layermask.include(&item.5) {
+                                    collect_opaque_normal_depth(item, &mut pipelines, &device, &queue, &shader, &gbp, &mut dynbuffer, &mut pipeline_pool, &mut opaque_list);
+                                }
                             });
         
                             opaque_list.into_iter().for_each(|v| {
@@ -73,7 +80,7 @@ impl DefaultMaterialTickBeforeRender {
 }
 
 fn collect_opaque_normal_depth(
-    query: (&DefaultMaterialMeta, &SceneID, &RenderLayerMask, &RenderSortParam, &BuildinAttributePosition, &BuildinAttributeColor4, &BuildinAttributeIndices, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil),
+    query: (&DefaultMaterialMeta, &SceneID, &BuildinAttributePosition, &BuildinAttributeNormal, &BuildinAttributeIndices, &RenderLayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil),
     pipelines: &mut DefaultMaterialPipeline,
     device: & RenderDevice,
     queue: & RenderQueue,
@@ -83,7 +90,7 @@ fn collect_opaque_normal_depth(
     pipeline_pool: &mut SingleRenderObjectPipelinePool,
     list: &mut Vec<RenderObjectMeta>,
 ) {
-    let (mat, sceneid, layermask, rendersort, position, color4, indices, blend, primit, depth_stencil) = query;
+    let (mat, sceneid, position, normal, indices, layermask, rendersort, blend, primit, depth_stencil) = query;
     if depth_stencil.depth {
         match &mat.bind_group {
             Some(bind_group) => {
@@ -117,6 +124,14 @@ fn collect_opaque_normal_depth(
                     }
                 );
                 let mut vertices = vec![];
+                let normal = RenderObjectVertice {
+                    slot: BuildinAttributePosition::SLOT,
+                    gbid: normal.meta.buffer_id,
+                    start: normal.meta.start,
+                    end: normal.meta.end,
+                    count: (normal.meta.end - normal.meta.start) / normal.meta.data_bytes_size
+                };
+                vertices.push(normal);
                 let mut instances = vec![];
                 let mut meta = RenderObjectMeta {
                     bind_groups,

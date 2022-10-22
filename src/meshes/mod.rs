@@ -1,5 +1,8 @@
 use crate::{object::ObjectID};
 
+pub mod cube;
+pub mod plane;
+
 pub struct Mesh {
     materials: Vec<ObjectID>,
 }

@@ -3,11 +3,10 @@ use pi_render::rhi::{bind_group::BindGroup, pipeline::RenderPipeline};
 use pi_share::Share;
 use pi_slotmap::{SlotMap, DefaultKey};
 
-use crate::geometry::GBID;
+use crate::{geometry::GBID, object::{GameObject, ObjectID}};
 
-
-pub struct RenderObject;
-pub type RenderObjectID = Id<RenderObject>;
+#[derive(Debug)]
+pub struct RenderObjectID(pub ObjectID);
 
 #[derive(Default)]
 pub struct RenderObjectOpaqueList {

@@ -7,7 +7,7 @@ use render_geometry::geometry::VertexAttributeMeta;
 use render_material::material::{Material, UnifromData};
 use render_pipeline_key::{pipeline_key::{gen_pipeline_key, PipelineKeyCalcolator}, fragment_state::gen_fragment_state_key};
 
-use crate::{shaders::{BuildinShaderDefined, buildin_uniforms::{BuildinModelBind, bind_group_entry_buffer}, FragmentUniformBind, buildin_attributes::{BuildinAttributePosition, BuildinAttributeColor4} }, cameras::camera::CameraRenderData, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::SceneTime, materials::MBKK, bytes_write_to_memory, resources::SingleRenderObjectPipelinePool};
+use crate::{shaders::{BuildinShaderDefined, buildin_uniforms::{BuildinModelBind, bind_group_entry_buffer}, FragmentUniformBind, buildin_attributes::{BuildinAttributePosition, BuildinAttributeNormal} }, cameras::camera::CameraRenderData, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::SceneTime, materials::MBKK, bytes_write_to_memory, resources::SingleRenderObjectPipelinePool};
 
 use super::default::DefaultShader;
 
@@ -224,7 +224,7 @@ impl DefaultMaterialPipeline {
         
                 let vertex_layouts = vec![
                     BuildinAttributePosition::layout(&BuildinAttributePosition::ATTRIBUTES),
-                    BuildinAttributeColor4::layout(&BuildinAttributeColor4::ATTRIBUTES),
+                    BuildinAttributeNormal::layout(&BuildinAttributeNormal::ATTRIBUTES),
                 ];
                 
                 let vs_state = wgpu::VertexState {

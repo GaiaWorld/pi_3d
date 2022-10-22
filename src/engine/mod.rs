@@ -2,7 +2,7 @@ use std::{any::TypeId, mem::replace};
 
 use pi_ecs::{world::World, prelude::{ArchetypeId, StageBuilder}};
 
-use crate::{resources::{command::{UserCommands, TransformNodeTreeCommand, ObjectNewCommand}, SingleRenderBindGroupPool, SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, object::{GameObject, ObjectID}, systems::init_stage, default_render::default_material::DefaultMaterialPipeline, renderers::render_object::{RenderObject}};
+use crate::{resources::{command::{UserCommands, TransformNodeTreeCommand, ObjectCommand, MeshBuilderCommand, CameraCommand}, SingleRenderBindGroupPool, SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, object::{GameObject, ObjectID}, systems::init_stage, default_render::default_material::DefaultMaterialPipeline, renderers::render_object::{RenderObjectID}};
 
 pub struct Engine {
     world: World,
@@ -19,7 +19,6 @@ impl Engine {
     pub fn new(world: &mut World) -> Self {
         // 注册原型
         world.new_archetype::<GameObject>().create();
-        world.new_archetype::<RenderObject>().create();
 
         // 注册资源管理器
 
@@ -30,9 +29,7 @@ impl Engine {
 
         // 
         let node_archetype_id = world.archetypes().get_id_by_ident(TypeId::of::<GameObject>()).unwrap().clone();
-
         let archetype_id = world.archetypes_mut().get_or_create_archetype::<GameObject>();
-
 
         Self {
             world: world.clone(),
@@ -53,7 +50,7 @@ impl Engine {
         &mut self,
     ) -> ObjectID {
         let entity = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
-        self.commands.new_objects.push(ObjectNewCommand::NewScene(entity));
+        self.commands.objects.push(ObjectCommand::NewScene(entity));
 
         entity
     }
@@ -62,7 +59,7 @@ impl Engine {
         &mut self,
         scene: ObjectID,
     ) {
-        self.commands.tree.push(TransformNodeTreeCommand::Destroy(scene));
+        self.commands.objects.push(ObjectCommand::Destroy(scene));
     }
 
     pub fn new_transform_node(
@@ -70,7 +67,7 @@ impl Engine {
         scene: ObjectID,
     ) -> ObjectID {
         let entity = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
-        self.commands.new_objects.push(ObjectNewCommand::NewTransformNode(entity));
+        self.commands.objects.push(ObjectCommand::NewTransformNode(entity, scene));
         self.commands.tree.push(TransformNodeTreeCommand::Append(entity, scene));
 
         entity
@@ -90,11 +87,11 @@ impl Engine {
         self.commands.tree.push(TransformNodeTreeCommand::Append(node, parent));
     }
 
-    pub fn destroy_transform_node(
+    pub fn destroy(
         &mut self,
-        node: ObjectID,
+        obj: ObjectID,
     ) {
-        self.commands.tree.push(TransformNodeTreeCommand::Destroy(node));
+        self.commands.objects.push(ObjectCommand::Destroy(obj));
     }
 
     pub fn new_free_camera(
@@ -102,15 +99,43 @@ impl Engine {
         scene: ObjectID,
     ) -> ObjectID {
         let entity = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
-        self.commands.new_objects.push(ObjectNewCommand::NewTransformNode(entity));
-        self.commands.new_objects.push(ObjectNewCommand::NewFreeCamera(entity));
+        self.commands.objects.push(ObjectCommand::NewTransformNode(entity, scene));
+        self.commands.objects.push(ObjectCommand::NewFreeCamera(entity, scene));
         self.commands.tree.push(TransformNodeTreeCommand::Append(entity, scene));
+        entity
+    }
+
+    pub fn set_active_camera(
+        &mut self,
+        camera: ObjectID,
+        flag: bool,
+    ) {
+        match flag {
+            true => {
+                let render_id = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
+                self.commands.cameras.push(CameraCommand::ActiveRender(camera, render_id));
+            },
+            false => {
+                self.commands.cameras.push(CameraCommand::DisableRender(camera));
+            }
+        }
+    }
+
+    pub fn new_cube(
+        &mut self,
+        scene: ObjectID,
+    ) -> ObjectID {
+        let entity = unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) };
+        self.commands.objects.push(ObjectCommand::NewMesh(entity, scene));
+        self.commands.tree.push(TransformNodeTreeCommand::Append(entity, scene));
+        self.commands.mesh_builder.push(MeshBuilderCommand::Cube(entity));
         entity
     }
 
     pub fn tick_run(
         &mut self,
     ) {
+        println!("Engine Tick Run: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         let node_archetype_id = self.node_archetype_id;
         self.world.archetypes_mut()[node_archetype_id].flush();
         let commands = replace(&mut self.commands, UserCommands::default());

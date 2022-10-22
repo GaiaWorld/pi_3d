@@ -79,7 +79,7 @@ impl Node for RenderNode {
     type Output = RenderOutput;
 
     fn run<'a>(
-        &'a self,
+        &'a mut self,
         context: pi_render::graph::RenderContext,
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         input: &'a Self::Input,
@@ -154,10 +154,11 @@ impl Node for RenderNode {
                 None => {},
             }
         });
+        todo!()
     }
 
     fn build<'a>(
-        &'a self,
+        &'a mut self,
         _context: pi_render::graph::RenderContext,
         _usage: &'a pi_render::graph::node::ParamUsage,
     ) -> Option<BoxFuture<'a, Result<(), String>>> {

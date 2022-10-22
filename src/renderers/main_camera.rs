@@ -12,11 +12,10 @@ pub struct MainCameraBindGroup {
     pub set: u32,
 }
 impl MainCameraBindGroup {
-    pub fn init(
-        &mut self,
+    pub fn new(
         device: &RenderDevice,
         dynbuffer: &mut DynUniformBuffer,
-    ) {
+    ) -> Self {
         let camera_bind = dynbuffer.alloc_binding::<CameraRenderData>();
         let fog_bind = dynbuffer.alloc_binding::<SceneFog>();
         let time_bind = dynbuffer.alloc_binding::<SceneTime>();
@@ -51,7 +50,10 @@ impl MainCameraBindGroup {
             )
         );
 
-        self.bind_group = Some(bind_group_0);
+        Self {
+            bind_group: Some(bind_group_0),
+            set: 0,
+        }
     }
 }
 

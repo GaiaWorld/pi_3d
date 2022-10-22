@@ -4,7 +4,7 @@ use pi_render::{
         target_alloc::ShareTargetView,
     },
     init_render,
-    rhi::{options::RenderOptions, device::RenderDevice},
+    rhi::{options::RenderOptions, device::RenderDevice, dyn_uniform_buffer::{Uniform, Bind}, RenderQueue},
 };
 use std::{any::TypeId, sync::Arc, time::Instant};
 use wgpu::PresentMode;
@@ -19,7 +19,7 @@ use pi_3d::{
             TargetCameraViewMatrixCacl,
         },
         transform_node_sys::{LocalMatrixCacl, LocalRotationMatrixCacl, WorldMatrixCacl},
-    },
+    }, bytes_write_to_memory, shaders::FragmentUniformBind,
 };
 use pi_async::{
     prelude::{Mutex, WorkerRuntime},
@@ -29,7 +29,7 @@ use pi_ecs::{
     entity::Id,
     prelude::{
         ArchetypeId, IntoSystem, Query, Res, ResMut, Setup, SingleDispatcher, StageBuilder, System,
-        World,
+        World, Dispatcher,
     },
 };
 use pi_share::{Share, ShareMutex, ShareRwLock};
@@ -40,6 +40,12 @@ pub struct EnginShell {
     pub world: World,
     pub rt: WorkerRuntime,
     pub engine: Engine,
+}
+impl EnginShell {
+    pub async fn run(&mut self) {
+        self.engine.tick_run();
+        self.dispatcher.run().await;
+    }
 }
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
@@ -89,12 +95,18 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
 		//     > world.insert_resource(RenderGraph::new(w, device, queue)); // RenderGraph 在此处被创建
         let render_stages = init_render(world, options, win1.clone(), rt.clone()).await;
 
-        let limits = world.get_resource::<RenderDevice>().unwrap().limits();
+        let device = world.get_resource::<RenderDevice>().unwrap();
+        let queue = world.get_resource::<RenderQueue>().unwrap();
+        let limits = device.limits();
         let min_uniform_buffer_offset_alignment = limits.min_uniform_buffer_offset_alignment;
-        world.insert_resource(pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer::new(
+        let mut dynbuffer = pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer::new(
             Some("DynUniformBuffer".to_string()),
             min_uniform_buffer_offset_alignment.max(192),
-        ));
+        );
+        let bind = dynbuffer.alloc_binding::<InitBuffer>();
+        dynbuffer.set_uniform::<InitBuffer>(&bind, &InitBuffer {});
+        dynbuffer.write_buffer(device, queue);
+        world.insert_resource(dynbuffer);
 
         init_data(world, win1);
 
@@ -136,6 +148,8 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
         let node01 = engine.new_transform_node(scene01);
         let camera01 = engine.new_free_camera(scene01);
         engine.set_parent(camera01, scene01, Some(node01));
+        let cube = engine.new_cube(scene01);
+        engine.set_active_camera(camera01, true);
 
 
         *result1.write() = Some((engine, dispatcher));
@@ -161,11 +175,35 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
     }
 }
 
-pub fn run_engine(engine: &EnginShell) {}
+pub fn run_engine(engine: &EnginShell) {
+    
+}
 
 fn init_data(world: &mut World, win: Arc<winit::window::Window>) {
     // 创建 RenderWindow
     let render_window = RenderWindow::new(win, PresentMode::Mailbox);
     let render_windows = world.get_resource_mut::<RenderWindows>().unwrap();
     render_windows.insert(render_window);
+}
+
+
+pub struct InitBuffer {
+}
+impl Uniform for InitBuffer {
+    fn write_into(&self, index: u32, buffer: &mut [u8]) {
+        let mut time = vec![];
+        for _ in 0..4096*1024 {
+            time.push(0.);
+        }
+        bytes_write_to_memory(bytemuck::cast_slice(&time), 0, buffer);
+    }
+
+}
+impl Bind for InitBuffer {
+    fn index() -> pi_render::rhi::dyn_uniform_buffer::BindIndex {
+        pi_render::rhi::dyn_uniform_buffer::BindIndex::new(0)
+    }
+    fn min_size() -> usize {
+        4096*1024
+    }
 }

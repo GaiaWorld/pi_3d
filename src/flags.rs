@@ -1,3 +1,5 @@
+use crate::object::ObjectID;
+
 
 pub struct SceneID01;
 pub struct SceneID02;
@@ -13,7 +15,7 @@ pub struct SceneCameraID06;
 
 pub struct CullingFlag(pub bool);
 
-pub struct SceneID(pub usize);
+pub struct SceneID(pub ObjectID);
 pub struct CameraID(pub usize);
 
 pub struct RenderBlend {
@@ -154,6 +156,11 @@ pub struct RenderLayerMask(pub u32);
 impl Default for RenderLayerMask {
     fn default() -> Self {
         Self(0xFFFFFFFF)
+    }
+}
+impl RenderLayerMask {
+    pub fn include(&self, other: &Self) -> bool {
+        return self.0 & other.0 > 0;
     }
 }
 

@@ -2,24 +2,26 @@ use pi_scene_math::{Vector3, Number, Perspective3, Orthographic3, Matrix};
 
 use super::{camera::{Camera, CameraParam, CameraRenderData}, target_camera::TargetCameraParam};
 
+#[derive(Debug, Clone, Copy)]
 pub enum EFovMode {
     VerticalFixed,
     HorizontalFixed,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum EFreeCameraMode {
     Perspective,
     Orthograhic,
 }
 
 pub struct FreeCameraParam {
-    left: f32,
-    top: f32,
-    right: f32,
-    bottom: f32,
-    fov: f32,
-    fov_mode: EFovMode,
-    mode: EFreeCameraMode,
+    pub left: f32,
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+    pub fov: f32,
+    pub fov_mode: EFovMode,
+    pub mode: EFreeCameraMode,
 }
 
 impl Default for FreeCameraParam {
