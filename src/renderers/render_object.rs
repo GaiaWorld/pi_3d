@@ -22,6 +22,7 @@ pub struct RenderObjectTransparentList {
 /// * 在渲染图节点中使用
 /// * 记录顶点数据 ID
 /// * 记录 BindGroup ID
+#[derive(Debug)]
 pub struct RenderObjectMeta {
     pub bind_groups: Vec<RenderObjectBindGroup>,
     pub pipeline: RenderObjectPipeline,
@@ -42,6 +43,7 @@ pub struct RenderObjectPipeline {
     pub id: DefaultKey,
 }
 
+#[derive(Debug)]
 pub struct RenderObjectVertice {
     pub slot: u32,
     pub gbid: GBID,
@@ -49,6 +51,8 @@ pub struct RenderObjectVertice {
     pub end: usize,
     pub count: usize,
 }
+
+#[derive(Debug)]
 pub struct RenderObjectIndices {
     pub slot: u32,
     pub gbid: GBID,
@@ -57,6 +61,8 @@ pub struct RenderObjectIndices {
     pub count: usize,
     pub format: wgpu::IndexFormat,
 }
+
+#[derive(Debug)]
 pub struct RenderObjectInstance {
     pub slot: u32,
     pub gbid: GBID,

@@ -165,7 +165,9 @@ fn cmd_mesh_builder(
                         item.0.insert_no_notify(data.0);
                         item.1.insert_no_notify(data.1);
                         item.2.insert_no_notify(data.2);
-                        item.3.insert_no_notify(DefaultMaterialMeta::new(dynbuffer));
+                        let mut temp = DefaultMaterialMeta::new(dynbuffer);
+                        temp.init(device, dynbuffer);
+                        item.3.insert_no_notify(temp);
                     },
                     None => {
                         

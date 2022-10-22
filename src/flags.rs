@@ -152,6 +152,7 @@ impl RenderDepthAndStencil {
     }
 }
 
+#[derive(Debug)]
 pub struct RenderLayerMask(pub u32);
 impl Default for RenderLayerMask {
     fn default() -> Self {

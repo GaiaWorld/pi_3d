@@ -58,7 +58,7 @@ impl DefaultMaterialTickBeforeRender {
                             let mut opaque_list = vec![];
         
                             query_drawobj.iter().for_each(|item| {
-                                println!("opaque draw obj >>>>>>>>>>>>>>>");
+                                println!("opaque draw obj >>>>>>>>>>>>>>> {:?}, {:?}, {:?}, {:?}", sceneid.0, item.1.0, layermask, item.5);
                                 if sceneid.0 == item.1.0 && layermask.include(&item.5) {
                                     collect_opaque_normal_depth(item, &mut pipelines, &device, &queue, &shader, &gbp, &mut dynbuffer, &mut pipeline_pool, &mut opaque_list);
                                 }
@@ -90,6 +90,7 @@ fn collect_opaque_normal_depth(
     pipeline_pool: &mut SingleRenderObjectPipelinePool,
     list: &mut Vec<RenderObjectMeta>,
 ) {
+    println!("collect_opaque_normal_depth ");
     let (mat, sceneid, position, normal, indices, layermask, rendersort, blend, primit, depth_stencil) = query;
     if depth_stencil.depth {
         match &mat.bind_group {
@@ -141,9 +142,12 @@ fn collect_opaque_normal_depth(
                     vertices,
                     instances,
                 };
+                println!("{:?}", meta);
                 list.push(meta);
             },
-            None => {}
+            None => {
+                println!("DefaultMaterialMeta Not Get Bindgroup!");
+            }
         }
     }
 }
