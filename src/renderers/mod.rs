@@ -11,8 +11,8 @@ use render_material::error::EMaterialError;
 use crate::{meshes::Mesh, geometry::{VDK, GBID}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, object::{ObjectID, GameObject}};
 
 pub mod pipeline;
-pub mod render_default;
 pub mod render_object;
+
 
 pub struct SingleScreenClearGraphicNodeKey(pub String);
 

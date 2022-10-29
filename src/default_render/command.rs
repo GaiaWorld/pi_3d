@@ -1,10 +1,9 @@
 
-use pi_ecs::{prelude::{ResMut, Query, Modify, EntityDelete}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
 use pi_ecs_macros::setup;
-use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
 use pi_scene_math::Number;
 
-use crate::{object::{ObjectID, GameObject}, materials::material::MaterialID};
+use crate::{object::{ObjectID, GameObject}, materials::material::MaterialID, resources::RenderDynUniformBuffer};
 
 use super::default_material::{DefaultMaterialPropertype, SingleDefaultMaterialBindDynInfoSet};
 
@@ -27,7 +26,7 @@ impl SysDefaultMaterialCommand {
     pub fn cmd(
         mut cmds: ResMut<SingeDefaultMaterialCommandList>,
         mut materials: Query<GameObject, Write<DefaultMaterialPropertype>>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
         mut matrecord: ResMut<SingleDefaultMaterialBindDynInfoSet>,
         mut entity_delete: EntityDelete<GameObject>,
     ) {

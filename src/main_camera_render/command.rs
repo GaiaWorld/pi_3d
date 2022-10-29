@@ -1,8 +1,8 @@
 use pi_ecs::prelude::*;
 use pi_ecs_macros::setup;
-use pi_render::{graph::graph::RenderGraph, rhi::dyn_uniform_buffer::DynUniformBuffer};
+use pi_render::{graph::graph::RenderGraph};
 
-use crate::{renderers::render_object::RenderObjectID, object::{ObjectID, GameObject}, cameras::camera::CameraRenderData, postprocess::Postprocess};
+use crate::{renderers::render_object::RenderObjectID, object::{ObjectID, GameObject}, cameras::camera::CameraRenderData, postprocess::Postprocess, resources::RenderDynUniformBuffer};
 
 use super::MainCameraRenderer;
 
@@ -25,7 +25,7 @@ impl SysMainCameraRenderCommand {
         mut cmds: ResMut<SingleMainCameraRenderCommandList>,
         mut cameras: Query<GameObject, (Write<CameraRenderData>, Write<RenderObjectID>)>,
         mut renderers: Query<GameObject, (Write<MainCameraRenderer>, Write<Postprocess>)>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
         mut render_graphic: ResMut<RenderGraph>,
     ) {
         let render_graphic = &mut render_graphic;

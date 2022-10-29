@@ -1,3 +1,4 @@
+use pi_share::Share;
 ///
 /// 网格信息单独与 GameObject 绑定
 
@@ -11,12 +12,15 @@ pub type VDK = usize;
 pub type GBID = DefaultKey;
 
 pub struct GeometryID(pub ObjectID);
+
 pub struct PluginBuildinGeometry;
 impl Plugin for PluginBuildinGeometry {
     fn init(
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        todo!()
+        let world = engine.world_mut();
+
+        Ok(())
     }
 }

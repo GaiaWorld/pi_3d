@@ -1,8 +1,8 @@
-use pi_ecs::{prelude::{ResMut, Query, Setup, EntityDelete}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
 use pi_ecs_macros::setup;
 use pi_scene_math::{Vector3, Quaternion};
 
-use crate::{object::{ObjectID, GameObject}, engine::Engine};
+use crate::{object::{ObjectID, GameObject}};
 
 use super::transform_node::{LocalTransform, TransformDirty, GlobalTransform};
 

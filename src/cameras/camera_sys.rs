@@ -1,12 +1,10 @@
-use pi_ecs::{prelude::{Query, Id, ResMut}, query::With};
+use pi_ecs::{prelude::{Query}};
 use pi_ecs_macros::setup;
 use pi_ecs_utils::prelude::EntityTree;
-use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, Number};
+use pi_scene_math::{coordiante_system::CoordinateSytem3};
 use pi_slotmap_tree::Storage;
-use log::trace;
 
-use crate::{transforms::transform_node::{LocalTransform, GlobalTransform}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam, camera::{CameraParam, CameraRenderData}, free_camera::FreeCameraParam}, shaders::*};
+use crate::{transforms::transform_node::{LocalTransform, GlobalTransform}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam, camera::{CameraRenderData}}};
 
 pub struct TargetCameraEffectLocalRotation;
 #[setup]

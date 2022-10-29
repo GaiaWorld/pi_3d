@@ -22,13 +22,6 @@ impl Engine {
         // 注册原型
         world.new_archetype::<GameObject>().create();
 
-        // 注册资源管理器
-
-        // 注册单例资源
-        world.insert_resource(SingleRenderBindGroupPool::default());
-        world.insert_resource(SingleRenderObjectPipelinePool::default());
-        world.insert_resource(SingleGeometryBufferPool::default());
-
         // 
         let node_archetype_id = world.archetypes().get_id_by_ident(TypeId::of::<GameObject>()).unwrap().clone();
         let archetype_id = world.archetypes_mut().get_or_create_archetype::<GameObject>();

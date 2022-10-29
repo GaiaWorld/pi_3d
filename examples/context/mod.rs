@@ -101,14 +101,6 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
         let render_graphic = world.get_resource_mut::<RenderGraph>().unwrap();
         let clear_id =  render_graphic.add_node("Clear", ScreenClearNode { color: (1., 0., 0., 1.), depth: 1.  }).unwrap();
         let device = world.get_resource::<RenderDevice>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-        let limits = device.limits();
-        let min_uniform_buffer_offset_alignment = limits.min_uniform_buffer_offset_alignment;
-        let mut dynbuffer = pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer::new(
-            Some("DynUniformBuffer".to_string()),
-            min_uniform_buffer_offset_alignment.max(192),
-        );
-        world.insert_resource(dynbuffer);
 
         init_data(world, win1);
 

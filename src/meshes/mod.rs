@@ -1,8 +1,7 @@
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
-use pi_render::rhi::dyn_uniform_buffer::{BindOffset, DynUniformBuffer};
 
-use crate::{object::{ObjectID, GameObject}, flags::{RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, SceneID}, transforms::{InterfaceTransformNode, transform_node_command::{TransformNodeCommand, SingleTransformNodeCommandList}, transform_node::GlobalTransform}, scene::{SingleSceneCommandList, SceneCommand, InterfaceScene}, plugin::Plugin, layer_mask::LayerMask};
+use crate::{object::{ObjectID, GameObject}, flags::{RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil}, transforms::{InterfaceTransformNode}, scene::{InterfaceScene}, plugin::Plugin, layer_mask::LayerMask, resources::RenderDynUniformBuffer};
 
 use self::model::BuildinModelBind;
 
@@ -40,7 +39,7 @@ impl SysMeshCommand {
     pub fn cmd(
         mut cmds: ResMut<SingleMeshCommandList>,
         mut meshes: Query<GameObject, (Write<LayerMask>, Write<RenderSortParam>, Write<RenderBlend>, Write<PrimitiveState>, Write<RenderDepthAndStencil>, Write<BuildinModelBind>)>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {

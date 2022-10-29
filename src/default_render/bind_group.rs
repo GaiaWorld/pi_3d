@@ -1,8 +1,8 @@
 use pi_ecs::prelude::{Res, Query, ResMut};
 use pi_ecs_macros::setup;
-use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, dyn_uniform_buffer::DynUniformBuffer, device::RenderDevice};
+use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, device::RenderDevice};
 
-use crate::{materials::{SingleDynUnifromBufferReBindFlag, bind_group::RenderBindGroup}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::FragmentUniformBind};
+use crate::{materials::{SingleDynUnifromBufferReBindFlag, bind_group::RenderBindGroup}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::FragmentUniformBind, resources::RenderDynUniformBuffer};
 
 use super::default_material::DefaultMaterialPropertype;
 
@@ -28,7 +28,7 @@ impl IDDefaultMaterialBindGroup {
     pub fn bind_group(
         device: &RenderDevice,
         group: &mut RenderBindGroup,
-        dynbuffer: &DynUniformBuffer,
+        dynbuffer: &RenderDynUniformBuffer,
     ) {
         group.bind_group = Some(
             BindGroup::from(
@@ -53,7 +53,7 @@ impl SysDefaultMaterialBindGroupUpdate {
     #[system]
     pub fn tick(
         device: Res<RenderDevice>,
-        dynbuffer: Res<DynUniformBuffer>,
+        dynbuffer: Res<RenderDynUniformBuffer>,
         dynbuffer_flag: Res<SingleDynUnifromBufferReBindFlag>,
         mut bindgroups: Query<GameObject, &mut RenderBindGroup>,
         id: ResMut<IDDefaultMaterialBindGroup>,

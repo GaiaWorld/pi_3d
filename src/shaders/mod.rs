@@ -1,7 +1,7 @@
-use pi_render::rhi::{bind_group_layout::BindGroupLayout, dyn_uniform_buffer::{BindOffset, Bind, Uniform, DynUniformBuffer}, device::RenderDevice};
+use pi_render::rhi::{bind_group_layout::BindGroupLayout, dyn_uniform_buffer::{BindOffset}};
 use render_geometry::vertex_data::VertexAttributeDesc;
 
-use crate::{geometry::VDK, materials::MBKK};
+use crate::{geometry::VDK, materials::MBKK, resources::RenderDynUniformBuffer};
 
 pub struct BindInfo {
     pub set: u32,
@@ -67,13 +67,13 @@ pub trait FragmentUniformBind {
 
     fn entry<'a>(
         bind_offset: &BindOffset,
-        buff: &'a DynUniformBuffer,
+        buff: &'a RenderDynUniformBuffer,
     ) -> wgpu::BindGroupEntry<'a> {
         bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), **bind_offset, Self::SIZE as u32)
     }
 
     fn dyn_entry<'a>(
-        buff: &'a DynUniformBuffer,
+        buff: &'a RenderDynUniformBuffer,
     ) -> wgpu::BindGroupEntry<'a> {
         bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), 0, Self::SIZE as u32)
     }

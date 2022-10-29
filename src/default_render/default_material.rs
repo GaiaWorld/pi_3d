@@ -1,16 +1,9 @@
-use pi_ecs::world::World;
-use pi_hash::XHashMap;
-use pi_render::rhi::{dyn_uniform_buffer::{Bind, BindOffset, DynUniformBuffer, Uniform}, device::RenderDevice, bind_group::BindGroup, pipeline::RenderPipeline, bind_group_layout::BindGroupLayout};
-use pi_scene_math::{Color4, Matrix};
-use pi_slotmap::DefaultKey;
-use render_geometry::geometry::VertexAttributeMeta;
-use render_material::material::{Material, UnifromData};
-use render_pipeline_key::{pipeline_key::{gen_pipeline_key, PipelineKeyCalcolator}, fragment_state::gen_fragment_state_key};
-use render_resource::{bind_group::AsMaterialBindGroup, bind_group_layout::AsUniformBindingBufferDynamic};
+use pi_render::rhi::{dyn_uniform_buffer::{Bind, BindOffset, Uniform}};
 
-use crate::{shaders::{BuildinShaderDefined, FragmentUniformBind, }, materials::{MBKK, material::MaterialID}, bytes_write_to_memory, };
+use render_resource::{bind_group_layout::AsUniformBindingBufferDynamic};
 
-use super::shader::DefaultShader;
+use crate::{shaders::{FragmentUniformBind, }, materials::{material::MaterialID}, bytes_write_to_memory, resources::RenderDynUniformBuffer, };
+
 
 
 pub struct DefaultMaterialPropertype {
@@ -22,7 +15,7 @@ impl DefaultMaterialPropertype {
     pub const EMISSIVE: usize = 4;
     pub const EMISSIVE_OFFSET: usize = 0 * 4;
 
-    pub fn new(dynbuffer: &mut DynUniformBuffer) -> Self {
+    pub fn new(dynbuffer: &mut RenderDynUniformBuffer) -> Self {
         Self {
             bind_offset: dynbuffer.alloc_binding::<Self>(),
             emissive_color: (1., 1., 1.),

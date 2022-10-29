@@ -1,9 +1,9 @@
-use pi_ecs::{prelude::{Setup, ResMut, Query, EntityDelete}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
 use pi_ecs_macros::setup;
-use pi_render::rhi::{dyn_uniform_buffer::{Uniform, DynUniformBuffer, BindOffset, Bind}, bind_group::BindGroup, device::RenderDevice, bind_group_layout::BindGroupLayout};
-use pi_scene_math::{Vector3, Vector4, Matrix, frustum::FrustumPlanes, plane::Plane, Point3, Isometry3, Translation3, Orthographic3};
+use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
+use pi_scene_math::{Vector3, Matrix};
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, environment::{fog::SceneFog, ambient_light::AmbientLight}, plugin::Plugin, object::{ObjectID, GameObject}};
+use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, object::{ObjectID, GameObject}, resources::RenderDynUniformBuffer};
 
 // #[derive(Debug, Clone)]
 // pub struct ViewMatrix(pub Matrix);
@@ -69,7 +69,7 @@ impl CameraRenderData {
     pub const PI_ORTHCAMERA_DIRECT_OFFSIZE: usize = Self::PI_CAMERA_POSITION_OFFSIZE + Self::PI_CAMERA_POSITION * 4;
 
     pub fn new(
-        dynbuffer: &mut DynUniformBuffer,
+        dynbuffer: &mut RenderDynUniformBuffer,
     ) -> Self {
         Self {
             view_matrix: Matrix::identity(),

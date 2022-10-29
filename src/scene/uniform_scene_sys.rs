@@ -1,6 +1,5 @@
 use pi_ecs::prelude::{Query, ResMut};
 use pi_ecs_macros::setup;
-use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
 
 use crate::{object::GameObject, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::scene_time::SceneTime};
 
@@ -10,7 +9,7 @@ impl SceneUniformTickUpdate {
     #[system]
     pub fn tick(
         query_scenes: Query<GameObject, (&SceneTime, &SceneFog, &AmbientLight)>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         println!("Scene Uniform Tick Update");
         query_scenes.iter().for_each(|(time, fog, ambl)| {

@@ -1,6 +1,6 @@
-use pi_render::rhi::dyn_uniform_buffer::{BindOffset, DynUniformBuffer, Bind};
+use pi_render::rhi::dyn_uniform_buffer::{BindOffset, Bind};
 
-use crate::shaders::FragmentUniformBind;
+use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer};
 
 // pub struct BuildinTimeBind {
 //     pub bind_offset: BindOffset,
@@ -81,7 +81,7 @@ impl BuildinModelBind {
     pub const WORLD_TO_OBJECT_OFFSIZE: usize = Self::OBJECT_TO_WORLD_OFFSIZE + Self::WORLD_TO_OBJECT * 4;
 
     pub fn new(
-        dynbuffer: &mut DynUniformBuffer,
+        dynbuffer: &mut RenderDynUniformBuffer,
     ) -> Self {
         Self {
             bind_offset: dynbuffer.alloc_binding::<Self>(),

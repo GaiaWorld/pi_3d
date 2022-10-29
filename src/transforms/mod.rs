@@ -3,7 +3,7 @@ use pi_ecs_macros::setup;
 use pi_ecs_utils::prelude::EntityTreeMut;
 use pi_scene_math::Vector3;
 
-use crate::{object::{ObjectID, GameObject}, plugin::Plugin, scene::{SingleSceneCommandList, SceneCommand, InterfaceScene}, flags::SceneID};
+use crate::{object::{ObjectID, GameObject}, plugin::Plugin, scene::{InterfaceScene}};
 
 use self::{transform_node_command::{SysTransformNodeCommand, SingleTransformNodeCommandList, TransformNodeCommand}, transform_node_sys::{LocalRotationMatrixCalc, LocalMatrixCalc, WorldMatrixCalc}};
 
@@ -25,7 +25,7 @@ impl SysTreeCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleTreeCommandList>,
-        mut entitys: Query<GameObject, ObjectID>,
+        entitys: Query<GameObject, ObjectID>,
         mut tree: EntityTreeMut<GameObject>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
@@ -73,7 +73,7 @@ impl InterfaceTransformNode for crate::engine::Engine {
     ) -> ObjectID {
 
         let entity = self.new_object();
-        let world = self.world_mut();
+        // let world = self.world_mut();
 
         self.add_to_scene(entity, scene);
 

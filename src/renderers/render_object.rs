@@ -1,9 +1,6 @@
-use pi_ecs::prelude::Id;
-use pi_render::rhi::{bind_group::BindGroup, pipeline::RenderPipeline};
-use pi_share::Share;
-use pi_slotmap::{SlotMap, DefaultKey};
+use pi_slotmap::{DefaultKey};
 
-use crate::{geometry::GBID, object::{GameObject, ObjectID}, flags::{ERenderMode, RenderSortParam}};
+use crate::{geometry::GBID, object::{ObjectID}, flags::{RenderSortParam}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct RenderObjectID(pub ObjectID);

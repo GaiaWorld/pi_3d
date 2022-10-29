@@ -1,9 +1,7 @@
-use pi_ecs_utils::system_param::tree::EntityTree;
-use pi_idtree::IdTree;
-use pi_render::rhi::dyn_uniform_buffer::{Uniform, DynUniformBuffer, Bind, BindOffset};
-use pi_scene_math::coordiante_system;
 
-use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory};
+use pi_render::rhi::dyn_uniform_buffer::{Uniform, Bind, BindOffset};
+
+use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory, resources::RenderDynUniformBuffer};
 
 
 
@@ -20,7 +18,7 @@ impl SceneTime {
     pub const DELTA_TIME_OFFSIZE: usize = Self::TIME_OFFSIZE + Self::TIME * 4;
 
     pub fn new(
-        dynbuffer: &mut DynUniformBuffer,
+        dynbuffer: &mut RenderDynUniformBuffer,
     ) -> Self {
         Self {
             time: 0.,

@@ -6,6 +6,7 @@ use materials::PluginMaterialID;
 use meshes::{cube::PluginCubeBuilder, PluginMesh};
 use plugin::Plugin;
 use main_camera_render::PluginMainCameraRender;
+use resources::PluginResource;
 use scene::PluginScene;
 use transforms::PluginTransformNode;
 use vertex_data::{color4::PluginAttributeColor4, normal::PluginAttributeNormal, position::PluginAttributePosition, indices::PluginAttributeIndices, uv::PluginAttributeUV};
@@ -52,6 +53,7 @@ impl Plugin for PluginBundleDefault {
         engine: &mut engine::Engine,
         stages: &mut run_stage::RunStage,
     ) -> Result<(), plugin::ErrorPlugin> {
+        PluginResource::init(engine, stages);
         PluginScene::init(engine, stages);
         PluginTransformNode::init(engine, stages);
         PluginCamera::init(engine, stages);

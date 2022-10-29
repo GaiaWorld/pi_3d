@@ -1,6 +1,7 @@
-use pi_render::rhi::bind_group::BindGroup;
+use pi_render::rhi::{pipeline::RenderPipeline};
+use pi_slotmap::{SlotMap, DefaultKey};
 
-
-pub struct PipelineMeta {
-    pub bind_group: Vec<BindGroup>,
+#[derive(Debug, Default)]
+pub struct SingleRenderObjectPipelinePool {
+    pub map: SlotMap<DefaultKey, RenderPipeline>,
 }

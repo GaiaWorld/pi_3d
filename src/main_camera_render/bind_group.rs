@@ -1,9 +1,9 @@
-use pi_ecs::{prelude::{ResMut, Query, Setup, Res}, world::World, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Res}};
 use pi_ecs_macros::setup;
-use pi_render::{rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice, bind_group::BindGroup, dyn_uniform_buffer::DynUniformBuffer}, graph::{NodeId, graph::RenderGraph}, components::view::target_alloc::ShareTargetView};
-use wgpu::RenderPass;
+use pi_render::{rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice, bind_group::BindGroup}};
 
-use crate::{object::{ObjectID, GameObject}, cameras::camera::CameraRenderData, scene::scene_time::SceneTime, environment::{fog::SceneFog, ambient_light::AmbientLight}, materials::{bind_group::RenderBindGroup, SingleDynUnifromBufferReBindFlag}, shaders::FragmentUniformBind, flags::SceneID};
+
+use crate::{object::{ObjectID, GameObject}, cameras::camera::CameraRenderData, scene::scene_time::SceneTime, environment::{fog::SceneFog, ambient_light::AmbientLight}, materials::{bind_group::RenderBindGroup, SingleDynUnifromBufferReBindFlag}, shaders::FragmentUniformBind, flags::SceneID, resources::RenderDynUniformBuffer};
 
 
 pub struct IDMainCameraRenderBindGroup(pub ObjectID);
@@ -30,7 +30,7 @@ impl IDMainCameraRenderBindGroup {
     pub fn bind_group(
         device: &RenderDevice,
         group: &mut RenderBindGroup,
-        dynbuffer: &DynUniformBuffer,
+        dynbuffer: &RenderDynUniformBuffer,
     ) {
         group.bind_group = Some(
             BindGroup::from(
@@ -57,7 +57,7 @@ impl SysMainCameraRenderBindGroupUpdate {
     #[system]
     pub fn tick(
         device: Res<RenderDevice>,
-        dynbuffer: Res<DynUniformBuffer>,
+        dynbuffer: Res<RenderDynUniformBuffer>,
         dynbuffer_flag: Res<SingleDynUnifromBufferReBindFlag>,
         mut bindgroups: Query<GameObject, &mut RenderBindGroup>,
         id: ResMut<IDMainCameraRenderBindGroup>,
@@ -83,17 +83,17 @@ impl SysMainCameraRenderUniformUpdate {
         // query_scenes: Query<GameObject, (ObjectID, &SceneTime, &SceneFog, &AmbientLight)>,
         query_scenes: Query<GameObject, (ObjectID, &SceneTime, ObjectID)>,
         query_cameras: Query<GameObject, (&SceneID, &CameraRenderData)>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         println!("Sys MainCameraRender Uniform Update");
         query_scenes.iter().for_each(|scene| {
             query_cameras.iter().for_each(|camera| {
                 if scene.0 == camera.0.0 {
                     println!("MainCameraRender Uniform Update set_uniform");
-                    dynbuffer.set_uniform(&scene.1.bind_offset, scene.1);
+                    dynbuffer.as_mut().set_uniform(&scene.1.bind_offset, scene.1);
                     // dynbuffer.set_uniform(&scene.2.bind_offset, scene.2);
                     // dynbuffer.set_uniform(&scene.3.bind_offset, scene.3);
-                    dynbuffer.set_uniform(&camera.1.bind_offset, camera.1);
+                    dynbuffer.as_mut().set_uniform(&camera.1.bind_offset, camera.1);
                 }
             });
         });

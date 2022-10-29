@@ -1,8 +1,8 @@
 use pi_ecs::prelude::{Setup, ResMut, Res};
 use pi_ecs_macros::setup;
-use pi_render::rhi::{dyn_uniform_buffer::DynUniformBuffer, device::RenderDevice, RenderQueue};
+use pi_render::rhi::{device::RenderDevice, RenderQueue};
 
-use crate::plugin::Plugin;
+use crate::{plugin::Plugin, resources::RenderDynUniformBuffer};
 
 use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand}, bind_group::{SysRenderBindGroupCommand, SingleRenderBindGroupCommandList}};
 
@@ -21,7 +21,7 @@ impl SysDynUnifromBufferUpdate {
     pub fn tick(
         device: Res<RenderDevice>,
         queue: Res<RenderQueue>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
         mut flag: ResMut<SingleDynUnifromBufferReBindFlag>,
     ) {
         println!("SysDynUnifromBuffer Update");
@@ -33,7 +33,7 @@ impl SysDynUnifromBufferUpdate {
 // impl SysDynUnifromBufferReBindFlag {
 //     #[system]
 //     pub fn tick(
-//         dynbuffer: Res<DynUniformBuffer>,
+//         dynbuffer: Res<RenderDynUniformBuffer>,
 //         mut flag: ResMut<SingleDynUnifromBufferReBindFlag>,
 //     ) {
 //         flag.0 = false;

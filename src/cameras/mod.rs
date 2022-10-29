@@ -1,10 +1,8 @@
-use pi_ecs::{prelude::{Setup, ResMut, Query}, query::Write};
-use pi_ecs_macros::setup;
-use pi_render::{rhi::dyn_uniform_buffer::DynUniformBuffer, graph::graph::RenderGraph};
+use pi_ecs::{prelude::{Setup, }};
 
-use crate::{plugin::Plugin, object::{GameObject, ObjectID}, renderers::{render_object::RenderObjectID}, postprocess::Postprocess, transforms::InterfaceTransformNode, scene::InterfaceScene};
+use crate::{plugin::Plugin, object::{ObjectID}, transforms::InterfaceTransformNode, scene::InterfaceScene};
 
-use self::{camera::{CameraRenderData, SysCameraCommand, SingleCameraCommandList, CameraCommand}, camera_sys::{CameraTransformMatricCalc, TargetCameraViewMatrixCalc}, free_camera::{SysFreeCameraCommand, FreeCameraProjectionCalc, SingleFreeCameraCommandList, FreeCameraCommand}, target_camera::{SysTargetCameraCommand, SingleTargetCameraCommandList, TargetCameraCommand}};
+use self::{camera::{SysCameraCommand, SingleCameraCommandList, CameraCommand}, camera_sys::{CameraTransformMatricCalc, TargetCameraViewMatrixCalc}, free_camera::{SysFreeCameraCommand, FreeCameraProjectionCalc, SingleFreeCameraCommandList, FreeCameraCommand}, target_camera::{SysTargetCameraCommand, SingleTargetCameraCommandList, TargetCameraCommand}};
 
 pub mod camera;
 pub mod free_camera;

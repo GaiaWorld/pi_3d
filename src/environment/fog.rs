@@ -1,6 +1,6 @@
-use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind, DynUniformBuffer}, device::RenderDevice};
+use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
 
-use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory};
+use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory, resources::RenderDynUniformBuffer};
 
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -28,7 +28,7 @@ impl SceneFog {
     pub const FOG_COLOR_OFFSIZE: usize = Self::FOG_PARAM_OFFSIZE + Self::FOG_PARAM_OFFSIZE * 4;
 
     pub fn new(
-        dynbuffer: &mut DynUniformBuffer,
+        dynbuffer: &mut RenderDynUniformBuffer,
     ) -> Self {
         Self {
             mode: EFogMode::None,

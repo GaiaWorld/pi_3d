@@ -1,10 +1,10 @@
-use pi_ecs::{prelude::{Query, ResMut, Res}, query::With};
+use pi_ecs::{prelude::{Query, ResMut, Res}};
 use pi_ecs_macros::setup;
-use pi_render::{rhi::{bind_group::BindGroup, dyn_uniform_buffer::DynUniformBuffer, device::RenderDevice, RenderQueue}};
+use pi_render::{rhi::{device::RenderDevice, RenderQueue}};
 use pi_scene_math::{Vector3};
 use render_geometry::geometry::VertexAttributeMeta;
 
-use crate::{object::{GameObject, ObjectID}, transforms::transform_node::GlobalTransform, renderers::{render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, cameras::camera::CameraRenderData, materials::{material::MaterialID, bind_group::RenderBindGroup}, geometry::GeometryID, meshes::model::BuildinModelBind, vertex_data::{indices::{self, IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}}, main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup}, layer_mask::LayerMask};
+use crate::{object::{GameObject, ObjectID}, transforms::transform_node::GlobalTransform, renderers::{render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype}, resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer}, cameras::camera::CameraRenderData, materials::{material::MaterialID, bind_group::RenderBindGroup}, meshes::model::BuildinModelBind, vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}}, main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup}, layer_mask::LayerMask};
 
 use super::{shader::DefaultShader, bind_group::{IDDefaultMaterialBindGroup}, pipeline::DefaultMaterialPipeline};
 
@@ -15,15 +15,15 @@ impl DefaultMaterialUniformUpdate {
     pub fn tick(
         neshes: Query<GameObject, (&GlobalTransform, &MaterialID, &BuildinModelBind)>,
         materials: Query<GameObject, &DefaultMaterialPropertype>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         println!("DefaultMaterial Uniform TickUpdate");
         neshes.iter().for_each(|(transform, mat_id, model)| {
             match materials.get(mat_id.0) {
                 Some(material) => {
                     println!("DefaultMaterial >>>>>>>>>>>> ");
-                    dynbuffer.set_uniform::<GlobalTransform>(&model.bind_offset, transform);
-                    dynbuffer.set_uniform::<DefaultMaterialPropertype>(&material.bind_offset, &material);
+                    dynbuffer.as_mut().set_uniform::<GlobalTransform>(&model.bind_offset, transform);
+                    dynbuffer.as_mut().set_uniform::<DefaultMaterialPropertype>(&material.bind_offset, &material);
                 },
                 None => todo!(),
             }

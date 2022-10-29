@@ -1,54 +1,33 @@
-use pi_render::rhi::{bind_group::BindGroup, pipeline::RenderPipeline};
-use pi_share::Share;
-use pi_slotmap::{SlotMap, DefaultKey};
-use render_data_container::GeometryBufferPool;
+use pi_render::rhi::{device::RenderDevice};
 
-use crate::geometry::GBID;
+use crate::{plugin::Plugin};
 
-pub mod pipeline;
+mod bind_group_pool;
+mod dyn_uniform_buffer;
+mod vertex_buffer_pool;
+mod pipeline;
 
-#[derive(Debug, Default)]
-pub struct SingleRenderBindGroupPool {
-    pub map: SlotMap<DefaultKey, BindGroup>,
-}
+pub use bind_group_pool::*;
+pub use dyn_uniform_buffer::*;
+pub use vertex_buffer_pool::*;
+pub use pipeline::*;
 
-#[derive(Debug, Default)]
-pub struct SingleRenderObjectPipelinePool {
-    pub map: SlotMap<DefaultKey, RenderPipeline>,
-}
+pub struct PluginResource;
+impl Plugin for PluginResource {
+    fn init(
+        engine: &mut crate::engine::Engine,
+        stages: &mut crate::run_stage::RunStage,
+    ) -> Result<(), crate::plugin::ErrorPlugin> {
+        let world = engine.world_mut();
 
-#[derive(Debug, Default)]
-pub struct SingleGeometryBufferPool {
-    list: SlotMap<GBID, render_data_container::GeometryBuffer>,
-}
-impl GeometryBufferPool<GBID> for SingleGeometryBufferPool {
-    fn insert(&mut self, data: render_data_container::GeometryBuffer) -> GBID {
-        self.list.insert(data)
-    }
+        world.insert_resource(SingleRenderBindGroupPool::default());
+        world.insert_resource(SingleRenderObjectPipelinePool::default());
+        world.insert_resource(SingleGeometryBufferPool::default());
 
-    fn remove(&mut self, key: &GBID) -> Option<render_data_container::GeometryBuffer> {
-        self.list.remove(*key)
-    }
+        let device = world.get_resource::<RenderDevice>().unwrap().clone();
+        world.insert_resource(RenderDynUniformBuffer::new(&device));
 
-    fn get(&self, key: &GBID) -> Option<&render_data_container::GeometryBuffer> {
-        self.list.get(*key)
-    }
-
-    fn get_size(&self, key: &GBID) -> usize {
-        match self.list.get(*key) {
-            Some(geo) => geo.size(),
-            None => 0,
-        }
-    }
-
-    fn get_mut(&mut self, key: &GBID) -> Option<&mut render_data_container::GeometryBuffer> {
-        self.list.get_mut(*key)
-    }
-
-    fn get_buffer(&self, key: &GBID) -> Option<Share<&wgpu::Buffer>> {
-        match self.list.get(*key) {
-            Some(geo) => geo.get_buffer(),
-            None => None,
-        }
+        Ok(())
     }
 }
+

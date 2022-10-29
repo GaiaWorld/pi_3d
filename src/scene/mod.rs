@@ -1,8 +1,7 @@
 use pi_ecs::{sys::system, prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
-use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
 
-use crate::{object::{ObjectID, GameObject}, flags::SceneID, plugin::Plugin};
+use crate::{object::{ObjectID, GameObject}, flags::SceneID, plugin::Plugin, resources::RenderDynUniformBuffer};
 
 use self::{coordinate_system::SceneCoordinateSytem, scene_time::SceneTime};
 
@@ -27,7 +26,7 @@ impl SysSceneCommand {
         mut cmds: ResMut<SingleSceneCommandList>,
         mut scenes: Query<GameObject, (Write<SceneCoordinateSytem>, Write<SceneTime>)>,
         mut objects: Query<GameObject, Write<SceneID>>,
-        mut dynbuffer: ResMut<DynUniformBuffer>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {

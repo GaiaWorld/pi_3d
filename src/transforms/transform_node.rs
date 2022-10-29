@@ -1,10 +1,9 @@
-use pi_ecs::prelude::Setup;
+
 use pi_render::rhi::dyn_uniform_buffer::Uniform;
-use pi_scene_math::{transform::{Transform3}, Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, Number, vector::TToolMatrix, Translation3, Isometry3};
+use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3};
 
-use crate::{bytes_write_to_memory, object::ObjectID, plugin::Plugin, meshes::model::BuildinModelBind};
+use crate::{bytes_write_to_memory, meshes::model::BuildinModelBind};
 
-use super::{transform_node_sys::{LocalMatrixCalc, LocalRotationMatrixCalc, WorldMatrixCalc}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct TransformNode;

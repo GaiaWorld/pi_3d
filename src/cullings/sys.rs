@@ -1,10 +1,8 @@
-use pi_ecs::prelude::{Query, ResMut};
+use pi_ecs::prelude::{Query};
 use pi_ecs_macros::setup;
-use pi_render::rhi::{device::RenderDevice, dyn_uniform_buffer::DynUniformBuffer};
 use pi_scene_math::{frustum::FrustumPlanes};
-use render_data_container::GeometryBufferPool;
 
-use crate::{meshes::Mesh, cullings::{BoundingInfo, bounding::check_boundings}, object::GameObject, shaders::*, environment::{fog::SceneFog, ambient_light::AmbientLight}, cameras::camera::CameraRenderData, flags::SceneID};
+use crate::{cullings::{BoundingInfo}, object::GameObject, cameras::camera::CameraRenderData, flags::SceneID};
 
 
 pub struct SysCameraCulling;
