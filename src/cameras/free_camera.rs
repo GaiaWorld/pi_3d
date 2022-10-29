@@ -87,7 +87,7 @@ impl FreeCameraParam {
                         bottom = -value / aspect;
                     },
                 }
-                let p = Orthographic3::new(0., right, 0., top, camera.minz, camera.maxz);
+                let p = Orthographic3::new(left, right, bottom, top, camera.minz, camera.maxz);
                 c_p_m.project_matrix.copy_from(p.as_matrix());
             },
         };

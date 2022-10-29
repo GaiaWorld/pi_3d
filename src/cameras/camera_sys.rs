@@ -95,7 +95,8 @@ impl CameraTransformMatricCalc {
         println!("Transform Matrix Calc:");
         query_cameras.iter_mut().for_each(| mut camera | {
             // transform matrix
-            camera.view_matrix.clone().mul_to(&camera.project_matrix.clone(), &mut camera.transform_matrix);
+            // camera.view_matrix.clone().mul_to(&camera.project_matrix.clone(), &mut camera.transform_matrix);
+            camera.project_matrix.clone().mul_to(&camera.view_matrix.clone(), &mut camera.transform_matrix);
             println!("{}", camera.transform_matrix);
         });
     }

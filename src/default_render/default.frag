@@ -18,6 +18,7 @@ void main() {
 
     float alpha = 1.0;
 
+    baseColor.rgb *= v_normal;
+
     gl_FragColor = vec4(baseColor.rgb, alpha);
-    gl_FragColor = vec4(1., 1., 0., 1.);
 }

@@ -180,6 +180,7 @@ pub fn calc_world_matrix(
     match p_m {
         Some(p_m) => {
             p_m.mul_to(&l_m, w_m);
+            // l_m.mul_to(&p_m, w_m);
         },
         None => {
             w_m.copy_from(&l_m);

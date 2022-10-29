@@ -23,8 +23,8 @@ impl SysTest {
             let x = item.1 % 4000.0 / 4000.0 * 3.1415926 * 2.;
             let y = item.2 % 4000.0 / 4000.0 * 3.1415926 * 2.;
             let z = item.3 % 4000.0 / 4000.0 * 3.1415926 * 2.;
-            transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 20., 0., 5.)));
-            // transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(0., y, 0.)));
+            // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 20., 0., 5.)));
+            transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
         });
     }
 }
@@ -45,10 +45,10 @@ impl Plugin for PluginTest {
         let node01 = engine.create_transform_node(scene01);
         // engine.set_parent(camera01, scene01, Some(node01));
         engine.active_camera(camera01, true);
-        engine.transform_position(camera01, Vector3::new(0., 0., 0.));
+        engine.transform_position(camera01, Vector3::new(0., 0., -5.));
 
         let cube = engine.new_cube(scene01);
-        engine.transform_position(cube, Vector3::new(0., 0., 5.));
+        engine.transform_position(cube, Vector3::new(0., 0., 0.));
 
         engine.layer_mask(camera01, LayerMask::default());
         engine.layer_mask(cube, LayerMask::default());

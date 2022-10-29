@@ -60,12 +60,14 @@ pub struct CameraRenderData {
 impl CameraRenderData {
     pub const PI_MATRIX_V: usize = 16;
     pub const PI_MATRIX_P: usize = 16;
+    pub const PI_MATRIX_VP: usize = 16;
     pub const PI_CAMERA_POSITION: usize = 4;
     pub const PI_ORTHCAMERA_DIRECT: usize = 4;
 
     pub const PI_MATRIX_V_OFFSIZE: usize = 0 * 4;
     pub const PI_MATRIX_P_OFFSIZE: usize = Self::PI_MATRIX_V_OFFSIZE + Self::PI_MATRIX_V * 4;
-    pub const PI_CAMERA_POSITION_OFFSIZE: usize = Self::PI_MATRIX_P_OFFSIZE + Self::PI_MATRIX_P * 4;
+    pub const PI_MATRIX_VP_OFFSIZE: usize = Self::PI_MATRIX_P_OFFSIZE + Self::PI_MATRIX_VP * 4;
+    pub const PI_CAMERA_POSITION_OFFSIZE: usize = Self::PI_MATRIX_VP_OFFSIZE + Self::PI_MATRIX_P * 4;
     pub const PI_ORTHCAMERA_DIRECT_OFFSIZE: usize = Self::PI_CAMERA_POSITION_OFFSIZE + Self::PI_CAMERA_POSITION * 4;
 
     pub fn new(
@@ -85,6 +87,7 @@ impl Uniform for CameraRenderData {
     fn write_into(&self, index: u32, buffer: &mut [u8]) {
         bytes_write_to_memory(bytemuck::cast_slice(self.view_matrix.transpose().as_slice()), index as usize + Self::PI_MATRIX_V_OFFSIZE, buffer);
         bytes_write_to_memory(bytemuck::cast_slice(self.project_matrix.transpose().as_slice()), index as usize + Self::PI_MATRIX_P_OFFSIZE, buffer);
+        bytes_write_to_memory(bytemuck::cast_slice(self.transform_matrix.transpose().as_slice()), index as usize + Self::PI_MATRIX_VP_OFFSIZE, buffer);
         bytes_write_to_memory(bytemuck::cast_slice(self.global_position.as_slice()), index as usize + Self::PI_CAMERA_POSITION_OFFSIZE, buffer);
         bytes_write_to_memory(bytemuck::cast_slice(self.camera_direction.as_slice()), index as usize + Self::PI_ORTHCAMERA_DIRECT, buffer);
     }

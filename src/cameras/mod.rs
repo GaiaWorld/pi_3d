@@ -22,8 +22,8 @@ impl Plugin for PluginCamera {
         SysTargetCameraCommand::setup(world, stages.command_stage());
         SysFreeCameraCommand::setup(world, stages.command_stage());
         FreeCameraProjectionCalc::setup(world, stages.after_world_matrix());
-        CameraTransformMatricCalc::setup(world, stages.after_world_matrix());
         TargetCameraViewMatrixCalc::setup(world, stages.after_world_matrix());
+        CameraTransformMatricCalc::setup(world, stages.uniform_update());
 
         world.insert_resource(SingleCameraCommandList::default());
         world.insert_resource(SingleTargetCameraCommandList::default());
