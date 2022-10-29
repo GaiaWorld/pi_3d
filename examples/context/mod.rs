@@ -4,22 +4,16 @@ use pi_render::{
         target_alloc::ShareTargetView,
     },
     init_render,
-    rhi::{options::RenderOptions, device::RenderDevice, dyn_uniform_buffer::{Uniform, Bind}, RenderQueue},
+    rhi::{options::RenderOptions, device::RenderDevice, dyn_uniform_buffer::{Uniform, Bind}, RenderQueue}, graph::graph::RenderGraph,
 };
+use pi_scene_math::Vector3;
 use std::{any::TypeId, sync::Arc, time::Instant};
 use wgpu::PresentMode;
 use winit::window::Window;
 
 use pi_3d::{
     engine::Engine,
-    object::GameObject,
-    systems::{
-        camera_sys::{
-            CameraTransformMatricCacl, FreeCameraProjectionCacl, TargetCameraEffectLocalRotation,
-            TargetCameraViewMatrixCacl,
-        },
-        transform_node_sys::{LocalMatrixCacl, LocalRotationMatrixCacl, WorldMatrixCacl},
-    }, bytes_write_to_memory, shaders::FragmentUniformBind,
+    object::GameObject,bytes_write_to_memory, shaders::FragmentUniformBind, scene::InterfaceScene, transforms::InterfaceTransformNode, cameras::InterfaceCamera, meshes::cube::InterfaceCube, main_camera_render::InterfaceMainCamera, layer_mask::{InterfaceLayerMask, LayerMask}, run_stage::RunStage, PluginBundleDefault, plugin::Plugin,
 };
 use pi_async::{
     prelude::{Mutex, WorkerRuntime},
@@ -33,6 +27,11 @@ use pi_ecs::{
     },
 };
 use pi_share::{Share, ShareMutex, ShareRwLock};
+
+use self::{shell_node::ScreenClearNode, plugin_test::PluginTest};
+
+pub mod shell_node;
+pub mod plugin_test;
 
 pub struct EnginShell {
     pub win: Arc<Window>,
@@ -88,13 +87,19 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
 
     let _ = runtime.spawn(runtime.alloc(), async move {
         let world = &mut world1;
-        let options = RenderOptions::default();
+        let options = RenderOptions {
+            backends: wgpu::Backends::VULKAN,
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            ..Default::default()
+        };
         
 		// init_render
 		//   > insert_render_graph
 		//     > world.insert_resource(RenderGraph::new(w, device, queue)); // RenderGraph 在此处被创建
         let render_stages = init_render(world, options, win1.clone(), rt.clone()).await;
 
+        let render_graphic = world.get_resource_mut::<RenderGraph>().unwrap();
+        let clear_id =  render_graphic.add_node("Clear", ScreenClearNode { color: (1., 0., 0., 1.), depth: 1.  }).unwrap();
         let device = world.get_resource::<RenderDevice>().unwrap();
         let queue = world.get_resource::<RenderQueue>().unwrap();
         let limits = device.limits();
@@ -103,9 +108,6 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
             Some("DynUniformBuffer".to_string()),
             min_uniform_buffer_offset_alignment.max(192),
         );
-        let bind = dynbuffer.alloc_binding::<InitBuffer>();
-        dynbuffer.set_uniform::<InitBuffer>(&bind, &InitBuffer {});
-        dynbuffer.write_buffer(device, queue);
         world.insert_resource(dynbuffer);
 
         init_data(world, win1);
@@ -121,13 +123,20 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
 
         // 初始化 Engine stage
         let mut engine = Engine::new(world);
-        let gui_stages = engine.init(0, 0, size.width, size.height);
-        for stage in gui_stages.into_iter() {
+        engine.init(0, 0, size.width, size.height);
+
+        let mut runstages = RunStage::default();
+        // 建立System运行队列
+        PluginBundleDefault::init(&mut engine, &mut runstages);
+        PluginTest::init(&mut engine, &mut runstages);
+
+        for stage in runstages.drain() {
             stages.push(Arc::new(stage.build(world)));
         }
+
         // stages.push(Arc::new(render_stages.extract_stage.build(world)));
-        // stages.push(Arc::new(render_stages.prepare_stage.build(world)));
-        // stages.push(Arc::new(render_stages.render_stage.build(world)));
+        stages.push(Arc::new(render_stages.prepare_stage.build(world)));
+        stages.push(Arc::new(render_stages.render_stage.build(world)));
 
         let mut last_stage = StageBuilder::new();
 
@@ -141,16 +150,6 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
 
         let mut dispatcher = SingleDispatcher::new(rt);
         dispatcher.init(stages, world);
-
-
-        // Test Code
-        let scene01 = engine.new_scene();
-        let node01 = engine.new_transform_node(scene01);
-        let camera01 = engine.new_free_camera(scene01);
-        engine.set_parent(camera01, scene01, Some(node01));
-        let cube = engine.new_cube(scene01);
-        engine.set_active_camera(camera01, true);
-
 
         *result1.write() = Some((engine, dispatcher));
 

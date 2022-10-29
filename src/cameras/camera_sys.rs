@@ -12,38 +12,38 @@ pub struct TargetCameraEffectLocalRotation;
 #[setup]
 impl TargetCameraEffectLocalRotation {
     #[system]
-    pub fn cacl(
+    pub fn calc(
         mut query_cameras: Query<GameObject, (&TargetCameraParam, &mut LocalTransform)>,
     ) {
-        println!("Target Camera Control Cacl:");
+        println!("Target Camera Control Calc:");
         let coordsys = CoordinateSytem3::left();
         for (target_camera, mut l_transform) in query_cameras.iter_mut() {
             let l_p = l_transform.position.clone();
-            target_camera.cacl_rotation(&coordsys, &l_p, &mut l_transform.rotation);
+            target_camera.calc_rotation(&coordsys, &l_p, &mut l_transform.rotation);
         }
     }
     // #[system]
-    // pub fn cacl(
+    // pub fn calc(
     //     mut query_cameras: Query<GameObject, (&TargetCameraParam, &LocalPosition, &mut LocalRotationMatrix)>,
     // ) {
-    //     println!("Target Camera Control Cacl:");
+    //     println!("Target Camera Control Calc:");
     //     let coordsys = CoordinateSytem3::left();
     //     for (target_camera, l_p, mut l_r) in query_cameras.iter_mut() {
-    //         target_camera.cacl_rotation(&coordsys, &l_p.0, &mut l_r.0);
+    //         target_camera.calc_rotation(&coordsys, &l_p.0, &mut l_r.0);
     //     }
     // }
 }
 
-pub struct TargetCameraViewMatrixCacl;
+pub struct TargetCameraViewMatrixCalc;
 #[setup]
-impl TargetCameraViewMatrixCacl {
+impl TargetCameraViewMatrixCalc {
     #[system]
-    pub fn cacl(
+    pub fn calc(
         mut query_cameras: Query<GameObject, (ObjectID, &TargetCameraParam, &LocalTransform, &mut CameraRenderData)>,
         query_transforms: Query<GameObject, &GlobalTransform>,
         idtree: EntityTree<GameObject>,
     ) {
-        println!("View Matrix Cacl:");
+        println!("View Matrix Calc:");
         let coordsys = CoordinateSytem3::left();
         for (entity, target_camera, l_transform, mut camera_data) in query_cameras.iter_mut() {
             let (p_m, p_iso) = match idtree.get_up(entity) {
@@ -58,16 +58,16 @@ impl TargetCameraViewMatrixCacl {
                 None => (None, None),
             };
             target_camera.view_matrix(&coordsys, &mut camera_data, &l_transform.position, p_m.as_ref(), p_iso.as_ref());
-            println!("{}", camera_data.view_matrix);
+            println!("View Matrix {}", camera_data.view_matrix);
         }
     }
     // #[system]
-    // pub fn cacl(
+    // pub fn calc(
     //     mut query_cameras: Query<GameObject, (ObjectID, &TargetCameraParam, &LocalPosition, &mut CameraGlobalPosition, &mut ViewMatrix)>,
     //     query_transforms: Query<GameObject, (&WorldMatrix, &GlobalIsometry)>,
     //     idtree: EntityTree<GameObject>,
     // ) {
-    //     println!("View Matrix Cacl:");
+    //     println!("View Matrix Calc:");
     //     let coordsys = CoordinateSytem3::left();
     //     for (entity, target_camera, l_p, mut c_g_p, mut c_v_m) in query_cameras.iter_mut() {
     //         let (p_m, p_iso) = match idtree.get_up(entity) {
@@ -87,29 +87,14 @@ impl TargetCameraViewMatrixCacl {
     // }
 }
 
-pub struct FreeCameraProjectionCacl;
+pub struct CameraTransformMatricCalc;
 #[setup]
-impl FreeCameraProjectionCacl {
+impl CameraTransformMatricCalc {
     #[system]
-    pub fn cacl(
-        mut query_cameras: Query<GameObject, (&CameraParam, &FreeCameraParam, &mut CameraRenderData)>,
-    ) {
-        println!("Projection Matrix Cacl:");
-        query_cameras.iter_mut().for_each(|(camera, free_camera, mut c_p_m)| {
-            free_camera.project_matrix(camera, &mut c_p_m, 1.0);
-            println!("{}", c_p_m.project_matrix);
-        });
-    }
-}
-
-pub struct CameraTransformMatricCacl;
-#[setup]
-impl CameraTransformMatricCacl {
-    #[system]
-    pub fn cacl(
+    pub fn calc(
         mut query_cameras: Query<GameObject, &mut CameraRenderData>,
     ) {
-        println!("Transform Matrix Cacl:");
+        println!("Transform Matrix Calc:");
         query_cameras.iter_mut().for_each(| mut camera | {
             // transform matrix
             camera.view_matrix.clone().mul_to(&camera.project_matrix.clone(), &mut camera.transform_matrix);

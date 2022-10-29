@@ -4,16 +4,14 @@ mod context;
 use context::{create_engine, EnginShell};
 use pi_3d::{
     cameras::{
-        camera::{Camera, CameraParam, CameraRenderData},
+        camera::{CameraParam, CameraRenderData},
         free_camera::FreeCameraParam,
         target_camera::TargetCameraParam,
     },
     engine::Engine,
     flags::{SceneCameraID01, SceneID01},
-    default_render::default_material::{DefaultMaterialMeta, DefaultMaterialPropertype},
+    default_render::default_material::{ DefaultMaterialPropertype},
     object::GameObject,
-    scene::SceneParam,
-    systems::init_stage,
     transforms::transform_node::{GlobalTransform, LocalTransform, TransformDirty, TransformNode},
 };
 use pi_async::rt::{
@@ -58,10 +56,11 @@ fn run_loop(mut engine_sheel: EnginShell) {
 
                 if time > time1 {
                     let d = time - time1;
-                    let duration = if d > Duration::from_millis(16) {
+                    let delay = 33;
+                    let duration = if d > Duration::from_millis(delay) {
                         Duration::from_millis(0)
                     } else {
-                        Duration::from_millis(16) - d
+                        Duration::from_millis(delay) - d
                     };
                     spin_sleep::sleep(duration);
                 }
@@ -97,44 +96,44 @@ fn run_window_loop(window: Arc<winit::window::Window>, event_loop: winit::event_
     });
 }
 
-pub fn main1() {
-    env_logger::init();
+// pub fn main1() {
+//     env_logger::init();
 
-    let mut world = World::new();
-    // let mut demo = Demo::new(&mut world);
+//     let mut world = World::new();
+//     // let mut demo = Demo::new(&mut world);
 
-    let mut dynbuffer = DynUniformBuffer::new(Some("DynamicBindBUffer".to_string()), 16);
+//     let mut dynbuffer = DynUniformBuffer::new(Some("DynamicBindBUffer".to_string()), 16);
 
-    let mut engine = Engine::new(&mut world);
-    let stage_builders = engine.init(0, 0, 100, 100);
+//     let mut engine = Engine::new(&mut world);
+//     let stage_builders = engine.init(0, 0, 100, 100);
 
-    // 创建一个运行时
-    let pool = MultiTaskRuntimeBuilder::<(), StealableTaskPool<()>>::default();
-    // 创建一个运行时
-    let rt = pool.build();
+//     // 创建一个运行时
+//     let pool = MultiTaskRuntimeBuilder::<(), StealableTaskPool<()>>::default();
+//     // 创建一个运行时
+//     let rt = pool.build();
 
-    // 创建派发器
-    let mut dispatcher = SingleDispatcher::new(rt.clone());
-    let mut stages = Vec::new();
-    stage_builders.into_iter().for_each(|stage| {
-        stages.push(Arc::new(stage.build(&world)));
-    });
-    dispatcher.init(stages, &world);
+//     // 创建派发器
+//     let mut dispatcher = SingleDispatcher::new(rt.clone());
+//     let mut stages = Vec::new();
+//     stage_builders.into_iter().for_each(|stage| {
+//         stages.push(Arc::new(stage.build(&world)));
+//     });
+//     dispatcher.init(stages, &world);
 
-    let scene01 = engine.new_scene();
-    let node01 = engine.new_transform_node(scene01);
-    let camera01 = engine.new_free_camera(scene01);
-    engine.set_parent(camera01, scene01, Some(node01));
+//     let scene01 = engine.new_scene();
+//     let node01 = engine.new_transform_node(scene01);
+//     let camera01 = engine.new_free_camera(scene01);
+//     engine.set_parent(camera01, scene01, Some(node01));
 
-    println!("Run:");
-    // 运行派发器，通常每帧推动
-    dispatcher.run();
+//     println!("Run:");
+//     // 运行派发器，通常每帧推动
+//     dispatcher.run();
 
-    world.insert_resource(dynbuffer);
+//     world.insert_resource(dynbuffer);
 
-    rt.spawn(rt.alloc(), async move {
-        engine.tick_run();
-        dispatcher.run().await;
-    });
-    loop {}
-}
+//     rt.spawn(rt.alloc(), async move {
+//         engine.tick_run();
+//         dispatcher.run().await;
+//     });
+//     loop {}
+// }

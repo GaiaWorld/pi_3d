@@ -1,7 +1,9 @@
+use pi_ecs::{prelude::{Setup, ResMut, Query, EntityDelete}, query::Write};
+use pi_ecs_macros::setup;
 use pi_render::rhi::{dyn_uniform_buffer::{Uniform, DynUniformBuffer, BindOffset, Bind}, bind_group::BindGroup, device::RenderDevice, bind_group_layout::BindGroupLayout};
 use pi_scene_math::{Vector3, Vector4, Matrix, frustum::FrustumPlanes, plane::Plane, Point3, Isometry3, Translation3, Orthographic3};
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::SceneTime};
+use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, environment::{fog::SceneFog, ambient_light::AmbientLight}, plugin::Plugin, object::{ObjectID, GameObject}};
 
 // #[derive(Debug, Clone)]
 // pub struct ViewMatrix(pub Matrix);
@@ -81,8 +83,8 @@ impl CameraRenderData {
 }
 impl Uniform for CameraRenderData {
     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        bytes_write_to_memory(bytemuck::cast_slice(self.view_matrix.as_slice()), index as usize + Self::PI_MATRIX_V_OFFSIZE, buffer);
-        bytes_write_to_memory(bytemuck::cast_slice(self.project_matrix.as_slice()), index as usize + Self::PI_MATRIX_P_OFFSIZE, buffer);
+        bytes_write_to_memory(bytemuck::cast_slice(self.view_matrix.transpose().as_slice()), index as usize + Self::PI_MATRIX_V_OFFSIZE, buffer);
+        bytes_write_to_memory(bytemuck::cast_slice(self.project_matrix.transpose().as_slice()), index as usize + Self::PI_MATRIX_P_OFFSIZE, buffer);
         bytes_write_to_memory(bytemuck::cast_slice(self.global_position.as_slice()), index as usize + Self::PI_CAMERA_POSITION_OFFSIZE, buffer);
         bytes_write_to_memory(bytemuck::cast_slice(self.camera_direction.as_slice()), index as usize + Self::PI_ORTHCAMERA_DIRECT, buffer);
     }
@@ -107,6 +109,17 @@ pub struct CameraViewport {
     pub w: f32,
     pub h: f32,
 }
+impl Default for CameraViewport {
+    fn default() -> Self {
+        Self {
+            x: 0.,
+            y: 0.,
+            w: 1.,
+            h: 1.
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct CameraParam {
     pub up: Vector3,
@@ -119,35 +132,42 @@ impl Default for CameraParam {
     }
 }
 
-// 初始方向为z轴正方向
-pub struct Camera {
-    pub up: Vector3,
-    pub minz: f32,
-    pub maxz: f32,
-    /// 
-    /// * Define the default inertia of the camera.
-    /// * This helps giving a smooth feeling to the camera movement.
-    pub inertia: f32,
-    pub viewport: Vector4,
-    pub view_matrix: Matrix,
-    pub project_matrix: Matrix,
-    pub transform_matrix: Matrix,
-    pub global_position: Translation3,
+#[derive(Debug)]
+pub enum CameraCommand {
+    Create(ObjectID),
+    Destroy(ObjectID),
 }
 
 
-impl Default for Camera {
-    fn default() -> Self {
-        Self {
-            up: Vector3::new(0., 1., 0.),
-            minz: 0.1,
-            maxz: 1000.,
-            inertia: 0.7,
-            viewport: Vector4::new(0., 0., 1., 1.),
-            view_matrix: Matrix::identity(),
-            project_matrix: Matrix::identity(),
-            transform_matrix: Matrix::identity(),
-            global_position: Translation3::new(0., 0., 0.),
-        }
+#[derive(Debug, Default)]
+pub struct SingleCameraCommandList {
+    pub list: Vec<CameraCommand>,
+}
+
+pub struct SysCameraCommand;
+#[setup]
+impl SysCameraCommand {
+    #[system]
+    pub fn cmds(
+        mut cmds: ResMut<SingleCameraCommandList>,
+        mut cameras: Query<GameObject, Write<CameraParam>>,
+        mut entity_delete: EntityDelete<GameObject>,
+    ) {
+        cmds.list.drain(..).for_each(|cmd| {
+            match cmd {
+                CameraCommand::Create(entity) => {
+                    match cameras.get_mut(entity) {
+                        Some(mut camera) => {
+                            camera.insert_no_notify(CameraParam::default());
+                        },
+                        None => todo!(),
+                    }
+                },
+                CameraCommand::Destroy(entity) => {
+                    entity_delete.despawn(entity);
+                },
+            }
+        });
+
     }
 }

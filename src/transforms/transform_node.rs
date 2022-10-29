@@ -1,7 +1,10 @@
+use pi_ecs::prelude::Setup;
 use pi_render::rhi::dyn_uniform_buffer::Uniform;
 use pi_scene_math::{transform::{Transform3}, Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, Number, vector::TToolMatrix, Translation3, Isometry3};
 
-use crate::{shaders::buildin_uniforms::BuildinModelBind, bytes_write_to_memory};
+use crate::{bytes_write_to_memory, object::ObjectID, plugin::Plugin, meshes::model::BuildinModelBind};
+
+use super::{transform_node_sys::{LocalMatrixCalc, LocalRotationMatrixCalc, WorldMatrixCalc}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct TransformNode;
@@ -56,8 +59,8 @@ impl Default for GlobalTransform {
     }
 }
 impl GlobalTransform {
-    pub fn cacl(&mut self, p_m: Option<Matrix>, l_transform: &LocalTransform) {
-        cacl_world_matrix(
+    pub fn calc(&mut self, p_m: Option<Matrix>, l_transform: &LocalTransform) {
+        calc_world_matrix(
             p_m,
             &l_transform.matrix,
             &mut self.matrix,
@@ -75,8 +78,8 @@ impl GlobalTransform {
 }
 impl Uniform for GlobalTransform {
     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        bytes_write_to_memory(bytemuck::cast_slice(self.matrix.as_slice()), index as usize + BuildinModelBind::OBJECT_TO_WORLD_OFFSIZE, buffer);
-        bytes_write_to_memory(bytemuck::cast_slice(self.matrix_inv.as_slice()), index as usize + BuildinModelBind::WORLD_TO_OBJECT_OFFSIZE, buffer);
+        bytes_write_to_memory(bytemuck::cast_slice(self.matrix.transpose().as_slice()), index as usize + BuildinModelBind::OBJECT_TO_WORLD_OFFSIZE, buffer);
+        bytes_write_to_memory(bytemuck::cast_slice(self.matrix_inv.transpose().as_slice()), index as usize + BuildinModelBind::WORLD_TO_OBJECT_OFFSIZE, buffer);
     }
 }
 
@@ -166,7 +169,7 @@ impl Default for TransformDirty {
     }
 }
 
-pub fn cacl_world_matrix(
+pub fn calc_world_matrix(
     p_m: Option<Matrix>,
     l_m: &Matrix,
     w_m: &mut Matrix,

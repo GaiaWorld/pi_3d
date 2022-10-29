@@ -15,7 +15,9 @@ pub struct SceneCameraID06;
 
 pub struct CullingFlag(pub bool);
 
+#[derive(Debug)]
 pub struct SceneID(pub ObjectID);
+#[derive(Debug)]
 pub struct CameraID(pub usize);
 
 pub struct RenderBlend {
@@ -57,7 +59,7 @@ impl RenderTargetState {
             true => {
                 [
                     Some(wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                        format: wgpu::TextureFormat::Bgra8Unorm,
                         blend: Some(
                             wgpu::BlendState {
                                 color: wgpu::BlendComponent {
@@ -79,7 +81,7 @@ impl RenderTargetState {
             false => {
                 [
                     Some(wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                        format: wgpu::TextureFormat::Bgra8Unorm,
                         blend: None,
                         write_mask: wgpu::ColorWrites::ALL,
                     })
@@ -89,9 +91,22 @@ impl RenderTargetState {
     }
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct PrimitiveState {
     pub state: wgpu::PrimitiveState,
+}
+impl Default for PrimitiveState {
+    fn default() -> Self {
+        Self {
+            state: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Cw,
+                polygon_mode: wgpu::PolygonMode::Fill,
+                ..Default::default()
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -103,7 +118,7 @@ pub struct RenderDepthAndStencil {
 impl Default for RenderDepthAndStencil {
     fn default() -> Self {
         Self {
-            depth: true,
+            depth: false,
             stencil: false,
             depth_compare: wgpu::CompareFunction::LessEqual,
         }
@@ -152,31 +167,18 @@ impl RenderDepthAndStencil {
     }
 }
 
-#[derive(Debug)]
-pub struct RenderLayerMask(pub u32);
-impl Default for RenderLayerMask {
-    fn default() -> Self {
-        Self(0xFFFFFFFF)
-    }
-}
-impl RenderLayerMask {
-    pub fn include(&self, other: &Self) -> bool {
-        return self.0 & other.0 > 0;
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum RenderMode {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ERenderMode {
     Opaque = 1,
     Skybox = 2,
     AlphaTest = 3,
     Transparent = 4,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct RenderSortParam {
     /// 渲染类型
-    pub mode: RenderMode,
+    pub mode: ERenderMode,
     /// 同 渲染类型 中的 渲染分组
     pub group: u8,
     /// 同 渲染分组 中的 渲染顺序
@@ -185,28 +187,28 @@ pub struct RenderSortParam {
 impl RenderSortParam {
     pub fn opaque() -> Self {
         Self {
-            mode: RenderMode::Opaque,
+            mode: ERenderMode::Opaque,
             group: 0,
             index: 2000,
         }
     }
     pub fn transparent() -> Self {
         Self {
-            mode: RenderMode::Transparent,
+            mode: ERenderMode::Transparent,
             group: 0,
             index: 3000,
         }
     }
     pub fn skybox() -> Self {
         Self {
-            mode: RenderMode::Skybox,
+            mode: ERenderMode::Skybox,
             group: 0,
             index: 2000,
         }
     }
     pub fn alpha_test() -> Self {
         Self {
-            mode: RenderMode::AlphaTest,
+            mode: ERenderMode::AlphaTest,
             group: 0,
             index: 2450,
         }

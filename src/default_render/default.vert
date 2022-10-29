@@ -22,19 +22,21 @@ layout(set = 1, binding = 0) uniform Model {
     mat4 PI_ObjectToWorld;
     mat4 PI_WorldToObject;
 };
-
-layout(set = 0, binding = 0) uniform Param0 {
-    mat4 PI_MATRIX_V;
-    mat4 PI_MATRIX_P;
-};
 // <<<<<<<<<<<<< Buildin Vertex
 
 layout(location = 0) out vec3 v_normal;
 
 void main() {
     mat4 finalWorld = PI_MATRIX_P * PI_MATRIX_V;
-    gl_Position = finalWorld * vec4(a_position, 1.);
 
-    mat3 normalWorld = mat3(finalWorld);
+    vec4 positionUpdate = vec4(a_position, 1.);
+
+    positionUpdate = PI_ObjectToWorld * positionUpdate;
+
+    gl_Position = PI_MATRIX_P * PI_MATRIX_V * positionUpdate;
+    // gl_Position = vec4(a_position * 0.5, 1.);
+
+    mat3 normalWorld = mat3(PI_ObjectToWorld);
     v_normal = normalize(normalWorld * a_normal);
+    v_normal = a_normal;
 }

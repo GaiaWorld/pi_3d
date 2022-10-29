@@ -1,8 +1,10 @@
+
+
 use pi_ecs::prelude::{Query, ResMut};
 use pi_ecs_macros::setup;
 use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
 
-use crate::{object::GameObject, scene::SceneTime, environment::{fog::SceneFog, ambient_light::AmbientLight}};
+use crate::{object::GameObject, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::scene_time::SceneTime};
 
 pub struct SceneUniformTickUpdate;
 #[setup]

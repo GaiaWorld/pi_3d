@@ -1,6 +1,6 @@
 use pi_render::rhi::dyn_uniform_buffer::{BindOffset, DynUniformBuffer, Bind};
 
-use super::FragmentUniformBind;
+use crate::shaders::FragmentUniformBind;
 
 // pub struct BuildinTimeBind {
 //     pub bind_offset: BindOffset,
@@ -79,6 +79,14 @@ impl BuildinModelBind {
 
     pub const OBJECT_TO_WORLD_OFFSIZE: usize = 0 * 4;
     pub const WORLD_TO_OBJECT_OFFSIZE: usize = Self::OBJECT_TO_WORLD_OFFSIZE + Self::WORLD_TO_OBJECT * 4;
+
+    pub fn new(
+        dynbuffer: &mut DynUniformBuffer,
+    ) -> Self {
+        Self {
+            bind_offset: dynbuffer.alloc_binding::<Self>(),
+        }
+    }
 }
 impl FragmentUniformBind for BuildinModelBind {
     const ID: u32 = 0;
@@ -90,23 +98,5 @@ impl Bind for BuildinModelBind {
     }
     fn min_size() -> usize {
         Self::SIZE
-    }
-}
-
-pub fn bind_group_entry_buffer(
-    id: u32,
-    buffer: &wgpu::Buffer,
-    offset: u32,
-    size: u32,
-) -> wgpu::BindGroupEntry {
-    wgpu::BindGroupEntry {
-        binding: id,
-        resource: wgpu::BindingResource::Buffer(
-            wgpu::BufferBinding {
-                buffer,
-                offset:  offset as wgpu::BufferAddress,
-                size: wgpu::BufferSize::new(size as wgpu::BufferAddress),
-            }
-        ),
     }
 }

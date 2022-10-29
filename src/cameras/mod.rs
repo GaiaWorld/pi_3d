@@ -1,4 +1,109 @@
+use pi_ecs::{prelude::{Setup, ResMut, Query}, query::Write};
+use pi_ecs_macros::setup;
+use pi_render::{rhi::dyn_uniform_buffer::DynUniformBuffer, graph::graph::RenderGraph};
+
+use crate::{plugin::Plugin, object::{GameObject, ObjectID}, renderers::{render_object::RenderObjectID}, postprocess::Postprocess, transforms::InterfaceTransformNode, scene::InterfaceScene};
+
+use self::{camera::{CameraRenderData, SysCameraCommand, SingleCameraCommandList, CameraCommand}, camera_sys::{CameraTransformMatricCalc, TargetCameraViewMatrixCalc}, free_camera::{SysFreeCameraCommand, FreeCameraProjectionCalc, SingleFreeCameraCommandList, FreeCameraCommand}, target_camera::{SysTargetCameraCommand, SingleTargetCameraCommandList, TargetCameraCommand}};
+
 pub mod camera;
 pub mod free_camera;
 pub mod arc_rotate_camera;
 pub mod target_camera;
+pub mod camera_sys;
+
+pub struct PluginCamera;
+impl Plugin for PluginCamera {
+    fn init(
+        engine: &mut crate::engine::Engine,
+        stages: &mut crate::run_stage::RunStage,
+    ) -> Result<(), crate::plugin::ErrorPlugin> {
+        let world = engine.world_mut();
+
+        SysCameraCommand::setup(world, stages.command_stage());
+        SysTargetCameraCommand::setup(world, stages.command_stage());
+        SysFreeCameraCommand::setup(world, stages.command_stage());
+        FreeCameraProjectionCalc::setup(world, stages.after_world_matrix());
+        CameraTransformMatricCalc::setup(world, stages.after_world_matrix());
+        TargetCameraViewMatrixCalc::setup(world, stages.after_world_matrix());
+
+        world.insert_resource(SingleCameraCommandList::default());
+        world.insert_resource(SingleTargetCameraCommandList::default());
+        world.insert_resource(SingleFreeCameraCommandList::default());
+
+        Ok(())
+    }
+}
+
+pub trait InterfaceCamera {
+    fn create_free_camera(
+        &mut self,
+        scene: ObjectID,
+    ) -> ObjectID;
+
+    fn as_camera(
+        &mut self,
+        object: ObjectID,
+    );
+
+    fn as_target_camera(
+        &mut self,
+        object: ObjectID,
+    );
+
+    fn as_free_camera(
+        &mut self,
+        object: ObjectID,
+    );
+}
+
+impl InterfaceCamera for crate::engine::Engine {
+    fn create_free_camera(
+        &mut self,
+        scene: ObjectID,
+    ) -> ObjectID {
+
+        let entity = self.new_object();
+        let world = self.world_mut();
+
+        self.add_to_scene(entity, scene);
+        self.as_transform_node(entity);
+        self.transform_parent(entity, scene);
+
+        self.as_camera(entity);
+        self.as_target_camera(entity);
+        self.as_free_camera(entity);
+
+        entity
+    }
+
+    fn as_camera(
+        &mut self,
+        object: ObjectID,
+    ) {
+        let world = self.world_mut();
+
+        let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
+        commands.list.push(CameraCommand::Create(object));
+    }
+
+    fn as_target_camera(
+        &mut self,
+        object: ObjectID,
+    ) {
+        let world = self.world_mut();
+
+        let commands = world.get_resource_mut::<SingleTargetCameraCommandList>().unwrap();
+        commands.list.push(TargetCameraCommand::Create(object));
+    }
+
+    fn as_free_camera(
+        &mut self,
+        object: ObjectID,
+    ) {
+        let world = self.world_mut();
+
+        let commands = world.get_resource_mut::<SingleFreeCameraCommandList>().unwrap();
+        commands.list.push(FreeCameraCommand::Create(object));
+    }
+}

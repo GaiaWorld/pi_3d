@@ -1,7 +1,11 @@
 
+use pi_ecs::{prelude::{ResMut, EntityDelete, Query}, query::Write};
+use pi_ecs_macros::setup;
 use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRotation}, coordiante_system::CoordinateSytem3, Point3, Isometry3, Number, Rotation3};
 
-use super::camera::{Camera, CameraRenderData};
+use crate::object::{ObjectID, GameObject};
+
+use super::camera::{CameraRenderData};
 
 
 /// 通过 设置 target 目标点 调整相机
@@ -24,12 +28,12 @@ impl Default for TargetCameraParam {
 }
 
 impl TargetCameraParam {
-    pub fn cacl_rotation(&self, coordsys: &CoordinateSytem3, l_p: &Vector3, rotation: &mut Rotation3) {
+    pub fn calc_rotation(&self, coordsys: &CoordinateSytem3, l_p: &Vector3, rotation: &mut Rotation3) {
         let mut reference = Vector3::new(0., 0., 1.);
 
         let mut eye: Vector3 = l_p.clone();
         if eye.z == self.target.z {
-            eye.z += Number::EPSILON;
+            eye.z -= Number::EPSILON;
         }
 
         let dir = self.target - eye;
@@ -107,5 +111,46 @@ impl TargetCameraParam {
 
             camera_data.view_matrix.clone_from(&iso.to_matrix());
         }
+    }
+}
+
+
+#[derive(Debug)]
+pub enum TargetCameraCommand {
+    Create(ObjectID),
+    Destroy(ObjectID),
+}
+
+
+#[derive(Debug, Default)]
+pub struct SingleTargetCameraCommandList {
+    pub list: Vec<TargetCameraCommand>,
+}
+
+pub struct SysTargetCameraCommand;
+#[setup]
+impl SysTargetCameraCommand {
+    #[system]
+    pub fn cmds(
+        mut cmds: ResMut<SingleTargetCameraCommandList>,
+        mut cameras: Query<GameObject, Write<TargetCameraParam>>,
+        mut entity_delete: EntityDelete<GameObject>,
+    ) {
+        cmds.list.drain(..).for_each(|cmd| {
+            match cmd {
+                TargetCameraCommand::Create(entity) => {
+                    match cameras.get_mut(entity) {
+                        Some(mut camera) => {
+                            camera.insert_no_notify(TargetCameraParam::default());
+                        },
+                        None => todo!(),
+                    }
+                },
+                TargetCameraCommand::Destroy(entity) => {
+                    entity_delete.despawn(entity);
+                },
+            }
+        });
+
     }
 }

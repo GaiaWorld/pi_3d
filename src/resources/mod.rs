@@ -5,7 +5,6 @@ use render_data_container::GeometryBufferPool;
 
 use crate::geometry::GBID;
 
-pub mod command;
 pub mod pipeline;
 
 #[derive(Debug, Default)]

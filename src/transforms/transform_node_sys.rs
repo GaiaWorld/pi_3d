@@ -1,31 +1,30 @@
 
 use pi_ecs_macros::{listen, setup};
-use pi_ecs::{prelude::Query, query::With};
+use pi_ecs::{prelude::{Query, ResMut}, query::With};
 use pi_ecs_utils::prelude::EntityTree;
 use pi_scene_math::{Matrix, coordiante_system::CoordinateSytem3, vector::{TToolRotation, TToolMatrix}};
 use pi_slotmap_tree::Storage;
 
-use crate::{object::{GameObject, ObjectID}, transforms::transform_node::{TransformDirty, cacl_world_matrix, LocalTransform, GlobalTransform}, scene::SceneParam};
+use crate::{object::{GameObject, ObjectID}, transforms::transform_node::{TransformDirty, calc_world_matrix, LocalTransform, GlobalTransform}, scene::coordinate_system::SceneCoordinateSytem};
 
 // pub struct TransformNodeInit;
 // #[setup]
 // impl TransformNodeInit {
 //     /// 监听到 TransformNode 组件被添加, 则 添加 LocalPosition, 
 //     #[listen()]
-//     pub fn cacl(
+//     pub fn calc(
 //     ) {
 
 //     }
 // }
-
-pub struct LocalRotationMatrixCacl;
+pub struct LocalRotationMatrixCalc;
 #[setup]
-impl LocalRotationMatrixCacl {
+impl LocalRotationMatrixCalc {
     #[system]
-    pub fn cacl(
+    pub fn calc(
         mut query_locals: Query<GameObject, (&mut TransformDirty, &mut LocalTransform)>,
     ) {
-        println!("LocalRotationMatrixCacl:");
+        println!("LocalRotationMatrixCalc:");
         let coordsys = CoordinateSytem3::left();
         query_locals.iter_mut().for_each(|(dirty, mut l_transform)| {
             match dirty.0 {
@@ -53,10 +52,10 @@ impl LocalRotationMatrixCacl {
         });
     }
     // #[system]
-    // pub fn cacl(
+    // pub fn calc(
     //     mut query_locals: Query<GameObject, (Option<&LocalRotationEuler>, Option<&LocalRotationQuaternion>, &mut LocalTransform)>,
     // ) {
-    //     println!("LocalRotationMatrixCacl:");
+    //     println!("LocalRotationMatrixCalc:");
     //     let coordsys = CoordinateSytem3::left();
     //     query_locals.iter_mut().for_each(|(l_rotation, l_quaternion, mut l_rotation_m)| {
     //         match l_rotation {
@@ -71,14 +70,14 @@ impl LocalRotationMatrixCacl {
     // }
 }
 
-pub struct LocalMatrixCacl;
+pub struct LocalMatrixCalc;
 #[setup]
-impl LocalMatrixCacl {
+impl LocalMatrixCalc {
     #[system]
-    pub fn cacl(
+    pub fn calc(
         mut query_locals: Query<GameObject, (&mut TransformDirty, &mut LocalTransform)>,
     ) {
-        println!("LocalMatrixCacl:");
+        println!("LocalMatrixCalc:");
         query_locals.iter_mut().for_each(|(dirty, mut l_transform)| {
             match dirty.0 {
                 true => {
@@ -95,26 +94,26 @@ impl LocalMatrixCacl {
         });
     }
     // #[system]
-    // pub fn cacl(
+    // pub fn calc(
     //     mut query_locals: Query<GameObject, (&LocalPosition, &LocalRotationMatrix, &LocalScaling, &mut LocalMatrix)>,
     // ) {
-    //     println!("LocalMatrixCacl:");
+    //     println!("LocalMatrixCalc:");
     //     query_locals.iter_mut().for_each(|(translation, quaternion, scaling, mut wm)| {
     //         CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &quaternion.0, &translation.0, &mut wm.0);
     //     });
     // }
 }
 
-pub struct WorldMatrixCacl;
+pub struct WorldMatrixCalc;
 #[setup]
-impl WorldMatrixCacl {
+impl WorldMatrixCalc {
     #[system]
-    pub fn cacl(
-        query_scenes: Query<GameObject, (ObjectID, &SceneParam)>,
+    pub fn calc(
+        query_scenes: Query<GameObject, (ObjectID, &SceneCoordinateSytem)>,
         mut query_ms: Query<GameObject, (&mut TransformDirty, &LocalTransform, &mut GlobalTransform)>,
         tree: EntityTree<GameObject>,
     ) {
-        println!("World Matrix Cacl:");
+        println!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
             println!("Get Scene {:?}", root);
             let mut temp_ids = vec![];
@@ -122,7 +121,7 @@ impl WorldMatrixCacl {
                 match query_ms.get_mut(v) {
                     Some((mut dirty, l_transform, mut g_transform)) => {
                         if dirty.0 {
-                            g_transform.cacl(None, l_transform);
+                            g_transform.calc(None, l_transform);
                             temp_ids.push((v, true, Some(g_transform.matrix.clone())));
                         } else {
                             temp_ids.push((v, false, Some(g_transform.matrix.clone())));
@@ -154,7 +153,7 @@ impl WorldMatrixCacl {
                                         Some((mut dirty, l_transform, mut g_transform)) => {
                                             let real_dirty = dirty.0 || p_dirty;
                                             if real_dirty {
-                                                g_transform.cacl(p_m, l_transform);
+                                                g_transform.calc(p_m, l_transform);
                                                 temp.push((entity, true, Some(g_transform.matrix.clone())));
                                             } else {
                                                 temp.push((entity, false, Some(g_transform.matrix.clone())));
@@ -181,19 +180,19 @@ impl WorldMatrixCacl {
         }
     }
     // #[system]
-    // pub fn cacl(
+    // pub fn calc(
     //     query_scenes: Query<GameObject, (ObjectID, &SceneParam)>,
     //     mut query_ms: Query<GameObject, (&mut TransformDirty, &LocalMatrix, &mut WorldMatrix, &mut GlobalPosition, &mut GlobalRotation, &mut GlobalScaling, &mut GlobalIsometry)>,
     //     tree: EntityTree<GameObject>,
     // ) {
-    //     println!("World Matrix Cacl:");
+    //     println!("World Matrix Calc:");
     //     for (root, _) in query_scenes.iter() {
     //         let mut temp_ids = vec![];
     //         tree.iter(root).for_each(|v| {
     //             match query_ms.get_mut(v) {
     //                 Some((mut dirty, l_m, mut w_m, mut g_p, mut g_r, mut g_s, mut g_i)) => {
     //                     if dirty.0 {
-    //                         cacl_world_matrix(None, l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i);
+    //                         calc_world_matrix(None, l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i);
     //                         temp_ids.push((v, true, Some(w_m.0.clone())));
     //                     } else {
     //                         temp_ids.push((v, false, Some(w_m.0.clone())));
@@ -218,8 +217,8 @@ impl WorldMatrixCacl {
     //                             Some((mut dirty, l_m, mut w_m, mut g_p, mut g_r, mut g_s, mut g_i)) => {
     //                                 if dirty.0 || p_dirty {
     //                                     match p_m {
-    //                                         Some(p_m) => cacl_world_matrix(Some(p_m), l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i),
-    //                                         None => cacl_world_matrix(None, l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i),
+    //                                         Some(p_m) => calc_world_matrix(Some(p_m), l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i),
+    //                                         None => calc_world_matrix(None, l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i),
     //                                     };
     //                                     temp.push((entity, true, Some(w_m.0.clone())));
     //                                 } else {

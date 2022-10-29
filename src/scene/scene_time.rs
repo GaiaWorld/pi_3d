@@ -5,9 +5,6 @@ use pi_scene_math::coordiante_system;
 
 use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory};
 
-pub struct SceneParam {
-    pub coordsys: coordiante_system::CoordinateSytem3,
-}
 
 
 pub struct SceneTime {

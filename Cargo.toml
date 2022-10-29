@@ -12,6 +12,9 @@ keywords = ["3d scene"]
 wgpu = "0.13"
 env_logger = "0.9"
 log = "0.4"
+smallvec = "1.10"
+
+futures = "0.3"
 
 parry3d = "0.9"
 lazy_static = "1.4"
@@ -34,6 +37,8 @@ pi_share = "0.4"
 
 pi_animation = { git = "https://github.com/GaiaWorld/pi_animation" }
 
+# render_utils = { git = "https://github.com/GaiaWorld/pi_render" }
+render_utils = { path = "../pi_render/crates/render_utils" }
 render_pipeline_key = { git = "https://github.com/GaiaWorld/pi_render" }
 # render_data_container = { git = "https://github.com/GaiaWorld/pi_render" }
 render_data_container = { path = "../pi_render/crates/render_data_container" }
@@ -43,6 +48,9 @@ render_geometry = { path = "../pi_render/crates/render_geometry" }
 render_material = { path = "../pi_render/crates/render_material" }
 # pi_render = { git = "https://github.com/GaiaWorld/pi_render" }
 pi_render = { path = "../pi_render" }
+render_derive = {path = "../pi_render/crates/render_derive"}
+render_resource = { path = "../pi_render/crates/render_resource" }
+
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
 

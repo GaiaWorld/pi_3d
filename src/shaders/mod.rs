@@ -3,11 +3,6 @@ use render_geometry::vertex_data::VertexAttributeDesc;
 
 use crate::{geometry::VDK, materials::MBKK};
 
-use self::buildin_uniforms::bind_group_entry_buffer;
-
-pub mod buildin_attributes;
-pub mod buildin_uniforms;
-
 pub struct BindInfo {
     pub set: u32,
     pub bind: u32,
@@ -64,7 +59,7 @@ pub trait FragmentUniformBind {
         visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
         ty: wgpu::BindingType::Buffer {
             ty: wgpu::BufferBindingType::Uniform,
-            has_dynamic_offset: false,
+            has_dynamic_offset: true,
             min_binding_size: wgpu::BufferSize::new(Self::SIZE as wgpu::BufferAddress),
         },
         count: None,
@@ -75,5 +70,29 @@ pub trait FragmentUniformBind {
         buff: &'a DynUniformBuffer,
     ) -> wgpu::BindGroupEntry<'a> {
         bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), **bind_offset, Self::SIZE as u32)
+    }
+
+    fn dyn_entry<'a>(
+        buff: &'a DynUniformBuffer,
+    ) -> wgpu::BindGroupEntry<'a> {
+        bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), 0, Self::SIZE as u32)
+    }
+}
+
+pub fn bind_group_entry_buffer(
+    id: u32,
+    buffer: &wgpu::Buffer,
+    offset: u32,
+    size: u32,
+) -> wgpu::BindGroupEntry {
+    wgpu::BindGroupEntry {
+        binding: id,
+        resource: wgpu::BindingResource::Buffer(
+            wgpu::BufferBinding {
+                buffer,
+                offset:  offset as wgpu::BufferAddress,
+                size: wgpu::BufferSize::new(size as wgpu::BufferAddress),
+            }
+        ),
     }
 }
