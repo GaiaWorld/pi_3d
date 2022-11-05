@@ -1,6 +1,6 @@
 
 use pi_render::rhi::dyn_uniform_buffer::Uniform;
-use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3};
+use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Vector4};
 
 use crate::{bytes_write_to_memory, meshes::model::BuildinModelBind};
 
@@ -78,7 +78,7 @@ impl GlobalTransform {
 impl Uniform for GlobalTransform {
     fn write_into(&self, index: u32, buffer: &mut [u8]) {
         bytes_write_to_memory(bytemuck::cast_slice(self.matrix.transpose().as_slice()), index as usize + BuildinModelBind::OBJECT_TO_WORLD_OFFSIZE, buffer);
-        bytes_write_to_memory(bytemuck::cast_slice(self.matrix_inv.transpose().as_slice()), index as usize + BuildinModelBind::WORLD_TO_OBJECT_OFFSIZE, buffer);
+        bytes_write_to_memory(bytemuck::cast_slice(self.matrix_inv.as_slice()), index as usize + BuildinModelBind::WORLD_TO_OBJECT_OFFSIZE, buffer);
     }
 }
 
@@ -179,8 +179,9 @@ pub fn calc_world_matrix(
 ) {
     match p_m {
         Some(p_m) => {
-            p_m.mul_to(&l_m, w_m);
+            // p_m.mul_to(&l_m, w_m);
             // l_m.mul_to(&p_m, w_m);
+            w_m.copy_from(&(p_m * l_m));
         },
         None => {
             w_m.copy_from(&l_m);

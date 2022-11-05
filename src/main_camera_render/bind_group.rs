@@ -3,7 +3,7 @@ use pi_ecs_macros::setup;
 use pi_render::{rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice, bind_group::BindGroup}};
 
 
-use crate::{object::{ObjectID, GameObject}, cameras::camera::CameraRenderData, scene::scene_time::SceneTime, environment::{fog::SceneFog, ambient_light::AmbientLight}, materials::{bind_group::RenderBindGroup, SingleDynUnifromBufferReBindFlag}, shaders::FragmentUniformBind, flags::SceneID, resources::RenderDynUniformBuffer};
+use crate::{object::{ObjectID, GameObject}, cameras::camera::{CameraRenderData, CameraViewMatrix, CameraProjectionMatrix, CameraTransformMatrix, CameraGlobalPosition, CameraDirection}, scene::scene_time::SceneTime, environment::{fog::SceneFog, ambient_light::AmbientLight}, materials::{bind_group::RenderBindGroup, SingleDynUnifromBufferReBindFlag}, shaders::FragmentUniformBind, flags::SceneID, resources::RenderDynUniformBuffer};
 
 
 pub struct IDMainCameraRenderBindGroup(pub ObjectID);
@@ -82,18 +82,22 @@ impl SysMainCameraRenderUniformUpdate {
     pub fn tick(
         // query_scenes: Query<GameObject, (ObjectID, &SceneTime, &SceneFog, &AmbientLight)>,
         query_scenes: Query<GameObject, (ObjectID, &SceneTime, ObjectID)>,
-        query_cameras: Query<GameObject, (&SceneID, &CameraRenderData)>,
+        query_cameras: Query<GameObject, (&SceneID, &CameraRenderData, &CameraViewMatrix, &CameraProjectionMatrix, &CameraTransformMatrix, &CameraGlobalPosition, &CameraDirection)>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         println!("Sys MainCameraRender Uniform Update");
         query_scenes.iter().for_each(|scene| {
-            query_cameras.iter().for_each(|camera| {
-                if scene.0 == camera.0.0 {
+            query_cameras.iter().for_each(|(camera_scene, camera_data, view_matrix, project_matrix, transform_matrix, position, direction)| {
+                if scene.0 == camera_scene.0 {
                     println!("MainCameraRender Uniform Update set_uniform");
                     dynbuffer.as_mut().set_uniform(&scene.1.bind_offset, scene.1);
                     // dynbuffer.set_uniform(&scene.2.bind_offset, scene.2);
                     // dynbuffer.set_uniform(&scene.3.bind_offset, scene.3);
-                    dynbuffer.as_mut().set_uniform(&camera.1.bind_offset, camera.1);
+                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, view_matrix);
+                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, project_matrix);
+                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, transform_matrix);
+                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, position);
+                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, direction);
                 }
             });
         });

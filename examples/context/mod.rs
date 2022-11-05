@@ -88,7 +88,7 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
     let _ = runtime.spawn(runtime.alloc(), async move {
         let world = &mut world1;
         let options = RenderOptions {
-            backends: wgpu::Backends::VULKAN,
+            backends: wgpu::Backends::DX12,
             power_preference: wgpu::PowerPreference::HighPerformance,
             ..Default::default()
         };
@@ -99,7 +99,7 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
         let render_stages = init_render(world, options, win1.clone(), rt.clone()).await;
 
         let render_graphic = world.get_resource_mut::<RenderGraph>().unwrap();
-        let clear_id =  render_graphic.add_node("Clear", ScreenClearNode { color: (0., 0., 0., 1.), depth: 1.  }).unwrap();
+        let clear_id =  render_graphic.add_node("Clear", ScreenClearNode { color: (0., 0., 0., 1.), depth: -1.  }).unwrap();
         let device = world.get_resource::<RenderDevice>().unwrap();
 
         init_data(world, win1);

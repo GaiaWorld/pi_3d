@@ -4,7 +4,7 @@ use pi_render::{rhi::{device::RenderDevice, RenderQueue}};
 use pi_scene_math::{Vector3};
 use render_geometry::geometry::VertexAttributeMeta;
 
-use crate::{object::{GameObject, ObjectID}, transforms::transform_node::GlobalTransform, renderers::{render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype}, resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer}, cameras::camera::CameraRenderData, materials::{material::MaterialID, bind_group::RenderBindGroup}, meshes::model::BuildinModelBind, vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}}, main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup}, layer_mask::LayerMask};
+use crate::{object::{GameObject, ObjectID}, transforms::transform_node::GlobalTransform, renderers::{render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype}, resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer}, cameras::camera::{CameraRenderData, CameraGlobalPosition}, materials::{material::MaterialID, bind_group::RenderBindGroup}, meshes::model::BuildinModelBind, vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}}, main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup}, layer_mask::LayerMask};
 
 use super::{shader::DefaultShader, bind_group::{IDDefaultMaterialBindGroup}, pipeline::DefaultMaterialPipeline};
 
@@ -36,7 +36,7 @@ pub struct DefaultMaterialFilter;
 impl DefaultMaterialFilter {
     #[system]
     pub fn tick(
-        query_camera: Query<GameObject, (&RenderObjectID, &SceneID, &LayerMask, &CameraRenderData)>,
+        query_camera: Query<GameObject, (&RenderObjectID, &SceneID, &LayerMask, &CameraRenderData, &CameraGlobalPosition)>,
         mut query_renderers: Query<GameObject, &mut MainCameraRenderer>,
         meshes: Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind)>,
         materials: Query<GameObject, &DefaultMaterialPropertype>,
@@ -55,7 +55,7 @@ impl DefaultMaterialFilter {
         let id_bind_group_main_camera = id_bind_group_main_camera.0;
         let id_bind_group_default = id_bind_group_default.0;
         println!("DefaultMaterial Filter");
-        query_camera.iter().for_each(|(renderid, sceneid, layermask, cameradata)| {
+        query_camera.iter().for_each(|(renderid, sceneid, layermask, cameradata, camerapos)| {
             println!("Camera >>>>>>>>>>>>>>>");
             if bind_groups.get(id_bind_group_main_camera).unwrap().bind_group.is_some()
             && bind_groups.get(id_bind_group_default).unwrap().bind_group.is_some() {
@@ -81,7 +81,7 @@ impl DefaultMaterialFilter {
                             layermask,
                             &materials,
                             &meshes,
-                            &cameradata.global_position,
+                            &camerapos.0,
                             &positions, &normals, &indices,
                             &mut pipelines, &device, &shader, &mut pipeline_pool, &mut renderlist.draws,
                             id_bind_group_default

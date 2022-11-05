@@ -43,33 +43,8 @@ impl LocalRotationMatrixCalc {
                 },
                 false => {},
             }
-            // match l_rotation {
-            //     Some(l_rotation) => coordsys.rotation_matrix_mut_euler_angles(l_rotation.0.x, l_rotation.0.y, l_rotation.0.z, &mut l_rotation_m.0),
-            //     None => {},
-            // }
-            // match l_quaternion {
-            //     Some(l_quaternion) => l_rotation_m.0.clone_from(&l_quaternion.0.to_rotation_matrix()),
-            //     None => {},
-            // }
         });
     }
-    // #[system]
-    // pub fn calc(
-    //     mut query_locals: Query<GameObject, (Option<&LocalRotationEuler>, Option<&LocalRotationQuaternion>, &mut LocalTransform)>,
-    // ) {
-    //     println!("LocalRotationMatrixCalc:");
-    //     let coordsys = CoordinateSytem3::left();
-    //     query_locals.iter_mut().for_each(|(l_rotation, l_quaternion, mut l_rotation_m)| {
-    //         match l_rotation {
-    //             Some(l_rotation) => coordsys.rotation_matrix_mut_euler_angles(l_rotation.0.x, l_rotation.0.y, l_rotation.0.z, &mut l_rotation_m.0),
-    //             None => {},
-    //         }
-    //         match l_quaternion {
-    //             Some(l_quaternion) => l_rotation_m.0.clone_from(&l_quaternion.0.to_rotation_matrix()),
-    //             None => {},
-    //         }
-    //     });
-    // }
 }
 
 pub struct LocalMatrixCalc;
@@ -95,15 +70,6 @@ impl LocalMatrixCalc {
             }
         });
     }
-    // #[system]
-    // pub fn calc(
-    //     mut query_locals: Query<GameObject, (&LocalPosition, &LocalRotationMatrix, &LocalScaling, &mut LocalMatrix)>,
-    // ) {
-    //     println!("LocalMatrixCalc:");
-    //     query_locals.iter_mut().for_each(|(translation, quaternion, scaling, mut wm)| {
-    //         CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &quaternion.0, &translation.0, &mut wm.0);
-    //     });
-    // }
 }
 
 pub struct WorldMatrixCalc;
@@ -117,7 +83,7 @@ impl WorldMatrixCalc {
     ) {
         println!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
-            println!("Get Scene {:?}", root);
+            // println!("Get Scene {:?}", root);
             let mut temp_ids = vec![];
             tree.iter(root).for_each(|v| {
                 match query_ms.get_mut(v) {
@@ -139,11 +105,11 @@ impl WorldMatrixCalc {
             let max = 4096;
             let mut i = 0;
             loop {
-                println!("temp_ids {}", temp_ids.len());
+                // println!("temp_ids {}", temp_ids.len());
                 let mut temp = vec![];
                 if temp_ids.len() > 0 && i < max {
                     temp_ids.into_iter().for_each(|(p_id, p_dirty, p_m)| {
-                        println!("Parent {:?}", p_id);
+                        // println!("Parent {:?}", p_id);
 
                         match tree.get_down(p_id) {
                             Some(node_children_head) => {

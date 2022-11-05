@@ -34,6 +34,7 @@ pub mod vertex_data;
 pub mod run_stage;
 pub mod main_camera_render;
 pub mod layer_mask;
+pub mod texture2d;
 
 pub fn bytes_write_to_memory(
     bytes: &[u8],

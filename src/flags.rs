@@ -100,10 +100,9 @@ impl Default for PrimitiveState {
         Self {
             state: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 polygon_mode: wgpu::PolygonMode::Fill,
-                cull_mode: None,
+                cull_mode: None, //Some(wgpu::Face::Back),
                 ..Default::default()
             }
         }
