@@ -1,3 +1,7 @@
+///
+/// Layer Mask
+/// * 通过 layer mask 数据标识目标的层级信息
+/// * 提供用户操作接口, 对应实现操作命令, 实现操作命令队列, 命令队列的执行System
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write, entity};
 use pi_ecs_macros::setup;
 

@@ -5,7 +5,7 @@ use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRo
 
 use crate::object::{ObjectID, GameObject};
 
-use super::camera::{CameraRenderData};
+use super::{camera::{CameraGlobalPosition, CameraViewMatrix}, dirty::DirtyTargetCamera};
 
 
 /// 通过 设置 target 目标点 调整相机
@@ -15,6 +15,7 @@ pub struct TargetCameraParam {
     pub up: Vector3,
     pub target: Vector3,
     pub ignore_parent_scale: bool,
+    pub dirty: bool,
 }
 
 impl Default for TargetCameraParam {
@@ -23,6 +24,7 @@ impl Default for TargetCameraParam {
             target: Vector3::new(0., 0., 1.),
             up: CoordinateSytem3::up(),
             ignore_parent_scale: false,
+            dirty: true,
         }
     }
 }
@@ -64,14 +66,14 @@ impl TargetCameraParam {
 
         coordsys.rotation_matrix_mut_yaw_pitch_roll(ry, rx, rz, rotation);
     }
-    pub fn view_matrix(&self, coordsys: &CoordinateSytem3, camera_data: &mut CameraRenderData, l_p: &Vector3, p_m: Option<&Matrix>, p_iso: Option<&Isometry3>) {
+    pub fn view_matrix(&self, coordsys: &CoordinateSytem3, view_matrix: &mut CameraViewMatrix, global_position: &mut CameraGlobalPosition, l_p: &Vector3, p_m: Option<&Matrix>, p_iso: Option<&Isometry3>) {
         if self.ignore_parent_scale {
             match p_m {
                 Some(parent_world) => {
                     let transformation = parent_world;
                     let mut eye = Vector3::zeros();
                     CoordinateSytem3::transform_coordinates(l_p, transformation, &mut eye);
-                    camera_data.global_position.copy_from(&eye);
+                    global_position.0.copy_from(&eye);
 
                     let mut target = Vector3::zeros();
                     CoordinateSytem3::transform_coordinates(&self.target, transformation, &mut target);
@@ -82,15 +84,15 @@ impl TargetCameraParam {
                     let mut iso = Isometry3::identity();
                     coordsys.lookat(&eye, &target, &up, &mut iso);
 
-                    camera_data.view_matrix.clone_from(&iso.to_matrix());
+                    view_matrix.0.clone_from(&iso.to_matrix());
                 },
                 None => {
                     let mut iso = Isometry3::identity();
                     let eye = l_p;
                     coordsys.lookat(&eye, &self.target, &self.up, &mut iso);
                     
-                    camera_data.view_matrix.clone_from(&iso.to_matrix());
-                    camera_data.global_position.copy_from(&eye);
+                    view_matrix.0.clone_from(&iso.to_matrix());
+                    global_position.0.copy_from(&eye);
                 },
             }
         } else {
@@ -101,15 +103,15 @@ impl TargetCameraParam {
             match p_iso {
                 Some(parent_iso) => {
                     iso = iso.inv_mul(parent_iso);
-                    camera_data.global_position = iso.translation.vector;
+                    global_position.0 = iso.translation.vector;
                     iso.inverse_mut();
                 },
                 None => {
-                    camera_data.global_position = iso.translation.vector;
+                    global_position.0 = iso.translation.vector;
                 },
             }
 
-            camera_data.view_matrix.clone_from(&iso.to_matrix());
+            view_matrix.0.clone_from(&iso.to_matrix());
         }
     }
 }
@@ -133,15 +135,18 @@ impl SysTargetCameraCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleTargetCameraCommandList>,
-        mut cameras: Query<GameObject, Write<TargetCameraParam>>,
+        mut cameras: Query<GameObject, (Write<TargetCameraParam>, Write<DirtyTargetCamera>)>,
         mut entity_delete: EntityDelete<GameObject>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 TargetCameraCommand::Create(entity) => {
                     match cameras.get_mut(entity) {
-                        Some(mut camera) => {
+                        Some((mut camera, mut dirty_target)) => {
                             camera.insert_no_notify(TargetCameraParam::default());
+                            if dirty_target.get_mut().is_none() {
+                                dirty_target.insert_no_notify(DirtyTargetCamera);
+                            }
                         },
                         None => todo!(),
                     }

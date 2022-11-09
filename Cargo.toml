@@ -16,10 +16,10 @@ smallvec = "1.10"
 
 futures = "0.3"
 
-parry3d = "0.9"
+parry3d = "0.8"
 lazy_static = "1.4"
 pi_spatialtree = { git = "https://github.com/GaiaWorld/pi_spatialtree.git" }
-ncollide3d = "0.27"
+ncollide3d = "0.33"
 
 approx = "0.5"
 naga = { version = "0.9", features = [
@@ -57,11 +57,10 @@ pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
 pi_futures = "0.1"
 pi_async = "0.5"
 pi_idtree = "0.1"
-pi_slotmap_tree = "0.2"
+pi_slotmap_tree = "0.3"
 pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
 pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
-
 
 [patch."https://github.com/GaiaWorld/pi_animation"]
 pi_animation = { path = "../pi_animation" }

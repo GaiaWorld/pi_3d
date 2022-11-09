@@ -4,7 +4,7 @@ use pi_scene_math::{Vector3, Quaternion};
 
 use crate::{object::{ObjectID, GameObject}};
 
-use super::transform_node::{LocalTransform, TransformDirty, GlobalTransform};
+use super::{transform_node::{LocalTransform, GlobalTransform}, dirty::DirtyLocalTransform};
 
 
 pub enum TransformNodeCommand {
@@ -26,7 +26,7 @@ impl SysTransformNodeCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleTransformNodeCommandList>,
-        mut transforms: Query<GameObject, (Write<LocalTransform>, Write<GlobalTransform>, Write<TransformDirty>)>,
+        mut transforms: Query<GameObject, (Write<LocalTransform>, Write<GlobalTransform>, Write<DirtyLocalTransform>)>,
         mut delete: EntityDelete<GameObject>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
@@ -36,7 +36,9 @@ impl SysTransformNodeCommand {
                         Some(mut transform) => {
                             transform.0.insert_no_notify(LocalTransform::default());
                             transform.1.insert_no_notify(GlobalTransform::default());
-                            transform.2.insert_no_notify(TransformDirty::default());
+                            transform.2.insert_no_notify(DirtyLocalTransform);
+                            
+                            // println!("DirtyLocalTransform >>>>>>>>>> ");
                         },
                         None => {},
                     }
@@ -53,7 +55,14 @@ impl SysTransformNodeCommand {
                                 },
                                 None => todo!(),
                             }
-                            transform.2.insert_no_notify(TransformDirty::default());
+                            match transform.2.get_mut() {
+                                Some(_) => {
+                                },
+                                None => {
+                                    transform.2.insert_no_notify(DirtyLocalTransform);
+                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
+                                },
+                            }
                         },
                         None => {},
                     }
@@ -67,7 +76,14 @@ impl SysTransformNodeCommand {
                                 },
                                 None => todo!(),
                             }
-                            transform.2.insert_no_notify(TransformDirty::default());
+                            match transform.2.get_mut() {
+                                Some(_) => {
+                                },
+                                None => {
+                                    transform.2.insert_no_notify(DirtyLocalTransform);
+                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
+                                },
+                            }
                         },
                         None => {},
                     }      
@@ -81,7 +97,14 @@ impl SysTransformNodeCommand {
                                 },
                                 None => todo!(),
                             }
-                            transform.2.insert_no_notify(TransformDirty::default());
+                            match transform.2.get_mut() {
+                                Some(_) => {
+                                },
+                                None => {
+                                    transform.2.insert_no_notify(DirtyLocalTransform);
+                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
+                                },
+                            }
                         },
                         None => {},
                     }      
@@ -95,7 +118,14 @@ impl SysTransformNodeCommand {
                                 },
                                 None => todo!(),
                             }
-                            transform.2.insert_no_notify(TransformDirty::default());
+                            match transform.2.get_mut() {
+                                Some(_) => {
+                                },
+                                None => {
+                                    transform.2.insert_no_notify(DirtyLocalTransform);
+                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
+                                },
+                            }
                         },
                         None => {},
                     }      

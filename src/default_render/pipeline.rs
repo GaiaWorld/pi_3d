@@ -43,6 +43,8 @@ impl DefaultMaterialPipeline {
         }
         let key = calcolator.key;
 
+        // let key = 1;
+
         match self.map.get(&key) {
             None => {
                 let bind_group_0_layout = BindGroupLayout::from(

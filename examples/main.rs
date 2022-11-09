@@ -2,26 +2,10 @@
 
 mod context;
 use context::{create_engine, EnginShell};
-use pi_3d::{
-    cameras::{
-        camera::{CameraParam, CameraRenderData},
-        free_camera::FreeCameraParam,
-        target_camera::TargetCameraParam,
-    },
-    engine::Engine,
-    flags::{SceneCameraID01, SceneID01},
-    default_render::default_material::{ DefaultMaterialPropertype},
-    object::GameObject,
-    transforms::transform_node::{GlobalTransform, LocalTransform, TransformDirty, TransformNode},
-};
 use pi_async::rt::{
-    multi_thread::{MultiTaskRuntimeBuilder, StealableTaskPool},
     AsyncRuntime,
 };
-use pi_ecs::prelude::{Dispatcher, IntoSystem, Query, SingleDispatcher, StageBuilder, World};
 use pi_hal::runtime::MULTI_MEDIA_RUNTIME;
-use pi_render::rhi::dyn_uniform_buffer::DynUniformBuffer;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, Vector3};
 use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
 
 pub fn main() {
@@ -56,7 +40,7 @@ fn run_loop(mut engine_sheel: EnginShell) {
 
                 if time > time1 {
                     let d = time - time1;
-                    let delay = 33;
+                    let delay = 2;
                     let duration = if d > Duration::from_millis(delay) {
                         Duration::from_millis(0)
                     } else {

@@ -10,6 +10,7 @@ pub struct DefaultMaterialPropertype {
     pub bind_offset: BindOffset,
     pub emissive_color: (f32, f32, f32),
     pub emissive_intensity: f32,
+    pub dirty: bool,
 }
 impl DefaultMaterialPropertype {
     pub const EMISSIVE: usize = 4;
@@ -20,6 +21,7 @@ impl DefaultMaterialPropertype {
             bind_offset: dynbuffer.alloc_binding::<Self>(),
             emissive_color: (1., 1., 1.),
             emissive_intensity: 1.,
+            dirty: false,
         }
     }
 }

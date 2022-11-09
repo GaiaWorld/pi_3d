@@ -58,7 +58,7 @@ impl SysDefaultMaterialBindGroupUpdate {
         mut bindgroups: Query<GameObject, &mut RenderBindGroup>,
         id: ResMut<IDDefaultMaterialBindGroup>,
     ) {
-        println!("Sys DefaultMaterial BindGroup Update");
+        //  println!("Sys DefaultMaterial BindGroup Update");
         if dynbuffer_flag.0 {
             match bindgroups.get_mut(id.0) {
                 Some(mut group) => {

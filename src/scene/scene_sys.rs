@@ -5,19 +5,15 @@ use pi_ecs_macros::setup;
 
 use crate::{object::GameObject, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::scene_time::SceneTime};
 
-pub struct SceneUniformTickUpdate;
+pub struct SysDirtySceneTick;
 #[setup]
-impl SceneUniformTickUpdate {
+impl SysDirtySceneTick {
     #[system]
     pub fn tick(
-        query_scenes: Query<GameObject, (&SceneTime, &SceneFog, &AmbientLight)>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+        mut query_scenes: Query<GameObject, (&mut SceneTime, &SceneFog)>
     ) {
-        println!("Scene Uniform Tick Update");
-        query_scenes.iter().for_each(|(time, fog, ambl)| {
-            dynbuffer.set_uniform::<SceneTime>(&time.bind_offset, time);
-            dynbuffer.set_uniform::<SceneFog>(&fog.bind_offset, fog);
-            dynbuffer.set_uniform::<AmbientLight>(&ambl.bind_offset, ambl);
+        query_scenes.iter_mut().for_each(|(mut scene_time, mut scene_fog)| {
+            scene_time.dirty = false;
         });
     }
 }

@@ -89,7 +89,7 @@ impl Node for ScreenClearNode {
         input: &'a Self::Input,
         usage: &'a ParamUsage,
     ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
-        println!("Clear ");
+        // println!("Clear ");
 
         let RenderContext {
             mut world, device, queue, ..

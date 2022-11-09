@@ -1,32 +1,49 @@
-use pi_ecs::{prelude::{Query, ResMut, Res}};
+use std::time::Instant;
+
+use pi_ecs::{prelude::{Query, ResMut, Res}, query::{With, Write}};
 use pi_ecs_macros::setup;
 use pi_render::{rhi::{device::RenderDevice, RenderQueue}};
 use pi_scene_math::{Vector3};
 use render_geometry::geometry::VertexAttributeMeta;
 
-use crate::{object::{GameObject, ObjectID}, transforms::transform_node::GlobalTransform, renderers::{render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype}, resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer}, cameras::camera::CameraRenderData, materials::{material::MaterialID, bind_group::RenderBindGroup}, meshes::model::BuildinModelBind, vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}}, main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup}, layer_mask::LayerMask};
+use crate::{object::{GameObject, ObjectID}, transforms::{transform_node::{GlobalTransform}, dirty::DirtyGlobalTransform}, renderers::{render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype}, resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer}, cameras::camera::{CameraRenderData, CameraGlobalPosition}, materials::{material::MaterialID, bind_group::RenderBindGroup}, meshes::model::BuildinModelBind, vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}}, main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup}, layer_mask::LayerMask};
 
-use super::{shader::DefaultShader, bind_group::{IDDefaultMaterialBindGroup}, pipeline::DefaultMaterialPipeline};
+use super::{shader::DefaultShader, bind_group::{IDDefaultMaterialBindGroup}, pipeline::DefaultMaterialPipeline, dirty::DirtyDefaultMaterialPropertype};
+
+
+pub struct DefaultModelUniformUpdate;
+#[setup]
+impl DefaultModelUniformUpdate {
+    #[system]
+    pub fn tick(
+        meshes: Query<GameObject, (&GlobalTransform, &MaterialID, &BuildinModelBind), With<DirtyGlobalTransform>>,
+        materials: Query<GameObject, &DefaultMaterialPropertype>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+    ) {
+        //  println!("DefaultMaterial Uniform TickUpdate");
+        meshes.iter().for_each(|(transform, mat_id, model)| {
+            match materials.get(mat_id.0) {
+                Some(material) => {
+                    //  println!("DefaultMaterial >>>>>>>>>>>> ");
+                    dynbuffer.as_mut().set_uniform::<GlobalTransform>(&model.bind_offset, transform);
+                },
+                None => todo!(),
+            }
+        });
+    }
+}
 
 pub struct DefaultMaterialUniformUpdate;
 #[setup]
 impl DefaultMaterialUniformUpdate {
     #[system]
     pub fn tick(
-        neshes: Query<GameObject, (&GlobalTransform, &MaterialID, &BuildinModelBind)>,
-        materials: Query<GameObject, &DefaultMaterialPropertype>,
+        materials: Query<GameObject, &DefaultMaterialPropertype, With<DirtyDefaultMaterialPropertype>>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
-        println!("DefaultMaterial Uniform TickUpdate");
-        neshes.iter().for_each(|(transform, mat_id, model)| {
-            match materials.get(mat_id.0) {
-                Some(material) => {
-                    println!("DefaultMaterial >>>>>>>>>>>> ");
-                    dynbuffer.as_mut().set_uniform::<GlobalTransform>(&model.bind_offset, transform);
-                    dynbuffer.as_mut().set_uniform::<DefaultMaterialPropertype>(&material.bind_offset, &material);
-                },
-                None => todo!(),
-            }
+        //  println!("DefaultMaterial Uniform TickUpdate");
+        materials.iter().for_each(|(material)| {
+            dynbuffer.as_mut().set_uniform::<DefaultMaterialPropertype>(&material.bind_offset, &material);
         });
     }
 }
@@ -36,7 +53,7 @@ pub struct DefaultMaterialFilter;
 impl DefaultMaterialFilter {
     #[system]
     pub fn tick(
-        query_camera: Query<GameObject, (&RenderObjectID, &SceneID, &LayerMask, &CameraRenderData)>,
+        query_camera: Query<GameObject, (&RenderObjectID, &SceneID, &LayerMask, &CameraRenderData, &CameraGlobalPosition)>,
         mut query_renderers: Query<GameObject, &mut MainCameraRenderer>,
         meshes: Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind)>,
         materials: Query<GameObject, &DefaultMaterialPropertype>,
@@ -52,14 +69,17 @@ impl DefaultMaterialFilter {
         mut pipelines: ResMut<DefaultMaterialPipeline>,
         mut pipeline_pool: ResMut<SingleRenderObjectPipelinePool>,
     ) {
+        
+        let time = Instant::now();
+
         let id_bind_group_main_camera = id_bind_group_main_camera.0;
         let id_bind_group_default = id_bind_group_default.0;
-        println!("DefaultMaterial Filter");
-        query_camera.iter().for_each(|(renderid, sceneid, layermask, cameradata)| {
-            println!("Camera >>>>>>>>>>>>>>>");
+        //  println!("DefaultMaterial Filter");
+        query_camera.iter().for_each(|(renderid, sceneid, layermask, cameradata, camerapos)| {
+            //  println!("Camera >>>>>>>>>>>>>>>");
             if bind_groups.get(id_bind_group_main_camera).unwrap().bind_group.is_some()
             && bind_groups.get(id_bind_group_default).unwrap().bind_group.is_some() {
-                println!("Main Camera >>>>>>>>>>>>>>>");
+                //  println!("Main Camera >>>>>>>>>>>>>>>");
                 let camera_bind_group = RenderObjectBindGroup {
                     bind_group: id_bind_group_main_camera,
                     offsets: vec![
@@ -70,7 +90,7 @@ impl DefaultMaterialFilter {
 
                 match query_renderers.get_mut(renderid.0) {
                     Some(mut renderer) => {
-                        println!("opaque List >>>>>>>>>>>>>>> {:?}", renderid.0);
+                        // println!("opaque List >>>>>>>>>>>>>>> {:?}", renderid.0);
 
                         let renderlist = &mut renderer.opaque_draws;
                         renderlist.draws.clear();
@@ -81,7 +101,7 @@ impl DefaultMaterialFilter {
                             layermask,
                             &materials,
                             &meshes,
-                            &cameradata.global_position,
+                            &camerapos.0,
                             &positions, &normals, &indices,
                             &mut pipelines, &device, &shader, &mut pipeline_pool, &mut renderlist.draws,
                             id_bind_group_default
@@ -91,6 +111,9 @@ impl DefaultMaterialFilter {
                 }
             }
         });
+        // let _use_time = Instant::now() - pre_frame_time;
+        let time1 = Instant::now();
+        println!("DefaultMaterialFilter: {:?}", time1 - time);
     }
 }
 
@@ -117,12 +140,13 @@ fn collect_opaque_normal_depth(
         let depth_stencil = item.6;
         let globaltransform = item.7;
         let model = item.11;
-        println!("opaque draw obj >>>>>>>>>>>>>>> {:?}, {:?}, {:?}, {:?}", sceneid, item.1.0, layermask, item.5);
+        // println!("opaque draw obj >>>>>>>>>>>>>>> {:?}, {:?}, {:?}, {:?}", sceneid, item.1.0, layermask, item.5);
         if sceneid == item.1.0 && layermask.include(&item.2) {
             match materials.get(item.0.0) {
                 Some(mat) => {
                     match (positions.get(item.8.0), normals.get(item.9.0), indices.get(item.10.0)) {
                         (Some(position), Some(normal), Some(indices)) => {
+                            // if list.len() >= 1 { return; }
                             let view_distance = camerapos.metric_distance(&globaltransform.position);
                             let pipeline = pipelines.build(
                                 device,
@@ -180,7 +204,7 @@ fn collect_opaque_normal_depth(
                                 render_sort: *rendersort,
                                 view_distance,
                             };
-                            println!("{:?}", meta);
+                            // println!("{:?}", meta);
                             list.push(meta);
                         },
                         (_, _, _) => {

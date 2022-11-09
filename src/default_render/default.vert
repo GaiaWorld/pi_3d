@@ -26,18 +26,20 @@ layout(set = 1, binding = 0) uniform Model {
 // <<<<<<<<<<<<< Buildin Vertex
 
 layout(location = 0) out vec3 v_normal;
+layout(location = 1) out vec3 v_pos;
 
 void main() {
-    mat4 finalWorld = PI_MATRIX_P * PI_MATRIX_V;
+    mat4 finalWorld = PI_ObjectToWorld;
 
-    vec4 positionUpdate = vec4(a_position * 0.5, 1.);
+    vec4 position =  vec4(a_position, 1.);
+    vec4 worldPos =  finalWorld * position;
+    // vec4 worldPos =  position;
 
-    positionUpdate = PI_ObjectToWorld * positionUpdate;
+    gl_Position = PI_MATRIX_VP * worldPos;
+    // gl_Position = position;
 
-    gl_Position = PI_MATRIX_VP * positionUpdate;
-    // gl_Position = vec4(a_position * 0.5, 1.);
+    v_pos = worldPos.xyz;
 
-    mat3 normalWorld = mat3(PI_ObjectToWorld);
-    v_normal = normalize(normalWorld * a_normal);
-    v_normal = a_normal;
+    mat3 normalWorld = mat3(finalWorld);
+    v_normal = a_normal; // normalize(vec3(finalWorld * vec4(a_normal, 1.0)));
 }

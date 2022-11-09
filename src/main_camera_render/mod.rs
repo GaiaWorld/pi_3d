@@ -84,7 +84,7 @@ impl InterfaceMainCamera for crate::engine::Engine {
 
             let world = self.world_mut();
             let commands = world.get_resource_mut::<SingleMainCameraRenderCommandList>().unwrap();
-            commands.list.push(MainCameraRenderCommand::Active(object, RenderObjectID(render_id)));
+            commands.list.push(MainCameraRenderCommand::Active(object, RenderObjectID(render_id), None));
         } else {
             //
         }

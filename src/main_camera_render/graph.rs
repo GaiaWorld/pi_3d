@@ -1,7 +1,9 @@
+use std::time::Instant;
+
 use futures::FutureExt;
 use pi_ecs::query::QueryState;
 use pi_futures::BoxFuture;
-use pi_render::{graph::{NodeId, graph::RenderGraph, node::Node, RenderContext}, rhi::texture::ScreenTexture};
+use pi_render::{graph::{NodeId, graph::RenderGraph, node::Node, RenderContext}, rhi::{texture::ScreenTexture, pipeline::RenderPipeline}};
 use render_data_container::GeometryBufferPool;
 
 use crate::{cameras::camera::CameraViewport, renderers::render_object::{RenderObjectOpaqueList, RenderObjectTransparentList}, object::{ObjectID, GameObject}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, main_camera_render::MainCameraRenderer, materials::bind_group::RenderBindGroup};
@@ -28,6 +30,8 @@ impl Node for SingleMainCameraOpaqueRenderNode {
         input: &'a Self::Input,
         usage: &'a pi_render::graph::node::ParamUsage,
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
+        let mut time = Instant::now();
+
         let RenderContext {
             mut world, device, queue, ..
         } = context;
@@ -37,7 +41,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
         let query = QueryState::<GameObject, &MainCameraRenderer>::new(&mut world);
         let bind_groups = QueryState::<GameObject, &RenderBindGroup>::new(&mut world);
 
-        println!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
+        //  println!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
         match query.get(&world, self.renderer_id) {
             Some(renderer) => {
                 let opaque_list = &renderer.opaque_draws;
@@ -80,7 +84,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                         Some(render_bind_group) => {
                             match &render_bind_group.bind_group {
                                 Some(group) => {
-                                    println!("MainCameraOpaque set_bind_group ............. {:?}", bindinfo.offsets);
+                                    //  println!("MainCameraOpaque set_bind_group ............. {:?}", bindinfo.offsets);
                                     renderpass.set_bind_group(render_bind_group.set, &group, &bindinfo.offsets);
                                 },
                                 None => todo!(),
@@ -89,18 +93,26 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                         None => todo!(),
                     }
                 });
-        
+                let pipelines = world.get_resource::<SingleRenderObjectPipelinePool>().unwrap();
+                let gbp = world.get_resource::<SingleGeometryBufferPool>().unwrap();
+
+                time = Instant::now();
+                // let mut pipeline: Option<&RenderPipeline> = None;
+                let item = opaque_list.draws.get(0).unwrap();
+                // let buffer = gbp.get_buffer(&item.positions.gbid).clone();
+                // let buffer2 = gbp.get_buffer(&item.indices.as_ref().unwrap().gbid).clone();
                 opaque_list.draws.iter().for_each(|draw| {
-                    println!("SingleMainCameraOpaqueRenderNode draws .............");
-                    let pipelines = world.get_resource::<SingleRenderObjectPipelinePool>().unwrap();
-                    let gbp = world.get_resource::<SingleGeometryBufferPool>().unwrap();
+                    //  println!("SingleMainCameraOpaqueRenderNode draws .............");
+                    // if pipeline.is_none() {
+                    //     pipeline = pipelines.map.get(draw.pipeline.id);
+                    // }
                     match pipelines.map.get(draw.pipeline.id) {
                         Some(pipeline) => {
-                            println!("SingleMainCameraOpaqueRenderNode pipeline .............");
+                            //  println!("SingleMainCameraOpaqueRenderNode pipeline .............");
                             let positions = &draw.positions;
                             match gbp.get_buffer(&positions.gbid) {
                                 Some(buffer) => {
-                                    println!("SingleMainCameraOpaqueRenderNode draw .............");
+                                    //  println!("SingleMainCameraOpaqueRenderNode draw .............");
                                     let start = positions.start as wgpu::BufferAddress;
                                     let end = positions.end as wgpu::BufferAddress;
                                     renderpass.set_vertex_buffer(positions.slot, buffer.slice(start..end));
@@ -142,7 +154,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                                                     renderpass.set_index_buffer(buffer.slice(start..end), indices.format);
                                                     let indices_count = indices.count as u32;
                                                     renderpass.draw_indexed(0..indices_count, 0 as i32, 0..1);
-                                                    println!("SingleMainCameraOpaqueRenderNode draw_indexed .............");
+                                                    // println!("SingleMainCameraOpaqueRenderNode draw_indexed .............");
                                                 },
                                                 None => {
                                                     renderpass.draw(0..vertex_count, 0..1);
@@ -166,6 +178,9 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                 
             },
         }
+        
+        let time1 = Instant::now();
+        println!("MainCameraOpaqueRenderNode: {:?}", time1 - time);
 
         async move {
             Ok(())

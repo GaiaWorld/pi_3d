@@ -24,7 +24,7 @@ impl SysDynUnifromBufferUpdate {
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
         mut flag: ResMut<SingleDynUnifromBufferReBindFlag>,
     ) {
-        println!("SysDynUnifromBuffer Update");
+        //  println!("SysDynUnifromBuffer Update");
         flag.0 = dynbuffer.write_buffer(&device, &queue);
     }
 }
