@@ -36,7 +36,7 @@ void main() {
 
     vec3 fog_color = vec3(1.0, 1.0, 1.0); // 雾颜色。
 
-    vec3 pixel_color = mix(fog_color, pixel_color, v_dist);
+    pixel_color = mix(fog_color, pixel_color, v_dist);
 
     gl_FragColor = vec4(pixel_color, alpha);
 }

@@ -61,7 +61,7 @@ void main() {
     mat3 normalWorld = mat3(PI_ObjectToWorld);
     v_normal = normalize(normalWorld * a_normal);
     v_normal = a_normal;
-    v_dist = applyFog(distance(PI_MATRIX_VP * positionUpdate, PI_CAMERA_POSITION), PI_CAMERA_POSITION.xyz, (PI_CAMERA_POSITION- (PI_MATRIX_VP * positionUpdate)).xyz);
+    v_dist = applyFog(distance(positionUpdate.xyz, PI_CAMERA_POSITION.xyz), PI_CAMERA_POSITION.xyz, PI_CAMERA_POSITION.xyz - positionUpdate.xyz);
 
     // v_dist = distance(PI_MATRIX_VP * positionUpdate, PI_CAMERA_POSITION) ;
 

@@ -5,7 +5,7 @@ use pi_scene_math::Vector3;
 use render_geometry::geometry::VertexAttributeMeta;
 
 use crate::{
-    cameras::camera::CameraRenderData,
+    cameras::camera::{CameraRenderData, CameraGlobalPosition},
     flags::{PrimitiveState, RenderBlend, RenderDepthAndStencil, RenderSortParam, SceneID, RenderTargetState},
     layer_mask::LayerMask,
     main_camera_render::{bind_group::IDMainCameraRenderBindGroup, MainCameraRenderer},
@@ -56,7 +56,7 @@ pub struct SkyboxMaterialFilter;
 impl SkyboxMaterialFilter {
     #[system]
     pub fn tick(
-        query_camera: Query<GameObject, (&RenderObjectID, &SceneID, &LayerMask, &CameraRenderData)>,
+        query_camera: Query<GameObject, (&RenderObjectID, &SceneID, &LayerMask, &CameraRenderData, &CameraGlobalPosition)>,
         mut query_renderers: Query<GameObject, &mut MainCameraRenderer>,
         meshes: Query<
             GameObject,
@@ -93,7 +93,7 @@ impl SkyboxMaterialFilter {
         println!("SkyboxMaterial Filter");
         query_camera
             .iter()
-            .for_each(|(renderid, sceneid, layermask, cameradata)| {
+            .for_each(|(renderid, sceneid, layermask, cameradata, global_position)| {
                 println!("Camera >>>>>>>>>>>>>>>");
                 if bind_groups
                     .get(id_bind_group_main_camera)
@@ -125,7 +125,7 @@ impl SkyboxMaterialFilter {
                                 layermask,
                                 &materials,
                                 &meshes,
-                                &cameradata.global_position,
+                                &global_position.0,
                                 &positions,
                                 &normals,
                                 &indices,
