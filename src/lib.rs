@@ -8,6 +8,7 @@ use plugin::Plugin;
 use main_camera_render::PluginMainCameraRender;
 use resources::PluginResource;
 use scene::PluginScene;
+use skybox::{PluginSkybox, interface::PluginSkyboxMaterial};
 use transforms::PluginTransformNode;
 use vertex_data::{color4::PluginAttributeColor4, normal::PluginAttributeNormal, position::PluginAttributePosition, indices::PluginAttributeIndices, uv::PluginAttributeUV};
 
@@ -34,6 +35,7 @@ pub mod vertex_data;
 pub mod run_stage;
 pub mod main_camera_render;
 pub mod layer_mask;
+pub mod skybox;
 
 pub fn bytes_write_to_memory(
     bytes: &[u8],
@@ -69,10 +71,13 @@ impl Plugin for PluginBundleDefault {
         PluginMaterialID::init(engine, stages);
         PluginLayerMask::init(engine, stages);
 
-        PluginDefaultMaterial::init(engine, stages);
-
         PluginMainCameraRender::init(engine, stages);
-        PluginCubeBuilder::init(engine, stages);
+
+        // PluginDefaultMaterial::init(engine, stages);
+        PluginSkyboxMaterial::init(engine, stages);
+
+        // PluginCubeBuilder::init(engine, stages);
+        PluginSkybox::init(engine, stages);
 
         Ok(())
     }
