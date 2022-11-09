@@ -5,11 +5,12 @@ use pi_scene_math::Vector3;
 
 use crate::{object::{ObjectID, GameObject}, plugin::Plugin, scene::{InterfaceScene}};
 
-use self::{transform_node_command::{SysTransformNodeCommand, SingleTransformNodeCommandList, TransformNodeCommand}, transform_node_sys::{LocalRotationMatrixCalc, LocalMatrixCalc, WorldMatrixCalc}};
+use self::{transform_node_command::{SysTransformNodeCommand, SingleTransformNodeCommandList, TransformNodeCommand}, transform_node_sys::{LocalRotationMatrixCalc, LocalMatrixCalc, WorldMatrixCalc}, dirty::SysDirtyTransformNodeTick};
 
 pub mod transform_node;
 pub mod transform_node_sys;
 pub mod transform_node_command;
+pub mod dirty;
 
 pub enum TreeCommand {
     Append(ObjectID, ObjectID),
@@ -65,6 +66,12 @@ pub trait InterfaceTransformNode {
         node: ObjectID,
         parent: ObjectID,
     ) -> &mut Self;
+    
+    fn transform_rotation_euler(
+        &mut self,
+        node: ObjectID,
+        euler_angle: Vector3
+    ) -> &mut Self;
 }
 impl InterfaceTransformNode for crate::engine::Engine {
     fn create_transform_node(
@@ -109,6 +116,19 @@ impl InterfaceTransformNode for crate::engine::Engine {
         self
     }
 
+    fn transform_rotation_euler(
+        &mut self,
+        node: ObjectID,
+        euler_angle: Vector3
+    ) -> &mut Self {
+        let world = self.world_mut();
+
+        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
+        commands.list.push(TransformNodeCommand::ModifyRotation(node, euler_angle));
+
+        self
+    }
+
     fn transform_parent(
         &mut self,
         node: ObjectID,
@@ -117,6 +137,7 @@ impl InterfaceTransformNode for crate::engine::Engine {
         let world = self.world_mut();
 
         let commands = world.get_resource_mut::<SingleTreeCommandList>().unwrap();
+        commands.list.push(TreeCommand::Remove(node));
         commands.list.push(TreeCommand::Append(node, parent));
 
         self
@@ -133,6 +154,7 @@ impl Plugin for PluginTransformNode {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
+        SysDirtyTransformNodeTick::setup(world, stages.dirty_state_stage());
         SysTreeCommand::setup(world, stages.command_stage());
         SysTransformNodeCommand::setup(world, stages.command_stage());
         LocalRotationMatrixCalc::setup(world, stages.local_matrix_stage());

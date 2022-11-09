@@ -23,6 +23,7 @@ impl Default for RunStage {
                 StageBuilder::new(),
 
                 StageBuilder::new(),
+                StageBuilder::new(),
             ]
         }
     }
@@ -39,6 +40,7 @@ impl RunStage {
     const BETWEEN_UNIFORM_UPDATE_AND_FILTER_CULLING: usize = 8;
     const FILTER_CULLING: usize = 9;
     const RENDER_SORT: usize = 10;
+    const DIRTY_STATE: usize = 11;
     pub fn command_stage(&mut self) -> &mut StageBuilder {
         self.list.get_mut(Self::COMMAND).unwrap()
     }
@@ -71,6 +73,9 @@ impl RunStage {
     }
     pub fn render_sort(&mut self) -> &mut StageBuilder {
         self.list.get_mut(Self::RENDER_SORT).unwrap()
+    }
+    pub fn dirty_state_stage(&mut self) -> &mut StageBuilder {
+        self.list.get_mut(Self::DIRTY_STATE).unwrap()
     }
     pub fn drain(&mut self) -> Drain<StageBuilder> {
         self.list.drain(..)

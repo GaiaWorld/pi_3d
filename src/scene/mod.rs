@@ -3,10 +3,11 @@ use pi_ecs_macros::setup;
 
 use crate::{object::{ObjectID, GameObject}, flags::SceneID, plugin::Plugin, resources::RenderDynUniformBuffer};
 
-use self::{coordinate_system::SceneCoordinateSytem, scene_time::SceneTime};
+use self::{coordinate_system::SceneCoordinateSytem, scene_time::{SceneTime}, scene_sys::SysDirtySceneTick};
 
 pub mod scene_time;
 pub mod coordinate_system;
+pub mod scene_sys;
 
 #[derive(Debug)]
 pub enum SceneCommand {
@@ -61,6 +62,7 @@ impl Plugin for PluginScene {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
+        SysDirtySceneTick::setup(world, stages.dirty_state_stage());
         SysSceneCommand::setup(world, stages.command_stage());
 
         Ok(())

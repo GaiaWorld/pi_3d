@@ -5,7 +5,7 @@ use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRo
 
 use crate::object::{ObjectID, GameObject};
 
-use super::camera::{CameraRenderData, CameraGlobalPosition, CameraViewMatrix};
+use super::{camera::{CameraGlobalPosition, CameraViewMatrix}, dirty::DirtyTargetCamera};
 
 
 /// 通过 设置 target 目标点 调整相机
@@ -15,6 +15,7 @@ pub struct TargetCameraParam {
     pub up: Vector3,
     pub target: Vector3,
     pub ignore_parent_scale: bool,
+    pub dirty: bool,
 }
 
 impl Default for TargetCameraParam {
@@ -23,6 +24,7 @@ impl Default for TargetCameraParam {
             target: Vector3::new(0., 0., 1.),
             up: CoordinateSytem3::up(),
             ignore_parent_scale: false,
+            dirty: true,
         }
     }
 }
@@ -133,15 +135,18 @@ impl SysTargetCameraCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleTargetCameraCommandList>,
-        mut cameras: Query<GameObject, Write<TargetCameraParam>>,
+        mut cameras: Query<GameObject, (Write<TargetCameraParam>, Write<DirtyTargetCamera>)>,
         mut entity_delete: EntityDelete<GameObject>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 TargetCameraCommand::Create(entity) => {
                     match cameras.get_mut(entity) {
-                        Some(mut camera) => {
+                        Some((mut camera, mut dirty_target)) => {
                             camera.insert_no_notify(TargetCameraParam::default());
+                            if dirty_target.get_mut().is_none() {
+                                dirty_target.insert_no_notify(DirtyTargetCamera);
+                            }
                         },
                         None => todo!(),
                     }

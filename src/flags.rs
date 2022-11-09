@@ -102,7 +102,9 @@ impl Default for PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 front_face: wgpu::FrontFace::Ccw,
                 polygon_mode: wgpu::PolygonMode::Fill,
-                cull_mode: None, //Some(wgpu::Face::Back),
+                cull_mode: Some(wgpu::Face::Back),
+                // 不设置可能渲染出来黑的
+                unclipped_depth: true,
                 ..Default::default()
             }
         }

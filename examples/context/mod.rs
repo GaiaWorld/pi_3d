@@ -88,7 +88,7 @@ pub fn create_engine(win: &Arc<Window>, _r: f64) -> EnginShell {
     let _ = runtime.spawn(runtime.alloc(), async move {
         let world = &mut world1;
         let options = RenderOptions {
-            backends: wgpu::Backends::DX12,
+            backends: wgpu::Backends::VULKAN,
             power_preference: wgpu::PowerPreference::HighPerformance,
             ..Default::default()
         };

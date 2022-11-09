@@ -3,12 +3,11 @@ use pi_render::rhi::dyn_uniform_buffer::{Uniform, Bind, BindOffset};
 
 use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory, resources::RenderDynUniformBuffer};
 
-
-
 pub struct SceneTime {
     pub time: f32,
     pub delta_tims: f32,
     pub bind_offset: BindOffset,
+    pub dirty: bool,
 }
 impl SceneTime {
     pub const TIME: usize = 4;
@@ -24,6 +23,7 @@ impl SceneTime {
             time: 0.,
             delta_tims: 0.,
             bind_offset: dynbuffer.alloc_binding::<Self>(),
+            dirty: true,
         }
     }
 }

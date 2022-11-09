@@ -4,8 +4,6 @@ use pi_scene_math::{Vector3, Number, Perspective3, Orthographic3, Matrix};
 
 use crate::object::{ObjectID, GameObject};
 
-use super::{camera::{CameraParam, CameraRenderData, CameraProjectionMatrix}, target_camera::TargetCameraParam};
-
 
 pub struct FreeCameraParam {
 }

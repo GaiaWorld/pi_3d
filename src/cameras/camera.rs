@@ -38,7 +38,7 @@ impl Default for CameraTransformMatrix {
 }
 impl Uniform for CameraTransformMatrix {
     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        println!(">>>>>>>>> {:?}", self.0.as_slice());
+        //  println!(">>>>>>>>> {:?}", self.0.as_slice());
         bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + CameraRenderData::PI_MATRIX_VP_OFFSIZE, buffer);
     }
 }
@@ -147,6 +147,7 @@ pub struct CameraParam {
     pub fixed_mode: EFixedMode,
     pub mode: EFreeCameraMode,
     pub orth_size: Number,
+    pub dirty: bool,
 }
 impl Default for CameraParam {
     fn default() -> Self {
@@ -160,6 +161,7 @@ impl Default for CameraParam {
             fov: Number::to_radians(60.0),
             fixed_mode: EFixedMode::VerticalFixed,
             mode: EFreeCameraMode::Orthograhic,
+            dirty: true,
         }
     }
 }
@@ -270,6 +272,7 @@ impl SysCameraCommand {
                             match camera.0.get_mut() {
                                 Some(camera) => {
                                     camera.orth_size = value;
+                                    camera.dirty = true;
                                 },
                                 None => todo!(),
                             }

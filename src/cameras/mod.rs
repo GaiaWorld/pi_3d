@@ -3,13 +3,14 @@ use pi_scene_math::Number;
 
 use crate::{plugin::Plugin, object::{ObjectID}, transforms::InterfaceTransformNode, scene::InterfaceScene};
 
-use self::{camera::{SysCameraCommand, SingleCameraCommandList, CameraCommand}, camera_sys::{TargetCameraViewMatrixCalc, SysCameraTransformMatrix, SysCameraProjectionCalc}, free_camera::{SysFreeCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand}, target_camera::{SysTargetCameraCommand, SingleTargetCameraCommandList, TargetCameraCommand}};
+use self::{camera::{SysCameraCommand, SingleCameraCommandList, CameraCommand}, camera_sys::{TargetCameraViewMatrixCalc, SysCameraTransformMatrix, SysCameraProjectionCalc}, free_camera::{SysFreeCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand}, target_camera::{SysTargetCameraCommand, SingleTargetCameraCommandList, TargetCameraCommand}, dirty::{SysDirtyCameraParamTick, SysDirtyCameraRenderDataTick, SysDirtyTargetCameraTick}};
 
 pub mod camera;
 pub mod free_camera;
 pub mod arc_rotate_camera;
 pub mod target_camera;
 pub mod camera_sys;
+pub mod dirty;
 
 pub struct PluginCamera;
 impl Plugin for PluginCamera {
@@ -19,6 +20,9 @@ impl Plugin for PluginCamera {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
+        SysDirtyTargetCameraTick::setup(world, stages.dirty_state_stage());
+        SysDirtyCameraParamTick::setup(world, stages.dirty_state_stage());
+        SysDirtyCameraRenderDataTick::setup(world, stages.dirty_state_stage());
         SysCameraCommand::setup(world, stages.command_stage());
         SysTargetCameraCommand::setup(world, stages.command_stage());
         SysFreeCameraCommand::setup(world, stages.command_stage());

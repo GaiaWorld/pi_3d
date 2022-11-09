@@ -13,7 +13,7 @@ impl SysCameraCulling {
         cameras: Query<GameObject, (&CameraTransformMatrix, &SceneID)>,
         mut objects: Query<GameObject, (&BoundingInfo, &SceneID)>,
     ) {
-        println!("Scene Camera Culling:");
+        //  println!("Scene Camera Culling:");
         cameras.iter().for_each(|camera| {
             let mut frustum_planes = FrustumPlanes::default();
             frustum_planes.from_transform_matrix(&camera.0.0);

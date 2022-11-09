@@ -34,15 +34,15 @@ impl SysMainCameraRenderCommand {
             match cmd {
                 MainCameraRenderCommand::Active(entity, render_id, viewport) => {
                     match cameras.get_mut(entity) {
-                        Some(mut item) => {
-                            item.0.insert_no_notify(CameraRenderData::new(&mut dynbuffer));
-                            item.1.insert_no_notify(render_id);
+                        Some((mut camera_data, mut renderobj, mut camera_viewport)) => {
+                            camera_data.insert_no_notify(CameraRenderData::new(&mut dynbuffer));
+                            renderobj.insert_no_notify(render_id);
                             match viewport {
                                 Some(viewport) => {
-                                    item.2.insert_no_notify(viewport);
+                                    camera_viewport.insert_no_notify(viewport);
                                 },
                                 None => {
-                                    item.2.insert_no_notify(CameraViewport::default());
+                                    camera_viewport.insert_no_notify(CameraViewport::default());
                                 },
                             }
                         },

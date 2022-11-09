@@ -35,20 +35,14 @@ impl CubeBuilder {
     ) -> AttributePosition {
         let mut position = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
         let mut data = [
-            1., -1., 1., 
-            -1., -1., 1., 
-            -1., 1., 1., 
-            1., 1., 1., 
+            1., -1., 1., -1., -1., 1., -1., 1., 1., 1., 1., 1., 
+            1., 1., -1., -1., 1., -1., -1., -1., -1.,  1., -1., -1., 
+            1., 1., -1., 1., -1., -1., 1., -1., 1., 1., 1., 1.,
+            -1., 1., 1., -1., -1., 1., -1., -1., -1., -1., 1., -1.,
+            -1., 1., 1., -1., 1., -1., 1., 1., -1., 1., 1., 1., 
+            1., -1., 1., 1., -1., -1., -1., -1., -1., -1., -1., 1.
+        ];
 
-            1., 1., -1., 
-            -1., 1., -1., 
-            -1., -1., -1., 
-            1., -1., -1., 
-
-            1., 1., -1., 1., -1., -1., 1., -1., 1., 1., 1., 1., -1., 1., 1., -1., -1., 1., -1., -1., -1., -1., 1., -1., -1., 1., 1., -1., 1., -1., 1., 1., -1., 1., 1., 1., 1., -1., 1., 1., -1., -1., -1., -1., -1., -1., -1., 1.];
-        data.iter_mut().for_each(|v| {
-            *v = *v * 0.5 + 0.5;
-        });
         position.update_f32(&data, 0);
         position.update_buffer(device, queue);
         let id_position = gbp.insert(position);
@@ -75,7 +69,8 @@ impl CubeBuilder {
             1., 0., 0., 1., 0., 0., 1., 0., 0., 1., 0., 0., 
             -1., 0., 0., -1., 0., 0., -1., 0., 0., -1., 0., 0., 
             0., 1., 0., 0., 1., 0., 0., 1., 0., 0., 1., 0., 
-            0., -1., 0., 0., -1., 0., 0., -1., 0., 0., -1., 0.];        let mut indices = GeometryBuffer::new(false, EVertexDataFormat::U16, true);
+            0., -1., 0., 0., -1., 0., 0., -1., 0., 0., -1., 0.
+        ];
         let mut normals = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
         normals.update_f32(&data, 0);
         normals.update_buffer(device, queue);
@@ -96,7 +91,14 @@ impl CubeBuilder {
         queue: &RenderQueue,
         gbp: &mut SingleGeometryBufferPool,
     ) -> AttributeIndices {
-        let data = [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23];
+        let data = [
+            0, 1, 2, 0, 2, 3,
+            4, 5, 6, 4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15,
+            16, 17, 18, 16, 18, 19,
+            20, 21, 22, 20, 22, 23
+        ];
         let mut indices = GeometryBuffer::new(true, EVertexDataFormat::U16, true);
         indices.update_u16(&data, 0);
         indices.update_buffer(device, queue);

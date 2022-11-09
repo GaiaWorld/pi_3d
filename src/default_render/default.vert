@@ -31,42 +31,15 @@ layout(location = 1) out vec3 v_pos;
 void main() {
     mat4 finalWorld = PI_ObjectToWorld;
 
-    mat4 w = mat4(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    );
+    vec4 position =  vec4(a_position, 1.);
+    vec4 worldPos =  finalWorld * position;
+    // vec4 worldPos =  position;
 
-    mat4 v = mat4(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 10.0,
-        0.0, 0.0, 0.0, 1.0
-    );
+    gl_Position = PI_MATRIX_VP * worldPos;
+    // gl_Position = position;
 
-    mat4 p = mat4(
-        0.25, 0.0, 0.0, 0.0,
-        0.0, 0.25, 0.0, 0.0,
-        0.0, 0.0, 0.002002002,  -1.002002,
-        0.0, 0.0, 0.0, 1.0
-    );
+    v_pos = worldPos.xyz;
 
-    mat4 vp = mat4(
-         0.25, 0.0, 0.0, 0.0,
-        0.0, 0.25, 0.0, 0.0,
-        0.0, 0.0, 0.0020020019728690386,  -0.9819819927215576,
-        0.0, 0.0, 0.0, 1.0
-    );
-
-    vec4 worldPos =  PI_MATRIX_VP * PI_ObjectToWorld * vec4(a_position * 0.5, 1.);
-
-worldPos.z = (worldPos.z + 1.) * 0.5;
-    gl_Position = worldPos; //  * PI_MATRIX_VP;
-    v_pos = gl_Position.xyz;
-    // gl_Position = vec4(a_position * 0.5, 1.);
-
-    mat3 normalWorld = mat3(PI_ObjectToWorld);
-    v_normal = normalize(normalWorld * a_normal);
-    v_normal = a_normal;
+    mat3 normalWorld = mat3(finalWorld);
+    v_normal = a_normal; // normalize(vec3(finalWorld * vec4(a_normal, 1.0)));
 }

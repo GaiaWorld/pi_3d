@@ -5,7 +5,7 @@ use pi_scene_math::Number;
 
 use crate::{object::{ObjectID, GameObject}, materials::material::MaterialID, resources::RenderDynUniformBuffer};
 
-use super::default_material::{DefaultMaterialPropertype, SingleDefaultMaterialBindDynInfoSet};
+use super::{default_material::{DefaultMaterialPropertype, SingleDefaultMaterialBindDynInfoSet}, dirty::DirtyDefaultMaterialPropertype};
 
 
 pub enum DefaultMaterialCommand {
@@ -25,7 +25,7 @@ impl SysDefaultMaterialCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingeDefaultMaterialCommandList>,
-        mut materials: Query<GameObject, Write<DefaultMaterialPropertype>>,
+        mut materials: Query<GameObject, (Write<DefaultMaterialPropertype>, Write<DirtyDefaultMaterialPropertype>)>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
         mut matrecord: ResMut<SingleDefaultMaterialBindDynInfoSet>,
         mut entity_delete: EntityDelete<GameObject>,
@@ -34,9 +34,10 @@ impl SysDefaultMaterialCommand {
             match cmd {
                 DefaultMaterialCommand::Create(entity) => {
                     match materials.get_mut(entity) {
-                        Some(mut mat) => {
-                            println!("DefaultMaterialCommand Create");
+                        Some((mut mat, mut dirty_mat)) => {
+                            //  println!("DefaultMaterialCommand Create");
                             mat.insert_no_notify(DefaultMaterialPropertype::new(&mut dynbuffer));
+                            dirty_mat.insert_no_notify(DirtyDefaultMaterialPropertype);
                             matrecord.add(MaterialID(entity));
                         },
                         None => {
@@ -54,10 +55,16 @@ impl SysDefaultMaterialCommand {
                 },
                 DefaultMaterialCommand::EmissiveColor(entity, r, g, b) => {
                     match materials.get_mut(entity) {
-                        Some(mut mat) => {
+                        Some((mut mat, mut dirty_mat)) => {
                             match mat.get_mut() {
                                 Some(mat) => {
                                     mat.emissive_color = (r, g, b);
+                                },
+                                None => todo!(),
+                            }
+                            match dirty_mat.get_mut() {
+                                Some(_) => {
+                                    dirty_mat.insert_no_notify(DirtyDefaultMaterialPropertype);
                                 },
                                 None => todo!(),
                             }
@@ -69,10 +76,16 @@ impl SysDefaultMaterialCommand {
                 },
                 DefaultMaterialCommand::EmissiveIntensity(entity, intensity) => {
                     match materials.get_mut(entity) {
-                        Some(mut mat) => {
+                        Some((mut mat, mut dirty_mat)) => {
                             match mat.get_mut() {
                                 Some(mat) => {
                                     mat.emissive_intensity = intensity;
+                                },
+                                None => todo!(),
+                            }
+                            match dirty_mat.get_mut() {
+                                Some(_) => {
+                                    dirty_mat.insert_no_notify(DirtyDefaultMaterialPropertype);
                                 },
                                 None => todo!(),
                             }

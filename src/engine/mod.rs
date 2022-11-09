@@ -48,7 +48,7 @@ impl Engine {
     pub fn tick_run(
         &mut self,
     ) {
-        println!("Engine Tick Run: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        //  println!("Engine Tick Run: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         let node_archetype_id = self.node_archetype_id;
         self.world.archetypes_mut()[node_archetype_id].flush();
 
