@@ -3,56 +3,13 @@ use pi_ecs_macros::setup;
 
 use crate::{object::{ObjectID, GameObject}, flags::SceneID, plugin::Plugin, resources::RenderDynUniformBuffer};
 
-use self::{coordinate_system::SceneCoordinateSytem, scene_time::{SceneTime}, scene_sys::SysDirtySceneTick};
+use self::{coordinate_system::SceneCoordinateSytem, scene_time::{SceneTime}, scene_sys::SysDirtySceneTick, command::SysSceneCommand};
 
 pub mod scene_time;
 pub mod coordinate_system;
 pub mod scene_sys;
-
-#[derive(Debug)]
-pub enum SceneCommand {
-    Create(ObjectID),
-    AddObject(ObjectID, SceneID),
-}
-
-#[derive(Debug, Default)]
-pub struct SingleSceneCommandList {
-    pub list: Vec<SceneCommand>,
-}
-pub struct SysSceneCommand;
-#[setup]
-impl SysSceneCommand {
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleSceneCommandList>,
-        mut scenes: Query<GameObject, (Write<SceneCoordinateSytem>, Write<SceneTime>)>,
-        mut objects: Query<GameObject, Write<SceneID>>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
-    ) {
-        cmds.list.drain(..).for_each(|cmd| {
-            match cmd {
-                SceneCommand::Create(entity) => {
-                    match scenes.get_mut(entity) {
-                        Some(mut scene) => {
-                            scene.0.insert_no_notify(SceneCoordinateSytem::default());
-                            scene.1.insert_no_notify(SceneTime::new(&mut dynbuffer));
-                        },
-                        None => todo!(),
-                    }
-                },
-                SceneCommand::AddObject(entity, scene) => {
-                    match objects.get_mut(entity) {
-                        Some(mut object) => {
-                            object.insert_no_notify(scene);
-                        },
-                        None => todo!(),
-                    }
-                },
-            }
-        });
-
-    }
-}
+pub mod command;
+pub mod interface;
 
 pub struct PluginScene;
 impl Plugin for PluginScene {
@@ -66,44 +23,5 @@ impl Plugin for PluginScene {
         SysSceneCommand::setup(world, stages.command_stage());
 
         Ok(())
-    }
-}
-
-pub trait InterfaceScene {
-    fn create_scene(
-        &mut self,
-    ) -> ObjectID;
-
-    fn add_to_scene(
-        &mut self,
-        object: ObjectID,
-        scene: ObjectID,
-    ) -> &mut Self;
-}
-
-impl InterfaceScene for crate::engine::Engine {
-    fn create_scene(
-        &mut self,
-    ) -> ObjectID {
-        let entity = self.new_object();
-        let world = self.world_mut();
-
-        let commands = world.get_resource_mut::<SingleSceneCommandList>().unwrap();
-        commands.list.push(SceneCommand::Create(entity));
-
-        entity
-    }
-
-    fn add_to_scene(
-        &mut self,
-        object: ObjectID,
-        scene: ObjectID,
-    ) -> &mut Self {
-        let world = self.world_mut();
-        
-        let commands = world.get_resource_mut::<SingleSceneCommandList>().unwrap();
-        commands.list.push(SceneCommand::AddObject(object, SceneID(scene)));
-
-        self
     }
 }

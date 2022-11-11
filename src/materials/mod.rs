@@ -4,41 +4,14 @@ use pi_render::rhi::{device::RenderDevice, RenderQueue};
 
 use crate::{plugin::Plugin, resources::RenderDynUniformBuffer};
 
-use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand}, bind_group::{SysRenderBindGroupCommand, SingleRenderBindGroupCommandList}};
+use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand}, command::{SysRenderBindGroupCommand, SingleRenderBindGroupCommandList}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}};
 
 pub mod material;
 pub mod bind_group;
+pub mod command;
+pub mod uniform_buffer;
 
 pub type MBKK = usize;
-
-#[derive(Debug, Default)]
-pub struct SingleDynUnifromBufferReBindFlag(pub bool);
-
-pub struct SysDynUnifromBufferUpdate;
-#[setup]
-impl SysDynUnifromBufferUpdate {
-    #[system]
-    pub fn tick(
-        device: Res<RenderDevice>,
-        queue: Res<RenderQueue>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
-        mut flag: ResMut<SingleDynUnifromBufferReBindFlag>,
-    ) {
-        //  println!("SysDynUnifromBuffer Update");
-        flag.0 = dynbuffer.write_buffer(&device, &queue);
-    }
-}
-// pub struct SysDynUnifromBufferReBindFlag;
-// #[setup]
-// impl SysDynUnifromBufferReBindFlag {
-//     #[system]
-//     pub fn tick(
-//         dynbuffer: Res<RenderDynUniformBuffer>,
-//         mut flag: ResMut<SingleDynUnifromBufferReBindFlag>,
-//     ) {
-//         flag.0 = false;
-//     }
-// }
 
 pub struct PluginMaterialID;
 impl Plugin for PluginMaterialID {

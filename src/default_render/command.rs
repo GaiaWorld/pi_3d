@@ -1,4 +1,6 @@
 
+use std::mem::replace;
+
 use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
 use pi_ecs_macros::setup;
 use pi_scene_math::Number;
@@ -30,7 +32,9 @@ impl SysDefaultMaterialCommand {
         mut matrecord: ResMut<SingleDefaultMaterialBindDynInfoSet>,
         mut entity_delete: EntityDelete<GameObject>,
     ) {
-        cmds.list.drain(..).for_each(|cmd| {
+        let mut list = replace(&mut cmds.list, vec![]);
+
+        list.drain(..).for_each(|cmd| {
             match cmd {
                 DefaultMaterialCommand::Create(entity) => {
                     match materials.get_mut(entity) {

@@ -13,7 +13,16 @@ use winit::window::Window;
 
 use pi_3d::{
     engine::Engine,
-    object::GameObject,bytes_write_to_memory, shaders::FragmentUniformBind, scene::InterfaceScene, transforms::InterfaceTransformNode, cameras::InterfaceCamera, meshes::cube::InterfaceCube, main_camera_render::InterfaceMainCamera, layer_mask::{InterfaceLayerMask, LayerMask}, run_stage::RunStage, PluginBundleDefault, plugin::Plugin,
+    object::GameObject,bytes_write_to_memory, shaders::FragmentUniformBind,
+    scene::interface::InterfaceScene,
+    transforms::interface::InterfaceTransformNode,
+    cameras::interface::InterfaceCamera,
+    meshes::cube::InterfaceCube,
+    main_camera_render::interface::InterfaceMainCamera,
+    layer_mask::{interface::InterfaceLayerMask, LayerMask},
+    run_stage::RunStage,
+    PluginBundleDefault,
+    plugin::Plugin,
 };
 use pi_async::{
     prelude::{Mutex, WorkerRuntime},
@@ -175,26 +184,4 @@ fn init_data(world: &mut World, win: Arc<winit::window::Window>) {
     let render_window = RenderWindow::new(win, PresentMode::Mailbox);
     let render_windows = world.get_resource_mut::<RenderWindows>().unwrap();
     render_windows.insert(render_window);
-}
-
-
-pub struct InitBuffer {
-}
-impl Uniform for InitBuffer {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        let mut time = vec![];
-        for _ in 0..4096*1024 {
-            time.push(0.);
-        }
-        bytes_write_to_memory(bytemuck::cast_slice(&time), 0, buffer);
-    }
-
-}
-impl Bind for InitBuffer {
-    fn index() -> pi_render::rhi::dyn_uniform_buffer::BindIndex {
-        pi_render::rhi::dyn_uniform_buffer::BindIndex::new(0)
-    }
-    fn min_size() -> usize {
-        4096*1024
-    }
 }

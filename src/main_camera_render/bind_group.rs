@@ -3,7 +3,7 @@ use pi_ecs_macros::setup;
 use pi_render::{rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice, bind_group::BindGroup}};
 
 
-use crate::{object::{ObjectID, GameObject}, cameras::{camera::{CameraRenderData, CameraViewMatrix, CameraProjectionMatrix, CameraTransformMatrix, CameraGlobalPosition, CameraDirection}, dirty::DirtyCamera}, scene::scene_time::{SceneTime}, environment::{fog::SceneFog, ambient_light::AmbientLight}, materials::{bind_group::RenderBindGroup, SingleDynUnifromBufferReBindFlag}, shaders::FragmentUniformBind, flags::SceneID, resources::RenderDynUniformBuffer};
+use crate::{object::{ObjectID, GameObject}, cameras::{camera::{CameraRenderData, CameraViewMatrix, CameraProjectionMatrix, CameraTransformMatrix, CameraGlobalPosition, CameraDirection}, dirty::DirtyCamera}, scene::scene_time::{SceneTime}, environment::{fog::SceneFog, ambient_light::AmbientLight}, materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, shaders::FragmentUniformBind, flags::SceneID, resources::RenderDynUniformBuffer};
 
 
 pub struct IDMainCameraRenderBindGroup(pub ObjectID);

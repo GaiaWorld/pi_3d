@@ -14,6 +14,10 @@ impl Engine {
         &mut self.world
     }
 
+    pub fn world(&self) -> & World {
+        & self.world
+    }
+
     pub fn archetype_id(&self) -> ArchetypeId {
         self.node_archetype_id
     }
@@ -40,9 +44,9 @@ impl Engine {
     }
 
     pub fn new_object(
-        &mut self,
+        & self,
     ) -> ObjectID {
-        unsafe { ObjectID::new(self.world.archetypes_mut()[self.node_archetype_id].reserve_entity()) }
+        unsafe { ObjectID::new(self.world.clone().archetypes_mut()[self.node_archetype_id].reserve_entity()) }
     }
 
     pub fn tick_run(

@@ -2,7 +2,7 @@ use pi_render::rhi::{dyn_uniform_buffer::{Bind, BindOffset, Uniform}};
 
 use render_resource::{bind_group_layout::AsUniformBindingBufferDynamic};
 
-use crate::{shaders::{FragmentUniformBind, }, materials::{material::MaterialID}, bytes_write_to_memory, resources::RenderDynUniformBuffer, };
+use crate::{shaders::{FragmentUniformBind, }, materials::{material::MaterialID}, bytes_write_to_memory, resources::RenderDynUniformBuffer, texture2d::Texture2D, };
 
 
 
@@ -45,6 +45,10 @@ impl Uniform for DefaultMaterialPropertype {
         bytes_write_to_memory(bytemuck::cast_slice(&v), index as usize + 0, buffer);
     }
 }
+
+pub struct DefaultMaterialEmissiveTexture(pub Texture2D);
+
+
 
 #[derive(Debug, Default)]
 pub struct SingleDefaultMaterialBindDynInfoSet {

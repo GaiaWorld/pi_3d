@@ -1,4 +1,11 @@
-use pi_3d::{plugin::Plugin, object::ObjectID, transforms::{transform_node_command::{SingleTransformNodeCommandList, TransformNodeCommand}, InterfaceTransformNode}, scene::InterfaceScene, cameras::InterfaceCamera, meshes::cube::InterfaceCube, main_camera_render::InterfaceMainCamera, layer_mask::{InterfaceLayerMask, LayerMask}};
+use pi_3d::{plugin::Plugin, object::ObjectID,
+    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
+    scene::{interface::InterfaceScene},
+    cameras::interface::InterfaceCamera,
+    meshes::cube::InterfaceCube,
+    main_camera_render::interface::InterfaceMainCamera,
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}
+};
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
@@ -43,7 +50,7 @@ impl Plugin for PluginTest {
 
         SysTest::setup(&mut world, stages.command_stage());
 
-        let tes_size = 60;
+        let tes_size = 100;
 
         // Test Code
         let scene01 = engine.create_scene();

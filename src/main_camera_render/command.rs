@@ -1,3 +1,5 @@
+use std::mem::replace;
+
 use pi_ecs::prelude::*;
 use pi_ecs_macros::setup;
 use pi_render::{graph::graph::RenderGraph};
@@ -30,7 +32,9 @@ impl SysMainCameraRenderCommand {
     ) {
         let render_graphic = &mut render_graphic;
 
-        cmds.list.drain(..).for_each(|cmd| {
+        let mut list = replace(&mut cmds.list, vec![]);
+
+        list.drain(..).for_each(|cmd| {
             match cmd {
                 MainCameraRenderCommand::Active(entity, render_id, viewport) => {
                     match cameras.get_mut(entity) {
