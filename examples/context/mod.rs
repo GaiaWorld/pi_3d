@@ -37,10 +37,11 @@ use pi_ecs::{
 };
 use pi_share::{Share, ShareMutex, ShareRwLock};
 
-use self::{shell_node::ScreenClearNode, plugin_test::PluginTest};
+use self::{shell_node::ScreenClearNode, plugin_skybox::PluginTest};
 
 pub mod shell_node;
-pub mod plugin_test;
+// pub mod plugin_test;
+pub mod plugin_skybox;
 
 pub struct EnginShell {
     pub win: Arc<Window>,
