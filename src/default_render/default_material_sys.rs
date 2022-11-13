@@ -113,7 +113,7 @@ impl DefaultMaterialFilter {
         });
         // let _use_time = Instant::now() - pre_frame_time;
         let time1 = Instant::now();
-        println!("DefaultMaterialFilter: {:?}", time1 - time);
+        // println!("DefaultMaterialFilter: {:?}", time1 - time);
     }
 }
 

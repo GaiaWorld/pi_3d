@@ -11,16 +11,6 @@ use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoord
 
 use super::{transform_node::{LocalTransform, GlobalTransform}, dirty::DirtyLocalTransform};
 
-// pub struct TransformNodeInit;
-// #[setup]
-// impl TransformNodeInit {
-//     /// 监听到 TransformNode 组件被添加, 则 添加 LocalPosition, 
-//     #[listen()]
-//     pub fn calc(
-//     ) {
-
-//     }
-// }
 pub struct LocalRotationMatrixCalc;
 #[setup]
 impl LocalRotationMatrixCalc {
@@ -77,7 +67,6 @@ impl WorldMatrixCalc {
 
         //  println!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
-            // println!("Get Scene {:?}", root);
             let mut temp_ids: Vec<(ObjectID, bool, Option<Matrix>)> = vec![];
             tree.iter(root).for_each(|entity| {
                 match query_ms.get_mut(entity) {
@@ -86,11 +75,8 @@ impl WorldMatrixCalc {
                             g_transform.calc(None, l_transform);
                             temp_ids.push((entity, true, Some(g_transform.matrix.clone())));
                             dirty_global.insert_no_notify(DirtyGlobalTransform);
-                            // temp_ids.push((v, true, None));
-                            // println!("Transform real_dirty 0 >>>>>>>>>> ");
                         } else {
                             temp_ids.push((entity, false, Some(g_transform.matrix.clone())));
-                            // temp_ids.push((v, true, None));
                         }
                     },
                     None => {
@@ -99,52 +85,39 @@ impl WorldMatrixCalc {
                 }
             });
     
-            let max = 4096;
-            let mut i = 0;
+            // 广度优先遍历 - 最大遍历到深度 65535
+            let max = 65535;
+            let mut deep = 0;
             loop {
-                // println!("temp_ids {}", temp_ids.len());
                 let mut temp = vec![];
-                if temp_ids.len() > 0 && i < max {
+                if temp_ids.len() > 0 && deep < max {
                     temp_ids.into_iter().for_each(|(p_id, p_dirty, p_m)| {
                         match tree.get_down(p_id) {
                             Some(node_children_head) => {
-                                // match query_ms.get_mut(p_id) {
-                                //     Some((dirty, _, p_m)) => {
-                                //         let p_dirty = dirty.0;
-                                //         let p_m = Some(p_m.matrix.clone());
-                                        let node_children_head = node_children_head.head;
-                                        tree.iter(node_children_head).for_each(|entity| {
-                                            match query_ms.get_mut(entity) {
-                                                Some((l_transform, mut g_transform, mut dirty_global)) => {
-                                                    let real_dirty = p_dirty || query_local_dirty.get(entity).is_some();
-                                                    if real_dirty {
-                                                        // println!("Transform real_dirty >>>>>>>>>> ");
-                                                        g_transform.calc(p_m, l_transform);
-                                                        temp.push((entity, true, Some(g_transform.matrix.clone())));
-                                                        dirty_global.insert_no_notify(DirtyGlobalTransform);
-                                                        // temp.push((entity, true, None));
-                                                    } else {
-                                                        temp.push((entity, false, Some(g_transform.matrix.clone())));
-                                                        // temp.push((entity, true, None));
-                                                    }
-                                                    // println!("{}", g_transform.matrix);
-                                                },
-                                                None => {
-                                                    //  println!("Child Not Found {:?}", entity);
-                                                },
+                                let node_children_head = node_children_head.head;
+                                tree.iter(node_children_head).for_each(|entity| {
+                                    match query_ms.get_mut(entity) {
+                                        Some((l_transform, mut g_transform, mut dirty_global)) => {
+                                            let real_dirty = p_dirty || query_local_dirty.get(entity).is_some();
+                                            if real_dirty {
+                                                // println!("Transform real_dirty >>>>>>>>>> ");
+                                                g_transform.calc(p_m, l_transform);
+                                                temp.push((entity, true, Some(g_transform.matrix.clone())));
+                                                dirty_global.insert_no_notify(DirtyGlobalTransform);
+                                            } else {
+                                                temp.push((entity, false, Some(g_transform.matrix.clone())));
                                             }
-                                        }); 
-                                    // },
-                                    // None => {
-                                    //     //  println!("Child Not Found {:?}", entity);
-                                    // },
-                                    
-                                // }
+                                        },
+                                        None => {
+                                            
+                                        },
+                                    }
+                                }); 
                             },
                             None => {},
                         }
                     });
-                    i += 1;
+                    deep += 1;
                 } else {
                     break;
                 }
@@ -153,65 +126,6 @@ impl WorldMatrixCalc {
         }
 
         let time1 = Instant::now();
-        println!("World Matrix Calc: {:?}", time1 - time);
+        // println!("World Matrix Calc: {:?}", time1 - time);
     }
-    // #[system]
-    // pub fn calc(
-    //     query_scenes: Query<GameObject, (ObjectID, &SceneParam)>,
-    //     mut query_ms: Query<GameObject, (&mut TransformDirty, &LocalMatrix, &mut WorldMatrix, &mut GlobalPosition, &mut GlobalRotation, &mut GlobalScaling, &mut GlobalIsometry)>,
-    //     tree: EntityTree<GameObject>,
-    // ) {
-    //     //  println!("World Matrix Calc:");
-    //     for (root, _) in query_scenes.iter() {
-    //         let mut temp_ids = vec![];
-    //         tree.iter(root).for_each(|v| {
-    //             match query_ms.get_mut(v) {
-    //                 Some((mut dirty, l_m, mut w_m, mut g_p, mut g_r, mut g_s, mut g_i)) => {
-    //                     if dirty.0 {
-    //                         calc_world_matrix(None, l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i);
-    //                         temp_ids.push((v, true, Some(w_m.0.clone())));
-    //                     } else {
-    //                         temp_ids.push((v, false, Some(w_m.0.clone())));
-    //                     }
-    //                     dirty.0 = false;
-    //                 },
-    //                 None => {
-    //                     temp_ids.push((v, false, None));
-    //                 },
-    //             }
-    //         });
-    
-    //         let max = 4096;
-    //         let mut i = 0;
-    //         loop {
-    //             let mut temp = vec![];
-    //             if temp_ids.len() > 0 && i < max {
-    //                 temp_ids.iter().for_each(|(p_id, p_dirty, p_m)| {
-    //                     let p_dirty = *p_dirty;
-    //                     tree.iter(*p_id).for_each(|entity| {
-    //                         match query_ms.get_mut(entity) {
-    //                             Some((mut dirty, l_m, mut w_m, mut g_p, mut g_r, mut g_s, mut g_i)) => {
-    //                                 if dirty.0 || p_dirty {
-    //                                     match p_m {
-    //                                         Some(p_m) => calc_world_matrix(Some(p_m), l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i),
-    //                                         None => calc_world_matrix(None, l_m, &mut w_m, &mut g_p, &mut g_r, &mut g_s, &mut g_i),
-    //                                     };
-    //                                     temp.push((entity, true, Some(w_m.0.clone())));
-    //                                 } else {
-    //                                     temp.push((entity, false, Some(w_m.0.clone())));
-    //                                 }
-    //                                 dirty.0 = false;
-    //                             },
-    //                             None => {},
-    //                         }
-    //                     }); 
-    //                 });
-    //                 i += 1;
-    //             } else {
-    //                 break;
-    //             }
-    //             temp_ids = temp;
-    //         }
-    //     }
-    // }
 }

@@ -4,7 +4,7 @@ use pi_futures::BoxFuture;
 use pi_render::{graph::{NodeId, graph::RenderGraph, node::Node, RenderContext}, rhi::{texture::ScreenTexture, device::RenderDevice}};
 use render_data_container::GeometryBufferPool;
 
-use crate::{cameras::camera::CameraViewport, renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectID}}, object::{ObjectID, GameObject}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, plugin::Plugin, materials::bind_group::{SingleRenderBindGroupCommandList, RenderBindGroupCommand}};
+use crate::{cameras::camera::CameraViewport, renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectID}}, object::{ObjectID, GameObject}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, plugin::Plugin, materials::command::{SingleRenderBindGroupCommandList, RenderBindGroupCommand}};
 
 use self::{command::{SingleMainCameraRenderCommandList, SysMainCameraRenderCommand, MainCameraRenderCommand}, graph::SingleMainCameraOpaqueRenderNode, draw_sort_sys::DrawSortTick, bind_group::{SysMainCameraRenderBindGroupUpdate, SysMainCameraRenderUniformUpdate, IDMainCameraRenderBindGroup}};
 
@@ -12,6 +12,7 @@ pub mod command;
 pub mod bind_group;
 pub mod graph;
 pub mod draw_sort_sys;
+pub mod interface;
 
 pub struct MainCameraRenderer {
     pub viewport: CameraViewport,
@@ -63,30 +64,5 @@ impl Plugin for PluginMainCameraRender {
         world.insert_resource(IDMainCameraRenderBindGroup(main_camera_bind_group_id));
 
         Ok(())
-    }
-}
-
-pub trait InterfaceMainCamera {
-    fn active_camera(
-        &mut self,
-        object: ObjectID,
-        flag: bool,
-    );
-}
-impl InterfaceMainCamera for crate::engine::Engine {
-    fn active_camera(
-        &mut self,
-        object: ObjectID,
-        flag: bool,
-    ) {
-        if flag {
-            let render_id = self.new_object();
-
-            let world = self.world_mut();
-            let commands = world.get_resource_mut::<SingleMainCameraRenderCommandList>().unwrap();
-            commands.list.push(MainCameraRenderCommand::Active(object, RenderObjectID(render_id), None));
-        } else {
-            //
-        }
     }
 }

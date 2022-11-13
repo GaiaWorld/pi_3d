@@ -26,37 +26,3 @@ impl FreeCameraParam {
     const P7: Vector3 = Vector3::new(-1., -1., 0.);
 
 }
-
-#[derive(Debug)]
-pub enum FreeCameraCommand {
-    Create(ObjectID),
-}
-
-#[derive(Debug, Default)]
-pub struct SingleFreeCameraCommandList {
-    pub list: Vec<FreeCameraCommand>,
-}
-
-pub struct SysFreeCameraCommand;
-#[setup]
-impl SysFreeCameraCommand {
-    #[system]
-    pub fn cmds(
-        mut cmds: ResMut<SingleFreeCameraCommandList>,
-        mut cameras: Query<GameObject, Write<FreeCameraParam>>,
-    ) {
-        cmds.list.drain(..).for_each(|cmd| {
-            match cmd {
-                FreeCameraCommand::Create(entity) => {
-                    match cameras.get_mut(entity) {
-                        Some(mut camera) => {
-                            camera.insert_no_notify(FreeCameraParam::default());
-                        },
-                        None => todo!(),
-                    }
-                },
-            }
-        });
-
-    }
-}

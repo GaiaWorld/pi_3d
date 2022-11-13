@@ -1,9 +1,9 @@
 use pi_ecs::{world::World, prelude::{StageBuilder, Setup, ArchetypeId}};
 use pi_render::rhi::device::RenderDevice;
 
-use crate::{object::ObjectID, plugin::{Plugin, ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID, SingleMaterialIDCommandList, MaterialIDCommand}, bind_group::{SingleRenderBindGroupCommandList, RenderBindGroupCommand}}, default_render::command::SysDefaultMaterialCommand};
+use crate::{object::ObjectID, plugin::{Plugin, ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, command::{SingleRenderBindGroupCommandList, RenderBindGroupCommand}}, default_render::command::SysDefaultMaterialCommand};
 
-use self::{default_material::{SingleDefaultMaterialBindDynInfoSet}, shader::DefaultShader, default_material_sys::{DefaultMaterialUniformUpdate, DefaultMaterialFilter, DefaultModelUniformUpdate}, command::{SingeDefaultMaterialCommandList, DefaultMaterialCommand}, pipeline::DefaultMaterialPipeline, bind_group::{IDDefaultMaterialBindGroup, SysDefaultMaterialBindGroupUpdate}, dirty::SysDirtyDefaultMaterialPropertype};
+use self::{default_material::{SingleDefaultMaterialBindDynInfoSet}, shader::DefaultShader, default_material_sys::{DefaultMaterialUniformUpdate, DefaultMaterialFilter, DefaultModelUniformUpdate}, command::{SingeDefaultMaterialCommandList, DefaultMaterialCommand}, pipeline::DefaultMaterialPipeline, bind_group::{IDDefaultMaterialBindGroup, SysDefaultMaterialBindGroupUpdate}, dirty::SysDirtyDefaultMaterialPropertype, interface::InterfaceDefaultMaterial};
 
 pub mod default_material;
 pub mod default_material_sys;
@@ -12,7 +12,7 @@ pub mod command;
 pub mod pipeline;
 pub mod bind_group;
 pub mod dirty;
-
+pub mod interface;
 pub struct SingleIDBaseDefaultMaterial(pub MaterialID);
 
 pub struct PluginDefaultMaterial;
@@ -51,55 +51,3 @@ impl Plugin for PluginDefaultMaterial {
     }
 }
 
-pub trait InterfaceDefaultMaterial {
-    fn create_default_material(
-        &mut self,
-    ) -> ObjectID;
-
-    fn as_default_material(
-        &mut self,
-        object: ObjectID,
-    ) -> &mut Self;
-
-    fn use_default_material(
-        &mut self,
-        object: ObjectID,
-    ) -> &mut Self;
-}
-
-impl InterfaceDefaultMaterial for crate::engine::Engine {
-    fn create_default_material(
-        &mut self,
-    ) -> ObjectID {
-        //  println!("create_default_material");
-        let entity = self.new_object();
-
-        self.as_default_material(entity);
-
-        entity
-    }
-    fn as_default_material(
-        &mut self,
-        object: ObjectID,
-    ) -> &mut Self {
-        let world = self.world_mut();
-
-        let commands = world.get_resource_mut::<SingeDefaultMaterialCommandList>().unwrap();
-        commands.list.push(DefaultMaterialCommand::Create(object));
-
-        self
-    }
-
-    fn use_default_material(
-        &mut self,
-        object: ObjectID,
-    ) -> &mut Self {
-        let world = self.world_mut();
-
-        let base_material = world.get_resource::<SingleIDBaseDefaultMaterial>().unwrap();
-        let commands = world.get_resource_mut::<SingleMaterialIDCommandList>().unwrap();
-        commands.list.push(MaterialIDCommand::Use(object, base_material.0));
-
-        self
-    }
-}

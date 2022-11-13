@@ -2,7 +2,7 @@ use pi_ecs::prelude::{Res, Query, ResMut};
 use pi_ecs_macros::setup;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, device::RenderDevice};
 
-use crate::{materials::{SingleDynUnifromBufferReBindFlag, bind_group::RenderBindGroup}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::FragmentUniformBind, resources::RenderDynUniformBuffer};
+use crate::{materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::FragmentUniformBind, resources::RenderDynUniformBuffer};
 
 use super::default_material::DefaultMaterialPropertype;
 

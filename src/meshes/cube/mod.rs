@@ -5,9 +5,9 @@ use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use render_data_container::{GeometryBuffer, EVertexDataFormat, GeometryBufferPool};
 use render_geometry::geometry::VertexAttributeBufferMeta;
 
-use crate::{resources::{SingleGeometryBufferPool}, geometry::GBID, plugin::{Plugin, ErrorPlugin}, object::{ObjectID, GameObject}, engine::Engine, vertex_data::{position::{IDAttributePosition, AttributePosition, SingleAttributePositionCommandList, AttributePositionCommand, SingleIDAttributePositionCommandList, IDAttributePositionCommand}, normal::{IDAttributeNormal, AttributeNormal, SingleAttributeNormalCommandList, AttributeNormalCommand, IDAttributeNormalCommand, SingleIDAttributeNormalCommandList}, indices::{IDAttributeIndices, AttributeIndices, SingleAttributeIndicesCommandList, AttributeIndicesCommand, SingleIDAttributeIndicesCommandList, IDAttributeIndicesCommand}}, scene::{SingleSceneCommandList, SceneCommand, InterfaceScene}, flags::SceneID, transforms::{transform_node_command::{SingleTransformNodeCommandList, TransformNodeCommand}, SingleTreeCommandList, TreeCommand, InterfaceTransformNode}, default_render::InterfaceDefaultMaterial};
+use crate::{resources::{SingleGeometryBufferPool}, geometry::GBID, plugin::{Plugin, ErrorPlugin}, object::{ObjectID, GameObject}, engine::Engine, vertex_data::{position::{IDAttributePosition, AttributePosition, SingleAttributePositionCommandList, AttributePositionCommand, SingleIDAttributePositionCommandList, IDAttributePositionCommand}, normal::{IDAttributeNormal, AttributeNormal, SingleAttributeNormalCommandList, AttributeNormalCommand, IDAttributeNormalCommand, SingleIDAttributeNormalCommandList}, indices::{IDAttributeIndices, AttributeIndices, SingleAttributeIndicesCommandList, AttributeIndicesCommand, SingleIDAttributeIndicesCommandList, IDAttributeIndicesCommand}}, scene::{ command::{SingleSceneCommandList, SceneCommand}, interface::InterfaceScene}, flags::SceneID, transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand, SingleTreeCommandList, TreeCommand}, interface::InterfaceTransformNode}, default_render::interface::InterfaceDefaultMaterial};
 
-use super::{MeshCommand, SingleMeshCommandList, InterfaceMesh};
+use super::interface::InterfaceMesh;
 
 pub struct SingleBaseCube {
     position: IDAttributePosition,
@@ -124,44 +124,16 @@ pub enum CubeBuilderCommand {
 pub struct SingleCubeBuilderCommandList {
     pub list: Vec<CubeBuilderCommand>,
 }
-
-// pub struct SysCubeBuilderCommand;
-// #[setup]
-// impl SysCubeBuilderCommand {
-//     #[system]
-//     pub fn sys(
-//         mut commands: ResMut<SingleCubeBuilderCommandList>,
-//         mut geometrys: Query<GameObject, (Write<IDAttributePosition>, Write<IDAttributeNormal>, Write<IDAttributeIndices>)>,
-//     ) {
-//         commands.list.drain(..).for_each(|cmd| {
-//             match cmd {
-//                 CubeBuilderCommand::Base(entity, position, normal, indices) => {
-//                     match geometrys.get_mut(entity) {
-//                         Some(item) => {
-//                             item.0.insert_no_notify(position);
-//                             item.1.insert_no_notify(normal);
-//                             item.2.insert_no_notify(indices);
-//                         },
-//                         None => {
-                            
-//                         },
-//                     }
-//                 },
-//             }
-//         });
-//     }
-// }
-
 pub trait InterfaceCube {
     fn new_cube(
-        &mut self,
+        & self,
         scene: ObjectID,
     ) -> ObjectID;
 }
 
 impl InterfaceCube for Engine {
     fn new_cube(
-        &mut self,
+        & self,
         scene: ObjectID,
     ) -> ObjectID {
 
@@ -171,7 +143,7 @@ impl InterfaceCube for Engine {
                                     .transform_parent(entity, scene)
                                     .as_mesh(entity)
                                     .use_default_material(entity)
-                                    .world_mut();
+                                    .world();
         
         let base_cube = world.get_resource_mut::<SingleBaseCube>().unwrap();
         let commands = world.get_resource_mut::<SingleIDAttributePositionCommandList>().unwrap();

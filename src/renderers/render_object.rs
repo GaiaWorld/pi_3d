@@ -112,7 +112,7 @@ pub struct RenderObjectPipeline {
     pub id: DefaultKey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RenderObjectVertice {
     pub slot: u32,
     pub gbid: GBID,
@@ -121,7 +121,7 @@ pub struct RenderObjectVertice {
     pub count: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RenderObjectIndices {
     pub slot: u32,
     pub gbid: GBID,
@@ -131,11 +131,63 @@ pub struct RenderObjectIndices {
     pub format: wgpu::IndexFormat,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RenderObjectInstance {
     pub slot: u32,
     pub gbid: GBID,
     pub start: usize,
     pub end: usize,
     pub count: usize,
+}
+
+#[derive(Debug, Default)]
+pub struct TempDrawInfoRecord {
+    list: Vec<RenderObjectVertice>,
+    indices: Option<RenderObjectIndices>,
+}
+impl TempDrawInfoRecord {
+    pub fn record_vertex_and_check_diff_with_last(
+        &mut self,
+        vertex: &RenderObjectVertice,
+    ) -> bool {
+        if self.get(vertex.slot as usize) == vertex {
+            return false;
+        } else {
+            self.list[vertex.slot as usize] = *vertex;
+            return true;
+        }
+    }
+    pub fn record_indices_and_check_diff_with_last(
+        &mut self,
+        indices: &RenderObjectIndices,
+    ) -> bool {
+        let result = match self.indices {
+            Some(old) => {
+                old != *indices
+            },
+            None => {
+                true
+            },
+        };
+
+        self.indices = Some(*indices);
+        
+        result
+    }
+    fn get(&mut self, slot: usize) -> &RenderObjectVertice {
+        let oldlen = self.list.len();
+        let mut addcount = 0;
+        while oldlen + addcount <= slot {
+            self.list.push(RenderObjectVertice {
+                slot: slot as u32,
+                gbid: GBID::default(),
+                start: 0,
+                end: 0,
+                count: 0,
+            });
+            addcount += 1;
+        }
+
+        self.list.get(slot).unwrap()
+    }
 }
