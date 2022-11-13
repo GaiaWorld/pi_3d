@@ -3,10 +3,11 @@ use parry3d::{
     na::{Isometry3, Point3},
     shape::{ConvexPolyhedron, Cuboid},
 };
+use pi_ecs::prelude::Res;
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
 use pi_spatialtree::OctTree;
 
-use crate::cameras::camera::Camera;
+use crate::{cameras::camera::Camera, engine::Engine};
 
 use super::{BoundingInfo, BoundingKey, TBoundingInfoCalc};
 
@@ -147,3 +148,110 @@ pub fn compute_frustum(camera: &Camera) -> Option<ConvexPolyhedron> {
 
     ConvexPolyhedron::from_convex_mesh(points, &indices)
 }
+
+pub struct PluginBoundingTree;
+impl Plugin for PluginBoundingTree {
+    fn init(engine: &mut Engine, stages: &mut RunStage) -> Result<(), ErrorPlugin> {
+        let world = engine.world_mut();
+
+        let max = Vector3::new(100f32, 100f32, 100f32);
+        let min = max / 100f32;
+
+        let mut tree = OctTree::new(
+            AABB::new(
+                Point3::new(-1024f32, -1024f32, -4194304f32),
+                Point3::new(3072f32, 3072f32, 4194304f32),
+            ),
+            max,
+            min,
+            0,
+            0,
+            0,
+        );
+
+        world.insert_resource::<BoundingTree>(BoundingTree(tree));
+
+        Ok(())
+    }
+}
+
+
+impl TBoundingInfoCalc for Engine{
+    fn add(&mut self, key: BoundingKey, info: BoundingInfo) {
+        let box_point = info.bounding_box.vectors_world;
+        let points = vec![
+            Point3::new(box_point[0][0], box_point[0][1], box_point[0][2]),
+            Point3::new(box_point[1][0], box_point[1][1], box_point[1][2]),
+            Point3::new(box_point[2][0], box_point[2][1], box_point[2][2]),
+            Point3::new(box_point[3][0], box_point[3][1], box_point[3][2]),
+            Point3::new(box_point[4][0], box_point[4][1], box_point[4][2]),
+            Point3::new(box_point[5][0], box_point[5][1], box_point[5][2]),
+            Point3::new(box_point[6][0], box_point[6][1], box_point[6][2]),
+            Point3::new(box_point[7][0], box_point[7][1], box_point[7][2]),
+        ];
+
+        let obb = parry3d::utils::obb(&points);
+        let aadd_maxs = obb.0 * obb.1.local_aabb().maxs;
+        let aadd_mins = obb.0 * obb.1.local_aabb().mins;
+
+        let world = self.world_mut();
+        let tree = world.get_resource_mut::<BoundingTree>().unwrap();
+        tree.0.add(
+            key,
+            AABB::new(
+                TreePoint3::new(aadd_mins.x, aadd_mins.y, aadd_mins.z),
+                TreePoint3::new(aadd_maxs.x, aadd_maxs.y, aadd_maxs.z),
+            ),
+            obb,
+        );
+    }
+
+    fn remove(&mut self, key: BoundingKey) {
+        let world = self.world_mut();
+        let tree = world.get_resource_mut::<BoundingTree>().unwrap();
+        let _ = tree.0.remove(key);
+    }
+
+    fn check_boundings(&self, _: &FrustumPlanes, _: &mut Vec<BoundingKey>) {
+        todo!()
+    }
+
+    fn check_boundings_of_tree(&self, frustum: &ConvexPolyhedron, result: &mut Vec<BoundingKey>) {
+        let aabb = frustum.local_aabb();
+
+        let aabb = AABB::new(
+            TreePoint3::new(aabb.mins.x, aabb.mins.y, aabb.mins.z),
+            TreePoint3::new(aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
+        );
+
+        let mut args = AbQueryArgs::new(frustum.clone());
+
+        let world = self.world();
+        let tree = world.get_resource::<BoundingTree>().unwrap();
+
+        tree.0.query(&aabb, intersects, &mut args, ab_query_func);
+        *result = args.result
+    }
+}
+
+// pub struct SysCameraCullingOfTree;
+// #[setup]
+// impl SysCameraCullingOfTree {
+//     #[system]
+//     pub fn tick(
+//         tree: Res<BoundingTree>,
+//         cameras: Query<GameObject, (&CameraTransformMatrix, &SceneID)>,
+//         mut objects: Query<GameObject, (&BoundingInfo, &SceneID)>,
+//     ) {
+//         //  println!("Scene Camera Culling:");
+//         cameras.iter().for_each(|camera| {
+//             let mut frustum_planes = FrustumPlanes::default();
+//             frustum_planes.from_transform_matrix(&camera.0.0);
+//             // compute_frustum(&frustum_planes)
+
+//             objects.iter().for_each(|object| {
+//                 object.0.is_in_frustum(&frustum_planes);
+//             });
+//         });
+//     }
+// }
