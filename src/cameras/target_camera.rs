@@ -1,11 +1,7 @@
 
-use pi_ecs::{prelude::{ResMut, EntityDelete, Query}, query::Write};
-use pi_ecs_macros::setup;
-use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRotation}, coordiante_system::CoordinateSytem3, Point3, Isometry3, Number, Rotation3};
+use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRotation}, coordiante_system::CoordinateSytem3, Isometry3, Number, Rotation3};
 
-use crate::object::{ObjectID, GameObject};
-
-use super::{camera::{CameraGlobalPosition, CameraViewMatrix}, dirty::DirtyTargetCamera};
+use super::{camera::{CameraGlobalPosition, CameraViewMatrix}};
 
 
 /// 通过 设置 target 目标点 调整相机

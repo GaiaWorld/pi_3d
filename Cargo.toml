@@ -34,6 +34,7 @@ bytemuck = { version = "1.4", features = ["derive"] }
 pi_slotmap = "0.1"
 pi_hash = "0.1"
 pi_share = "0.4"
+pi_graph = "0.1"
 
 pi_animation = { git = "https://github.com/GaiaWorld/pi_animation" }
 
@@ -63,6 +64,13 @@ pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
 pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 
+
+# [dev-dependencies]
+image = "0.24"
+winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
+pollster = "0.2"
+spin_sleep = "1.1"
+
 [patch."https://github.com/GaiaWorld/pi_animation"]
 pi_animation = { path = "../pi_animation" }
 
@@ -73,9 +81,9 @@ pi_render = { path = "../pi_render" }
 pi_scene = { path = "../pi_scene" }
 
 # [[example]]
+# name = "cube"
+# path = "examples/cube/cube.rs"
 
-[dev-dependencies]
-image = "0.24"
-winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
-pollster = "0.2"
-spin_sleep = "1.1"
+[[example]]
+name = "cube"
+path = "examples/context/plugin_test.rs"

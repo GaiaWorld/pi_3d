@@ -28,10 +28,11 @@ impl LayerMask {
 pub struct PluginLayerMask;
 impl Plugin for PluginLayerMask {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysLayerMaskCommand::setup(world, stages.command_stage());
 

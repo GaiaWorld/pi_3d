@@ -1,7 +1,7 @@
 use crate::{
     engine::Engine,
     materials::{
-        bind_group::{RenderBindGroupCommand, SingleRenderBindGroupCommandList},
+        command::{RenderBindGroupCommand, SingleRenderBindGroupCommandList},
         material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList},
     },
     object::ObjectID,
@@ -25,18 +25,19 @@ pub struct SingleIDBaseSkyboxMaterial(pub MaterialID);
 pub struct PluginSkyboxMaterial;
 impl Plugin for PluginSkyboxMaterial {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
         println!("PluginSkyboxMaterial");
         let id_default_mat_bind_group = engine.new_object();
-        let mut world = engine.world_mut().clone();
 
-        SysSkyboxMaterialCommand::setup(&mut world, stages.command_stage());
-        SkyboxMaterialUniformUpdate::setup(&mut world, stages.uniform_update());
-        SkyboxMaterialFilter::setup(&mut world, stages.filter_culling());
+        SysSkyboxMaterialCommand::setup(world, stages.command_stage());
+        SkyboxMaterialUniformUpdate::setup(world, stages.uniform_update());
+        SkyboxMaterialFilter::setup(world, stages.filter_culling());
         SysSkyboxMaterialBindGroupUpdate::setup(
-            &mut world,
+            world,
             stages.between_uniform_update_and_filter_culling(),
         );
 
@@ -66,15 +67,15 @@ impl Plugin for PluginSkyboxMaterial {
 }
 
 pub trait InterfaceSkyboxMaterial {
-    fn create_skybox_material(&mut self) -> ObjectID;
+    fn create_skybox_material(&self) -> ObjectID;
 
-    fn as_skybox_material(&mut self, object: ObjectID) -> &mut Self;
+    fn as_skybox_material(&self, object: ObjectID) -> & Self;
 
-    fn use_skybox_material(&mut self, object: ObjectID) -> &mut Self;
+    fn use_skybox_material(&self, object: ObjectID) -> & Self;
 }
 
 impl InterfaceSkyboxMaterial for crate::engine::Engine {
-    fn create_skybox_material(&mut self) -> ObjectID {
+    fn create_skybox_material(&self) -> ObjectID {
         println!("create_default_material");
         let entity = self.new_object();
 
@@ -82,8 +83,8 @@ impl InterfaceSkyboxMaterial for crate::engine::Engine {
 
         entity
     }
-    fn as_skybox_material(&mut self, object: ObjectID) -> &mut Self {
-        let world = self.world_mut();
+    fn as_skybox_material(&self, object: ObjectID) -> &Self {
+        let world = self.world();
 
         let commands = world
             .get_resource_mut::<SingeSkyboxMaterialCommandList>()
@@ -93,8 +94,8 @@ impl InterfaceSkyboxMaterial for crate::engine::Engine {
         self
     }
 
-    fn use_skybox_material(&mut self, object: ObjectID) -> &mut Self {
-        let world = self.world_mut();
+    fn use_skybox_material(&self, object: ObjectID) -> &Self {
+        let world = self.world();
 
         let base_material = world.get_resource::<SingleIDBaseSkyboxMaterial>().unwrap();
         let commands = world

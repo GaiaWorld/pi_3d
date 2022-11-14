@@ -1,38 +1,37 @@
-use std::{any::TypeId, mem::replace};
+use std::{any::TypeId, mem::replace, sync::Arc};
 
-use pi_ecs::{world::World, prelude::{ArchetypeId, StageBuilder}};
+use pi_ecs::{world::World, prelude::{ArchetypeId, StageBuilder}, storage::Local};
 
 use crate::{resources::{SingleRenderBindGroupPool, SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, object::{GameObject, ObjectID}, run_stage::RunStage, PluginBundleDefault, plugin::Plugin};
 
 pub struct Engine {
-    world: World,
     node_archetype_id: ArchetypeId,
+    world: World,
+    // world_call: Box<dyn Fn() -> &'static World>,
 }
 
 impl Engine {
-    pub fn world_mut(&mut self) -> &mut World {
-        &mut self.world
-    }
-
     pub fn world(&self) -> & World {
-        & self.world
+        &self.world
+
+        // let call = self.world_call.as_ref();
+        // call()
     }
 
     pub fn archetype_id(&self) -> ArchetypeId {
         self.node_archetype_id
     }
 
-    pub fn new(world: &mut World) -> Self {
-        // 注册原型
-        world.new_archetype::<GameObject>().create();
-
-        // 
-        let node_archetype_id = world.archetypes().get_id_by_ident(TypeId::of::<GameObject>()).unwrap().clone();
-        let archetype_id = world.archetypes_mut().get_or_create_archetype::<GameObject>();
+    pub fn new(
+        world: World,
+        node_archetype_id: Local,
+        // world_call: Box<dyn Fn() -> &'static World>,
+    ) -> Self {
 
         Self {
-            world: world.clone(),
             node_archetype_id,
+            world,
+            // world_call
         }
     }
 
@@ -46,15 +45,18 @@ impl Engine {
     pub fn new_object(
         & self,
     ) -> ObjectID {
-        unsafe { ObjectID::new(self.world.clone().archetypes_mut()[self.node_archetype_id].reserve_entity()) }
+        let world = self.world();
+        unsafe { ObjectID::new(world.clone().archetypes_mut()[self.node_archetype_id].reserve_entity()) }
     }
 
     pub fn tick_run(
-        &mut self,
+        &self,
     ) {
+        let world = self.world();
+    
         //  println!("Engine Tick Run: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         let node_archetype_id = self.node_archetype_id;
-        self.world.archetypes_mut()[node_archetype_id].flush();
+        world.clone().archetypes_mut()[node_archetype_id].flush();
 
         // let commands = replace(&mut self.commands, UserCommands::default());
         // self.world.insert_resource(commands);

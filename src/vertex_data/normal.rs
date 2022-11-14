@@ -105,10 +105,11 @@ impl SysIDAttributeNormalCommand {
 pub struct PluginAttributeNormal;
 impl Plugin for PluginAttributeNormal {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysAttributeNormalCommand::setup(world, stages.command_stage());
         SysIDAttributeNormalCommand::setup(world, stages.command_stage());
@@ -122,17 +123,17 @@ impl Plugin for PluginAttributeNormal {
 
 pub trait InterfaceAttributeNormal {
     fn create_vertex_data_normal(
-        &mut self,
+        &self,
         data: GeometryBuffer,
     ) -> ObjectID;
 }
 impl InterfaceAttributeNormal for crate::engine::Engine {
     fn create_vertex_data_normal(
-        &mut self,
+        &self,
         data: GeometryBuffer,
     ) -> ObjectID {
         let entity = self.new_object();
-        let world = self.world_mut();
+        let world = self.world();
 
         let data_size = data.size();
         let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();

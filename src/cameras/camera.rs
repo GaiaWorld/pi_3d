@@ -1,9 +1,7 @@
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
-use pi_ecs_macros::setup;
 use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
 use pi_scene_math::{Vector3, Matrix, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, object::{ObjectID, GameObject}, resources::RenderDynUniformBuffer};
+use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, resources::RenderDynUniformBuffer};
 
 #[derive(Debug, Clone)]
 pub struct CameraViewMatrix(pub Matrix);

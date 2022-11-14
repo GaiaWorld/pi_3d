@@ -16,10 +16,11 @@ pub type MBKK = usize;
 pub struct PluginMaterialID;
 impl Plugin for PluginMaterialID {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysMaterialIDCommand::setup(world, stages.command_stage());
         SysRenderBindGroupCommand::setup(world, stages.command_stage());

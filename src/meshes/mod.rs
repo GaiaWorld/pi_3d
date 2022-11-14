@@ -10,16 +10,12 @@ pub mod plane;
 pub mod model;
 pub mod command;
 pub mod interface;
+pub mod alpha_index;
+pub mod render_group;
 
-pub struct Mesh {
-    materials: Vec<ObjectID>,
-}
-impl Default for Mesh {
-    fn default() -> Self {
-        Self {
-            materials: vec![],
-        }
-    }
+pub trait Mesh {
+    fn alpha_index(&self) -> usize;
+    fn render_group(&self) -> u8;
 }
 
 pub struct MeshID(pub ObjectID);
@@ -27,10 +23,11 @@ pub struct MeshID(pub ObjectID);
 pub struct PluginMesh;
 impl crate::Plugin for PluginMesh {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysMeshCommand::setup(world, stages.command_stage());
 

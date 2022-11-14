@@ -13,13 +13,13 @@ use render_geometry::geometry::VertexAttributeBufferMeta;
 
 use crate::{
     engine::Engine,
-    meshes::InterfaceMesh,
+    meshes::{interface::InterfaceMesh},
     object::ObjectID,
     plugin::{ErrorPlugin, Plugin},
     resources::SingleGeometryBufferPool,
     run_stage::RunStage,
-    scene::InterfaceScene,
-    transforms::InterfaceTransformNode,
+    scene::{interface::InterfaceScene},
+    transforms::{interface::InterfaceTransformNode},
     vertex_data::{
         indices::{
             AttributeIndices, AttributeIndicesCommand, IDAttributeIndices,
@@ -221,7 +221,7 @@ impl InterfaceSkybox for Engine {
             .transform_parent(entity, scene)
             .as_mesh(entity)
             .use_skybox_material(entity)
-            .world_mut();
+            .world();
 
         let sky_box = world.get_resource_mut::<Skybox>().unwrap();
 
@@ -253,14 +253,16 @@ impl InterfaceSkybox for Engine {
 
 pub struct PluginSkybox;
 impl Plugin for PluginSkybox {
-    fn init(engine: &mut Engine, stages: &mut RunStage) -> Result<(), ErrorPlugin> {
-        let world = engine.world_mut();
+    fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
+        engine: &mut Engine,
+        stages: &mut RunStage,
+    ) -> Result<(), ErrorPlugin> {
 
         let position_id = engine.new_object();
         let normal_id = engine.new_object();
         let indices_id = engine.new_object();
-
-        let world = engine.world_mut();
 
         let device = world.get_resource::<RenderDevice>().unwrap();
         let queue = world.get_resource::<RenderQueue>().unwrap();

@@ -2,7 +2,7 @@
 
 use pi_ecs::prelude::Setup;
 
-use self::{command::{SysCameraCommand, CameraCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, TargetCameraCommand, SysFreeCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand}, camera_sys::{TargetCameraViewMatrixCalc, SysCameraTransformMatrix, SysCameraProjectionCalc}, dirty::{SysDirtyCameraParamTick, SysDirtyCameraRenderDataTick, SysDirtyTargetCameraTick}};
+use self::{command::{SysCameraCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList}, camera_sys::{TargetCameraViewMatrixCalc, SysCameraTransformMatrix, SysCameraProjectionCalc}, dirty::{SysDirtyCameraParamTick, SysDirtyCameraRenderDataTick, SysDirtyTargetCameraTick}};
 
 pub mod camera;
 pub mod free_camera;
@@ -16,10 +16,11 @@ pub mod interface;
 pub struct PluginCamera;
 impl crate::Plugin for PluginCamera {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysDirtyTargetCameraTick::setup(world, stages.dirty_state_stage());
         SysDirtyCameraParamTick::setup(world, stages.dirty_state_stage());

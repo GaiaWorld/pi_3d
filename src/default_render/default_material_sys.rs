@@ -1,12 +1,33 @@
 use std::time::Instant;
 
-use pi_ecs::{prelude::{Query, ResMut, Res}, query::{With, Write}};
+use pi_ecs::{prelude::{Query, ResMut, Res}, query::{With, Write, WithOut, Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_render::{rhi::{device::RenderDevice, RenderQueue}};
 use pi_scene_math::{Vector3};
 use render_geometry::geometry::VertexAttributeMeta;
 
-use crate::{object::{GameObject, ObjectID}, transforms::{transform_node::{GlobalTransform}, dirty::DirtyGlobalTransform}, renderers::{render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup}}, flags::{SceneID01, SceneCameraID01, SceneID, RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil, RenderTargetState}, environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype}, resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer}, cameras::camera::{CameraRenderData, CameraGlobalPosition}, materials::{material::MaterialID, bind_group::RenderBindGroup}, meshes::model::BuildinModelBind, vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}}, main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup}, layer_mask::LayerMask};
+use crate::{
+    object::{GameObject, ObjectID},
+    transforms::{transform_node::{GlobalTransform}, dirty::DirtyGlobalTransform},
+    renderers::{
+        render_object::{RenderObjectID, RenderObjectMetaOpaque, RenderObjectVertice, RenderObjectIndices, RenderObjectBindGroup},
+        pipeline::PipelineKey,
+        render_blend::RenderBlend,
+        render_depth_and_stencil::RenderDepthAndStencil,
+        render_primitive::PrimitiveState,
+        render_sort::RenderSortParam,
+        render_target_state::RenderTargetState,
+    },
+    flags::{SceneID01, SceneCameraID01, SceneID},
+    environment::fog::SceneFog, default_render::default_material::{DefaultMaterialPropertype},
+    resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer},
+    cameras::camera::{CameraRenderData, CameraGlobalPosition},
+    materials::{material::MaterialID, bind_group::RenderBindGroup},
+    meshes::model::BuildinModelBind,
+    vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}},
+    main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup},
+    layer_mask::LayerMask
+};
 
 use super::{shader::DefaultShader, bind_group::{IDDefaultMaterialBindGroup}, pipeline::DefaultMaterialPipeline, dirty::DirtyDefaultMaterialPropertype};
 
@@ -48,6 +69,35 @@ impl DefaultMaterialUniformUpdate {
     }
 }
 
+pub struct SysDefaultMaterialPipelineKey;
+#[setup]
+impl SysDefaultMaterialPipelineKey {
+    #[system]
+    pub fn tick(
+        mut items: Query<GameObject, (&MaterialID, &RenderBlend, &RenderDepthAndStencil, &PrimitiveState, Write<PipelineKey>), Or<(Changed<MaterialID>, Changed<RenderBlend>, Changed<RenderDepthAndStencil>, Changed<PrimitiveState>)>>,
+        materials: Query<GameObject, &DefaultMaterialPropertype>,
+        device: Res<RenderDevice>,
+        shader: Res<DefaultShader>,
+        mut pipelines: ResMut<DefaultMaterialPipeline>,
+        mut pipeline_pool: ResMut<SingleRenderObjectPipelinePool>,
+    ) {
+        items.iter_mut().for_each(|(matid, blend, depth_stencil, primitive, mut pipeline )| {
+            let key = pipelines.build(
+                &device,
+                &shader,
+                RenderTargetState::color_target(blend).as_slice(),
+                depth_stencil.state(),
+                primitive.state,
+                &mut pipeline_pool,
+            );
+            
+            let key = PipelineKey { id: key };
+
+            pipeline.insert_no_notify(key);
+        });
+    }
+}
+
 pub struct DefaultMaterialFilter;
 #[setup]
 impl DefaultMaterialFilter {
@@ -55,7 +105,7 @@ impl DefaultMaterialFilter {
     pub fn tick(
         query_camera: Query<GameObject, (&RenderObjectID, &SceneID, &LayerMask, &CameraRenderData, &CameraGlobalPosition)>,
         mut query_renderers: Query<GameObject, &mut MainCameraRenderer>,
-        meshes: Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind)>,
+        meshes: Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &PipelineKey, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind)>,
         materials: Query<GameObject, &DefaultMaterialPropertype>,
         bind_groups: Query<GameObject, &RenderBindGroup>,
         positions: Query<GameObject, &AttributePosition>,
@@ -63,11 +113,8 @@ impl DefaultMaterialFilter {
         indices: Query<GameObject, &AttributeIndices>,
         device: Res<RenderDevice>,
         queue: Res<RenderQueue>,
-        shader: Res<DefaultShader>,
         id_bind_group_main_camera: Res<IDMainCameraRenderBindGroup>,
         id_bind_group_default: Res<IDDefaultMaterialBindGroup>,
-        mut pipelines: ResMut<DefaultMaterialPipeline>,
-        mut pipeline_pool: ResMut<SingleRenderObjectPipelinePool>,
     ) {
         
         let time = Instant::now();
@@ -103,7 +150,7 @@ impl DefaultMaterialFilter {
                             &meshes,
                             &camerapos.0,
                             &positions, &normals, &indices,
-                            &mut pipelines, &device, &shader, &mut pipeline_pool, &mut renderlist.draws,
+                            &mut renderlist.draws,
                             id_bind_group_default
                         );
                     },
@@ -118,46 +165,28 @@ impl DefaultMaterialFilter {
 }
 
 fn collect_opaque_normal_depth(
-    sceneid: ObjectID,
+    camera_sceneid: ObjectID,
     layermask: &LayerMask,
     materials: &Query<GameObject, &DefaultMaterialPropertype>,
-    query: &Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind)>,
+    query: &Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &PipelineKey, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind)>,
     camerapos: &Vector3,
     positions: &Query<GameObject, &AttributePosition>,
     normals: &Query<GameObject, &AttributeNormal>,
     indices: &Query<GameObject, &AttributeIndices>,
-    pipelines: &mut DefaultMaterialPipeline,
-    device: & RenderDevice,
-    shader: & DefaultShader,
-    pipeline_pool: &mut SingleRenderObjectPipelinePool,
     list: &mut Vec<RenderObjectMetaOpaque>,
     id_bind_group_default: ObjectID,
 ) {
-    query.iter().for_each(|item| {
-        let rendersort = item.3;
-        let blend = item.4;
-        let primit = item.5;
-        let depth_stencil = item.6;
-        let globaltransform = item.7;
-        let model = item.11;
+    query.iter().for_each(|(matid, sceneid, layer, rendersort, pipeline, globaltransform, position, normal, indice, model)| {
+
         // println!("opaque draw obj >>>>>>>>>>>>>>> {:?}, {:?}, {:?}, {:?}", sceneid, item.1.0, layermask, item.5);
-        if sceneid == item.1.0 && layermask.include(&item.2) {
-            match materials.get(item.0.0) {
+        if camera_sceneid == sceneid.0 && layermask.include(&layer) {
+            match materials.get(matid.0) {
                 Some(mat) => {
-                    match (positions.get(item.8.0), normals.get(item.9.0), indices.get(item.10.0)) {
+                    match (positions.get(position.0), normals.get(normal.0), indices.get(indice.0)) {
                         (Some(position), Some(normal), Some(indices)) => {
                             // if list.len() >= 1 { return; }
                             let view_distance = camerapos.metric_distance(&globaltransform.position);
-                            let pipeline = pipelines.build(
-                                device,
-                                shader,
-                                RenderTargetState::color_target(blend).as_slice(),
-                                depth_stencil.state(),
-                                primit.state,
-                                pipeline_pool,
-                            );
-                            
-                            let pipeline = RenderObjectPipeline { id: pipeline };
+
                             let mut bind_groups = vec![];
                             bind_groups.push(RenderObjectBindGroup {
                                 bind_group: id_bind_group_default,
@@ -192,11 +221,12 @@ fn collect_opaque_normal_depth(
                                 end: normal.meta.end,
                                 count: (normal.meta.end - normal.meta.start) / normal.meta.data_bytes_size
                             };
+
                             vertices.push(normal);
                             let mut instances = vec![];
                             let mut meta = RenderObjectMetaOpaque {
                                 bind_groups,
-                                pipeline,
+                                pipeline: *pipeline,
                                 positions,
                                 indices,
                                 vertices,
@@ -204,6 +234,9 @@ fn collect_opaque_normal_depth(
                                 render_sort: *rendersort,
                                 view_distance,
                             };
+
+                            // draw_write.insert_no_notify(meta);
+
                             // println!("{:?}", meta);
                             list.push(meta);
                         },

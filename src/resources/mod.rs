@@ -15,10 +15,11 @@ pub use pipeline::*;
 pub struct PluginResource;
 impl Plugin for PluginResource {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         world.insert_resource(SingleRenderBindGroupPool::default());
         world.insert_resource(SingleRenderObjectPipelinePool::default());

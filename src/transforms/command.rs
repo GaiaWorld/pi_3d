@@ -3,7 +3,7 @@ use pi_ecs_macros::setup;
 use pi_ecs_utils::prelude::EntityTreeMut;
 use pi_scene_math::{Vector3, Quaternion};
 
-use crate::{object::{ObjectID, GameObject}, plugin::Plugin, scene::{interface::InterfaceScene}};
+use crate::{object::{ObjectID, GameObject}, };
 
 use super::{transform_node::{LocalTransform, GlobalTransform}, dirty::DirtyLocalTransform};
 

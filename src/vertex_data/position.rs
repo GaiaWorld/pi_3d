@@ -109,10 +109,11 @@ impl SysIDAttributePositionCommand {
 pub struct PluginAttributePosition;
 impl Plugin for PluginAttributePosition {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysAttributePositionCommand::setup(world, stages.command_stage());
         SysIDAttributePositionCommand::setup(world, stages.command_stage());
@@ -126,17 +127,17 @@ impl Plugin for PluginAttributePosition {
 
 pub trait InterfaceAttributePosition {
     fn create_vertex_data_position(
-        &mut self,
+        &self,
         data: GeometryBuffer,
     ) -> ObjectID;
 }
 impl InterfaceAttributePosition for crate::engine::Engine {
     fn create_vertex_data_position(
-        &mut self,
+        &self,
         data: GeometryBuffer,
     ) -> ObjectID {
         let entity = self.new_object();
-        let world = self.world_mut();
+        let world = self.world();
 
         let data_size = data.size();
         let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();

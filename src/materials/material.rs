@@ -2,8 +2,11 @@
 use pi_ecs::{prelude::{Id, ResMut, Query}, query::Write};
 use pi_ecs_macros::setup;
 
-use crate::object::{ObjectID, GameObject};
+use crate::{object::{ObjectID, GameObject}, renderers::render_mode::ERenderMode};
 
+pub trait TMaterial {
+    fn render_mode(&self) -> ERenderMode;
+}
 
 ///
 /// 材质单独与 GameObject 关联
@@ -51,7 +54,7 @@ impl SysMaterialIDCommand {
 
 pub trait InterfaceMaterial {
     fn use_material(
-        &mut self,
+        & self,
         object: ObjectID,
         material: MaterialID,
     );
@@ -59,11 +62,11 @@ pub trait InterfaceMaterial {
 
 impl InterfaceMaterial for crate::engine::Engine {
     fn use_material(
-        &mut self,
+        & self,
         object: ObjectID,
         material: MaterialID,
     ) {
-        let world = self.world_mut();
+        let world = self.world();
 
         let commands = world.get_resource_mut::<SingleMaterialIDCommandList>().unwrap();
         commands.list.push(MaterialIDCommand::Use(object, material));

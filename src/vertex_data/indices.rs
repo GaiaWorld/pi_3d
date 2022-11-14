@@ -87,10 +87,11 @@ impl SysIDAttributeIndicesCommand {
 pub struct PluginAttributeIndices;
 impl Plugin for PluginAttributeIndices {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysAttributeIndicesCommand::setup(world, stages.command_stage());
         SysIDAttributeIndicesCommand::setup(world, stages.command_stage());
@@ -104,18 +105,18 @@ impl Plugin for PluginAttributeIndices {
 
 pub trait InterfaceAttributeIndices {
     fn create_vertex_data_indices(
-        &mut self,
+        & self,
         data: GeometryBuffer,
     ) -> ObjectID;
 }
 impl InterfaceAttributeIndices for Engine {
     fn create_vertex_data_indices(
-        &mut self,
+        & self,
         data: GeometryBuffer,
     ) -> ObjectID {
 
         let entity = self.new_object();
-        let world = self.world_mut();
+        let world = self.world();
 
         let data_size = data.size();
         let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();

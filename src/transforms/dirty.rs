@@ -4,8 +4,6 @@ use pi_ecs_macros::setup;
 
 use crate::object::GameObject;
 
-use super::transform_node::{LocalTransform, GlobalTransform};
-
 #[derive(Debug, Default)]
 pub struct DirtyLocalTransform;
 

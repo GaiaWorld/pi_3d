@@ -44,16 +44,17 @@ impl MainCameraRenderer {
 pub struct PluginMainCameraRender;
 impl Plugin for PluginMainCameraRender {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let mut world = engine.world_mut().clone();
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
 
-        SysMainCameraRenderCommand::setup(&mut world, stages.command_stage());
-        DrawSortTick::setup(&mut world, stages.render_sort());
-        SysMainCameraRenderUniformUpdate::setup(&mut world, stages.uniform_update());
-        SysMainCameraRenderBindGroupUpdate::setup(&mut world, stages.between_uniform_update_and_filter_culling());
+        SysMainCameraRenderCommand::setup(world, stages.command_stage());
+        DrawSortTick::setup(world, stages.render_sort());
+        SysMainCameraRenderUniformUpdate::setup(world, stages.uniform_update());
+        SysMainCameraRenderBindGroupUpdate::setup(world, stages.between_uniform_update_and_filter_culling());
         
         world.insert_resource(SingleMainCameraRenderCommandList::default());
 

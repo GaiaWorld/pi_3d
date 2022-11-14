@@ -1,6 +1,8 @@
 use pi_slotmap::{DefaultKey};
 
-use crate::{geometry::GBID, object::{ObjectID}, flags::{RenderSortParam}};
+use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}};
+
+use super::pipeline::PipelineKey;
 
 #[derive(Debug, Clone, Copy)]
 pub struct RenderObjectID(pub ObjectID);
@@ -23,7 +25,7 @@ pub struct RenderObjectTransparentList {
 #[derive(Debug)]
 pub struct RenderObjectMetaOpaque {
     pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub pipeline: RenderObjectPipeline,
+    pub pipeline: PipelineKey,
     pub positions: RenderObjectVertice,
     pub indices: Option<RenderObjectIndices>,
     pub vertices: Vec<RenderObjectVertice>,
@@ -68,7 +70,7 @@ impl Ord for RenderObjectMetaOpaque {
 #[derive(Debug)]
 pub struct RenderObjectMetaTransparent {
     pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub pipeline: RenderObjectPipeline,
+    pub pipeline: PipelineKey,
     pub positions: RenderObjectVertice,
     pub indices: Option<RenderObjectIndices>,
     pub vertices: Vec<RenderObjectVertice>,

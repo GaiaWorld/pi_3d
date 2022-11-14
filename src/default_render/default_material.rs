@@ -48,8 +48,6 @@ impl Uniform for DefaultMaterialPropertype {
 
 pub struct DefaultMaterialEmissiveTexture(pub Texture2D);
 
-
-
 #[derive(Debug, Default)]
 pub struct SingleDefaultMaterialBindDynInfoSet {
     pub list: Vec<MaterialID>,

@@ -160,13 +160,14 @@ impl InterfaceCube for Engine {
 pub struct PluginCubeBuilder;
 impl Plugin for PluginCubeBuilder {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
         let position_id = engine.new_object();
         let normal_id = engine.new_object();
         let indices_id = engine.new_object();
-        let world = engine.world_mut();
 
         let device = world.get_resource::<RenderDevice>().unwrap();
         let queue = world.get_resource::<RenderQueue>().unwrap();
