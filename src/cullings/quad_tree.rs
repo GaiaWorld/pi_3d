@@ -24,9 +24,10 @@ use super::{
     BoundingInfo,
 };
 
-pub struct BoundingOctTree(OctTree<BoundingKey, f32, (Isometry3<f32>, Cuboid)>);
 
-impl TBoundingInfoCalc for BoundingOctTree {
+pub struct BoundingQuadTree(OctTree<BoundingKey, f32, (Isometry3<f32>, Cuboid)>);
+
+impl TBoundingInfoCalc for BoundingQuadTree {
     fn add(&mut self, key: BoundingKey, info: BoundingInfo) {
         let box_point = info.bounding_box.vectors_world;
         let points = vec![
@@ -151,12 +152,12 @@ pub fn compute_frustum(
     ConvexPolyhedron::from_convex_mesh(points, &indices)
 }
 
-pub struct PluginBoundingOctTree;
-impl Plugin for PluginBoundingOctTree {
+pub struct PluginBoundingQuadTree;
+impl Plugin for PluginBoundingQuadTree {
     fn init(engine: &mut Engine, stages: &mut RunStage) -> Result<(), ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysCameraCullingOctTree::setup(world, stages.after_world_matrix());
+        SysCameraCullingQuadTree::setup(world, stages.after_world_matrix());
 
         let max = Vector3::new(100f32, 100f32, 100f32);
         let min = max / 100f32;
@@ -173,19 +174,19 @@ impl Plugin for PluginBoundingOctTree {
             0,
         );
 
-        world.insert_resource::<BoundingOctTree>(BoundingOctTree(tree));
+        world.insert_resource::<BoundingQuadTree>(BoundingQuadTree(tree));
 
         Ok(())
     }
 }
 
-trait InterfaceOctTree {
-    fn add_of_oct_tree(&mut self, key: BoundingKey, info: BoundingInfo);
-    fn remove_of_oct_tree(&mut self, key: BoundingKey);
+trait InterfaceQuadTree {
+    fn add_of_quad_tree(&mut self, key: BoundingKey, info: BoundingInfo);
+    fn remove_of_quad_tree(&mut self, key: BoundingKey);
 }
 
-impl InterfaceOctTree for Engine {
-    fn add_of_oct_tree(&mut self, key: BoundingKey, info: BoundingInfo) {
+impl InterfaceQuadTree for Engine {
+    fn add_of_quad_tree(&mut self, key: BoundingKey, info: BoundingInfo) {
         let box_point = info.bounding_box.vectors_world;
         let points = vec![
             Point3::new(box_point[0][0], box_point[0][1], box_point[0][2]),
@@ -203,7 +204,7 @@ impl InterfaceOctTree for Engine {
         let aadd_mins = obb.0 * obb.1.local_aabb().mins;
 
         let world = self.world_mut();
-        let tree = world.get_resource_mut::<BoundingOctTree>().unwrap();
+        let tree = world.get_resource_mut::<BoundingQuadTree>().unwrap();
         tree.0.add(
             key,
             AABB::new(
@@ -214,20 +215,19 @@ impl InterfaceOctTree for Engine {
         );
     }
 
-    fn remove_of_oct_tree(&mut self, key: BoundingKey) {
+    fn remove_of_quad_tree(&mut self, key: BoundingKey) {
         let world = self.world_mut();
-        let tree = world.get_resource_mut::<BoundingOctTree>().unwrap();
+        let tree = world.get_resource_mut::<BoundingQuadTree>().unwrap();
         let _ = tree.0.remove(key);
     }
-
 }
 
-pub struct SysCameraCullingOctTree;
+pub struct SysCameraCullingQuadTree;
 #[setup]
-impl SysCameraCullingOctTree {
+impl SysCameraCullingQuadTree {
     #[system]
     pub fn tick(
-        tree: Res<BoundingOctTree>,
+        tree: Res<BoundingQuadTree>,
         cameras: Query<GameObject, (&CameraParam, &CameraViewport, &CameraProjectionMatrix)>,
         mut objects: Query<GameObject, (&BoundingInfo)>,
     ) {
@@ -239,6 +239,7 @@ impl SysCameraCullingOctTree {
                     tree.check_boundings_of_tree(&frustum, &mut result);
                 });
             }
+            // compute_frustum(&frustum_planes)
         });
     }
 }

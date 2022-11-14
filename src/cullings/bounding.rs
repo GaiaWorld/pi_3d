@@ -174,3 +174,18 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         todo!()
     }
 }
+
+
+/// aabb的查询函数的参数
+pub struct AbQueryArgs {
+    pub frustum: ConvexPolyhedron,
+    pub result: Vec<BoundingKey>,
+}
+impl AbQueryArgs {
+    pub fn new(frustum: ConvexPolyhedron) -> AbQueryArgs {
+        AbQueryArgs {
+            frustum,
+            result: Vec::new(),
+        }
+    }
+}
