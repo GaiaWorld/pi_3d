@@ -11,9 +11,10 @@ use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, bounding:
 
 pub mod bounding_box;
 pub mod bounding_sphere;
-// pub mod oct_tree;
 pub mod sys;
 pub mod bounding;
+pub mod oct_tree;
+pub mod quad_tree;
 
 /// 检测级别
 /// *
