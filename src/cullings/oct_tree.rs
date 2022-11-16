@@ -6,7 +6,7 @@ use parry3d::{
     na::{Isometry3, Point3},
     shape::{ConvexPolyhedron, Cuboid},
 };
-use pi_ecs::prelude::{Res, Query};
+use pi_ecs::{prelude::{Res, Query}, query::Write};
 use pi_ecs::prelude::Setup;
 use pi_ecs_macros::setup;
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
@@ -21,7 +21,7 @@ use crate::{
 
 use super::{
     bounding::{BoundingKey, TBoundingInfoCalc, AbQueryArgs},
-    BoundingInfo,
+    BoundingInfo, IsCulled,
 };
 
 pub struct BoundingOctTree(OctTree<BoundingKey, f32, (Isometry3<f32>, Cuboid)>);
@@ -229,14 +229,22 @@ impl SysCameraCullingOctTree {
     pub fn tick(
         tree: Res<BoundingOctTree>,
         cameras: Query<GameObject, (&CameraParam, &CameraViewport, &CameraProjectionMatrix)>,
-        mut objects: Query<GameObject, (&BoundingInfo)>,
+        mut objects: Query<GameObject, Write<IsCulled>>,
     ) {
         //  println!("Scene Camera Culling:");
         cameras.iter().for_each(|camera| {
             if let Some(frustum) = compute_frustum(&camera.0, &camera.1, &camera.2){
-                objects.iter().for_each(|object| {
-                    let mut result = vec![];
-                    tree.check_boundings_of_tree(&frustum, &mut result);
+                objects.iter_mut().for_each(|object| {
+                    object.insert_no_notify(IsCulled)
+                });
+
+                let mut result = vec![];
+                tree.check_boundings_of_tree(&frustum, &mut result);
+
+                result.iter().for_each(|id|{
+                    if let Some(obj) = objects.get(*id){
+                        obj.remove();
+                    }
                 });
             }
         });

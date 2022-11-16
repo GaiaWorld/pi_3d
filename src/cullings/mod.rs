@@ -16,6 +16,10 @@ pub mod bounding;
 pub mod oct_tree;
 pub mod quad_tree;
 
+
+#[derive(Debug, Clone)]
+pub struct IsCulled;
+
 /// 检测级别
 /// *
 pub enum ECullingStrategy {

@@ -10,6 +10,7 @@ pub mod plane;
 pub mod model;
 pub mod command;
 pub mod interface;
+pub mod ball;
 
 pub struct Mesh {
     materials: Vec<ObjectID>,
