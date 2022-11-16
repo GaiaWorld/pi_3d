@@ -1,60 +1,33 @@
 #![feature(box_into_inner)]
 
-mod context;
-use context::{create_engine, EnginShell};
+use pi_3d::{PluginBundleDefault, context::{EnginShell, run}};
 use pi_async::rt::{
     AsyncRuntime,
 };
 use pi_hal::runtime::MULTI_MEDIA_RUNTIME;
+use pi_render::rhi::options::RenderOptions;
 use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
 
 pub fn main() {
-    env_logger::init();
-
     let event_loop = winit::event_loop::EventLoop::new();
     let window = Arc::new(winit::window::Window::new(&event_loop).unwrap());
 
-    let size = window.inner_size();
+    let mut shell = EnginShell::new(
+        RenderOptions {
+            backends: wgpu::Backends::VULKAN,
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            ..Default::default()
+        },
+        window.clone()
+    );
 
-    let engine = create_engine(&window, 0.0);
+    shell.add_plugin(PluginBundleDefault);
 
-    run_loop(engine);
+    shell.ready();
+
+    run(shell);
     
-    run_window_loop(window, event_loop);
-}
 
-fn run_loop(mut engine_sheel: EnginShell) {
-    MULTI_MEDIA_RUNTIME
-        .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-            // example.init(&mut engine, (size.width as usize, size.height as usize)).await;
-
-            let mut pre_frame_time = Instant::now();
-            loop {
-                // 运行
-                // example.render(&mut engine);
-                engine_sheel.run().await;
-
-                let time = Instant::now();
-                // let _use_time = Instant::now() - pre_frame_time;
-                let time1 = pre_frame_time.clone();
-
-                if time > time1 {
-                    let d = time - time1;
-                    let delay = 2;
-                    let duration = if d > Duration::from_millis(delay) {
-                        Duration::from_millis(0)
-                    } else {
-                        Duration::from_millis(delay) - d
-                    };
-                    spin_sleep::sleep(duration);
-                }
-                pre_frame_time = time;
-            }
-        })
-        .unwrap();
-}
-
-fn run_window_loop(window: Arc<winit::window::Window>, event_loop: winit::event_loop::EventLoop<()>) {
     event_loop.run(move |event, _, control_flow| {
         *control_flow = winit::event_loop::ControlFlow::Wait;
 
@@ -79,6 +52,7 @@ fn run_window_loop(window: Arc<winit::window::Window>, event_loop: winit::event_
         }
     });
 }
+
 
 // pub fn main1() {
 //     env_logger::init();

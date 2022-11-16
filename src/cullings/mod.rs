@@ -5,7 +5,7 @@ use pi_scene_math::{
     frustum::FrustumPlanes, plane::Plane, vector::TMinimizeMaximize, Matrix, Vector3,
 };
 use pi_slotmap::{DefaultKey, KeyData, Key};
-use crate::{object::{ObjectID, GameObject}, plugin::Plugin};
+use crate::{object::{ObjectID, GameObject}};
 
 use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, bounding::BoundingInfo, sys::SysCameraCulling};
 
@@ -69,13 +69,13 @@ impl SysCullingCommand {
 }
 
 pub struct PluginCulling;
-impl Plugin for PluginCulling {
+impl crate::Plugin for PluginCulling {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
-
         SysCullingCommand::setup(world, stages.command_stage());
         SysCameraCulling::setup(world, stages.after_world_matrix());
 
@@ -101,7 +101,7 @@ impl InterfaceBoundingInfo for crate::engine::Engine {
         min: Vector3,
         max: Vector3,
     ) {
-        let world = self.world_mut();
+        let world = self.world();
 
         let commands = world.get_resource_mut::<SingleCullingCommandList>().unwrap();
         commands.list.push(CullingCommand::Bounding(object, min, max));

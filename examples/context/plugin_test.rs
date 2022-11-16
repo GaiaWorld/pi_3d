@@ -1,3 +1,15 @@
+#![feature(box_into_inner)]
+
+mod shell_node;
+mod engine_shell;
+
+use engine_shell::{create_engine, EnginShell};
+use pi_async::rt::{
+    AsyncRuntime,
+};
+use pi_hal::runtime::MULTI_MEDIA_RUNTIME;
+use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
+
 use pi_3d::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
@@ -43,10 +55,11 @@ impl SysTest {
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut pi_3d::engine::Engine,
         stages: &mut pi_3d::run_stage::RunStage,
     ) -> Result<(), pi_3d::plugin::ErrorPlugin> {
-        let mut world = engine.world_mut().clone();
 
         SysTest::setup(&mut world, stages.command_stage());
 
@@ -87,4 +100,77 @@ impl Plugin for PluginTest {
 
         Ok(())
     }
+}
+
+
+pub fn main() {
+    env_logger::init();
+
+    let event_loop = winit::event_loop::EventLoop::new();
+    let window = Arc::new(winit::window::Window::new(&event_loop).unwrap());
+
+    let size = window.inner_size();
+
+    let engine = create_engine(&window, 0.0, PluginTest);
+
+    run_loop(engine);
+    
+    run_window_loop(window, event_loop);
+}
+
+fn run_loop(mut engine_sheel: EnginShell) {
+    MULTI_MEDIA_RUNTIME
+        .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+            // example.init(&mut engine, (size.width as usize, size.height as usize)).await;
+
+            let mut pre_frame_time = Instant::now();
+            loop {
+                // 运行
+                // example.render(&mut engine);
+                engine_sheel.run().await;
+
+                let time = Instant::now();
+                // let _use_time = Instant::now() - pre_frame_time;
+                let time1 = pre_frame_time.clone();
+
+                if time > time1 {
+                    let d = time - time1;
+                    let delay = 2;
+                    let duration = if d > Duration::from_millis(delay) {
+                        Duration::from_millis(0)
+                    } else {
+                        Duration::from_millis(delay) - d
+                    };
+                    spin_sleep::sleep(duration);
+                }
+                pre_frame_time = time;
+            }
+        })
+        .unwrap();
+}
+
+fn run_window_loop(window: Arc<winit::window::Window>, event_loop: winit::event_loop::EventLoop<()>) {
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = winit::event_loop::ControlFlow::Wait;
+
+        match event {
+            winit::event::Event::WindowEvent {
+                event: winit::event::WindowEvent::Resized(_size),
+                ..
+            } => {}
+            winit::event::Event::MainEventsCleared => {
+                window.request_redraw();
+            }
+            winit::event::Event::RedrawRequested(_) => {}
+            winit::event::Event::WindowEvent {
+                // 窗口 关闭，退出 循环
+                event: winit::event::WindowEvent::CloseRequested,
+                ..
+            } => {
+                log::info!("RenderExample::clean");
+                *control_flow = winit::event_loop::ControlFlow::Exit
+            }
+            _ => {}
+        }
+    });
 }

@@ -1,8 +1,8 @@
-use pi_ecs::prelude::{Res, Query, ResMut};
+use pi_ecs::{prelude::{Res, Query, ResMut}, sys::system};
 use pi_ecs_macros::setup;
 use pi_render::rhi::{device::RenderDevice, bind_group_layout::BindGroupLayout, bind_group::BindGroup};
 
-use crate::{object::{ObjectID, GameObject}, meshes::model::BuildinModelBind, materials::{bind_group::RenderBindGroup, SingleDynUnifromBufferReBindFlag}, resources::RenderDynUniformBuffer, shaders::FragmentUniformBind};
+use crate::{object::{ObjectID, GameObject}, meshes::model::BuildinModelBind, materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, resources::RenderDynUniformBuffer, shaders::FragmentUniformBind};
 
 use super::material::SkyboxMaterialPropertype;
 

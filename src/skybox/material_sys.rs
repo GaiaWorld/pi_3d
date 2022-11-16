@@ -6,13 +6,13 @@ use render_geometry::geometry::VertexAttributeMeta;
 
 use crate::{
     cameras::camera::{CameraRenderData, CameraGlobalPosition},
-    flags::{PrimitiveState, RenderBlend, RenderDepthAndStencil, RenderSortParam, SceneID, RenderTargetState},
+    flags::{SceneID},
     layer_mask::LayerMask,
     main_camera_render::{bind_group::IDMainCameraRenderBindGroup, MainCameraRenderer},
     materials::{bind_group::RenderBindGroup, material::MaterialID},
     meshes::model::BuildinModelBind,
     object::{GameObject, ObjectID},
-    renderers::render_object::{RenderObjectID, RenderObjectBindGroup, RenderObjectMetaOpaque, RenderObjectPipeline, RenderObjectVertice, RenderObjectIndices},
+    renderers::{render_object::{RenderObjectID, RenderObjectBindGroup, RenderObjectMetaOpaque, RenderObjectVertice, RenderObjectIndices}, pipeline::PipelineKey, render_blend::RenderBlend, render_depth_and_stencil::RenderDepthAndStencil, render_primitive::PrimitiveState, render_sort::RenderSortParam, render_target_state::RenderTargetState},
     resources::{RenderDynUniformBuffer, SingleRenderObjectPipelinePool},
     transforms::transform_node::GlobalTransform,
     vertex_data::{
@@ -183,7 +183,7 @@ fn collect_opaque_normal_depth(
                                 pipeline_pool,
                             );
                             
-                            let pipeline = RenderObjectPipeline { id: pipeline };
+                            let pipeline = PipelineKey { id: pipeline };
                             let mut bind_groups = vec![];
                             bind_groups.push(RenderObjectBindGroup {
                                 bind_group: id_bind_group_default,

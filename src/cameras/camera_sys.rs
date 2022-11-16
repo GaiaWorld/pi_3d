@@ -1,7 +1,7 @@
 use pi_ecs::{prelude::{Query}, query::{Write, With, Or}};
 use pi_ecs_macros::setup;
 use pi_ecs_utils::prelude::EntityTree;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, Vector4};
+use pi_scene_math::{coordiante_system::CoordinateSytem3};
 use pi_slotmap_tree::Storage;
 
 use crate::{transforms::{transform_node::{LocalTransform, GlobalTransform, }, dirty::{DirtyLocalTransform, DirtyGlobalTransform}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}};

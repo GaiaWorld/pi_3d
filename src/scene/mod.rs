@@ -14,10 +14,11 @@ pub mod interface;
 pub struct PluginScene;
 impl Plugin for PluginScene {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysDirtySceneTick::setup(world, stages.dirty_state_stage());
         SysSceneCommand::setup(world, stages.command_stage());

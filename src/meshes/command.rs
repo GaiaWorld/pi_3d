@@ -3,7 +3,7 @@ use std::mem::replace;
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
 
-use crate::{object::{ObjectID, GameObject}, flags::{RenderSortParam, RenderBlend, PrimitiveState, RenderDepthAndStencil}, transforms::{interface::InterfaceTransformNode}, scene::{interface::InterfaceScene}, plugin::Plugin, layer_mask::LayerMask, resources::RenderDynUniformBuffer};
+use crate::{object::{ObjectID, GameObject}, renderers::{render_sort::RenderSortParam, render_blend::RenderBlend, render_primitive::PrimitiveState, render_depth_and_stencil::RenderDepthAndStencil}, transforms::{interface::InterfaceTransformNode}, scene::{interface::InterfaceScene}, plugin::Plugin, layer_mask::LayerMask, resources::RenderDynUniformBuffer};
 
 use super::model::BuildinModelBind;
 
@@ -34,12 +34,12 @@ impl SysMeshCommand {
                 MeshCommand::Create(entity) => {
                     match meshes.get_mut(entity) {
                         Some(mut item) => {
-                            item.0.insert_no_notify(LayerMask::default());
-                            item.1.insert_no_notify(RenderSortParam::opaque());
-                            item.2.insert_no_notify(RenderBlend::default());
-                            item.3.insert_no_notify(PrimitiveState::default());
-                            item.4.insert_no_notify(RenderDepthAndStencil::default());
-                            item.5.insert_no_notify(BuildinModelBind::new(&mut dynbuffer));
+                            item.0.write(LayerMask::default());
+                            item.1.write(RenderSortParam::opaque());
+                            item.2.write(RenderBlend::default());
+                            item.3.write(PrimitiveState::default());
+                            item.4.write(RenderDepthAndStencil::default());
+                            item.5.write(BuildinModelBind::new(&mut dynbuffer));
                         },
                         None => {
                             

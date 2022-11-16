@@ -1,8 +1,4 @@
-use pi_ecs::{prelude::{ResMut, Query}, query::Write};
-use pi_ecs_macros::setup;
-use pi_scene_math::{Vector3, Number, Perspective3, Orthographic3, Matrix};
-
-use crate::object::{ObjectID, GameObject};
+use pi_scene_math::{Vector3};
 
 
 pub struct FreeCameraParam {

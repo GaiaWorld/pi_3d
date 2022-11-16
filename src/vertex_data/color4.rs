@@ -109,10 +109,11 @@ impl SysIDAttributeColor4Command {
 pub struct PluginAttributeColor4;
 impl Plugin for PluginAttributeColor4 {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
 
         SysAttributeColor4Command::setup(world, stages.command_stage());
         SysIDAttributeColor4Command::setup(world, stages.command_stage());
@@ -126,17 +127,17 @@ impl Plugin for PluginAttributeColor4 {
 
 pub trait InterfaceAttributeColor4 {
     fn create_vertex_data_color4(
-        &mut self,
+        &self,
         data: GeometryBuffer,
     ) -> ObjectID;
 }
 impl InterfaceAttributeColor4 for Engine {
     fn create_vertex_data_color4(
-        &mut self,
+        &self,
         data: GeometryBuffer,
     ) -> ObjectID {
         let entity = self.new_object();
-        let world = self.world_mut();
+        let world = self.world();
 
         let data_size = data.size();
         let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();

@@ -1,7 +1,6 @@
-use pi_ecs::{prelude::{Setup, }};
 use pi_scene_math::Number;
 
-use crate::{plugin::Plugin, object::{ObjectID}, transforms::{interface::InterfaceTransformNode}, scene::interface::InterfaceScene};
+use crate::{object::{ObjectID}, transforms::{interface::InterfaceTransformNode}, scene::interface::InterfaceScene};
 
 use super::command::{SingleCameraCommandList, SingleTargetCameraCommandList, CameraCommand, TargetCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand};
 

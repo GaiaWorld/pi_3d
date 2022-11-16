@@ -1,9 +1,9 @@
 use pi_ecs::{world::World, prelude::{StageBuilder, Setup, ArchetypeId}};
 use pi_render::rhi::device::RenderDevice;
 
-use crate::{object::ObjectID, plugin::{Plugin, ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, command::{SingleRenderBindGroupCommandList, RenderBindGroupCommand}}, default_render::command::SysDefaultMaterialCommand};
+use crate::{object::ObjectID, plugin::{ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, command::{SingleRenderBindGroupCommandList, RenderBindGroupCommand}}, default_render::command::SysDefaultMaterialCommand};
 
-use self::{default_material::{SingleDefaultMaterialBindDynInfoSet}, shader::DefaultShader, default_material_sys::{DefaultMaterialUniformUpdate, DefaultMaterialFilter, DefaultModelUniformUpdate}, command::{SingeDefaultMaterialCommandList, DefaultMaterialCommand}, pipeline::DefaultMaterialPipeline, bind_group::{IDDefaultMaterialBindGroup, SysDefaultMaterialBindGroupUpdate}, dirty::SysDirtyDefaultMaterialPropertype, interface::InterfaceDefaultMaterial};
+use self::{default_material::{SingleDefaultMaterialBindDynInfoSet}, shader::DefaultShader, default_material_sys::{DefaultMaterialUniformUpdate, DefaultMaterialFilter, DefaultModelUniformUpdate, SysDefaultMaterialPipelineKey}, command::{SingeDefaultMaterialCommandList, DefaultMaterialCommand}, pipeline::DefaultMaterialPipeline, bind_group::{IDDefaultMaterialBindGroup, SysDefaultMaterialBindGroupUpdate}, dirty::SysDirtyDefaultMaterialPropertype, interface::InterfaceDefaultMaterial};
 
 pub mod default_material;
 pub mod default_material_sys;
@@ -16,21 +16,23 @@ pub mod interface;
 pub struct SingleIDBaseDefaultMaterial(pub MaterialID);
 
 pub struct PluginDefaultMaterial;
-impl Plugin for PluginDefaultMaterial {
+impl crate::Plugin for PluginDefaultMaterial {
     fn init(
+        &mut self,
+        world: &mut pi_ecs::world::World,
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
         //  println!("PluginDefaultMaterial");
         let id_default_mat_bind_group = engine.new_object();
-        let mut world = engine.world_mut().clone();
 
-        SysDirtyDefaultMaterialPropertype::setup(&mut world, stages.dirty_state_stage());
-        SysDefaultMaterialCommand::setup(&mut world, stages.command_stage());
-        DefaultModelUniformUpdate::setup(&mut world, stages.uniform_update());
-        DefaultMaterialUniformUpdate::setup(&mut world, stages.uniform_update());
-        DefaultMaterialFilter::setup(&mut world, stages.filter_culling());
-        SysDefaultMaterialBindGroupUpdate::setup(&mut world, stages.between_uniform_update_and_filter_culling());
+        SysDirtyDefaultMaterialPropertype::setup(world, stages.dirty_state_stage());
+        SysDefaultMaterialCommand::setup(world, stages.command_stage());
+        DefaultModelUniformUpdate::setup(world, stages.uniform_update());
+        DefaultMaterialUniformUpdate::setup(world, stages.uniform_update());
+        DefaultMaterialFilter::setup(world, stages.filter_culling());
+        SysDefaultMaterialBindGroupUpdate::setup(world, stages.between_uniform_update_and_filter_culling());
+        SysDefaultMaterialPipelineKey::setup(world, stages.uniform_update());
 
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
         world.insert_resource(DefaultMaterialPipeline::default());

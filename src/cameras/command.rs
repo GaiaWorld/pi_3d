@@ -2,10 +2,9 @@ use std::mem::replace;
 
 use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
 use pi_ecs_macros::setup;
-use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
-use pi_scene_math::{Vector3, Matrix, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
+use pi_scene_math::{Number};
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, object::{ObjectID, GameObject}, resources::RenderDynUniformBuffer};
+use crate::{bytes_write_to_memory, object::{ObjectID, GameObject}};
 
 use super::{free_camera::FreeCameraParam, dirty::DirtyTargetCamera, target_camera::TargetCameraParam, camera::{CameraTransformMatrix, CameraGlobalPosition, CameraDirection, CameraProjectionMatrix, CameraViewMatrix, CameraParam, EFreeCameraMode, EFixedMode}};
 

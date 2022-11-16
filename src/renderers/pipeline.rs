@@ -1,16 +1,6 @@
-use render_material::MaterialPropertypeBlock;
+use pi_slotmap::DefaultKey;
 
-use crate::{materials::MBKK};
-
-
-pub struct PipelineQpaque;
-
-impl PipelineQpaque {
-    pub fn render<'a>(
-        renderpass: &mut wgpu::RenderPass<'a>,
-        materials: &Vec<&MaterialPropertypeBlock<MBKK>>,
-        // shaders: &Vec<>
-    ) {
-
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PipelineKey {
+    pub id: DefaultKey,
 }

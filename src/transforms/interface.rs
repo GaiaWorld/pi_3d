@@ -1,9 +1,7 @@
-use pi_ecs::prelude::{ResMut, Query, Setup};
-use pi_ecs_macros::setup;
-use pi_ecs_utils::prelude::EntityTreeMut;
+
 use pi_scene_math::Vector3;
 
-use crate::{object::{ObjectID, GameObject}, plugin::Plugin, scene::{interface::InterfaceScene}};
+use crate::{object::{ObjectID}, scene::{interface::InterfaceScene}};
 
 use super::{command::{SingleTreeCommandList, TreeCommand, TransformNodeCommand, SingleTransformNodeCommandList}};
 
