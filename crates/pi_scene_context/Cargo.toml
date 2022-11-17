@@ -1,0 +1,84 @@
+[package]
+name = "pi_scene_context"
+version = "0.0.1"
+authors = ["baip0002 <2494156981@qq.com>"]
+edition = "2021"
+description = "3D Framework for Scene."
+repository = "https://github.com/GaiaWorld/pi_3d"
+license = "MIT OR Apache-2.0"
+keywords = ["3d scene"]
+
+[dependencies]
+wgpu = "0.13"
+env_logger = "0.9"
+log = "0.4"
+smallvec = "1.9"
+crossbeam="0.8"
+futures = "0.3"
+
+parry3d = "0.9"
+lazy_static = "1.4"
+pi_spatialtree = { git = "https://github.com/GaiaWorld/pi_spatialtree.git" }
+ncollide3d = "0.33"
+
+approx = "0.5"
+naga = { version = "0.9", features = [
+    "glsl-in",
+    "spv-in",
+    "spv-out",
+    "wgsl-in",
+    "wgsl-out",
+] }
+bytemuck = { version = "1.4", features = ["derive"] }
+
+pi_slotmap = "0.1"
+pi_hash = "0.1"
+pi_share = "0.4"
+pi_graph = "0.1"
+
+pi_animation = { git = "https://github.com/GaiaWorld/pi_animation" }
+
+# render_utils = { git = "https://github.com/GaiaWorld/pi_render" }
+render_utils = { path = "../../../pi_render/crates/render_utils" }
+render_pipeline_key = { git = "https://github.com/GaiaWorld/pi_render" }
+# render_data_container = { git = "https://github.com/GaiaWorld/pi_render" }
+render_data_container = { path = "../../../pi_render/crates/render_data_container" }
+# render_geometry = { git = "https://github.com/GaiaWorld/pi_render" }
+render_geometry = { path = "../../../pi_render/crates/render_geometry" }
+# render_material = { git = "https://github.com/GaiaWorld/pi_render" }
+render_material = { path = "../../../pi_render/crates/render_material" }
+# pi_render = { git = "https://github.com/GaiaWorld/pi_render" }
+pi_render = { path = "../../../pi_render" }
+render_derive = {path = "../../../pi_render/crates/render_derive"}
+render_resource = { path = "../../../pi_render/crates/render_resource" }
+
+# pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
+
+pi_atom = { version="0.2", features = ["serde"] }
+pi_assets = "0.10"
+pi_futures = "0.1"
+pi_async = "0.5"
+pi_idtree = "0.1"
+pi_slotmap_tree = "0.3"
+pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
+pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
+pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
+pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
+
+pi_engine_shell = { path = "../pi_engine_shell" }
+
+# [dev-dependencies]
+image = "0.24"
+winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
+pollster = "0.2"
+spin_sleep = "1.1"
+
+[patch."https://github.com/GaiaWorld/pi_animation"]
+pi_animation = { path = "../../../pi_animation" }
+
+[patch."https://github.com/GaiaWorld/pi_render"]
+pi_render = { path = "../../../pi_render" }
+
+[patch."https://github.com/GaiaWorld/pi_scene"]
+pi_scene = { path = "../../../pi_scene" }
