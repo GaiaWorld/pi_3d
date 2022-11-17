@@ -40,3 +40,11 @@ path = "examples/cube/cube.rs"
 [[example]]
 name = "skybox"
 path = "examples/skybox/skybox.rs"
+
+[[example]]
+name = "performance_static_render"
+path = "examples/performance/static_10000.rs"
+
+[[example]]
+name = "performance_transform_render"
+path = "examples/performance/transform_10000.rs"
