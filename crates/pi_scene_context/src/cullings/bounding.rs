@@ -2,6 +2,8 @@ use parry3d::shape::ConvexPolyhedron;
 use pi_scene_math::{Vector3, Matrix, frustum::FrustumPlanes};
 use pi_slotmap::{KeyData, Key};
 
+use crate::object::ObjectID;
+
 use super::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, ECullingStrategy};
 
 
@@ -78,22 +80,8 @@ pub fn check_boundings(
     res_vec
 }
 
-#[derive(Debug, Copy, Clone, Hash, Ord, PartialOrd, Eq, PartialEq, Default)]
-pub struct BoundingKey(pub(crate) usize);
 
-unsafe impl Key for BoundingKey {
-    #[inline]
-    fn data(&self) -> KeyData {
-        KeyData::from_ffi(self.0 as u64)
-    }
-}
-
-impl From<KeyData> for BoundingKey {
-    #[inline]
-    fn from(data: KeyData) -> Self {
-        BoundingKey(data.as_ffi() as usize)
-    }
-}
+pub type BoundingKey = ObjectID;
 
 pub trait TBoundingInfoCalc {
     fn add(&mut self, key: BoundingKey, info: BoundingInfo);
@@ -112,7 +100,7 @@ pub trait TBoundingInfoCalc {
 
 pub struct VecBoundingInfoCalc {
     recycle: Vec<usize>,
-    record: Vec<usize>,
+    record: Vec<BoundingKey>,
     list: Vec<BoundingInfo>,
 }
 
@@ -131,17 +119,17 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         match self.recycle.pop() {
             Some(index) => {
                 self.list[index] = info;
-                self.record[index] = key.0;
+                self.record[index] = key;
             },
             None => {
                 self.list.push(info);
-                self.record.push(key.0);
+                self.record.push(key);
             },
         } 
     }
 
     fn remove(&mut self, key: BoundingKey) {
-        match self.record.binary_search(&key.0) {
+        match self.record.binary_search(&key) {
             Ok(index) => {
                 self.recycle.push(index);
             },
@@ -160,7 +148,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             if !self.recycle.contains(&index) {
                 if self.list[index].is_in_frustum(frustum_planes) {
                     let key = self.record.get(index).unwrap();
-                    res_vec.push(BoundingKey(*key));
+                    res_vec.push(*key);
                 }
             }
         }

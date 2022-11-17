@@ -6,8 +6,7 @@ use parry3d::{
     na::{Isometry3, Point3},
     shape::{ConvexPolyhedron, Cuboid},
 };
-use pi_ecs::{prelude::{Res, Query}, world::World};
-use pi_ecs::prelude::Setup;
+use pi_ecs::{prelude::{Res, Setup, Query}, query::Write,};
 use pi_ecs_macros::setup;
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
 use pi_spatialtree::OctTree;
@@ -15,15 +14,15 @@ use pi_spatialtree::OctTree;
 use crate::{
     cameras::camera::{CameraParam, CameraProjectionMatrix, CameraViewport},
     engine::Engine,
+    object::GameObject,
     plugin::{ErrorPlugin, Plugin},
-    run_stage::RunStage, object::GameObject,
+    run_stage::RunStage,
 };
 
 use super::{
-    bounding::{BoundingKey, TBoundingInfoCalc, AbQueryArgs},
-    BoundingInfo,
+    bounding::{AbQueryArgs, BoundingKey, TBoundingInfoCalc},
+    BoundingInfo, IsCulled,
 };
-
 
 pub struct BoundingQuadTree(OctTree<BoundingKey, f32, (Isometry3<f32>, Cuboid)>);
 
@@ -185,12 +184,12 @@ impl Plugin for PluginBoundingQuadTree {
 }
 
 trait InterfaceQuadTree {
-    fn add_of_quad_tree(&mut self, key: BoundingKey, info: BoundingInfo);
-    fn remove_of_quad_tree(&mut self, key: BoundingKey);
+    fn add_of_quad_tree(& self, key: BoundingKey, info: BoundingInfo);
+    fn remove_of_quad_tree(& self, key: BoundingKey);
 }
 
 impl InterfaceQuadTree for Engine {
-    fn add_of_quad_tree(&mut self, key: BoundingKey, info: BoundingInfo) {
+    fn add_of_quad_tree(& self, key: BoundingKey, info: BoundingInfo) {
         let box_point = info.bounding_box.vectors_world;
         let points = vec![
             Point3::new(box_point[0][0], box_point[0][1], box_point[0][2]),
@@ -219,7 +218,7 @@ impl InterfaceQuadTree for Engine {
         );
     }
 
-    fn remove_of_quad_tree(&mut self, key: BoundingKey) {
+    fn remove_of_quad_tree(& self, key: BoundingKey) {
         let world = self.world();
         let tree = world.get_resource_mut::<BoundingQuadTree>().unwrap();
         let _ = tree.0.remove(key);
@@ -233,17 +232,24 @@ impl SysCameraCullingQuadTree {
     pub fn tick(
         tree: Res<BoundingQuadTree>,
         cameras: Query<GameObject, (&CameraParam, &CameraViewport, &CameraProjectionMatrix)>,
-        mut objects: Query<GameObject, (&BoundingInfo)>,
+        mut objects: Query<GameObject, Write<IsCulled>>,
     ) {
         //  println!("Scene Camera Culling:");
         cameras.iter().for_each(|camera| {
-            if let Some(frustum) = compute_frustum(&camera.0, &camera.1, &camera.2){
-                objects.iter().for_each(|object| {
-                    let mut result = vec![];
-                    tree.check_boundings_of_tree(&frustum, &mut result);
+            if let Some(frustum) = compute_frustum(&camera.0, &camera.1, &camera.2) {
+                objects
+                    .iter_mut()
+                    .for_each(|mut object| object.insert_no_notify(IsCulled));
+
+                let mut result = vec![];
+                tree.check_boundings_of_tree(&frustum, &mut result);
+
+                result.iter().for_each(|id| {
+                    if let Some(mut obj) = objects.get_mut(*id) {
+                        obj.remove();
+                    }
                 });
             }
-            // compute_frustum(&frustum_planes)
         });
     }
 }

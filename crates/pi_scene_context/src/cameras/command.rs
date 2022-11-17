@@ -9,7 +9,7 @@ use crate::{bytes_write_to_memory, object::{ObjectID, GameObject}};
 use super::{free_camera::FreeCameraParam, target_camera::TargetCameraParam, camera::{CameraTransformMatrix, CameraGlobalPosition, CameraDirection, CameraProjectionMatrix, CameraViewMatrix, CameraParam, EFreeCameraMode, EFixedMode}};
 
 #[derive(Debug)]
-enum CameraCommand {
+pub enum CameraCommand {
     Create(ObjectID),
     Destroy(ObjectID),
     ModifyMode(ObjectID, EFreeCameraMode),
@@ -20,11 +20,11 @@ enum CameraCommand {
 
 
 #[derive(Debug, Default)]
-struct SingleCameraCommandList {
+pub struct SingleCameraCommandList {
     pub list: Vec<CameraCommand>,
 }
 
-struct SysCameraCommand;
+pub struct SysCameraCommand;
 #[setup]
 impl SysCameraCommand {
     #[system]
