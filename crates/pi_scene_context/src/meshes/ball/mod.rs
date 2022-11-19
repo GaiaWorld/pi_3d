@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, f32::consts::PI};
 
 use pi_engine_shell::object::InterfaceObject;
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
@@ -28,6 +28,7 @@ use crate::{
             IDAttributePositionCommand, SingleAttributePositionCommandList,
             SingleIDAttributePositionCommandList,
         },
+        uv::{AttributeUV, AttributeUVCommand, IDAttributeUV, SingleAttributeUVCommandList},
     },
 };
 
@@ -37,6 +38,7 @@ pub struct SingleBaseBall {
     position: IDAttributePosition,
     normal: IDAttributeNormal,
     indices: IDAttributeIndices,
+    uv: IDAttributeUV,
 }
 impl SingleBaseBall {
     pub fn position(&self) -> IDAttributePosition {
@@ -121,6 +123,29 @@ impl BallBuilder {
             format: wgpu::IndexFormat::Uint32,
         }
     }
+
+    pub fn uv(
+        device: &RenderDevice,
+        queue: &RenderQueue,
+        gbp: &mut SingleGeometryBufferPool,
+        data: &[f32],
+    ) -> AttributeUV {
+        let len = data.len();
+        let mut uvs = GeometryBuffer::new(true, EVertexDataFormat::F32, true);
+        uvs.update_f32(&data, 0);
+        uvs.update_buffer(device, queue);
+        let id_uv = gbp.insert(uvs);
+
+        AttributeUV {
+            meta: VertexAttributeBufferMeta {
+                buffer_id: id_uv,
+                start: 0,
+                end: len * 2 * 4,
+                data_bytes_size: 2 * 4,
+                data_count: len / 2,
+            },
+        }
+    }
 }
 
 pub enum BallBuilderCommand {
@@ -185,6 +210,8 @@ impl Plugin for PluginBallBuilder {
         let position_id = engine.new_object();
         let normal_id = engine.new_object();
         let indices_id = engine.new_object();
+        let uv_id = engine.new_object();
+
         let world = engine.world_mut();
 
         let device = world.get_resource::<RenderDevice>().unwrap();
@@ -198,76 +225,130 @@ impl Plugin for PluginBallBuilder {
         let len = ball.len();
         // 每个三角形 3 个点，一共 8个象限
         let mut positions = Vec::with_capacity(len * 9 * 8);
-        let mut normals = Vec::with_capacity(len * 3 * 8);
+        let mut normals = Vec::with_capacity(len * 9 * 8);
         let mut indices = Vec::with_capacity(len * 3 * 8);
+        let mut uvs = Vec::with_capacity(len * 6 * 8);
 
         let mut index = 0;
         for tri in ball {
             let start = index * 24;
             let mut data = [tri.a.as_slice(), tri.b.as_slice(), tri.c.as_slice()].concat();
-            let normal = tri.compute_normal();
-
+            let mut normal = tri.compute_normal();
+            let mut uv = compute_uv(&normal);
             // 第一象限
             positions.append(&mut data);
-            normals.append(&mut vec![normal[0], normal[1], normal[2]]);
+            normals.append(&mut normal);
+            uvs.append(&mut uv);
 
             // 第二象限
             data[0] = -data[0];
             data[3] = -data[3];
             data[6] = -data[6];
+
+            normal[0] = -normal[0];
+            normal[3] = -normal[3];
+            normal[6] = -normal[6];
             positions.append(&mut data);
-            normals.append(&mut vec![-normal[0], normal[1], normal[2]]);
+            normals.append(&mut normal);
+
+            let mut uv = compute_uv(&normal);
+            uvs.append(&mut uv);
 
             // 第三象限
             data[1] = -data[1];
             data[4] = -data[4];
             data[7] = -data[7];
+
+            normal[1] = -normal[1];
+            normal[4] = -normal[4];
+            normal[7] = -normal[7];
             positions.append(&mut data);
-            normals.append(&mut vec![-normal[0], -normal[1], normal[2]]);
+            normals.append(&mut normal);
+
+            let mut uv = compute_uv(&normal);
+            uvs.append(&mut uv);
 
             // 第四象限
             data[0] = -data[0];
             data[3] = -data[3];
             data[6] = -data[6];
+
+            normal[0] = -normal[0];
+            normal[3] = -normal[3];
+            normal[6] = -normal[6];
             positions.append(&mut data);
-            normals.append(&mut vec![normal[0], -normal[1], normal[2]]);
+            normals.append(&mut normal);
+
+            let mut uv = compute_uv(&normal);
+            uvs.append(&mut uv);
 
             // 第五象限
             data[2] = -data[2];
             data[5] = -data[5];
             data[8] = -data[8];
+
+            normal[2] = -normal[2];
+            normal[5] = -normal[5];
+            normal[8] = -normal[8];
             positions.append(&mut data);
-            normals.append(&mut vec![normal[0], normal[1], -normal[2]]);
+            normals.append(&mut normal);
+
+            let mut uv = compute_uv(&normal);
+            uvs.append(&mut uv);
 
             // 第六象限
             data[0] = -data[0];
             data[3] = -data[3];
             data[6] = -data[6];
+
+            normal[0] = -normal[0];
+            normal[3] = -normal[3];
+            normal[6] = -normal[6];
             positions.append(&mut data);
-            normals.append(&mut vec![-normal[0], normal[1], -normal[2]]);
+            normals.append(&mut normal);
+
+            let mut uv = compute_uv(&normal);
+            uvs.append(&mut uv);
 
             // 第七象限
             data[1] = -data[1];
             data[4] = -data[4];
             data[7] = -data[7];
+
+            normal[1] = -normal[1];
+            normal[4] = -normal[4];
+            normal[7] = -normal[7];
             positions.append(&mut data);
-            normals.append(&mut vec![-normal[0], -normal[1], -normal[2]]);
+            normals.append(&mut normal);
+
+            let mut uv = compute_uv(&normal);
+            uvs.append(&mut uv);
 
             // 第八象限
             data[0] = -data[0];
             data[3] = -data[3];
             data[6] = -data[6];
+
+            normal[0] = -normal[0];
+            normal[3] = -normal[3];
+            normal[6] = -normal[6];
             positions.append(&mut data);
-            normals.append(&mut vec![normal[0], -normal[1], -normal[2]]);
+            normals.append(&mut normal);
+
+            let mut uv = compute_uv(&normal);
+            uvs.append(&mut uv);
 
             for i in 0..8 * 3 {
                 indices.push(start + i);
             }
+
+            index += 1;
         }
 
         let position = BallBuilder::position(device, queue, gbp, &positions);
         let normal = BallBuilder::normal(device, queue, gbp, &normals);
         let indices = BallBuilder::indices(device, queue, gbp, &indices);
+        let uvs = BallBuilder::uv(device, queue, gbp, &uvs);
 
         let commands = world
             .get_resource_mut::<SingleAttributePositionCommandList>()
@@ -275,12 +356,14 @@ impl Plugin for PluginBallBuilder {
         commands
             .list
             .push(AttributePositionCommand::Create(position_id, position));
+
         let commands = world
             .get_resource_mut::<SingleAttributeNormalCommandList>()
             .unwrap();
         commands
             .list
             .push(AttributeNormalCommand::Create(normal_id, normal));
+
         let commands = world
             .get_resource_mut::<SingleAttributeIndicesCommandList>()
             .unwrap();
@@ -288,10 +371,16 @@ impl Plugin for PluginBallBuilder {
             .list
             .push(AttributeIndicesCommand::Create(indices_id, indices));
 
+        let commands = world
+            .get_resource_mut::<SingleAttributeUVCommandList>()
+            .unwrap();
+        commands.list.push(AttributeUVCommand::Create(uv_id, uvs));
+
         world.insert_resource::<SingleBaseBall>(SingleBaseBall {
             position: IDAttributePosition(position_id),
             normal: IDAttributeNormal(normal_id),
             indices: IDAttributeIndices(indices_id),
+            uv: IDAttributeUV(uv_id),
         });
 
         Ok(())
@@ -306,11 +395,11 @@ struct Triangle {
 }
 
 impl Triangle {
-    pub fn compute_normal(&self) -> Vector3 {
-        let ab = self.b - self.a;
-        let bc = self.c - self.b;
-
-        return ab.cross(&bc).normalize();
+    pub fn compute_normal(&self) -> Vec<f32> {
+        let a = self.a.normalize();
+        let b = self.b.normalize();
+        let c = self.c.normalize();
+        [a.as_slice(), b.as_slice(), c.as_slice()].concat()
     }
 }
 
@@ -322,8 +411,8 @@ fn generate_sphere(mut resolution: f32) -> VecDeque<Triangle> {
     let mut triangles = VecDeque::new();
     triangles.push_back(Triangle {
         a: Vector3::new(0.0, 1.0, 0.0),
-        b: Vector3::new(1.0, 0.0, 0.0),
-        c: Vector3::new(0.0, 0.0, 1.0),
+        b: Vector3::new(0.0, 0.0, 1.0),
+        c: Vector3::new(1.0, 0.0, 0.0),
     });
 
     // 这里平方一下，dist_square 的时候 就不用每次开平方了
@@ -339,10 +428,10 @@ fn generate_sphere(mut resolution: f32) -> VecDeque<Triangle> {
             let e = mid_arc_point(t.b, t.c);
             let f = mid_arc_point(t.c, t.a);
 
-            triangles.push_back(Triangle { a: t.a, b: f, c: d });
-            triangles.push_back(Triangle { a: t.b, b: d, c: e });
-            triangles.push_back(Triangle { a: t.c, b: e, c: f });
-            triangles.push_back(Triangle { a: d, b: e, c: f });
+            triangles.push_back(Triangle { a: t.a, b: d, c: f });
+            triangles.push_back(Triangle { a: d, b: t.b, c: e });
+            triangles.push_back(Triangle { a: d, b: f, c: e });
+            triangles.push_back(Triangle { a: f, b: e, c: t.c });
         } else {
             break;
         }
@@ -364,4 +453,17 @@ fn mid_arc_point(a: Vector3, b: Vector3) -> Vector3 {
 fn dist_square(a: Vector3, b: Vector3) -> f32 {
     let c = a - b;
     return c[0] * c[0] + c[1] * c[1] + c[2] * c[2];
+}
+
+fn compute_uv(normalize: &[f32]) -> Vec<f32> {
+    let au = normalize[0].atan2(normalize[2]) / (2.0 * PI) + 0.5;
+    let av = normalize[2] * 0.5 + 0.5;
+
+    let bu = normalize[3].atan2(normalize[5]) / (2.0 * PI) + 0.5;
+    let bv = normalize[4] * 0.5 + 0.5;
+
+    let cu = normalize[6].atan2(normalize[8]) / (2.0 * PI) + 0.5;
+    let cv = normalize[7] * 0.5 + 0.5;
+
+    vec![au, av, bu, bv, cu, cv]
 }
