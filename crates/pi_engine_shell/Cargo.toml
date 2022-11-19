@@ -57,6 +57,7 @@ pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 pi_render = { path = "../../../pi_render" }
 render_derive = {path = "../../../pi_render/crates/render_derive"}
 render_resource = { path = "../../../pi_render/crates/render_resource" }
+render_data_container = { path = "../../../pi_render/crates/render_data_container" }
 
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
