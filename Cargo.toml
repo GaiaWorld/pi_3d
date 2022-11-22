@@ -45,6 +45,10 @@ name = "unlit_cube"
 path = "examples/cube/unlit_cube.rs"
 
 [[example]]
+name = "quad"
+path = "examples/quad/quad.rs"
+
+[[example]]
 name = "skybox"
 path = "examples/skybox/skybox.rs"
 

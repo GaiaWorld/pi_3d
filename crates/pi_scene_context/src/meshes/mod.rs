@@ -13,6 +13,7 @@ pub mod interface;
 pub mod alpha_index;
 pub mod render_group;
 pub mod ball;
+pub mod quad;
 
 pub trait Mesh {
     fn alpha_index(&self) -> usize;
