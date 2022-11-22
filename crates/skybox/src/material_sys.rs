@@ -9,7 +9,7 @@ use pi_scene_context::{
     flags::{SceneID},
     layer_mask::LayerMask,
     main_camera_render::{bind_group::IDMainCameraRenderBindGroup, MainCameraRenderer},
-    materials::{bind_group::RenderBindGroup, material::MaterialID},
+    materials::{bind_group::{RenderBindGroup, RenderBindGroupPool, RenderBindGroupKey}, material::MaterialID},
     meshes::model::BuildinModelBind,
     object::{GameObject, ObjectID},
     renderers::{render_object::{RenderObjectID, RenderObjectBindGroup, RenderObjectMetaOpaque, RenderObjectVertice, RenderObjectIndices}, pipeline::PipelineKey, render_blend::RenderBlend, render_depth_and_stencil::RenderDepthAndStencil, render_primitive::PrimitiveState, render_sort::RenderSortParam, render_target_state::RenderTargetState},
@@ -78,7 +78,7 @@ impl SkyboxMaterialFilter {
             ),
         >,
         materials: Query<GameObject, &SkyboxMaterialPropertype>,
-        bind_groups: Query<GameObject, &RenderBindGroup>,
+        bind_groups: Res<RenderBindGroupPool>,
         positions: Query<GameObject, &AttributePosition>,
         normals: Query<GameObject, &AttributeNormal>,
         indices: Query<GameObject, &AttributeIndices>,
@@ -145,7 +145,7 @@ fn collect_opaque_normal_depth(
     shader: & SkyboxShader,
     pipeline_pool: &mut SingleRenderObjectPipelinePool,
     list: &mut Vec<RenderObjectMetaOpaque>,
-    id_bind_group_default: ObjectID,
+    id_bind_group_default: RenderBindGroupKey,
 ) {
     query.iter().for_each(|item| {
         let rendersort = item.3;

@@ -2,11 +2,11 @@ use pi_ecs::prelude::{Res, Query, ResMut};
 use pi_ecs_macros::setup;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, device::RenderDevice};
 
-use pi_scene_context::{materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::FragmentUniformBind, resources::RenderDynUniformBuffer};
+use pi_scene_context::{materials::{bind_group::{RenderBindGroup, RenderBindGroupKey, RenderBindGroupPool}, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::FragmentUniformBind, resources::RenderDynUniformBuffer};
 
 use super::default_material::DefaultMaterialPropertype;
 
-pub struct IDDefaultMaterialBindGroup(pub ObjectID);
+pub struct IDDefaultMaterialBindGroup(pub RenderBindGroupKey);
 impl IDDefaultMaterialBindGroup {
     const LABEL: &'static str = "DefaultMaterialBindGroup";
     pub const SET: u32 = 1;
@@ -55,7 +55,7 @@ impl SysDefaultMaterialBindGroupUpdate {
         device: Res<RenderDevice>,
         dynbuffer: Res<RenderDynUniformBuffer>,
         dynbuffer_flag: Res<SingleDynUnifromBufferReBindFlag>,
-        mut bindgroups: Query<GameObject, &mut RenderBindGroup>,
+        mut bindgroups: ResMut<RenderBindGroupPool>,
         id: ResMut<IDDefaultMaterialBindGroup>,
     ) {
         // println!("Sys DefaultMaterial BindGroup Update");

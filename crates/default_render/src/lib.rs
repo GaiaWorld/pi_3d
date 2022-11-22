@@ -1,9 +1,8 @@
 use command::SysDefaultMaterialCommand;
 use pi_ecs::{prelude::{Setup}};
-use pi_engine_shell::object::InterfaceObject;
 use pi_render::rhi::device::RenderDevice;
 
-use pi_scene_context::{plugin::{ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, command::{InterfaceRenderBindGroup}}};
+use pi_scene_context::{plugin::{ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, bind_group::RenderBindGroupPool}};
 
 use self::{default_material::{SingleDefaultMaterialBindDynInfoSet}, shader::DefaultShader, default_material_sys::{DefaultMaterialUniformUpdate, DefaultMaterialFilter, DefaultModelUniformUpdate, SysDefaultMaterialPipelineKey}, command::{SingeDefaultMaterialCommandList}, pipeline::DefaultMaterialPipeline, bind_group::{IDDefaultMaterialBindGroup, SysDefaultMaterialBindGroupUpdate}, interface::InterfaceDefaultMaterial};
 
@@ -25,13 +24,12 @@ impl pi_engine_shell::plugin::Plugin for PluginDefaultMaterial {
     ) -> Result<(), ErrorPlugin> {
 
         //  println!("PluginDefaultMaterial");
-        let id_default_mat_bind_group = engine.new_object();
 
         let world = engine.world_mut();
 
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
         let layout = IDDefaultMaterialBindGroup::layout(&device);
-        engine.as_render_bind_group(id_default_mat_bind_group, layout, IDDefaultMaterialBindGroup::SET);
+        let id_default_mat_bind_group = world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, layout, IDDefaultMaterialBindGroup::SET);
 
         let world = engine.world_mut();
 

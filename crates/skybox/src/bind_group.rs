@@ -2,11 +2,11 @@ use pi_ecs::{prelude::{Res, Query, ResMut}, sys::system};
 use pi_ecs_macros::setup;
 use pi_render::rhi::{device::RenderDevice, bind_group_layout::BindGroupLayout, bind_group::BindGroup};
 
-use pi_scene_context::{object::{ObjectID, GameObject}, meshes::model::BuildinModelBind, materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, resources::RenderDynUniformBuffer, shaders::FragmentUniformBind};
+use pi_scene_context::{object::{ObjectID, GameObject}, meshes::model::BuildinModelBind, materials::{bind_group::{RenderBindGroup, RenderBindGroupKey, RenderBindGroupPool}, uniform_buffer::SingleDynUnifromBufferReBindFlag}, resources::RenderDynUniformBuffer, shaders::FragmentUniformBind};
 
 use super::material::SkyboxMaterialPropertype;
 
-pub struct IDSkyboxMaterialBindGroup(pub ObjectID);
+pub struct IDSkyboxMaterialBindGroup(pub RenderBindGroupKey);
 impl IDSkyboxMaterialBindGroup {
     const LABEL: &'static str = "SkyboxMaterialBindGroup";
     pub const SET: u32 = 1;
@@ -56,7 +56,7 @@ impl SysSkyboxMaterialBindGroupUpdate {
         device: Res<RenderDevice>,
         dynbuffer: Res<RenderDynUniformBuffer>,
         dynbuffer_flag: Res<SingleDynUnifromBufferReBindFlag>,
-        mut bindgroups: Query<GameObject, &mut RenderBindGroup>,
+        mut bindgroups: ResMut<RenderBindGroupPool>,
         id: ResMut<IDSkyboxMaterialBindGroup>,
     ) {
         println!("Sys SkyboxMaterial BindGroup Update");

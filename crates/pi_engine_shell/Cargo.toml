@@ -35,6 +35,7 @@ image = "0.24"
 winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
 pollster = "0.2"
 spin_sleep = "1.1"
+derive_deref = "1.1"
 
 pi_slotmap = "0.1"
 pi_hash = "0.1"

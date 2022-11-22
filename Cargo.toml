@@ -15,8 +15,11 @@ members = ["crates/*"]
 pi_scene_context = { path = "crates/pi_scene_context" }
 pi_engine_shell = { path = "crates/pi_engine_shell" }
 default_render = { path = "crates/default_render" }
+material_textures = { path = "crates/material_textures" }
 skybox = { path = "crates/skybox" }
-standard_material = { path = "crates/standard_material" }
+unlit_material = { path = "crates/unlit_material" }
+# standard_material = { path = "crates/standard_material" }
+render_resource = { path = "../pi_render/crates/render_resource" }
 
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
@@ -37,6 +40,9 @@ futures = "0.3"
 [[example]]
 name = "cube"
 path = "examples/cube/cube.rs"
+[[example]]
+name = "unlit_cube"
+path = "examples/cube/unlit_cube.rs"
 
 [[example]]
 name = "skybox"

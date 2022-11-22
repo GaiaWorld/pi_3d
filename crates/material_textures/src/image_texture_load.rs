@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use crossbeam::queue::SegQueue;
+use derive_deref::{Deref, DerefMut};
 use pi_assets::{
     asset::Handle,
     mgr::{AssetMgr, LoadResult},
@@ -13,6 +14,7 @@ use pi_ecs::{
     prelude::{Query, Res, Write},
 };
 use pi_ecs_macros::{listen, setup};
+use pi_engine_shell::object::{ObjectID, GameObject};
 use pi_hal::{loader::AsyncLoader, runtime::MULTI_MEDIA_RUNTIME};
 use pi_render::rhi::{
     asset::{ImageTextureDesc, TextureRes},
@@ -21,10 +23,8 @@ use pi_render::rhi::{
 };
 use pi_share::{Share, ThreadSync};
 
-use crate::object::GameObject;
-
 #[derive(Clone, DerefMut, Deref)]
-pub struct ImageAwait<T>(Share<SegQueue<(Id<GameObject>, Atom, Handle<TextureRes>)>>, PhantomData<T>);
+pub struct ImageAwait<T>(Share<SegQueue<(ObjectID, Atom, Handle<TextureRes>)>>, PhantomData<T>);
 
 impl<T> Default for ImageAwait<T> {
     fn default() -> Self { Self(Share::new(SegQueue::new()), PhantomData) }
@@ -51,6 +51,7 @@ where
         queue: Res<RenderQueue>,
         device: Res<RenderDevice>,
     ) {
+        println!("image_change: ");
         let (key, mut texture) = query.get_unchecked_mut_by_entity(e.id);
         let result = AssetMgr::load(&texture_assets_mgr, &(key.get_hash() as u64));
         match result {
@@ -85,6 +86,7 @@ where
     //
     #[system]
     pub fn check_await_texture(image_await: Res<ImageAwait<S>>, mut query: Query<GameObject, (&S, Write<D>)>) {
+        println!("check_await_texture: ");
         // let awaits = std::mem::replace(&mut border_image_await.0, Share::new(SegQueue::new()));
         let mut r = image_await.0.pop();
         while let Some((id, key, texture)) = r {
@@ -102,6 +104,7 @@ where
                 None => continue,
             };
             texture_item.write(D::from(texture));
+            println!("Write texture_item $$$");
         }
     }
 }

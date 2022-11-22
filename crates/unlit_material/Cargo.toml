@@ -1,5 +1,5 @@
 [package]
-name = "standard_material"
+name = "unlit_material"
 version = "0.0.1"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
@@ -11,6 +11,7 @@ keywords = ["3d scene"]
 [dependencies]
 pi_scene_context = { path = "../pi_scene_context" }
 pi_engine_shell = { path = "../pi_engine_shell" }
+material_textures = { path = "../material_textures" }
 
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
@@ -31,6 +32,7 @@ render_resource = { path = "../../../pi_render/crates/render_resource" }
 pi_share = "0.4"
 pi_slotmap = "0.1"
 pi_hash = "0.1"
+pi_assets = "0.10"
 
 pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
@@ -49,3 +51,4 @@ log = "0.4"
 smallvec = "1.9"
 crossbeam="0.8"
 futures = "0.3"
+derive_deref = "1.1"

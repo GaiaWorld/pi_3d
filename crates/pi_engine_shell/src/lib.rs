@@ -38,7 +38,6 @@ pub mod object;
 pub mod run_stage;
 pub mod setup;
 pub mod assets;
-// pub mod image_texture_load;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 

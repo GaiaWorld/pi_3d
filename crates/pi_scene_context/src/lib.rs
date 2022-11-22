@@ -19,7 +19,6 @@ pub mod postprocess;
 pub mod vertex_data;
 pub mod main_camera_render;
 pub mod layer_mask;
-pub mod texture;
 pub mod plugin;
 pub mod run_stage;
 pub mod object;

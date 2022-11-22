@@ -4,7 +4,7 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::object::{InterfaceObject, GameObject};
 use pi_render::{graph::{NodeId, graph::RenderGraph}, rhi::{device::RenderDevice}};
 
-use crate::{cameras::camera::{CameraViewport, CameraRenderData}, renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectBindGroup, RenderObjectID}}, object::{ObjectID}, plugin::Plugin, materials::{command::{InterfaceRenderBindGroup}, bind_group::RenderBindGroup}};
+use crate::{cameras::camera::{CameraViewport, CameraRenderData}, renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectBindGroup, RenderObjectID}}, object::{ObjectID}, plugin::Plugin, materials::{bind_group::{RenderBindGroup, RenderBindGroupPool}}};
 
 use self::{command::{SingleMainCameraRenderCommandList, SysMainCameraRenderCommand}, graph::SingleMainCameraOpaqueRenderNode, draw_sort_sys::DrawSortTick, bind_group::{SysMainCameraRenderBindGroupUpdate, SysMainCameraRenderUniformUpdate, IDMainCameraRenderBindGroup}};
 
@@ -71,7 +71,7 @@ impl SysMainCameraRenderReset {
         maincameras: Query<GameObject, (&CameraRenderData, &RenderObjectID)>,
         mut renders: Query<GameObject, &mut MainCameraRenderer>,
         id_bind_group_main_camera: Res<IDMainCameraRenderBindGroup>,
-        bind_groups: Query<GameObject, &RenderBindGroup>,
+        bind_groups: Res<RenderBindGroupPool>,
     ) {
         let id_bind_group_main_camera = id_bind_group_main_camera.0;
         maincameras.iter().for_each(|(cameradata, renderid)| {
@@ -98,13 +98,12 @@ impl Plugin for PluginMainCameraRender {
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let main_camera_bind_group_id = engine.new_object();
 
         let world = engine.world_mut();
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
 
         let layout = IDMainCameraRenderBindGroup::layout(&device);
-        engine.as_render_bind_group(main_camera_bind_group_id, layout, IDMainCameraRenderBindGroup::SET);
+        let main_camera_bind_group_id = world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, layout, IDMainCameraRenderBindGroup::SET);
 
         let world = engine.world_mut();
 

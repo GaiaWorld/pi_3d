@@ -4,21 +4,21 @@ use render_material::{binding::BindingDesc, material::{UniformDesc, EUniformData
 
 use pi_scene_context::{materials::MBKK, shaders::BuildinShaderDefined};
 
-use crate::define::{StandardMaterialMode, StandardMaterialDefines};
+use crate::define::{UnlitMaterialMode, UnlitMaterialDefines};
 
 #[derive(Debug, Default)]
-pub struct StandardShaderPool {
-    pub map: XHashMap<StandardMaterialMode, StandardShader>,
+pub struct UnlitShaderPool {
+    pub map: XHashMap<UnlitMaterialMode, UnlitShader>,
 }
-impl StandardShaderPool {
+impl UnlitShaderPool {
     pub fn get(
         &mut self,
-        defines: &StandardMaterialDefines,
+        defines: &UnlitMaterialDefines,
         device: &RenderDevice,
-    ) -> &StandardShader {
+    ) -> &UnlitShader {
         let mode = defines.mode();
         if self.map.contains_key(&mode) == false {
-            let shader = StandardShader::new(defines, device);
+            let shader = UnlitShader::new(defines, device);
             self.map.insert(mode, shader);
         }
 
@@ -27,31 +27,31 @@ impl StandardShaderPool {
 }
 
 #[derive(Debug)]
-pub struct StandardShader {
+pub struct UnlitShader {
     pub vs_module: wgpu::ShaderModule,
     pub fs_module: wgpu::ShaderModule,
 }
 
-impl StandardShader {
-    pub const SHADER_NAME: &str                         = "Standard";
+impl UnlitShader {
+    pub const SHADER_NAME: &str                         = "unlit";
     pub const A_POSITION: MBKK                          = BuildinShaderDefined::A_POSITION;
     pub const A_POSITION_SLOT: u32                      = 0;
     pub const A_POSITION_SIZE: u32                      = 3 * 4;
     pub const U_EMISSIVE: MBKK                          = BuildinShaderDefined::MBKK_START_FOR_OTHER + 01 as MBKK;
     
-    pub fn new(defines: &StandardMaterialDefines, device: &RenderDevice) -> Self {
+    pub fn new(defines: &UnlitMaterialDefines, device: &RenderDevice) -> Self {
         let vs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Default-VS"),
+            label: Some("unlit-VS"),
             source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./standard.vert")),
+                shader: std::borrow::Cow::Borrowed(include_str!("./unlit.vert")),
                 stage: naga::ShaderStage::Vertex,
                 defines: naga::FastHashMap::default(),
             },
         });
         let fs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Default-FS"),
+            label: Some("unlit-FS"),
             source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./standard.frag")),
+                shader: std::borrow::Cow::Borrowed(include_str!("./unlit.frag")),
                 stage: naga::ShaderStage::Fragment,
                 defines: naga::FastHashMap::default(),
             },

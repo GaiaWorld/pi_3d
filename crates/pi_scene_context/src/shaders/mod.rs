@@ -87,7 +87,7 @@ pub trait FragmentUniformBindTexture {
 
     const ENTRY_TEXTURE: wgpu::BindGroupLayoutEntry = wgpu::BindGroupLayoutEntry {
         binding: Self::TEXTURE_BIND as u32,
-        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+        visibility: wgpu::ShaderStages::FRAGMENT,
         ty: wgpu::BindingType::Texture {
             sample_type: Self::TEXTURE_SAMPLER_TYPE,
             view_dimension: Self::DIM,
@@ -112,7 +112,7 @@ pub trait FragmentUniformBindTextureSampler {
 
     const ENTRY_SAMPLER: wgpu::BindGroupLayoutEntry = wgpu::BindGroupLayoutEntry {
         binding: Self::SAMPLER_BIND as u32,
-        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+        visibility: wgpu::ShaderStages::FRAGMENT,
         ty: wgpu::BindingType::Sampler(Self::SAMPLER_TYPE),
         count: None,
     };

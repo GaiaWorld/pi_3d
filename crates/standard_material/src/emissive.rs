@@ -1,7 +1,7 @@
 use naga::Handle;
 use pi_engine_shell::object::ObjectID;
 use pi_render::rhi::{asset::TextureRes, texture::Sampler};
-use pi_scene_context::{texture::{texture_sampler::TextureSamplerDesc, texture2d::Texture2D}, shaders::{FragmentUniformBindTexture, FragmentUniformBindTextureSampler}};
+use pi_scene_context::{texture::{texture_sampler::TextureSamplerDesc}, shaders::{FragmentUniformBindTexture, FragmentUniformBindTextureSampler}};
 
 
 pub struct EmissiveTexture {

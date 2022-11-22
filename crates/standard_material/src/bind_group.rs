@@ -4,7 +4,7 @@ use pi_ecs::{prelude::{Res, Query, ResMut, query}, query::Changed};
 use pi_ecs_macros::setup;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, device::RenderDevice, texture::{TextureView, Sampler}, asset::{RenderRes, TextureRes}};
 
-use pi_scene_context::{materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, resources::RenderDynUniformBuffer, texture::texture2d::{Texture2DKey, Texture2D}};
+use pi_scene_context::{materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, resources::RenderDynUniformBuffer};
 use pi_slotmap::DefaultKey;
 
 use crate::{define::{StandardMaterialMode, StandardMaterialDefines}, emissive::EmissiveTexture};

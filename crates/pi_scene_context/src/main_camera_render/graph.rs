@@ -6,7 +6,7 @@ use pi_futures::BoxFuture;
 use pi_render::{graph::{node::Node, RenderContext}, rhi::{texture::ScreenTexture}};
 use render_data_container::GeometryBufferPool;
 
-use crate::{renderers::render_object::{TempDrawInfoRecord}, object::{ObjectID, GameObject}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, main_camera_render::MainCameraRenderer, materials::bind_group::RenderBindGroup};
+use crate::{renderers::render_object::{TempDrawInfoRecord}, object::{ObjectID, GameObject}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}, main_camera_render::MainCameraRenderer, materials::bind_group::{RenderBindGroup, RenderBindGroupPool}};
 
 pub struct SingleMainCameraOpaqueRenderNode {
     pub renderer_id: ObjectID,
@@ -39,7 +39,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
         // let window = world.get_resource::<RenderWindow>().unwrap();
 
         let query = QueryState::<GameObject, & MainCameraRenderer>::new(&mut world);
-        let bind_groups = QueryState::<GameObject, &RenderBindGroup>::new(&mut world);
+        let bind_groups = world.get_resource::<RenderBindGroupPool>().unwrap();
 
         let mut temp_vertex_record: TempDrawInfoRecord = TempDrawInfoRecord::default();
 
@@ -84,7 +84,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                     // renderpass.set_viewport(0., 0., 600., 600., 0., 1.);
     
                     opaque_list.bind_groups.iter().for_each(|bindinfo| {
-                        match bind_groups.get(&world, bindinfo.bind_group) {
+                        match bind_groups.get(bindinfo.bind_group) {
                             Some(render_bind_group) => {
                                 match &render_bind_group.bind_group {
                                     Some(group) => {
@@ -131,7 +131,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                                         
                                 renderpass.set_pipeline(pipeline);
                                 draw.bind_groups.iter().for_each(|bindinfo| {
-                                    match bind_groups.get(&world, bindinfo.bind_group) {
+                                    match bind_groups.get(bindinfo.bind_group) {
                                         Some(render_bind_group) => {
                                             match &render_bind_group.bind_group {
                                                 Some(group) => {

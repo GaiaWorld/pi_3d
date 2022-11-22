@@ -2,10 +2,12 @@
 use std::mem::size_of;
 
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr};
-use pi_render::{rhi::{asset::{RenderRes, TextureRes}, buffer::Buffer, texture::TextureView, bind_group::BindGroup, pipeline::RenderPipeline}, components::view::target_alloc::UnuseTexture};
+use pi_render::{rhi::{asset::{RenderRes, TextureRes}, buffer::Buffer, texture::TextureView, bind_group::BindGroup, pipeline::RenderPipeline, shader::Shader}, components::view::target_alloc::UnuseTexture};
 use pi_share::Share;
 
 use crate::plugin::Plugin;
+
+pub mod local_load;
 
 pub struct PluginGeometryBufferAsstes;
 impl Plugin for PluginGeometryBufferAsstes {
@@ -74,23 +76,6 @@ impl Plugin for PluginRenderPipelineAssets {
     }
 }
 
-pub struct PluginTexture2DAssets;
-impl Plugin for PluginTexture2DAssets {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine_shell::EnginShell,
-        _: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        if engine.world().get_resource::<Share<AssetMgr<RenderRes<Texture2D>>>>().is_none() {
-            engine.world_mut().insert_resource(
-                AssetMgr::<RenderRes<TextureRes>>::new(GarbageEmpty(), false, 60 * 1024, 60 * 1000)
-            );
-        }
-        
-        Ok(())
-    }
-}
-
 pub struct PluginUnuseTextureAssets;
 impl Plugin for PluginUnuseTextureAssets {
     fn init(
@@ -101,6 +86,23 @@ impl Plugin for PluginUnuseTextureAssets {
         if engine.world().get_resource::<Share<HomogeneousMgr<RenderRes<UnuseTexture>>>>().is_none() {
             engine.world_mut().insert_resource(
                 HomogeneousMgr::<RenderRes<UnuseTexture>>::new(pi_assets::homogeneous::GarbageEmpty(), 10 * size_of::<UnuseTexture>(), size_of::<UnuseTexture>(), 60 * 1000)
+            );
+        }
+        
+        Ok(())
+    }
+}
+
+pub struct PluginShaderAssets;
+impl Plugin for PluginShaderAssets {
+    fn init(
+        &mut self,
+        engine: &mut crate::engine_shell::EnginShell,
+        _: &mut crate::run_stage::RunStage,
+    ) -> Result<(), crate::plugin::ErrorPlugin> {
+        if engine.world().get_resource::<Share<AssetMgr<RenderRes<Shader>>>>().is_none() {
+            engine.world_mut().insert_resource(
+                AssetMgr::<RenderRes<Shader>>::new(GarbageEmpty(), false, 10 * 1024, 60 * 1000)
             );
         }
         

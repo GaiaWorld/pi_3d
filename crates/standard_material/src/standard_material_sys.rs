@@ -33,6 +33,14 @@ use crate::{standard_material::{StandardMaterialPropertype}, bind_group::{Standa
 
 use super::{pipeline::StandardMaterialPipeline};
 
+pub struct SysStandardShaderEffectUpdate;
+impl SysStandardShaderEffectUpdate {
+    pub fn sys(
+        shaders: Res<_>,
+    ) {
+
+    }
+}
 
 pub struct DefaultModelUniformUpdate;
 #[setup]
