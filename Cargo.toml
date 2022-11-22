@@ -17,6 +17,7 @@ pi_engine_shell = { path = "crates/pi_engine_shell" }
 default_render = { path = "crates/default_render" }
 material_textures = { path = "crates/material_textures" }
 skybox = { path = "crates/skybox" }
+procedural_texture = { path = "crates/procedural_texture" }
 
 unlit_material = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }

@@ -1,6 +1,5 @@
 #![feature(box_into_inner)]
 
-use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;

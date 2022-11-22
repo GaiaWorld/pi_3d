@@ -147,7 +147,6 @@ impl InterfaceTestPerlinNoise for Engine {
             .as_transform_node(entity)
             .transform_parent(entity, scene)
             .as_mesh(entity)
-            .use_cloud_material(entity)
             .world();
 
         let sky_box = world.get_resource_mut::<Skybox>().unwrap();
