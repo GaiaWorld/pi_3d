@@ -17,10 +17,10 @@ pi_engine_shell = { path = "crates/pi_engine_shell" }
 default_render = { path = "crates/default_render" }
 material_textures = { path = "crates/material_textures" }
 skybox = { path = "crates/skybox" }
+
 unlit_material = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }
 render_resource = { path = "../pi_render/crates/render_resource" }
-
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
 # pi_render = { git = "https://github.com/GaiaWorld/pi_render" }
@@ -59,3 +59,15 @@ path = "examples/performance/static_10000.rs"
 [[example]]
 name = "performance_transform_render"
 path = "examples/performance/transform_10000.rs"
+
+[[example]]
+name = "oct_tree"
+path = "examples/oct_tree/oct_tree.rs"
+
+[[example]]
+name = "noise"
+path = "examples/ball/ball.rs"
+
+[[example]]
+name = "procedural_texture"
+path = "examples/procedural_texture/procedural_texture.rs"

@@ -161,11 +161,11 @@ pub struct SingleBallBuilderCommandList {
     pub list: Vec<BallBuilderCommand>,
 }
 pub trait InterfaceBall {
-    fn new_Ball(&self, scene: ObjectID) -> ObjectID;
+    fn new_ball(&self, scene: ObjectID) -> ObjectID;
 }
 
 impl InterfaceBall for Engine {
-    fn new_Ball(&self, scene: ObjectID) -> ObjectID {
+    fn new_ball(&self, scene: ObjectID) -> ObjectID {
         let entity = self.new_object();
         let world = self
             .add_to_scene(entity, scene)
@@ -220,130 +220,7 @@ impl Plugin for PluginBallBuilder {
             .get_resource_mut::<SingleGeometryBufferPool>()
             .unwrap();
 
-        let ball = generate_sphere(0.1);
-
-        let len = ball.len();
-        // 每个三角形 3 个点，一共 8个象限
-        let mut positions = Vec::with_capacity(len * 9 * 8);
-        let mut normals = Vec::with_capacity(len * 9 * 8);
-        let mut indices = Vec::with_capacity(len * 3 * 8);
-        let mut uvs = Vec::with_capacity(len * 6 * 8);
-
-        let mut index = 0;
-        for tri in ball {
-            let start = index * 24;
-            let mut data = [tri.a.as_slice(), tri.b.as_slice(), tri.c.as_slice()].concat();
-            let mut normal = tri.compute_normal();
-            let mut uv = compute_uv(&normal);
-            // 第一象限
-            positions.append(&mut data);
-            normals.append(&mut normal);
-            uvs.append(&mut uv);
-
-            // 第二象限
-            data[0] = -data[0];
-            data[3] = -data[3];
-            data[6] = -data[6];
-
-            normal[0] = -normal[0];
-            normal[3] = -normal[3];
-            normal[6] = -normal[6];
-            positions.append(&mut data);
-            normals.append(&mut normal);
-
-            let mut uv = compute_uv(&normal);
-            uvs.append(&mut uv);
-
-            // 第三象限
-            data[1] = -data[1];
-            data[4] = -data[4];
-            data[7] = -data[7];
-
-            normal[1] = -normal[1];
-            normal[4] = -normal[4];
-            normal[7] = -normal[7];
-            positions.append(&mut data);
-            normals.append(&mut normal);
-
-            let mut uv = compute_uv(&normal);
-            uvs.append(&mut uv);
-
-            // 第四象限
-            data[0] = -data[0];
-            data[3] = -data[3];
-            data[6] = -data[6];
-
-            normal[0] = -normal[0];
-            normal[3] = -normal[3];
-            normal[6] = -normal[6];
-            positions.append(&mut data);
-            normals.append(&mut normal);
-
-            let mut uv = compute_uv(&normal);
-            uvs.append(&mut uv);
-
-            // 第五象限
-            data[2] = -data[2];
-            data[5] = -data[5];
-            data[8] = -data[8];
-
-            normal[2] = -normal[2];
-            normal[5] = -normal[5];
-            normal[8] = -normal[8];
-            positions.append(&mut data);
-            normals.append(&mut normal);
-
-            let mut uv = compute_uv(&normal);
-            uvs.append(&mut uv);
-
-            // 第六象限
-            data[0] = -data[0];
-            data[3] = -data[3];
-            data[6] = -data[6];
-
-            normal[0] = -normal[0];
-            normal[3] = -normal[3];
-            normal[6] = -normal[6];
-            positions.append(&mut data);
-            normals.append(&mut normal);
-
-            let mut uv = compute_uv(&normal);
-            uvs.append(&mut uv);
-
-            // 第七象限
-            data[1] = -data[1];
-            data[4] = -data[4];
-            data[7] = -data[7];
-
-            normal[1] = -normal[1];
-            normal[4] = -normal[4];
-            normal[7] = -normal[7];
-            positions.append(&mut data);
-            normals.append(&mut normal);
-
-            let mut uv = compute_uv(&normal);
-            uvs.append(&mut uv);
-
-            // 第八象限
-            data[0] = -data[0];
-            data[3] = -data[3];
-            data[6] = -data[6];
-
-            normal[0] = -normal[0];
-            normal[3] = -normal[3];
-            normal[6] = -normal[6];
-            positions.append(&mut data);
-            normals.append(&mut normal);
-
-            let mut uv = compute_uv(&normal);
-            uvs.append(&mut uv);
-
-            for i in 0..8 * 3 {
-                indices.push(start + i);
-            }
-
-            index += 1;
-        }
+        let (positions, normals, indices, uvs) = generate_sphere(36, 18);
 
         let position = BallBuilder::position(device, queue, gbp, &positions);
         let normal = BallBuilder::normal(device, queue, gbp, &normals);
@@ -407,7 +284,7 @@ impl Triangle {
  * @brief 面细分法 八分之一个球
  * @param resolution 分辨率
  */
-fn generate_sphere(mut resolution: f32) -> VecDeque<Triangle> {
+fn generate_sphere2(mut resolution: f32) -> (Vec<f32>, Vec<f32>, Vec<u32>, Vec<f32>) {
     let mut triangles = VecDeque::new();
     triangles.push_back(Triangle {
         a: Vector3::new(0.0, 1.0, 0.0),
@@ -437,7 +314,130 @@ fn generate_sphere(mut resolution: f32) -> VecDeque<Triangle> {
         }
     }
 
-    return triangles;
+    let len = triangles.len();
+    // 每个三角形 3 个点，一共 8个象限
+    let mut positions = Vec::with_capacity(len * 9 * 8);
+    let mut normals = Vec::with_capacity(len * 9 * 8);
+    let mut indices = Vec::with_capacity(len * 3 * 8);
+    let mut uvs = Vec::with_capacity(len * 6 * 8);
+
+    let mut index = 0;
+    for tri in triangles {
+        let start = index * 24;
+        let mut data = [tri.a.as_slice(), tri.b.as_slice(), tri.c.as_slice()].concat();
+        let mut normal = tri.compute_normal();
+        let mut uv = compute_uv(&normal);
+        // 第一象限
+        positions.append(&mut data);
+        normals.append(&mut normal);
+        uvs.append(&mut uv);
+
+        // 第二象限
+        data[0] = -data[0];
+        data[3] = -data[3];
+        data[6] = -data[6];
+
+        normal[0] = -normal[0];
+        normal[3] = -normal[3];
+        normal[6] = -normal[6];
+        positions.append(&mut data);
+        normals.append(&mut normal);
+
+        let mut uv = compute_uv(&normal);
+        uvs.append(&mut uv);
+
+        // 第三象限
+        data[1] = -data[1];
+        data[4] = -data[4];
+        data[7] = -data[7];
+
+        normal[1] = -normal[1];
+        normal[4] = -normal[4];
+        normal[7] = -normal[7];
+        positions.append(&mut data);
+        normals.append(&mut normal);
+
+        let mut uv = compute_uv(&normal);
+        uvs.append(&mut uv);
+
+        // 第四象限
+        data[0] = -data[0];
+        data[3] = -data[3];
+        data[6] = -data[6];
+
+        normal[0] = -normal[0];
+        normal[3] = -normal[3];
+        normal[6] = -normal[6];
+        positions.append(&mut data);
+        normals.append(&mut normal);
+
+        let mut uv = compute_uv(&normal);
+        uvs.append(&mut uv);
+
+        // 第五象限
+        data[2] = -data[2];
+        data[5] = -data[5];
+        data[8] = -data[8];
+
+        normal[2] = -normal[2];
+        normal[5] = -normal[5];
+        normal[8] = -normal[8];
+        positions.append(&mut data);
+        normals.append(&mut normal);
+
+        let mut uv = compute_uv(&normal);
+        uvs.append(&mut uv);
+
+        // 第六象限
+        data[0] = -data[0];
+        data[3] = -data[3];
+        data[6] = -data[6];
+
+        normal[0] = -normal[0];
+        normal[3] = -normal[3];
+        normal[6] = -normal[6];
+        positions.append(&mut data);
+        normals.append(&mut normal);
+
+        let mut uv = compute_uv(&normal);
+        uvs.append(&mut uv);
+
+        // 第七象限
+        data[1] = -data[1];
+        data[4] = -data[4];
+        data[7] = -data[7];
+
+        normal[1] = -normal[1];
+        normal[4] = -normal[4];
+        normal[7] = -normal[7];
+        positions.append(&mut data);
+        normals.append(&mut normal);
+
+        let mut uv = compute_uv(&normal);
+        uvs.append(&mut uv);
+
+        // 第八象限
+        data[0] = -data[0];
+        data[3] = -data[3];
+        data[6] = -data[6];
+
+        normal[0] = -normal[0];
+        normal[3] = -normal[3];
+        normal[6] = -normal[6];
+        positions.append(&mut data);
+        normals.append(&mut normal);
+
+        let mut uv = compute_uv(&normal);
+        uvs.append(&mut uv);
+
+        for i in 0..8 * 3 {
+            indices.push(start + i);
+        }
+
+        index += 1;
+    }
+
+    return (positions, normals, indices, uvs);
 }
 
 fn mid_arc_point(a: Vector3, b: Vector3) -> Vector3 {
@@ -466,4 +466,66 @@ fn compute_uv(normalize: &[f32]) -> Vec<f32> {
     let cv = normalize[7] * 0.5 + 0.5;
 
     vec![au, av, bu, bv, cu, cv]
+}
+
+/**
+ * @brief 面细分法 经纬细分
+ * @param sectors 分辨率
+ */
+fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u32>, Vec<f32>) {
+    // Largely inspired from http://www.songho.ca/opengl/gl_sphere.html
+    let radius = 1.0;
+
+    let sectorsf32 = sectors as f32;
+    let stacksf32 = stacks as f32;
+    let length_inv = 1. / radius;
+    let sector_step = 2. * PI / sectorsf32;
+    let stack_step = PI / stacksf32;
+
+    let mut vertices: Vec<[f32; 3]> = Vec::with_capacity(stacks * sectors);
+    let mut normals: Vec<[f32; 3]> = Vec::with_capacity(stacks * sectors);
+    let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(stacks * sectors);
+    let mut indices: Vec<u32> = Vec::with_capacity(stacks * sectors * 2 * 3);
+
+    for i in 0..stacks + 1 {
+        let stack_angle = PI / 2. - (i as f32) * stack_step;
+        let xy = radius * stack_angle.cos();
+        let z = radius * stack_angle.sin();
+
+        for j in 0..sectors + 1 {
+            let sector_angle = (j as f32) * sector_step;
+            let x = xy * sector_angle.cos();
+            let y = xy * sector_angle.sin();
+
+            vertices.push([x, y, z]);
+            normals.push([x * length_inv, y * length_inv, z * length_inv]);
+            uvs.push([(j as f32) / sectorsf32, (i as f32) / stacksf32]);
+        }
+    }
+
+    // indices
+    //  k1--k1+1
+    //  |  / |
+    //  | /  |
+    //  k2--k2+1
+    for i in 0..stacks {
+        let mut k1 = i * (sectors + 1);
+        let mut k2 = k1 + sectors + 1;
+        for _j in 0..sectors {
+            if i != 0 {
+                indices.push(k1 as u32);
+                indices.push(k2 as u32);
+                indices.push((k1 + 1) as u32);
+            }
+            if i != stacks - 1 {
+                indices.push((k1 + 1) as u32);
+                indices.push(k2 as u32);
+                indices.push((k2 + 1) as u32);
+            }
+            k1 += 1;
+            k2 += 1;
+        }
+    }
+
+    return (vertices.concat(), normals.concat(), indices, uvs.concat());
 }
