@@ -16,6 +16,7 @@ pi_scene_context = { path = "crates/pi_scene_context" }
 pi_engine_shell = { path = "crates/pi_engine_shell" }
 default_render = { path = "crates/default_render" }
 skybox = { path = "crates/skybox" }
+procedural_texture = { path = "crates/procedural_texture" }
 
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
@@ -48,3 +49,15 @@ path = "examples/performance/static_10000.rs"
 [[example]]
 name = "performance_transform_render"
 path = "examples/performance/transform_10000.rs"
+
+[[example]]
+name = "oct_tree"
+path = "examples/oct_tree/oct_tree.rs"
+
+[[example]]
+name = "noise"
+path = "examples/ball/ball.rs"
+
+[[example]]
+name = "procedural_texture"
+path = "examples/procedural_texture/procedural_texture.rs"

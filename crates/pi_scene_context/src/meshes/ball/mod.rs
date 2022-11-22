@@ -161,11 +161,11 @@ pub struct SingleBallBuilderCommandList {
     pub list: Vec<BallBuilderCommand>,
 }
 pub trait InterfaceBall {
-    fn new_Ball(&self, scene: ObjectID) -> ObjectID;
+    fn new_ball(&self, scene: ObjectID) -> ObjectID;
 }
 
 impl InterfaceBall for Engine {
-    fn new_Ball(&self, scene: ObjectID) -> ObjectID {
+    fn new_ball(&self, scene: ObjectID) -> ObjectID {
         let entity = self.new_object();
         let world = self
             .add_to_scene(entity, scene)
@@ -499,7 +499,7 @@ fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u3
 
             vertices.push([x, y, z]);
             normals.push([x * length_inv, y * length_inv, z * length_inv]);
-            uvs.push([(j as f32) / sectorsf32, (i as f32) / stacks]);
+            uvs.push([(j as f32) / sectorsf32, (i as f32) / stacksf32]);
         }
     }
 
@@ -509,15 +509,15 @@ fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u3
     //  | /  |
     //  k2--k2+1
     for i in 0..stacks {
-        let mut k1 = i * (sphere.sectors + 1);
-        let mut k2 = k1 + sphere.sectors + 1;
+        let mut k1 = i * (sectors + 1);
+        let mut k2 = k1 + sectors + 1;
         for _j in 0..sectors {
             if i != 0 {
                 indices.push(k1 as u32);
                 indices.push(k2 as u32);
                 indices.push((k1 + 1) as u32);
             }
-            if i != sphere.stacks - 1 {
+            if i != stacks - 1 {
                 indices.push((k1 + 1) as u32);
                 indices.push(k2 as u32);
                 indices.push((k2 + 1) as u32);
@@ -527,5 +527,5 @@ fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u3
         }
     }
 
-    return (positions, normals, indices, uvs);
+    return (vertices.concat(), normals.concat(), indices, uvs.concat());
 }
