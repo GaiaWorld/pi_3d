@@ -21,7 +21,7 @@ use pi_scene_context::{
     flags::{SceneID},
     resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer},
     cameras::camera::{CameraRenderData, CameraGlobalPosition},
-    materials::{material::MaterialID, bind_group::RenderBindGroup},
+    materials::{material::MaterialID, bind_group::{RenderBindGroup, RenderBindGroupPool, RenderBindGroupKey}},
     meshes::model::BuildinModelBind,
     vertex_data::{indices::{IDAttributeIndices, AttributeIndices}, position::{IDAttributePosition, AttributePosition}, normal::{IDAttributeNormal, AttributeNormal}},
     main_camera_render::{MainCameraRenderer, bind_group::IDMainCameraRenderBindGroup},
@@ -112,7 +112,7 @@ impl DefaultMaterialFilter {
         mut query_renderers: Query<GameObject, &mut MainCameraRenderer>,
         meshes: Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &PipelineKey, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind, &RenderMode)>,
         materials: Query<GameObject, &DefaultMaterialPropertype>,
-        bind_groups: Query<GameObject, &RenderBindGroup>,
+        bind_groups: Res<RenderBindGroupPool>,
         positions: Query<GameObject, &AttributePosition>,
         normals: Query<GameObject, &AttributeNormal>,
         indices: Query<GameObject, &AttributeIndices>,
@@ -165,7 +165,7 @@ fn collect_opaque_normal_depth(
     normals: &Query<GameObject, &AttributeNormal>,
     indices: &Query<GameObject, &AttributeIndices>,
     renderer: &mut MainCameraRenderer,
-    id_bind_group_default: ObjectID,
+    id_bind_group_default: RenderBindGroupKey,
 ) {
     query.iter().for_each(|(matid, sceneid, layer, rendersort, pipeline, globaltransform, position, normal, indice, model, rendermode)| {
 

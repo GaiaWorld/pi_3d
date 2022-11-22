@@ -1,6 +1,6 @@
 use pi_render::rhi::{dyn_uniform_buffer::{Bind, BindOffset, Uniform}, internal::bytemuck};
 
-use pi_scene_context::{shaders::{FragmentUniformBind, }, materials::{material::MaterialID}, bytes_write_to_memory, resources::RenderDynUniformBuffer, texture::texture2d::Texture2D, };
+use pi_scene_context::{shaders::{FragmentUniformBind, }, materials::{material::MaterialID}, bytes_write_to_memory, resources::RenderDynUniformBuffer};
 
 
 
@@ -43,8 +43,6 @@ impl Uniform for DefaultMaterialPropertype {
         bytes_write_to_memory(bytemuck::cast_slice(&v), index as usize + 0, buffer);
     }
 }
-
-pub struct DefaultMaterialEmissiveTexture(pub Texture2D);
 
 #[derive(Debug, Default)]
 pub struct SingleDefaultMaterialBindDynInfoSet {

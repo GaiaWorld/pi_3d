@@ -1,6 +1,6 @@
 use pi_ecs::prelude::{Setup};
 
-use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand}, command::{SysRenderBindGroupCommand, SingleRenderBindGroupCommandList}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}};
+use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}, bind_group::RenderBindGroupPool};
 
 pub mod material;
 pub mod bind_group;
@@ -19,13 +19,12 @@ impl crate::Plugin for PluginMaterialID {
         let world = engine.world_mut();
 
         SysMaterialIDCommand::setup(world, stages.command_stage());
-        SysRenderBindGroupCommand::setup(world, stages.command_stage());
         SysDynUnifromBufferUpdate::setup(world, stages.between_uniform_update_and_filter_culling());
         // SysDynUnifromBufferReBindFlag::setup(world, stages.between_uniform_update_and_filter_culling());
 
         world.insert_resource(SingleMaterialIDCommandList::default());
         world.insert_resource(SingleDynUnifromBufferReBindFlag::default());
-        world.insert_resource(SingleRenderBindGroupCommandList::default());
+        world.insert_resource(RenderBindGroupPool::default());
 
         Ok(())
     }

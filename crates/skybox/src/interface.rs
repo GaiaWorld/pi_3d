@@ -1,8 +1,7 @@
 use pi_scene_context::{
     engine::Engine,
     materials::{
-        command::{RenderBindGroupCommand, SingleRenderBindGroupCommandList},
-        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList},
+        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList}, bind_group::RenderBindGroupPool,
     },
     object::ObjectID,
     plugin::{ErrorPlugin, Plugin},
@@ -30,7 +29,6 @@ impl Plugin for PluginSkyboxMaterial {
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
         println!("PluginSkyboxMaterial");
-        let id_default_mat_bind_group = engine.new_object();
 
         let world = engine.world_mut();
 
@@ -50,14 +48,8 @@ impl Plugin for PluginSkyboxMaterial {
         world.insert_resource(SingleSkyboxMaterialBindDynInfoSet::default());
 
         let layout = IDSkyboxMaterialBindGroup::layout(&device);
-        let commands = world
-            .get_resource_mut::<SingleRenderBindGroupCommandList>()
-            .unwrap();
-        commands.list.push(RenderBindGroupCommand::Create(
-            id_default_mat_bind_group,
-            layout,
-            IDSkyboxMaterialBindGroup::SET,
-        ));
+        let id_default_mat_bind_group = world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, layout, IDSkyboxMaterialBindGroup::SET);
+
         world.insert_resource(IDSkyboxMaterialBindGroup(id_default_mat_bind_group));
 
         let base_default_id = engine.create_skybox_material().clone();

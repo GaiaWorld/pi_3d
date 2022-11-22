@@ -1,5 +1,5 @@
 use default_render::PluginDefaultMaterial;
-use pi_scene_context::{texture::{texture2d::PluginTexture2D, texture_sampler::PluginTextureSampler}, renderers::PluginRenderer, meshes::{cube::PluginCubeBuilder, PluginMesh, ball::PluginBallBuilder}, main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterialID, vertex_data::{uv::PluginAttributeUV, indices::PluginAttributeIndices, position::PluginAttributePosition, normal::PluginAttributeNormal, color4::PluginAttributeColor4}, cullings::{PluginCulling, oct_tree::PluginBoundingOctTree}, cameras::PluginCamera, transforms::PluginTransformNode, scene::PluginScene, resources::PluginResource};
+use pi_scene_context::{renderers::PluginRenderer, meshes::{cube::PluginCubeBuilder, PluginMesh}, main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterialID, vertex_data::{uv::PluginAttributeUV, indices::PluginAttributeIndices, position::PluginAttributePosition, normal::PluginAttributeNormal, color4::PluginAttributeColor4}, cullings::PluginCulling, cameras::PluginCamera, transforms::PluginTransformNode, scene::PluginScene, resources::PluginResource};
 
 pub struct PluginBundleDefault;
 impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
@@ -32,9 +32,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCubeBuilder.init(engine, stages);
 
         PluginRenderer.init(engine, stages);
-
-        PluginTextureSampler.init(engine, stages);
-        PluginTexture2D.init(engine, stages);
 
         skybox::interface::PluginSkyboxMaterial.init(engine, stages);
         skybox::PluginSkybox.init(engine, stages);

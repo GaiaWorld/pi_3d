@@ -4,7 +4,7 @@ use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use render_data_container::{GeometryBuffer, EVertexDataFormat, GeometryBufferPool};
 use render_geometry::geometry::VertexAttributeBufferMeta;
 
-use crate::{resources::{SingleGeometryBufferPool}, plugin::{Plugin, ErrorPlugin}, object::{ObjectID}, engine::Engine, vertex_data::{position::{IDAttributePosition, AttributePosition, SingleAttributePositionCommandList, AttributePositionCommand, SingleIDAttributePositionCommandList, IDAttributePositionCommand}, normal::{IDAttributeNormal, AttributeNormal, SingleAttributeNormalCommandList, AttributeNormalCommand, IDAttributeNormalCommand, SingleIDAttributeNormalCommandList}, indices::{IDAttributeIndices, AttributeIndices, SingleAttributeIndicesCommandList, AttributeIndicesCommand, SingleIDAttributeIndicesCommandList, IDAttributeIndicesCommand}}, scene::{ interface::InterfaceScene}, transforms::interface::InterfaceTransformNode};
+use crate::{resources::{SingleGeometryBufferPool}, plugin::{Plugin, ErrorPlugin}, object::{ObjectID}, engine::Engine, vertex_data::{position::{IDAttributePosition, AttributePosition, SingleAttributePositionCommandList, AttributePositionCommand, SingleIDAttributePositionCommandList, IDAttributePositionCommand}, normal::{IDAttributeNormal, AttributeNormal, SingleAttributeNormalCommandList, AttributeNormalCommand, IDAttributeNormalCommand, SingleIDAttributeNormalCommandList}, indices::{IDAttributeIndices, AttributeIndices, SingleAttributeIndicesCommandList, AttributeIndicesCommand, SingleIDAttributeIndicesCommandList, IDAttributeIndicesCommand}, uv::{SingleAttributeUVCommandList, IDAttributeUVCommand, IDAttributeUV, AttributeUV, AttributeUVCommand, SingleIDAttributeUVCommandList}}, scene::{ interface::InterfaceScene}, transforms::interface::InterfaceTransformNode};
 
 use super::interface::InterfaceMesh;
 
@@ -12,6 +12,7 @@ pub struct SingleBaseCube {
     position: IDAttributePosition,
     normal: IDAttributeNormal,
     indices: IDAttributeIndices,
+    uvs: IDAttributeUV,
 }
 impl SingleBaseCube {
     pub fn position(&self) -> IDAttributePosition {
@@ -22,6 +23,9 @@ impl SingleBaseCube {
     }
     pub fn indices(&self) -> IDAttributeIndices {
         self.indices
+    }
+    pub fn uvs(&self) -> IDAttributeUV {
+        self.uvs
     }
 }
 
@@ -114,6 +118,34 @@ impl CubeBuilder {
             format: wgpu::IndexFormat::Uint16,
         }
     }
+    pub fn uvs(
+        device: &RenderDevice,
+        queue: &RenderQueue,
+        gbp: &mut SingleGeometryBufferPool,
+    ) -> AttributeUV {
+        let data = [
+            1., 0.,     0., 0.,     0., 1.,     1., 1., 
+            1., 1.,     0., 1.,     0., 0.,     1., 0., 
+            1., 0.,     0., 0.,     0., 1.,     1., 1.,
+            1., 1.,     0., 1.,     0., 0.,     1., 0.,
+            0., 1.,     0., 0.,     1., 0.,     1., 1., 
+            1., 1.,     1., 0.,     0., 0.,     0., 1.
+        ];
+        let mut indices = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
+        indices.update_f32(&data, 0);
+        indices.update_buffer(device, queue);
+        let id_indices = gbp.insert(indices);
+
+        AttributeUV {
+            meta: VertexAttributeBufferMeta {
+                buffer_id: id_indices,
+                start: 0,
+                end: 48 * 4,
+                data_bytes_size: 2 * 4,
+                data_count: 24,
+            }
+        }
+    }
 }
 
 pub enum CubeBuilderCommand {
@@ -150,6 +182,8 @@ impl InterfaceCube for Engine {
         commands.list.push(IDAttributeNormalCommand::Create(entity, base_cube.normal()));
         let commands = world.get_resource_mut::<SingleIDAttributeIndicesCommandList>().unwrap();
         commands.list.push(IDAttributeIndicesCommand::Create(entity, base_cube.indices()));
+        let commands = world.get_resource_mut::<SingleIDAttributeUVCommandList>().unwrap();
+        commands.list.push(IDAttributeUVCommand::Create(entity, base_cube.uvs()));
 
         entity
     }
@@ -166,6 +200,7 @@ impl Plugin for PluginCubeBuilder {
         let position_id = engine.new_object();
         let normal_id = engine.new_object();
         let indices_id = engine.new_object();
+        let uvs_id = engine.new_object();
 
         let world = engine.world_mut();
 
@@ -177,6 +212,7 @@ impl Plugin for PluginCubeBuilder {
         let position = CubeBuilder::position(device, queue, gbp);
         let normal = CubeBuilder::normal(device, queue, gbp);
         let indices = CubeBuilder::indices(device, queue, gbp);
+        let uvs = CubeBuilder::uvs(device, queue, gbp);
 
         let commands = world.get_resource_mut::<SingleAttributePositionCommandList>().unwrap();
         commands.list.push(AttributePositionCommand::Create(position_id, position));
@@ -184,9 +220,11 @@ impl Plugin for PluginCubeBuilder {
         commands.list.push(AttributeNormalCommand::Create(normal_id, normal));
         let commands = world.get_resource_mut::<SingleAttributeIndicesCommandList>().unwrap();
         commands.list.push(AttributeIndicesCommand::Create(indices_id, indices));
+        let commands = world.get_resource_mut::<SingleAttributeUVCommandList>().unwrap();
+        commands.list.push(AttributeUVCommand::Create(uvs_id, uvs));
 
         world.insert_resource::<SingleBaseCube>(
-            SingleBaseCube { position: IDAttributePosition(position_id), normal: IDAttributeNormal(normal_id), indices: IDAttributeIndices(indices_id) }
+            SingleBaseCube { position: IDAttributePosition(position_id), normal: IDAttributeNormal(normal_id), indices: IDAttributeIndices(indices_id), uvs: IDAttributeUV(uvs_id) }
         );
 
         Ok(())

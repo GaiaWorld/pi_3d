@@ -1,6 +1,6 @@
 use pi_slotmap::{DefaultKey};
 
-use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}};
+use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}, materials::bind_group::RenderBindGroupKey};
 
 use super::pipeline::PipelineKey;
 
@@ -105,7 +105,7 @@ impl Ord for RenderObjectMetaTransparent {
 
 #[derive(Debug, Clone)]
 pub struct RenderObjectBindGroup {
-    pub bind_group: ObjectID,
+    pub bind_group: RenderBindGroupKey,
     pub offsets: Vec<u32>,
 }
 

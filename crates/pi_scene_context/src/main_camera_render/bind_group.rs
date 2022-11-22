@@ -3,10 +3,19 @@ use pi_ecs_macros::setup;
 use pi_render::{rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice, bind_group::BindGroup}};
 
 
-use crate::{object::{ObjectID, GameObject}, cameras::{camera::{CameraRenderData, CameraViewMatrix, CameraProjectionMatrix, CameraTransformMatrix, CameraGlobalPosition, CameraDirection}}, scene::scene_time::{SceneTime}, environment::{fog::SceneFog, ambient_light::AmbientLight}, materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, shaders::FragmentUniformBind, flags::SceneID, resources::RenderDynUniformBuffer};
+use crate::{
+    object::{ObjectID, GameObject},
+    cameras::{camera::{CameraRenderData, CameraViewMatrix, CameraProjectionMatrix, CameraTransformMatrix, CameraGlobalPosition, CameraDirection}},
+    scene::scene_time::{SceneTime},
+    environment::{fog::SceneFog, ambient_light::AmbientLight},
+    materials::{bind_group::{RenderBindGroup, RenderBindGroupKey, RenderBindGroupPool}, uniform_buffer::SingleDynUnifromBufferReBindFlag},
+    shaders::FragmentUniformBind,
+    flags::SceneID,
+    resources::RenderDynUniformBuffer
+};
 
 
-pub struct IDMainCameraRenderBindGroup(pub ObjectID);
+pub struct IDMainCameraRenderBindGroup(pub RenderBindGroupKey);
 impl IDMainCameraRenderBindGroup {
     const LABEL: &'static str = "MainCameraRenderBindGroup";
     pub const SET: u32 = 0;
@@ -59,7 +68,7 @@ impl SysMainCameraRenderBindGroupUpdate {
         device: Res<RenderDevice>,
         dynbuffer: Res<RenderDynUniformBuffer>,
         dynbuffer_flag: Res<SingleDynUnifromBufferReBindFlag>,
-        mut bindgroups: Query<GameObject, &mut RenderBindGroup>,
+        mut bindgroups: ResMut<RenderBindGroupPool>,
         id: ResMut<IDMainCameraRenderBindGroup>,
     ) {
         // println!("Sys MainCameraRender BindGroup Update");

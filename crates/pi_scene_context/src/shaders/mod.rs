@@ -1,4 +1,4 @@
-use pi_render::rhi::{bind_group_layout::BindGroupLayout, dyn_uniform_buffer::{BindOffset}};
+use pi_render::rhi::{bind_group_layout::BindGroupLayout, dyn_uniform_buffer::{BindOffset}, texture::{TextureView, Sampler}};
 use render_geometry::vertex_data::VertexAttributeDesc;
 
 use crate::{geometry::VDK, materials::MBKK, resources::RenderDynUniformBuffer};
@@ -76,6 +76,54 @@ pub trait FragmentUniformBind {
         buff: &'a RenderDynUniformBuffer,
     ) -> wgpu::BindGroupEntry<'a> {
         bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), 0, Self::SIZE as u32)
+    }
+}
+
+pub trait FragmentUniformBindTexture {
+    const TEXTURE_BIND: u8;
+    const TEXTURE_SAMPLER_TYPE: wgpu::TextureSampleType;
+    const DIM: wgpu::TextureViewDimension;
+    const MULTI: bool;
+
+    const ENTRY_TEXTURE: wgpu::BindGroupLayoutEntry = wgpu::BindGroupLayoutEntry {
+        binding: Self::TEXTURE_BIND as u32,
+        visibility: wgpu::ShaderStages::FRAGMENT,
+        ty: wgpu::BindingType::Texture {
+            sample_type: Self::TEXTURE_SAMPLER_TYPE,
+            view_dimension: Self::DIM,
+            multisampled: Self::MULTI
+        },
+        count: None,
+    };
+
+    fn entry_texture<'a>(
+        view: &'a wgpu::TextureView,
+    ) -> wgpu::BindGroupEntry<'a> {
+        wgpu::BindGroupEntry {
+            binding: Self::TEXTURE_BIND as u32,
+            resource: wgpu::BindingResource::TextureView(view),
+        }
+    }
+}
+
+pub trait FragmentUniformBindTextureSampler {
+    const SAMPLER_BIND: u8;
+    const SAMPLER_TYPE: wgpu::SamplerBindingType;
+
+    const ENTRY_SAMPLER: wgpu::BindGroupLayoutEntry = wgpu::BindGroupLayoutEntry {
+        binding: Self::SAMPLER_BIND as u32,
+        visibility: wgpu::ShaderStages::FRAGMENT,
+        ty: wgpu::BindingType::Sampler(Self::SAMPLER_TYPE),
+        count: None,
+    };
+
+    fn entry_sampler<'a>(
+        value: &'a Sampler,
+    ) -> wgpu::BindGroupEntry<'a> {
+        wgpu::BindGroupEntry {
+            binding: Self::SAMPLER_BIND as u32,
+            resource: wgpu::BindingResource::Sampler(value),
+        }
     }
 }
 
