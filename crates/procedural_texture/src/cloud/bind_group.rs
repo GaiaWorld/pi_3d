@@ -8,21 +8,14 @@ use super::material::CloudMaterialPropertype;
 
 pub struct IDCloudMaterialBindGroup(pub RenderBindGroupKey);
 impl IDCloudMaterialBindGroup {
-    const LABEL: &'static str = "CloudMaterialBindGroup";
+    pub const LABEL: &'static str = "CloudMaterialBindGroup";
     pub const SET: u32 = 1;
 
-    pub fn layout(device: &RenderDevice) -> BindGroupLayout {
-        BindGroupLayout::from(
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    label: Some(Self::LABEL),
-                    entries: &[
-                        BuildinModelBind::ENTRY,
-                        CloudMaterialPropertype::ENTRY,
-                    ],
-                }
-            )
-        )
+    pub fn layout_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+        vec![
+            BuildinModelBind::ENTRY,
+            CloudMaterialPropertype::ENTRY,
+        ]
     }
 
     pub fn bind_group(
@@ -61,7 +54,7 @@ impl SysCloudMaterialBindGroupUpdate {
     ) {
         println!("Sys CloudMaterial BindGroup Update");
         if dynbuffer_flag.0 {
-            match bindgroups.get_mut(id.0) {
+            match bindgroups.get_mut(&id.0) {
                 Some(mut group) => {
                     IDCloudMaterialBindGroup::bind_group(&device, &mut group, &dynbuffer);
                 },

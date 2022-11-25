@@ -1,17 +1,18 @@
 
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Res}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Res}, query::Write, storage::Local};
 use pi_ecs_macros::setup;
 use pi_render::rhi::device::RenderDevice;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::{material::MaterialID, bind_group::RenderBindGroupPool}, resources::RenderDynUniformBuffer};
+use pi_scene_context::{object::{ObjectID, GameObject}, materials::{material::MaterialID, bind_group::{RenderBindGroupPool, RenderBindGroupKey}}, resources::RenderDynUniformBuffer};
 
 use crate::{define::UnlitMaterialDefines, bind_group::{UnlitMaterialBindGroup, SingleUnlitBindGroupList}};
 
 use super::{unlit_material::{UnlitMaterialPropertype, SingleUnlitMaterialBindDynInfoSet}};
 
+// pub(crate) static mut RES_ID_COMMAND_LIST: Option<Local> = None;
 
 pub enum UnlitMaterialCommand {
     Create(ObjectID),
@@ -24,6 +25,7 @@ pub enum UnlitMaterialCommand {
 pub struct SingleUnlitMaterialCommandList {
     pub list: Vec<UnlitMaterialCommand>,
 }
+
 pub struct SysUnlitMaterialCommand;
 #[setup]
 impl SysUnlitMaterialCommand {
@@ -69,12 +71,13 @@ impl SysUnlitMaterialCommand {
                         Some(mut item) => {
                             match unlit_bindgroup.value {
                                 None => {
-                                    let group = bindgroups.creat(&device, UnlitMaterialBindGroup::layout(&device), UnlitMaterialBindGroup::SET);
+                                    let group = RenderBindGroupKey::from(UnlitMaterialBindGroup::LABEL);
+                                    bindgroups.creat(&device, group.clone(), UnlitMaterialBindGroup::layout_entries().as_slice(), UnlitMaterialBindGroup::SET);
                                     unlit_bindgroup.value = Some(group);
                                 },
                                 _ => {}
                             }
-                            item.write(UnlitMaterialBindGroup(unlit_bindgroup.value.unwrap()));
+                            item.write(UnlitMaterialBindGroup(unlit_bindgroup.value.as_ref().unwrap().clone()));
                         },
                         None => {
 

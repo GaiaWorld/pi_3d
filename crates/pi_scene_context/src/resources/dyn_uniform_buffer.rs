@@ -1,4 +1,4 @@
-use pi_render::rhi::{dyn_uniform_buffer::{DynUniformBuffer, BindOffset, Bind}, device::RenderDevice, buffer::Buffer, RenderQueue};
+use pi_render::rhi::{dyn_uniform_buffer::{DynUniformBuffer, BindOffset, Bind, AsBind}, device::RenderDevice, buffer::Buffer, RenderQueue};
 
 pub struct RenderDynUniformBuffer(DynUniformBuffer);
 impl RenderDynUniformBuffer {
@@ -14,6 +14,9 @@ impl RenderDynUniformBuffer {
     }
     pub fn alloc_binding<T: Bind>(&mut self) -> BindOffset {
         self.0.alloc_binding::<T>()
+    }
+    pub fn alloc_binding_with_asbind<T: AsBind>(&mut self, bind: &T) -> BindOffset {
+        self.0.alloc_binding_with_asbind::<T>(bind)
     }
     pub fn buffer(&self) -> Option<&Buffer> {
         self.0.buffer()

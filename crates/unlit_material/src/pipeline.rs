@@ -5,7 +5,7 @@ use render_geometry::geometry::VertexAttributeMeta;
 use render_pipeline_key::{pipeline_key::{PipelineKeyCalcolator, gen_pipeline_key, PipelineKey}, fragment_state::gen_fragment_state_key};
 
 use material_textures::main_texture::{MainTextureKey, MainTextureRes, MainTextureSampler};
-use pi_scene_context::{resources::SingleRenderObjectPipelinePool, cameras::camera::CameraRenderData, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::scene_time::SceneTime, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, meshes::model::BuildinModelBind, vertex_data::{position::AttributePosition, normal::AttributeNormal, uv::AttributeUV}, main_camera_render::bind_group::IDMainCameraRenderBindGroup};
+use pi_scene_context::{resources::SingleRenderObjectPipelinePool, cameras::camera::CameraRenderData, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::scene_time::SceneTime, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, meshes::model::BuildinModelBind, vertex_data::{position::AttributePosition, normal::AttributeNormal, uv::AttributeUV}, main_camera_render::bind_group::IDMainCameraRenderBindGroup, materials::bind_group::{RenderBindGroupPool, RenderBindGroupKey}};
 
 use crate::{define::UnlitMaterialMode, bind_group::{UnlitMaterialTextureBindGroup, UnlitMaterialBindGroup}};
 
@@ -30,6 +30,7 @@ impl UnlitMaterialPipeline {
         depth_stencil: Option<wgpu::DepthStencilState>,
         primitive: wgpu::PrimitiveState,
         pipelines: &mut SingleRenderObjectPipelinePool,
+        layoutpool: &RenderBindGroupPool,
     ) -> DefaultKey {
 
         let mut calcolator = PipelineKeyCalcolator::new();
@@ -57,9 +58,10 @@ impl UnlitMaterialPipeline {
 
         match map.get_mut(&key) {
             None => {
-                let bind_group_0_layout = IDMainCameraRenderBindGroup::layout(device);
-                let bind_group_1_layout = UnlitMaterialBindGroup::layout(device);
-                let bind_group_2_layout = UnlitMaterialTextureBindGroup::layout(mode, device);
+                println!("UnlitMaterialPipeline >>> ");
+                let bind_group_0_layout = layoutpool.get_layout(&RenderBindGroupKey::from(IDMainCameraRenderBindGroup::LABEL)).unwrap();
+                let bind_group_1_layout = layoutpool.get_layout(&RenderBindGroupKey::from(UnlitMaterialBindGroup::LABEL)).unwrap();
+                let bind_group_2_layout = layoutpool.get_layout(&RenderBindGroupKey::from(UnlitMaterialTextureBindGroup::label(mode))).unwrap();
 
                 let vertex_layouts = vec![
                     AttributePosition::layout(&AttributePosition::ATTRIBUTES),

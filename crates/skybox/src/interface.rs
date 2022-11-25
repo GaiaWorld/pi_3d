@@ -1,7 +1,8 @@
+
 use pi_scene_context::{
     engine::Engine,
     materials::{
-        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList}, bind_group::RenderBindGroupPool,
+        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList}, bind_group::{RenderBindGroupPool, RenderBindGroupKey},
     },
     object::ObjectID,
     plugin::{ErrorPlugin, Plugin},
@@ -47,8 +48,8 @@ impl Plugin for PluginSkyboxMaterial {
         world.insert_resource(SingeSkyboxMaterialCommandList::default());
         world.insert_resource(SingleSkyboxMaterialBindDynInfoSet::default());
 
-        let layout = IDSkyboxMaterialBindGroup::layout(&device);
-        let id_default_mat_bind_group = world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, layout, IDSkyboxMaterialBindGroup::SET);
+        let id_default_mat_bind_group = RenderBindGroupKey::from(IDSkyboxMaterialBindGroup::LABEL);
+        world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, id_default_mat_bind_group.clone(), IDSkyboxMaterialBindGroup::layout_entries().as_slice(), IDSkyboxMaterialBindGroup::SET);
 
         world.insert_resource(IDSkyboxMaterialBindGroup(id_default_mat_bind_group));
 

@@ -1,7 +1,7 @@
 use pi_scene_context::{
     engine::Engine,
     materials::{
-        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList}, bind_group::RenderBindGroupPool,
+        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList}, bind_group::{RenderBindGroupPool, RenderBindGroupKey},
     },
     object::ObjectID,
     plugin::{ErrorPlugin, Plugin},
@@ -48,8 +48,8 @@ impl Plugin for PluginPerlinNoiseMaterial {
         world.insert_resource(SingePerlinNoiseMaterialCommandList::default());
         world.insert_resource(SinglePerlinNoiseMaterialBindDynInfoSet::default());
 
-        let layout = IDPerlinNoiseMaterialBindGroup::layout(&device);
-        let id_default_mat_bind_group = world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, layout, IDPerlinNoiseMaterialBindGroup::SET);
+        let id_default_mat_bind_group = RenderBindGroupKey::from(IDPerlinNoiseMaterialBindGroup::LABEL);
+        world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, id_default_mat_bind_group.clone(), IDPerlinNoiseMaterialBindGroup::layout_entries().as_slice(), IDPerlinNoiseMaterialBindGroup::SET);
         world.insert_resource(IDPerlinNoiseMaterialBindGroup(id_default_mat_bind_group));
 
         let base_default_id = engine.create_perlin_noise_material().clone();

@@ -84,7 +84,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                     // renderpass.set_viewport(0., 0., 600., 600., 0., 1.);
     
                     opaque_list.bind_groups.iter().for_each(|bindinfo| {
-                        match bind_groups.get(bindinfo.bind_group) {
+                        match bind_groups.get(&bindinfo.bind_group) {
                             Some(render_bind_group) => {
                                 match &render_bind_group.bind_group {
                                     Some(group) => {
@@ -131,7 +131,7 @@ impl Node for SingleMainCameraOpaqueRenderNode {
                                         
                                 renderpass.set_pipeline(pipeline);
                                 draw.bind_groups.iter().for_each(|bindinfo| {
-                                    match bind_groups.get(bindinfo.bind_group) {
+                                    match bind_groups.get(&bindinfo.bind_group) {
                                         Some(render_bind_group) => {
                                             match &render_bind_group.bind_group {
                                                 Some(group) => {

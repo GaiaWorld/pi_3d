@@ -3,7 +3,7 @@ use pi_ecs::{prelude::{Res, Query, ResMut, query}, query::{Changed, Or, Write, W
 use pi_ecs_macros::setup;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, device::RenderDevice, texture::{TextureView, Sampler}, asset::{RenderRes, TextureRes}};
 
-use pi_scene_context::{materials::{bind_group::{RenderBindGroup, RenderBindGroupPool}, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, resources::RenderDynUniformBuffer};
+use pi_scene_context::{materials::{bind_group::{RenderBindGroup, RenderBindGroupPool, RenderBindGroupKey}, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, resources::RenderDynUniformBuffer};
 use pi_slotmap::DefaultKey;
 use material_textures::main_texture::{MainTextureKey, MainTextureRes, MainTextureSampler};
 
@@ -13,29 +13,20 @@ use super::unlit_material::UnlitMaterialPropertype;
 
 #[derive(Debug, Default)]
 pub struct SingleUnlitBindGroupList {
-    pub value: Option<DefaultKey>,
-    pub texture_map: XHashMap<UnlitMaterialMode, DefaultKey>,
+    pub value: Option<RenderBindGroupKey>,
+    pub texture_map: XHashMap<UnlitMaterialMode, RenderBindGroupKey>,
 }
 
-pub struct UnlitMaterialBindGroup(pub DefaultKey);
+pub struct UnlitMaterialBindGroup(pub RenderBindGroupKey);
 impl UnlitMaterialBindGroup {
-    const LABEL: &'static str = "UnlitMaterialBindGroup";
+    pub const LABEL: &'static str = "UnlitMaterialBindGroup";
     pub const SET: u32 = 1;
 
-    pub fn layout(
-        device: &RenderDevice
-    ) -> BindGroupLayout {
-        BindGroupLayout::from(
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    label: Some(Self::LABEL),
-                    entries: &[
-                        BuildinModelBind::ENTRY,
-                        UnlitMaterialPropertype::ENTRY,
-                    ],
-                }
-            )
-        )
+    pub fn layout_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+        vec![
+            BuildinModelBind::ENTRY,
+            UnlitMaterialPropertype::ENTRY,
+        ]
     }
 
     pub fn bind_group(
@@ -60,7 +51,7 @@ impl UnlitMaterialBindGroup {
     }
 }
 
-pub struct UnlitMaterialTextureBindGroup(pub DefaultKey);
+pub struct UnlitMaterialTextureBindGroup(pub RenderBindGroupKey);
 impl UnlitMaterialTextureBindGroup {
     pub fn label(
         mode: UnlitMaterialMode,
@@ -80,23 +71,11 @@ impl UnlitMaterialTextureBindGroup {
         true
     }
 
-    pub fn layout(
-        mode: UnlitMaterialMode,
-        device: &RenderDevice
-    ) -> BindGroupLayout {
-        println!("{:?}", MainTextureRes::ENTRY_TEXTURE);
-        println!("{:?}", MainTextureSampler::ENTRY_SAMPLER);
-        BindGroupLayout::from(
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    label: Some(Self::label(mode)),
-                    entries: &[
-                        MainTextureRes::ENTRY_TEXTURE,
-                        MainTextureSampler::ENTRY_SAMPLER,
-                    ],
-                }
-            )
-        )
+    pub fn layout_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+        vec![
+            MainTextureRes::ENTRY_TEXTURE,
+            MainTextureSampler::ENTRY_SAMPLER,
+        ]
     }
 
     pub fn bind_group(
@@ -136,7 +115,7 @@ impl SysUnlitMaterialBindGroupUpdate {
         mut bindgroups: ResMut<RenderBindGroupPool>,
     ) {
         if dynbuffer_flag.0 {
-            UnlitMaterialBindGroup::bind_group(&device, bindgroups.get_mut(unlit_bindgroup.value.unwrap()).unwrap(), &dynbuffer);
+            UnlitMaterialBindGroup::bind_group(&device, bindgroups.get_mut(&unlit_bindgroup.value.clone().unwrap()).unwrap(), &dynbuffer);
         }
     }
 }
@@ -150,17 +129,17 @@ impl SysUnlitMaterialTextureBindGroupUpdate {
         device: Res<RenderDevice>,
         mut items: Query<GameObject, (&UnlitMaterialDefines, &MainTextureRes, &MainTextureSampler, Write<UnlitMaterialTextureBindGroup>), Or<(Changed<UnlitMaterialDefines>, Changed<MainTextureSampler>, Changed<MainTextureRes>)>>,
         mut unlit_bindgroup: ResMut<SingleUnlitBindGroupList>,
-        mut bindgroups: ResMut<RenderBindGroupPool>,
+        mut bindgrouppool: ResMut<RenderBindGroupPool>,
     ) {
         println!("Sys UnlitMaterial Texture BindGroup Update");
         items.iter_mut().for_each(|(define, tex2d, sampler, mut texbindgroupwrite)| {
             let deffinemode = define.mode();
             match unlit_bindgroup.texture_map.get(&deffinemode) {
                 Some(group) => {
-                    let texbindgroup = UnlitMaterialTextureBindGroup(*group);
-                    match bindgroups.get_mut(*group) {
+                    let texbindgroup = UnlitMaterialTextureBindGroup(group.clone());
+                    match bindgrouppool.get_mut(&group) {
                         Some(group) => {
-                            println!("UnlitMaterialTextureBindGroup bind_group");
+                            println!("UnlitMaterialTextureBindGroup bind_group 1");
                             texbindgroup.bind_group(deffinemode, &device,  group, (&tex2d.0, &sampler.0));
                             texbindgroupwrite.write(texbindgroup);
                         },
@@ -168,17 +147,18 @@ impl SysUnlitMaterialTextureBindGroupUpdate {
                     }
                 },
                 None => {
-                    let group = bindgroups.creat(&device, UnlitMaterialTextureBindGroup::layout(deffinemode, &device), UnlitMaterialTextureBindGroup::slot(deffinemode) as u32);
-                    let texbindgroup = UnlitMaterialTextureBindGroup(group);
+                    let group = RenderBindGroupKey::from(UnlitMaterialTextureBindGroup::label(deffinemode));
+                    bindgrouppool.creat(&device, group.clone(), UnlitMaterialTextureBindGroup::layout_entries().as_slice(), UnlitMaterialTextureBindGroup::slot(deffinemode) as u32);
+                    let texbindgroup = UnlitMaterialTextureBindGroup(group.clone());
                     texbindgroup.bind_group(
                         deffinemode,
                         &device,
-                        bindgroups.get_mut(group).unwrap(),
+                        bindgrouppool.get_mut(&group).unwrap(),
                         (&tex2d.0, &sampler.0),
-                    ); 
-                    unlit_bindgroup.texture_map.insert(define.mode(), group);
+                    );
+                    unlit_bindgroup.texture_map.insert(define.mode(), group.clone());
                     texbindgroupwrite.write(texbindgroup);
-                    println!("UnlitMaterialTextureBindGroup bind_group");
+                    println!("UnlitMaterialTextureBindGroup bind_group 0");
                 },
             }
         });

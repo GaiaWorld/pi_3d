@@ -1,4 +1,5 @@
 
+use pi_atom::Atom;
 use pi_ecs::{prelude::{Setup, Query, Res}, query::With};
 use pi_ecs_macros::setup;
 use pi_engine_shell::object::{InterfaceObject, GameObject};
@@ -73,12 +74,12 @@ impl SysMainCameraRenderReset {
         id_bind_group_main_camera: Res<IDMainCameraRenderBindGroup>,
         bind_groups: Res<RenderBindGroupPool>,
     ) {
-        let id_bind_group_main_camera = id_bind_group_main_camera.0;
+        let id_bind_group_main_camera = id_bind_group_main_camera.0.clone();
         maincameras.iter().for_each(|(cameradata, renderid)| {
-            if bind_groups.get(id_bind_group_main_camera).unwrap().bind_group.is_some() {
+            if bind_groups.get(&id_bind_group_main_camera).unwrap().bind_group.is_some() {
                 if let Some(mut render) = renders.get_mut(renderid.0) {
                     let camera_bind_group = RenderObjectBindGroup {
-                        bind_group: id_bind_group_main_camera,
+                        bind_group: id_bind_group_main_camera.clone(),
                         offsets: vec![
                             *cameradata.bind_offset,
                             0, 0, 0,
@@ -102,8 +103,8 @@ impl Plugin for PluginMainCameraRender {
         let world = engine.world_mut();
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
 
-        let layout = IDMainCameraRenderBindGroup::layout(&device);
-        let main_camera_bind_group_id = world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, layout, IDMainCameraRenderBindGroup::SET);
+        let main_camera_bind_group_id = Atom::from(IDMainCameraRenderBindGroup::LABEL);
+        world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, main_camera_bind_group_id.clone(), IDMainCameraRenderBindGroup::layout_entries().as_slice(), IDMainCameraRenderBindGroup::SET);
 
         let world = engine.world_mut();
 

@@ -3,7 +3,7 @@ use command::{SysUnlitMaterialCommand, SingleUnlitMaterialCommandList};
 use define::SysUnlitMaterialDefinesUpdate;
 use pi_ecs::prelude::Setup;
 use pi_engine_shell::plugin::Plugin;
-use unlit_material_sys::{UnlitModelUniformUpdate, UnlitMaterialUniformUpdate, SysUnlitMaterialPipelineKey, UnlitMaterialFilter};
+use unlit_material_sys::{UnlitModelUniformUpdate, UnlitMaterialUniformUpdate, SysUnlitMaterialPipelineKey, UnlitMaterialFilter, SysUnlitMaterialPipelineKeyMaterialChange};
 
 pub mod unlit_material;
 pub mod unlit_material_sys;
@@ -31,9 +31,14 @@ impl Plugin for PluginUnlitMaterial {
         UnlitModelUniformUpdate::setup(world, stages.uniform_update());
         UnlitMaterialUniformUpdate::setup(world, stages.uniform_update());
         SysUnlitMaterialPipelineKey::setup(world, stages.uniform_update());
+        SysUnlitMaterialPipelineKeyMaterialChange::setup(world, stages.uniform_update());
         UnlitMaterialFilter::setup(world, stages.filter_culling());
 
-        world.insert_resource(SingleUnlitBindGroupList::default());
+        let id = world.insert_resource(SingleUnlitBindGroupList::default()).id();
+        // unsafe {
+        //     RES_ID_COMMAND_LIST = Some(id);
+        // }
+
         world.insert_resource(SingleUnlitMaterialCommandList::default());
         
         Ok(())

@@ -84,13 +84,14 @@ pub struct SysUnlitMaterialPipelineKey;
 #[setup]
 impl SysUnlitMaterialPipelineKey {
     #[system]
-    pub fn tick(
+    pub fn tick_modelchange(
         mut items: Query<GameObject, (&MaterialID, &RenderBlend, &RenderDepthAndStencil, &PrimitiveState, Write<PipelineKey>), Or<(Changed<MaterialID>, Changed<RenderBlend>, Changed<RenderDepthAndStencil>, Changed<PrimitiveState>)>>,
-        materials: Query<GameObject, (&UnlitMaterialDefines), With<UnlitMaterialPropertype>>,
+        materials: Query<GameObject, (&UnlitMaterialDefines), (With<UnlitMaterialPropertype>, With<UnlitMaterialTextureBindGroup>)>,
         device: Res<RenderDevice>,
         mut shaderpool: ResMut<UnlitShaderPool>,
         mut pipelines: ResMut<UnlitMaterialPipeline>,
         mut pipeline_pool: ResMut<SingleRenderObjectPipelinePool>,
+        layout_pool: Res<RenderBindGroupPool>,
     ) {
         items.iter_mut().for_each(|(matid, blend, depth_stencil, primitive, mut pipelinekey )| {
             if let Some((defines)) = materials.get(matid.0) {
@@ -105,6 +106,43 @@ impl SysUnlitMaterialPipelineKey {
                     depth_stencil.state(),
                     primitive.state,
                     &mut pipeline_pool,
+                    &layout_pool,
+                );
+                
+                let key = PipelineKey { id: key };
+    
+                pipelinekey.write(key);
+            }
+        });
+    }
+}
+pub struct SysUnlitMaterialPipelineKeyMaterialChange;
+#[setup]
+impl SysUnlitMaterialPipelineKeyMaterialChange {
+    #[system]
+    pub fn tick_materialchange(
+        mut items: Query<GameObject, (&MaterialID, &RenderBlend, &RenderDepthAndStencil, &PrimitiveState, Write<PipelineKey>)>,
+        materials: Query<GameObject, (&UnlitMaterialDefines), (Changed<UnlitMaterialTextureBindGroup>)>,
+        device: Res<RenderDevice>,
+        mut shaderpool: ResMut<UnlitShaderPool>,
+        mut pipelines: ResMut<UnlitMaterialPipeline>,
+        mut pipeline_pool: ResMut<SingleRenderObjectPipelinePool>,
+        layout_pool: Res<RenderBindGroupPool>,
+    ) {
+        items.iter_mut().for_each(|(matid, blend, depth_stencil, primitive, mut pipelinekey )| {
+            if let Some((defines)) = materials.get(matid.0) {
+                let shader = shaderpool.get(defines, &device);
+                let definemode = defines.mode();
+
+                let key = pipelines.build(
+                    definemode,
+                    &device,
+                    &shader,
+                    RenderTargetState::color_target(blend).as_slice(),
+                    depth_stencil.state(),
+                    primitive.state,
+                    &mut pipeline_pool,
+                    &layout_pool,
                 );
                 
                 let key = PipelineKey { id: key };
@@ -137,7 +175,7 @@ impl UnlitMaterialFilter {
             match query_renderers.get_mut(renderid.0) {
                 Some(mut renderer) => {
                     if renderer.ready {
-                        println!("opaque List >>>>>>>>>>>>>>> {:?}", renderid.0);
+                        // println!("UnlitMaterialFilter Renderer >>>>>>>>>>>>>>> {:?}", renderid.0);
                         collect_opaque_normal_depth(
                             sceneid.0,
                             layermask,
@@ -177,27 +215,27 @@ fn collect_opaque_normal_depth(
             // println!("camera_sceneid & layermask ok >>>>>>>>>>>>>>>");
 
             if let Some((mat, valuebindgroup, texbindgroup )) = materials.get(matid.0) {
-
+                // println!("collect_opaque_normal_depth materials ok >>>>>>>>>>>>>>>");
                 match (positions.get(position.0), normals.get(normal.0), indices.get(indice.0), uvs.get(uv.0)) {
                     (Some(position), Some(normal), Some(indices), Some(uv)) => {
                         // if list.len() >= 1 { return; }
                         
                         let view_distance = camerapos.metric_distance(&globaltransform.position);
 
-                        let value_bindgroup = bindgroups.get(valuebindgroup.0);
-                        let tex_bindgroup = bindgroups.get(texbindgroup.0);
+                        let value_bindgroup = bindgroups.get(&valuebindgroup.0);
+                        let tex_bindgroup = bindgroups.get(&texbindgroup.0);
 
                         if value_bindgroup.is_some() && tex_bindgroup.is_some() {
                             let mut bind_groups = vec![];
                             bind_groups.push(RenderObjectBindGroup {
-                                bind_group: valuebindgroup.0,
+                                bind_group: valuebindgroup.0.clone(),
                                 offsets: vec![
                                     *model.bind_offset,
                                     *mat.bind_offset
                                 ],
                             });
                             bind_groups.push(RenderObjectBindGroup {
-                                bind_group: texbindgroup.0,
+                                bind_group: texbindgroup.0.clone(),
                                 offsets: vec![],
                             });
     

@@ -88,7 +88,7 @@ impl PerlinNoiseMaterialFilter {
         mut pipelines: ResMut<PerlinNoiseMaterialPipeline>,
         mut pipeline_pool: ResMut<SingleRenderObjectPipelinePool>,
     ) {
-        let id_bind_group_default = id_bind_group_default.0;
+        let id_bind_group_default = &id_bind_group_default.0;
         println!("PerlinNoiseMaterial Filter");
         query_camera
             .iter()
@@ -145,7 +145,7 @@ fn collect_opaque_normal_depth(
     shader: & PerlinNoiseShader,
     pipeline_pool: &mut SingleRenderObjectPipelinePool,
     list: &mut Vec<RenderObjectMetaOpaque>,
-    id_bind_group_default: RenderBindGroupKey,
+    id_bind_group_default: &RenderBindGroupKey,
 ) {
     query.iter().for_each(|item| {
         let rendersort = item.3;
@@ -173,7 +173,7 @@ fn collect_opaque_normal_depth(
                             let pipeline = PipelineKey { id: pipeline };
                             let mut bind_groups = vec![];
                             bind_groups.push(RenderObjectBindGroup {
-                                bind_group: id_bind_group_default,
+                                bind_group: id_bind_group_default.clone(),
                                 offsets: vec![
                                     *model.bind_offset,
                                     *mat.bind_offset

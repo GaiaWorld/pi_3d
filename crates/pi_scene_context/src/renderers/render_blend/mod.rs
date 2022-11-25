@@ -32,6 +32,17 @@ impl RenderBlend {
     pub fn combine(&mut self) {
         self.enable = true;
     }
+    pub fn one_one() -> Self {
+        Self {
+            enable: false,
+            src_color: wgpu::BlendFactor::One,
+            dst_color: wgpu::BlendFactor::One,
+            src_alpha: wgpu::BlendFactor::One,
+            dst_alpha: wgpu::BlendFactor::One,
+            opt_color: wgpu::BlendOperation::Add,
+            opt_alpha: wgpu::BlendOperation::Add,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

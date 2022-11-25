@@ -121,7 +121,7 @@ impl DefaultMaterialFilter {
         
         let time = Instant::now();
 
-        let id_bind_group_default = id_bind_group_default.0;
+        let id_bind_group_default = &id_bind_group_default.0;
         //  println!("DefaultMaterial Filter");
         query_camera.iter().for_each(|(renderid, sceneid, layermask, camerapos)| {
             //  println!("Camera >>>>>>>>>>>>>>>");
@@ -165,7 +165,7 @@ fn collect_opaque_normal_depth(
     normals: &Query<GameObject, &AttributeNormal>,
     indices: &Query<GameObject, &AttributeIndices>,
     renderer: &mut MainCameraRenderer,
-    id_bind_group_default: RenderBindGroupKey,
+    id_bind_group_default: &RenderBindGroupKey,
 ) {
     query.iter().for_each(|(matid, sceneid, layer, rendersort, pipeline, globaltransform, position, normal, indice, model, rendermode)| {
 
@@ -180,7 +180,7 @@ fn collect_opaque_normal_depth(
 
                             let mut bind_groups = vec![];
                             bind_groups.push(RenderObjectBindGroup {
-                                bind_group: id_bind_group_default,
+                                bind_group: id_bind_group_default.clone(),
                                 offsets: vec![
                                     *model.bind_offset,
                                     *mat.bind_offset

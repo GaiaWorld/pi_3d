@@ -8,21 +8,14 @@ use super::default_material::DefaultMaterialPropertype;
 
 pub struct IDDefaultMaterialBindGroup(pub RenderBindGroupKey);
 impl IDDefaultMaterialBindGroup {
-    const LABEL: &'static str = "DefaultMaterialBindGroup";
+    pub const LABEL: &'static str = "DefaultMaterialBindGroup";
     pub const SET: u32 = 1;
 
-    pub fn layout(device: &RenderDevice) -> BindGroupLayout {
-        BindGroupLayout::from(
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    label: Some(Self::LABEL),
-                    entries: &[
-                        BuildinModelBind::ENTRY,
-                        DefaultMaterialPropertype::ENTRY,
-                    ],
-                }
-            )
-        )
+    pub fn layout_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+        vec![
+            BuildinModelBind::ENTRY,
+            DefaultMaterialPropertype::ENTRY,
+        ]
     }
 
     pub fn bind_group(
@@ -60,7 +53,7 @@ impl SysDefaultMaterialBindGroupUpdate {
     ) {
         // println!("Sys DefaultMaterial BindGroup Update");
         if dynbuffer_flag.0 {
-            match bindgroups.get_mut(id.0) {
+            match bindgroups.get_mut(&id.0) {
                 Some(mut group) => {
                     // println!("IDDefaultMaterialBindGroup bind_group");
                     IDDefaultMaterialBindGroup::bind_group(&device, &mut group, &dynbuffer);

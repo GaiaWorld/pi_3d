@@ -8,21 +8,14 @@ use super::material::SkyboxMaterialPropertype;
 
 pub struct IDSkyboxMaterialBindGroup(pub RenderBindGroupKey);
 impl IDSkyboxMaterialBindGroup {
-    const LABEL: &'static str = "SkyboxMaterialBindGroup";
+    pub const LABEL: &'static str = "SkyboxMaterialBindGroup";
     pub const SET: u32 = 1;
 
-    pub fn layout(device: &RenderDevice) -> BindGroupLayout {
-        BindGroupLayout::from(
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    label: Some(Self::LABEL),
-                    entries: &[
-                        BuildinModelBind::ENTRY,
-                        SkyboxMaterialPropertype::ENTRY,
-                    ],
-                }
-            )
-        )
+    pub fn layout_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+        vec![
+            BuildinModelBind::ENTRY,
+            SkyboxMaterialPropertype::ENTRY,
+        ]
     }
 
     pub fn bind_group(
@@ -61,7 +54,7 @@ impl SysSkyboxMaterialBindGroupUpdate {
     ) {
         println!("Sys SkyboxMaterial BindGroup Update");
         if dynbuffer_flag.0 {
-            match bindgroups.get_mut(id.0) {
+            match bindgroups.get_mut(&id.0) {
                 Some(mut group) => {
                     IDSkyboxMaterialBindGroup::bind_group(&device, &mut group, &dynbuffer);
                 },
