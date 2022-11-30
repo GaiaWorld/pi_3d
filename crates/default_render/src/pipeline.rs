@@ -27,6 +27,7 @@ impl DefaultMaterialPipeline {
         primitive: wgpu::PrimitiveState,
         pipelines: &mut SingleRenderObjectPipelinePool,
     ) -> DefaultKey {
+        println!("depth_stencil >>> {:?}", depth_stencil);
 
         let mut calcolator = PipelineKeyCalcolator::new();
         gen_pipeline_key(&mut calcolator, &primitive, &depth_stencil, 0, 8);

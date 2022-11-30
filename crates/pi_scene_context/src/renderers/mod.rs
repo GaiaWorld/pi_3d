@@ -16,6 +16,7 @@ pub mod render_depth_and_stencil;
 pub mod render_primitive;
 pub mod render_sort;
 pub mod render_target_state;
+pub mod render_object_list;
 
 
 pub struct SingleScreenClearGraphicNodeKey(pub String);

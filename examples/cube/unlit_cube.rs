@@ -13,7 +13,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     cameras::interface::InterfaceCamera,
     meshes::cube::InterfaceCube,
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::material::{InterfaceMaterial, MaterialID}, renderers::render_blend::{InterfaceRenderBlend, RenderBlend}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::material::{InterfaceMaterial, MaterialID}, renderers::{render_blend::{InterfaceRenderBlend, RenderBlend}, render_mode::{InterfaceRenderMode, ERenderMode}}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
@@ -83,7 +83,7 @@ impl PluginTest {
         let tes_size = 2;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
-        engine.frame_time(2);
+        engine.frame_time(50);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -101,7 +101,8 @@ impl PluginTest {
             for j in 0..tes_size {
                 for k in 0..1 {
                     let cube = engine.new_cube(scene01);
-                    // engine.blend(cube, RenderBlend::one_one());
+                    engine.render_mode(cube, ERenderMode::Transparent);
+                    engine.blend(cube, RenderBlend::one_one());
                     engine.use_material(cube, MaterialID(unlitmaterial));
                     engine.transform_position(cube, Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
                     engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 0.2, j as f32 * 0.2, k as f32 * 0.2));

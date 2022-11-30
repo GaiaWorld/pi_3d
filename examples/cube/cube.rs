@@ -12,7 +12,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     cameras::interface::InterfaceCamera,
     meshes::cube::InterfaceCube,
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::render_depth_and_stencil::{InterfaceRenderDepthAndStencil, RenderDepthAndStencil}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
@@ -75,10 +75,10 @@ impl PluginTest {
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
 
-        let tes_size = 10;
+        let tes_size = 2;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
-        engine.frame_time(1);
+        engine.frame_time(1000);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -93,8 +93,10 @@ impl PluginTest {
             for j in 0..tes_size {
                 for k in 0..1 {
                     let cube = engine.new_cube(scene01);
+                    
+                    engine.depth_stencil(cube, RenderDepthAndStencil { depth: true, stencil: false, depth_compare: wgpu::CompareFunction::LessEqual });
                     engine.use_default_material(cube);
-                    engine.transform_position(cube, Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
+                    engine.transform_position(cube, Vector3::new(i as f32 * 1. - (tes_size) as f32 * 0.5, j as f32 * 1. - (tes_size) as f32 * 0.5, k as f32 * 1. - (tes_size) as f32 * 0.5));
                     engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 0.2, j as f32 * 0.2, k as f32 * 0.2));
                     engine.layer_mask(cube, LayerMask::default());
                     testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));

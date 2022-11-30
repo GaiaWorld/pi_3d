@@ -1,21 +1,21 @@
 use pi_slotmap::{DefaultKey};
 
-use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}, materials::bind_group::RenderBindGroupKey};
+use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}, materials::bind_group::{RenderBindGroupKey}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}};
 
 use super::pipeline::PipelineKey;
+
+pub use super::render_object_list::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct RenderObjectID(pub ObjectID);
 
-#[derive(Default)]
-pub struct RenderObjectOpaqueList {
-    pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub draws: Vec<RenderObjectMetaOpaque>,
-}
-#[derive(Default)]
-pub struct RenderObjectTransparentList {
-    pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub draws: Vec<RenderObjectMetaTransparent>,
+pub trait DrawObject {
+    fn bind_groups(&self) -> &Vec<RenderObjectBindGroup>;
+    fn pipeline(&self) -> &PipelineKey;
+    fn positions(&self) -> &RenderObjectVertice;
+    fn indices(&self) -> &Option<RenderObjectIndices>;
+    fn vertices(&self) -> &Vec<RenderObjectVertice>;
+    fn instances(&self) -> &Vec<RenderObjectInstance>;
 }
 
 /// wgpu 级别的渲染对象
@@ -61,6 +61,31 @@ impl Ord for RenderObjectMetaOpaque {
         self.partial_cmp(other).unwrap()
     }
 }
+impl DrawObject for RenderObjectMetaOpaque {
+    fn bind_groups(&self) -> &Vec<RenderObjectBindGroup> {
+        &self.bind_groups
+    }
+
+    fn pipeline(&self) -> &PipelineKey {
+        &self.pipeline
+    }
+
+    fn positions(&self) -> &RenderObjectVertice {
+        &self.positions
+    }
+
+    fn indices(&self) -> &Option<RenderObjectIndices> {
+        &self.indices
+    }
+
+    fn vertices(&self) -> &Vec<RenderObjectVertice> {
+        &self.vertices
+    }
+
+    fn instances(&self) -> &Vec<RenderObjectInstance> {
+        &self.instances
+    }
+}
 
 
 /// wgpu 级别的渲染对象
@@ -99,6 +124,31 @@ impl PartialOrd for RenderObjectMetaTransparent {
 impl Ord for RenderObjectMetaTransparent {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
+    }
+}
+impl DrawObject for RenderObjectMetaTransparent {
+    fn bind_groups(&self) -> &Vec<RenderObjectBindGroup> {
+        &self.bind_groups
+    }
+
+    fn pipeline(&self) -> &PipelineKey {
+        &self.pipeline
+    }
+
+    fn positions(&self) -> &RenderObjectVertice {
+        &self.positions
+    }
+
+    fn indices(&self) -> &Option<RenderObjectIndices> {
+        &self.indices
+    }
+
+    fn vertices(&self) -> &Vec<RenderObjectVertice> {
+        &self.vertices
+    }
+
+    fn instances(&self) -> &Vec<RenderObjectInstance> {
+        &self.instances
     }
 }
 
