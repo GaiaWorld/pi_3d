@@ -1,165 +1,87 @@
+
 use std::{collections::VecDeque, f32::consts::PI};
 
-use pi_engine_shell::object::InterfaceObject;
+use pi_assets::mgr::AssetMgr;
+use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAssetSyncCreate, AssetSyncWait}};
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use pi_scene_math::Vector3;
-use render_data_container::{EVertexDataFormat, GeometryBuffer, GeometryBufferPool};
-use render_geometry::geometry::VertexAttributeBufferMeta;
+use pi_share::Share;
+use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
+use render_geometry::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
 
 use crate::{
-    engine::Engine,
-    object::ObjectID,
-    plugin::{ErrorPlugin, Plugin},
-    resources::SingleGeometryBufferPool,
-    scene::interface::InterfaceScene,
-    transforms::interface::InterfaceTransformNode,
+    plugin::{Plugin, ErrorPlugin},
+    object::{ObjectID},
+    engine::Engine, 
     vertex_data::{
-        indices::{
-            AttributeIndices, AttributeIndicesCommand, IDAttributeIndices,
-            IDAttributeIndicesCommand, SingleAttributeIndicesCommandList,
-            SingleIDAttributeIndicesCommandList,
-        },
-        normal::{
-            AttributeNormal, AttributeNormalCommand, IDAttributeNormal, IDAttributeNormalCommand,
-            SingleAttributeNormalCommandList, SingleIDAttributeNormalCommandList,
-        },
-        position::{
-            AttributePosition, AttributePositionCommand, IDAttributePosition,
-            IDAttributePositionCommand, SingleAttributePositionCommandList,
-            SingleIDAttributePositionCommandList,
-        },
-        uv::{AttributeUV, AttributeUVCommand, IDAttributeUV, SingleAttributeUVCommandList},
+        position::{AssetKeyBufferPosition, AssetResBufferPosition, InterfaceBufferPosition},
+        normal::{AssetKeyBufferNormal, AssetResBufferNormal, InterfaceBufferNormal},
+        indices::{InterfaceBufferIndices},
+        uv::{AssetResBufferUV, AssetKeyBufferUV, InterfaceBufferUV}, color4::{AssetKeyBufferColor4, AssetResBufferColor4},
     },
+    scene::{ interface::InterfaceScene},
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc}
 };
 
 use super::interface::InterfaceMesh;
 
-pub struct SingleBaseBall {
-    position: IDAttributePosition,
-    normal: IDAttributeNormal,
-    indices: IDAttributeIndices,
-    uv: IDAttributeUV,
-}
-impl SingleBaseBall {
-    pub fn position(&self) -> IDAttributePosition {
-        self.position
-    }
-    pub fn normal(&self) -> IDAttributeNormal {
-        self.normal
-    }
-    pub fn indices(&self) -> IDAttributeIndices {
-        self.indices
-    }
-}
 
 pub struct BallBuilder;
 impl BallBuilder {
+    const KEY_BUFFER_COLOR4:    &'static str = "BallColor4";
+    const KEY_BUFFER_POSITION:  &'static str = "BallPosition";
+    const KEY_BUFFER_NORMAL:    &'static str = "BallNormal";
+    const KEY_BUFFER_UV:        &'static str = "BallUV";
+    const KEY_BUFFER_INDICES:   &'static str = "BallIndices";
     pub fn position(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
         data: &[f32],
-    ) -> AttributePosition {
-        let mut position = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
+    ) -> VertexBuffer {
+        let mut position = VertexBuffer::new(true, EVertexDataFormat::F32, false);
 
         let len = data.len();
         position.update_f32(&data, 0);
         position.update_buffer(device, queue);
-        let id_position = gbp.insert(position);
-
-        AttributePosition {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_position,
-                start: 0,
-                end: len * 4,
-                data_bytes_size: 3 * 4,
-                data_count: len / 3,
-            },
-        }
+        position
     }
     pub fn normal(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
         data: &[f32],
-    ) -> AttributeNormal {
+    ) -> VertexBuffer {
         let len = data.len();
 
-        let mut normals = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut normals = VertexBuffer::new(true, EVertexDataFormat::F32, false);
         normals.update_f32(&data, 0);
         normals.update_buffer(device, queue);
-        let id_normal = gbp.insert(normals);
-
-        AttributeNormal {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_normal,
-                start: 0,
-                end: len * 4,
-                data_bytes_size: 3 * 4,
-                data_count: len / 3,
-            },
-        }
+        normals
     }
     pub fn indices(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
         data: &[u32],
-    ) -> AttributeIndices {
+    ) -> VertexBuffer {
         let len = data.len();
-        let mut indices = GeometryBuffer::new(true, EVertexDataFormat::U32, true);
+        let mut indices = VertexBuffer::new(true, EVertexDataFormat::U32, true);
         indices.update_u32(&data, 0);
         indices.update_buffer(device, queue);
-        let id_indices = gbp.insert(indices);
-
-        AttributeIndices {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_indices,
-                start: 0,
-                end: len * 4,
-                data_bytes_size: 1 * 4,
-                data_count: len,
-            },
-            format: wgpu::IndexFormat::Uint32,
-        }
+        indices
     }
 
     pub fn uv(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
         data: &[f32],
-    ) -> AttributeUV {
+    ) -> VertexBuffer {
         let len = data.len();
-        let mut uvs = GeometryBuffer::new(true, EVertexDataFormat::F32, true);
+        let mut uvs = VertexBuffer::new(true, EVertexDataFormat::F32, true);
         uvs.update_f32(&data, 0);
         uvs.update_buffer(device, queue);
-        let id_uv = gbp.insert(uvs);
-
-        AttributeUV {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_uv,
-                start: 0,
-                end: len * 2 * 4,
-                data_bytes_size: 2 * 4,
-                data_count: len / 2,
-            },
-        }
+        uvs
     }
 }
 
-pub enum BallBuilderCommand {
-    Base(
-        ObjectID,
-        IDAttributePosition,
-        IDAttributeNormal,
-        IDAttributeIndices,
-    ),
-}
-
-pub struct SingleBallBuilderCommandList {
-    pub list: Vec<BallBuilderCommand>,
-}
 pub trait InterfaceBall {
     fn new_ball(&self, scene: ObjectID) -> ObjectID;
 }
@@ -174,27 +96,32 @@ impl InterfaceBall for Engine {
             .as_mesh(entity)
             .world();
 
-        let base_Ball = world.get_resource_mut::<SingleBaseBall>().unwrap();
-        let commands = world
-            .get_resource_mut::<SingleIDAttributePositionCommandList>()
-            .unwrap();
-        commands.list.push(IDAttributePositionCommand::Create(
+        let device = world.get_resource::<RenderDevice>().unwrap();
+        let queue = world.get_resource::<RenderQueue>().unwrap();
+
+        let (positions, normals, indices, uvs) = generate_sphere(36, 18);
+
+        let keypos = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_POSITION);
+        self.create_vertex_buffer(keypos.clone(), BallBuilder::position(device, queue, positions.as_slice()));
+
+        let keynormal = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_NORMAL);
+        self.create_vertex_buffer(keynormal.clone(), BallBuilder::normal(device, queue, normals.as_slice()));
+        
+        let keyuv = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_UV);
+        self.create_vertex_buffer(keyuv.clone(), BallBuilder::uv(device, queue, uvs.as_slice()));
+
+        let key = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_INDICES);
+        self.create_vertex_buffer(key.clone(), BallBuilder::indices(device, queue, indices.as_slice()));
+
+        self.use_geometry(
             entity,
-            base_Ball.position(),
-        ));
-        let commands = world
-            .get_resource_mut::<SingleIDAttributeNormalCommandList>()
-            .unwrap();
-        commands
-            .list
-            .push(IDAttributeNormalCommand::Create(entity, base_Ball.normal()));
-        let commands = world
-            .get_resource_mut::<SingleIDAttributeIndicesCommandList>()
-            .unwrap();
-        commands.list.push(IDAttributeIndicesCommand::Create(
-            entity,
-            base_Ball.indices(),
-        ));
+            vec![
+                VertexBufferDesc { bufferkey: keypos, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }], step_mode: wgpu::VertexStepMode::Vertex },
+                VertexBufferDesc { bufferkey: keynormal, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }], step_mode: wgpu::VertexStepMode::Vertex },
+                VertexBufferDesc { bufferkey: keyuv, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }], step_mode: wgpu::VertexStepMode::Vertex },
+            ]
+        );
+        self.use_indices(entity, IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key });
 
         entity
     }
@@ -207,59 +134,6 @@ impl Plugin for PluginBallBuilder {
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
-        let position_id = engine.new_object();
-        let normal_id = engine.new_object();
-        let indices_id = engine.new_object();
-        let uv_id = engine.new_object();
-
-        let world = engine.world_mut();
-
-        let device = world.get_resource::<RenderDevice>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-        let gbp = world
-            .get_resource_mut::<SingleGeometryBufferPool>()
-            .unwrap();
-
-        let (positions, normals, indices, uvs) = generate_sphere(36, 18);
-
-        let position = BallBuilder::position(device, queue, gbp, &positions);
-        let normal = BallBuilder::normal(device, queue, gbp, &normals);
-        let indices = BallBuilder::indices(device, queue, gbp, &indices);
-        let uvs = BallBuilder::uv(device, queue, gbp, &uvs);
-
-        let commands = world
-            .get_resource_mut::<SingleAttributePositionCommandList>()
-            .unwrap();
-        commands
-            .list
-            .push(AttributePositionCommand::Create(position_id, position));
-
-        let commands = world
-            .get_resource_mut::<SingleAttributeNormalCommandList>()
-            .unwrap();
-        commands
-            .list
-            .push(AttributeNormalCommand::Create(normal_id, normal));
-
-        let commands = world
-            .get_resource_mut::<SingleAttributeIndicesCommandList>()
-            .unwrap();
-        commands
-            .list
-            .push(AttributeIndicesCommand::Create(indices_id, indices));
-
-        let commands = world
-            .get_resource_mut::<SingleAttributeUVCommandList>()
-            .unwrap();
-        commands.list.push(AttributeUVCommand::Create(uv_id, uvs));
-
-        world.insert_resource::<SingleBaseBall>(SingleBaseBall {
-            position: IDAttributePosition(position_id),
-            normal: IDAttributeNormal(normal_id),
-            indices: IDAttributeIndices(indices_id),
-            uv: IDAttributeUV(uv_id),
-        });
-
         Ok(())
     }
 }

@@ -1,126 +1,82 @@
 
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Res}, query::Write, storage::Local};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Res}, query::{Write, With}, storage::Local};
 use pi_ecs_macros::setup;
 use pi_render::rhi::device::RenderDevice;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::{material::MaterialID, bind_group::{RenderBindGroupPool, RenderBindGroupKey}}, resources::RenderDynUniformBuffer};
+use pi_scene_context::{object::{ObjectID, GameObject}, materials::{material::MaterialID, bind_group::{RenderBindGroupPool, RenderBindGroupKey}, uniforms::{vec4::Vec4Uniform, texture::TextureSlot1, texture_uniform::MaterialTextureBindGroupID}, material_meta::AssetResMaterailMeta}, resources::RenderDynUniformBuffer};
+use render_resource::ImageAssetKey;
 
-use crate::{define::UnlitMaterialDefines, bind_group::{UnlitMaterialBindGroup, SingleUnlitBindGroupList}};
-
-use super::{unlit_material::{UnlitMaterialPropertype, SingleUnlitMaterialBindDynInfoSet}};
-
-// pub(crate) static mut RES_ID_COMMAND_LIST: Option<Local> = None;
-
-pub enum UnlitMaterialCommand {
-    Create(ObjectID),
-    Destroy(ObjectID),
-    Clear(),
-    BaseColor(ObjectID, Number, Number, Number),
-    Opacity(ObjectID, Number),
+#[derive(Debug, Clone)]
+pub enum EUnlitMaterialCommand {
+    EmissiveColor(ObjectID, (Number, Number, Number)),
+    EmissiveIntensity(ObjectID, Number),
+    EmissiveTexture(ObjectID, ImageAssetKey),
 }
 #[derive(Default)]
 pub struct SingleUnlitMaterialCommandList {
-    pub list: Vec<UnlitMaterialCommand>,
+    pub list: Vec<EUnlitMaterialCommand>,
 }
-
 pub struct SysUnlitMaterialCommand;
 #[setup]
 impl SysUnlitMaterialCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleUnlitMaterialCommandList>,
-        mut materials: Query<GameObject, Write<UnlitMaterialPropertype>>,
-        mut material_defines: Query<GameObject, Write<UnlitMaterialDefines>>,
-        mut material_bindgroup_values: Query<GameObject, Write<UnlitMaterialBindGroup>>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
-        mut matrecord: ResMut<SingleUnlitMaterialBindDynInfoSet>,
-        mut entity_delete: EntityDelete<GameObject>,
-        mut unlit_bindgroup: ResMut<SingleUnlitBindGroupList>,
-        mut bindgroups: ResMut<RenderBindGroupPool>,
-        device: Res<RenderDevice>,
+        mut materials: Query<
+            GameObject,
+            (Write<Vec4Uniform>, Write<TextureSlot1>),
+            (With<AssetResMaterailMeta>, With<MaterialTextureBindGroupID>)
+        >,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
-                UnlitMaterialCommand::Create(entity) => {
+                EUnlitMaterialCommand::EmissiveColor(entity, color) => {
                     match materials.get_mut(entity) {
-                        Some(mut mat) => {
-                            //  println!("DefaultMaterialCommand Create");
-                            mat.write(UnlitMaterialPropertype::new(&mut dynbuffer));
-                            matrecord.add(MaterialID(entity));
-                            mat.notify_modify();
-                        },
-                        None => {
-                            
-                        },
-                    }
-                    
-                    match material_defines.get_mut(entity) {
-                        Some(mut defines) => {
-                            defines.write(UnlitMaterialDefines::default())
-                        },
-                        None => {
-
-                        }
-                    }
-                    match material_bindgroup_values.get_mut(entity) {
-                        Some(mut item) => {
-                            match unlit_bindgroup.value {
-                                None => {
-                                    let group = RenderBindGroupKey::from(UnlitMaterialBindGroup::LABEL);
-                                    bindgroups.creat(&device, group.clone(), UnlitMaterialBindGroup::layout_entries().as_slice(), UnlitMaterialBindGroup::SET);
-                                    unlit_bindgroup.value = Some(group);
-                                },
-                                _ => {}
+                        Some((mut valueuniform, texuniform)) => {
+                            if let Some(prop) = valueuniform.get_mut() {
+                                let a = prop.value(0)[3];
+                                prop.set(0, &[color.0, color.1, color.2, a]);
+                                valueuniform.notify_modify();
+                            } else {
+                                cmds.list.push(cmd.clone());
                             }
-                            item.write(UnlitMaterialBindGroup(unlit_bindgroup.value.as_ref().unwrap().clone()));
                         },
                         None => {
-
-                        }
-                    }
-                },
-                UnlitMaterialCommand::Destroy(entity) => {
-                    entity_delete.despawn(entity);
-                },
-                UnlitMaterialCommand::Clear() => {
-                    matrecord.list().drain(..).for_each(|entity| {
-                        entity_delete.despawn(entity.0);
-                    });
-                },
-                UnlitMaterialCommand::BaseColor(entity, r, g, b) => {
-                    match materials.get_mut(entity) {
-                        Some(mut mat) => {
-                            match mat.get_mut() {
-                                Some(mat) => {
-                                    mat.base_color = (r, g, b);
-                                },
-                                None => todo!(),
-                            };
-                            mat.notify_modify();
-                        },
-                        None => {
-                            
+                            cmds.list.push(cmd.clone());
                         },
                     }
                 },
-                UnlitMaterialCommand::Opacity(entity, intensity) => {
+                EUnlitMaterialCommand::EmissiveIntensity(entity, intensity) => {
                     match materials.get_mut(entity) {
-                        Some(mut mat) => {
-                            match mat.get_mut() {
-                                Some(mat) => {
-                                    mat.opacity = intensity;
-                                },
-                                None => todo!(),
-                            };
-                            mat.notify_modify();
+                        Some((mut valueuniform, texuniform)) => {
+                            if let Some(prop) = valueuniform.get_mut() {
+                                let t = prop.value(0);
+                                let r = t[0];
+                                let g = t[1];
+                                let b = t[2];
+                                prop.set(0, &[r, g, b, intensity]);
+                                valueuniform.notify_modify();
+                            } else {
+                                cmds.list.push(cmd.clone());
+                            }
                         },
                         None => {
-                            
+                            cmds.list.push(cmd.clone());
+                        },
+                    }
+                },
+                EUnlitMaterialCommand::EmissiveTexture(entity, imagepath) => {
+                    match materials.get_mut(entity) {
+                        Some((mut valueuniform, mut texuniform)) => {
+                            texuniform.write(TextureSlot1(imagepath.clone()));
+                        },
+                        None => {
+                            cmds.list.push(EUnlitMaterialCommand::EmissiveTexture(entity, imagepath));
                         },
                     }
                 },
@@ -128,5 +84,3 @@ impl SysUnlitMaterialCommand {
         });
     }
 }
-
-// pub enum EMainTextureCommand;

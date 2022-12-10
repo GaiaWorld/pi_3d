@@ -1,83 +1,50 @@
-use pi_hash::XHashMap;
-use pi_render::rhi::{device::RenderDevice, shader::Shader};
-use render_material::{binding::BindingDesc, material::{UniformDesc, EUniformDataFormat}};
+use pi_atom::Atom;
+use pi_render::rhi::{device::RenderDevice};
+use render_shader::{shader::{KeyPreShader, ResPreShaderMeta, PreShaderMeta}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::{MaterialValueBindDesc, MaterialTextureBindDesc, UniformTextureDesc, UniformPropertyName}};
 
-use pi_scene_context::{materials::MBKK, shaders::BuildinShaderDefined};
-
-use crate::define::{UnlitMaterialMode, UnlitMaterialDefines};
-
-#[derive(Debug, Default)]
-pub struct UnlitShaderPool {
-    pub map: XHashMap<UnlitMaterialMode, UnlitShader>,
-}
-impl UnlitShaderPool {
-    pub fn get(
-        &mut self,
-        defines: &UnlitMaterialDefines,
-        device: &RenderDevice,
-    ) -> &UnlitShader {
-        let mode = defines.mode();
-        if self.map.contains_key(&mode) == false {
-            let shader = UnlitShader::new(defines, device);
-            self.map.insert(mode, shader);
-        }
-
-        self.map.get(&mode).unwrap()
-    }
-}
-
-#[derive(Debug)]
 pub struct UnlitShader {
     pub vs_module: wgpu::ShaderModule,
     pub fs_module: wgpu::ShaderModule,
 }
 
 impl UnlitShader {
-    pub const SHADER_NAME: &str                         = "unlit";
-    pub const A_POSITION: MBKK                          = BuildinShaderDefined::A_POSITION;
-    pub const A_POSITION_SLOT: u32                      = 0;
-    pub const A_POSITION_SIZE: u32                      = 3 * 4;
-    pub const U_EMISSIVE: MBKK                          = BuildinShaderDefined::MBKK_START_FOR_OTHER + 01 as MBKK;
-    
-    pub fn new(defines: &UnlitMaterialDefines, device: &RenderDevice) -> Self {
-        let vs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("unlit-VS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./unlit.vert")),
-                stage: naga::ShaderStage::Vertex,
-                defines: naga::FastHashMap::default(),
-            },
-        });
-        let fs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("unlit-FS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./unlit.frag")),
-                stage: naga::ShaderStage::Fragment,
-                defines: naga::FastHashMap::default(),
-            },
-        });
+    pub const KEY: &str     = "UnlitShader";
 
-        Self {
-            vs_module,
-            fs_module,
-        }
-    }
-
-    pub fn bind_desc() -> Vec<BindingDesc<MBKK>> {
-        vec![
-            BindingDesc {
-                uniforms: vec![
-                    UniformDesc {
-                        kind: Self::U_EMISSIVE,
-                        bind: 1,
-                        format: EUniformDataFormat::Color4,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        byte_offset_in_bind: 0,
-                    }
-                ],
-                size: 4 * 4,
-                id: 1
-            }
-        ]
+    pub fn res() -> PreShaderMeta {
+        PreShaderMeta::new(
+            MaterialValueBindDesc {
+                set: 1,
+                bind: 1,
+                stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                mat4_list: vec![],
+                mat2_list: vec![],
+                vec4_list: vec![Atom::from("emissive"), Atom::from("emissive_scaleoffset")],
+                vec2_list: vec![],
+                float_list: vec![],
+                int_list: vec![],
+                uint_list: vec![],
+            },
+            Some(MaterialTextureBindDesc {
+                set: 2,
+                list: vec![
+                    UniformTextureDesc::new2d(UniformPropertyName::from("_MainTex"), wgpu::ShaderStages::FRAGMENT)
+                ]
+            }),
+            Varyings(
+                vec![
+                    Varying { format: Atom::from("vec3"), name: Atom::from("v_normal") },
+                    Varying { format: Atom::from("vec3"), name: Atom::from("v_pos") },
+                    Varying { format: Atom::from("vec2"), name: Atom::from("v_uv") },
+                ]
+            ),
+            BlockCodeAtom { 
+                define: Atom::from(include_str!("./unlit_define.vert")), 
+                running: Atom::from(include_str!("./unlit.vert"))
+            },
+            BlockCodeAtom { 
+                define: Atom::from(include_str!("./unlit_define.frag")),
+                running: Atom::from(include_str!("./unlit.frag"))
+            },
+        )
     }
 }

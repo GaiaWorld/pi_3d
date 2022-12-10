@@ -3,7 +3,7 @@ use pi_ecs::prelude::Setup;
 
 use crate::object::ObjectID;
 
-use self::{command::{SysMeshCommand, SingleMeshCommandList}};
+use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::SysModelUniformUpdate};
 
 pub mod cube;
 pub mod plane;
@@ -32,6 +32,7 @@ impl crate::Plugin for PluginMesh {
         let world = engine.world_mut();
 
         SysMeshCommand::setup(world, stages.command_stage());
+        SysModelUniformUpdate::setup(world, stages.uniform_update());
 
         world.insert_resource(SingleMeshCommandList::default());
 

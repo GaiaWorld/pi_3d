@@ -1,6 +1,6 @@
-use pi_ecs::{prelude::{ResMut, Query, Res}, query::{With, Changed, Or}};
+use pi_ecs::{prelude::{ResMut, Query, Res}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
-use pi_render::{rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice, bind_group::BindGroup}};
+use pi_render::{rhi::{device::RenderDevice, bind_group::BindGroup}};
 
 
 use crate::{

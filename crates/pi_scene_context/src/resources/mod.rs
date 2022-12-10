@@ -12,6 +12,8 @@ pub use dyn_uniform_buffer::*;
 pub use vertex_buffer_pool::*;
 pub use pipeline::*;
 
+pub mod vertex_buffer;
+
 pub struct PluginResource;
 impl Plugin for PluginResource {
     fn init(
@@ -23,7 +25,7 @@ impl Plugin for PluginResource {
 
         world.insert_resource(SingleRenderBindGroupPool::default());
         world.insert_resource(SingleRenderObjectPipelinePool::default());
-        world.insert_resource(SingleGeometryBufferPool::default());
+        // world.insert_resource(SingleGeometryBufferPool::default());
 
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
         world.insert_resource(RenderDynUniformBuffer::new(&device));

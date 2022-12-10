@@ -1,158 +1,122 @@
+use derive_deref::{Deref, DerefMut};
+use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::object::InterfaceObject;
-use render_data_container::{EVertexDataFormat, GeometryBuffer, GeometryBufferPool};
-use render_geometry::geometry::{VertexAttributeBufferMeta, VertexAttributeMeta};
+use pi_engine_shell::{assets::sync_load::PluginAssetSyncLoad};
+use render_data_container::{EVertexDataFormat, VertexBuffer, KeyVertexBuffer, TVertexBufferMeta, TAttributeMeta};
 
-use crate::{object::{ObjectID, GameObject}, geometry::GBID, plugin::Plugin, resources::SingleGeometryBufferPool};
+use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};
 
 
-#[derive(Debug, Clone, Copy)]
-pub struct IDAttributeNormal(pub ObjectID);
 #[derive(Debug)]
-pub struct AttributeNormal {
-    pub meta: VertexAttributeBufferMeta<GBID>,
+enum ECommand {
+    Use(ObjectID, KeyVertexBuffer),
 }
-impl AttributeNormal {
-    pub const NORMAL: u32 = 3;
-    pub const NORMAL_OFFSET: u32 = 0 * 4;
-    pub const NORMAL_FORMAT: wgpu::VertexFormat = wgpu::VertexFormat::Float32x3;
-    pub const NORMAL_LOCATION: u32 = 1;
-    pub const ATTRIBUTES: [wgpu::VertexAttribute; 1] = [
-        wgpu::VertexAttribute {
-            format: Self::NORMAL_FORMAT,
-            offset: Self::NORMAL_OFFSET as wgpu::BufferAddress,
-            shader_location: Self::NORMAL_LOCATION,
-        }
-    ];
+#[derive(Debug, Default)]
+struct CommandListBufferNormal {
+    pub list: Vec<ECommand>,
 }
-impl VertexAttributeMeta for AttributeNormal {
-    const SLOT: u32 = 1;
-    const SIZE_PER_VERTEX: u32 = Self::NORMAL_OFFSET + Self::NORMAL * 4;
+struct SysCommand;
+#[setup]
+impl SysCommand {
+    #[system]
+    pub fn cmd(
+        mut cmds: ResMut<CommandListBufferNormal>,
+        mut items: Query<GameObject, Write<AssetKeyBufferNormal>>,
+    ) {
+        let mut list = std::mem::replace(&mut cmds.list, vec![]);
+        list.drain(..).for_each(|cmd| {
+            match cmd {
+                ECommand::Use(entity, key) => {
+                    if let Some(mut item) = items.get_mut(entity) {
+                        item.write(AssetKeyBufferNormal(key.clone()));
+                    }
+                },
+            }
+        });
+    }
+}
+
+#[derive(Debug, Deref, DerefMut, Clone, Hash)]
+pub struct AssetKeyBufferNormal(pub KeyVertexBuffer);
+
+#[derive(Deref, DerefMut)]
+pub struct AssetResBufferNormal(pub Handle<VertexBuffer>);
+impl From<Handle<VertexBuffer>> for AssetResBufferNormal {
+    fn from(value: Handle<VertexBuffer>) -> Self {
+        Self(value)
+    }
+}
+impl AssetResBufferNormal {
+    pub const NUMBER_BYTES: wgpu::BufferAddress = 4;
+    pub const NUMBER_COUNT: wgpu::BufferAddress = 3;
+    pub const OFFSET: u32 = 0 * 4;
+}
+impl TVertexBufferMeta for AssetResBufferNormal {
+    const DATA_FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
-    const FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
-}
+    fn size_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT * Self::NUMBER_BYTES
+    }
 
-#[derive(Debug)]
-pub enum AttributeNormalCommand {
-    Create(ObjectID, AttributeNormal)
-}
-
-#[derive(Debug, Default)]
-pub struct SingleAttributeNormalCommandList {
-    pub list: Vec<AttributeNormalCommand>,
-}
-
-pub struct SysAttributeNormalCommand;
-#[setup]
-impl SysAttributeNormalCommand {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleAttributeNormalCommandList>,
-        mut colors: Query<GameObject, Write<AttributeNormal>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                AttributeNormalCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn number_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT
     }
 }
 
-#[derive(Debug)]
-pub enum IDAttributeNormalCommand {
-    Create(ObjectID, IDAttributeNormal)
+pub struct AttributeNormal {
+    pub format: wgpu::VertexFormat,
+    pub offset: wgpu::BufferAddress,
+    pub shader_location: u32,
 }
+impl TAttributeMeta for AttributeNormal {
+    fn format(&self) -> wgpu::VertexFormat {
+        self.format
+    }
 
-#[derive(Debug, Default)]
-pub struct SingleIDAttributeNormalCommandList {
-    pub list: Vec<IDAttributeNormalCommand>,
-}
+    fn offset(&self) -> wgpu::BufferAddress {
+        self.offset
+    }
 
-pub struct SysIDAttributeNormalCommand;
-#[setup]
-impl SysIDAttributeNormalCommand {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleIDAttributeNormalCommandList>,
-        mut colors: Query<GameObject, Write<IDAttributeNormal>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                IDAttributeNormalCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn shader_location(&self) -> u32 {
+        self.shader_location
     }
 }
 
-pub struct PluginAttributeNormal;
-impl Plugin for PluginAttributeNormal {
+pub trait InterfaceBufferNormal {
+    fn use_vertex_data_normal(
+        & self,
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self;
+}
+impl InterfaceBufferNormal for Engine {
+    fn use_vertex_data_normal(
+        & self,
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self {
+        let commands = self.world().get_resource_mut::<CommandListBufferNormal>().unwrap();
+        commands.list.push(ECommand::Use(entity, key));
+
+        self
+    }
+}
+
+pub struct PluginBufferNormal;
+impl Plugin for PluginBufferNormal {
     fn init(
         &mut self,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
+
+        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferNormal, VertexBuffer, AssetResBufferNormal>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
+
         let world = engine.world_mut();
-
-        SysAttributeNormalCommand::setup(world, stages.command_stage());
-        SysIDAttributeNormalCommand::setup(world, stages.command_stage());
-
-        world.insert_resource(SingleAttributeNormalCommandList::default());
-        world.insert_resource(SingleIDAttributeNormalCommandList::default());
+        world.insert_resource(CommandListBufferNormal::default());
+        SysCommand::setup(world, stages.command_stage());
 
         Ok(())
-    }
-}
-
-pub trait InterfaceAttributeNormal {
-    fn create_vertex_data_normal(
-        &self,
-        data: GeometryBuffer,
-    ) -> ObjectID;
-}
-impl InterfaceAttributeNormal for crate::engine::Engine {
-    fn create_vertex_data_normal(
-        &self,
-        data: GeometryBuffer,
-    ) -> ObjectID {
-        let entity = self.new_object();
-        let world = self.world();
-
-        let data_size = data.size();
-        let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();
-        let buffer_id = gbp.insert(data);
-
-        let data = AttributeNormal {
-            meta: VertexAttributeBufferMeta {
-                buffer_id,
-                start: 0,
-                end: data_size * 4,
-                data_bytes_size: 3 * 4,
-                data_count: data_size / 3,
-            },
-        };
-
-        let commands = world.get_resource_mut::<SingleAttributeNormalCommandList>().unwrap();
-        commands.list.push(AttributeNormalCommand::Create(entity, data));
-
-        entity
     }
 }

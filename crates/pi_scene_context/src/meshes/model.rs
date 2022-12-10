@@ -1,6 +1,9 @@
+use pi_ecs::{prelude::{ResMut, Query}, query::With};
+use pi_ecs_macros::setup;
+use pi_engine_shell::object::GameObject;
 use pi_render::rhi::dyn_uniform_buffer::{BindOffset, Bind};
 
-use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer};
+use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer, transforms::{transform_node::GlobalTransform, dirty::DirtyGlobalTransform}};
 
 // pub struct BuildinTimeBind {
 //     pub bind_offset: BindOffset,
@@ -98,5 +101,20 @@ impl Bind for BuildinModelBind {
     }
     fn min_size() -> usize {
         Self::SIZE
+    }
+}
+
+pub struct SysModelUniformUpdate;
+#[setup]
+impl SysModelUniformUpdate {
+    #[system]
+    pub fn tick(
+        meshes: Query<GameObject, (&GlobalTransform, &BuildinModelBind), With<DirtyGlobalTransform>>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+    ) {
+        //  println!("DefaultMaterial Uniform TickUpdate");
+        meshes.iter().for_each(|(transform, model)| {
+            dynbuffer.as_mut().set_uniform::<GlobalTransform>(&model.bind_offset, transform);
+        });
     }
 }

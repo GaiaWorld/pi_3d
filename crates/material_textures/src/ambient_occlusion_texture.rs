@@ -4,12 +4,10 @@ use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup, Res}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, engine_shell, plugin::Plugin};
+use pi_engine_shell::{object::{ObjectID, GameObject}, engine_shell, plugin::Plugin, assets::image_texture_load::CalcImageLoad};
 use pi_render::rhi::{asset::TextureRes, texture::Sampler, device::RenderDevice};
 use pi_scene_context::{shaders::{FragmentUniformBindTexture, FragmentUniformBindTextureSampler}};
 use render_resource::{ImageAssetKey, sampler::{SamplerDesc, SamplerPool}};
-
-use crate::image_texture_load::CalcImageLoad;
 
 
 #[derive(Debug, Deref, DerefMut, Clone, Default, Hash)]

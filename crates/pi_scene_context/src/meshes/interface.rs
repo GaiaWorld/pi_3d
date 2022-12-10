@@ -1,6 +1,6 @@
 use pi_engine_shell::object::InterfaceObject;
 
-use crate::{object::ObjectID, transforms::interface::InterfaceTransformNode, scene::interface::InterfaceScene, renderers::{render_mode::{InterfaceRenderMode, ERenderMode}, render_sort::{InterfaceRenderSort, RenderSortParam}}};
+use crate::{object::ObjectID, transforms::interface::InterfaceTransformNode, scene::interface::InterfaceScene, renderers::{render_mode::{InterfaceRenderMode, ERenderMode}, render_sort::{InterfaceRenderSort, RenderSortParam}, render_blend::InterfaceRenderBlend, render_depth_and_stencil::InterfaceRenderDepthAndStencil, render_primitive::{InterfaceRenderPrimitive, PrimitiveState}}, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
 
 use super::command::{SingleMeshCommandList, MeshCommand};
 
@@ -23,7 +23,6 @@ impl InterfaceMesh for crate::engine::Engine {
     ) -> ObjectID {
 
         let entity = self.new_object();
-        let world = self.world();
 
         self.add_to_scene(entity, scene);
         self.as_transform_node(entity);
@@ -45,6 +44,10 @@ impl InterfaceMesh for crate::engine::Engine {
 
         self.render_sort(object, RenderSortParam::opaque());
         self.render_mode(object, ERenderMode::Opaque);
+        self.disable_blend(object);
+        self.disable_depth_stencil(object);
+        self.layer_mask(object, LayerMask::default());
+        self.primitive(object, PrimitiveState::default());
 
         self
     }

@@ -1,162 +1,122 @@
+use derive_deref::{Deref, DerefMut};
+use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::object::InterfaceObject;
-use render_data_container::{EVertexDataFormat, GeometryBuffer, GeometryBufferPool};
-use render_geometry::geometry::{VertexAttributeBufferMeta, VertexAttributeMeta};
+use pi_engine_shell::{assets::sync_load::PluginAssetSyncLoad};
+use render_data_container::{EVertexDataFormat, VertexBuffer, VertexBufferPool, KeyVertexBuffer, TVertexBufferMeta, TAttributeMeta};
 
-use crate::{object::{ObjectID, GameObject}, geometry::GBID, plugin::Plugin, engine::Engine, resources::SingleGeometryBufferPool};
+use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};
 
-#[derive(Debug, Clone, Copy)]
-pub struct IDAttributeColor4(pub ObjectID);
 #[derive(Debug)]
-pub struct AttributeColor4 {
-    pub meta: VertexAttributeBufferMeta<GBID>,
+enum ECommand {
+    Use(ObjectID, KeyVertexBuffer),
 }
-impl AttributeColor4 {
-    pub const COLOR: u32 = 4;
-    pub const COLOR_OFFSET: u32 = 0 * 4;
-    pub const COLOR_FORMAT: wgpu::VertexFormat = wgpu::VertexFormat::Float32x4;
-    pub const COLOR_LOCATION: u32 = 3;
-
-    pub const ATTRIBUTES: [wgpu::VertexAttribute; 1] = [
-        wgpu::VertexAttribute {
-            format: Self::COLOR_FORMAT,
-            offset: Self::COLOR_OFFSET as wgpu::BufferAddress,
-            shader_location: Self::COLOR_LOCATION,
-        }
-    ];
+#[derive(Debug, Default)]
+struct CommandListBufferColor4 {
+    pub list: Vec<ECommand>,
 }
-impl VertexAttributeMeta for AttributeColor4 {
-    const SLOT: u32 = 3;
+struct SysCommand;
+#[setup]
+impl SysCommand {
+    #[system]
+    pub fn cmd(
+        mut cmds: ResMut<CommandListBufferColor4>,
+        mut items: Query<GameObject, Write<AssetKeyBufferColor4>>,
+    ) {
+        let mut list = std::mem::replace(&mut cmds.list, vec![]);
+        list.drain(..).for_each(|cmd| {
+            match cmd {
+                ECommand::Use(entity, key) => {
+                    if let Some(mut item) = items.get_mut(entity) {
+                        item.write(AssetKeyBufferColor4(key.clone()));
+                    }
+                },
+            }
+        });
+    }
+}
 
-    const SIZE_PER_VERTEX: u32 = Self::COLOR_OFFSET + Self::COLOR * 4;
+#[derive(Debug, Deref, DerefMut, Clone, Hash)]
+pub struct AssetKeyBufferColor4(pub KeyVertexBuffer);
 
+#[derive(Deref, DerefMut)]
+pub struct AssetResBufferColor4(pub Handle<VertexBuffer>);
+impl From<Handle<VertexBuffer>> for AssetResBufferColor4 {
+    fn from(value: Handle<VertexBuffer>) -> Self {
+        Self(value)
+    }
+}
+impl AssetResBufferColor4 {
+    pub const NUMBER_BYTES: wgpu::BufferAddress = 4;
+    pub const NUMBER_COUNT: wgpu::BufferAddress = 4;
+    pub const OFFSET: u32 = 0 * 4;
+}
+impl TVertexBufferMeta for AssetResBufferColor4 {
+    const DATA_FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
-    const FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
-}
 
+    fn size_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT * Self::NUMBER_BYTES
+    }
 
-#[derive(Debug)]
-pub enum AttributeColor4Command {
-    Create(ObjectID, AttributeColor4)
-}
-
-#[derive(Debug, Default)]
-pub struct SingleAttributeColor4CommandList {
-    pub list: Vec<AttributeColor4Command>,
-}
-
-pub struct SysAttributeColor4Command;
-#[setup]
-impl SysAttributeColor4Command {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleAttributeColor4CommandList>,
-        mut colors: Query<GameObject, Write<AttributeColor4>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                AttributeColor4Command::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn number_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT
     }
 }
 
-
-#[derive(Debug)]
-pub enum IDAttributeColor4Command {
-    Create(ObjectID, IDAttributeColor4)
+pub struct AttributeColor4 {
+    pub format: wgpu::VertexFormat,
+    pub offset: wgpu::BufferAddress,
+    pub shader_location: u32,
 }
+impl TAttributeMeta for AttributeColor4 {
+    fn format(&self) -> wgpu::VertexFormat {
+        self.format
+    }
 
-#[derive(Debug, Default)]
-pub struct SingleIDAttributeColor4CommandList {
-    pub list: Vec<IDAttributeColor4Command>,
-}
+    fn offset(&self) -> wgpu::BufferAddress {
+        self.offset
+    }
 
-pub struct SysIDAttributeColor4Command;
-#[setup]
-impl SysIDAttributeColor4Command {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleIDAttributeColor4CommandList>,
-        mut colors: Query<GameObject, Write<IDAttributeColor4>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                IDAttributeColor4Command::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn shader_location(&self) -> u32 {
+        self.shader_location
     }
 }
 
-pub struct PluginAttributeColor4;
-impl Plugin for PluginAttributeColor4 {
+pub trait InterfaceBufferColor4 {
+    fn use_vertex_data_color4(
+        & self,
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self;
+}
+impl InterfaceBufferColor4 for Engine {
+    fn use_vertex_data_color4(
+        & self,
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self {
+        let commands = self.world().get_resource_mut::<CommandListBufferColor4>().unwrap();
+        commands.list.push(ECommand::Use(entity, key));
+
+        self
+    }
+}
+
+pub struct PluginBufferColor4;
+impl Plugin for PluginBufferColor4 {
     fn init(
         &mut self,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
+
+        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferColor4, VertexBuffer, AssetResBufferColor4>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
+
         let world = engine.world_mut();
-
-        SysAttributeColor4Command::setup(world, stages.command_stage());
-        SysIDAttributeColor4Command::setup(world, stages.command_stage());
-
-        world.insert_resource(SingleAttributeColor4CommandList::default());
-        world.insert_resource(SingleIDAttributeColor4CommandList::default());
+        world.insert_resource(CommandListBufferColor4::default());
+        SysCommand::setup(world, stages.command_stage());
 
         Ok(())
-    }
-}
-
-pub trait InterfaceAttributeColor4 {
-    fn create_vertex_data_color4(
-        &self,
-        data: GeometryBuffer,
-    ) -> ObjectID;
-}
-impl InterfaceAttributeColor4 for Engine {
-    fn create_vertex_data_color4(
-        &self,
-        data: GeometryBuffer,
-    ) -> ObjectID {
-        let entity = self.new_object();
-        let world = self.world();
-
-        let data_size = data.size();
-        let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();
-        let id_indices = gbp.insert(data);
-
-        let data = AttributeColor4 {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_indices,
-                start: 0,
-                end: data_size * 4,
-                data_bytes_size: 4 * 4,
-                data_count: data_size / 4,
-            }
-        };
-
-        let commands = world.get_resource_mut::<SingleAttributeColor4CommandList>().unwrap();
-        commands.list.push(AttributeColor4Command::Create(entity, data));
-
-        entity
     }
 }

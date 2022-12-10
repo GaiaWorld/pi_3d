@@ -1,8 +1,6 @@
-use std::time::Instant;
+use std::{time::Instant, ops::Range};
 
-use render_data_container::GeometryBufferPool;
-
-use crate::{materials::bind_group::RenderBindGroupPool, renderers::render_object::TempDrawInfoRecord, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}};
+use crate::{materials::bind_group::RenderBindGroupPool, renderers::render_object::TempDrawInfoRecord};
 
 use super::render_object::{RenderObjectBindGroup, RenderObjectMetaOpaque, RenderObjectMetaTransparent, DrawObject};
 
@@ -10,13 +8,12 @@ use super::render_object::{RenderObjectBindGroup, RenderObjectMetaOpaque, Render
 pub trait DrawList<T: DrawObject> {
     fn bindgroups(&self) -> &Vec<RenderObjectBindGroup>;
     fn drawlist(&self) -> &Vec<T>;
-    fn render(
+    fn render<'a>(
         &self,
-        commands: &mut wgpu::CommandEncoder,
+        commands: &'a mut wgpu::CommandEncoder,
         target_view: &wgpu::TextureView,
+        depth_stencil: Option<wgpu::RenderPassDepthStencilAttachment>,
         bindgrouppool: &RenderBindGroupPool,
-        pipelines: &SingleRenderObjectPipelinePool,
-        gbp: &SingleGeometryBufferPool,
     ) {
         let mut time = Instant::now();
 
@@ -30,7 +27,6 @@ pub trait DrawList<T: DrawObject> {
             store: true,
         };
         let mut color_attachments = vec![];
-        let mut depth_stencil_attachment = None;
         color_attachments.push(
             Some(
                 wgpu::RenderPassColorAttachment {
@@ -40,13 +36,12 @@ pub trait DrawList<T: DrawObject> {
                 }
             )
         );
-        depth_stencil_attachment = None;
 
         let mut renderpass = commands.begin_render_pass(
             &wgpu::RenderPassDescriptor {
                 label: Some("RenderNode"),
                 color_attachments: color_attachments.as_slice(),
-                depth_stencil_attachment: depth_stencil_attachment,
+                depth_stencil_attachment: depth_stencil,
             }
         );
 
@@ -67,76 +62,48 @@ pub trait DrawList<T: DrawObject> {
         time = Instant::now();
 
         draws.iter().for_each(|draw| {
-            match pipelines.map.get(draw.pipeline().id) {
-                Some(pipeline) => {
-                    let positions = &draw.positions();
-                    
-                    if temp_vertex_record.record_vertex_and_check_diff_with_last(positions) {
-                        match gbp.get_buffer(&positions.gbid) {
-                            Some(buffer) => {
-                                let start = positions.start as wgpu::BufferAddress;
-                                let end = positions.end as wgpu::BufferAddress;
-                                renderpass.set_vertex_buffer(positions.slot, buffer.slice(start..end));
-                            },
-                            None => {
-                            },
-                        }
-                    }
-                    let vertex_count = positions.count as u32;
-                            
-                    renderpass.set_pipeline(pipeline);
-                    draw.bind_groups().iter().for_each(|bindinfo| {
-                        match bindgrouppool.get(&bindinfo.bind_group) {
-                            Some(render_bind_group) => {
-                                match &render_bind_group.bind_group {
-                                    Some(group) => {
-                                        renderpass.set_bind_group(render_bind_group.set, &group, &bindinfo.offsets);
-                                    },
-                                    None => todo!(),
-                                }
+            renderpass.set_pipeline(draw.pipeline());
+            draw.bind_groups().iter().for_each(|bindinfo| {
+                match bindgrouppool.get(&bindinfo.bind_group) {
+                    Some(render_bind_group) => {
+                        match &render_bind_group.bind_group {
+                            Some(group) => {
+                                renderpass.set_bind_group(render_bind_group.set, &group, &bindinfo.offsets);
                             },
                             None => todo!(),
                         }
-                    });
+                    },
+                    None => todo!(),
+                }
+            });
 
-                    draw.vertices().iter().for_each(|item| {
-                        if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
-                            match gbp.get_buffer(&item.gbid) {
-                                Some(buffer) => {
-                                    let start = item.start as wgpu::BufferAddress;
-                                    let end = item.end as wgpu::BufferAddress;
-                                    renderpass.set_vertex_buffer(item.slot, buffer.slice(start..end));
-                                },
-                                None => {
+            let mut vertex_range = 0..0;
+            let mut instance_range = 0..1;
+            draw.vertices().iter().for_each(|item| {
+                if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
+                    renderpass.set_vertex_buffer(item.slot, item.slice());
+                    vertex_range = item.value_range();
+                }
+            });
 
-                                },
-                            }
-                        }
-                    });
-                            
-                    match &draw.indices() {
-                        Some(indices) => {
-                            if temp_vertex_record.record_indices_and_check_diff_with_last(indices) {
-                                match gbp.get_buffer(&indices.gbid) {
-                                    Some(buffer) => {
-                                        let start = indices.start as wgpu::BufferAddress;
-                                        let end = indices.end as wgpu::BufferAddress;
-                                        renderpass.set_index_buffer(buffer.slice(start..end), indices.format);
-                                    },
-                                    None => {
-                                    },
-                                }
-                            }
+            draw.instances().iter().for_each(|item| {
+                if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
+                    renderpass.set_vertex_buffer(item.slot, item.slice());
+                    instance_range = item.value_range();
+                }
+            });
 
-                            let indices_count = indices.count as u32;
-                            renderpass.draw_indexed(0..indices_count, 0 as i32, 0..1);
-                        },
-                        None => {
-                            renderpass.draw(0..vertex_count, 0..1);
-                        },
+            match &draw.indices() {
+                Some(indices) => {
+                    if temp_vertex_record.record_indices_and_check_diff_with_last(indices) {
+                        renderpass.set_index_buffer(indices.slice(), indices.format);
                     }
+
+                    renderpass.draw_indexed(indices.value_range(), 0 as i32, instance_range);
                 },
-                None => {},
+                None => {
+                    renderpass.draw(vertex_range, instance_range);
+                },
             }
         });
         

@@ -1,11 +1,18 @@
 use std::time::Instant;
 
 use futures::FutureExt;
+use pi_assets::mgr::AssetMgr;
 use pi_ecs::query::QueryState;
 use pi_futures::BoxFuture;
 use pi_render::{graph::{node::Node, RenderContext}, rhi::{texture::ScreenTexture}};
 
-use crate::{renderers::{render_object_list::DrawList}, object::{ObjectID, GameObject}, main_camera_render::MainCameraRenderer, materials::bind_group::{RenderBindGroupPool}, resources::{SingleRenderObjectPipelinePool, SingleGeometryBufferPool}};
+use crate::{
+    renderers::{render_object_list::DrawList},
+    object::{ObjectID, GameObject},
+    main_camera_render::MainCameraRenderer,
+    materials::bind_group::{RenderBindGroupPool},
+    resources::{SingleRenderObjectPipelinePool}
+};
 
 pub struct SingleMainCameraOpaqueRenderNode {
     pub renderer_id: ObjectID,
@@ -44,10 +51,8 @@ impl Node for SingleMainCameraOpaqueRenderNode {
             Some(renderer) => {
                 let surface = world.get_resource::<ScreenTexture>().unwrap();
                 let bindgrouppool = world.get_resource::<RenderBindGroupPool>().unwrap();
-                let pipelines = world.get_resource::<SingleRenderObjectPipelinePool>().unwrap();
-                let gbp = world.get_resource::<SingleGeometryBufferPool>().unwrap();
-                renderer.opaque_draws.render(&mut commands, surface.view.as_ref().unwrap(), bindgrouppool, pipelines, gbp);
-                renderer.transparent_draws.render(&mut commands, surface.view.as_ref().unwrap(), bindgrouppool, pipelines, gbp);
+                renderer.opaque_draws.render(&mut commands, surface.view.as_ref().unwrap(), None, bindgrouppool);
+                renderer.transparent_draws.render(&mut commands, surface.view.as_ref().unwrap(), None, bindgrouppool);
             },
             None => {
                 

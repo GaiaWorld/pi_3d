@@ -1,8 +1,8 @@
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write, entity};
+use pi_ecs::{prelude::{ResMut, Query}, query::Write};
 use pi_ecs_macros::setup;
 
-use crate::{object::{ObjectID, GameObject}, plugin::Plugin};
+use crate::{object::{ObjectID, GameObject}};
 
 use super::LayerMask;
 

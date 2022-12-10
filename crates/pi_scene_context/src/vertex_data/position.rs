@@ -1,162 +1,104 @@
+use derive_deref::{Deref, DerefMut};
+use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::object::InterfaceObject;
-use render_data_container::{EVertexDataFormat, GeometryBuffer, GeometryBufferPool};
-use render_geometry::geometry::{VertexAttributeBufferMeta, VertexAttributeMeta};
+use pi_engine_shell::{assets::sync_load::PluginAssetSyncLoad};
+use render_data_container::{EVertexDataFormat, VertexBuffer, KeyVertexBuffer, TVertexBufferMeta, TAttributeMeta};
 
-use crate::{object::{ObjectID, GameObject}, geometry::GBID, plugin::Plugin, resources::SingleGeometryBufferPool};
+use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};
 
 
-#[derive(Debug, Clone, Copy)]
-pub struct IDAttributePosition(pub ObjectID);
 #[derive(Debug)]
-pub struct AttributePosition {
-    pub meta: VertexAttributeBufferMeta<GBID>,
+enum ECommand {
+    Use(ObjectID, KeyVertexBuffer),
 }
-impl AttributePosition {
-    pub const POSITION: u32 = 3;
-    pub const POSITION_OFFSET: u32 = 0 * 4;
-    pub const POSITION_FORMAT: wgpu::VertexFormat = wgpu::VertexFormat::Float32x3;
-    pub const POSITION_LOCATION: u32 = 0;
-
-    pub const ATTRIBUTES: [wgpu::VertexAttribute;1] = [
-        wgpu::VertexAttribute {
-            format: Self::POSITION_FORMAT,
-            offset: Self::POSITION_OFFSET as wgpu::BufferAddress,
-            shader_location: Self::POSITION_LOCATION,
-        }
-    ];
+#[derive(Debug, Default)]
+struct CommandListBufferPosition {
+    pub list: Vec<ECommand>,
 }
-impl VertexAttributeMeta for AttributePosition {
-    const SLOT: u32 = 0;
+struct SysCommand;
+#[setup]
+impl SysCommand {
+    #[system]
+    pub fn cmd(
+        mut cmds: ResMut<CommandListBufferPosition>,
+        mut items: Query<GameObject, Write<AssetKeyBufferPosition>>,
+    ) {
+        let mut list = std::mem::replace(&mut cmds.list, vec![]);
+        list.drain(..).for_each(|cmd| {
+            match cmd {
+                ECommand::Use(entity, key) => {
+                    if let Some(mut item) = items.get_mut(entity) {
+                        item.write(AssetKeyBufferPosition(key.clone()));
+                    }
+                },
+            }
+        });
+    }
+}
 
-    const SIZE_PER_VERTEX: u32 = Self::POSITION_OFFSET + Self::POSITION * 4;
+#[derive(Debug, Deref, DerefMut, Clone, Hash)]
+pub struct AssetKeyBufferPosition(pub KeyVertexBuffer);
 
+#[derive(Deref, DerefMut)]
+pub struct AssetResBufferPosition(pub Handle<VertexBuffer>);
+impl From<Handle<VertexBuffer>> for AssetResBufferPosition {
+    fn from(value: Handle<VertexBuffer>) -> Self {
+        Self(value)
+    }
+}
+impl AssetResBufferPosition {
+    pub const NUMBER_BYTES: wgpu::BufferAddress = 4;
+    pub const NUMBER_COUNT: wgpu::BufferAddress = 3;
+    pub const OFFSET: u32 = 0 * 4;
+}
+impl TVertexBufferMeta for AssetResBufferPosition {
+    const DATA_FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
+    fn size_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT * Self::NUMBER_BYTES
+    }
 
-    const FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
-}
-
-#[derive(Debug)]
-pub enum AttributePositionCommand {
-    Create(ObjectID, AttributePosition)
-}
-
-#[derive(Debug, Default)]
-pub struct SingleAttributePositionCommandList {
-    pub list: Vec<AttributePositionCommand>,
-}
-
-pub struct SysAttributePositionCommand;
-#[setup]
-impl SysAttributePositionCommand {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleAttributePositionCommandList>,
-        mut colors: Query<GameObject, Write<AttributePosition>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                AttributePositionCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn number_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT
     }
 }
 
-#[derive(Debug)]
-pub enum IDAttributePositionCommand {
-    Create(ObjectID, IDAttributePosition)
+pub struct AttributePosition {
+    pub format: wgpu::VertexFormat,
+    pub offset: wgpu::BufferAddress,
+    pub shader_location: u32,
 }
+impl TAttributeMeta for AttributePosition {
+    fn format(&self) -> wgpu::VertexFormat {
+        self.format
+    }
 
-#[derive(Debug, Default)]
-pub struct SingleIDAttributePositionCommandList {
-    pub list: Vec<IDAttributePositionCommand>,
-}
+    fn offset(&self) -> wgpu::BufferAddress {
+        self.offset
+    }
 
-pub struct SysIDAttributePositionCommand;
-#[setup]
-impl SysIDAttributePositionCommand {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleIDAttributePositionCommandList>,
-        mut colors: Query<GameObject, Write<IDAttributePosition>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                IDAttributePositionCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn shader_location(&self) -> u32 {
+        self.shader_location
     }
 }
 
-pub struct PluginAttributePosition;
-impl Plugin for PluginAttributePosition {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
-
-        SysAttributePositionCommand::setup(world, stages.command_stage());
-        SysIDAttributePositionCommand::setup(world, stages.command_stage());
-
-        world.insert_resource(SingleAttributePositionCommandList::default());
-        world.insert_resource(SingleIDAttributePositionCommandList::default());
-
-        Ok(())
-    }
+pub trait InterfaceBufferPosition {
+    fn use_vertex_data_position(
+        & self,
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self;
 }
+impl InterfaceBufferPosition for Engine {
+    fn use_vertex_data_position(
+        & self,
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self {
+        let commands = self.world().get_resource_mut::<CommandListBufferPosition>().unwrap();
+        commands.list.push(ECommand::Use(entity, key));
 
-pub trait InterfaceAttributePosition {
-    fn create_vertex_data_position(
-        &self,
-        data: GeometryBuffer,
-    ) -> ObjectID;
-}
-impl InterfaceAttributePosition for crate::engine::Engine {
-    fn create_vertex_data_position(
-        &self,
-        data: GeometryBuffer,
-    ) -> ObjectID {
-        let entity = self.new_object();
-        let world = self.world();
-
-        let data_size = data.size();
-        let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();
-        let buffer_id = gbp.insert(data);
-
-        let data = AttributePosition {
-            meta: VertexAttributeBufferMeta {
-                buffer_id,
-                start: 0,
-                end: data_size * 4,
-                data_bytes_size: 3 * 4,
-                data_count: data_size / 3,
-            },
-        };
-
-        let commands = world.get_resource_mut::<SingleAttributePositionCommandList>().unwrap();
-        commands.list.push(AttributePositionCommand::Create(entity, data));
-
-        entity
+        self
     }
 }

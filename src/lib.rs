@@ -1,5 +1,14 @@
 use default_render::PluginDefaultMaterial;
-use pi_scene_context::{renderers::PluginRenderer, meshes::{cube::PluginCubeBuilder, PluginMesh, ball::PluginBallBuilder}, main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterialID, vertex_data::{uv::PluginAttributeUV, indices::PluginAttributeIndices, position::PluginAttributePosition, normal::PluginAttributeNormal, color4::PluginAttributeColor4}, cullings::{PluginCulling, oct_tree::PluginBoundingOctTree}, cameras::PluginCamera, transforms::PluginTransformNode, scene::PluginScene, resources::PluginResource};
+use pi_scene_context::{
+    renderers::PluginRenderer,
+    meshes::{cube::PluginCubeBuilder, PluginMesh, ball::PluginBallBuilder},
+    main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterial,
+    vertex_data::{normal::PluginBufferNormal, color4::PluginBufferColor4, indices::PluginBufferIndices},
+    cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
+    cameras::PluginCamera,
+    transforms::PluginTransformNode,
+    scene::PluginScene, resources::PluginResource, geometry::PluginBuildinGeometry
+};
 
 pub struct PluginBundleDefault;
 impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
@@ -16,14 +25,16 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCamera.init(engine, stages);
         PluginCulling.init(engine, stages);
 
-        PluginAttributeColor4.init(engine, stages);
-        PluginAttributeNormal.init(engine, stages);
-        PluginAttributePosition.init(engine, stages);
-        PluginAttributeIndices.init(engine, stages);
-        PluginAttributeUV.init(engine, stages);
+        PluginBufferIndices.init(engine, stages);
+        PluginBuildinGeometry.init(engine, stages);
+        PluginBufferColor4.init(engine, stages);
+        PluginBufferNormal.init(engine, stages);
+        // PluginBufferPosition.init(engine, stages);
+        // PluginAttributeIndices.init(engine, stages);
+        // PluginBufferUV.init(engine, stages);
 
         PluginMesh.init(engine, stages);
-        PluginMaterialID.init(engine, stages);
+        PluginMaterial.init(engine, stages);
         PluginLayerMask.init(engine, stages);
 
         PluginMainCameraRender.init(engine, stages);
@@ -33,13 +44,13 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
 
         PluginRenderer.init(engine, stages);
 
-        skybox::interface::PluginSkyboxMaterial.init(engine, stages);
-        skybox::PluginSkybox.init(engine, stages);
+        // skybox::interface::PluginSkyboxMaterial.init(engine, stages);
+        // skybox::PluginSkybox.init(engine, stages);
 
-        procedural_texture::perlin_noise::interface::PluginPerlinNoiseMaterial.init(engine, stages);
-        procedural_texture::PluginTestPerlinNoise.init(engine, stages);
+        // procedural_texture::perlin_noise::interface::PluginPerlinNoiseMaterial.init(engine, stages);
+        // procedural_texture::PluginTestPerlinNoise.init(engine, stages);
 
-        procedural_texture::cloud::interface::PluginCloudMaterial.init(engine, stages);
+        // procedural_texture::cloud::interface::PluginCloudMaterial.init(engine, stages);
         // procedural_texture::PluginTestPerlinNoise.init(engine, stages);
 
         PluginBoundingOctTree.init(engine, stages);

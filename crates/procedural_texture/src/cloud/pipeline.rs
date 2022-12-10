@@ -1,10 +1,10 @@
 use pi_hash::XHashMap;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice};
 use pi_slotmap::DefaultKey;
-use render_geometry::geometry::VertexAttributeMeta;
+use render_geometry::geometry::VertexBufferMeta;
 use render_pipeline_key::{
     fragment_state::gen_fragment_state_key,
-    pipeline_key::{gen_pipeline_key, PipelineKeyCalcolator},
+    pipeline_key::{gen_pipeline_key, PipelineStateKeyCalcolator},
 };
 
 use pi_scene_context::{
@@ -14,7 +14,7 @@ use pi_scene_context::{
     resources::SingleRenderObjectPipelinePool,
     scene::scene_time::SceneTime,
     shaders::FragmentUniformBind,
-    vertex_data::{normal::AttributeNormal, position::AttributePosition},
+    vertex_data::{normal::BufferNormal, position::BufferPosition},
 };
 
 use super::{material::CloudMaterialPropertype, shader::CloudShader};
@@ -39,7 +39,7 @@ impl CloudMaterialPipeline {
         primitive: wgpu::PrimitiveState,
         pipelines: &mut SingleRenderObjectPipelinePool,
     ) -> DefaultKey {
-        let mut calcolator = PipelineKeyCalcolator::new();
+        let mut calcolator = PipelineStateKeyCalcolator::new();
         gen_pipeline_key(&mut calcolator, &primitive, &depth_stencil, 0, 8);
         match targets.get(0) {
             Some(target) => match target {
@@ -74,8 +74,8 @@ impl CloudMaterialPipeline {
                 ));
 
                 let vertex_layouts = vec![
-                    AttributePosition::layout(&AttributePosition::ATTRIBUTES),
-                    AttributeNormal::layout(&AttributeNormal::ATTRIBUTES),
+                    BufferPosition::layout(&BufferPosition::ATTRIBUTES),
+                    BufferNormal::layout(&BufferNormal::ATTRIBUTES),
                 ];
 
                 let vs_state = wgpu::VertexState {

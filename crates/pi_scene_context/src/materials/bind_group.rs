@@ -97,9 +97,9 @@ impl RenderBindGroupPool {
     pub fn get_layout(
         &self,
         key: &RenderBindGroupKey,
-    ) -> Option<BindGroupLayout> {
+    ) -> Option<&BindGroupLayout> {
         match self.layouts.get(key) {
-            Some(layout) => Some(layout.clone()),
+            Some(layout) => Some(layout),
             None => None,
         }
     }

@@ -2,7 +2,7 @@ use pi_ecs::prelude::{Query, Res, ResMut};
 use pi_ecs_macros::setup;
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use pi_scene_math::Vector3;
-use render_geometry::geometry::VertexAttributeMeta;
+use render_geometry::geometry::VertexBufferMeta;
 
 use pi_scene_context::{
     cameras::camera::{CameraRenderData, CameraGlobalPosition},
@@ -16,9 +16,9 @@ use pi_scene_context::{
     resources::{RenderDynUniformBuffer, SingleRenderObjectPipelinePool},
     transforms::transform_node::GlobalTransform,
     vertex_data::{
-        indices::{AttributeIndices, IDAttributeIndices},
-        normal::{IDAttributeNormal, AttributeNormal},
-        position::{AttributePosition, IDAttributePosition},
+        indices::{Indices, IDAttributeIndices},
+        normal::{IDBufferNormal, BufferNormal},
+        position::{BufferPosition, IDBufferPosition},
     },
 };
 
@@ -71,17 +71,17 @@ impl PerlinNoiseMaterialFilter {
                 &PrimitiveState,
                 &RenderDepthAndStencil,
                 &GlobalTransform,
-                &IDAttributePosition,
-                &IDAttributeNormal,
+                &IDBufferPosition,
+                &IDBufferNormal,
                 &IDAttributeIndices,
                 &BuildinModelBind,
             ),
         >,
         materials: Query<GameObject, &PerlinNoiseMaterialPropertype>,
         bind_groups: Res<RenderBindGroupPool>,
-        positions: Query<GameObject, &AttributePosition>,
-        normals: Query<GameObject, &AttributeNormal>,
-        indices: Query<GameObject, &AttributeIndices>,
+        positions: Query<GameObject, &BufferPosition>,
+        normals: Query<GameObject, &BufferNormal>,
+        indices: Query<GameObject, &Indices>,
         device: Res<RenderDevice>,
         shader: Res<PerlinNoiseShader>,
         id_bind_group_default: Res<IDPerlinNoiseMaterialBindGroup>,
@@ -135,11 +135,11 @@ fn collect_opaque_normal_depth(
     sceneid: ObjectID,
     layermask: &LayerMask,
     materials: &Query<GameObject, &PerlinNoiseMaterialPropertype>,
-    query: &Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil, &GlobalTransform, &IDAttributePosition, &IDAttributeNormal, &IDAttributeIndices, &BuildinModelBind)>,
+    query: &Query<GameObject, (&MaterialID, &SceneID, &LayerMask, &RenderSortParam, &RenderBlend, &PrimitiveState, &RenderDepthAndStencil, &GlobalTransform, &IDBufferPosition, &IDBufferNormal, &IDAttributeIndices, &BuildinModelBind)>,
     camerapos: &Vector3,
-    positions: &Query<GameObject, &AttributePosition>,
-    normals: &Query<GameObject, &AttributeNormal>,
-    indices: &Query<GameObject, &AttributeIndices>,
+    positions: &Query<GameObject, &BufferPosition>,
+    normals: &Query<GameObject, &BufferNormal>,
+    indices: &Query<GameObject, &Indices>,
     pipelines: &mut PerlinNoiseMaterialPipeline,
     device: & RenderDevice,
     shader: & PerlinNoiseShader,
@@ -181,7 +181,7 @@ fn collect_opaque_normal_depth(
                             });
 
                             let positions = RenderObjectVertice {
-                                slot: AttributePosition::SLOT,
+                                slot: BufferPosition::SLOT,
                                 gbid: position.meta.buffer_id,
                                 start: position.meta.start,
                                 end: position.meta.end,
@@ -189,7 +189,7 @@ fn collect_opaque_normal_depth(
                             };
                             let indices = Some(
                                 RenderObjectIndices {
-                                    slot: AttributePosition::SLOT,
+                                    slot: BufferPosition::SLOT,
                                     gbid: indices.meta.buffer_id,
                                     start: indices.meta.start,
                                     end: indices.meta.end,
@@ -199,7 +199,7 @@ fn collect_opaque_normal_depth(
                             );
                             let mut vertices = vec![];
                             let normal = RenderObjectVertice {
-                                slot: AttributeNormal::SLOT,
+                                slot: BufferNormal::SLOT,
                                 gbid: normal.meta.buffer_id,
                                 start: normal.meta.start,
                                 end: normal.meta.end,

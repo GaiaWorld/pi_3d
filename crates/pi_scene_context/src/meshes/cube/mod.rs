@@ -1,42 +1,40 @@
 
-use pi_engine_shell::object::InterfaceObject;
-use pi_render::rhi::{device::RenderDevice, RenderQueue};
-use render_data_container::{GeometryBuffer, EVertexDataFormat, GeometryBufferPool};
-use render_geometry::geometry::VertexAttributeBufferMeta;
 
-use crate::{resources::{SingleGeometryBufferPool}, plugin::{Plugin, ErrorPlugin}, object::{ObjectID}, engine::Engine, vertex_data::{position::{IDAttributePosition, AttributePosition, SingleAttributePositionCommandList, AttributePositionCommand, SingleIDAttributePositionCommandList, IDAttributePositionCommand}, normal::{IDAttributeNormal, AttributeNormal, SingleAttributeNormalCommandList, AttributeNormalCommand, IDAttributeNormalCommand, SingleIDAttributeNormalCommandList}, indices::{IDAttributeIndices, AttributeIndices, SingleAttributeIndicesCommandList, AttributeIndicesCommand, SingleIDAttributeIndicesCommandList, IDAttributeIndicesCommand}, uv::{SingleAttributeUVCommandList, IDAttributeUVCommand, IDAttributeUV, AttributeUV, AttributeUVCommand, SingleIDAttributeUVCommandList}}, scene::{ interface::InterfaceScene}, transforms::interface::InterfaceTransformNode};
+use pi_assets::mgr::AssetMgr;
+use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAssetSyncCreate, AssetSyncWait}};
+use pi_render::rhi::{device::RenderDevice, RenderQueue};
+use pi_share::Share;
+use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
+use render_geometry::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
+
+use crate::{
+    plugin::{Plugin, ErrorPlugin},
+    object::{ObjectID},
+    engine::Engine, 
+    vertex_data::{
+        position::{AssetKeyBufferPosition, AssetResBufferPosition, InterfaceBufferPosition},
+        normal::{AssetKeyBufferNormal, AssetResBufferNormal, InterfaceBufferNormal},
+        indices::{InterfaceBufferIndices},
+        uv::{AssetResBufferUV, AssetKeyBufferUV, InterfaceBufferUV},
+    },
+    scene::{ interface::InterfaceScene},
+    transforms::interface::InterfaceTransformNode, geometry::TInterfaceGeomtery
+};
 
 use super::interface::InterfaceMesh;
 
-pub struct SingleBaseCube {
-    position: IDAttributePosition,
-    normal: IDAttributeNormal,
-    indices: IDAttributeIndices,
-    uvs: IDAttributeUV,
-}
-impl SingleBaseCube {
-    pub fn position(&self) -> IDAttributePosition {
-        self.position
-    }
-    pub fn normal(&self) -> IDAttributeNormal {
-        self.normal
-    }
-    pub fn indices(&self) -> IDAttributeIndices {
-        self.indices
-    }
-    pub fn uvs(&self) -> IDAttributeUV {
-        self.uvs
-    }
-}
-
 pub struct CubeBuilder;
 impl CubeBuilder {
+    const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";
+    const KEY_BUFFER_POSITION:  &'static str = "CubePosition";
+    const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
+    const KEY_BUFFER_UV:        &'static str = "CubeUV";
+    const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
     pub fn position(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
-    ) -> AttributePosition {
-        let mut position = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
+    ) -> VertexBuffer {
+        let mut position = VertexBuffer::new(true, EVertexDataFormat::F32, false);
         let mut data = [
             1., -1., 1., -1., -1., 1., -1., 1., 1., 1., 1., 1., 
             1., 1., -1., -1., 1., -1., -1., -1., -1.,  1., -1., -1., 
@@ -48,23 +46,12 @@ impl CubeBuilder {
 
         position.update_f32(&data, 0);
         position.update_buffer(device, queue);
-        let id_position = gbp.insert(position);
-
-        AttributePosition {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_position,
-                start: 0,
-                end: 72 * 4,
-                data_bytes_size: 3 * 4,
-                data_count: 24,
-            },
-        }
+        position
     }
     pub fn normal(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
-    ) -> AttributeNormal {
+    ) -> VertexBuffer {
 
         let data = [
             0., 0., 1., 0., 0., 1., 0., 0., 1., 0., 0., 1., 
@@ -74,26 +61,15 @@ impl CubeBuilder {
             0., 1., 0., 0., 1., 0., 0., 1., 0., 0., 1., 0., 
             0., -1., 0., 0., -1., 0., 0., -1., 0., 0., -1., 0.
         ];
-        let mut normals = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut normals = VertexBuffer::new(true, EVertexDataFormat::F32, false);
         normals.update_f32(&data, 0);
         normals.update_buffer(device, queue);
-        let id_normal = gbp.insert(normals);
-
-        AttributeNormal {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_normal,
-                start: 0,
-                end: 72 * 4,
-                data_bytes_size: 3 * 4,
-                data_count: 24,
-            },
-        }
+        normals
     }
     pub fn indices(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
-    ) -> AttributeIndices {
+    ) -> VertexBuffer {
         let data = [
             0, 1, 2, 0, 2, 3,
             4, 5, 6, 4, 6, 7,
@@ -102,27 +78,15 @@ impl CubeBuilder {
             16, 17, 18, 16, 18, 19,
             20, 21, 22, 20, 22, 23
         ];
-        let mut indices = GeometryBuffer::new(true, EVertexDataFormat::U16, true);
+        let mut indices = VertexBuffer::new(true, EVertexDataFormat::U16, true);
         indices.update_u16(&data, 0);
         indices.update_buffer(device, queue);
-        let id_indices = gbp.insert(indices);
-
-        AttributeIndices {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_indices,
-                start: 0,
-                end: 36 * 2,
-                data_bytes_size: 1 * 2,
-                data_count: 36,
-            },
-            format: wgpu::IndexFormat::Uint16,
-        }
+        indices
     }
     pub fn uvs(
         device: &RenderDevice,
         queue: &RenderQueue,
-        gbp: &mut SingleGeometryBufferPool,
-    ) -> AttributeUV {
+    ) -> VertexBuffer {
         let data = [
             1., 0.,     0., 0.,     0., 1.,     1., 1., 
             1., 1.,     0., 1.,     0., 0.,     1., 0., 
@@ -131,30 +95,13 @@ impl CubeBuilder {
             0., 1.,     0., 0.,     1., 0.,     1., 1., 
             1., 1.,     1., 0.,     0., 0.,     0., 1.
         ];
-        let mut indices = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut indices = VertexBuffer::new(true, EVertexDataFormat::F32, false);
         indices.update_f32(&data, 0);
         indices.update_buffer(device, queue);
-        let id_indices = gbp.insert(indices);
-
-        AttributeUV {
-            meta: VertexAttributeBufferMeta {
-                buffer_id: id_indices,
-                start: 0,
-                end: 48 * 4,
-                data_bytes_size: 2 * 4,
-                data_count: 24,
-            }
-        }
+        indices
     }
 }
 
-pub enum CubeBuilderCommand {
-    Base(ObjectID, IDAttributePosition, IDAttributeNormal, IDAttributeIndices)
-}
-
-pub struct SingleCubeBuilderCommandList {
-    pub list: Vec<CubeBuilderCommand>,
-}
 pub trait InterfaceCube {
     fn new_cube(
         & self,
@@ -174,16 +121,32 @@ impl InterfaceCube for Engine {
                                     .transform_parent(entity, scene)
                                     .as_mesh(entity)
                                     .world();
+
+        let device = world.get_resource::<RenderDevice>().unwrap();
+        let queue = world.get_resource::<RenderQueue>().unwrap();
+        let assert_mgr = world.get_resource::<Share<AssetMgr<VertexBuffer>>>().unwrap();
+
+        let keypos = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_POSITION);
+        self.create_vertex_buffer(keypos.clone(), CubeBuilder::position(device, queue));
+
+        let keynormal = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_NORMAL);
+        self.create_vertex_buffer(keynormal.clone(), CubeBuilder::normal(device, queue));
         
-        let base_cube = world.get_resource_mut::<SingleBaseCube>().unwrap();
-        let commands = world.get_resource_mut::<SingleIDAttributePositionCommandList>().unwrap();
-        commands.list.push(IDAttributePositionCommand::Create(entity, base_cube.position()));
-        let commands = world.get_resource_mut::<SingleIDAttributeNormalCommandList>().unwrap();
-        commands.list.push(IDAttributeNormalCommand::Create(entity, base_cube.normal()));
-        let commands = world.get_resource_mut::<SingleIDAttributeIndicesCommandList>().unwrap();
-        commands.list.push(IDAttributeIndicesCommand::Create(entity, base_cube.indices()));
-        let commands = world.get_resource_mut::<SingleIDAttributeUVCommandList>().unwrap();
-        commands.list.push(IDAttributeUVCommand::Create(entity, base_cube.uvs()));
+        let keyuv = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_UV);
+        self.create_vertex_buffer(keyuv.clone(), CubeBuilder::uvs(device, queue));
+
+        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
+        self.create_vertex_buffer(key.clone(), CubeBuilder::indices(device, queue));
+        
+        self.use_geometry(
+            entity,
+            vec![
+                VertexBufferDesc { bufferkey: keypos, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }], step_mode: wgpu::VertexStepMode::Vertex },
+                VertexBufferDesc { bufferkey: keynormal, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }], step_mode: wgpu::VertexStepMode::Vertex },
+                VertexBufferDesc { bufferkey: keyuv, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }], step_mode: wgpu::VertexStepMode::Vertex },
+            ]
+        );
+        self.use_indices(entity, IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key });
 
         entity
     }
@@ -196,37 +159,6 @@ impl Plugin for PluginCubeBuilder {
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
-
-        let position_id = engine.new_object();
-        let normal_id = engine.new_object();
-        let indices_id = engine.new_object();
-        let uvs_id = engine.new_object();
-
-        let world = engine.world_mut();
-
-        let device = world.get_resource::<RenderDevice>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-        let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();
-    
-
-        let position = CubeBuilder::position(device, queue, gbp);
-        let normal = CubeBuilder::normal(device, queue, gbp);
-        let indices = CubeBuilder::indices(device, queue, gbp);
-        let uvs = CubeBuilder::uvs(device, queue, gbp);
-
-        let commands = world.get_resource_mut::<SingleAttributePositionCommandList>().unwrap();
-        commands.list.push(AttributePositionCommand::Create(position_id, position));
-        let commands = world.get_resource_mut::<SingleAttributeNormalCommandList>().unwrap();
-        commands.list.push(AttributeNormalCommand::Create(normal_id, normal));
-        let commands = world.get_resource_mut::<SingleAttributeIndicesCommandList>().unwrap();
-        commands.list.push(AttributeIndicesCommand::Create(indices_id, indices));
-        let commands = world.get_resource_mut::<SingleAttributeUVCommandList>().unwrap();
-        commands.list.push(AttributeUVCommand::Create(uvs_id, uvs));
-
-        world.insert_resource::<SingleBaseCube>(
-            SingleBaseCube { position: IDAttributePosition(position_id), normal: IDAttributeNormal(normal_id), indices: IDAttributeIndices(indices_id), uvs: IDAttributeUV(uvs_id) }
-        );
-
         Ok(())
     }
 }

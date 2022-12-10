@@ -1,6 +1,8 @@
 
+use derive_deref::{Deref, DerefMut};
 use pi_ecs::{prelude::{Id, ResMut, Query}, query::Write};
 use pi_ecs_macros::setup;
+use render_shader::shader::{KeyPreShader, ResPreShaderMeta, ResShader, KeyShader};
 
 use crate::{object::{ObjectID, GameObject}, renderers::render_mode::ERenderMode};
 
