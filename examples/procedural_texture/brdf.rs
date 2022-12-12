@@ -13,13 +13,12 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     cameras::interface::InterfaceCamera,
     meshes::quad::{InterfaceQuad, PluginQuadBuilder},
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::material::{InterfaceMaterial, MaterialID}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use render_resource::sampler::SamplerDesc;
-use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
+use procedural_texture::brdf::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 
 
 #[derive(Debug)]
@@ -59,8 +58,7 @@ impl PluginTest {
         engine.free_camera_orth_size(camera01, 1 as f32);
 
         let unlitmaterial = engine.create_unlit_material();
-		engine.set_texture_sampler(unlitmaterial, "_MainTex", SamplerDesc::default());
-        engine.emissive_texture(unlitmaterial, render_resource::ImageAssetKey::from("I:/Rust/PI/pi_3d/assets/images/top.jpg"));
+        engine.set_main_texture(unlitmaterial, Some(render_resource::ImageAssetKey::from("E:/rust_render/pi_3d/assets/images/fractal.png")));
 
         
         let quad = engine.new_quad(scene01);

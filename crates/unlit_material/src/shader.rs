@@ -10,7 +10,7 @@ pub struct UnlitShader {
 }
 
 impl UnlitShader {
-    pub const KEY: &str     = "UnlitShader";
+pub const KEY: &str     = "UnlitShader";
 
     pub fn meta() -> ShaderEffectMeta {
         ShaderEffectMeta::new(
@@ -27,8 +27,7 @@ impl UnlitShader {
                 vec2_list: vec![],
                 float_list: vec![],
                 int_list: vec![],
-                uint_list: vec![],
-            },
+                uint_list: vec![],            },
             Some(MaterialTextureBindDesc {
                 set: 2,
                 list: vec![

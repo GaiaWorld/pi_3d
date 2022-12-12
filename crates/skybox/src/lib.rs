@@ -29,17 +29,7 @@ impl InterfaceSkybox for EnginShell {
 
 pub struct PluginSkybox;
 impl Plugin for PluginSkybox {
-    fn init(
-        &mut self,
-        engine: &mut EnginShell,
-        _: &mut RunStage,
-    ) -> Result<(), ErrorPlugin> {
-        engine.regist_material_meta(KeyShaderEffect(Atom::from(SkyboxShader::KEY)), SkyboxShader::meta());
-        
-        let material = engine.new_object();
-        engine.as_material(material, KeyShaderEffect(Atom::from(SkyboxShader::KEY)));
-        engine.world_mut().insert_resource(SingleSkyboxMaterial(MaterialID(material)));
-
+        let position_id = engine.new_object();
         Ok(())
     }
 }

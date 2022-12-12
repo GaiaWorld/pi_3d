@@ -18,6 +18,7 @@ default_render = { path = "crates/default_render" }
 material_textures = { path = "crates/material_textures" }
 skybox = { path = "crates/skybox" }
 procedural_texture = { path = "crates/procedural_texture" }
+skeletons = { path = "crates/skeletons" }
 
 unlit_material = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }
@@ -71,5 +72,17 @@ name = "noise"
 path = "examples/ball/ball.rs"
 
 [[example]]
-name = "procedural_texture"
-path = "examples/procedural_texture/procedural_texture.rs"
+name = "cloud"
+path = "examples/procedural_texture/cloud.rs"
+
+[[example]]
+name = "water"
+path = "examples/procedural_texture/water.rs"
+
+[[example]]
+name = "brdf"
+path = "examples/procedural_texture/brdf.rs"
+
+[[example]]
+name = "skeletons"
+path = "examples/skeletons/skeletons.rs"
