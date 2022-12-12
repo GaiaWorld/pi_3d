@@ -3,11 +3,10 @@ use pi_scene_context::{
     renderers::PluginRenderer,
     meshes::{cube::PluginCubeBuilder, PluginMesh, ball::PluginBallBuilder},
     main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterial,
-    vertex_data::{normal::PluginBufferNormal, color4::PluginBufferColor4, indices::PluginBufferIndices},
     cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
     cameras::PluginCamera,
     transforms::PluginTransformNode,
-    scene::PluginScene, resources::PluginResource, geometry::PluginBuildinGeometry
+    scene::PluginScene, resources::PluginResource, geometry::{PluginBuildinGeometry, indices::PluginBufferIndices}
 };
 
 pub struct PluginBundleDefault;
@@ -27,11 +26,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
 
         PluginBufferIndices.init(engine, stages);
         PluginBuildinGeometry.init(engine, stages);
-        PluginBufferColor4.init(engine, stages);
-        PluginBufferNormal.init(engine, stages);
-        // PluginBufferPosition.init(engine, stages);
-        // PluginAttributeIndices.init(engine, stages);
-        // PluginBufferUV.init(engine, stages);
 
         PluginMesh.init(engine, stages);
         PluginMaterial.init(engine, stages);
