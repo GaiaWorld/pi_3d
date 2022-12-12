@@ -4,7 +4,7 @@ use render_material::{binding::BindingDesc, material::{UniformDesc, EUniformData
 
 use pi_scene_context::{materials::MBKK, shaders::BuildinShaderDefined};
 
-use crate::define::{UnlitMaterialMode, UnlitMaterialDefines};
+use super::define::{UnlitMaterialMode, UnlitMaterialDefines};
 
 #[derive(Debug, Default)]
 pub struct UnlitShaderPool {

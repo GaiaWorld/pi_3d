@@ -18,7 +18,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
+use procedural_texture::brdf::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 
 
 #[derive(Debug)]
@@ -58,7 +58,7 @@ impl PluginTest {
         engine.free_camera_orth_size(camera01, 1 as f32);
 
         let unlitmaterial = engine.create_unlit_material();
-        engine.set_main_texture(unlitmaterial, Some(render_resource::ImageAssetKey::from("./assets/images/top.jpg")));
+        engine.set_main_texture(unlitmaterial, Some(render_resource::ImageAssetKey::from("E:/rust_render/pi_3d/assets/images/fractal.png")));
 
         
         let quad = engine.new_quad(scene01);

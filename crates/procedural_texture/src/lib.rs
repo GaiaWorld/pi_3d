@@ -1,5 +1,7 @@
 pub mod cloud;
 pub mod perlin_noise;
+pub mod water;
+pub mod brdf;
 
 use cloud::interface::InterfaceCloudMaterial;
 use perlin_noise::interface::InterfacePerlinNoiseMaterial;

@@ -5,7 +5,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID, transforms::{command::{
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use procedural_texture::{InterfaceTestPerlinNoise, cloud::interface::InterfaceCloudMaterial};
+use procedural_texture::{InterfaceTestPerlinNoise, cloud::interface::{InterfaceCloudMaterial, PluginCloudMaterial}, PluginTestPerlinNoise};
 
 
 pub struct PluginTest;
@@ -15,6 +15,9 @@ impl Plugin for PluginTest {
         engine: &mut pi_scene_context::engine::Engine,
         stages: &mut pi_scene_context::run_stage::RunStage,
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
+        PluginTestPerlinNoise.init(engine, stages);
+        PluginCloudMaterial.init(engine, stages);
+        
         PluginQuadBuilder.init(engine, stages);
 
 

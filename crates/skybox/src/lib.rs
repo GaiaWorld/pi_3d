@@ -14,13 +14,13 @@ use render_geometry::geometry::VertexAttributeBufferMeta;
 
 use pi_scene_context::{
     engine::Engine,
-    meshes::{interface::InterfaceMesh},
+    meshes::interface::InterfaceMesh,
     object::ObjectID,
     plugin::{ErrorPlugin, Plugin},
     resources::SingleGeometryBufferPool,
     run_stage::RunStage,
-    scene::{interface::InterfaceScene},
-    transforms::{interface::InterfaceTransformNode},
+    scene::interface::InterfaceScene,
+    transforms::interface::InterfaceTransformNode,
     vertex_data::{
         indices::{
             AttributeIndices, AttributeIndicesCommand, IDAttributeIndices,
@@ -66,80 +66,11 @@ impl SkyboxBuilder {
         gbp: &mut SingleGeometryBufferPool,
     ) -> AttributePosition {
         let mut position = GeometryBuffer::new(true, EVertexDataFormat::F32, false);
-        let delta_z = 0.0;
         let data = [
-            1.,
-            -1.,
-            1. + delta_z,
-            -1.,
-            -1.,
-            1. + delta_z,
-            -1.,
-            1.,
-            1. + delta_z,
-            1.,
-            1.,
-            1. + delta_z,
-            1.,
-            1.,
-            -1. + delta_z,
-            -1.,
-            1.,
-            -1. + delta_z,
-            -1.,
-            -1.,
-            -1. + delta_z,
-            1.,
-            -1.,
-            -1. + delta_z,
-            1.,
-            1.,
-            -1. + delta_z,
-            1.,
-            -1.,
-            -1. + delta_z,
-            1.,
-            -1.,
-            1. + delta_z,
-            1.,
-            1.,
-            1. + delta_z,
-            -1.,
-            1.,
-            1. + delta_z,
-            -1.,
-            -1.,
-            1. + delta_z,
-            -1.,
-            -1.,
-            -1. + delta_z,
-            -1.,
-            1.,
-            -1. + delta_z,
-            -1.,
-            1.,
-            1. + delta_z,
-            -1.,
-            1.,
-            -1. + delta_z,
-            1.,
-            1.,
-            -1. + delta_z,
-            1.,
-            1.,
-            1. + delta_z,
-            1.,
-            -1.,
-            1. + delta_z,
-            1.,
-            -1.,
-            -1. + delta_z,
-            -1.,
-            -1.,
-            -1. + delta_z,
-            -1.,
-            -1.,
-            1. + delta_z,
+            1., -1., 1., -1., -1., 1., -1., 1., 1., 1., 1., 1., 1., 1., -1., -1., 1., -1., -1.,
+            -1., -1., 1., -1., -1., 1., 1., -1., 1., -1., -1., 1., -1., 1., 1., 1., 1., -1., 1.,
+            1., -1., -1., 1., -1., -1., -1., -1., 1., -1., -1., 1., 1., -1., 1., -1., 1., 1., -1.,
+            1., 1., 1., 1., -1., 1., 1., -1., -1., -1., -1., -1., -1., -1., 1.,
         ];
         position.update_f32(&data, 0);
         position.update_buffer(device, queue);
@@ -254,12 +185,7 @@ impl InterfaceSkybox for Engine {
 
 pub struct PluginSkybox;
 impl Plugin for PluginSkybox {
-    fn init(
-        &mut self,
-        engine: &mut Engine,
-        _: &mut RunStage,
-    ) -> Result<(), ErrorPlugin> {
-
+    fn init(&mut self, engine: &mut Engine, _: &mut RunStage) -> Result<(), ErrorPlugin> {
         let position_id = engine.new_object();
         let normal_id = engine.new_object();
         let indices_id = engine.new_object();

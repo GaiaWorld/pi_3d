@@ -10,7 +10,6 @@ layout(location = 0) out vec4 gl_FragColor;
 
 layout(set = 1, binding = 1) uniform MatParam0 {
     vec4 emissive;
-    // sampler2D text_buffer;
 };
 
 float noise( vec2 n )

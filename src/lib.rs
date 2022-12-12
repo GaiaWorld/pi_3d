@@ -1,5 +1,21 @@
 use default_render::PluginDefaultMaterial;
-use pi_scene_context::{renderers::PluginRenderer, meshes::{cube::PluginCubeBuilder, PluginMesh, ball::PluginBallBuilder}, main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterialID, vertex_data::{uv::PluginAttributeUV, indices::PluginAttributeIndices, position::PluginAttributePosition, normal::PluginAttributeNormal, color4::PluginAttributeColor4}, cullings::{PluginCulling, oct_tree::PluginBoundingOctTree}, cameras::PluginCamera, transforms::PluginTransformNode, scene::PluginScene, resources::PluginResource};
+use pi_scene_context::{
+    cameras::PluginCamera,
+    cullings::{oct_tree::PluginBoundingOctTree, PluginCulling},
+    layer_mask::PluginLayerMask,
+    main_camera_render::PluginMainCameraRender,
+    materials::PluginMaterialID,
+    meshes::{ball::PluginBallBuilder, cube::PluginCubeBuilder, PluginMesh},
+    renderers::PluginRenderer,
+    resources::PluginResource,
+    scene::PluginScene,
+    transforms::PluginTransformNode,
+    vertex_data::{
+        color4::PluginAttributeColor4, indices::PluginAttributeIndices,
+        normal::PluginAttributeNormal, position::PluginAttributePosition, uv::PluginAttributeUV,
+    },
+};
+use skeletons::{matrices_indices::PluginAttributeMatricesIndices, matrices_weights::PluginAttributeMatricesWeights};
 
 pub struct PluginBundleDefault;
 impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
@@ -21,6 +37,8 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginAttributePosition.init(engine, stages);
         PluginAttributeIndices.init(engine, stages);
         PluginAttributeUV.init(engine, stages);
+        PluginAttributeMatricesIndices.init(engine, stages);
+        PluginAttributeMatricesWeights.init(engine, stages);
 
         PluginMesh.init(engine, stages);
         PluginMaterialID.init(engine, stages);
@@ -32,15 +50,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCubeBuilder.init(engine, stages);
 
         PluginRenderer.init(engine, stages);
-
-        skybox::interface::PluginSkyboxMaterial.init(engine, stages);
-        skybox::PluginSkybox.init(engine, stages);
-
-        procedural_texture::perlin_noise::interface::PluginPerlinNoiseMaterial.init(engine, stages);
-        procedural_texture::PluginTestPerlinNoise.init(engine, stages);
-
-        procedural_texture::cloud::interface::PluginCloudMaterial.init(engine, stages);
-        // procedural_texture::PluginTestPerlinNoise.init(engine, stages);
 
         PluginBoundingOctTree.init(engine, stages);
         PluginBallBuilder.init(engine, stages);

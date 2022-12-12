@@ -5,8 +5,8 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID, transforms::{command::{
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use skybox::{InterfaceSkybox, PluginSkybox, interface::PluginSkyboxMaterial};
-
+use skeletons::{PluginSkeletons, interface::PluginSkeletonsPropertype};
+use skeletons::InterfaceSkeletons;
 #[derive(Debug, Default)]
 pub struct SingleTestData {
     pub transforms: Vec<(ObjectID, f32, f32, f32)>,
@@ -43,8 +43,8 @@ impl Plugin for PluginTest {
         stages: &mut pi_scene_context::run_stage::RunStage,
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
 
-        PluginSkyboxMaterial.init(engine, stages);
-        PluginSkybox.init(engine, stages);
+        PluginSkeletonsPropertype.init(engine, stages);
+        PluginSkeletons.init(engine, stages);
 
         let mut world = engine.world_mut().clone();
 
@@ -69,7 +69,7 @@ impl PluginTest {
         engine.active_camera(camera01, true);
         engine.transform_position(camera01, Vector3::new(0., 0., -5.));
 
-        let sky_box = engine.new_skybox(scene01);
+        let sky_box = engine.new_skeletons(scene01);
         engine.transform_position(sky_box, Vector3::new(0., 0., 0.));
 
         engine.layer_mask(camera01, LayerMask::default());
