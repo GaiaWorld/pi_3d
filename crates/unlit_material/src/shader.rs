@@ -1,6 +1,8 @@
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use render_shader::{shader::{KeyPreShader, ResPreShaderMeta, PreShaderMeta}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::{MaterialValueBindDesc, MaterialTextureBindDesc, UniformTextureDesc, UniformPropertyName}};
+use pi_scene_context::materials::material_meta::{ShaderEffectMeta, UniformPropertyVec4};
+use pi_scene_math::Vector4;
+use render_shader::{block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::{MaterialValueBindDesc, MaterialTextureBindDesc, UniformTextureDesc, UniformPropertyName}};
 
 pub struct UnlitShader {
     pub vs_module: wgpu::ShaderModule,
@@ -10,15 +12,18 @@ pub struct UnlitShader {
 impl UnlitShader {
     pub const KEY: &str     = "UnlitShader";
 
-    pub fn res() -> PreShaderMeta {
-        PreShaderMeta::new(
+    pub fn meta() -> ShaderEffectMeta {
+        ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 set: 1,
                 bind: 1,
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
                 mat4_list: vec![],
                 mat2_list: vec![],
-                vec4_list: vec![Atom::from("emissive"), Atom::from("emissive_scaleoffset")],
+                vec4_list: vec![
+                    UniformPropertyVec4(Atom::from("emissive"), Vector4::new(1., 1., 1., 1.)),
+                    UniformPropertyVec4(Atom::from("emissive_scaleoffset"), Vector4::new(1., 1., 0., 0.)),
+                ],
                 vec2_list: vec![],
                 float_list: vec![],
                 int_list: vec![],

@@ -78,7 +78,7 @@ impl PluginTest {
         let tes_size = 2;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
-        engine.frame_time(2000);
+        engine.frame_time(2);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -101,7 +101,7 @@ impl PluginTest {
                     // engine.use_material(cube, MaterialID(matid));
                     engine.use_default_material(cube);
                     engine.transform_position(cube, Vector3::new(i as f32 * 1. - (tes_size) as f32 * 0.5, j as f32 * 1. - (tes_size) as f32 * 0.5, k as f32 * 1. - (tes_size) as f32 * 0.5));
-                    engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 0.2, j as f32 * 0.2, k as f32 * 0.2));
+                    engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 1., j as f32 * 1., k as f32 * 1.));
                     engine.layer_mask(cube, LayerMask::default());
                     testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
                 }

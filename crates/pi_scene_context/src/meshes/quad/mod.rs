@@ -85,6 +85,9 @@ impl QuadBuilder {
 }
 
 pub trait InterfaceQuad {
+    fn regist_quad(
+        &self
+    ) -> &Self;
     fn new_quad(
         & self,
         scene: ObjectID,
@@ -92,25 +95,12 @@ pub trait InterfaceQuad {
 }
 
 impl InterfaceQuad for Engine {
-    fn new_quad(
-        & self,
-        scene: ObjectID,
-    ) -> ObjectID {
-
-        let entity = self.new_object();
-        let world = self.add_to_scene(entity, scene)
-                                    .as_transform_node(entity)
-                                    .transform_parent(entity, scene)
-                                    .as_mesh(entity)
-                                    .world();
-
+    fn regist_quad(
+        &self
+    ) -> &Self {
+        let world = self.world();
         let device = world.get_resource::<RenderDevice>().unwrap();
         let queue = world.get_resource::<RenderQueue>().unwrap();
-        let assert_mgr = world.get_resource::<Share<AssetMgr<VertexBuffer>>>().unwrap();
-
-        let device = world.get_resource::<RenderDevice>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-        let assert_mgr = world.get_resource::<Share<AssetMgr<VertexBuffer>>>().unwrap();
 
         let keypos = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_POSITION);
         self.create_vertex_buffer(keypos.clone(), QuadBuilder::position(device, queue));
@@ -123,6 +113,27 @@ impl InterfaceQuad for Engine {
 
         let key = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES);
         self.create_vertex_buffer(key.clone(), QuadBuilder::indices(device, queue));
+
+        self
+    }
+    fn new_quad(
+        & self,
+        scene: ObjectID,
+    ) -> ObjectID {
+
+        let entity = self.new_object();
+        self.add_to_scene(entity, scene)
+                                    .as_transform_node(entity)
+                                    .transform_parent(entity, scene)
+                                    .as_mesh(entity);
+
+        let keypos = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_POSITION);
+
+        let keynormal = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_NORMAL);
+        
+        let keyuv = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_UV);
+
+        let key = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES);
         
         self.use_geometry(
             entity,
@@ -145,6 +156,8 @@ impl Plugin for PluginQuadBuilder {
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
+        engine.regist_quad();
+
         Ok(())
     }
 }

@@ -60,11 +60,11 @@ impl BallBuilder {
     pub fn indices(
         device: &RenderDevice,
         queue: &RenderQueue,
-        data: &[u32],
+        data: &[u16],
     ) -> VertexBuffer {
         let len = data.len();
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::U32, true);
-        indices.update_u32(&data, 0);
+        let mut indices = VertexBuffer::new(true, EVertexDataFormat::U16, true);
+        indices.update_u16(&data, 0);
         indices.update_buffer(device, queue);
         indices
     }
@@ -75,7 +75,7 @@ impl BallBuilder {
         data: &[f32],
     ) -> VertexBuffer {
         let len = data.len();
-        let mut uvs = VertexBuffer::new(true, EVertexDataFormat::F32, true);
+        let mut uvs = VertexBuffer::new(true, EVertexDataFormat::F32, false);
         uvs.update_f32(&data, 0);
         uvs.update_buffer(device, queue);
         uvs
@@ -83,11 +83,11 @@ impl BallBuilder {
 }
 
 pub trait InterfaceBall {
-    fn new_ball(&self, scene: ObjectID) -> ObjectID;
+    fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID;
 }
 
 impl InterfaceBall for Engine {
-    fn new_ball(&self, scene: ObjectID) -> ObjectID {
+    fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID {
         let entity = self.new_object();
         let world = self
             .add_to_scene(entity, scene)
@@ -99,18 +99,19 @@ impl InterfaceBall for Engine {
         let device = world.get_resource::<RenderDevice>().unwrap();
         let queue = world.get_resource::<RenderQueue>().unwrap();
 
-        let (positions, normals, indices, uvs) = generate_sphere(36, 18);
+        let (positions, normals, indices, uvs) = generate_sphere(sectors, stacks);
 
-        let keypos = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_POSITION);
+        let flag = String::from("#") + sectors.to_string().as_str() + "#" + stacks.to_string().as_str();
+        let keypos = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_POSITION) + flag.as_str());
         self.create_vertex_buffer(keypos.clone(), BallBuilder::position(device, queue, positions.as_slice()));
 
-        let keynormal = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_NORMAL);
+        let keynormal = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_NORMAL) + flag.as_str());
         self.create_vertex_buffer(keynormal.clone(), BallBuilder::normal(device, queue, normals.as_slice()));
         
-        let keyuv = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_UV);
+        let keyuv = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_UV) + flag.as_str());
         self.create_vertex_buffer(keyuv.clone(), BallBuilder::uv(device, queue, uvs.as_slice()));
 
-        let key = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_INDICES);
+        let key = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_INDICES) + flag.as_str());
         self.create_vertex_buffer(key.clone(), BallBuilder::indices(device, queue, indices.as_slice()));
 
         self.use_geometry(
@@ -134,6 +135,7 @@ impl Plugin for PluginBallBuilder {
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
+
         Ok(())
     }
 }
@@ -346,7 +348,7 @@ fn compute_uv(normalize: &[f32]) -> Vec<f32> {
  * @brief 面细分法 经纬细分
  * @param sectors 分辨率
  */
-fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u32>, Vec<f32>) {
+fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u16>, Vec<f32>) {
     // Largely inspired from http://www.songho.ca/opengl/gl_sphere.html
     let radius = 1.0;
 
@@ -359,7 +361,7 @@ fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u3
     let mut vertices: Vec<[f32; 3]> = Vec::with_capacity(stacks * sectors);
     let mut normals: Vec<[f32; 3]> = Vec::with_capacity(stacks * sectors);
     let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(stacks * sectors);
-    let mut indices: Vec<u32> = Vec::with_capacity(stacks * sectors * 2 * 3);
+    let mut indices: Vec<u16> = Vec::with_capacity(stacks * sectors * 2 * 3);
 
     for i in 0..stacks + 1 {
         let stack_angle = PI / 2. - (i as f32) * stack_step;
@@ -387,14 +389,14 @@ fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u3
         let mut k2 = k1 + sectors + 1;
         for _j in 0..sectors {
             if i != 0 {
-                indices.push(k1 as u32);
-                indices.push(k2 as u32);
-                indices.push((k1 + 1) as u32);
+                indices.push(k1 as u16);
+                indices.push(k2 as u16);
+                indices.push((k1 + 1) as u16);
             }
             if i != stacks - 1 {
-                indices.push((k1 + 1) as u32);
-                indices.push(k2 as u32);
-                indices.push((k2 + 1) as u32);
+                indices.push((k1 + 1) as u16);
+                indices.push(k2 as u16);
+                indices.push((k2 + 1) as u16);
             }
             k1 += 1;
             k2 += 1;

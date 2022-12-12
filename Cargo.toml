@@ -46,31 +46,30 @@ path = "examples/cube/cube.rs"
 name = "unlit_cube"
 path = "examples/cube/unlit_cube.rs"
 
-# [[example]]
-# name = "quad"
-# path = "examples/quad/quad.rs"
-# 
-# [[example]]
-# name = "skybox"
-# path = "examples/skybox/skybox.rs"
-# 
-# [[example]]
-# name = "performance_static_render"
-# path = "examples/performance/static_10000.rs"
-# 
-# [[example]]
-# name = "performance_transform_render"
-# path = "examples/performance/transform_10000.rs"
-# 
-# [[example]]
-# name = "oct_tree"
-# path = "examples/oct_tree/oct_tree.rs"
-# 
-# [[example]]
-# name = "noise"
-# path = "examples/ball/ball.rs"
-# 
-# [[example]]
-# name = "procedural_texture"
-# path = "examples/procedural_texture/procedural_texture.rs"
-# 
+[[example]]
+name = "quad"
+path = "examples/quad/quad.rs"
+
+[[example]]
+name = "skybox"
+path = "examples/skybox/skybox.rs"
+
+[[example]]
+name = "performance_static_render"
+path = "examples/performance/static_10000.rs"
+
+[[example]]
+name = "performance_transform_render"
+path = "examples/performance/transform_10000.rs"
+
+[[example]]
+name = "oct_tree"
+path = "examples/oct_tree/oct_tree.rs"
+
+[[example]]
+name = "noise"
+path = "examples/ball/ball.rs"
+
+[[example]]
+name = "procedural_texture"
+path = "examples/procedural_texture/procedural_texture.rs"

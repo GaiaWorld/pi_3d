@@ -75,12 +75,6 @@ impl GlobalTransform {
         }
     }
 }
-impl Uniform for GlobalTransform {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        bytes_write_to_memory(bytemuck::cast_slice(self.matrix.as_slice()), index as usize + BuildinModelBind::OBJECT_TO_WORLD_OFFSIZE, buffer);
-        bytes_write_to_memory(bytemuck::cast_slice(self.matrix_inv.as_slice()), index as usize + BuildinModelBind::WORLD_TO_OBJECT_OFFSIZE, buffer);
-    }
-}
 
 pub fn calc_world_matrix(
     p_m: Option<Matrix>,

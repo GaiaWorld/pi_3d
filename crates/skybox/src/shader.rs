@@ -1,6 +1,8 @@
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use render_shader::{shader::{KeyPreShader, ResPreShaderMeta, PreShaderMeta}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
+use pi_scene_context::materials::material_meta::{ShaderEffectMeta, UniformPropertyVec4};
+use pi_scene_math::Vector4;
+use render_shader::{shader::{}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
 
 pub struct SkyboxShader {
     pub vs_module: wgpu::ShaderModule,
@@ -10,15 +12,17 @@ pub struct SkyboxShader {
 impl SkyboxShader {
     pub const KEY: &str     = "SkyboxShader";
 
-    pub fn res() -> PreShaderMeta {
-        PreShaderMeta::new(
+    pub fn meta() -> ShaderEffectMeta {
+        ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 set: 1,
                 bind: 1,
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
                 mat4_list: vec![],
                 mat2_list: vec![],
-                vec4_list: vec![Atom::from("emissive")],
+                vec4_list: vec![
+                    UniformPropertyVec4(Atom::from("emissive"), Vector4::new(1., 1., 1., 0.5)),
+                ],
                 vec2_list: vec![],
                 float_list: vec![],
                 int_list: vec![],

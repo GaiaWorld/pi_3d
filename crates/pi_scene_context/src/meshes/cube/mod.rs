@@ -103,6 +103,9 @@ impl CubeBuilder {
 }
 
 pub trait InterfaceCube {
+    fn regist_cube(
+        &self
+    ) -> &Self;
     fn new_cube(
         & self,
         scene: ObjectID,
@@ -110,21 +113,12 @@ pub trait InterfaceCube {
 }
 
 impl InterfaceCube for Engine {
-    fn new_cube(
-        & self,
-        scene: ObjectID,
-    ) -> ObjectID {
-
-        let entity = self.new_object();
-        let world = self.add_to_scene(entity, scene)
-                                    .as_transform_node(entity)
-                                    .transform_parent(entity, scene)
-                                    .as_mesh(entity)
-                                    .world();
-
+    fn regist_cube(
+        &self
+    ) -> &Self {
+        let world = self.world();
         let device = world.get_resource::<RenderDevice>().unwrap();
         let queue = world.get_resource::<RenderQueue>().unwrap();
-        let assert_mgr = world.get_resource::<Share<AssetMgr<VertexBuffer>>>().unwrap();
 
         let keypos = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_POSITION);
         self.create_vertex_buffer(keypos.clone(), CubeBuilder::position(device, queue));
@@ -137,6 +131,24 @@ impl InterfaceCube for Engine {
 
         let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
         self.create_vertex_buffer(key.clone(), CubeBuilder::indices(device, queue));
+
+        self
+    }
+    fn new_cube(
+        & self,
+        scene: ObjectID,
+    ) -> ObjectID {
+
+        let entity = self.new_object();
+        self.add_to_scene(entity, scene)
+                                    .as_transform_node(entity)
+                                    .transform_parent(entity, scene)
+                                    .as_mesh(entity);
+
+        let keypos = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_POSITION);
+        let keynormal = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_NORMAL);
+        let keyuv = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_UV);
+        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
         
         self.use_geometry(
             entity,
@@ -159,6 +171,8 @@ impl Plugin for PluginCubeBuilder {
         engine: &mut Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
+        engine.regist_cube();
+
         Ok(())
     }
 }

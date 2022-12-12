@@ -1,6 +1,6 @@
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
 use pi_scene_math::Number;
-use crate::{bytes_write_to_memory, materials::value::{FromValueUniformStatistics}};
+use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, material_meta::UniformPropertyFloat}};
 
 use super::value_uniform::MaterialValueBind;
 
@@ -17,28 +17,28 @@ pub enum FloatUniform {
 }
 impl FromValueUniformStatistics for FloatUniform {
     fn new(value: &MaterialValueBind) -> Self {
-        if value.vec2_count == 1 {
+        if value.float_count == 1 {
             Self::Slot1(value.float_begin, [0.])
         }
-        else if value.vec2_count == 2 {
+        else if value.float_count == 2 {
             Self::Slot2(value.float_begin, [0., 0.])
         }
-        else if value.vec2_count == 3 {
+        else if value.float_count == 3 {
             Self::Slot3(value.float_begin, [0., 0., 0.])
         }
-        else if value.vec2_count == 4 {
+        else if value.float_count == 4 {
             Self::Slot4(value.float_begin, [0., 0., 0., 0.])
         }
-        else if value.vec2_count == 5 {
+        else if value.float_count == 5 {
             Self::Slot5(value.float_begin, [0., 0., 0., 0., 0.])
         }
-        else if value.vec2_count == 6 {
+        else if value.float_count == 6 {
             Self::Slot6(value.float_begin, [0., 0., 0., 0., 0., 0.])
         }
-        else if value.vec2_count == 7 {
+        else if value.float_count == 7 {
             Self::Slot7(value.float_begin, [0., 0., 0., 0., 0., 0., 0.])
         }
-        else if value.vec2_count == 8 {
+        else if value.float_count == 8 {
             Self::Slot8(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0.])
         }
         else {
@@ -47,6 +47,13 @@ impl FromValueUniformStatistics for FloatUniform {
     }
 }
 impl FloatUniform {
+    pub fn init(&mut self, desc: &Vec<UniformPropertyFloat>) {
+        let mut index = 0;
+        desc.iter().for_each(|item| {
+            self.set(index, item.1);
+            index += 1;
+        });
+    }
     pub fn value(&self, slot: usize) -> Number {
         match self {
             Self::Slot0(_) => 0.,

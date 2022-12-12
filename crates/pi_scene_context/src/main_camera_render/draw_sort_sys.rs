@@ -123,7 +123,7 @@ fn collect_opaque_normal_depth(
 
                 },
                 ERenderMode::Opaque => {
-                    println!(">>>>>>>>>>>>>>>>> 1");
+                    // println!(">>>>>>>>>>>>>>>>> 1");
                     let meta = RenderObjectMetaOpaque {
                         bind_groups,
                         pipeline: pipeline.pipeline(),
@@ -137,7 +137,7 @@ fn collect_opaque_normal_depth(
                 },
                 ERenderMode::Skybox => todo!(),
                 ERenderMode::Transparent => {
-                    println!(">>>>>>>>>>>>>>>>> 2");
+                    // println!(">>>>>>>>>>>>>>>>> 2");
                     let meta = RenderObjectMetaTransparent {
                         bind_groups,
                         pipeline: pipeline.pipeline(),

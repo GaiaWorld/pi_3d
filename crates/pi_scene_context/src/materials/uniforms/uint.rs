@@ -1,5 +1,5 @@
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
-use crate::{bytes_write_to_memory, materials::value::{FromValueUniformStatistics}};
+use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, material_meta::UniformPropertyUint}};
 
 use super::value_uniform::MaterialValueBind;
 
@@ -46,6 +46,13 @@ impl FromValueUniformStatistics for UintUniform {
     }
 }
 impl UintUniform {
+    pub fn init(&mut self, desc: &Vec<UniformPropertyUint>) {
+        let mut index = 0;
+        desc.iter().for_each(|item| {
+            self.set(index, item.1);
+            index += 1;
+        });
+    }
     pub fn value(&self, index: usize) -> u32 {
         match self {
             Self::Slot0(_) => 0,

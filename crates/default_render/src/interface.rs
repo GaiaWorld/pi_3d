@@ -3,7 +3,7 @@ use pi_atom::Atom;
 use pi_engine_shell::{object::InterfaceObject};
 
 use pi_scene_context::{object::ObjectID, materials::{material::{InterfaceMaterial}, material_meta::InterfaceMaterialMeta}};
-use render_shader::shader::{KeyPreShader};
+use render_shader::shader::{KeyShaderEffect};
 
 use crate::shader::DefaultShader;
 
@@ -37,9 +37,7 @@ impl InterfaceDefaultMaterial for crate::engine::Engine {
         //  println!("create_default_material");
         let entity = self.new_object();
 
-        self.as_material(entity, KeyPreShader(Atom::from(DefaultShader::KEY)));
-        self.emissive_color(entity, (1., 1., 1.));
-        self.emissive_intensity(entity, 1.);
+        self.as_material(entity, KeyShaderEffect(Atom::from(DefaultShader::KEY)));
 
         entity
     }

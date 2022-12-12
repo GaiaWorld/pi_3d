@@ -5,7 +5,7 @@ use pi_atom::Atom;
 use pi_ecs::{prelude::{Setup}};
 
 use pi_scene_context::{plugin::{ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, material_meta::InterfaceMaterialMeta}};
-use render_shader::shader::KeyPreShader;
+use render_shader::shader::KeyShaderEffect;
 use shader::DefaultShader;
 
 pub mod shader;
@@ -33,7 +33,7 @@ impl pi_engine_shell::plugin::Plugin for PluginDefaultMaterial {
         let world = engine.world_mut();
         world.insert_resource(SingleIDBaseDefaultMaterial(MaterialID(base_default_id)));
 
-        let key = KeyPreShader(Atom::from(DefaultShader::KEY));
+        let key = KeyShaderEffect(Atom::from(DefaultShader::KEY));
         engine.regist_material_meta(key, DefaultShader::res());
 
         Ok(())

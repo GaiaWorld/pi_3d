@@ -30,3 +30,5 @@ float noise (in vec2 st) {
             (c - a)* u.y * (1.0 - u.x) +
             (d - b) * u.x * u.y;
 }
+
+layout(location = 0) out vec4 gl_FragColor;

@@ -9,7 +9,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    meshes::{cube::InterfaceCube, ball::InterfaceBall},
+    meshes::{cube::InterfaceCube, ball::{InterfaceBall, PluginBallBuilder}},
     main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}
 };
@@ -57,6 +57,7 @@ impl Plugin for PluginTest {
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
 
         PluginBundleDefault.init(engine, stages);
+        PluginBallBuilder.init(engine, stages);
 
         let world = engine.world_mut();
 
@@ -91,7 +92,7 @@ impl PluginTest {
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..1 {
-                    let ball = engine.new_ball(scene01);
+                    let ball = engine.new_ball(scene01, 36, 18);
                     engine.use_default_material(ball);
                     engine.transform_position(ball, Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
                     // engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 0.2, j as f32 * 0.2, k as f32 * 0.2));

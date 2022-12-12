@@ -1,6 +1,6 @@
 use pi_ecs::prelude::{Setup};
 
-use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}, bind_group::RenderBindGroupPool, material_meta::{PluginMaterialMeta}, uniforms::PluginMaterialUniforms};
+use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand, SingleValueUniformCommands, SysValueUniformComand}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}, bind_group::RenderBindGroupPool, material_meta::{PluginMaterialMeta}, uniforms::PluginMaterialUniforms};
 
 pub mod material;
 pub mod bind_group;
@@ -25,7 +25,9 @@ impl crate::Plugin for PluginMaterial {
         world.insert_resource(SingleMaterialIDCommandList::default());
         world.insert_resource(SingleDynUnifromBufferReBindFlag::default());
         world.insert_resource(RenderBindGroupPool::default());
+        world.insert_resource(SingleValueUniformCommands::default());
         
+        SysValueUniformComand::setup(world, stages.command_stage());
         SysMaterialIDCommand::setup(world, stages.command_stage());
         SysDynUnifromBufferUpdate::setup(world, stages.between_uniform_update_and_filter_culling());
 

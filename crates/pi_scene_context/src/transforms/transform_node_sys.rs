@@ -7,7 +7,7 @@ use pi_ecs_utils::prelude::EntityTree;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolRotation, TToolMatrix}, Matrix};
 use pi_slotmap_tree::Storage;
 
-use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem, transforms::dirty::DirtyGlobalTransform};
+use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem, transforms::dirty::DirtyGlobalTransform, meshes::model::BuildinModelBind};
 
 use super::{transform_node::{LocalTransform, GlobalTransform}, dirty::DirtyLocalTransform};
 
@@ -59,22 +59,28 @@ impl WorldMatrixCalc {
     #[system]
     pub fn calc(
         query_scenes: Query<GameObject, (ObjectID, &SceneCoordinateSytem)>,
-        mut query_ms: Query<GameObject, (&LocalTransform, &mut GlobalTransform, Write<DirtyGlobalTransform>)>,
+        mut query_ms: Query<GameObject, (&LocalTransform, &mut GlobalTransform, Write<DirtyGlobalTransform>, Write<BuildinModelBind>)>,
         query_local_dirty: Query<GameObject, &DirtyLocalTransform>,
         tree: EntityTree<GameObject>,
     ) {
         let time = Instant::now();
 
-        //  println!("World Matrix Calc:");
+         println!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
             let mut temp_ids: Vec<(ObjectID, bool, Option<Matrix>)> = vec![];
             tree.iter(root).for_each(|entity| {
                 match query_ms.get_mut(entity) {
-                    Some((l_transform, mut g_transform, mut dirty_global)) => {
+                    Some((l_transform, mut g_transform, mut dirty_global, mut model)) => {
                         if query_local_dirty.get(entity).is_some() {
                             g_transform.calc(None, l_transform);
                             temp_ids.push((entity, true, Some(g_transform.matrix.clone())));
                             dirty_global.insert_no_notify(DirtyGlobalTransform);
+
+                            if let Some(mut modelmodify) = model.get_mut() {
+                                modelmodify.matrix.clone_from(&g_transform.matrix);
+                                modelmodify.matrix_inv.clone_from(&g_transform.matrix_inv);
+                                model.notify_modify();
+                            }
                         } else {
                             temp_ids.push((entity, false, Some(g_transform.matrix.clone())));
                         }
@@ -97,13 +103,19 @@ impl WorldMatrixCalc {
                                 let node_children_head = node_children_head.head;
                                 tree.iter(node_children_head).for_each(|entity| {
                                     match query_ms.get_mut(entity) {
-                                        Some((l_transform, mut g_transform, mut dirty_global)) => {
+                                        Some((l_transform, mut g_transform, mut dirty_global, mut model)) => {
                                             let real_dirty = p_dirty || query_local_dirty.get(entity).is_some();
                                             if real_dirty {
                                                 // println!("Transform real_dirty >>>>>>>>>> ");
                                                 g_transform.calc(p_m, l_transform);
                                                 temp.push((entity, true, Some(g_transform.matrix.clone())));
                                                 dirty_global.insert_no_notify(DirtyGlobalTransform);
+                                                
+                                                if let Some(mut modelmodify) = model.get_mut() {
+                                                    modelmodify.matrix.clone_from(&g_transform.matrix);
+                                                    modelmodify.matrix_inv.clone_from(&g_transform.matrix_inv);
+                                                    model.notify_modify();
+                                                }
                                             } else {
                                                 temp.push((entity, false, Some(g_transform.matrix.clone())));
                                             }

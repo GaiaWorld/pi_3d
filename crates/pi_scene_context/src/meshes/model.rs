@@ -1,9 +1,10 @@
-use pi_ecs::{prelude::{ResMut, Query}, query::With};
+use pi_ecs::{prelude::{ResMut, Query}, query::{With, Changed}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::object::GameObject;
-use pi_render::rhi::dyn_uniform_buffer::{BindOffset, Bind};
+use pi_render::rhi::dyn_uniform_buffer::{BindOffset, Bind, Uniform};
+use pi_scene_math::Matrix;
 
-use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer, transforms::{transform_node::GlobalTransform, dirty::DirtyGlobalTransform}};
+use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer, transforms::{transform_node::GlobalTransform, dirty::DirtyGlobalTransform}, bytes_write_to_memory};
 
 // pub struct BuildinTimeBind {
 //     pub bind_offset: BindOffset,
@@ -75,6 +76,8 @@ use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer, tra
 /// Model Uniform Bind
 pub struct BuildinModelBind {
     pub bind_offset: BindOffset,
+    pub matrix: Matrix,
+    pub matrix_inv: Matrix,
 }
 impl BuildinModelBind {
     pub const OBJECT_TO_WORLD: usize = 16;
@@ -88,6 +91,8 @@ impl BuildinModelBind {
     ) -> Self {
         Self {
             bind_offset: dynbuffer.alloc_binding::<Self>(),
+            matrix: Matrix::identity(),
+            matrix_inv: Matrix::identity(),
         }
     }
 }
@@ -103,18 +108,24 @@ impl Bind for BuildinModelBind {
         Self::SIZE
     }
 }
+impl Uniform for BuildinModelBind {
+    fn write_into(&self, index: u32, buffer: &mut [u8]) {
+        bytes_write_to_memory(bytemuck::cast_slice(self.matrix.as_slice()), index as usize + BuildinModelBind::OBJECT_TO_WORLD_OFFSIZE, buffer);
+        bytes_write_to_memory(bytemuck::cast_slice(self.matrix_inv.as_slice()), index as usize + BuildinModelBind::WORLD_TO_OBJECT_OFFSIZE, buffer);
+    }
+}
 
 pub struct SysModelUniformUpdate;
 #[setup]
 impl SysModelUniformUpdate {
     #[system]
     pub fn tick(
-        meshes: Query<GameObject, (&GlobalTransform, &BuildinModelBind), With<DirtyGlobalTransform>>,
+        meshes: Query<GameObject, &BuildinModelBind, Changed<BuildinModelBind>>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
-        //  println!("DefaultMaterial Uniform TickUpdate");
-        meshes.iter().for_each(|(transform, model)| {
-            dynbuffer.as_mut().set_uniform::<GlobalTransform>(&model.bind_offset, transform);
+         println!("DefaultMaterial Uniform TickUpdate");
+        meshes.iter().for_each(|model| {
+            dynbuffer.as_mut().set_uniform::<BuildinModelBind>(&model.bind_offset, model);
         });
     }
 }

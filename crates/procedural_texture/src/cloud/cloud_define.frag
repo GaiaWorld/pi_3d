@@ -20,3 +20,5 @@ float fbm(vec2 n) {
 	}
 	return total;
 }
+
+layout(location = 0) out vec4 gl_FragColor;

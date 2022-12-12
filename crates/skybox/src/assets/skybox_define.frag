@@ -12,3 +12,5 @@ float n1noise( vec2 n )
 	float nrnd0 = noise( n + 0.07*t );
 	return nrnd0;
 }
+
+layout(location = 0) out vec4 gl_FragColor;

@@ -1,6 +1,7 @@
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use render_shader::{shader::{KeyPreShader, ResPreShaderMeta, PreShaderMeta}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
+use pi_scene_context::materials::material_meta::{ShaderEffectMeta, UniformPropertyFloat};
+use render_shader::{shader::{}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
 
 pub struct PerlinNoiseShader {
     pub vs_module: wgpu::ShaderModule,
@@ -10,8 +11,8 @@ pub struct PerlinNoiseShader {
 impl PerlinNoiseShader {
     pub const KEY: &str     = "PerlinNoiseShader";
 
-    pub fn res() -> PreShaderMeta {
-        PreShaderMeta::new(
+    pub fn meta() -> ShaderEffectMeta {
+        ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 set: 1,
                 bind: 1,
@@ -20,7 +21,11 @@ impl PerlinNoiseShader {
                 mat2_list: vec![],
                 vec4_list: vec![],
                 vec2_list: vec![],
-                float_list: vec![Atom::from("size"), Atom::from("width"), Atom::from("height"), Atom::from("placeholder"), ],
+                float_list: vec![
+                    UniformPropertyFloat(Atom::from("size"), 1.),
+                    UniformPropertyFloat(Atom::from("width"), 1.),
+                    UniformPropertyFloat(Atom::from("height"), 1.),
+                ],
                 int_list: vec![],
                 uint_list: vec![],
             },

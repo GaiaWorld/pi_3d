@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
 use pi_scene_math::Number;
-use crate::{bytes_write_to_memory, materials::value::{FromValueUniformStatistics}};
+use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, material_meta::UniformPropertyVec4}};
 
 use super::{value_uniform::MaterialValueBind, update_data};
 
@@ -54,6 +54,13 @@ impl FromValueUniformStatistics for Vec4Uniform {
 impl Vec4Uniform {
     const N: usize = 4;
     const M: [Number; Self::N] = [0., 0., 0., 0.];
+    pub fn init(&mut self, desc: &Vec<UniformPropertyVec4>) {
+        let mut index = 0;
+        desc.iter().for_each(|item| {
+            self.set(index, item.1.as_slice());
+            index += 1;
+        });
+    }
     pub fn value(&self, slot: usize) -> &[Number] {
         let range = Range { start: slot * Self::N, end: (slot + 1) * Self::N };
         match self {

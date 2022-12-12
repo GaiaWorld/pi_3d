@@ -79,6 +79,7 @@ impl PluginTest {
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
         engine.frame_time(1);
+        engine.regist_cube();
 
         // Test Code
         let scene01 = engine.create_scene();
