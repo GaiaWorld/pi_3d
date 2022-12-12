@@ -1,45 +1,16 @@
-#version 450
 
-#define SHADER_NAME vertex:Default
+vec3 position = A_POSITION;
+vec3 normal = A_NORMAL;
+mat4 finalWorld = PI_ObjectToWorld;
 
-// Buildin Vertex >>>>>>>>>>>>>>>>
-layout(location = 0) in vec3 a_position;
-layout(location = 1) in vec3 a_normal;
+vec4 positionUpdate =  vec4(position, 1.);
+vec4 worldPos =  finalWorld * positionUpdate;
+// vec4 worldPos =  positionUpdate;
 
-layout(set = 0, binding = 0) uniform Camera {
-    mat4 PI_MATRIX_V;
-    mat4 PI_MATRIX_P;
-    mat4 PI_MATRIX_VP;
-    vec4 PI_CAMERA_POSITION;
-    vec4 PI_VIEW_DIRECTION;
-};
+gl_Position = PI_MATRIX_VP * worldPos;
+// gl_Position = positionUpdate;
 
-layout(set = 0, binding = 1) uniform Time {
-    vec4 PI_Time;
-    vec4 PI_DeltaTime;
-};
+v_pos = worldPos.xyz;
 
-layout(set = 1, binding = 0) uniform Model {
-    mat4 PI_ObjectToWorld;
-    mat4 PI_WorldToObject;
-};
-// <<<<<<<<<<<<< Buildin Vertex
-
-layout(location = 0) out vec3 v_normal;
-layout(location = 1) out vec3 v_pos;
-
-void main() {
-    mat4 finalWorld = PI_ObjectToWorld;
-
-    vec4 position =  vec4(a_position, 1.);
-    vec4 worldPos =  finalWorld * position;
-    // vec4 worldPos =  position;
-
-    gl_Position = PI_MATRIX_VP * worldPos;
-    // gl_Position = position;
-
-    v_pos = worldPos.xyz;
-
-    mat3 normalWorld = mat3(finalWorld);
-    v_normal = a_normal; // normalize(vec3(finalWorld * vec4(a_normal, 1.0)));
-}
+mat3 normalWorld = mat3(finalWorld);
+v_normal = normal; // normalize(vec3(finalWorld * vec4(normal, 1.0)));

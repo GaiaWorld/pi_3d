@@ -10,7 +10,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    meshes::cube::InterfaceCube,
+    meshes::cube::{InterfaceCube, PluginCubeBuilder},
     main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}
 };
@@ -58,6 +58,7 @@ impl Plugin for PluginTest {
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
 
         PluginBundleDefault.init(engine, stages);
+        PluginCubeBuilder.init(engine, stages);
 
         let world = engine.world_mut();
 

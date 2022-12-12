@@ -1,11 +1,13 @@
 use pi_3d::PluginBundleDefault;
 use pi_engine_shell::engine_shell::{EnginShell, AppShell};
+use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID, transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode}, scene::{interface::InterfaceScene}, cameras::interface::InterfaceCamera, meshes::cube::InterfaceCube, main_camera_render::interface::InterfaceMainCamera, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use skybox::{InterfaceSkybox, PluginSkybox, interface::PluginSkyboxMaterial};
+use skybox::InterfaceSkybox;
+use skybox::{InterfaceSkybox, PluginSkybox};
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -42,10 +44,6 @@ impl Plugin for PluginTest {
         engine: &mut pi_scene_context::engine::Engine,
         stages: &mut pi_scene_context::run_stage::RunStage,
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-
-        PluginSkyboxMaterial.init(engine, stages);
-        PluginSkybox.init(engine, stages);
-
         let mut world = engine.world_mut().clone();
 
         SysTest::setup(&mut world, stages.command_stage());
@@ -61,6 +59,7 @@ impl PluginTest {
     fn setup(
         engine: &EnginShell
     ) {
+
         // Test Code
         let scene01 = engine.create_scene();
         let camera01 = engine.create_free_camera(scene01);
@@ -90,6 +89,8 @@ pub fn main() {
         }
     );
     shell.add_plugin(PluginBundleDefault);
+    shell.add_plugin(PluginSkybox);
+    shell.add_plugin(PluginSkybox);
     shell.add_plugin(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);

@@ -19,7 +19,6 @@ pub struct AppShell {
 }
 
 impl AppShell {
-    
     pub fn new(
         options: RenderOptions,
     ) -> Self {
@@ -178,6 +177,7 @@ pub struct EnginShell {
     world: World,
     node_archetype_id: Local,
     single_dispatcher: SingleDispatcher<WorkerRuntime>,
+    resource_type_ids: Vec<Local>,
 }
 
 impl EnginShell {
@@ -195,7 +195,8 @@ impl EnginShell {
             options,
             world,
             node_archetype_id,
-            single_dispatcher: SingleDispatcher::new(runtime)
+            single_dispatcher: SingleDispatcher::new(runtime),
+            resource_type_ids: vec![],
         }
     }
     async fn _run(&mut self) {

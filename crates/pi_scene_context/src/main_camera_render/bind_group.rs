@@ -1,6 +1,6 @@
-use pi_ecs::{prelude::{ResMut, Query, Res}, query::{With, Changed, Or}};
+use pi_ecs::{prelude::{ResMut, Query, Res}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
-use pi_render::{rhi::{bind_group_layout::BindGroupLayout, device::RenderDevice, bind_group::BindGroup}};
+use pi_render::{rhi::{device::RenderDevice, bind_group::BindGroup}};
 
 
 use crate::{
@@ -17,23 +17,16 @@ use crate::{
 
 pub struct IDMainCameraRenderBindGroup(pub RenderBindGroupKey);
 impl IDMainCameraRenderBindGroup {
-    const LABEL: &'static str = "MainCameraRenderBindGroup";
+    pub const LABEL: &'static str = "MainCameraRenderBindGroup";
     pub const SET: u32 = 0;
 
-    pub fn layout(device: &RenderDevice) -> BindGroupLayout {
-        BindGroupLayout::from(
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    label: Some(Self::LABEL),
-                    entries: &[
-                        CameraRenderData::ENTRY,
-                        SceneTime::ENTRY,
-                        SceneFog::ENTRY,
-                        AmbientLight::ENTRY,
-                    ],
-                }
-            )
-        )
+    pub fn layout_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+        vec![
+            CameraRenderData::ENTRY,
+            SceneTime::ENTRY,
+            SceneFog::ENTRY,
+            AmbientLight::ENTRY,
+        ]
     }
 
     pub fn bind_group(
@@ -73,7 +66,7 @@ impl SysMainCameraRenderBindGroupUpdate {
     ) {
         // println!("Sys MainCameraRender BindGroup Update");
         if dynbuffer_flag.0 {
-            match bindgroups.get_mut(id.0) {
+            match bindgroups.get_mut(&id.0) {
                 Some(mut group) => {
                     // println!("Sys MainCameraRender BindGroup Update bind_group");
                     IDMainCameraRenderBindGroup::bind_group(&device, &mut group, &dynbuffer);

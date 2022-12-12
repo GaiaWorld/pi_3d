@@ -1,7 +1,8 @@
+use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use render_material::{binding::BindingDesc, material::{UniformDesc, EUniformDataFormat}};
-
-use pi_scene_context::{materials::MBKK, shaders::BuildinShaderDefined};
+use pi_scene_context::materials::material_meta::{ShaderEffectMeta, UniformPropertyVec4};
+use pi_scene_math::Vector4;
+use render_shader::{shader::{}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
 
 pub struct SkyboxShader {
     pub vs_module: wgpu::ShaderModule,
@@ -9,50 +10,39 @@ pub struct SkyboxShader {
 }
 
 impl SkyboxShader {
-    pub const A_POSITION: MBKK                          = BuildinShaderDefined::A_POSITION;
-    pub const A_POSITION_SLOT: u32                      = 0;
-    pub const A_POSITION_SIZE: u32                      = 3 * 4;
-    pub const U_EMISSIVE: MBKK                          = BuildinShaderDefined::MBKK_START_FOR_OTHER + 01 as MBKK;
-    
-    pub fn new(device: &RenderDevice) -> Self {
-        let vs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Skybox-VS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./assets/skybox.vert")),
-                stage: naga::ShaderStage::Vertex,
-                defines: naga::FastHashMap::default(),
-            },
-        });
-        let fs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Skybox-FS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./assets/skybox.frag")),
-                stage: naga::ShaderStage::Fragment,
-                defines: naga::FastHashMap::default(),
-            },
-        });
+    pub const KEY: &str     = "SkyboxShader";
 
-        Self {
-            vs_module,
-            fs_module,
-        }
-    }
-
-    pub fn bind_desc() -> Vec<BindingDesc<MBKK>> {
-        vec![
-            BindingDesc {
-                uniforms: vec![
-                    UniformDesc {
-                        kind: Self::U_EMISSIVE,
-                        bind: 1,
-                        format: EUniformDataFormat::Color4,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        byte_offset_in_bind: 0,
-                    }
+    pub fn meta() -> ShaderEffectMeta {
+        ShaderEffectMeta::new(
+            MaterialValueBindDesc {
+                set: 1,
+                bind: 1,
+                stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                mat4_list: vec![],
+                mat2_list: vec![],
+                vec4_list: vec![
+                    UniformPropertyVec4(Atom::from("emissive"), Vector4::new(1., 1., 1., 0.5)),
                 ],
-                size: 4 * 4,
-                id: 1
-            }
-        ]
+                vec2_list: vec![],
+                float_list: vec![],
+                int_list: vec![],
+                uint_list: vec![],
+            },
+            None,
+            Varyings(
+                vec![
+                    Varying { format: Atom::from("vec3"), name: Atom::from("v_normal") },
+                    Varying { format: Atom::from("float"), name: Atom::from("v_dist") },
+                ]
+            ),
+            BlockCodeAtom { 
+                define: Atom::from(include_str!("./assets/skybox_define.vert")), 
+                running: Atom::from(include_str!("./assets/skybox.vert"))
+            },
+            BlockCodeAtom { 
+                define: Atom::from(include_str!("./assets/skybox_define.frag")),
+                running: Atom::from(include_str!("./assets/skybox.frag"))
+            },
+        )
     }
 }

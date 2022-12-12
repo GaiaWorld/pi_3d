@@ -4,7 +4,7 @@ use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_share::Share;
 use pi_scene_math::Number;
 
-pub mod image_texture_load;
+pub mod sampler_load;
 pub mod main_texture;
 pub mod emissive_texture;
 

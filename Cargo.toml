@@ -42,6 +42,7 @@ futures = "0.3"
 [[example]]
 name = "cube"
 path = "examples/cube/cube.rs"
+
 [[example]]
 name = "unlit_cube"
 path = "examples/cube/unlit_cube.rs"

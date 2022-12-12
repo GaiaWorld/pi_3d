@@ -8,6 +8,8 @@ use pi_share::Share;
 use crate::plugin::Plugin;
 
 pub mod local_load;
+pub mod sync_load;
+pub mod image_texture_load;
 
 pub struct PluginGeometryBufferAsstes;
 impl Plugin for PluginGeometryBufferAsstes {
@@ -16,8 +18,8 @@ impl Plugin for PluginGeometryBufferAsstes {
         engine: &mut crate::engine_shell::EnginShell,
         _: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        if engine.world().get_resource::<Share<AssetMgr<RenderRes<render_data_container::GeometryBuffer>>>>().is_none() {
-            let asset = AssetMgr::<RenderRes<render_data_container::GeometryBuffer>>::new(GarbageEmpty(), false, 20 * 1024 * 1024, 3 * 60 * 1000);
+        if engine.world().get_resource::<Share<AssetMgr<RenderRes<render_data_container::VertexBuffer>>>>().is_none() {
+            let asset = AssetMgr::<RenderRes<render_data_container::VertexBuffer>>::new(GarbageEmpty(), false, 20 * 1024 * 1024, 3 * 60 * 1000);
             engine.world_mut().insert_resource(asset);
         }
         

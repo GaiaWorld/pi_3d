@@ -1,21 +1,21 @@
+use pi_assets::asset::Handle;
 use pi_slotmap::{DefaultKey};
+use render_data_container::{VertexBuffer, KeyVertexBuffer, RenderVertices, RenderIndices};
 
-use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}, materials::bind_group::RenderBindGroupKey};
+use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}, materials::bind_group::{RenderBindGroupKey}, };
 
-use super::pipeline::PipelineKey;
+use super::pipeline::{AssetResRenderPipeline, ResRenderPipeline};
+pub use super::render_object_list::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct RenderObjectID(pub ObjectID);
 
-#[derive(Default)]
-pub struct RenderObjectOpaqueList {
-    pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub draws: Vec<RenderObjectMetaOpaque>,
-}
-#[derive(Default)]
-pub struct RenderObjectTransparentList {
-    pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub draws: Vec<RenderObjectMetaTransparent>,
+pub trait DrawObject {
+    fn bind_groups(&self) -> &Vec<RenderObjectBindGroup>;
+    fn pipeline(&self) -> &wgpu::RenderPipeline;
+    fn indices(&self) -> &Option<RenderIndices>;
+    fn vertices(&self) -> &Vec<RenderVertices>;
+    fn instances(&self) -> &Vec<RenderVertices>;
 }
 
 /// wgpu 级别的渲染对象
@@ -25,17 +25,16 @@ pub struct RenderObjectTransparentList {
 #[derive(Debug)]
 pub struct RenderObjectMetaOpaque {
     pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub pipeline: PipelineKey,
-    pub positions: RenderObjectVertice,
-    pub indices: Option<RenderObjectIndices>,
-    pub vertices: Vec<RenderObjectVertice>,
-    pub instances: Vec<RenderObjectInstance>,
+    pub pipeline: Handle<ResRenderPipeline>,
+    pub indices: Option<RenderIndices>,
+    pub vertices: Vec<RenderVertices>,
+    pub instances: Vec<RenderVertices>,
     pub render_sort: RenderSortParam,
     pub view_distance: f32,
 }
 impl PartialEq for RenderObjectMetaOpaque {
     fn eq(&self, other: &Self) -> bool {
-        self.pipeline == other.pipeline && self.render_sort == other.render_sort
+        self.pipeline.key() == other.pipeline.key() && self.render_sort == other.render_sort
     }
 }
 impl Eq for RenderObjectMetaOpaque {
@@ -53,12 +52,33 @@ impl PartialOrd for RenderObjectMetaOpaque {
             Some(core::cmp::Ordering::Equal) => {}
             ord => return ord,
         }
-        self.pipeline.partial_cmp(&other.pipeline)
+        self.pipeline.key().partial_cmp(&other.pipeline.key())
     }
 }
 impl Ord for RenderObjectMetaOpaque {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
+    }
+}
+impl DrawObject for RenderObjectMetaOpaque {
+    fn bind_groups(&self) -> &Vec<RenderObjectBindGroup> {
+        &self.bind_groups
+    }
+
+    fn pipeline(&self) -> &wgpu::RenderPipeline {
+        &self.pipeline.0
+    }
+
+    fn indices(&self) -> &Option<RenderIndices> {
+        &self.indices
+    }
+
+    fn vertices(&self) -> &Vec<RenderVertices> {
+        &self.vertices
+    }
+
+    fn instances(&self) -> &Vec<RenderVertices> {
+        &self.instances
     }
 }
 
@@ -70,16 +90,15 @@ impl Ord for RenderObjectMetaOpaque {
 #[derive(Debug)]
 pub struct RenderObjectMetaTransparent {
     pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub pipeline: PipelineKey,
-    pub positions: RenderObjectVertice,
-    pub indices: Option<RenderObjectIndices>,
-    pub vertices: Vec<RenderObjectVertice>,
-    pub instances: Vec<RenderObjectInstance>,
+    pub pipeline: Handle<ResRenderPipeline>,
+    pub indices: Option<RenderIndices>,
+    pub vertices: Vec<RenderVertices>,
+    pub instances: Vec<RenderVertices>,
     pub render_sort: RenderSortParam,
 }
 impl PartialEq for RenderObjectMetaTransparent {
     fn eq(&self, other: &Self) -> bool {
-        self.pipeline == other.pipeline && self.render_sort == other.render_sort
+        self.pipeline.key() == other.pipeline.key() && self.render_sort == other.render_sort
     }
 }
 impl Eq for RenderObjectMetaTransparent {
@@ -93,12 +112,33 @@ impl PartialOrd for RenderObjectMetaTransparent {
             Some(core::cmp::Ordering::Equal) => {}
             ord => return ord,
         }
-        self.pipeline.partial_cmp(&other.pipeline)
+        self.pipeline.key().partial_cmp(&other.pipeline.key())
     }
 }
 impl Ord for RenderObjectMetaTransparent {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
+    }
+}
+impl DrawObject for RenderObjectMetaTransparent {
+    fn bind_groups(&self) -> &Vec<RenderObjectBindGroup> {
+        &self.bind_groups
+    }
+
+    fn pipeline(&self) -> &wgpu::RenderPipeline {
+        &self.pipeline.0
+    }
+
+    fn indices(&self) -> &Option<RenderIndices> {
+        &self.indices
+    }
+
+    fn vertices(&self) -> &Vec<RenderVertices> {
+        &self.vertices
+    }
+
+    fn instances(&self) -> &Vec<RenderVertices> {
+        &self.instances
     }
 }
 
@@ -109,87 +149,111 @@ pub struct RenderObjectBindGroup {
     pub offsets: Vec<u32>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct RenderObjectPipeline {
-    pub id: DefaultKey,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct RenderObjectVertice {
     pub slot: u32,
-    pub gbid: GBID,
+    pub gbid: Handle<VertexBuffer>,
     pub start: usize,
     pub end: usize,
     pub count: usize,
 }
+impl PartialEq for RenderObjectVertice {
+    fn eq(&self, other: &Self) -> bool {
+        self.gbid.key() == other.gbid.key()
+    }
+}
+impl Eq for RenderObjectVertice {
+    fn assert_receiver_is_total_eq(&self) {
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct RenderObjectIndices {
     pub slot: u32,
-    pub gbid: GBID,
+    pub gbid: Handle<VertexBuffer>,
     pub start: usize,
     pub end: usize,
     pub count: usize,
     pub format: wgpu::IndexFormat,
 }
+impl PartialEq for RenderObjectIndices {
+    fn eq(&self, other: &Self) -> bool {
+        self.gbid.key() == other.gbid.key()
+    }
+}
+impl Eq for RenderObjectIndices {
+    fn assert_receiver_is_total_eq(&self) {
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct RenderObjectInstance {
     pub slot: u32,
-    pub gbid: GBID,
+    pub gbid: Handle<VertexBuffer>,
     pub start: usize,
     pub end: usize,
     pub count: usize,
 }
+impl PartialEq for RenderObjectInstance {
+    fn eq(&self, other: &Self) -> bool {
+        self.gbid.key() == other.gbid.key()
+    }
+}
+impl Eq for RenderObjectInstance {
+    fn assert_receiver_is_total_eq(&self) {
+
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct TempDrawInfoRecord {
-    list: Vec<RenderObjectVertice>,
-    indices: Option<RenderObjectIndices>,
+    list: Vec<Option<RenderVertices>>,
+    indices: Option<RenderIndices>,
 }
 impl TempDrawInfoRecord {
     pub fn record_vertex_and_check_diff_with_last(
         &mut self,
-        vertex: &RenderObjectVertice,
+        vertex: &RenderVertices,
     ) -> bool {
-        if self.get(vertex.slot as usize) == vertex {
-            return false;
+        if let Some(save) = self.get(vertex.slot as usize) {
+            if save == vertex {
+                return false;
+            } else {
+                self.list[vertex.slot as usize] = Some(vertex.clone());
+                return true;
+            }
         } else {
-            self.list[vertex.slot as usize] = *vertex;
+            self.list[vertex.slot as usize] = Some(vertex.clone());
             return true;
         }
     }
     pub fn record_indices_and_check_diff_with_last(
         &mut self,
-        indices: &RenderObjectIndices,
+        indices: &RenderIndices,
     ) -> bool {
-        let result = match self.indices {
+        let result = match &self.indices {
             Some(old) => {
-                old != *indices
+                old != indices
             },
             None => {
                 true
             },
         };
 
-        self.indices = Some(*indices);
+        self.indices = Some(indices.clone());
         
         result
     }
-    fn get(&mut self, slot: usize) -> &RenderObjectVertice {
+    fn get(&mut self, slot: usize) -> Option<&RenderVertices> {
         let oldlen = self.list.len();
         let mut addcount = 0;
         while oldlen + addcount <= slot {
-            self.list.push(RenderObjectVertice {
-                slot: slot as u32,
-                gbid: GBID::default(),
-                start: 0,
-                end: 0,
-                count: 0,
-            });
+            self.list.push(None);
             addcount += 1;
         }
 
-        self.list.get(slot).unwrap()
+        self.list.get(slot).unwrap().as_ref()
     }
 }

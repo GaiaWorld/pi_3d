@@ -1,49 +1,38 @@
+use std::ops::Range;
+
+use derive_deref::{Deref, DerefMut};
+use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::object::InterfaceObject;
-use render_data_container::{GeometryBuffer, GeometryBufferPool};
-use render_geometry::geometry::{VertexAttributeBufferMeta};
+use pi_engine_shell::{assets::sync_load::PluginAssetSyncLoad};
+use render_data_container::{EVertexDataFormat, VertexBuffer, KeyVertexBuffer, TVertexBufferMeta, TIndicesMeta};
+use render_geometry::indices::{IndicesBufferDesc, AssetKeyBufferIndices, AssetResBufferIndices};
 
-use crate::{object::{ObjectID, GameObject}, geometry::GBID, plugin::Plugin, resources::SingleGeometryBufferPool, engine::Engine};
-
-#[derive(Debug, Clone, Copy)]
-pub struct IDAttributeIndices(pub ObjectID);
+use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};
 
 #[derive(Debug)]
-pub struct AttributeIndices {
-    pub meta: VertexAttributeBufferMeta<GBID>,
-    pub format: wgpu::IndexFormat,
+enum ECommand {
+    Use(ObjectID, IndicesBufferDesc),
 }
-
-
-#[derive(Debug)]
-pub enum AttributeIndicesCommand {
-    Create(ObjectID, AttributeIndices)
-}
-
 #[derive(Debug, Default)]
-pub struct SingleAttributeIndicesCommandList {
-    pub list: Vec<AttributeIndicesCommand>,
+struct CommandListBufferIndices {
+    pub list: Vec<ECommand>,
 }
-
-pub struct SysAttributeIndicesCommand;
+struct SysCommand;
 #[setup]
-impl SysAttributeIndicesCommand {
+impl SysCommand {
     #[system]
-    fn sys(
-        mut commands: ResMut<SingleAttributeIndicesCommandList>,
-        mut colors: Query<GameObject, Write<AttributeIndices>>,
+    pub fn cmd(
+        mut cmds: ResMut<CommandListBufferIndices>,
+        mut items: Query<GameObject, (Write<IndicesBufferDesc>, Write<AssetKeyBufferIndices>)>,
     ) {
-        commands.list.drain(..).for_each(|cmd| {
+        let mut list = std::mem::replace(&mut cmds.list, vec![]);
+        list.drain(..).for_each(|cmd| {
             match cmd {
-                AttributeIndicesCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
+                ECommand::Use(entity, desc) => {
+                    if let Some((mut itemdesc, mut itemkey)) = items.get_mut(entity) {
+                        itemkey.write(AssetKeyBufferIndices(desc.buffer.clone()));
+                        itemdesc.write(desc);
                     }
                 },
             }
@@ -51,92 +40,40 @@ impl SysAttributeIndicesCommand {
     }
 }
 
-#[derive(Debug)]
-pub enum IDAttributeIndicesCommand {
-    Create(ObjectID, IDAttributeIndices)
+pub trait InterfaceBufferIndices {
+    fn use_indices(
+        & self,
+        entity: ObjectID,
+        info: IndicesBufferDesc,
+    ) -> &Self;
 }
+impl InterfaceBufferIndices for Engine {
+    fn use_indices(
+        & self,
+        entity: ObjectID,
+        info: IndicesBufferDesc,
+    ) -> &Self {
+        let commands = self.world().get_resource_mut::<CommandListBufferIndices>().unwrap();
+        commands.list.push(ECommand::Use(entity, info));
 
-#[derive(Debug, Default)]
-pub struct SingleIDAttributeIndicesCommandList {
-    pub list: Vec<IDAttributeIndicesCommand>,
-}
-pub struct SysIDAttributeIndicesCommand;
-#[setup]
-impl SysIDAttributeIndicesCommand {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleIDAttributeIndicesCommandList>,
-        mut colors: Query<GameObject, Write<IDAttributeIndices>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                IDAttributeIndicesCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+        self
     }
 }
 
-pub struct PluginAttributeIndices;
-impl Plugin for PluginAttributeIndices {
+pub struct PluginBufferIndices;
+impl Plugin for PluginBufferIndices {
     fn init(
         &mut self,
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
+
+        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
+
         let world = engine.world_mut();
-
-        SysAttributeIndicesCommand::setup(world, stages.command_stage());
-        SysIDAttributeIndicesCommand::setup(world, stages.command_stage());
-
-        world.insert_resource(SingleAttributeIndicesCommandList::default());
-        world.insert_resource(SingleIDAttributeIndicesCommandList::default());
+        world.insert_resource(CommandListBufferIndices::default());
+        SysCommand::setup(world, stages.command_stage());
 
         Ok(())
-    }
-}
-
-pub trait InterfaceAttributeIndices {
-    fn create_vertex_data_indices(
-        & self,
-        data: GeometryBuffer,
-    ) -> ObjectID;
-}
-impl InterfaceAttributeIndices for Engine {
-    fn create_vertex_data_indices(
-        & self,
-        data: GeometryBuffer,
-    ) -> ObjectID {
-
-        let entity = self.new_object();
-        let world = self.world();
-
-        let data_size = data.size();
-        let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();
-        let buffer_id = gbp.insert(data);
-
-        let data = AttributeIndices {
-            meta: VertexAttributeBufferMeta {
-                buffer_id,
-                start: 0,
-                end: data_size * 2,
-                data_bytes_size: 1 * 2,
-                data_count: data_size / 1,
-            },
-            format: wgpu::IndexFormat::Uint16,
-        };
-
-        let commands = world.get_resource_mut::<SingleAttributeIndicesCommandList>().unwrap();
-        commands.list.push(AttributeIndicesCommand::Create(entity, data));
-
-        entity
     }
 }

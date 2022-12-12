@@ -24,7 +24,7 @@ impl SysMeshCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleMeshCommandList>,
-        mut meshes: Query<GameObject, (Write<LayerMask>, Write<RenderBlend>, Write<PrimitiveState>, Write<RenderDepthAndStencil>, Write<BuildinModelBind>)>,
+        mut meshes: Query<GameObject, Write<BuildinModelBind>>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
@@ -34,11 +34,7 @@ impl SysMeshCommand {
                 MeshCommand::Create(entity) => {
                     match meshes.get_mut(entity) {
                         Some(mut item) => {
-                            item.0.write(LayerMask::default());
-                            item.1.write(RenderBlend::default());
-                            item.2.write(PrimitiveState::default());
-                            item.3.write(RenderDepthAndStencil::default());
-                            item.4.write(BuildinModelBind::new(&mut dynbuffer));
+                            item.write(BuildinModelBind::new(&mut dynbuffer));
                         },
                         None => {
                             

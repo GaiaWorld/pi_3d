@@ -1,22 +1,5 @@
 use default_render::PluginDefaultMaterial;
-use pi_scene_context::{
-    cameras::PluginCamera,
-    cullings::{oct_tree::PluginBoundingOctTree, PluginCulling},
-    layer_mask::PluginLayerMask,
-    main_camera_render::PluginMainCameraRender,
-    materials::PluginMaterialID,
-    meshes::{ball::PluginBallBuilder, cube::PluginCubeBuilder, PluginMesh},
-    renderers::PluginRenderer,
-    resources::PluginResource,
-    scene::PluginScene,
-    transforms::PluginTransformNode,
-    vertex_data::{
-        color4::PluginAttributeColor4, indices::PluginAttributeIndices,
-        normal::PluginAttributeNormal, position::PluginAttributePosition, uv::PluginAttributeUV,
-    },
-};
 use skeletons::{matrices_indices::PluginAttributeMatricesIndices, matrices_weights::PluginAttributeMatricesWeights};
-
 pub struct PluginBundleDefault;
 impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
     fn init(
@@ -32,16 +15,18 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCamera.init(engine, stages);
         PluginCulling.init(engine, stages);
 
-        PluginAttributeColor4.init(engine, stages);
-        PluginAttributeNormal.init(engine, stages);
-        PluginAttributePosition.init(engine, stages);
-        PluginAttributeIndices.init(engine, stages);
-        PluginAttributeUV.init(engine, stages);
+        PluginBufferIndices.init(engine, stages);
+        PluginBuildinGeometry.init(engine, stages);
+        PluginBufferColor4.init(engine, stages);
+        PluginBufferNormal.init(engine, stages);
+        // PluginBufferPosition.init(engine, stages);
+        // PluginAttributeIndices.init(engine, stages);
+        // PluginBufferUV.init(engine, stages);
         PluginAttributeMatricesIndices.init(engine, stages);
         PluginAttributeMatricesWeights.init(engine, stages);
 
         PluginMesh.init(engine, stages);
-        PluginMaterialID.init(engine, stages);
+        PluginMaterial.init(engine, stages);
         PluginLayerMask.init(engine, stages);
 
         PluginMainCameraRender.init(engine, stages);

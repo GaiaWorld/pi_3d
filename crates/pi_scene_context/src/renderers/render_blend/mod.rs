@@ -32,6 +32,17 @@ impl RenderBlend {
     pub fn combine(&mut self) {
         self.enable = true;
     }
+    pub fn one_one() -> Self {
+        Self {
+            enable: true,
+            src_color: wgpu::BlendFactor::One,
+            dst_color: wgpu::BlendFactor::One,
+            src_alpha: wgpu::BlendFactor::One,
+            dst_alpha: wgpu::BlendFactor::One,
+            opt_color: wgpu::BlendOperation::Add,
+            opt_alpha: wgpu::BlendOperation::Add,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -63,7 +74,7 @@ impl SysRenderBlendCommand {
                                 blend.enable = false;
                             },
                             None => {
-                                blend.insert_no_notify(RenderBlend::default());
+                                blend.write(RenderBlend::default());
                             },
                         }
                         blend.notify_modify();
@@ -71,7 +82,7 @@ impl SysRenderBlendCommand {
                 },
                 ERenderBlendCommand::Blend(entity, value) => {
                     if let Some((mut blend)) = blends.get_mut(entity) {
-                        blend.write(RenderBlend::default());
+                        blend.write(value);
                     }
                 },
             }

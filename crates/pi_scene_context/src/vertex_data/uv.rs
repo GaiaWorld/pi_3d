@@ -1,161 +1,104 @@
+use derive_deref::{Deref, DerefMut};
+use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::object::InterfaceObject;
-use render_data_container::{EVertexDataFormat, GeometryBuffer, GeometryBufferPool};
-use render_geometry::geometry::{VertexAttributeBufferMeta, VertexAttributeMeta};
+use pi_engine_shell::{assets::sync_load::PluginAssetSyncLoad};
+use render_data_container::{EVertexDataFormat, VertexBuffer, KeyVertexBuffer, TVertexBufferMeta, TAttributeMeta};
 
-use crate::{object::{ObjectID, GameObject}, geometry::GBID, plugin::Plugin, resources::SingleGeometryBufferPool};
+use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};
 
-#[derive(Debug, Clone, Copy)]
-pub struct IDAttributeUV(pub ObjectID);
 
 #[derive(Debug)]
-pub struct AttributeUV {
-    pub meta: VertexAttributeBufferMeta<GBID>,
+enum ECommand {
+    Use(ObjectID, KeyVertexBuffer),
 }
-impl AttributeUV {
-    pub const UV: u32 = 2;
-    pub const UV_OFFSET: u32 = 0 * 4;
-    pub const UV_FORMAT: wgpu::VertexFormat = wgpu::VertexFormat::Float32x2;
-    pub const UV_LOCATION: u32 = 2;
-
-    pub const ATTRIBUTES: [wgpu::VertexAttribute; 1] = [
-        wgpu::VertexAttribute {
-            format: Self::UV_FORMAT,
-            offset: Self::UV_OFFSET as wgpu::BufferAddress,
-            shader_location: Self::UV_LOCATION,
-        }
-    ];
+#[derive(Debug, Default)]
+struct CommandListBufferUV {
+    pub list: Vec<ECommand>,
 }
-impl VertexAttributeMeta for AttributeUV {
-    const SLOT: u32 = 2;
+struct SysCommand;
+#[setup]
+impl SysCommand {
+    #[system]
+    pub fn cmd(
+        mut cmds: ResMut<CommandListBufferUV>,
+        mut items: Query<GameObject, Write<AssetKeyBufferUV>>,
+    ) {
+        let mut list = std::mem::replace(&mut cmds.list, vec![]);
+        list.drain(..).for_each(|cmd| {
+            match cmd {
+                ECommand::Use(entity, key) => {
+                    if let Some(mut item) = items.get_mut(entity) {
+                        item.write(AssetKeyBufferUV(key.clone()));
+                    }
+                },
+            }
+        });
+    }
+}
 
-    const SIZE_PER_VERTEX: u32 = Self::UV_OFFSET + Self::UV * 4;
+#[derive(Debug, Deref, DerefMut, Clone, Hash)]
+pub struct AssetKeyBufferUV(pub KeyVertexBuffer);
 
+#[derive(Deref, DerefMut)]
+pub struct AssetResBufferUV(pub Handle<VertexBuffer>);
+impl From<Handle<VertexBuffer>> for AssetResBufferUV {
+    fn from(value: Handle<VertexBuffer>) -> Self {
+        Self(value)
+    }
+}
+impl AssetResBufferUV {
+    pub const NUMBER_BYTES: wgpu::BufferAddress = 4;
+    pub const NUMBER_COUNT: wgpu::BufferAddress = 3;
+    pub const OFFSET: u32 = 0 * 4;
+}
+impl TVertexBufferMeta for AssetResBufferUV {
+    const DATA_FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
-    const FORMAT: EVertexDataFormat = EVertexDataFormat::F32;
-}
+    fn size_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT * Self::NUMBER_BYTES
+    }
 
-#[derive(Debug)]
-pub enum AttributeUVCommand {
-    Create(ObjectID, AttributeUV)
-}
-
-#[derive(Debug, Default)]
-pub struct SingleAttributeUVCommandList {
-    pub list: Vec<AttributeUVCommand>,
-}
-
-pub struct SysAttributeUVCommand;
-#[setup]
-impl SysAttributeUVCommand {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleAttributeUVCommandList>,
-        mut colors: Query<GameObject, Write<AttributeUV>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                AttributeUVCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn number_per_vertex(&self) -> wgpu::BufferAddress {
+        Self::NUMBER_COUNT
     }
 }
 
-#[derive(Debug)]
-pub enum IDAttributeUVCommand {
-    Create(ObjectID, IDAttributeUV)
+pub struct AttributeUV {
+    pub format: wgpu::VertexFormat,
+    pub offset: wgpu::BufferAddress,
+    pub shader_location: u32,
 }
+impl TAttributeMeta for AttributeUV {
+    fn format(&self) -> wgpu::VertexFormat {
+        self.format
+    }
 
-#[derive(Debug, Default)]
-pub struct SingleIDAttributeUVCommandList {
-    pub list: Vec<IDAttributeUVCommand>,
-}
+    fn offset(&self) -> wgpu::BufferAddress {
+        self.offset
+    }
 
-pub struct SysIDAttributeUVCommand;
-#[setup]
-impl SysIDAttributeUVCommand {
-    #[system]
-    fn sys(
-        mut commands: ResMut<SingleIDAttributeUVCommandList>,
-        mut colors: Query<GameObject, Write<IDAttributeUV>>,
-    ) {
-        commands.list.drain(..).for_each(|cmd| {
-            match cmd {
-                IDAttributeUVCommand::Create(entity, value) => {
-                    match colors.get_mut(entity) {
-                        Some(mut color) => {
-                            color.insert_no_notify(value);
-                        },
-                        None => {
-                            
-                        },
-                    }
-                },
-            }
-        });
+    fn shader_location(&self) -> u32 {
+        self.shader_location
     }
 }
 
-pub struct PluginAttributeUV;
-impl Plugin for PluginAttributeUV {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
-
-        SysAttributeUVCommand::setup(world, stages.command_stage());
-        SysIDAttributeUVCommand::setup(world, stages.command_stage());
-
-        world.insert_resource(SingleAttributeUVCommandList::default());
-        world.insert_resource(SingleIDAttributeUVCommandList::default());
-
-        Ok(())
-    }
-}
-
-pub trait InterfaceAttributeUV {
-    fn create_vertex_data_uv(
+pub trait InterfaceBufferUV {
+    fn use_vertex_data_uv(
         & self,
-        data: GeometryBuffer,
-    ) -> ObjectID;
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self;
 }
-impl InterfaceAttributeUV for crate::engine::Engine {
-    fn create_vertex_data_uv(
+impl InterfaceBufferUV for Engine {
+    fn use_vertex_data_uv(
         & self,
-        data: GeometryBuffer,
-    ) -> ObjectID {
-        let entity = self.new_object();
-        let world = self.world();
+        entity: ObjectID,
+        key: KeyVertexBuffer,
+    ) -> &Self {
+        let commands = self.world().get_resource_mut::<CommandListBufferUV>().unwrap();
+        commands.list.push(ECommand::Use(entity, key));
 
-        let data_size = data.size();
-        let gbp = world.get_resource_mut::<SingleGeometryBufferPool>().unwrap();
-        let buffer_id = gbp.insert(data);
-
-        let data = AttributeUV {
-            meta: VertexAttributeBufferMeta {
-                buffer_id,
-                start: 0,
-                end: data_size * 4,
-                data_bytes_size: 3 * 4,
-                data_count: data_size / 3,
-            },
-        };
-
-        let commands = world.get_resource_mut::<SingleAttributeUVCommandList>().unwrap();
-        commands.list.push(AttributeUVCommand::Create(entity, data));
-
-        entity
+        self
     }
 }
