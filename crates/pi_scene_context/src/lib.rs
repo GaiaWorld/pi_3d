@@ -16,7 +16,6 @@ pub mod environment;
 pub mod geometry;
 pub mod materials;
 pub mod postprocess;
-pub mod vertex_data;
 pub mod main_camera_render;
 pub mod layer_mask;
 pub mod plugin;

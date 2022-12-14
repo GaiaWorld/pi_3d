@@ -19,6 +19,7 @@ use self::{vertex_buffer_useinfo::{AssetKeyVBSlot1, AssetKeyVBSlot2, AssetKeyVBS
 pub mod vertex_buffer_useinfo;
 pub mod sys_vertex_buffer_use;
 pub mod geometry;
+pub mod indices;
 
 pub type VDK = usize;
 pub type GBID = Atom;

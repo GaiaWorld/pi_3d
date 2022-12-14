@@ -13,14 +13,8 @@ use crate::{
     plugin::{Plugin, ErrorPlugin},
     object::{ObjectID},
     engine::Engine, 
-    vertex_data::{
-        position::{AssetKeyBufferPosition, AssetResBufferPosition, InterfaceBufferPosition},
-        normal::{AssetKeyBufferNormal, AssetResBufferNormal, InterfaceBufferNormal},
-        indices::{InterfaceBufferIndices},
-        uv::{AssetResBufferUV, AssetKeyBufferUV, InterfaceBufferUV}, color4::{AssetKeyBufferColor4, AssetResBufferColor4},
-    },
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc}
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc, indices::InterfaceBufferIndices}
 };
 
 use super::interface::InterfaceMesh;

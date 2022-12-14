@@ -11,14 +11,8 @@ use crate::{
     plugin::{Plugin, ErrorPlugin},
     object::{ObjectID},
     engine::Engine, 
-    vertex_data::{
-        position::{AssetKeyBufferPosition, AssetResBufferPosition, InterfaceBufferPosition},
-        normal::{AssetKeyBufferNormal, AssetResBufferNormal, InterfaceBufferNormal},
-        indices::{InterfaceBufferIndices},
-        uv::{AssetResBufferUV, AssetKeyBufferUV, InterfaceBufferUV},
-    },
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::TInterfaceGeomtery
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
 };
 
 use super::interface::InterfaceMesh;

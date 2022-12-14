@@ -5,20 +5,14 @@ use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAsse
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use pi_share::Share;
 use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
-use render_geometry::{indices::{IndicesBufferDesc, AssetKeyBufferIndices, AssetResBufferIndices}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
+use render_geometry::{indices::{IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
 
 use crate::{
     plugin::{Plugin, ErrorPlugin},
     object::{ObjectID},
-    engine::Engine, 
-    vertex_data::{
-        position::{AssetKeyBufferPosition, AssetResBufferPosition, InterfaceBufferPosition},
-        normal::{AssetKeyBufferNormal, AssetResBufferNormal, InterfaceBufferNormal},
-        indices::{InterfaceBufferIndices},
-        uv::{AssetResBufferUV, AssetKeyBufferUV, InterfaceBufferUV},
-    },
+    engine::Engine,
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::TInterfaceGeomtery
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
 };
 
 use super::interface::InterfaceMesh;
