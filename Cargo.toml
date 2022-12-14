@@ -84,5 +84,5 @@ name = "brdf"
 path = "examples/procedural_texture/brdf.rs"
 
 [[example]]
-name = "skeletons"
-path = "examples/skeletons/skeletons.rs"
+name = "skin"
+path = "examples/skin/skin.rs"

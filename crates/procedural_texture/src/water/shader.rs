@@ -1,7 +1,15 @@
-use pi_render::rhi::{device::RenderDevice};
-use render_material::{binding::BindingDesc, material::{UniformDesc, EUniformDataFormat}};
-
-use pi_scene_context::{materials::MBKK, shaders::BuildinShaderDefined};
+use pi_atom::Atom;
+use pi_render::rhi::device::RenderDevice;
+use pi_scene_context::materials::material_meta::{
+    ShaderEffectMeta, UniformPropertyFloat, UniformPropertyVec2, UniformPropertyVec4,
+};
+use pi_scene_math::{Vector2, Vector4};
+use render_shader::{
+    block_code::{BlockCode, BlockCodeAtom},
+    shader::KeyShaderEffect,
+    unifrom_code::MaterialValueBindDesc,
+    varying_code::{Varying, Varyings},
+};
 
 pub struct WaterShader {
     pub vs_module: wgpu::ShaderModule,
@@ -9,32 +17,43 @@ pub struct WaterShader {
 }
 
 impl WaterShader {
-    pub const A_POSITION: MBKK                          = BuildinShaderDefined::A_POSITION;
-    pub const A_POSITION_SLOT: u32                      = 0;
-    pub const A_POSITION_SIZE: u32                      = 3 * 4;
-    pub const U_EMISSIVE: MBKK                          = BuildinShaderDefined::MBKK_START_FOR_OTHER + 01 as MBKK;
-    
-    pub fn new(device: &RenderDevice) -> Self {
-        let vs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Water-VS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("../assets/skybox.vert")),
-                stage: naga::ShaderStage::Vertex,
-                defines: naga::FastHashMap::default(),
-            },
-        });
-        let fs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Water-FS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./water.frag")),
-                stage: naga::ShaderStage::Fragment,
-                defines: naga::FastHashMap::default(),
-            },
-        });
+    pub const KEY: &'static str = "WaterShader";
 
-        Self {
-            vs_module,
-            fs_module,
-        }
+    pub fn meta() -> ShaderEffectMeta {
+        ShaderEffectMeta::new(
+            MaterialValueBindDesc {
+                set: 1,
+                bind: 1,
+                stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                mat4_list: vec![],
+                mat2_list: vec![],
+                vec4_list: vec![
+                    UniformPropertyVec4(Atom::from("sea_base"), Vector4::new(0.0, 0.09, 0.18, 1.0)),
+                    UniformPropertyVec4(
+                        Atom::from("sea_water_color"),
+                        Vector4::new(0.48, 0.54, 0.36, 1.0),
+                    ),
+                ],
+                vec2_list: vec![],
+                float_list: vec![
+                    UniformPropertyFloat(Atom::from("width"), 800.),
+                    UniformPropertyFloat(Atom::from("height"), 600.),
+                    UniformPropertyFloat(Atom::from("iTime"), 0.2),
+                    UniformPropertyFloat(Atom::from("phantom_data"), 0.),
+                ],
+                int_list: vec![],
+                uint_list: vec![],
+            },
+            None,
+            Varyings(vec![]),
+            BlockCodeAtom {
+                define: Atom::from(""),
+                running: Atom::from(include_str!("../assets/skybox.vert")),
+            },
+            BlockCodeAtom {
+                define: Atom::from(include_str!("./water_define.frag")),
+                running: Atom::from(include_str!("./water.frag")),
+            },
+        )
     }
 }

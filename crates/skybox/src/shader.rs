@@ -10,7 +10,7 @@ pub struct SkyboxShader {
 }
 
 impl SkyboxShader {
-    pub const KEY: &str     = "SkyboxShader";
+    pub const KEY: &'static str     = "SkyboxShader";
 
     pub fn meta() -> ShaderEffectMeta {
         ShaderEffectMeta::new(

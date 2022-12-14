@@ -1,5 +1,15 @@
 use default_render::PluginDefaultMaterial;
-use skeletons::{matrices_indices::PluginAttributeMatricesIndices, matrices_weights::PluginAttributeMatricesWeights};
+use pi_scene_context::{
+    renderers::PluginRenderer,
+    meshes::{cube::PluginCubeBuilder, PluginMesh, ball::PluginBallBuilder},
+    main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterial,
+    vertex_data::{normal::PluginBufferNormal, color4::PluginBufferColor4, indices::PluginBufferIndices},
+    cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
+    cameras::PluginCamera,
+    transforms::PluginTransformNode,
+    scene::PluginScene, resources::PluginResource, geometry::PluginBuildinGeometry
+};
+
 pub struct PluginBundleDefault;
 impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
     fn init(
@@ -22,8 +32,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         // PluginBufferPosition.init(engine, stages);
         // PluginAttributeIndices.init(engine, stages);
         // PluginBufferUV.init(engine, stages);
-        PluginAttributeMatricesIndices.init(engine, stages);
-        PluginAttributeMatricesWeights.init(engine, stages);
 
         PluginMesh.init(engine, stages);
         PluginMaterial.init(engine, stages);
@@ -35,6 +43,15 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCubeBuilder.init(engine, stages);
 
         PluginRenderer.init(engine, stages);
+
+        // skybox::interface::PluginSkyboxMaterial.init(engine, stages);
+        // skybox::PluginSkybox.init(engine, stages);
+
+        // procedural_texture::perlin_noise::interface::PluginPerlinNoiseMaterial.init(engine, stages);
+        // procedural_texture::PluginTestPerlinNoise.init(engine, stages);
+
+        // procedural_texture::cloud::interface::PluginCloudMaterial.init(engine, stages);
+        // procedural_texture::PluginTestPerlinNoise.init(engine, stages);
 
         PluginBoundingOctTree.init(engine, stages);
         PluginBallBuilder.init(engine, stages);

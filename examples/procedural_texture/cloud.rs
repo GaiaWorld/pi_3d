@@ -1,13 +1,10 @@
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::engine_shell::{EnginShell, AppShell};
 use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, object::InterfaceObject, frame_time::InterfaceFrameTime};
 use pi_render::rhi::options::RenderOptions;
-use pi_scene_context::{plugin::Plugin, object::ObjectID, transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode}, scene::{interface::InterfaceScene}, cameras::interface::InterfaceCamera, meshes::{cube::InterfaceCube, quad::{InterfaceQuad, PluginQuadBuilder}}, main_camera_render::interface::InterfaceMainCamera, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
 use pi_scene_context::{plugin::Plugin, object::ObjectID, transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode}, scene::{interface::InterfaceScene}, cameras::interface::InterfaceCamera, meshes::{cube::InterfaceCube, quad::{InterfaceQuad, PluginQuadBuilder}}, main_camera_render::interface::InterfaceMainCamera, layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material_meta::InterfaceMaterialMeta, material::{InterfaceMaterial, MaterialID}}};
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use procedural_texture::{InterfaceTestPerlinNoise, cloud::interface::InterfaceCloudMaterial};
 use procedural_texture::{cloud::{PluginCloudMaterial, shader::CloudShader, interface::InterfaceCloudMaterial}};
 
 
@@ -40,7 +37,6 @@ impl PluginTest {
         engine.free_camera_orth_size(camera01, 1 as f32);
 
         let sky_box = engine.new_quad(scene01);
-        engine.use_cloud_material(sky_box);
         let material = engine.create_cloud_material();
         engine.use_material(sky_box, MaterialID(material));
 

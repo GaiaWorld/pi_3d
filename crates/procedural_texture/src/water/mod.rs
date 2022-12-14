@@ -1,7 +1,24 @@
+use pi_atom::Atom;
+use pi_engine_shell::{engine_shell::EnginShell, plugin::{Plugin, ErrorPlugin}};
+use render_shader::shader::KeyShaderEffect;
+use pi_scene_context::materials::material_meta::InterfaceMaterialMeta;
+use crate::water::shader::WaterShader;
+
 pub mod shader;
-pub mod material;
 pub mod interface;
-pub mod command;
-pub mod pipeline;
-pub mod bind_group;
-pub mod material_sys;
+
+
+pub struct PluginWaterMaterial;
+impl Plugin for PluginWaterMaterial {
+    fn init(
+        &mut self,
+        engine: &mut pi_engine_shell::engine_shell::EnginShell,
+        stages: &mut pi_engine_shell::run_stage::RunStage,
+    ) -> Result<(), ErrorPlugin> {
+        println!("PluginWaterMaterial");
+        let key = KeyShaderEffect(Atom::from(WaterShader::KEY));
+        engine.regist_material_meta(key, WaterShader::meta());
+
+        Ok(())
+    }
+}

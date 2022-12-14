@@ -1,26 +1,24 @@
+use pi_atom::Atom;
 use pi_engine_shell::object::InterfaceObject;
 
-use pi_scene_context::{object::ObjectID, materials::material::{SingleMaterialIDCommandList, MaterialIDCommand}};
+use pi_scene_context::{object::ObjectID, materials::{material::{SingleMaterialIDCommandList, MaterialIDCommand}, material_meta::InterfaceMaterialMeta}};
+use render_shader::shader::KeyShaderEffect;
 
-use super::{command::{SingleUnlitMaterialCommandList, UnlitMaterialCommand}};
+use super::shader::BRDFShader;
 
 
-pub trait InterfaceUnlitMaterial {
-    fn create_unlit_material(
+pub trait InterfaceBRDFMaterial {
+    fn create_brdf_material(
         & self,
     ) -> ObjectID;
 }
 
-impl InterfaceUnlitMaterial for pi_engine_shell::engine_shell::EnginShell {
-    fn create_unlit_material(
+impl InterfaceBRDFMaterial for pi_engine_shell::engine_shell::EnginShell {
+    fn create_brdf_material(
         & self,
     ) -> ObjectID {
-        //  println!("create_unlit_material");
         let entity = self.new_object();
-
-        let world = self.world();
-        let commands = world.get_resource_mut::<SingleUnlitMaterialCommandList>().unwrap();
-        commands.list.push(UnlitMaterialCommand::Create(entity));
+        self.as_material(entity, KeyShaderEffect(Atom::from(BRDFShader::KEY)));
 
         entity
     }

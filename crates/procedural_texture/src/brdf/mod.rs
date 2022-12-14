@@ -1,41 +1,23 @@
-use bind_group::{SingleUnlitBindGroupList, SysUnlitMaterialTextureBindGroupUpdate, SysUnlitMaterialBindGroupUpdate};
-use command::{SysUnlitMaterialCommand, SingleUnlitMaterialCommandList};
-use define::SysUnlitMaterialDefinesUpdate;
+use pi_atom::Atom;
 use pi_ecs::prelude::Setup;
 use pi_engine_shell::plugin::Plugin;
-use material_sys::{UnlitModelUniformUpdate, UnlitMaterialUniformUpdate, SysUnlitMaterialPipelineKey, UnlitMaterialFilter};
+use pi_scene_context::materials::material_meta::InterfaceMaterialMeta;
+use render_shader::shader::KeyShaderEffect;
 
-pub mod material;
-pub mod material_sys;
+use self::shader::BRDFShader;
+
 pub mod shader;
-pub mod command;
-pub mod pipeline;
-pub mod bind_group;
 pub mod interface;
-pub mod define;
-pub mod assets;
-
-pub struct PluginUnlitMaterial;
-impl Plugin for PluginUnlitMaterial {
+pub struct PluginBRDFMaterial;
+impl Plugin for PluginBRDFMaterial {
     fn init(
         &mut self,
         engine: &mut pi_engine_shell::engine_shell::EnginShell,
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
+        let key = KeyShaderEffect(Atom::from(BRDFShader::KEY));
+        engine.regist_material_meta(key, BRDFShader::meta());
 
-        SysUnlitMaterialDefinesUpdate::setup(world, stages.command_stage());
-        SysUnlitMaterialBindGroupUpdate::setup(world, stages.command_stage());
-        SysUnlitMaterialTextureBindGroupUpdate::setup(world, stages.command_stage());
-        SysUnlitMaterialCommand::setup(world, stages.command_stage());
-        UnlitModelUniformUpdate::setup(world, stages.uniform_update());
-        UnlitMaterialUniformUpdate::setup(world, stages.uniform_update());
-        SysUnlitMaterialPipelineKey::setup(world, stages.uniform_update());
-        UnlitMaterialFilter::setup(world, stages.filter_culling());
-
-        world.insert_resource(SingleUnlitBindGroupList::default());
-        world.insert_resource(SingleUnlitMaterialCommandList::default());
-        
         Ok(())
     }
 }

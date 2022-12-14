@@ -1,24 +1,14 @@
-#![feature(box_into_inner)]
-
-use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
-
-use default_render::interface::InterfaceDefaultMaterial;
-use material_textures::{PluginMaterialTextures, main_texture::{PluginMainTexture, InterfaceMainTexture}};
+use material_textures::{PluginMaterialTextures, main_texture::PluginMainTexture};
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad};
+use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, object::InterfaceObject, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_render::rhi::options::RenderOptions;
-use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
-    cameras::interface::InterfaceCamera,
-    meshes::quad::{InterfaceQuad, PluginQuadBuilder},
-    main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::material::{InterfaceMaterial, MaterialID}
-};
+use pi_scene_context::{plugin::Plugin, object::ObjectID, transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode}, scene::{interface::InterfaceScene}, cameras::interface::InterfaceCamera, meshes::{cube::InterfaceCube, quad::{InterfaceQuad, PluginQuadBuilder}}, main_camera_render::interface::InterfaceMainCamera, layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material_meta::InterfaceMaterialMeta, material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}};
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use procedural_texture::brdf::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
+use procedural_texture::brdf::{PluginBRDFMaterial, interface::InterfaceBRDFMaterial};
+use render_resource::sampler::SamplerDesc;
+use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 
 
 #[derive(Debug)]
@@ -29,41 +19,43 @@ impl Plugin for PluginTest {
         engine: &mut pi_scene_context::engine::Engine,
         stages: &mut pi_scene_context::run_stage::RunStage,
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-        PluginLocalLoad.init(engine, stages);
-        PluginBundleDefault.init(engine, stages);
-
         PluginQuadBuilder.init(engine, stages);
+
+        PluginLocalLoad.init(engine, stages);
 
         PluginMaterialTextures.init(engine, stages);
         PluginMainTexture.init(engine, stages);
         PluginUnlitMaterial.init(engine, stages);
-
+        
         Ok(())
     }
 }
 
 impl PluginTest {
-    pub fn setup(
-        engine: &pi_engine_shell::engine_shell::EnginShell,
+    fn setup(
+        engine: &EnginShell
     ) {
-
-        engine.frame_time(2);
-
+        engine.frame_time(2000);
         // Test Code
         let scene01 = engine.create_scene();
         let camera01 = engine.create_free_camera(scene01);
+        let node01 = engine.create_transform_node(scene01);
+        // engine.set_parent(camera01, scene01, Some(node01));
         engine.active_camera(camera01, true);
-        engine.layer_mask(camera01, LayerMask::default());
-        engine.transform_position(camera01, Vector3::new(0., 0., -10.));
+        engine.transform_position(camera01, Vector3::new(0., 0., -5.));
         engine.free_camera_orth_size(camera01, 1 as f32);
 
-        let unlitmaterial = engine.create_unlit_material();
-        engine.set_main_texture(unlitmaterial, Some(render_resource::ImageAssetKey::from("E:/rust_render/pi_3d/assets/images/fractal.png")));
+        let sky_box = engine.new_quad(scene01);
+        let material = engine.create_brdf_material();
 
-        
-        let quad = engine.new_quad(scene01);
-        engine.use_material(quad, MaterialID(unlitmaterial));
-        engine.layer_mask(quad, LayerMask::default());
+        engine.set_texture_sampler(material, "_MainTex", SamplerDesc::default());
+        engine.emissive_texture(material, render_resource::ImageAssetKey::from("E:/rust_render/pi_3d/assets/images/fractal.png"));
+
+        engine.use_material(sky_box, MaterialID(material));
+
+        engine.layer_mask(camera01, LayerMask::default());
+        engine.layer_mask(sky_box, LayerMask::default());
+
     }
 }
 
@@ -75,6 +67,9 @@ pub fn main() {
             ..Default::default()
         }
     );
+    shell.add_plugin(PluginBundleDefault);
+    shell.add_plugin(PluginQuadBuilder);
+    shell.add_plugin(PluginBRDFMaterial);
     shell.add_plugin(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);

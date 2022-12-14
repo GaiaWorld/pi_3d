@@ -15,7 +15,7 @@ pub trait TMaterial {
     fn render_mode(&self) -> ERenderMode;
 }
 #[derive(Debug)]
-enum ECommand {
+pub enum ECommand {
     Mat4(ObjectID, usize, Matrix, bool),
     Mat2(ObjectID, usize, Matrix2, bool),
     Vec4(ObjectID, usize, Vector4, bool),
@@ -26,7 +26,7 @@ enum ECommand {
 }
 
 #[derive(Debug, Default)]
-pub struct SingleValueUniformCommands(Vec<ECommand>);
+pub struct SingleValueUniformCommands(pub Vec<ECommand>);
 pub struct SysValueUniformComand;
 #[setup]
 impl SysValueUniformComand {

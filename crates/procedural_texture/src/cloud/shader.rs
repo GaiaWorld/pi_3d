@@ -10,7 +10,7 @@ pub struct CloudShader {
 }
 
 impl CloudShader {
-    pub const KEY: &str     = "CloudShader";
+    pub const KEY: &'static str     = "CloudShader";
 
     pub fn meta() -> ShaderEffectMeta {
         ShaderEffectMeta::new(

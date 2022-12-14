@@ -5,7 +5,7 @@ use render_shader::{unifrom_code::MaterialValueBindDesc, varying_code::{Varyings
 
 pub struct DefaultShader;
 impl DefaultShader {
-    pub const KEY: &str = "Default";
+    pub const KEY: &'static str = "Default";
     pub fn res() -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {

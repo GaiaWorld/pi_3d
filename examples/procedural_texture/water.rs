@@ -1,7 +1,7 @@
 use pi_3d::PluginBundleDefault;
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
-use pi_engine_shell::engine_shell::{AppShell, EnginShell};
+use pi_engine_shell::{engine_shell::{AppShell, EnginShell}, frame_time::InterfaceFrameTime};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     cameras::interface::InterfaceCamera,
@@ -17,10 +17,10 @@ use pi_scene_context::{
     transforms::{
         command::{SingleTransformNodeCommandList, TransformNodeCommand},
         interface::InterfaceTransformNode,
-    },
+    }, materials::material::{MaterialID, InterfaceMaterial},
 };
 use pi_scene_math::Vector3;
-use procedural_texture::{water::interface::{InterfaceWaterMaterial, PluginWaterMaterial}, InterfaceTestPerlinNoise};
+use procedural_texture::water::interface::InterfaceWaterMaterial;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
@@ -29,7 +29,6 @@ impl Plugin for PluginTest {
         engine: &mut pi_scene_context::engine::Engine,
         stages: &mut pi_scene_context::run_stage::RunStage,
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-        PluginWaterMaterial.init(engine, stages);
         PluginQuadBuilder.init(engine, stages);
         
         Ok(())
@@ -39,6 +38,8 @@ impl Plugin for PluginTest {
 impl PluginTest {
     fn setup(engine: &EnginShell) {
         // Test Code
+        engine.frame_time(2000);
+        
         let scene01 = engine.create_scene();
         let camera01 = engine.create_free_camera(scene01);
         let node01 = engine.create_transform_node(scene01);
@@ -48,7 +49,8 @@ impl PluginTest {
         engine.free_camera_orth_size(camera01, 1 as f32);
 
         let sky_box = engine.new_quad(scene01);
-        engine.use_water_material(sky_box);
+        let material = engine.create_water_material();
+        engine.use_material(sky_box, MaterialID(material));
 
         engine.layer_mask(camera01, LayerMask::default());
         engine.layer_mask(sky_box, LayerMask::default());

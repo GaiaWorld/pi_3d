@@ -9,7 +9,7 @@ pub struct PerlinNoiseShader {
 }
 
 impl PerlinNoiseShader {
-    pub const KEY: &str     = "PerlinNoiseShader";
+    pub const KEY: &'static str     = "PerlinNoiseShader";
 
     pub fn meta() -> ShaderEffectMeta {
         ShaderEffectMeta::new(
