@@ -2,11 +2,10 @@ use pi_ecs::prelude::{Setup};
 
 use crate::{plugin::Plugin};
 
-use self::{command::{SysTransformNodeCommand, SingleTransformNodeCommandList, SysTreeCommand, SingleTreeCommandList}, transform_node_sys::{LocalRotationMatrixCalc, LocalMatrixCalc, WorldMatrixCalc}, dirty::SysDirtyTransformNodeTick};
+use self::{command::{SysTransformNodeCommand, SingleTransformNodeCommandList, SysTreeCommand, SingleTreeCommandList}, transform_node_sys::{LocalRotationMatrixCalc, LocalMatrixCalc, WorldMatrixCalc}};
 
 pub mod transform_node;
 pub mod transform_node_sys;
-pub mod dirty;
 pub mod command;
 pub mod interface;
 
@@ -19,7 +18,6 @@ impl Plugin for PluginTransformNode {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysDirtyTransformNodeTick::setup(world, stages.dirty_state_stage());
         SysTreeCommand::setup(world, stages.command_stage());
         SysTransformNodeCommand::setup(world, stages.command_stage());
         LocalRotationMatrixCalc::setup(world, stages.local_matrix_stage());

@@ -96,27 +96,11 @@ fn collect_opaque_normal_depth(
         if camera_sceneid == sceneid.0 && layermask.include(&layer) {
             let mut bind_groups = vec![];
 
-            if let Some(texbind) = &matid.tex_bind_group {
-                if bindgrouppool.get(texbind).unwrap().bind_group.is_some() {
-                    bind_groups.push(RenderObjectBindGroup {
-                        bind_group: texbind.clone(),
-                        offsets: vec![],
-                    });
-                } else {
-                    println!(">>>>>>>>>>>>>>>>>");
-                    return;
-                }
+            if !matid.renderobj_bind_group(model, &mut bind_groups, bindgrouppool) {
+                return;
             }
 
             let view_distance = camerapos.metric_distance(&globaltransform.position);
-
-            bind_groups.push(RenderObjectBindGroup {
-                bind_group: matid.material_bind_group.clone(),
-                offsets: vec![
-                    *model.bind_offset,
-                    matid.material_bind_offet
-                ],
-            });
 
             match rendermode.0 {
                 ERenderMode::AlphaTest => {

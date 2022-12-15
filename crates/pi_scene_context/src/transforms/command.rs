@@ -1,11 +1,11 @@
 use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
 use pi_ecs_macros::setup;
 use pi_ecs_utils::prelude::EntityTreeMut;
-use pi_scene_math::{Vector3, Quaternion};
+use pi_scene_math::{Vector3, Quaternion, Rotation3, coordiante_system::CoordinateSytem3, vector::TToolRotation};
 
 use crate::{object::{ObjectID, GameObject}, };
 
-use super::{transform_node::{LocalTransform, GlobalTransform}, dirty::DirtyLocalTransform};
+use super::{transform_node::{LocalPosition, LocalRotation, LocalRotationQuaternion, LocalEulerAngles, LocalScaling, LocalRoationWithQuaternion}};
 
 pub enum TreeCommand {
     Append(ObjectID, ObjectID),
@@ -59,19 +59,25 @@ impl SysTransformNodeCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleTransformNodeCommandList>,
-        mut transforms: Query<GameObject, (Write<LocalTransform>, Write<GlobalTransform>, Write<DirtyLocalTransform>)>,
+        mut transforms: Query<
+            GameObject,
+            (
+                Write<LocalPosition>, Write<LocalScaling>,
+                Write<LocalRotation>, Write<LocalRotationQuaternion>, Write<LocalEulerAngles>
+            )
+        >,
         mut delete: EntityDelete<GameObject>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 TransformNodeCommand::Create(node) => {
                     match transforms.get_mut(node) {
-                        Some(mut transform) => {
-                            transform.0.insert_no_notify(LocalTransform::default());
-                            transform.1.insert_no_notify(GlobalTransform::default());
-                            transform.2.insert_no_notify(DirtyLocalTransform);
-                            
-                            // println!("DirtyLocalTransform >>>>>>>>>> ");
+                        Some((mut position, mut lscaling, mut lrotation, mut lquaternion, mut leuler)) => {
+                            position.write(LocalPosition(Vector3::new(0., 0., 0.)));
+                            lscaling.write(LocalScaling(Vector3::new(1., 1., 1.)));
+                            lrotation.write(LocalRotation(Rotation3::identity()));
+                            lquaternion.write(LocalRotationQuaternion(Quaternion::identity()));
+                            leuler.write(LocalEulerAngles(Vector3::new(0., 0., 0.)));
                         },
                         None => {},
                     }
@@ -81,84 +87,45 @@ impl SysTransformNodeCommand {
                 },
                 TransformNodeCommand::ModifyPosition(node, value) => {
                     match transforms.get_mut(node) {
-                        Some(mut transform) => {
-                            match transform.0.get_mut() {
-                                Some(transform) => {
-                                    transform.position = value;
-                                },
-                                None => todo!(),
-                            }
-                            match transform.2.get_mut() {
-                                Some(_) => {
-                                },
-                                None => {
-                                    transform.2.insert_no_notify(DirtyLocalTransform);
-                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
-                                },
-                            }
+                        Some((mut position, mut lscaling, mut lrotation, mut lquaternion, mut leuler)) => {
+                            position.write(LocalPosition(value));
                         },
                         None => {},
                     }
                 },
                 TransformNodeCommand::ModifyRotation(node, value) => {
                     match transforms.get_mut(node) {
-                        Some(mut transform) => {
-                            match transform.0.get_mut() {
-                                Some(transform) => {
-                                    transform.euler = value;
-                                },
-                                None => todo!(),
-                            }
-                            match transform.2.get_mut() {
-                                Some(_) => {
-                                },
-                                None => {
-                                    transform.2.insert_no_notify(DirtyLocalTransform);
-                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
-                                },
-                            }
+                        Some((mut position, mut lscaling, mut lrotation, mut lquaternion, mut leuler)) => {
+                            
+                            let rotation = Rotation3::from_euler_angles(value.y, value.x, value.z);
+                            let quaternion = Quaternion::from_rotation_matrix(&rotation);
+                            lquaternion.write(LocalRotationQuaternion(quaternion));
+                            lrotation.write(LocalRotation(rotation));
+                            leuler.write(LocalEulerAngles(value));
                         },
                         None => {},
                     }      
                 },
                 TransformNodeCommand::ModifyScaling(node, value) => {
                     match transforms.get_mut(node) {
-                        Some(mut transform) => {
-                            match transform.0.get_mut() {
-                                Some(transform) => {
-                                    transform.scaling = value;
-                                },
-                                None => todo!(),
-                            }
-                            match transform.2.get_mut() {
-                                Some(_) => {
-                                },
-                                None => {
-                                    transform.2.insert_no_notify(DirtyLocalTransform);
-                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
-                                },
-                            }
+                        Some((mut position, mut lscaling, mut lrotation, mut lquaternion, mut leuler)) => {
+                            lscaling.write(LocalScaling(value));
                         },
                         None => {},
                     }      
                 },
                 TransformNodeCommand::ModifyRotationQuaternion(node, value) => {
                     match transforms.get_mut(node) {
-                        Some(mut transform) => {
-                            match transform.0.get_mut() {
-                                Some(transform) => {
-                                    transform.quaternion = value;
-                                },
-                                None => todo!(),
-                            }
-                            match transform.2.get_mut() {
-                                Some(_) => {
-                                },
-                                None => {
-                                    transform.2.insert_no_notify(DirtyLocalTransform);
-                                    // println!("DirtyLocalTransform >>>>>>>>>> ");
-                                },
-                            }
+                        Some((mut position, mut lscaling, mut lrotation, mut lquaternion, mut leuler)) => {
+                            
+                            let rotation = value.to_rotation_matrix();
+                            let mut euler = Vector3::new(0., 0., 0.);
+                            let (z, x, y) = rotation.euler_angles();
+                            euler.copy_from_slice(&[x, y, z]);
+
+                            lquaternion.write(LocalRotationQuaternion(value));
+                            lrotation.write(LocalRotation(rotation));
+                            leuler.write(LocalEulerAngles(euler));
                         },
                         None => {},
                     }      

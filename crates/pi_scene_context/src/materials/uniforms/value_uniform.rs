@@ -1,3 +1,4 @@
+use lazy_static::__Deref;
 use pi_atom::Atom;
 use pi_render::rhi::{dyn_uniform_buffer::{BindOffset, AsBind}, device::RenderDevice, bind_group::BindGroup};
 use render_data_container::UniformValueBindKey;
@@ -17,7 +18,7 @@ impl AsBind for TempMaterialValueBind {
 #[derive(Debug)]
 pub struct MaterialValueBind {
     pub bind: u32,
-    pub bind_offset: BindOffset,
+    pub bind_offset: Option<BindOffset>,
     pub mat4_count: u8,
     pub mat2_count: u8,
     pub vec4_count: u8,
@@ -118,7 +119,7 @@ impl MaterialValueBind {
 
         let temp = TempMaterialValueBind(bind, total_size as usize);
         let result = Self {
-            bind, bind_offset: dynbuffer.alloc_binding_with_asbind(&temp),
+            bind, bind_offset: if total_size > 0 { Some(dynbuffer.alloc_binding_with_asbind(&temp)) } else { None },
             mat4_count, mat2_count, vec4_count, vec2_count, float_count, int_count, uint_count, fill_vec2_count, fill_int_count,
             mat4_begin, mat2_begin, vec4_begin, vec2_begin, float_begin, int_begin, uint_begin, total_size, bind_group: key,
         };
@@ -126,6 +127,14 @@ impl MaterialValueBind {
         println!("{:?}", result);
 
         result
+    }
+
+    pub fn bind_offset(&self) -> Option<u32> {
+        if let Some(offset) = &self.bind_offset {
+            Some(*offset.deref())
+        } else {
+            None
+        }
     }
 
     pub fn calc_fill(
@@ -156,10 +165,17 @@ impl MaterialValueBind {
     pub fn layout_entries(
         total_size: usize
     ) -> Vec<wgpu::BindGroupLayoutEntry> {
-        vec![
-            BuildinModelBind::ENTRY,
-            Self::layout_entry(total_size),
-        ]
+        if total_size > 0 {
+            vec![
+                BuildinModelBind::ENTRY,
+                Self::layout_entry(total_size),
+            ]
+        } else {
+            vec![
+                BuildinModelBind::ENTRY,
+            ]
+        }
+            
     }
 
     pub fn calc_key(
@@ -230,20 +246,36 @@ impl MaterialValueBind {
         group: &mut RenderBindGroup,
         dynbuffer: &RenderDynUniformBuffer,
     ) {
-        group.bind_group = Some(
-            BindGroup::from(
-                device.create_bind_group(
-                    &wgpu::BindGroupDescriptor {
-                        label: Some(self.bind_group.as_str()),
-                        layout: &group.layout,
-                        entries: &[
-                            BuildinModelBind::dyn_entry(dynbuffer),
-                            self.dyn_entry(dynbuffer),
-                        ],
-                    }
+        if self.bind_offset.is_some() {
+            group.bind_group = Some(
+                BindGroup::from(
+                    device.create_bind_group(
+                        &wgpu::BindGroupDescriptor {
+                            label: Some(self.bind_group.as_str()),
+                            layout: &group.layout,
+                            entries: &[
+                                BuildinModelBind::dyn_entry(dynbuffer),
+                                self.dyn_entry(dynbuffer),
+                            ],
+                        }
+                    )
                 )
-            )
-        ); 
+            ); 
+        } else {
+            group.bind_group = Some(
+                BindGroup::from(
+                    device.create_bind_group(
+                        &wgpu::BindGroupDescriptor {
+                            label: Some(self.bind_group.as_str()),
+                            layout: &group.layout,
+                            entries: &[
+                                BuildinModelBind::dyn_entry(dynbuffer),
+                            ],
+                        }
+                    )
+                )
+            ); 
+        }
     }
 
     pub fn to_code(

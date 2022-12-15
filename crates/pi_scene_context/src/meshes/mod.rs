@@ -14,6 +14,7 @@ pub mod alpha_index;
 pub mod render_group;
 pub mod ball;
 pub mod quad;
+pub mod instanced_mesh;
 
 pub trait Mesh {
     fn alpha_index(&self) -> usize;

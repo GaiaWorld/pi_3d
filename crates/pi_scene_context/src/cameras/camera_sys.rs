@@ -1,24 +1,26 @@
 use pi_ecs::{prelude::{Query}, query::{Write, With, Or, Changed}};
 use pi_ecs_macros::setup;
 use pi_ecs_utils::prelude::EntityTree;
-use pi_scene_math::{coordiante_system::CoordinateSytem3};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, Rotation3};
 use pi_slotmap_tree::Storage;
 
-use crate::{transforms::{transform_node::{LocalTransform, GlobalTransform, }, dirty::{DirtyLocalTransform, DirtyGlobalTransform}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}};
+use crate::{transforms::{transform_node::{GlobalTransform, LocalPosition, WorldMatrix, LocalRotation, }}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}};
 
-use super::{camera::{CameraParam, CameraViewMatrix, CameraGlobalPosition, CameraProjectionMatrix, CameraTransformMatrix, CameraDirection}};
+use super::{camera::{CameraParam, CameraViewMatrix, CameraGlobalPosition, CameraProjectionMatrix, CameraTransformMatrix}};
 
 pub struct TargetCameraEffectLocalRotation;
 #[setup]
 impl TargetCameraEffectLocalRotation {
     #[system]
     pub fn calc(
-        mut query_cameras: Query<GameObject, (&TargetCameraParam, &mut LocalTransform)>,
+        mut query_cameras: Query<GameObject, (&TargetCameraParam, &LocalPosition, Write<LocalRotation>)>,
     ) {
         //  println!("Target Camera Control Calc:");
         let coordsys = CoordinateSytem3::left();
-        query_cameras.iter_mut().for_each(|(target_camera, mut l_transform)| {
-            target_camera.calc_rotation(&coordsys, &l_transform.position.clone(), &mut l_transform.rotation);
+        query_cameras.iter_mut().for_each(|(target_camera, lposition, mut lrotation)| {
+            let mut rotation = Rotation3::identity();
+            target_camera.calc_rotation(&coordsys, &lposition.0, &mut rotation);
+            lrotation.write(LocalRotation(rotation));
         });
     }
 }
@@ -28,14 +30,14 @@ pub struct TargetCameraViewMatrixCalc;
 impl TargetCameraViewMatrixCalc {
     #[system]
     pub fn calc(
-        mut query_cameras: Query<GameObject, (ObjectID, &CameraParam, &TargetCameraParam, &LocalTransform, &mut CameraViewMatrix, &mut CameraGlobalPosition), Or<(Changed<TargetCameraParam>, With<DirtyLocalTransform>)>>,
+        mut query_cameras: Query<GameObject, (ObjectID, &CameraParam, &TargetCameraParam, &LocalPosition, &mut CameraViewMatrix, &mut CameraGlobalPosition), Or<(Changed<TargetCameraParam>, With<LocalPosition>)>>,
         query_transforms: Query<GameObject, &GlobalTransform>,
-        dirty_globals: Query<GameObject, With<DirtyGlobalTransform>>,
+        dirty_globals: Query<GameObject, Changed<WorldMatrix>>,
         idtree: EntityTree<GameObject>,
     ) {
         //  println!("View Matrix Calc:");
         let coordsys = CoordinateSytem3::left();
-        for (entity, camera, target_camera, l_transform, mut camera_view, mut camera_pos) in query_cameras.iter_mut() {
+        for (entity, camera, target_camera, l_position, mut camera_view, mut camera_pos) in query_cameras.iter_mut() {
             match idtree.get_up(entity) {
                 Some(parent_id) => {
                     let parent_id = parent_id.parent();
@@ -43,11 +45,11 @@ impl TargetCameraViewMatrixCalc {
                     match parent {
                         Some(parent) => {
                             if dirty_globals.get(parent_id).is_some() {
-                                target_camera.view_matrix(&coordsys, &mut camera_view,  &mut camera_pos, &l_transform.position, Some(&parent.matrix), Some(&parent.iso));
+                                target_camera.view_matrix(&coordsys, &mut camera_view,  &mut camera_pos, &l_position.0, Some(&parent.matrix), Some(&parent.iso));
                             }
                         },
                         None => {
-                            target_camera.view_matrix(&coordsys, &mut camera_view,  &mut camera_pos, &l_transform.position, None, None);
+                            target_camera.view_matrix(&coordsys, &mut camera_view,  &mut camera_pos, &l_position.0, None, None);
                         },
                     }
                 },

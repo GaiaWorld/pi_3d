@@ -9,7 +9,7 @@ use pi_engine_shell::{assets::sync_load::{PluginAssetSyncLoad, InterfaceAssetSyn
 use pi_render::rhi::device::RenderDevice;
 use pi_scene_math::{Matrix, Matrix2, Vector4, Vector2, Number};
 use pi_share::Share;
-use render_shader::{shader::{KeyShaderEffect, ResShader, KeyShader, ShaderEffectMeta as ShaderEffectDesc}, skin_code::ESkinCode, scene_about_code::ERenderTag, unifrom_code::{UniformPropertyName, ErrorUniformSlot, TUnifromShaderProperty}};
+use render_shader::{shader::{KeyShaderEffect, ResShader, KeyShader, ShaderEffectMeta as ShaderEffectDesc}, skin_code::ESkinCode, scene_about_code::ERenderTag, unifrom_code::{UniformPropertyName, ErrorUniformSlot, TUnifromShaderProperty, MaterialValueBindDesc}};
 
 use crate::{object::{ObjectID, GameObject}, renderers::render_mode::ERenderMode};
 
@@ -64,6 +64,7 @@ impl TUnifromShaderProperty for UniformPropertyUint {
 }
 
 pub type ShaderEffectMeta = ShaderEffectDesc<UniformPropertyMat4, UniformPropertyMat2, UniformPropertyVec4, UniformPropertyVec2, UniformPropertyFloat, UniformPropertyInt, UniformPropertyUint>;
+pub type ShaderEffectValueUniformDesc = MaterialValueBindDesc<UniformPropertyMat4, UniformPropertyMat2, UniformPropertyVec4, UniformPropertyVec2, UniformPropertyFloat, UniformPropertyInt, UniformPropertyUint>;
 
 #[derive(Clone, Debug)]
 pub struct ResShaderEffectMeta(pub Share<ShaderEffectMeta>);

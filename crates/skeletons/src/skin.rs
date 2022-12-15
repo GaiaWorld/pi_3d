@@ -1,6 +1,6 @@
 use pi_engine_shell::{engine_shell::EnginShell, run_stage::RunStage, plugin::{ErrorPlugin, Plugin}, object::{ObjectID, InterfaceObject}};
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
-use pi_scene_context::{vertex_data::indices::InterfaceBufferIndices, geometry::TInterfaceGeomtery, scene::interface::InterfaceScene, transforms::interface::InterfaceTransformNode, meshes::interface::InterfaceMesh};
+use pi_scene_context::{geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, scene::interface::InterfaceScene, transforms::interface::InterfaceTransformNode, meshes::interface::InterfaceMesh};
 use render_data_container::{KeyVertexBuffer, VertexBuffer, EVertexDataFormat};
 use render_geometry::{vertex_data::{VertexAttribute, EVertexDataKind, VertexBufferDesc}, indices::IndicesBufferDesc};
 

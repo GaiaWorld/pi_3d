@@ -2,35 +2,40 @@
 use std::time::Instant;
 
 use pi_ecs_macros::{setup};
-use pi_ecs::{prelude::{Query}, query::{Write, With}};
+use pi_ecs::{prelude::{Query}, query::{Write, Changed, Or}};
 use pi_ecs_utils::prelude::EntityTree;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolRotation, TToolMatrix}, Matrix};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolRotation, TToolMatrix}, Matrix, Rotation3};
 use pi_slotmap_tree::Storage;
 
-use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem, transforms::dirty::DirtyGlobalTransform, meshes::model::BuildinModelBind};
+use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem, meshes::model::BuildinModelBind};
 
-use super::{transform_node::{LocalTransform, GlobalTransform}, dirty::DirtyLocalTransform};
+use super::{transform_node::{GlobalTransform, LocalMatrix, LocalRotation, LocalEulerAngles, LocalRotationQuaternion, LocalRoationWithQuaternion, LocalPosition, LocalScaling, WorldMatrix, WorldMatrixInv}};
 
 pub struct LocalRotationMatrixCalc;
 #[setup]
 impl LocalRotationMatrixCalc {
     #[system]
     pub fn calc(
-        mut query_locals: Query<GameObject, (&mut LocalTransform), With<DirtyLocalTransform>>,
+        mut local_rotations: Query<
+            GameObject,
+            (Write<LocalRotation>, &LocalEulerAngles, &LocalRotationQuaternion, &LocalRoationWithQuaternion),
+            Or<(Changed<LocalEulerAngles>, Changed<LocalRotationQuaternion>, Changed<LocalRoationWithQuaternion>)>
+        >,
     ) {
         //  println!("LocalRotationMatrixCalc:");
-        let coordsys = CoordinateSytem3::left();
-        query_locals.iter_mut().for_each(|(mut l_transform)| {
-            match l_transform.use_quaternion {
-                true => {
-                    let m = l_transform.quaternion.to_rotation_matrix();
-                    l_transform.rotation.clone_from(&m);
-                },
-                false => {
-                    CoordinateSytem3::rotation_matrix_mut_euler_angles(l_transform.euler.x, l_transform.euler.y, l_transform.euler.z, &mut l_transform.rotation);
-                },
-            }
-        });
+        // let coordsys = CoordinateSytem3::left();
+        // local_rotations.iter_mut().for_each(|(mut rotation, euler, quaternion, withquaternion)| {
+        //     match withquaternion.0 {
+        //         true => {
+        //             rotation.write(LocalRotation(quaternion.0.to_rotation_matrix()));
+        //         },
+        //         false => {
+        //             let mut temp = Rotation3::identity();
+        //             CoordinateSytem3::rotation_matrix_mut_euler_angles(euler.0.x, euler.0.y, euler.0.z, &mut temp);
+        //             rotation.write(LocalRotation(temp));
+        //         },
+        //     }
+        // });
     }
 }
 
@@ -39,15 +44,13 @@ pub struct LocalMatrixCalc;
 impl LocalMatrixCalc {
     #[system]
     pub fn calc(
-        mut query_locals: Query<GameObject, (&mut LocalTransform), With<DirtyLocalTransform>>,
+        mut localmatrixs: Query<GameObject, (Write<LocalMatrix>, &LocalPosition, &LocalScaling, &LocalRotation), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
     ) {
-        //  println!("LocalMatrixCalc:");
-        query_locals.iter_mut().for_each(|(mut l_transform)| {
-            let scaling = l_transform.scaling.clone();
-            let position = l_transform.position.clone();
-            let rotation = l_transform.rotation.clone();
-            CoordinateSytem3::matrix4_compose_rotation(&scaling, &rotation, &position, &mut l_transform.matrix);
-            //  println!("{}", l_transform.matrix);
+        localmatrixs.iter_mut().for_each(|(mut localmatrix, position, scaling, rotation)| {
+            //  println!("LocalMatrixCalc:");
+            let mut matrix = Matrix::identity();
+            CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
+            localmatrix.write(LocalMatrix(matrix, true));
         });
     }
 }
@@ -59,34 +62,37 @@ impl WorldMatrixCalc {
     #[system]
     pub fn calc(
         query_scenes: Query<GameObject, (ObjectID, &SceneCoordinateSytem)>,
-        mut query_ms: Query<GameObject, (&LocalTransform, &mut GlobalTransform, Write<DirtyGlobalTransform>, Write<BuildinModelBind>)>,
-        query_local_dirty: Query<GameObject, &DirtyLocalTransform>,
+        mut globaltransforms: Query<GameObject, (&mut LocalMatrix, Write<GlobalTransform>, Write<WorldMatrix>, Write<WorldMatrixInv>)>,
         tree: EntityTree<GameObject>,
     ) {
         let time = Instant::now();
 
-         println!("World Matrix Calc:");
+        // println!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
-            let mut temp_ids: Vec<(ObjectID, bool, Option<Matrix>)> = vec![];
+            let mut temp_ids: Vec<(ObjectID, bool, Matrix)> = vec![];
             tree.iter(root).for_each(|entity| {
-                match query_ms.get_mut(entity) {
-                    Some((l_transform, mut g_transform, mut dirty_global, mut model)) => {
-                        if query_local_dirty.get(entity).is_some() {
-                            g_transform.calc(None, l_transform);
-                            temp_ids.push((entity, true, Some(g_transform.matrix.clone())));
-                            dirty_global.insert_no_notify(DirtyGlobalTransform);
+                match globaltransforms.get_mut(entity) {
+                    Some((mut lmatrix, mut g_transform, mut worldmatrxi, mut worldmatrix_inv)) => {
 
-                            if let Some(mut modelmodify) = model.get_mut() {
-                                modelmodify.matrix.clone_from(&g_transform.matrix);
-                                modelmodify.matrix_inv.clone_from(&g_transform.matrix_inv);
-                                model.notify_modify();
-                            }
+                        if lmatrix.1 {
+                            lmatrix.1 = false;
+                            // println!(">>>>> local_dirty 0");
+                            let transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
+                            worldmatrxi.write(WorldMatrix::new(transform.matrix.clone()));
+                            worldmatrix_inv.write(WorldMatrixInv::new(transform.matrix_inv.clone()));
+                            temp_ids.push((entity, true, transform.matrix.clone()));
+
+                            g_transform.write(transform);
                         } else {
-                            temp_ids.push((entity, false, Some(g_transform.matrix.clone())));
+                            if let Some(transform) = g_transform.get() {
+                                temp_ids.push((entity, false, transform.matrix.clone()));
+                            } else {
+                                temp_ids.push((entity, false, Matrix::identity()));
+                            }
                         }
                     },
                     None => {
-                        temp_ids.push((entity, false, None));
+                        temp_ids.push((entity, false, Matrix::identity()));
                     },
                 }
             });
@@ -95,29 +101,31 @@ impl WorldMatrixCalc {
             let max = 65535;
             let mut deep = 0;
             loop {
-                let mut temp = vec![];
+                let mut temp_list = vec![];
                 if temp_ids.len() > 0 && deep < max {
                     temp_ids.into_iter().for_each(|(p_id, p_dirty, p_m)| {
                         match tree.get_down(p_id) {
                             Some(node_children_head) => {
                                 let node_children_head = node_children_head.head;
                                 tree.iter(node_children_head).for_each(|entity| {
-                                    match query_ms.get_mut(entity) {
-                                        Some((l_transform, mut g_transform, mut dirty_global, mut model)) => {
-                                            let real_dirty = p_dirty || query_local_dirty.get(entity).is_some();
+                                    match globaltransforms.get_mut(entity) {
+                                        Some((mut lmatrix, mut g_transform, mut worldmatrxi, mut worldmatrix_inv)) => {
+                                            let real_dirty = p_dirty || lmatrix.1 ;
+                                            lmatrix.1 = false;
                                             if real_dirty {
-                                                // println!("Transform real_dirty >>>>>>>>>> ");
-                                                g_transform.calc(p_m, l_transform);
-                                                temp.push((entity, true, Some(g_transform.matrix.clone())));
-                                                dirty_global.insert_no_notify(DirtyGlobalTransform);
-                                                
-                                                if let Some(mut modelmodify) = model.get_mut() {
-                                                    modelmodify.matrix.clone_from(&g_transform.matrix);
-                                                    modelmodify.matrix_inv.clone_from(&g_transform.matrix_inv);
-                                                    model.notify_modify();
-                                                }
+                                                // println!(">>>>> local_dirty 2");
+                                                let transform = GlobalTransform::calc(&p_m, &lmatrix);
+                                                worldmatrxi.write(WorldMatrix::new(transform.matrix.clone()));
+                                                worldmatrix_inv.write(WorldMatrixInv::new(transform.matrix_inv.clone()));
+                                                temp_list.push((entity, true, transform.matrix.clone()));
+
+                                                g_transform.write(transform);
                                             } else {
-                                                temp.push((entity, false, Some(g_transform.matrix.clone())));
+                                                if let Some(transform) = g_transform.get() {
+                                                    temp_list.push((entity, false, transform.matrix.clone()));
+                                                } else {
+                                                    temp_list.push((entity, false, Matrix::identity()));
+                                                }
                                             }
                                         },
                                         None => {
@@ -133,7 +141,7 @@ impl WorldMatrixCalc {
                 } else {
                     break;
                 }
-                temp_ids = temp;
+                temp_ids = temp_list;
             }
         }
 

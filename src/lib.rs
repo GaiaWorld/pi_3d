@@ -26,8 +26,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
 
         PluginBufferIndices.init(engine, stages);
         PluginBuildinGeometry.init(engine, stages);
-		PluginBufferColor4.init(engine, stages);
-        PluginBufferNormal.init(engine, stages);
         // PluginBufferPosition.init(engine, stages);
         // PluginAttributeIndices.init(engine, stages);
         // PluginBufferUV.init(engine, stages);

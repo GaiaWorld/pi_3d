@@ -7,15 +7,49 @@ use pi_render::rhi::{device::RenderDevice};
 use pi_share::Share;
 use render_shader::{shader::{ResShader, KeyShader}, scene_about_code::ERenderTag, skin_code::ESkinCode};
 
-use crate::{geometry::{AssetResVBLayouts, AssetKeyVBLayouts}, materials::{material::{MaterialID}, material_meta::{AssetKeyMaterialMeta, AssetResMaterailMeta}, uniforms::{value_uniform::MaterialValueBind, texture_uniform::MaterialTextureBindGroupID}, bind_group::{RenderBindGroupKey, RenderBindGroupPool}}, renderers::{pipeline::{KeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, pipeline_state_key, render_pipeline}, render_blend::RenderBlend, render_depth_and_stencil::RenderDepthAndStencil, render_primitive::PrimitiveState, render_target_state::RenderTargetState}, main_camera_render::bind_group::IDMainCameraRenderBindGroup};
+use crate::{geometry::{AssetResVBLayouts, AssetKeyVBLayouts}, materials::{material::{MaterialID}, material_meta::{AssetKeyMaterialMeta, AssetResMaterailMeta}, uniforms::{value_uniform::MaterialValueBind, texture_uniform::MaterialTextureBindGroupID}, bind_group::{RenderBindGroupKey, RenderBindGroupPool}}, renderers::{pipeline::{KeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, pipeline_state_key, render_pipeline}, render_blend::RenderBlend, render_depth_and_stencil::RenderDepthAndStencil, render_primitive::PrimitiveState, render_target_state::RenderTargetState, render_object::RenderObjectBindGroup}, main_camera_render::bind_group::IDMainCameraRenderBindGroup, meshes::model::BuildinModelBind};
 
 
 pub struct AssetResShaderMainCamera{
     pub shader: Handle<ResShader>,
     pub shaderkey: KeyShader,
     pub material_bind_group: RenderBindGroupKey,
-    pub material_bind_offet: u32,
+    pub material_bind_offet: Option<u32>,
     pub tex_bind_group: Option<RenderBindGroupKey>,
+}
+impl AssetResShaderMainCamera {
+    pub fn renderobj_bind_group(&self, model: &BuildinModelBind, bind_groups: &mut Vec<RenderObjectBindGroup>, pool: &RenderBindGroupPool) -> bool {
+        let mut resut = true;
+
+
+        if let Some(bindgroup) = &self.tex_bind_group {
+            if pool.get(bindgroup).unwrap().bind_group.is_some() {
+                bind_groups.push(RenderObjectBindGroup {
+                    bind_group: bindgroup.clone(),
+                    offsets: vec![],
+                });
+            } else {
+                resut = false;
+            }
+        }
+
+        if resut {
+            if let Some(offset) = self.material_bind_offet {
+                bind_groups.push(RenderObjectBindGroup {
+                    bind_group: self.material_bind_group.clone(),
+                    offsets: vec![*model.bind_offset, offset],
+                });
+
+            } else {
+                bind_groups.push(RenderObjectBindGroup {
+                    bind_group: self.material_bind_group.clone(),
+                    offsets: vec![*model.bind_offset],
+                });
+            }
+        }
+
+        resut
+    }
 }
 
 pub struct SysMaterialMainCameraChangeByMesh;
@@ -65,7 +99,7 @@ impl SysMaterialMainCameraChangeByMesh {
                                 shader,
                                 shaderkey,
                                 material_bind_group: RenderBindGroupKey::from(valuebind.bind_group.clone()),
-                                material_bind_offet: *valuebind.bind_offset,
+                                material_bind_offet: valuebind.bind_offset(),
                                 tex_bind_group: Some(texbind.0.clone()),
                             }
                         );
@@ -78,7 +112,7 @@ impl SysMaterialMainCameraChangeByMesh {
                             shader,
                             shaderkey,
                             material_bind_group: RenderBindGroupKey::from(valuebind.bind_group.clone()),
-                            material_bind_offet: *valuebind.bind_offset,
+                            material_bind_offet: valuebind.bind_offset(),
                             tex_bind_group: None,
                         }
                     );
@@ -135,7 +169,7 @@ impl SysMaterialMainCameraChangeByMat {
                                 shader,
                                 shaderkey,
                                 material_bind_group: RenderBindGroupKey::from(valuebind.bind_group.clone()),
-                                material_bind_offet: *valuebind.bind_offset,
+                                material_bind_offet: valuebind.bind_offset(),
                                 tex_bind_group: Some(texbind.0.clone()),
                             }
                         );
@@ -149,7 +183,7 @@ impl SysMaterialMainCameraChangeByMat {
                             shader,
                             shaderkey,
                             material_bind_group: RenderBindGroupKey::from(valuebind.bind_group.clone()),
-                            material_bind_offet: *valuebind.bind_offset,
+                            material_bind_offet: valuebind.bind_offset(),
                             tex_bind_group: None,
                         }
                     );

@@ -78,12 +78,11 @@ impl PluginTest {
         let tes_size = 2;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
-        engine.frame_time(2);
+        engine.frame_time(2000);
 
         // Test Code
         let scene01 = engine.create_scene();
         let camera01 = engine.create_free_camera(scene01);
-        let node01 = engine.create_transform_node(scene01);
         engine.active_camera(camera01, true);
         engine.layer_mask(camera01, LayerMask::default());
         engine.transform_position(camera01, Vector3::new(0., 0., -10.));
@@ -103,7 +102,7 @@ impl PluginTest {
                     engine.transform_position(cube, Vector3::new(i as f32 * 1. - (tes_size) as f32 * 0.5, j as f32 * 1. - (tes_size) as f32 * 0.5, k as f32 * 1. - (tes_size) as f32 * 0.5));
                     engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 1., j as f32 * 1., k as f32 * 1.));
                     engine.layer_mask(cube, LayerMask::default());
-                    testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
+                    // testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
                 }
             }
         }

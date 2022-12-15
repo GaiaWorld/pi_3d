@@ -45,27 +45,28 @@ impl SysMaterialMetaChange {
             mut mat4, mut mat2, mut vec4, mut vec2, mut float, mut int, mut uint
         )| {
             println!("SysMaterialMetaChange:");
-
-            let mat4_count      = material.uniforms.mat4_list.len() as u8;
-            let mat2_count      = material.uniforms.mat2_list.len() as u8;
-            let vec4_count      = material.uniforms.vec4_list.len() as u8;
-            let vec2_count      = material.uniforms.vec2_list.len() as u8;
-            let float_count     = material.uniforms.float_list.len() as u8;
-            let int_count       = material.uniforms.int_list.len() as u8;
-            let uint_count      = material.uniforms.uint_list.len() as u8;
+            let uniforms = &material.uniforms;
+            let mat4_count      = uniforms.mat4_list.len() as u8;
+            let mat2_count      = uniforms.mat2_list.len() as u8;
+            let vec4_count      = uniforms.vec4_list.len() as u8;
+            let vec2_count      = uniforms.vec2_list.len() as u8;
+            let float_count     = uniforms.float_list.len() as u8;
+            let int_count       = uniforms.int_list.len() as u8;
+            let uint_count      = uniforms.uint_list.len() as u8;
             let align_bytes     = 16;
 
-            let statistics = MaterialValueBind::new(&device, &mut dynbuffer, material.uniforms.bind, mat4_count, mat2_count, vec4_count, vec2_count, float_count, int_count, uint_count, align_bytes);
+            let statistics = MaterialValueBind::new(&device, &mut dynbuffer, uniforms.bind, mat4_count, mat2_count, vec4_count, vec2_count, float_count, int_count, uint_count, align_bytes);
 
-            if statistics.mat4_count    > 0 { let mut data = Mat4Uniform::new(&statistics); data.init(&material.uniforms.mat4_list); mat4.write(data); }
-            if statistics.mat2_count    > 0 { let mut data = Mat2Uniform::new(&statistics); data.init(&material.uniforms.mat2_list); mat2.write(data); }
-            if statistics.vec4_count    > 0 { let mut data = Vec4Uniform::new(&statistics); data.init(&material.uniforms.vec4_list); vec4.write(data); }
-            if statistics.vec2_count    > 0 { let mut data = Vec2Uniform::new(&statistics); data.init(&material.uniforms.vec2_list); vec2.write(data); }
-            if statistics.float_count   > 0 { let mut data = FloatUniform::new(&statistics); data.init(&material.uniforms.float_list); float.write(data); }
-            if statistics.int_count     > 0 { let mut data = IntUniform::new(&statistics); data.init(&material.uniforms.int_list); int.write(data); }
-            if statistics.uint_count    > 0 { let mut data = UintUniform::new(&statistics); data.init(&material.uniforms.uint_list); uint.write(data); }
+            if statistics.mat4_count    > 0 { let mut data = Mat4Uniform::new(&statistics);     data.init(&uniforms.mat4_list); mat4.write(data); }
+            if statistics.mat2_count    > 0 { let mut data = Mat2Uniform::new(&statistics);     data.init(&uniforms.mat2_list); mat2.write(data); }
+            if statistics.vec4_count    > 0 { let mut data = Vec4Uniform::new(&statistics);     data.init(&uniforms.vec4_list); vec4.write(data); }
+            if statistics.vec2_count    > 0 { let mut data = Vec2Uniform::new(&statistics);     data.init(&uniforms.vec2_list); vec2.write(data); }
+            if statistics.float_count   > 0 { let mut data = FloatUniform::new(&statistics);    data.init(&uniforms.float_list); float.write(data); }
+            if statistics.int_count     > 0 { let mut data = IntUniform::new(&statistics);          data.init(&uniforms.int_list); int.write(data); }
+            if statistics.uint_count    > 0 { let mut data = UintUniform::new(&statistics);     data.init(&uniforms.uint_list); uint.write(data); }
 
-            bindgrouppool.creat(&device, statistics.bind_group.clone(), MaterialValueBind::layout_entries(statistics.total_size as usize).as_slice(), material.uniforms.set);
+            bindgrouppool.creat(&device, statistics.bind_group.clone(), MaterialValueBind::layout_entries(statistics.total_size as usize).as_slice(), uniforms.set);
+
             statistics_value.write(statistics);
 
             if let Some(textures) = &material.textures {
@@ -95,7 +96,9 @@ where
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         items.iter_mut().for_each(|(bindoffset, slot)| {
-            dynbuffer.as_mut().set_uniform(&bindoffset.bind_offset, slot);
+            if let Some(bind_offset) = &bindoffset.bind_offset {
+                dynbuffer.as_mut().set_uniform(bind_offset, slot);
+            }
         });
     }
 }
