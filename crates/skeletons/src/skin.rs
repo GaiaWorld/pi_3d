@@ -1,7 +1,17 @@
-use pi_engine_shell::{engine_shell::EnginShell, run_stage::RunStage, plugin::{ErrorPlugin, Plugin}, object::{ObjectID, InterfaceObject}};
+use pi_engine_shell::{
+    engine_shell::EnginShell,
+    object::{InterfaceObject, ObjectID},
+    plugin::{ErrorPlugin, Plugin},
+    run_stage::RunStage,
+};
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
-use pi_scene_context::{vertex_data::indices::InterfaceBufferIndices, geometry::TInterfaceGeomtery, scene::interface::InterfaceScene, transforms::interface::InterfaceTransformNode, meshes::interface::InterfaceMesh};
-use render_data_container::{KeyVertexBuffer, VertexBuffer, EVertexDataFormat};
+use pi_scene_context::{
+    geometry::{indices::InterfaceBufferIndices, TInterfaceGeomtery},
+    meshes::interface::InterfaceMesh,
+    scene::interface::InterfaceScene,
+    transforms::interface::InterfaceTransformNode,
+};
+use render_data_container::{EVertexDataFormat, KeyVertexBuffer, VertexBuffer};
 use render_geometry::{vertex_data::{VertexAttribute, EVertexDataKind, VertexBufferDesc}, indices::IndicesBufferDesc};
 
 pub struct SkinBuilder;
@@ -14,8 +24,9 @@ impl SkinBuilder {
     pub fn position(device: &RenderDevice, queue: &RenderQueue) -> VertexBuffer {
         let mut position = VertexBuffer::new(true, EVertexDataFormat::F32, false);
         let mut data = [
-            -0.125, 0.0, 0.0, 0.125, 0.0, 0.0, -0.125, 0.25, 0.0, 0.125, 0.25, 0.0, -0.125, 0.5, 0.0, 0.125, 0.5,
-            0.0, -0.125, 0.75, 0.0, 0.125, 0.75, 0.0, -0.125, 1.0, 0.0, 0.125, 1.0, 0.0,
+            -0.125, 0.0, 0.0, 0.125, 0.0, 0.0, -0.125, 0.25, 0.0, 0.125, 0.25, 0.0, -0.125, 0.5,
+            0.0, 0.125, 0.5, 0.0, -0.125, 0.75, 0.0, 0.125, 0.75, 0.0, -0.125, 1.0, 0.0, 0.125,
+            1.0, 0.0,
         ];
 
         position.update_f32(&data, 0);
@@ -34,8 +45,8 @@ impl SkinBuilder {
     }
     pub fn joints(device: &RenderDevice, queue: &RenderQueue) -> VertexBuffer {
         let data = [
-            0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0.,
-            1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0.,
+            0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1.,
+            0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0.,
         ];
         let mut indices = VertexBuffer::new(true, EVertexDataFormat::F32, false);
         indices.update_f32(&data, 0);
@@ -81,7 +92,7 @@ impl InterfaceSkin for EnginShell {
 
         self
     }
-    
+
     fn new_skin(&self, scene: ObjectID) -> ObjectID {
         let entity = self.new_object();
         self.add_to_scene(entity, scene)
@@ -141,11 +152,7 @@ impl InterfaceSkin for EnginShell {
 
 pub struct PluginSkinBuilder;
 impl Plugin for PluginSkinBuilder {
-    fn init(
-        &mut self,
-        engine: &mut EnginShell,
-        stages: &mut RunStage,
-    ) -> Result<(), ErrorPlugin> {
+    fn init(&mut self, engine: &mut EnginShell, stages: &mut RunStage) -> Result<(), ErrorPlugin> {
         engine.regist_skin();
 
         Ok(())
