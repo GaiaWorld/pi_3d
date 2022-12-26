@@ -19,6 +19,7 @@ material_textures = { path = "crates/material_textures" }
 skybox = { path = "crates/skybox" }
 procedural_texture = { path = "crates/procedural_texture" }
 skeletons = { path = "crates/skeletons" }
+axis = { path = "crates/axis" }
 
 unlit_material = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }
@@ -86,3 +87,7 @@ path = "examples/procedural_texture/brdf.rs"
 [[example]]
 name = "skin"
 path = "examples/skin/skin.rs"
+
+[[example]]
+name = "axis"
+path = "examples/axis/axis.rs"
