@@ -3,8 +3,11 @@ use std::marker::PhantomData;
 use pi_ecs::{prelude::{Component, Query, Setup}, query::{Changed, Write, WithOut, Or}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::object::GameObject;
+use render_data_container::RenderVertices;
 
-use super::{vertex_buffer_useinfo::{TVertexBufferUseInfo, AssetDescVBSlot1, AssetDescVBSlot2, AssetDescVBSlot3, AssetDescVBSlot5, AssetDescVBSlot6, AssetDescVBSlot7, AssetDescVBSlot8, AssetDescVBSlot9, AssetDescVBSlot4, AssetResVBSlot1, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetResVBSlot5, AssetResVBSlot6, AssetResVBSlot7, AssetResVBSlot8, AssetResVBSlot9, AsKeyVertexBuffer, AssetKeyVBSlot1, AssetKeyVBSlot2, AssetKeyVBSlot3, AssetKeyVBSlot4, AssetKeyVBSlot5, AssetKeyVBSlot6, AssetKeyVBSlot7, AssetKeyVBSlot8, AssetKeyVBSlot9}, GeometryDesc, geometry::RenderGeometry};
+use crate::geometry::geometry::RenderVerticesFrom;
+
+use super::{vertex_buffer_useinfo::{TVertexBufferUseInfo, AssetDescVBSlot1, AssetDescVBSlot2, AssetDescVBSlot3, AssetDescVBSlot5, AssetDescVBSlot6, AssetDescVBSlot7, AssetDescVBSlot8, AssetDescVBSlot9, AssetDescVBSlot4, AssetResVBSlot1, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetResVBSlot5, AssetResVBSlot6, AssetResVBSlot7, AssetResVBSlot8, AssetResVBSlot9, AsKeyVertexBuffer, AssetKeyVBSlot1, AssetKeyVBSlot2, AssetKeyVBSlot3, AssetKeyVBSlot4, AssetKeyVBSlot5, AssetKeyVBSlot6, AssetKeyVBSlot7, AssetKeyVBSlot8, AssetKeyVBSlot9, AssetKeyVBSlot10, AssetKeyVBSlot11, AssetKeyVBSlot12, AssetKeyVBSlot13, AssetDescVBSlot10, AssetDescVBSlot11, AssetDescVBSlot12, AssetDescVBSlot13}, GeometryDesc, geometry::RenderGeometry};
 
 
 pub struct SysGeometryChangeIntSlot<D: TVertexBufferUseInfo + Component, D1: AsKeyVertexBuffer + Component>(PhantomData<(D, D1)>);
@@ -42,6 +45,10 @@ pub type SysGeometryChangeSlot6 = SysGeometryChangeIntSlot<AssetDescVBSlot6, Ass
 pub type SysGeometryChangeSlot7 = SysGeometryChangeIntSlot<AssetDescVBSlot7, AssetKeyVBSlot7>;
 pub type SysGeometryChangeSlot8 = SysGeometryChangeIntSlot<AssetDescVBSlot8, AssetKeyVBSlot8>;
 pub type SysGeometryChangeSlot9 = SysGeometryChangeIntSlot<AssetDescVBSlot9, AssetKeyVBSlot9>;
+pub type SysGeometryChangeSlot10 = SysGeometryChangeIntSlot<AssetDescVBSlot10, AssetKeyVBSlot10>;
+pub type SysGeometryChangeSlot11 = SysGeometryChangeIntSlot<AssetDescVBSlot11, AssetKeyVBSlot11>;
+pub type SysGeometryChangeSlot12 = SysGeometryChangeIntSlot<AssetDescVBSlot12, AssetKeyVBSlot12>;
+pub type SysGeometryChangeSlot13 = SysGeometryChangeIntSlot<AssetDescVBSlot13, AssetKeyVBSlot13>;
 
 pub struct SysGeometryVBUpdateSlot1;
 #[setup]
@@ -64,7 +71,10 @@ impl SysGeometryVBUpdateSlot1
             , key1, res1
         )| {
             if desc.slot_count() == 1 {
-                geometry.write(RenderGeometry::from((key1, res1)));
+                let values = vec![
+                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
+                ];
+                geometry.write(RenderGeometry::create(values));
             }
         });
     }
@@ -94,7 +104,11 @@ impl SysGeometryVBUpdateSlot2
             , key2, res2
         )| {
             if desc.slot_count() == 2 {
-                geometry.write(RenderGeometry::from((key1, res1, key2, res2)));
+                let values = vec![
+                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
+                ];
+                geometry.write(RenderGeometry::create(values));
             }
         });
     }
@@ -127,7 +141,12 @@ impl SysGeometryVBUpdateSlot3
             , key3, res3
         )| {
             if desc.slot_count() == 3 {
-                geometry.write(RenderGeometry::from((key1, res1, key2, res2, key3, res3)));
+                let values = vec![
+                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
+                    (key3.desc().step_mode, RenderVertices::create(key3, res3)),
+                ];
+                geometry.write(RenderGeometry::create(values));
             }
         });
     }
@@ -164,7 +183,60 @@ impl SysGeometryVBUpdateSlot4
         )| {
             if desc.slot_count() == 4 {
                 println!("VBUpdateSlot4");
-                geometry.write(RenderGeometry::from((key1, res1, key2, res2, key3, res3, key4, res4)));
+                let values = vec![
+                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
+                    (key3.desc().step_mode, RenderVertices::create(key3, res3)),
+                    (key4.desc().step_mode, RenderVertices::create(key4, res4)),
+                ];
+                geometry.write(RenderGeometry::create(values));
+            }
+        });
+    }
+}
+
+pub struct SysGeometryVBUpdateSlot5;
+#[setup]
+impl SysGeometryVBUpdateSlot5
+{
+    #[system]
+    pub fn slot_change(
+        mut items: Query<
+            GameObject,
+            (   &GeometryDesc, Write<RenderGeometry>
+                , &AssetDescVBSlot1, &AssetResVBSlot1
+                , &AssetDescVBSlot2, &AssetResVBSlot2
+                , &AssetDescVBSlot3, &AssetResVBSlot3
+                , &AssetDescVBSlot4, &AssetResVBSlot4
+                , &AssetDescVBSlot5, &AssetResVBSlot5
+            ),
+            Or<(
+                Changed<AssetResVBSlot1>,
+                Changed<AssetResVBSlot2>,
+                Changed<AssetResVBSlot3>,
+                Changed<AssetResVBSlot4>,
+                Changed<AssetResVBSlot5>,
+            )>
+        >,
+    ) {
+        items.iter_mut().for_each(|(
+            desc, mut geometry
+            , key1, res1
+            , key2, res2
+            , key3, res3
+            , key4, res4
+            , key5, res5
+        )| {
+            if desc.slot_count() == 5 {
+                println!("VBUpdateSlot5");
+                let values = vec![
+                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
+                    (key3.desc().step_mode, RenderVertices::create(key3, res3)),
+                    (key4.desc().step_mode, RenderVertices::create(key4, res4)),
+                    (key5.desc().step_mode, RenderVertices::create(key5, res5)),
+                ];
+                geometry.write(RenderGeometry::create(values));
             }
         });
     }
