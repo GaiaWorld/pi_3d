@@ -7,7 +7,7 @@ use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{engine_shell::EnginShell, object::GameObject, assets::sync_load::{AssetSyncWait, PluginAssetSyncLoad, InterfaceAssetSyncCreate}};
 use pi_share::Share;
-use render_data_container::{vertex_layout_key::KeyVertexLayouts, KeyVertexBuffer, VertexBuffer};
+use render_data_container::{vertex_layout_key::KeyVertexLayouts, KeyVertexBuffer, VertexBuffer, VertexBufferPool};
 use render_geometry::{vertex_data::{VertexBufferLayouts, VertexBufferDesc}, indices::{AssetKeyBufferIndices, AssetResBufferIndices}};
 ///
 /// 网格信息单独与 GameObject 绑定
@@ -174,6 +174,7 @@ impl Plugin for PluginBuildinGeometry {
 
         let world = engine.world_mut();
         world.insert_resource(SingleGeometryCommands::default());
+        world.insert_resource(VertexBufferPool::default());
         SysGeometryCommand::setup(world, stages.command_stage());
 
         Ok(())

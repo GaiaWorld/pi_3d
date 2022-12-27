@@ -22,7 +22,7 @@ impl SkinBuilder {
     const KEY_BUFFER_INDICES: &'static str = "SkinIndices";
 
     pub fn position(device: &RenderDevice, queue: &RenderQueue) -> VertexBuffer {
-        let mut position = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut position = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         let mut data = [
             -0.125, 0.0, 0.0, 0.125, 0.0, 0.0, -0.125, 0.25, 0.0, 0.125, 0.25, 0.0, -0.125, 0.5,
             0.0, 0.125, 0.5, 0.0, -0.125, 0.75, 0.0, 0.125, 0.75, 0.0, -0.125, 1.0, 0.0, 0.125,
@@ -38,7 +38,7 @@ impl SkinBuilder {
         let data = [
             0, 1, 3, 0, 3, 2, 2, 3, 5, 2, 5, 4, 4, 5, 7, 4, 7, 6, 6, 7, 9, 6, 9, 8,
         ];
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::U16, true);
+        let mut indices = VertexBuffer::new(false, EVertexDataFormat::U16, true);
         indices.update_u16(&data, 0);
         indices.update_buffer(device, queue);
         indices
@@ -48,7 +48,7 @@ impl SkinBuilder {
             0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1.,
             0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0.,
         ];
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut indices = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         indices.update_f32(&data, 0);
         indices.update_buffer(device, queue);
         indices
@@ -60,7 +60,7 @@ impl SkinBuilder {
             0.5, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.25, 0.75, 0.0, 0.0, 0.25, 0.75, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
         ];
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut indices = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         indices.update_f32(&data, 0);
         indices.update_buffer(device, queue);
         indices
@@ -108,33 +108,30 @@ impl InterfaceSkin for EnginShell {
         self.use_geometry(
             entity,
             vec![
-                VertexBufferDesc {
-                    bufferkey: keypos,
-                    range: None,
-                    attributes: vec![VertexAttribute {
+                VertexBufferDesc::vertices(
+                    keypos,
+                    None,
+                    vec![VertexAttribute {
                         kind: EVertexDataKind::Position,
                         format: wgpu::VertexFormat::Float32x3,
-                    }],
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                },
-                VertexBufferDesc {
-                    bufferkey: keyjoint,
-                    range: None,
-                    attributes: vec![VertexAttribute {
+                    }]
+                ),
+                VertexBufferDesc::vertices(
+                    keyjoint,
+                    None,
+                    vec![VertexAttribute {
                         kind: EVertexDataKind::MatricesIndices,
                         format: wgpu::VertexFormat::Float32x4,
-                    }],
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                },
-                VertexBufferDesc {
-                    bufferkey: keyweight,
-                    range: None,
-                    attributes: vec![VertexAttribute {
+                    }]
+                ),
+                VertexBufferDesc::vertices(
+                    keyweight,
+                    None,
+                    vec![VertexAttribute {
                         kind: EVertexDataKind::MatricesWeights,
                         format: wgpu::VertexFormat::Float32x4,
-                    }],
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                },
+                    }]
+                ),
             ],
         );
         self.use_indices(

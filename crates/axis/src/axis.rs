@@ -24,7 +24,7 @@ impl AxisBuilder {
     const KEY_BUFFER_INDICES: &'static str = "AxisIndices";
 
     pub fn position(device: &RenderDevice, queue: &RenderQueue) -> VertexBuffer {
-        let mut position = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut position = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         let mut x_axis = vec![
             -0.03, 0.03, 0.03, -0.03, -0.03, 0.03, -0.03, 0., -0.03,
              0.9,  0.03, 0.03,  0.9,  -0.03, 0.03,  0.9,  0., -0.03,
@@ -90,7 +90,7 @@ impl AxisBuilder {
         data.append(&mut y_axis);
         data.append(&mut z_axis);
         
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::U16, true);
+        let mut indices = VertexBuffer::new(false, EVertexDataFormat::U16, true);
         indices.update_u16(&data, 0);
         indices.update_buffer(device, queue);
         indices
@@ -101,7 +101,7 @@ impl AxisBuilder {
             0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1.,0., 1., 0., 1., 0., 1., 0., 1.,0., 1., 0., 1., 0., 1., 0., 1.,0., 1., 0., 1., 0., 1., 0., 1.,
             0., 0., 1., 1., 0., 0., 1., 1., 0., 0., 1., 1., 0., 0., 1., 1.,0., 0., 1., 1., 0., 0., 1., 1.,0., 0., 1., 1., 0., 0., 1., 1.,0., 0., 1., 1., 0., 0., 1., 1.,
         ];
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut indices = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         indices.update_f32(&data, 0);
         indices.update_buffer(device, queue);
         indices
@@ -145,24 +145,22 @@ impl InterfaceAxis for EnginShell {
         self.use_geometry(
             entity,
             vec![
-                VertexBufferDesc {
-                    bufferkey: keypos,
-                    range: None,
-                    attributes: vec![VertexAttribute {
+                VertexBufferDesc::vertices(
+                    keypos,
+                    None,
+                    vec![VertexAttribute {
                         kind: EVertexDataKind::Position,
                         format: wgpu::VertexFormat::Float32x3,
-                    }],
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                },
-                VertexBufferDesc {
-                    bufferkey: keycolor,
-                    range: None,
-                    attributes: vec![VertexAttribute {
+                    }]
+                ),
+                VertexBufferDesc::vertices(
+                    keycolor,
+                    None,
+                    vec![VertexAttribute {
                         kind: EVertexDataKind::Color4,
                         format: wgpu::VertexFormat::Float32x4,
-                    }],
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                },
+                    }]
+                ),
             ],
         );
         self.use_indices(

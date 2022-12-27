@@ -5,6 +5,7 @@ use pi_assets::mgr::AssetMgr;
 use pi_ecs::query::QueryState;
 use pi_futures::BoxFuture;
 use pi_render::{graph::{node::Node, RenderContext}, rhi::{texture::ScreenTexture}};
+use render_data_container::VertexBufferPool;
 
 use crate::{
     renderers::{render_object_list::DrawList},
@@ -51,8 +52,9 @@ impl Node for SingleMainCameraOpaqueRenderNode {
             Some(renderer) => {
                 let surface = world.get_resource::<ScreenTexture>().unwrap();
                 let bindgrouppool = world.get_resource::<RenderBindGroupPool>().unwrap();
-                renderer.opaque_draws.render(&mut commands, surface.view.as_ref().unwrap(), None, bindgrouppool);
-                renderer.transparent_draws.render(&mut commands, surface.view.as_ref().unwrap(), None, bindgrouppool);
+                let vbpool = world.get_resource::<VertexBufferPool>().unwrap();
+                renderer.opaque_draws.render(&mut commands, surface.view.as_ref().unwrap(), None, bindgrouppool, vbpool);
+                renderer.transparent_draws.render(&mut commands, surface.view.as_ref().unwrap(), None, bindgrouppool, vbpool);
             },
             None => {
                 

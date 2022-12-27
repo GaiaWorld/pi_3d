@@ -1,47 +1,65 @@
 use std::{ops::Range, sync::Arc};
 
-use pi_engine_shell::object::ObjectID;
-use render_data_container::{VertexBuffer, EVertexDataFormat};
+use pi_ecs::{prelude::{Query, ResMut, Res}, query::{Or, Changed}};
+use pi_ecs_macros::setup;
+use pi_engine_shell::object::{ObjectID, GameObject};
+use pi_render::rhi::{device::RenderDevice, RenderQueue};
+use pi_slotmap::DefaultKey;
+use render_data_container::{VertexBuffer, EVertexDataFormat, VertexBufferPool, KeyVertexBuffer};
 use render_geometry::vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind};
 
-use super::instanced_buffer::TInstancedBuffer;
+use crate::{geometry::{vertex_buffer_useinfo}, transforms::transform_node::WorldMatrix};
+
+use super::{instanced_buffer::TInstancedBuffer, instanced_mesh::InstanceList};
+
+pub struct InstancedWorldMatrixDirty;
 
 pub struct InstancedBufferWorldMatrix {
-    pub slot: crate::geometry::vertex_buffer_useinfo::EVertexBufferSlot, 
-    pub key: render_data_container::KeyVertexBuffer,
-    pub buffer: Arc<VertexBuffer>,
+    pub slot: vertex_buffer_useinfo::EVertexBufferSlot,
+    key: render_data_container::KeyVertexBuffer,
 }
 impl InstancedBufferWorldMatrix {
-    pub fn new(index: usize, id: String) -> Self {
+    pub fn new(index: usize, id: String, pool: &mut VertexBufferPool) -> Self {
         let buffer: VertexBuffer = VertexBuffer::new(true, EVertexDataFormat::F32, false);
-        let a = Arc::new(buffer);
+        let key = render_data_container::KeyVertexBuffer::from(id + "WorldMat");
+        pool.map.insert(key.clone(), buffer);
 
         Self {
-            slot: todo!(),
-            key: render_data_container::KeyVertexBuffer::from(id + "WorldMat"),
+            slot: vertex_buffer_useinfo::EVertexBufferSlot::from_u8_unsafe(index as u8),
+            key
         }
     }
 }
 impl TInstancedBuffer for InstancedBufferWorldMatrix {
-    fn desc(&self) -> VertexBufferDesc {
-        VertexBufferDesc {
-            bufferkey: self.key(),
-            range: None,
-            attributes: vec![
-                VertexAttribute { kind: EVertexDataKind::InsWorldRow1, format: wgpu::VertexFormat::Float32x4 },
-                VertexAttribute { kind: EVertexDataKind::InsWorldRow2, format: wgpu::VertexFormat::Float32x4 },
-                VertexAttribute { kind: EVertexDataKind::InsWorldRow3, format: wgpu::VertexFormat::Float32x4 },
-                VertexAttribute { kind: EVertexDataKind::InsWorldRow4, format: wgpu::VertexFormat::Float32x4 },
-            ],
-            step_mode: wgpu::VertexStepMode::Instance,
-        }
-    }
-
     fn key(&self) -> render_data_container::KeyVertexBuffer {
         self.key.clone()
     }
 
     fn slot(&self) -> crate::geometry::vertex_buffer_useinfo::EVertexBufferSlot {
         self.slot
+    }
+}
+
+pub struct SysInstancedWorldMatrixUpdate;
+#[setup]
+impl SysInstancedWorldMatrixUpdate {
+    #[system]
+    pub fn tick(
+        instances: Query<GameObject, &WorldMatrix>,
+        mut sources: Query<GameObject, (&InstanceList, &mut InstancedBufferWorldMatrix), Or<(Changed<InstanceList>, Changed<InstancedWorldMatrixDirty>)>>,
+        mut vbpool: ResMut<VertexBufferPool>,
+        device: Res<RenderDevice>,
+        queue: Res<RenderQueue>,
+    ) {
+        sources.iter_mut().for_each(|(inslist, buffer)| {
+            let mut list = vec![];
+            inslist.list.iter().for_each(|insid| {
+                if let Some(instance) = instances.get(insid.clone()) {
+                    list.push(instance);
+                }
+            });
+
+            buffer.update::<WorldMatrix>(list.as_slice(), &mut vbpool, &device, &queue);
+        });
     }
 }

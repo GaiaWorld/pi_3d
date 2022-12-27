@@ -1,5 +1,7 @@
 use std::{time::Instant, ops::Range};
 
+use render_data_container::VertexBufferPool;
+
 use crate::{materials::bind_group::RenderBindGroupPool, renderers::render_object::TempDrawInfoRecord};
 
 use super::render_object::{RenderObjectBindGroup, RenderObjectMetaOpaque, RenderObjectMetaTransparent, DrawObject};
@@ -14,6 +16,7 @@ pub trait DrawList<T: DrawObject> {
         target_view: &wgpu::TextureView,
         depth_stencil: Option<wgpu::RenderPassDepthStencilAttachment>,
         bindgrouppool: &RenderBindGroupPool,
+        vbpool: &VertexBufferPool,
     ) {
         let mut time = Instant::now();
 
@@ -81,25 +84,25 @@ pub trait DrawList<T: DrawObject> {
             let mut instance_range = 0..1;
             draw.vertices().iter().for_each(|item| {
                 if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
-                    renderpass.set_vertex_buffer(item.slot, item.slice());
-                    vertex_range = item.value_range();
+                    renderpass.set_vertex_buffer(item.slot, item.slice(vbpool));
+                    vertex_range = item.value_range(vbpool);
                 }
             });
 
             draw.instances().iter().for_each(|item| {
                 if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
-                    renderpass.set_vertex_buffer(item.slot, item.slice());
-                    instance_range = item.value_range();
+                    renderpass.set_vertex_buffer(item.slot, item.slice(vbpool));
+                    instance_range = item.value_range(vbpool);
                 }
             });
 
             match &draw.indices() {
                 Some(indices) => {
                     if temp_vertex_record.record_indices_and_check_diff_with_last(indices) {
-                        renderpass.set_index_buffer(indices.slice(), indices.format);
+                        renderpass.set_index_buffer(indices.slice(vbpool), indices.format);
                     }
 
-                    renderpass.draw_indexed(indices.value_range(), 0 as i32, instance_range);
+                    renderpass.draw_indexed(indices.value_range(vbpool), 0 as i32, instance_range);
                 },
                 None => {
                     renderpass.draw(vertex_range, instance_range);

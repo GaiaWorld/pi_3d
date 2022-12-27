@@ -4,6 +4,7 @@ use pi_ecs::{prelude::{Component, Query, Setup}, query::{Changed, Write, WithOut
 use pi_ecs_macros::setup;
 use pi_engine_shell::object::GameObject;
 use render_data_container::RenderVertices;
+use render_geometry::vertex_data::TVertexBufferDesc;
 
 use crate::geometry::geometry::RenderVerticesFrom;
 
@@ -72,7 +73,7 @@ impl SysGeometryVBUpdateSlot1
         )| {
             if desc.slot_count() == 1 {
                 let values = vec![
-                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
+                    (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                 ];
                 geometry.write(RenderGeometry::create(values));
             }
@@ -105,8 +106,8 @@ impl SysGeometryVBUpdateSlot2
         )| {
             if desc.slot_count() == 2 {
                 let values = vec![
-                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
-                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
+                    (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
                 ];
                 geometry.write(RenderGeometry::create(values));
             }
@@ -142,9 +143,9 @@ impl SysGeometryVBUpdateSlot3
         )| {
             if desc.slot_count() == 3 {
                 let values = vec![
-                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
-                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
-                    (key3.desc().step_mode, RenderVertices::create(key3, res3)),
+                    (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
+                    (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
                 ];
                 geometry.write(RenderGeometry::create(values));
             }
@@ -184,10 +185,10 @@ impl SysGeometryVBUpdateSlot4
             if desc.slot_count() == 4 {
                 println!("VBUpdateSlot4");
                 let values = vec![
-                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
-                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
-                    (key3.desc().step_mode, RenderVertices::create(key3, res3)),
-                    (key4.desc().step_mode, RenderVertices::create(key4, res4)),
+                    (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
+                    (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
+                    (key4.desc().step_mode(), RenderVertices::create(key4, res4)),
                 ];
                 geometry.write(RenderGeometry::create(values));
             }
@@ -230,11 +231,11 @@ impl SysGeometryVBUpdateSlot5
             if desc.slot_count() == 5 {
                 println!("VBUpdateSlot5");
                 let values = vec![
-                    (key1.desc().step_mode, RenderVertices::create(key1, res1)),
-                    (key2.desc().step_mode, RenderVertices::create(key2, res2)),
-                    (key3.desc().step_mode, RenderVertices::create(key3, res3)),
-                    (key4.desc().step_mode, RenderVertices::create(key4, res4)),
-                    (key5.desc().step_mode, RenderVertices::create(key5, res5)),
+                    (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
+                    (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
+                    (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
+                    (key4.desc().step_mode(), RenderVertices::create(key4, res4)),
+                    (key5.desc().step_mode(), RenderVertices::create(key5, res5)),
                 ];
                 geometry.write(RenderGeometry::create(values));
             }

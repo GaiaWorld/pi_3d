@@ -28,7 +28,7 @@ impl QuadBuilder {
         device: &RenderDevice,
         queue: &RenderQueue,
     ) -> VertexBuffer {
-        let mut position = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut position = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         let mut data = [
             -1., -1., 0.,   1., -1., 0.,   1., 1., 0.,  -1., 1., 0.,  
         ];
@@ -46,7 +46,7 @@ impl QuadBuilder {
         let data = [
             0., 0., 1.,     0., 0., 1.,     0., 0., 1.,     0., 0., 1.,
         ];
-        let mut normals = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut normals = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         normals.update_f32(&data, 0);
         normals.update_buffer(device, queue);
         normals
@@ -58,7 +58,7 @@ impl QuadBuilder {
         let data = [
             0, 1, 2, 0, 2, 3
         ];
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::U16, true);
+        let mut indices = VertexBuffer::new(false, EVertexDataFormat::U16, true);
         indices.update_u16(&data, 0);
         indices.update_buffer(device, queue);
 
@@ -71,7 +71,7 @@ impl QuadBuilder {
         let data = [
             0., 0.,   1., 0.,   1., 1.,     0., 1.,
         ];
-        let mut indices = VertexBuffer::new(true, EVertexDataFormat::F32, false);
+        let mut indices = VertexBuffer::new(false, EVertexDataFormat::F32, false);
         indices.update_f32(&data, 0);
         indices.update_buffer(device, queue);
         indices
@@ -132,9 +132,9 @@ impl InterfaceQuad for Engine {
         self.use_geometry(
             entity,
             vec![
-                VertexBufferDesc { bufferkey: keypos, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }], step_mode: wgpu::VertexStepMode::Vertex },
-                VertexBufferDesc { bufferkey: keynormal, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }], step_mode: wgpu::VertexStepMode::Vertex },
-                VertexBufferDesc { bufferkey: keyuv, range: None, attributes: vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }], step_mode: wgpu::VertexStepMode::Vertex },
+                VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
+                VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
+                VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
             ]
         );
         self.use_indices(entity, IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key });

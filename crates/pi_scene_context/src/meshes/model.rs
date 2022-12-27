@@ -1,10 +1,30 @@
-use pi_ecs::{prelude::{ResMut, Query}, query::{With, Changed, Or}};
+use pi_ecs::{prelude::{ResMut, Query, Res}, query::{With, Changed, Or, Write}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::object::GameObject;
-use pi_render::rhi::dyn_uniform_buffer::{BindOffset, Bind, Uniform};
+use pi_render::rhi::{dyn_uniform_buffer::{BindOffset, Bind, Uniform}, device::RenderDevice, RenderQueue};
 use pi_scene_math::Matrix;
+use render_data_container::VertexBufferPool;
 
 use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer, bytes_write_to_memory, transforms::transform_node::{WorldMatrix, WorldMatrixInv}};
+
+use super::instance::{instanced_mesh::{InstanceSource, InstanceList}, world_matrix::{InstancedBufferWorldMatrix, InstancedWorldMatrixDirty}, instanced_buffer::TInstancedBuffer};
+
+#[derive(Debug, Clone)]
+pub struct RenderWorldMatrix(pub Matrix);
+impl RenderWorldMatrix {
+    pub fn new(m: Matrix) -> Self {
+        Self(m)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RenderWorldMatrixInv(pub Matrix);
+impl RenderWorldMatrixInv {
+    pub fn new(m: Matrix) -> Self {
+        Self(m)
+    }
+}
+
 
 pub struct BuildinModelTemp<'a>(pub &'a Matrix, pub &'a Matrix);
 impl<'a> Uniform for BuildinModelTemp<'a> {
@@ -17,9 +37,6 @@ impl<'a> Uniform for BuildinModelTemp<'a> {
 /// Model Uniform Bind
 pub struct BuildinModelBind {
     pub bind_offset: BindOffset,
-    pub matrix: Matrix,
-    pub matrix_inv: Matrix,
-    pub is_dirty: bool,
 }
 impl BuildinModelBind {
     pub const OBJECT_TO_WORLD: usize = 16;
@@ -33,16 +50,7 @@ impl BuildinModelBind {
     ) -> Self {
         Self {
             bind_offset: dynbuffer.alloc_binding::<Self>(),
-            matrix: Matrix::identity(),
-            matrix_inv: Matrix::identity(),
-            is_dirty: true,
         }
-    }
-
-    pub fn update(&mut self, world: &Matrix, world_inv: &Matrix) {
-        self.matrix.clone_from(world);
-        self.matrix_inv.clone_from(world_inv);
-        self.is_dirty = true;
     }
 }
 impl FragmentUniformBind for BuildinModelBind {
@@ -58,12 +66,28 @@ impl Bind for BuildinModelBind {
     }
 }
 
+pub struct SysModelMatrixUpdate;
+#[setup]
+impl SysModelMatrixUpdate {
+    #[system]
+    pub fn tick(
+        mut meshes: Query<GameObject, (&BuildinModelBind, Write<RenderWorldMatrix>, Write<RenderWorldMatrixInv>, &WorldMatrix, &WorldMatrixInv), Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>)>>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+    ) {
+        meshes.iter_mut().for_each(|(model, mut render_worldmatrix, mut render_worldmatrix_inv, worldmatrix, worldmatrix_inv)| {
+            // println!("SysModelUniformUpdate:");
+            render_worldmatrix.write(RenderWorldMatrix::new(worldmatrix.0.clone()));
+            render_worldmatrix_inv.write(RenderWorldMatrixInv::new(worldmatrix_inv.0.clone()));
+        });
+    }
+}
+
 pub struct SysModelUniformUpdate;
 #[setup]
 impl SysModelUniformUpdate {
     #[system]
     pub fn tick(
-        mut meshes: Query<GameObject, (&BuildinModelBind, &WorldMatrix, &WorldMatrixInv), Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>)>>,
+        mut meshes: Query<GameObject, (&BuildinModelBind, &RenderWorldMatrix, &RenderWorldMatrixInv), Or<(Changed<RenderWorldMatrix>, Changed<RenderWorldMatrixInv>)>>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         meshes.iter_mut().for_each(|(model, worldmatrix, worldmatrix_inv)| {
@@ -71,6 +95,22 @@ impl SysModelUniformUpdate {
 
             let temp = BuildinModelTemp(&worldmatrix.0, &worldmatrix_inv.0);
             dynbuffer.as_mut().set_uniform::<BuildinModelTemp>(&model.bind_offset, &temp);
+        });
+    }
+}
+
+pub struct SysInstancedModelUpdate;
+#[setup]
+impl SysInstancedModelUpdate {
+    #[system]
+    pub fn tick(
+        instances: Query<GameObject, &InstanceSource, Changed<RenderWorldMatrix>>,
+        mut sources: Query<GameObject, Write<InstancedWorldMatrixDirty>>,
+    ) {
+        instances.iter().for_each(|source| {
+            if let Some(mut source) = sources.get_mut(source.0.clone()) {
+                source.write(InstancedWorldMatrixDirty);
+            }
         });
     }
 }

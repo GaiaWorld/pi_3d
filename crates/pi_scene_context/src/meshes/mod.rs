@@ -3,7 +3,7 @@ use pi_ecs::prelude::Setup;
 
 use crate::object::ObjectID;
 
-use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::SysModelUniformUpdate};
+use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysModelUniformUpdate, SysModelMatrixUpdate, SysInstancedModelUpdate}, instance::instanced_mesh::InstanceSourceRecord};
 
 pub mod cube;
 pub mod plane;
@@ -14,7 +14,7 @@ pub mod alpha_index;
 pub mod render_group;
 pub mod ball;
 pub mod quad;
-pub mod instanced_mesh;
+pub mod instance;
 
 pub trait Mesh {
     fn alpha_index(&self) -> usize;
@@ -33,9 +33,13 @@ impl crate::Plugin for PluginMesh {
         let world = engine.world_mut();
 
         SysMeshCommand::setup(world, stages.command_stage());
+        SysModelMatrixUpdate::setup(world, stages.command_stage());
+
         SysModelUniformUpdate::setup(world, stages.uniform_update());
+        SysInstancedModelUpdate::setup(world, stages.uniform_update());
 
         world.insert_resource(SingleMeshCommandList::default());
+        world.insert_resource(InstanceSourceRecord { counter: 0 });
 
         Ok(())
     }

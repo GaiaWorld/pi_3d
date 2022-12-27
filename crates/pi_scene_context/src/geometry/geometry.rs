@@ -45,7 +45,7 @@ impl From<
         let mut vertex_count = 0;
 
         let render_vertices = render_data_container::RenderVertices::create(value.0, value.1);
-        if value.0.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.0.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         Self {
             vertices,
@@ -68,10 +68,10 @@ impl From<
         let mut instances = vec![];
         
         let render_vertices = render_data_container::RenderVertices::create(value.0, value.1);
-        if value.0.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.0.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.2, value.3);
-        if value.2.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.2.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         Self {
             vertices,
@@ -97,13 +97,13 @@ impl From<
         let mut instances = vec![];
 
         let render_vertices = render_data_container::RenderVertices::create(value.0, value.1);
-        if value.0.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.0.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.2, value.3);
-        if value.2.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.2.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.4, value.5);
-        if value.4.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.4.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         Self {
             vertices,
@@ -130,16 +130,16 @@ impl From<
         let mut instances = vec![];
 
         let render_vertices = render_data_container::RenderVertices::create(value.0, value.1);
-        if value.0.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.0.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.2, value.3);
-        if value.2.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.2.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.4, value.5);
-        if value.4.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.4.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.6, value.7);
-        if value.6.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.6.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         Self {
             vertices,
@@ -168,19 +168,19 @@ impl From<
         let mut instances = vec![];
 
         let render_vertices = render_data_container::RenderVertices::create(value.0, value.1);
-        if value.0.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.0.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.2, value.3);
-        if value.2.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.2.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.4, value.5);
-        if value.4.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.4.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.6, value.7);
-        if value.6.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.6.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         let render_vertices = render_data_container::RenderVertices::create(value.8, value.9);
-        if value.8.desc().step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        if value.8.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
 
         Self {
             vertices,
