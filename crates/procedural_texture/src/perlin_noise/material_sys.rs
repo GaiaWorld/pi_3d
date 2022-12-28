@@ -217,7 +217,7 @@ fn collect_opaque_normal_depth(
                                 render_sort: *rendersort,
                                 view_distance,
                             };
-                            println!("{:?}", meta);
+                            // println!("{:?}", meta);
                             list.push(meta);
                         },
                         (_, _, _) => {

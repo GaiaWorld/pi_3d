@@ -3,17 +3,43 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::object::GameObject;
 use pi_render::rhi::{dyn_uniform_buffer::{BindOffset, Bind, Uniform}, device::RenderDevice, RenderQueue};
 use pi_scene_math::Matrix;
-use render_data_container::VertexBufferPool;
+use render_data_container::{VertexBufferPool, VertexBuffer};
+use render_geometry::vertex_data::EVertexDataKind;
 
-use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer, bytes_write_to_memory, transforms::transform_node::{WorldMatrix, WorldMatrixInv}};
+use crate::{shaders::FragmentUniformBind, resources::RenderDynUniformBuffer, bytes_write_to_memory, transforms::transform_node::{WorldMatrix, WorldMatrixInv}, geometry::instance::types::{TInstancedData, InstancedValue}};
 
-use super::instance::{instanced_mesh::{InstanceSource, InstanceList}, world_matrix::{InstancedBufferWorldMatrix, InstancedWorldMatrixDirty}, instanced_buffer::TInstancedBuffer};
+use super::{instance::{instanced_mesh::{InstanceSource, InstanceList}, world_matrix::{InstancedWorldMatrixDirty}}, abstract_mesh::AbstructMesh};
 
 #[derive(Debug, Clone)]
 pub struct RenderWorldMatrix(pub Matrix);
 impl RenderWorldMatrix {
     pub fn new(m: Matrix) -> Self {
         Self(m)
+    }
+}
+impl TInstancedData for RenderWorldMatrix {
+    fn vertex_kind(&self) -> EVertexDataKind {
+        EVertexDataKind::InsWorldRow1
+    }
+
+    fn value(&self) -> &InstancedValue {
+        todo!()
+    }
+
+    fn size() -> usize {
+        16
+    }
+
+    fn bytes_size() -> usize {
+        16 * 4
+    }
+
+    fn local_offset(&self) -> usize {
+        0
+    }
+
+    fn write_instance_buffer(&self, buffer: &mut VertexBuffer, offset: usize) {
+        buffer.update_f32(self.0.as_slice(), offset);
     }
 }
 
@@ -71,10 +97,10 @@ pub struct SysModelMatrixUpdate;
 impl SysModelMatrixUpdate {
     #[system]
     pub fn tick(
-        mut meshes: Query<GameObject, (&BuildinModelBind, Write<RenderWorldMatrix>, Write<RenderWorldMatrixInv>, &WorldMatrix, &WorldMatrixInv), Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>)>>,
+        mut meshes: Query<GameObject, (&AbstructMesh, Write<RenderWorldMatrix>, Write<RenderWorldMatrixInv>, &WorldMatrix, &WorldMatrixInv), Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>)>>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
-        meshes.iter_mut().for_each(|(model, mut render_worldmatrix, mut render_worldmatrix_inv, worldmatrix, worldmatrix_inv)| {
+        meshes.iter_mut().for_each(|(_, mut render_worldmatrix, mut render_worldmatrix_inv, worldmatrix, worldmatrix_inv)| {
             // println!("SysModelUniformUpdate:");
             render_worldmatrix.write(RenderWorldMatrix::new(worldmatrix.0.clone()));
             render_worldmatrix_inv.write(RenderWorldMatrixInv::new(worldmatrix_inv.0.clone()));

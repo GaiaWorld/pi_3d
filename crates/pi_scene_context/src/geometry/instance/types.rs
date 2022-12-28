@@ -8,7 +8,8 @@ use crate::transforms::transform_node::WorldMatrix;
 pub trait TInstancedData {
     fn vertex_kind(&self) -> EVertexDataKind;
     fn value(&self) -> &InstancedValue;
-    fn size(&self) -> usize;
+    fn size() -> usize;
+    fn bytes_size() -> usize;
     fn local_offset(&self) -> usize;
     fn write_instance_buffer(&self, buffer: &mut VertexBuffer, offset: usize);
 }
@@ -22,8 +23,12 @@ impl TInstancedData for WorldMatrix {
         todo!()
     }
 
-    fn size(&self) -> usize {
+    fn size() -> usize {
         16
+    }
+
+    fn bytes_size() -> usize {
+        16 * 4
     }
 
     fn local_offset(&self) -> usize {

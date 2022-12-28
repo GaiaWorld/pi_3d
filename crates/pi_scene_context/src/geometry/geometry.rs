@@ -3,6 +3,8 @@ use render_geometry::{vertex_data::TVertexBufferDesc, indices::{IndicesBufferDes
 
 use super::vertex_buffer_useinfo::{AssetResVBSlot1, AssetDescVBSlot1, TVertexBufferUseInfo, TAssetResVertexBuffer, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetDescVBSlot2, AssetDescVBSlot3, AssetDescVBSlot4, AssetResVBSlot5, AssetDescVBSlot5};
 
+pub struct RenderGeometryEable(pub bool);
+
 pub trait RenderVerticesFrom {
     fn create<T0: TVertexBufferUseInfo, T1: TAssetResVertexBuffer>(useinfo: &T0, res: &T1) -> Self;
 }

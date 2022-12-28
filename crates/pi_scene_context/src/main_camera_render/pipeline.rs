@@ -5,7 +5,7 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::{object::GameObject, assets::sync_load::{InterfaceAssetSyncCreate}};
 use pi_render::rhi::{device::RenderDevice};
 use pi_share::Share;
-use render_shader::{shader::{ResShader, KeyShader}, scene_about_code::ERenderTag, skin_code::ESkinCode};
+use render_shader::{shader::{ResShader, KeyShader}, scene_about_code::ERenderTag, skin_code::ESkinCode, instance_code::EInstanceCode};
 
 use crate::{geometry::{AssetResVBLayouts, AssetKeyVBLayouts}, materials::{material::{MaterialID}, material_meta::{AssetKeyMaterialMeta, AssetResMaterailMeta}, uniforms::{value_uniform::MaterialValueBind, texture_uniform::MaterialTextureBindGroupID}, bind_group::{RenderBindGroupKey, RenderBindGroupPool}}, renderers::{pipeline::{KeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, pipeline_state_key, render_pipeline}, render_blend::RenderBlend, render_depth_and_stencil::RenderDepthAndStencil, render_primitive::PrimitiveState, render_target_state::RenderTargetState, render_object::RenderObjectBindGroup}, main_camera_render::bind_group::IDMainCameraRenderBindGroup, meshes::model::BuildinModelBind};
 
@@ -61,9 +61,9 @@ impl SysMaterialMainCameraChangeByMesh {
             GameObject,
             (
                 Write<AssetResShaderMainCamera>,
-                &MaterialID, &AssetKeyVBLayouts, &AssetResVBLayouts, Option<&ESkinCode>
+                &MaterialID, &AssetKeyVBLayouts, &AssetResVBLayouts, Option<&ESkinCode>, Option<&EInstanceCode>
             ),
-            Or<(Changed<MaterialID>, Changed<AssetResVBLayouts>, Changed<ESkinCode>)>
+            Or<(Changed<MaterialID>, Changed<AssetResVBLayouts>, Changed<ESkinCode>, Changed<EInstanceCode>)>
         >,
         materials: Query<
             GameObject,
@@ -74,11 +74,12 @@ impl SysMaterialMainCameraChangeByMesh {
         asset_mgr: Res<Share<AssetMgr<ResShader>>>,
         device: Res<RenderDevice>,
     ) {
-        meshes.iter_mut().for_each(|(mut asset, matid, keyvb, vb, skin)| {
+        meshes.iter_mut().for_each(|(mut asset, matid, keyvb, vb, skin, instance)| {
 
             // println!("SysMaterialMainCameraChangeByMesh");
 
             let skin = if let Some(skin) = skin { skin.clone() } else { ESkinCode::None };
+            let instance = if let Some(instance) = instance { instance.clone() } else { EInstanceCode(EInstanceCode::NONE) };
             let vertex_layouts_key = keyvb.0.clone();
             let render_tag = ERenderTag::MainCamera;
 
@@ -89,7 +90,7 @@ impl SysMaterialMainCameraChangeByMesh {
                 let shader = if let Some(shader) = asset_mgr.get(&shaderkey) {
                     shader
                 } else {
-                    asset_mgr.create_asset(shaderkey.clone(), ResShader::build(&device, &matkey.0, &matmeta.0, &vb.0, &skin, &render_tag))
+                    asset_mgr.create_asset(shaderkey.clone(), ResShader::build(&device, &matkey.0, &matmeta.0, &vb.0, &instance, &skin, &render_tag))
                 };
 
                 if matmeta.textures.is_some() {
@@ -131,7 +132,7 @@ impl SysMaterialMainCameraChangeByMat {
             GameObject,
             (
                 Write<AssetResShaderMainCamera>,
-                &MaterialID, &AssetKeyVBLayouts, &AssetResVBLayouts, Option<&ESkinCode>
+                &MaterialID, &AssetKeyVBLayouts, &AssetResVBLayouts, Option<&ESkinCode>, Option<&EInstanceCode>
             ),
         >,
         materials: Query<
@@ -146,8 +147,9 @@ impl SysMaterialMainCameraChangeByMat {
         mut asset_mgr: ResMut<Share<AssetMgr<ResShader>>>,
         device: Res<RenderDevice>,
     ) {
-        meshes.iter_mut().for_each(|(mut asset, matid, keyvb, vb, skin)| {
+        meshes.iter_mut().for_each(|(mut asset, matid, keyvb, vb, skin, instance)| {
             let skin = if let Some(skin) = skin { skin.clone() } else { ESkinCode::None };
+            let instance = if let Some(instance) = instance { instance.clone() } else { EInstanceCode(EInstanceCode::NONE) };
             let vertex_layouts_key = keyvb.0.clone();
             let render_tag = ERenderTag::MainCamera;
 
@@ -159,7 +161,7 @@ impl SysMaterialMainCameraChangeByMat {
                 let shader = if let Some(shader) = asset_mgr.get(&shaderkey) {
                     shader
                 } else {
-                    asset_mgr.create_asset(shaderkey.clone(), ResShader::build(&device, &matkey.0, &matmeta.0, &vb.0, &skin, &render_tag))
+                    asset_mgr.create_asset(shaderkey.clone(), ResShader::build(&device, &matkey.0, &matmeta.0, &vb.0, &instance, &skin, &render_tag))
                 };
 
                 if matmeta.textures.is_some() {

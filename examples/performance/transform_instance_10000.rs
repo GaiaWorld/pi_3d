@@ -3,23 +3,22 @@
 use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
 
 use default_render::interface::InterfaceDefaultMaterial;
-use material_textures::{PluginMaterialTextures, main_texture::{PluginMainTexture, InterfaceMainTexture}};
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    meshes::cube::InterfaceCube,
+    meshes::{cube::{InterfaceCube, CubeBuilder}, interface::InterfaceMesh},
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}, renderers::{render_blend::{InterfaceRenderBlend, RenderBlend}, render_mode::{InterfaceRenderMode, ERenderMode}}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::render_depth_and_stencil::{InterfaceRenderDepthAndStencil, RenderDepthAndStencil}, materials::material::{InterfaceMaterial, MaterialID}, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use render_resource::{ImageAssetKey, sampler::SamplerDesc};
-use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
+use render_data_container::KeyVertexBuffer;
+use render_geometry::vertex_data::VertexBufferDesc;
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -59,11 +58,8 @@ impl Plugin for PluginTest {
         engine: &mut pi_scene_context::engine::Engine,
         stages: &mut pi_scene_context::run_stage::RunStage,
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-        PluginLocalLoad.init(engine, stages);
+
         PluginBundleDefault.init(engine, stages);
-        // PluginMaterialTextures.init(engine, stages);
-        // PluginMainTexture.init(engine, stages);
-        PluginUnlitMaterial.init(engine, stages);
 
         let world = engine.world_mut();
 
@@ -81,7 +77,7 @@ impl PluginTest {
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
 
-        let tes_size = 2;
+        let tes_size = 100;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
         engine.frame_time(2);
@@ -89,26 +85,28 @@ impl PluginTest {
         // Test Code
         let scene01 = engine.create_scene();
         let camera01 = engine.create_free_camera(scene01);
-        let node01 = engine.create_transform_node(scene01);
         engine.active_camera(camera01, true);
         engine.layer_mask(camera01, LayerMask::default());
         engine.transform_position(camera01, Vector3::new(0., 0., -10.));
         engine.free_camera_orth_size(camera01, tes_size as f32);
 
-        let unlitmaterial = engine.create_unlit_material();
-        engine.set_texture_sampler(unlitmaterial, "_MainTex", SamplerDesc::default());
-        engine.emissive_texture(unlitmaterial, render_resource::ImageAssetKey::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"));
+        // let matid = engine.create_default_material();
+        // engine.emissive_intensity(entity, intensity);
+
+        let source = engine.create_mesh(scene01);
+        let mut attrs = CubeBuilder::attrs_desc();
+        attrs.push(VertexBufferDesc::instance_world_matrix());
+        engine.use_geometry(source, attrs);
+        engine.use_indices(source, CubeBuilder::indices_desc());
+        engine.use_default_material(source);
+        engine.layer_mask(source, LayerMask::default());
 
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..1 {
-                    let cube = engine.new_cube(scene01);
-                    // engine.render_mode(cube, ERenderMode::Transparent);
-                    // engine.blend(cube, RenderBlend::one_one());
-                    engine.use_material(cube, MaterialID(unlitmaterial));
+                    let cube = engine.create_instanced_mesh(scene01, source.clone());
                     engine.transform_position(cube, Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
                     engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 0.2, j as f32 * 0.2, k as f32 * 0.2));
-                    engine.layer_mask(cube, LayerMask::default());
                     testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
                 }
             }

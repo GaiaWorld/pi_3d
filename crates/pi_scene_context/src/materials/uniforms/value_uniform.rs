@@ -124,7 +124,7 @@ impl MaterialValueBind {
             mat4_begin, mat2_begin, vec4_begin, vec2_begin, float_begin, int_begin, uint_begin, total_size, bind_group: key,
         };
 
-        println!("{:?}", result);
+        // println!("{:?}", result);
 
         result
     }

@@ -23,6 +23,18 @@ axis = { path = "crates/axis" }
 
 unlit_material = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }
+
+# render_utils = { git = "https://github.com/GaiaWorld/pi_render" }
+render_utils = { path = "../pi_render/crates/render_utils" }
+# render_pipeline_key = { git = "https://github.com/GaiaWorld/pi_render" }
+render_pipeline_key = { path = "../pi_render/crates/render_pipeline_key" }
+# render_data_container = { git = "https://github.com/GaiaWorld/pi_render" }
+render_data_container = { path = "../pi_render/crates/render_data_container" }
+# render_geometry = { git = "https://github.com/GaiaWorld/pi_render" }
+render_geometry = { path = "../pi_render/crates/render_geometry" }
+# render_material = { git = "https://github.com/GaiaWorld/pi_render" }
+render_material = { path = "../pi_render/crates/render_material" }
+
 render_resource = { path = "../pi_render/crates/render_resource" }
 # pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
@@ -63,6 +75,14 @@ path = "examples/performance/static_10000.rs"
 [[example]]
 name = "performance_transform_render"
 path = "examples/performance/transform_10000.rs"
+
+[[example]]
+name = "performance_static_instance"
+path = "examples/performance/static_instance_10000.rs"
+
+[[example]]
+name = "performance_transform_instance"
+path = "examples/performance/transform_instance_10000.rs"
 
 [[example]]
 name = "oct_tree"

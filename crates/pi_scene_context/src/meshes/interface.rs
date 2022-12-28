@@ -1,4 +1,5 @@
 use pi_engine_shell::object::InterfaceObject;
+use pi_scene_math::Vector4;
 
 use crate::{object::ObjectID, transforms::interface::InterfaceTransformNode, scene::interface::InterfaceScene, renderers::{render_mode::{InterfaceRenderMode, ERenderMode}, render_sort::{InterfaceRenderSort, RenderSortParam}, render_blend::InterfaceRenderBlend, render_depth_and_stencil::InterfaceRenderDepthAndStencil, render_primitive::{InterfaceRenderPrimitive, PrimitiveState}}, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
 
@@ -15,6 +16,18 @@ pub trait InterfaceMesh {
         & self,
         object: ObjectID,
     ) -> & Self;
+    
+    fn create_instanced_mesh(
+        & self,
+        scene: ObjectID,
+        source: ObjectID,
+    ) -> ObjectID;
+
+    fn set_instance_color(
+        & self,
+        instance: ObjectID,
+        color: Vector4,
+    ) -> &Self;
 }
 impl InterfaceMesh for crate::engine::Engine {
     fn create_mesh(
@@ -31,6 +44,36 @@ impl InterfaceMesh for crate::engine::Engine {
         self.as_mesh(entity);
 
         entity
+    }
+    
+    fn create_instanced_mesh(
+        & self,
+        scene: ObjectID,
+        source: ObjectID,
+    ) -> ObjectID {
+        let world = self.world();
+
+        let entity = self.new_object();
+
+        self.add_to_scene(entity, scene);
+        self.as_transform_node(entity);
+        self.transform_parent(entity, scene);
+
+        let commands = world.get_resource_mut::<SingleMeshCommandList>().unwrap();
+        commands.list.push(MeshCommand::CreateInstance(source, entity));
+
+        entity
+    }
+    
+    fn set_instance_color(
+        & self,
+        instance: ObjectID,
+        color: Vector4,
+    ) -> &Self {
+        let commands = self.world().get_resource_mut::<SingleMeshCommandList>().unwrap();
+        commands.list.push(MeshCommand::InstanceColor(instance, color));
+
+        self
     }
 
     fn as_mesh(

@@ -12,8 +12,6 @@ impl SingleInstanceBufferMgr {
     }
 }
 
-pub struct InstancedMesh;
-
 pub struct InstancedList(pub Vec<ObjectID>);
 
 pub struct FlagInstanceModify;

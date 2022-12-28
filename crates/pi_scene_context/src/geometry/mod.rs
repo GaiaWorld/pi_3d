@@ -14,12 +14,13 @@ use render_geometry::{vertex_data::{VertexBufferLayouts, VertexBufferDesc}, indi
 
 use crate::{object::ObjectID, plugin::Plugin};
 
-use self::{vertex_buffer_useinfo::{AssetKeyVBSlot1, AssetKeyVBSlot2, AssetKeyVBSlot3, AssetKeyVBSlot4, AssetKeyVBSlot5, AssetKeyVBSlot6, AssetKeyVBSlot7, AssetKeyVBSlot8, AssetKeyVBSlot9, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetResVBSlot5, AssetResVBSlot6, AssetResVBSlot7, AssetResVBSlot8, AssetResVBSlot9, AssetResVBSlot1}, sys_vertex_buffer_use::PluginVertexBuffers};
+use self::{vertex_buffer_useinfo::{AssetKeyVBSlot1, AssetKeyVBSlot2, AssetKeyVBSlot3, AssetKeyVBSlot4, AssetKeyVBSlot5, AssetKeyVBSlot6, AssetKeyVBSlot7, AssetKeyVBSlot8, AssetKeyVBSlot9, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetResVBSlot5, AssetResVBSlot6, AssetResVBSlot7, AssetResVBSlot8, AssetResVBSlot9, AssetResVBSlot1}, sys_vertex_buffer_use::PluginVertexBuffers, geometry::RenderGeometryEable};
 
 pub mod vertex_buffer_useinfo;
 pub mod sys_vertex_buffer_use;
 pub mod geometry;
 pub mod indices;
+pub mod instance;
 
 pub type VDK = usize;
 pub type GBID = Atom;
@@ -59,16 +60,18 @@ impl SysGeometryCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleGeometryCommands>,
-        mut items: Query<GameObject, (Write<GeometryDesc>, Write<AssetKeyVBLayouts>)>,
+        mut items: Query<GameObject, (Write<GeometryDesc>, Write<AssetKeyVBLayouts>, Write<RenderGeometryEable>)>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ECommand::Desc(entity, descs, key) => {
-                    if let Some((mut descwrite, mut keywrite)) = items.get_mut(entity) {
+                    if let Some((mut descwrite, mut keywrite, mut geo_disable)) = items.get_mut(entity) {
+                        println!(">>>>  GeometryDesc ");
                         descwrite.write(GeometryDesc{ list: descs });
                         keywrite.write(AssetKeyVBLayouts(key));
+                        geo_disable.write(RenderGeometryEable(true));
                     }
                 },
             }

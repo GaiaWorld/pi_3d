@@ -146,6 +146,6 @@ impl WorldMatrixCalc {
         }
 
         let time1 = Instant::now();
-        // println!("World Matrix Calc: {:?}", time1 - time);
+        println!("World Matrix Calc: {:?}", time1 - time);
     }
 }

@@ -24,6 +24,20 @@ impl CubeBuilder {
     const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
     const KEY_BUFFER_UV:        &'static str = "CubeUV";
     const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
+    pub fn attrs_desc() -> Vec<VertexBufferDesc> {
+        let keypos = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_POSITION);
+        let keynormal = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_NORMAL);
+        let keyuv = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_UV);
+        vec![
+            VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
+            VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
+            VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
+        ]
+    }
+    pub fn indices_desc() -> IndicesBufferDesc {
+        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
+        IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
+    }
     pub fn position(
         device: &RenderDevice,
         queue: &RenderQueue,
@@ -139,20 +153,11 @@ impl InterfaceCube for Engine {
                                     .transform_parent(entity, scene)
                                     .as_mesh(entity);
 
-        let keypos = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_POSITION);
-        let keynormal = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_NORMAL);
-        let keyuv = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_UV);
-        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
-        
         self.use_geometry(
             entity,
-            vec![
-                VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
-                VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
-                VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
-            ]
+            CubeBuilder::attrs_desc()
         );
-        self.use_indices(entity, IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key });
+        self.use_indices(entity, CubeBuilder::indices_desc());
 
         entity
     }

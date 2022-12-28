@@ -85,13 +85,13 @@ impl SysCameraTransformMatrix {
         mut query_cameras: Query<GameObject, (&CameraViewMatrix, &CameraProjectionMatrix, &mut CameraTransformMatrix), Or<(Changed<CameraViewMatrix>, Changed<CameraTransformMatrix>)>>,
     ) {
         query_cameras.iter_mut().for_each(|(view_matrix, project_matrix, mut transform_matrix)| {
-            println!("SysCamera Transform Matrix: p = {:?}, v = {:?}", project_matrix.0, view_matrix.0);
+            // println!("SysCamera Transform Matrix: p = {:?}, v = {:?}", project_matrix.0, view_matrix.0);
 
             // view_matrix.0.
             // transform_matrix.0 = view_matrix.0 * project_matrix.0;
             // println!("Transform Matrix v * p {}", transform_matrix.0);
             transform_matrix.0 = project_matrix.0 * view_matrix.0;
-            println!("Transform Matrix p * v {}", transform_matrix.0);
+            // println!("Transform Matrix p * v {}", transform_matrix.0);
             // view_matrix.0.mul_to(&project_matrix.0, &mut transform_matrix.0);
             // println!("Transform Matrix {}", transform_matrix.0);
             // project_matrix.0.mul_to(&view_matrix.0, &mut transform_matrix.0);

@@ -3,7 +3,7 @@ use pi_ecs::prelude::Setup;
 
 use crate::object::ObjectID;
 
-use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysModelUniformUpdate, SysModelMatrixUpdate, SysInstancedModelUpdate}, instance::instanced_mesh::InstanceSourceRecord};
+use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysModelUniformUpdate, SysModelMatrixUpdate, SysInstancedModelUpdate}, instance::{instanced_mesh::InstanceSourceRecord, world_matrix::{SysInstanceBufferWorldMatrixInit, SysInstanceBufferWorldMatrixUpdate}, instance_color::{SysInstanceBufferColorUpdate, SysInstanceBufferColorInit}}};
 
 pub mod cube;
 pub mod plane;
@@ -15,6 +15,7 @@ pub mod render_group;
 pub mod ball;
 pub mod quad;
 pub mod instance;
+pub mod abstract_mesh;
 
 pub trait Mesh {
     fn alpha_index(&self) -> usize;
@@ -34,6 +35,12 @@ impl crate::Plugin for PluginMesh {
 
         SysMeshCommand::setup(world, stages.command_stage());
         SysModelMatrixUpdate::setup(world, stages.command_stage());
+
+        SysInstanceBufferWorldMatrixInit::setup(world, stages.command_stage());
+        SysInstanceBufferWorldMatrixUpdate::setup(world, stages.uniform_update());
+        
+        SysInstanceBufferColorInit::setup(world, stages.command_stage());
+        SysInstanceBufferColorUpdate::setup(world, stages.uniform_update());
 
         SysModelUniformUpdate::setup(world, stages.uniform_update());
         SysInstancedModelUpdate::setup(world, stages.uniform_update());

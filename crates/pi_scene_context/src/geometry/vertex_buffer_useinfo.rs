@@ -151,6 +151,11 @@ impl From<Handle<VertexBuffer>> for AssetResVBSlot1 {
         Self(VertexBufferUse::Handle(value))
     }
 }
+impl From<KeyVertexBuffer> for AssetResVBSlot1 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
+    }
+}
 impl TAssetResVertexBuffer for AssetResVBSlot1 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
@@ -195,6 +200,11 @@ pub struct AssetResVBSlot2(pub VertexBufferUse);
 impl From<Handle<VertexBuffer>> for AssetResVBSlot2 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
+    }
+}
+impl From<KeyVertexBuffer> for AssetResVBSlot2 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
     }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot2 {
@@ -243,6 +253,11 @@ impl From<Handle<VertexBuffer>> for AssetResVBSlot3 {
         Self(VertexBufferUse::Handle(value))
     }
 }
+impl From<KeyVertexBuffer> for AssetResVBSlot3 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
+    }
+}
 impl TAssetResVertexBuffer for AssetResVBSlot3 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
@@ -287,6 +302,11 @@ pub struct AssetResVBSlot4(pub VertexBufferUse);
 impl From<Handle<VertexBuffer>> for AssetResVBSlot4 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
+    }
+}
+impl From<KeyVertexBuffer> for AssetResVBSlot4 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
     }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot4 {
@@ -335,6 +355,11 @@ impl From<Handle<VertexBuffer>> for AssetResVBSlot5 {
         Self(VertexBufferUse::Handle(value))
     }
 }
+impl From<KeyVertexBuffer> for AssetResVBSlot5 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
+    }
+}
 impl TAssetResVertexBuffer for AssetResVBSlot5 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
@@ -379,6 +404,11 @@ pub struct AssetResVBSlot6(pub VertexBufferUse);
 impl From<Handle<VertexBuffer>> for AssetResVBSlot6 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
+    }
+}
+impl From<KeyVertexBuffer> for AssetResVBSlot6 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
     }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot6 {
@@ -428,6 +458,11 @@ impl From<Handle<VertexBuffer>> for AssetResVBSlot7 {
         Self(VertexBufferUse::Handle(value))
     }
 }
+impl From<KeyVertexBuffer> for AssetResVBSlot7 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
+    }
+}
 impl TAssetResVertexBuffer for AssetResVBSlot7 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
@@ -472,6 +507,11 @@ pub struct AssetResVBSlot8(pub VertexBufferUse);
 impl From<Handle<VertexBuffer>> for AssetResVBSlot8 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
+    }
+}
+impl From<KeyVertexBuffer> for AssetResVBSlot8 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
     }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot8 {
@@ -520,6 +560,11 @@ impl From<Handle<VertexBuffer>> for AssetResVBSlot9 {
         Self(VertexBufferUse::Handle(value))
     }
 }
+impl From<KeyVertexBuffer> for AssetResVBSlot9 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
+    }
+}
 impl TAssetResVertexBuffer for AssetResVBSlot9 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
@@ -564,6 +609,11 @@ pub struct AssetResVBSlot10(pub VertexBufferUse);
 impl From<Handle<VertexBuffer>> for AssetResVBSlot10 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
+    }
+}
+impl From<KeyVertexBuffer> for AssetResVBSlot10 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
     }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot10 {
@@ -612,6 +662,11 @@ impl From<Handle<VertexBuffer>> for AssetResVBSlot11 {
         Self(VertexBufferUse::Handle(value))
     }
 }
+impl From<KeyVertexBuffer> for AssetResVBSlot11 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
+    }
+}
 impl TAssetResVertexBuffer for AssetResVBSlot11 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
@@ -656,6 +711,11 @@ pub struct AssetResVBSlot12(pub VertexBufferUse);
 impl From<Handle<VertexBuffer>> for AssetResVBSlot12 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
+    }
+}
+impl From<KeyVertexBuffer> for AssetResVBSlot12 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
     }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot12 {
@@ -703,6 +763,11 @@ pub struct AssetResVBSlot13(pub VertexBufferUse);
 impl From<Handle<VertexBuffer>> for AssetResVBSlot13 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
+    }
+}
+impl From<KeyVertexBuffer> for AssetResVBSlot13 {
+    fn from(value: KeyVertexBuffer) -> Self {
+        Self(VertexBufferUse::Arc(value))
     }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot13 {
