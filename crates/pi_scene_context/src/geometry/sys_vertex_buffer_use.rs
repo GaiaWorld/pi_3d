@@ -9,7 +9,7 @@ use render_shader::instance_code::EInstanceCode;
 
 use crate::{geometry::{geometry::RenderVerticesFrom, instance::instanced_buffer::TInstancedBuffer}, meshes::instance::{instanced_mesh::{InstanceSourceRecord, InstanceList, InstanceSource}}};
 
-use super::{vertex_buffer_useinfo::{TVertexBufferUseInfo, AssetDescVBSlot1, AssetDescVBSlot2, AssetDescVBSlot3, AssetDescVBSlot5, AssetDescVBSlot6, AssetDescVBSlot7, AssetDescVBSlot8, AssetDescVBSlot9, AssetDescVBSlot4, AssetResVBSlot1, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetResVBSlot5, AssetResVBSlot6, AssetResVBSlot7, AssetResVBSlot8, AssetResVBSlot9, AsKeyVertexBuffer, AssetKeyVBSlot1, AssetKeyVBSlot2, AssetKeyVBSlot3, AssetKeyVBSlot4, AssetKeyVBSlot5, AssetKeyVBSlot6, AssetKeyVBSlot7, AssetKeyVBSlot8, AssetKeyVBSlot9, AssetKeyVBSlot10, AssetKeyVBSlot11, AssetKeyVBSlot12, AssetKeyVBSlot13, AssetDescVBSlot10, AssetDescVBSlot11, AssetDescVBSlot12, AssetDescVBSlot13, TAssetResVertexBuffer, AssetResVBSlot10, AssetResVBSlot11, AssetResVBSlot12, AssetResVBSlot13}, GeometryDesc, geometry::{RenderGeometry, RenderGeometryEable}, instance::{instance_world_matrix::InstancedBufferWorldMatrix, instance_color::InstancedBufferColor}};
+use super::{vertex_buffer_useinfo::{TVertexBufferUseInfo, AssetDescVBSlot1, AssetDescVBSlot2, AssetDescVBSlot3, AssetDescVBSlot5, AssetDescVBSlot6, AssetDescVBSlot7, AssetDescVBSlot8, AssetDescVBSlot9, AssetDescVBSlot4, AssetResVBSlot1, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetResVBSlot5, AssetResVBSlot6, AssetResVBSlot7, AssetResVBSlot8, AssetResVBSlot9, AsKeyVertexBuffer, AssetKeyVBSlot1, AssetKeyVBSlot2, AssetKeyVBSlot3, AssetKeyVBSlot4, AssetKeyVBSlot5, AssetKeyVBSlot6, AssetKeyVBSlot7, AssetKeyVBSlot8, AssetKeyVBSlot9, AssetKeyVBSlot10, AssetKeyVBSlot11, AssetKeyVBSlot12, AssetKeyVBSlot13, AssetDescVBSlot10, AssetDescVBSlot11, AssetDescVBSlot12, AssetDescVBSlot13, TAssetResVertexBuffer, AssetResVBSlot10, AssetResVBSlot11, AssetResVBSlot12, AssetResVBSlot13}, GeometryDesc, geometry::{RenderGeometry, RenderGeometryEable}, instance::{instance_world_matrix::InstancedBufferWorldMatrix, instance_color::InstancedBufferColor, instance_tilloff::InstancedBufferTillOff}};
 
 
 pub struct SysGeometryChangeIntSlot<D: TVertexBufferUseInfo + Component, D1: AsKeyVertexBuffer + Component>(PhantomData<(D, D1)>);
@@ -23,7 +23,7 @@ where
     pub fn material_change(
         mut items: Query<
             GameObject,
-            (ObjectID, &GeometryDesc, Write<D>, Write<D1>, Write<EInstanceCode>, Write<InstanceList>, Write<RenderGeometryEable>, Write<InstancedBufferWorldMatrix>, Write<InstancedBufferColor>),
+            (ObjectID, &GeometryDesc, Write<D>, Write<D1>, Write<EInstanceCode>, Write<InstanceList>, Write<RenderGeometryEable>, Write<InstancedBufferWorldMatrix>, Write<InstancedBufferColor>, Write<InstancedBufferTillOff>),
             (Changed<GeometryDesc>),
         >,
         mut ins_record: ResMut<InstanceSourceRecord>,
@@ -32,7 +32,7 @@ where
         items.iter_mut().for_each(|(
             id, statistics, mut slot, mut slotkey, mut instance_code, 
             mut ins_list, mut render_geoenable,
-            mut buf_wm, mut buf_color
+            mut buf_wm, mut buf_color, mut buf_tilloff
         )| {
             
             if statistics.slot_count() >= D::ASK_SLOT_COUNT as usize {
@@ -80,7 +80,17 @@ where
                                     instance_code.write(EInstanceCode(EInstanceCode::COLOR));
                                 }
                             },
-                            render_geometry::vertex_data::EInstanceKind::TillOffset => todo!(),
+                            render_geometry::vertex_data::EInstanceKind::TillOffset => {
+                                let buff = InstancedBufferTillOff::new(slot_index, buff_id, &mut vbpool);
+                                buf_tilloff.write(buff);
+            
+                                if let Some(ins_code) = instance_code.get_mut() {
+                                    ins_code.0 = ins_code.0 | EInstanceCode::TILL_OFF_1;
+                                    instance_code.notify_modify();
+                                } else {
+                                    instance_code.write(EInstanceCode(EInstanceCode::TILL_OFF_1));
+                                }
+                            },
                             _ => { },
                         }
                     },
@@ -322,6 +332,62 @@ impl SysGeometryVBUpdateSlot5
     }
 }
 
+pub struct SysGeometryVBUpdateSlot6;
+#[setup]
+impl SysGeometryVBUpdateSlot6
+{
+    #[system]
+    pub fn slot_change(
+        mut items: Query<
+            GameObject,
+            (   &GeometryDesc, Write<RenderGeometry>, &RenderGeometryEable
+                , &AssetDescVBSlot1, &AssetResVBSlot1
+                , &AssetDescVBSlot2, &AssetResVBSlot2
+                , &AssetDescVBSlot3, &AssetResVBSlot3
+                , &AssetDescVBSlot4, &AssetResVBSlot4
+                , &AssetDescVBSlot5, &AssetResVBSlot5
+                , &AssetDescVBSlot6, &AssetResVBSlot6
+            ),
+            Or<(
+                Changed<RenderGeometryEable>, 
+                Changed<AssetDescVBSlot1>, Changed<AssetResVBSlot1>,
+                Changed<AssetDescVBSlot2>, Changed<AssetResVBSlot2>,
+                Changed<AssetDescVBSlot3>, Changed<AssetResVBSlot3>,
+                Changed<AssetDescVBSlot4>, Changed<AssetResVBSlot4>,
+                Changed<AssetDescVBSlot5>, Changed<AssetResVBSlot5>,
+                Changed<AssetDescVBSlot6>, Changed<AssetResVBSlot6>,
+            )>
+        >,
+    ) {
+        items.iter_mut().for_each(|(
+            desc, mut geometry, geo_disable
+            , key1, res1
+            , key2, res2
+            , key3, res3
+            , key4, res4
+            , key5, res5
+            , key6, res6
+        )| {
+            if desc.slot_count() == 6 {
+                println!("VBUpdateSlot6");
+                if geo_disable.0 == false {
+                    geometry.remove();
+                } else {
+                    let values = vec![
+                        (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
+                        (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
+                        (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
+                        (key4.desc().step_mode(), RenderVertices::create(key4, res4)),
+                        (key5.desc().step_mode(), RenderVertices::create(key5, res5)),
+                        (key6.desc().step_mode(), RenderVertices::create(key6, res6)),
+                    ];
+                    geometry.write(RenderGeometry::create(values));
+                }
+            }
+        });
+    }
+}
+
 pub struct  PluginVertexBuffers;
 impl pi_engine_shell::plugin::Plugin for PluginVertexBuffers {
     fn init(
@@ -350,6 +416,7 @@ impl pi_engine_shell::plugin::Plugin for PluginVertexBuffers {
         SysGeometryVBUpdateSlot3::setup(world, stages.uniform_update());
         SysGeometryVBUpdateSlot4::setup(world, stages.uniform_update());
         SysGeometryVBUpdateSlot5::setup(world, stages.uniform_update());
+        SysGeometryVBUpdateSlot6::setup(world, stages.uniform_update());
 
         Ok(())
     }

@@ -28,6 +28,12 @@ pub trait InterfaceMesh {
         instance: ObjectID,
         color: Vector4,
     ) -> &Self;
+    
+    fn set_instance_tilloff(
+        & self,
+        instance: ObjectID,
+        value: Vector4,
+    ) -> &Self;
 }
 impl InterfaceMesh for crate::engine::Engine {
     fn create_mesh(
@@ -72,6 +78,17 @@ impl InterfaceMesh for crate::engine::Engine {
     ) -> &Self {
         let commands = self.world().get_resource_mut::<SingleMeshCommandList>().unwrap();
         commands.list.push(MeshCommand::InstanceColor(instance, color));
+
+        self
+    }
+    
+    fn set_instance_tilloff(
+        & self,
+        instance: ObjectID,
+        value: Vector4,
+    ) -> &Self {
+        let commands = self.world().get_resource_mut::<SingleMeshCommandList>().unwrap();
+        commands.list.push(MeshCommand::InstanceTillOff(instance, value));
 
         self
     }

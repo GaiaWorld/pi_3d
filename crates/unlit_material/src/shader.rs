@@ -58,6 +58,10 @@ impl UnlitShader {
                     format: Atom::from("vec2"),
                     name: Atom::from("v_uv"),
                 },
+                Varying {
+                    format: Atom::from("vec4"),
+                    name: Atom::from("v_color"),
+                },
             ]),
             BlockCodeAtom {
                 define: Atom::from(include_str!("./unlit_define.vert")),

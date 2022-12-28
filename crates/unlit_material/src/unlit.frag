@@ -1,5 +1,5 @@
 
-    vec4 baseColor = vec4(1., 1., 1., 1.);
+    vec4 baseColor = v_color;
     float alpha = 1.0;
 
     vec4 mainTextureColor = texture(sampler2D(_MainTex, sampler_MainTex), v_uv);

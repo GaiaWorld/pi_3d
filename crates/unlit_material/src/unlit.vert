@@ -14,3 +14,4 @@
     v_normal = A_NORMAL; // normalize(vec3(finalWorld * vec4(a_normal, 1.0)));
     
     v_uv = A_UV;
+    v_color = A_COLOR4;

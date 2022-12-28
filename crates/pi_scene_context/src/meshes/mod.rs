@@ -3,7 +3,7 @@ use pi_ecs::prelude::Setup;
 
 use crate::object::ObjectID;
 
-use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysModelUniformUpdate, SysModelMatrixUpdate, SysInstancedModelUpdate}, instance::{instanced_mesh::InstanceSourceRecord, world_matrix::{SysInstanceBufferWorldMatrixInit, SysInstanceBufferWorldMatrixUpdate}, instance_color::{SysInstanceBufferColorUpdate, SysInstanceBufferColorInit}}};
+use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysModelUniformUpdate, SysModelMatrixUpdate, SysInstancedModelUpdate}, instance::{instanced_mesh::InstanceSourceRecord, world_matrix::{SysInstanceBufferWorldMatrixInit, SysInstanceBufferWorldMatrixUpdate}, instance_color::{SysInstanceBufferColorUpdate, SysInstanceBufferColorInit}, instance_tilloff::{SysInstanceBufferTillOffInit, SysInstanceBufferTillOffUpdate}}};
 
 pub mod cube;
 pub mod plane;
@@ -41,6 +41,9 @@ impl crate::Plugin for PluginMesh {
         
         SysInstanceBufferColorInit::setup(world, stages.command_stage());
         SysInstanceBufferColorUpdate::setup(world, stages.uniform_update());
+
+        SysInstanceBufferTillOffInit::setup(world, stages.command_stage());
+        SysInstanceBufferTillOffUpdate::setup(world, stages.uniform_update());
 
         SysModelUniformUpdate::setup(world, stages.uniform_update());
         SysInstancedModelUpdate::setup(world, stages.uniform_update());

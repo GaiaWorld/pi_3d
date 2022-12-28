@@ -85,6 +85,10 @@ name = "performance_transform_instance"
 path = "examples/performance/transform_instance_10000.rs"
 
 [[example]]
+name = "instance_color_tilloff"
+path = "examples/instance/instance_color_tilloff.rs"
+
+[[example]]
 name = "oct_tree"
 path = "examples/oct_tree/oct_tree.rs"
 
