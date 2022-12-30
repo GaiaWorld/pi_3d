@@ -1,7 +1,7 @@
 use pi_atom::Atom;
 use pi_engine_shell::{engine_shell::EnginShell, plugin::{Plugin, ErrorPlugin}};
 use render_shader::shader::KeyShaderEffect;
-use pi_scene_context::materials::material_meta::InterfaceMaterialMeta;
+use pi_scene_context::materials::shader_effect::InterfaceMaterialMeta;
 use crate::water::shader::WaterShader;
 
 pub mod shader;

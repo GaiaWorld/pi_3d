@@ -7,7 +7,7 @@ use pi_render::rhi::{device::RenderDevice};
 use pi_share::Share;
 use render_shader::{shader::{ResShader, KeyShader}, scene_about_code::ERenderTag, skin_code::ESkinCode, instance_code::EInstanceCode};
 
-use crate::{geometry::{AssetResVBLayouts, AssetKeyVBLayouts}, materials::{material::{MaterialID}, material_meta::{AssetKeyMaterialMeta, AssetResMaterailMeta}, uniforms::{value_uniform::MaterialValueBind, texture_uniform::MaterialTextureBindGroupID}, bind_group::{RenderBindGroupKey, RenderBindGroupPool}}, renderers::{pipeline::{KeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, pipeline_state_key, render_pipeline}, render_blend::RenderBlend, render_depth_and_stencil::RenderDepthAndStencil, render_primitive::PrimitiveState, render_target_state::RenderTargetState, render_object::RenderObjectBindGroup}, main_camera_render::bind_group::IDMainCameraRenderBindGroup, meshes::model::BuildinModelBind};
+use crate::{geometry::{AssetResVBLayouts, AssetKeyVBLayouts}, materials::{material::{MaterialID}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta}, uniforms::{value_uniform::MaterialValueBind, texture_uniform::MaterialTextureBindGroupID}, bind_group::{RenderBindGroupKey, RenderBindGroupPool}}, renderers::{pipeline::{KeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, pipeline_state_key, render_pipeline}, render_blend::RenderBlend, render_depth_and_stencil::RenderDepthAndStencil, render_primitive::PrimitiveState, render_target_state::RenderTargetState, render_object::RenderObjectBindGroup}, main_camera_render::bind_group::IDMainCameraRenderBindGroup, meshes::model::BuildinModelBind};
 
 
 pub struct AssetResShaderMainCamera{
@@ -68,7 +68,7 @@ impl SysMaterialMainCameraChangeByMesh {
         materials: Query<
             GameObject,
             (
-                &AssetKeyMaterialMeta, &AssetResMaterailMeta, &MaterialValueBind, Option<&MaterialTextureBindGroupID>
+                &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &MaterialValueBind, Option<&MaterialTextureBindGroupID>
             ),
         >,
         asset_mgr: Res<Share<AssetMgr<ResShader>>>,
@@ -138,10 +138,10 @@ impl SysMaterialMainCameraChangeByMat {
         materials: Query<
             GameObject,
             (
-                &AssetKeyMaterialMeta, &AssetResMaterailMeta, &MaterialValueBind, Option<&MaterialTextureBindGroupID>
+                &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &MaterialValueBind, Option<&MaterialTextureBindGroupID>
             ),
             Or<(
-                Changed<AssetResMaterailMeta>, Changed<MaterialValueBind>, Changed<MaterialTextureBindGroupID>
+                Changed<AssetResShaderEffectMeta>, Changed<MaterialValueBind>, Changed<MaterialTextureBindGroupID>
             )>
         >,
         mut asset_mgr: ResMut<Share<AssetMgr<ResShader>>>,

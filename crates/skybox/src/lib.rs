@@ -1,6 +1,6 @@
 use pi_atom::Atom;
 use pi_engine_shell::{plugin::{Plugin, ErrorPlugin}, engine_shell::EnginShell, run_stage::RunStage, object::{ObjectID, InterfaceObject}};
-use pi_scene_context::{materials::{material_meta::InterfaceMaterialMeta, material::{InterfaceMaterial, MaterialID}}, meshes::cube::InterfaceCube};
+use pi_scene_context::{materials::{shader_effect::InterfaceMaterialMeta, material::{InterfaceMaterial, MaterialID}}, meshes::cube::InterfaceCube};
 use render_shader::shader::KeyShaderEffect;
 use shader::SkyboxShader;
 

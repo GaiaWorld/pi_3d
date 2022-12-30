@@ -1,5 +1,5 @@
 use pi_atom::Atom;
-use pi_scene_context::materials::material_meta::{ShaderEffectMeta, UniformPropertyVec4, ShaderEffectValueUniformDesc, UniformPropertyInt};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyVec4, ShaderEffectValueUniformDesc, UniformPropertyInt};
 use pi_scene_math::Vector4;
 use render_shader::{unifrom_code::MaterialValueBindDesc, varying_code::{Varyings, Varying}, block_code::{BlockCodeAtom}};
 

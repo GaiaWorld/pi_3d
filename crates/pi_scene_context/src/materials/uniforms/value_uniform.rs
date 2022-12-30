@@ -175,7 +175,6 @@ impl MaterialValueBind {
                 BuildinModelBind::ENTRY,
             ]
         }
-            
     }
 
     pub fn calc_key(

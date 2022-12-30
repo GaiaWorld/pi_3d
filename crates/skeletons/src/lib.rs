@@ -5,7 +5,7 @@ pub mod interface;
 
 
 use pi_engine_shell::{plugin::{Plugin, ErrorPlugin}, engine_shell::EnginShell, run_stage::RunStage};
-use pi_scene_context::materials::material_meta::InterfaceMaterialMeta;
+use pi_scene_context::materials::shader_effect::InterfaceMaterialMeta;
 use render_shader::shader::KeyShaderEffect;
 use pi_atom::Atom;
 use crate::shader::SkinShader;

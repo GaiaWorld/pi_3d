@@ -4,7 +4,7 @@ use interface::InterfaceDefaultMaterial;
 use pi_atom::Atom;
 use pi_ecs::{prelude::{Setup}};
 
-use pi_scene_context::{plugin::{ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, material_meta::InterfaceMaterialMeta}};
+use pi_scene_context::{plugin::{ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, shader_effect::InterfaceMaterialMeta}};
 use render_shader::shader::KeyShaderEffect;
 use shader::DefaultShader;
 

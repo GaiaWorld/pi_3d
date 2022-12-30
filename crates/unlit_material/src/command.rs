@@ -6,7 +6,7 @@ use pi_ecs_macros::setup;
 use pi_render::rhi::device::RenderDevice;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::{material::MaterialID, bind_group::{RenderBindGroupPool, RenderBindGroupKey}, uniforms::{vec4::Vec4Uniform, texture::TextureSlot1, texture_uniform::MaterialTextureBindGroupID}, material_meta::AssetResMaterailMeta}, resources::RenderDynUniformBuffer};
+use pi_scene_context::{object::{ObjectID, GameObject}, materials::{material::MaterialID, bind_group::{RenderBindGroupPool, RenderBindGroupKey}, uniforms::{vec4::Vec4Uniform, texture::TextureSlot1, texture_uniform::MaterialTextureBindGroupID}, shader_effect::AssetResShaderEffectMeta}, resources::RenderDynUniformBuffer};
 use render_resource::ImageAssetKey;
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ impl SysUnlitMaterialCommand {
         mut materials: Query<
             GameObject,
             (Write<Vec4Uniform>, Write<TextureSlot1>),
-            (With<AssetResMaterailMeta>, With<MaterialTextureBindGroupID>)
+            (With<AssetResShaderEffectMeta>, With<MaterialTextureBindGroupID>)
         >,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);

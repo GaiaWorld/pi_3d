@@ -35,16 +35,17 @@ impl SysTest {
         mut transform_commands: ResMut<SingleTransformNodeCommandList>,
     ) {
         list.transforms.iter_mut().for_each(|mut item| {
-            // item.1 = item.1 + 16.0;
-            // item.2 = item.2 + 16.0;
-            // item.3 = item.3 + 16.0;
+            item.1 = item.1 + 16.0;
+            item.2 = item.2 + 16.0;
+            item.3 = item.3 + 16.0;
             // // println!("=========== item.1: {}, item.2: {}, item.3: {}", item.1, item.2, item.3);
-            // let x = item.1 % 4000.0 / 4000.0 * 3.1415926 * 2.;
-            // let y = item.2 % 4000.0 / 4000.0 * 3.1415926 * 2.;
-            // let z = item.3 % 4000.0 / 4000.0 * 3.1415926 * 2.;
+            let x = item.1 % 4000.0 / 4000.0 * 3.1415926 * 2.;
+            let y = item.2 % 4000.0 / 4000.0 * 3.1415926 * 2.;
+            let z = item.3 % 4000.0 / 4000.0 * 3.1415926 * 2.;
             // println!("=========== x: {}, y: {}, z: {}", x, y, z);
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 20., 0., 5.)));
-            transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(2.7394686, 2.7394686, 2.7394686)));
+            // transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(2.7394686, 2.7394686, 2.7394686)));
+            transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
         });
     }
 }

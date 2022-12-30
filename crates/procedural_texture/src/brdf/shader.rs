@@ -1,7 +1,7 @@
 
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use pi_scene_context::materials::material_meta::{ShaderEffectMeta, UniformPropertyFloat, UniformPropertyVec4};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyFloat, UniformPropertyVec4};
 use pi_scene_math::Vector4;
 use render_shader::{shader::{}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::{MaterialValueBindDesc, UniformTextureDesc, UniformPropertyName, MaterialTextureBindDesc}};
 

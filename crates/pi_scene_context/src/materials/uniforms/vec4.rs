@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
 use pi_scene_math::Number;
-use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, material_meta::UniformPropertyVec4}};
+use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, shader_effect::UniformPropertyVec4}};
 
 use super::{value_uniform::MaterialValueBind, update_data};
 

@@ -1,5 +1,5 @@
 use pi_engine_shell::{engine_shell, object::{ObjectID, InterfaceObject}};
-use pi_scene_context::materials::material_meta::InterfaceMaterialMeta;
+use pi_scene_context::materials::shader_effect::InterfaceMaterialMeta;
 use render_shader::shader::KeyShaderEffect;
 use crate::shader::AxisShader;
 use pi_atom::Atom;

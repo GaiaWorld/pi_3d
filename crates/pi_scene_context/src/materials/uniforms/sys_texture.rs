@@ -9,7 +9,7 @@ use pi_share::Share;
 use render_resource::{sampler::{SamplerPool, SamplerDesc}, ImageAssetKey};
 use render_shader::unifrom_code::{UniformPropertyName, MaterialTextureBindDesc};
 
-use crate::materials::{bind_group::{RenderBindGroupKey, RenderBindGroupPool}, material_meta::AssetResMaterailMeta};
+use crate::materials::{bind_group::{RenderBindGroupKey, RenderBindGroupPool}, shader_effect::AssetResShaderEffectMeta};
 
 use super::{texture_uniform::{MaterialTextureBindGroupID, TForTextureBindGroup}, texture::{ValueTextureKey, TextureSlot1, TextureResSlot1, TextureResSlot3, TextureResSlot4, TextureResSlot2, TextureSlot2, TextureSlot3, TextureSlot4, UniformSampler, SamplerSlot1, UniformTexture, SamplerSlot2, SamplerSlot3, SamplerSlot4, ETextureSlot}};
 
@@ -31,7 +31,7 @@ impl SysTextureChange {
         mut items: Query<
             GameObject,
             (
-                &AssetResMaterailMeta
+                &AssetResShaderEffectMeta
                 , Write<TextureSlot1>, Write<SamplerSlot1>
                 , Write<TextureSlot2>, Write<SamplerSlot2>
                 , Write<TextureSlot3>, Write<SamplerSlot3>
@@ -94,7 +94,7 @@ impl SysTextureResReady1 {
         items: Query<
             GameObject,
             (
-                &MaterialTextureBindGroupID, &AssetResMaterailMeta,
+                &MaterialTextureBindGroupID, &AssetResShaderEffectMeta,
                 &TextureResSlot1, &SamplerSlot1
             ),
             Or<(

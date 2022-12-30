@@ -2,7 +2,7 @@ use pi_atom::Atom;
 use pi_scene_context::{
     engine::Engine,
     materials::{
-        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList}, bind_group::RenderBindGroupPool, material_meta::InterfaceMaterialMeta,
+        material::{MaterialID, MaterialIDCommand, SingleMaterialIDCommandList}, bind_group::RenderBindGroupPool, shader_effect::InterfaceMaterialMeta,
     },
     object::ObjectID,
     plugin::{ErrorPlugin, Plugin},

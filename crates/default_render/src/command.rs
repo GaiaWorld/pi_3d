@@ -5,7 +5,7 @@ use pi_ecs::{prelude::{ResMut, Query}, query::{Write, With}};
 use pi_ecs_macros::setup;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::{uniforms::vec4::{Vec4Uniform}, material_meta::AssetResMaterailMeta}};
+use pi_scene_context::{object::{ObjectID, GameObject}, materials::{uniforms::vec4::{Vec4Uniform}, shader_effect::AssetResShaderEffectMeta}};
 
 
 pub enum DefaultMaterialCommand {
@@ -25,7 +25,7 @@ impl SysDefaultMaterialCommand {
         mut materials: Query<
             GameObject,
             Write<Vec4Uniform>,
-            With<AssetResMaterailMeta>
+            With<AssetResShaderEffectMeta>
         >,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);

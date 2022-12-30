@@ -1,6 +1,6 @@
 use pi_atom::Atom;
 use pi_engine_shell::plugin::Plugin;
-use pi_scene_context::materials::material_meta::InterfaceMaterialMeta;
+use pi_scene_context::materials::shader_effect::InterfaceMaterialMeta;
 use render_shader::shader::KeyShaderEffect;
 
 use self::shader::PerlinNoiseShader;

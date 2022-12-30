@@ -16,6 +16,8 @@ pub mod ball;
 pub mod quad;
 pub mod instance;
 pub mod abstract_mesh;
+pub mod skeleton;
+pub mod shader_about;
 
 pub trait Mesh {
     fn alpha_index(&self) -> usize;

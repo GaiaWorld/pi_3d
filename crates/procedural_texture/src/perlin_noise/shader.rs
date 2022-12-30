@@ -1,6 +1,6 @@
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use pi_scene_context::materials::material_meta::{ShaderEffectMeta, UniformPropertyFloat};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyFloat};
 use render_shader::{shader::{}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
 
 pub struct PerlinNoiseShader {

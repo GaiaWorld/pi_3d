@@ -1,6 +1,6 @@
 use pi_atom::Atom;
 use pi_render::rhi::device::RenderDevice;
-use pi_scene_context::materials::material_meta::{
+use pi_scene_context::materials::shader_effect::{
     ShaderEffectMeta, UniformPropertyFloat, UniformPropertyVec2, UniformPropertyVec4,
 };
 use pi_scene_math::{Vector2, Vector4};

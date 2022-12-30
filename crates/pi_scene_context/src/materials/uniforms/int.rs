@@ -1,5 +1,5 @@
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
-use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, material_meta::UniformPropertyInt}};
+use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, shader_effect::UniformPropertyInt}};
 
 use super::value_uniform::MaterialValueBind;
 

@@ -1,6 +1,6 @@
 use pi_ecs::prelude::{Setup};
 
-use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand, SingleValueUniformCommands, SysValueUniformComand}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}, bind_group::RenderBindGroupPool, material_meta::{PluginMaterialMeta}, uniforms::PluginMaterialUniforms};
+use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand, SingleValueUniformCommands, SysValueUniformComand}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}, bind_group::RenderBindGroupPool, shader_effect::{PluginShaderEffect}, uniforms::PluginMaterialUniforms};
 
 pub mod material;
 pub mod bind_group;
@@ -8,6 +8,7 @@ pub mod uniform_buffer;
 pub mod material_meta;
 pub mod uniforms;
 pub mod value;
+pub mod shader_effect;
 
 pub type MBKK = usize;
 
@@ -18,7 +19,7 @@ impl crate::Plugin for PluginMaterial {
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        PluginMaterialMeta.init(engine, stages);
+        PluginShaderEffect.init(engine, stages);
         PluginMaterialUniforms.init(engine, stages);
 
         let world = engine.world_mut();

@@ -2,7 +2,7 @@
 use pi_atom::Atom;
 use pi_engine_shell::{object::InterfaceObject};
 
-use pi_scene_context::{object::ObjectID, materials::{material::{InterfaceMaterial}, material_meta::InterfaceMaterialMeta}};
+use pi_scene_context::{object::ObjectID, materials::{material::{InterfaceMaterial}, shader_effect::InterfaceMaterialMeta}};
 use render_shader::shader::{KeyShaderEffect};
 
 use crate::shader::DefaultShader;

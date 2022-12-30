@@ -1,6 +1,6 @@
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
 use pi_scene_math::Number;
-use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, material_meta::UniformPropertyFloat}};
+use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, shader_effect::UniformPropertyFloat}};
 
 use super::value_uniform::MaterialValueBind;
 

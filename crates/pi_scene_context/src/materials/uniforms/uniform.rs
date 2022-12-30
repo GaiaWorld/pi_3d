@@ -8,7 +8,7 @@ use pi_render::rhi::{device::RenderDevice, dyn_uniform_buffer::Uniform};
 use crate::{resources::RenderDynUniformBuffer, materials::{bind_group::{RenderBindGroupPool, RenderBindGroupKey}, uniform_buffer::SingleDynUnifromBufferReBindFlag, value::FromValueUniformStatistics}};
 
 
-use crate::materials::material_meta::AssetResMaterailMeta;
+use crate::materials::shader_effect::AssetResShaderEffectMeta;
 
 use super::{
     value_uniform::{MaterialValueBind},
@@ -30,11 +30,11 @@ impl SysMaterialMetaChange {
         mut materials: Query<
             GameObject,
             (
-                &AssetResMaterailMeta,
+                &AssetResShaderEffectMeta,
                 Write<MaterialValueBind>, Write<MaterialTextureBindGroupID>,
                 Write<Mat4Uniform>, Write<Mat2Uniform>, Write<Vec4Uniform>, Write<Vec2Uniform>, Write<FloatUniform>, Write<IntUniform>, Write<UintUniform> 
             ),
-            Changed<AssetResMaterailMeta>
+            Changed<AssetResShaderEffectMeta>
         >,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
         mut bindgrouppool: ResMut<RenderBindGroupPool>,
