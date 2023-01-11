@@ -4,7 +4,7 @@ use std::{any::TypeId, sync::Arc, time::{Instant, Duration}, ops::RangeBounds};
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad, run_stage::{SysCommonUserCommand, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
@@ -67,7 +67,7 @@ impl Plugin for PluginTest {
 
         let world = engine.world_mut();
 
-        SysTest::setup(world, stages.command_stage());
+        SysTest::setup(world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);
@@ -120,7 +120,7 @@ impl PluginTest {
                     engine.set_instance_tilloff(cube, Vector4::new(1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
                     engine.transform_position(cube, Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
                     engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 0.2, j as f32 * 0.2, k as f32 * 0.2));
-                    testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
+                    // testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
                 }
             }
         }
@@ -128,6 +128,8 @@ impl PluginTest {
 }
 
 pub fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     let mut shell = AppShell::new(
         RenderOptions {
             backends: wgpu::Backends::VULKAN,

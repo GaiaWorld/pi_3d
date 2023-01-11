@@ -1,6 +1,6 @@
 use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
 
-use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory, resources::RenderDynUniformBuffer};
+use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory};
 
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -18,7 +18,6 @@ pub struct SceneFog {
     end: f32,
     intensity: f32,
     pub dirty: bool,
-    pub bind_offset: BindOffset,
 }
 impl SceneFog {
     pub const FOG_PARAM: usize = 4;
@@ -28,7 +27,6 @@ impl SceneFog {
     pub const FOG_COLOR_OFFSIZE: usize = Self::FOG_PARAM_OFFSIZE + Self::FOG_PARAM_OFFSIZE * 4;
 
     pub fn new(
-        dynbuffer: &mut RenderDynUniformBuffer,
     ) -> Self {
         Self {
             mode: EFogMode::None,
@@ -37,7 +35,6 @@ impl SceneFog {
             end: 100.,
             intensity: 1.0,
             dirty: true,
-            bind_offset: dynbuffer.alloc_binding::<Self>(),
         }
     }
 
@@ -89,17 +86,4 @@ impl Uniform for SceneFog {
         bytes_write_to_memory(bytemuck::cast_slice(&values), index as usize + SceneFog::FOG_PARAM_OFFSIZE, buffer);
     }
 }
-impl FragmentUniformBind for SceneFog {
-    const ID: u32 = 2;
-    const SIZE: usize = Self::FOG_COLOR_OFFSIZE + Self::FOG_COLOR * 4;
-}
-impl Bind for SceneFog {
-    fn index() -> pi_render::rhi::dyn_uniform_buffer::BindIndex {
-        pi_render::rhi::dyn_uniform_buffer::BindIndex::new(Self::ID as usize)
-    }
-    fn min_size() -> usize {
-        Self::SIZE
-    }
-}
-
 

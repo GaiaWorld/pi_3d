@@ -25,7 +25,7 @@ impl InterfaceUnlitMaterial for pi_engine_shell::engine_shell::EnginShell {
     fn create_unlit_material(
         & self,
     ) -> ObjectID {
-        //  println!("create_unlit_material");
+        //  log::debug!("create_unlit_material");
         let entity = self.new_object();
 
         self.as_material(entity, KeyShaderEffect(Atom::from(UnlitShader::KEY)));

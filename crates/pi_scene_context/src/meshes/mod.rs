@@ -1,9 +1,10 @@
 
 use pi_ecs::prelude::Setup;
+use pi_engine_shell::run_stage::ERunStageChap;
 
-use crate::object::ObjectID;
+use crate::{object::ObjectID, geometry::instance::{instance_world_matrix::SysInstanceBufferWorldMatrixInit, instance_color::SysInstanceBufferColorInit, instance_tilloff::SysInstanceBufferTillOffInit, InstanceSourceRecord}};
 
-use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysModelUniformUpdate, SysModelMatrixUpdate, SysInstancedModelUpdate}, instance::{instanced_mesh::InstanceSourceRecord, world_matrix::{SysInstanceBufferWorldMatrixInit, SysInstanceBufferWorldMatrixUpdate}, instance_color::{SysInstanceBufferColorUpdate, SysInstanceBufferColorInit}, instance_tilloff::{SysInstanceBufferTillOffInit, SysInstanceBufferTillOffUpdate}}};
+use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysRenderMatrixUniformUpdate, SysRenderMatrixUpdate, SysModelAboutUpdate}, instance::{world_matrix::{SysInstanceBufferWorldMatrixUpdate}, instance_color::{SysInstanceBufferColorUpdate}, instance_tilloff::{SysInstanceBufferTillOffUpdate}}, bind_group::SysModelAboutBindGroup};
 
 pub mod cube;
 pub mod plane;
@@ -18,11 +19,9 @@ pub mod instance;
 pub mod abstract_mesh;
 pub mod skeleton;
 pub mod shader_about;
+pub mod bind_group;
 
-pub trait Mesh {
-    fn alpha_index(&self) -> usize;
-    fn render_group(&self) -> u8;
-}
+pub struct Mesh;
 
 pub struct MeshID(pub ObjectID);
 
@@ -35,20 +34,21 @@ impl crate::Plugin for PluginMesh {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysMeshCommand::setup(world, stages.command_stage());
-        SysModelMatrixUpdate::setup(world, stages.command_stage());
+        SysMeshCommand::setup(world, stages.query_stage::<SysMeshCommand>(ERunStageChap::Command));
+        SysModelAboutUpdate::setup(world, stages.query_stage::<SysModelAboutUpdate>(ERunStageChap::Command));
+        SysRenderMatrixUpdate::setup(world, stages.query_stage::<SysRenderMatrixUpdate>(ERunStageChap::Command));
+        SysRenderMatrixUniformUpdate::setup(world, stages.query_stage::<SysRenderMatrixUniformUpdate>(ERunStageChap::Command));
 
-        SysInstanceBufferWorldMatrixInit::setup(world, stages.command_stage());
-        SysInstanceBufferWorldMatrixUpdate::setup(world, stages.uniform_update());
+        SysInstanceBufferWorldMatrixInit::setup(world, stages.query_stage::<SysInstanceBufferWorldMatrixInit>(ERunStageChap::Command));
+        SysInstanceBufferWorldMatrixUpdate::setup(world, stages.query_stage::<SysInstanceBufferWorldMatrixUpdate>(ERunStageChap::Uniform));
         
-        SysInstanceBufferColorInit::setup(world, stages.command_stage());
-        SysInstanceBufferColorUpdate::setup(world, stages.uniform_update());
+        SysInstanceBufferColorInit::setup(world, stages.query_stage::<SysInstanceBufferColorInit>(ERunStageChap::Command));
+        SysInstanceBufferColorUpdate::setup(world, stages.query_stage::<SysInstanceBufferColorUpdate>(ERunStageChap::Uniform));
 
-        SysInstanceBufferTillOffInit::setup(world, stages.command_stage());
-        SysInstanceBufferTillOffUpdate::setup(world, stages.uniform_update());
+        SysInstanceBufferTillOffInit::setup(world, stages.query_stage::<SysInstanceBufferTillOffInit>(ERunStageChap::Command));
+        SysInstanceBufferTillOffUpdate::setup(world, stages.query_stage::<SysInstanceBufferTillOffUpdate>(ERunStageChap::Uniform));
 
-        SysModelUniformUpdate::setup(world, stages.uniform_update());
-        SysInstancedModelUpdate::setup(world, stages.uniform_update());
+        SysModelAboutBindGroup::setup(world, stages.query_stage::<SysModelAboutBindGroup>(ERunStageChap::Uniform));
 
         world.insert_resource(SingleMeshCommandList::default());
         world.insert_resource(InstanceSourceRecord { counter: 0 });

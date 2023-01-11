@@ -145,7 +145,7 @@ pub fn create_engine<T: Plugin>(win: &Arc<Window>, _r: f64, test: T) -> EnginShe
 
         let last_run = move |end: Res<DispatchEnd>| {
             let mut l = end.0.lock();
-            // println!("set end true, {:?}, {:p}", *l, &end.0);
+            // log::debug!("set end true, {:?}, {:p}", *l, &end.0);
             *l = true;
         };
         last_stage.add_node(IntoSystem::system(last_run, world));

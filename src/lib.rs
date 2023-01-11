@@ -6,7 +6,7 @@ use pi_scene_context::{
     cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
     cameras::PluginCamera,
     transforms::PluginTransformNode,
-    scene::PluginScene, resources::PluginResource, geometry::{PluginBuildinGeometry, indices::PluginBufferIndices}
+    scene::PluginScene, resources::PluginResource, geometry::{PluginBuildinGeometry, indices::PluginBufferIndices}, bindgroup::PluginRenderBindGroup
 };
 
 pub struct PluginBundleDefault;
@@ -18,6 +18,7 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
+        PluginRenderBindGroup.init(engine, stages);
         PluginResource.init(engine, stages);
         PluginScene.init(engine, stages);
         PluginTransformNode.init(engine, stages);

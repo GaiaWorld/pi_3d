@@ -22,8 +22,6 @@ impl WaterShader {
     pub fn meta() -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
-                set: 1,
-                bind: 1,
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
                 mat4_list: vec![],
                 mat2_list: vec![],

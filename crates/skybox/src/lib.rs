@@ -5,7 +5,6 @@ use render_shader::shader::KeyShaderEffect;
 use shader::SkyboxShader;
 
 pub mod command;
-pub mod material;
 pub mod shader;
 pub mod texture;
 

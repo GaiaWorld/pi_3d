@@ -5,6 +5,11 @@ use render_geometry::vertex_data::EVertexDataKind;
 
 use crate::transforms::transform_node::WorldMatrix;
 
+pub trait TInstanceFlag {
+    fn dirty(&self) -> bool;
+    fn reset(&mut self);
+}
+
 pub trait TInstancedData {
     fn vertex_kind(&self) -> EVertexDataKind;
     fn value(&self) -> &InstancedValue;

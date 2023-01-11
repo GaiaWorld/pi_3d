@@ -8,11 +8,11 @@ use pi_render::{graph::{node::Node, RenderContext}, rhi::{texture::ScreenTexture
 use render_data_container::VertexBufferPool;
 
 use crate::{
-    renderers::{render_object_list::DrawList},
+    renderers::{render_object_list::DrawList, renderer::Renderer},
     object::{ObjectID, GameObject},
     main_camera_render::MainCameraRenderer,
-    materials::bind_group::{RenderBindGroupPool},
-    resources::{SingleRenderObjectPipelinePool}
+    resources::{SingleRenderObjectPipelinePool},
+    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
 };
 
 pub struct SingleMainCameraOpaqueRenderNode {
@@ -45,9 +45,9 @@ impl Node for SingleMainCameraOpaqueRenderNode {
 
         // let window = world.get_resource::<RenderWindow>().unwrap();
 
-        let query = QueryState::<GameObject, & MainCameraRenderer>::new(&mut world);
+        let query = QueryState::<GameObject, & Renderer>::new(&mut world);
 
-        //  println!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
+        //  log::debug!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
         match query.get(&world, self.renderer_id) {
             Some(renderer) => {
                 let surface = world.get_resource::<ScreenTexture>().unwrap();
@@ -61,13 +61,13 @@ impl Node for SingleMainCameraOpaqueRenderNode {
             },
         }
  
-        let mut query = QueryState::<GameObject, &mut MainCameraRenderer>::new(&mut world);
+        let mut query = QueryState::<GameObject, &mut Renderer>::new(&mut world);
         if let Some(mut renderer) = query.get_mut(&mut world, self.renderer_id) {
             renderer.clear();
         }
 
         let time1 = Instant::now();
-        println!("MainCameraRenderNode: {:?}", time1 - time);
+        log::debug!("MainCameraRenderNode: {:?}", time1 - time);
 
         async move {
             Ok(())

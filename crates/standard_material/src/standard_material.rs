@@ -1,7 +1,7 @@
 use pi_engine_shell::object::ObjectID;
 use pi_render::rhi::{dyn_uniform_buffer::{Bind, BindOffset, Uniform}, internal::bytemuck};
 
-use pi_scene_context::{shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler, }, materials::{material::MaterialID}, bytes_write_to_memory, resources::RenderDynUniformBuffer, texture::texture2d::{Texture2D, scale_offset::Texture2DScaleOffset}, };
+use pi_scene_context::{shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler, }, materials::{material::MaterialID}, bytes_write_to_memory,  texture::texture2d::{Texture2D, scale_offset::Texture2DScaleOffset}, };
 
 
 
@@ -19,7 +19,7 @@ impl StandardMaterialPropertype {
     pub const EMISSIVE_TEXTURE_MAT: usize = 4;
     pub const EMISSIVE_TEXTURE_MAT_OFFSET: usize = Self::EMISSIVE_INFO_OFFSET +  Self::EMISSIVE_INFO * 4;
 
-    pub fn new(dynbuffer: &mut RenderDynUniformBuffer) -> Self {
+    pub fn new(dynbuffer: &mut render_resource::uniform_buffer::RenderDynUniformBuffer) -> Self {
         Self {
             bind_offset: dynbuffer.alloc_binding::<Self>(),
             emissive_color: (1., 1., 1.),

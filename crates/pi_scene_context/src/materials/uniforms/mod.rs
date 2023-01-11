@@ -1,8 +1,8 @@
 use pi_ecs::prelude::Setup;
-use pi_engine_shell::plugin::Plugin;
+use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
 use pi_scene_math::Number;
 
-use self::{sys_float::PluginFloatSlot, sys_uint::PluginUintSlot, sys_int::PluginIntSlot, sys_mat2::PluginMat2Slot, sys_mat4::PluginMat4Slot, sys_vec2::PluginVec2Slot, sys_vec4::PluginVec4Slot, sys_texture::PluginTextureSlot, uniform::{SysMaterialMetaChange, SysValueBindgroupUpdate}};
+use self::{sys_float::PluginFloatSlot, sys_uint::PluginUintSlot, sys_int::PluginIntSlot, sys_mat2::PluginMat2Slot, sys_mat4::PluginMat4Slot, sys_vec2::PluginVec2Slot, sys_vec4::PluginVec4Slot, sys_texture::PluginTextureSlot, uniform::{SysMaterialMetaChange, SysEffectValueBindgroupUpdate, SysEffectBindgroupUpdateTex01, SysEffectBindgroupUpdateTex02, SysEffectBindgroupUpdateTex03, SysEffectBindgroupUpdateTex04, SysEffectTexBindgroupUpdate}};
 
 pub mod value_uniform;
 pub mod texture_uniform;
@@ -46,6 +46,14 @@ impl Plugin for PluginMaterialUniforms {
         engine: &mut pi_engine_shell::engine_shell::EnginShell,
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
+        let world = engine.world_mut();
+        SysMaterialMetaChange::setup(world, stages.query_stage::<SysMaterialMetaChange>(ERunStageChap::Command));
+
+        SysEffectValueBindgroupUpdate::setup(world, stages.query_stage::<SysEffectValueBindgroupUpdate>(ERunStageChap::Uniform));
+        SysEffectBindgroupUpdateTex01::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
+        SysEffectBindgroupUpdateTex02::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
+        SysEffectBindgroupUpdateTex03::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
+        SysEffectBindgroupUpdateTex04::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
 
         PluginFloatSlot.init(engine, stages);
         PluginIntSlot.init(engine, stages);
@@ -56,10 +64,6 @@ impl Plugin for PluginMaterialUniforms {
         PluginVec4Slot.init(engine, stages);
 
         PluginTextureSlot.init(engine, stages);
-
-        let world = engine.world_mut();
-        SysMaterialMetaChange::setup(world, stages.command_stage());
-        SysValueBindgroupUpdate::setup(world, stages.between_uniform_update_and_filter_culling());
 
         Ok(())
     }

@@ -1,3 +1,4 @@
+
 use ncollide3d::{
     bounding_volume::AABB,
     na::{Point3 as TreePoint3, Vector3},
@@ -6,16 +7,17 @@ use parry3d::{
     na::{Isometry3, Point3},
     shape::{ConvexPolyhedron, Cuboid},
 };
-use pi_ecs::{prelude::{Res, Query}, query::Write};use pi_ecs::prelude::Setup;
+use pi_ecs::{prelude::{Res, Query, Commands}, query::{Write, Changed, With}};use pi_ecs::prelude::Setup;
 use pi_ecs_macros::setup;
+use pi_engine_shell::{run_stage::{TSystemStageInfo, ERunStageChap}, object::ObjectID};
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
 use pi_spatialtree::OctTree;
 
 use crate::{
-    cameras::camera::{CameraParam, CameraProjectionMatrix, CameraViewport},
+    cameras::camera::{CameraParam},
     engine::Engine,
     plugin::{ErrorPlugin, Plugin},
-    run_stage::RunStage, object::GameObject,
+    run_stage::RunStage, object::GameObject, viewer::{ViewerProjectionMatrix, command::Viewport}, flags::{CameraID, SceneID}, layer_mask::LayerMask,
 };
 
 use super::{
@@ -102,8 +104,8 @@ fn intersects(a: &AABB<f32>, b: &AABB<f32>) -> bool {
 
 pub fn compute_frustum(
     camera: &CameraParam,
-    view_port: &CameraViewport,
-    project_matrix: &CameraProjectionMatrix,
+    view_port: &Viewport,
+    project_matrix: &ViewerProjectionMatrix,
 ) -> Option<ConvexPolyhedron> {
     let aspect = (view_port.w - view_port.x) / (view_port.h - view_port.y);
     let projection = Perspective3::new(aspect, camera.fov * 2.0, camera.minz, camera.maxz);
@@ -159,7 +161,7 @@ impl Plugin for PluginBoundingOctTree {
     ) -> Result<(), ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysCameraCullingOctTree::setup(world, stages.after_world_matrix());
+        SysCameraCullingOctTree::setup(world, stages.query_stage::<SysCameraCullingOctTree>(ERunStageChap::Command));
 
         let max = Vector3::new(100f32, 100f32, 100f32);
         let min = max / 100f32;
@@ -226,27 +228,33 @@ impl InterfaceOctTree for Engine {
 }
 
 pub struct SysCameraCullingOctTree;
+impl TSystemStageInfo for SysCameraCullingOctTree {
+
+}
 #[setup]
 impl SysCameraCullingOctTree {
     #[system]
     pub fn tick(
         tree: Res<BoundingOctTree>,
-        cameras: Query<GameObject, (&CameraParam, &CameraViewport, &CameraProjectionMatrix)>,
-        mut objects: Query<GameObject, Write<IsCulled>>,
+        cameras: Query<GameObject, (&CameraParam, &Viewport, &ViewerProjectionMatrix, &SceneID, &LayerMask), Changed<(CameraParam, Viewport, ViewerProjectionMatrix)>>,
+        objects: Query<GameObject, (ObjectID, &SceneID, &LayerMask, Option<&IsCulled>)>,
+        mut object_cmd: Commands<GameObject, IsCulled>,
     ) {
-        //  println!("Scene Camera Culling:");
+        //  log::debug!("Scene Camera Culling:");
         cameras.iter().for_each(|camera| {
             if let Some(frustum) = compute_frustum(&camera.0, &camera.1, &camera.2){
-                objects.iter_mut().for_each(|mut object| {
-                    object.insert_no_notify(IsCulled)
-                });
-
                 let mut result = vec![];
                 tree.check_boundings_of_tree(&frustum, &mut result);
 
-                result.iter().for_each(|id|{
-                    if let Some(mut obj) = objects.get_mut(*id){
-                        obj.remove();
+                objects.iter().for_each(|(obj, id_scene, obj_layer, isculled)| {
+                    if id_scene == camera.3 && camera.4.include(obj_layer) {
+                        if result.contains(&obj) {
+                            if isculled.is_none() {
+                                object_cmd.insert(obj, IsCulled);
+                            }
+                        } else {
+                            object_cmd.delete(obj);
+                        }
                     }
                 });
             }

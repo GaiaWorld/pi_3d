@@ -6,10 +6,8 @@ use render_shader::shader::KeyShaderEffect;
 use self::shader::PerlinNoiseShader;
 
 pub mod shader;
-pub mod material;
 pub mod interface;
 pub mod command;
-// pub mod material_sys;
 
 pub struct PluginPerlinNoise;
 impl Plugin for PluginPerlinNoise {

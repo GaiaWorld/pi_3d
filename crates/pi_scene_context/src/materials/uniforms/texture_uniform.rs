@@ -2,7 +2,9 @@
 use pi_render::rhi::{device::RenderDevice, bind_group::BindGroup, texture::Sampler, asset::TextureRes};
 use render_shader::unifrom_code::{ MaterialTextureBindDesc};
 
-use crate::materials::bind_group::{RenderBindGroup, RenderBindGroupKey};
+use crate::{
+    bindgroup::{RenderBindGroupKey, RenderBindGroupPool, RenderBindGroup}
+};
 
 pub trait TForTextureBindGroup {
     fn bind_group(

@@ -3,12 +3,10 @@ use pi_render::rhi::{device::RenderDevice};
 use crate::{plugin::Plugin};
 
 mod bind_group_pool;
-mod dyn_uniform_buffer;
 mod vertex_buffer_pool;
 mod pipeline;
 
 pub use bind_group_pool::*;
-pub use dyn_uniform_buffer::*;
 pub use vertex_buffer_pool::*;
 pub use pipeline::*;
 
@@ -28,7 +26,7 @@ impl Plugin for PluginResource {
         // world.insert_resource(SingleGeometryBufferPool::default());
 
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
-        world.insert_resource(RenderDynUniformBuffer::new(&device));
+        world.insert_resource(render_resource::uniform_buffer::RenderDynUniformBuffer::new(&device));
 
         Ok(())
     }

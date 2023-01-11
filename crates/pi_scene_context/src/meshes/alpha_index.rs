@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Command, Commands}, query::Write};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 
@@ -18,19 +19,18 @@ struct SingleAlphaIndexCommandList {
     pub list: Vec<(ObjectID, AlphaIndex)>,
 }
 struct SysAlphaIndexCommand;
+impl TSystemStageInfo for SysAlphaIndexCommand {}
 #[setup]
 impl SysAlphaIndexCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleAlphaIndexCommandList>,
-        mut meshes: Query<GameObject, Write<AlphaIndex>>,
+        mut meshes: Commands<GameObject, AlphaIndex>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
-            if let Some(mut mesh) = meshes.get_mut(cmd.0) {
-                mesh.insert_no_notify(cmd.1);
-            }
+            meshes.insert(cmd.0, cmd.1);
         });
     }
 }
@@ -66,7 +66,7 @@ impl crate::Plugin for PluginAlphaIndex {
         let world = engine.world_mut();
 
         world.insert_resource(SingleAlphaIndexCommandList::default());
-        SysAlphaIndexCommand::setup(world, stages.command_stage());
+        SysAlphaIndexCommand::setup(world, stages.query_stage::<SysAlphaIndexCommand>(ERunStageChap::Command));
         
         Ok(())
     }

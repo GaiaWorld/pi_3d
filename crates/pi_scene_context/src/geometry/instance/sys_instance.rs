@@ -1,31 +1,43 @@
 use std::{ops::Range, sync::Arc, time::Instant, marker::PhantomData};
 
-use pi_ecs::{prelude::{Query, ResMut, Res, Component}, query::{Or, Changed, Write}};
+use pi_ecs::{prelude::{Query, ResMut, Res, Component, Commands}, query::{Or, Changed, Write}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::object::{ObjectID, GameObject};
+use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use render_data_container::{VertexBufferPool};
 
-use crate::{geometry::{vertex_buffer_useinfo, geometry::RenderGeometryEable, instance::{instanced_buffer::TInstancedBuffer, types::TInstancedData}}};
+use crate::{geometry::{vertex_buffer_useinfo, geometry::RenderGeometryEable, instance::{instanced_buffer::TInstancedBuffer, types::TInstancedData}, sys_vertex_buffer_use::{SysGeometryStatesInit, SysRenderGeometryInit}}};
 
-use super::{instanced_mesh::InstanceList};
+use super::{InstanceList, types::TInstanceFlag};
 
-pub struct SysInstanceBufferUpdate<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: Component>(PhantomData<(T, D, F)>);
+///
+/// T: Mesh 中 保存实例数据的buffer
+/// D: 实例数据
+/// F: 实例数据在Mesh上的脏标识
+/// S: 脏标识更新的System
+pub struct SysInstanceBufferUpdateFunc<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: TInstanceFlag + Component, S: TSystemStageInfo>(PhantomData<(T, D, F, S)>);
+impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: TInstanceFlag + Component, S: TSystemStageInfo> TSystemStageInfo for SysInstanceBufferUpdateFunc<T, D, F, S> {
+    // fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+    //     vec![
+    //         S::key(), SysInstancedBufferInitFunc::<T>::key()
+    //     ]
+    // }
+}
 #[setup]
-impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: Component> SysInstanceBufferUpdate<T, D, F> {
+impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: TInstanceFlag + Component, S: TSystemStageInfo + 'static> SysInstanceBufferUpdateFunc<T, D, F, S> {
     #[system]
     pub fn tick(
         instances: Query<GameObject, &D>,
         mut sources: Query<
             GameObject,
             (
-                &InstanceList, &mut T, Write<RenderGeometryEable>,
-                Write<vertex_buffer_useinfo::AssetDescVBSlot1>, Write<vertex_buffer_useinfo::AssetDescVBSlot2>, Write<vertex_buffer_useinfo::AssetDescVBSlot3>, Write<vertex_buffer_useinfo::AssetDescVBSlot4>,
-                Write<vertex_buffer_useinfo::AssetDescVBSlot5>, Write<vertex_buffer_useinfo::AssetDescVBSlot6>, Write<vertex_buffer_useinfo::AssetDescVBSlot7>, Write<vertex_buffer_useinfo::AssetDescVBSlot8>, 
-                Write<vertex_buffer_useinfo::AssetDescVBSlot9>, Write<vertex_buffer_useinfo::AssetDescVBSlot10>, Write<vertex_buffer_useinfo::AssetDescVBSlot11>, Write<vertex_buffer_useinfo::AssetDescVBSlot12>,  
-                Write<vertex_buffer_useinfo::AssetDescVBSlot13>,
+                &InstanceList, &mut T, &mut F, &mut RenderGeometryEable,
+                ( 
+                    Option<&mut vertex_buffer_useinfo::AssetDescVBSlot01>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot02>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot03>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot04>,
+                    Option<&mut vertex_buffer_useinfo::AssetDescVBSlot05>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot06>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot07>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot08>, 
+                    Option<&mut vertex_buffer_useinfo::AssetDescVBSlot09>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot10>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot11>, Option<&mut vertex_buffer_useinfo::AssetDescVBSlot12>,  
+                )
             ),
-            Or<(Changed<InstanceList>, Changed<F>)>
         >,
         mut vbpool: ResMut<VertexBufferPool>,
         device: Res<RenderDevice>,
@@ -33,12 +45,18 @@ impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: Componen
     ) {
         let time = Instant::now();
         sources.iter_mut().for_each(|(
-            inslist, buffer, mut geodisable,
-            mut desc1, mut desc2, mut desc3, mut desc4, 
-            mut desc5, mut desc6, mut desc7, mut desc8, 
-            mut desc9, mut desc10, mut desc11, mut desc12, 
-            mut desc13,
+            inslist, buffer, mut flag, mut geodisable,
+            (
+                desc01, desc02, desc03, desc04, 
+                desc05, desc06, desc07, desc08, 
+                desc09, desc10, desc11, desc12, 
+            )
         )| {
+            log::trace!("SysInstanceBufferUpdateFunc:");
+            if flag.dirty() == false {
+                return;
+            }
+            log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.list.len());
             let mut list = vec![];
             inslist.list.iter().for_each(|insid| {
                 if let Some(instance) = instances.get(insid.clone()) {
@@ -48,75 +66,77 @@ impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: Componen
             let bytes = list.len() * D::bytes_size();
 
             if list.len() == 0 {
-                geodisable.write(RenderGeometryEable(false));
+                geodisable.0 = false;
             } else {
-                geodisable.write(RenderGeometryEable(true));
+                geodisable.0 = true;
+                flag.reset();
                 buffer.update::<D>(list.as_slice(), &mut vbpool, &device, &queue);
+                log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
                 match buffer.slot() {
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot01 => {
-                        if let Some(desc) = desc1.get_mut() {
+                        if let Some(mut desc) = desc01 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot02 => {
-                        if let Some(desc) = desc2.get_mut() {
+                        if let Some(mut desc) = desc02 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot03 => {
-                        if let Some(desc) = desc3.get_mut() {
+                        if let Some(mut desc) = desc03 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot04 => {
-                        if let Some(desc) = desc4.get_mut() {
+                        if let Some(mut desc) = desc04 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot05 => {
-                        if let Some(desc) = desc5.get_mut() {
+                        if let Some(mut desc) = desc05 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot06 => {
-                        if let Some(desc) = desc6.get_mut() {
+                        if let Some(mut desc) = desc06 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot07 => {
-                        if let Some(desc) = desc7.get_mut() {
+                        if let Some(mut desc) = desc07 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot08 => {
-                        if let Some(desc) = desc8.get_mut() {
+                        if let Some(mut desc) = desc08 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot09 => {
-                        if let Some(desc) = desc9.get_mut() {
+                        if let Some(mut desc) = desc09 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot10 => {
-                        if let Some(desc) = desc10.get_mut() {
+                        if let Some(mut desc) = desc10 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot11 => {
-                        if let Some(desc) = desc11.get_mut() {
+                        if let Some(mut desc) = desc11 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot12 => {
-                        if let Some(desc) = desc12.get_mut() {
+                        if let Some(mut desc) = desc12 {
                             desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
                         }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot13 => {
-                        if let Some(desc) = desc13.get_mut() {
-                            desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
-                        }
+                        // if let Some(mut desc) = desc13 {
+                        //     desc.desc.update_range(Some(Range { start: 0, end: bytes as wgpu::BufferAddress }));
+                        // }
                     },
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot14 => {
                         // if let Some(desc) = desc14.get_mut() {
@@ -148,76 +168,92 @@ impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: Componen
         });
         
         let time1 = Instant::now();
-        println!("SysInstancedBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
+        log::debug!("SysInstancedBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
     }
 }
 
 
-pub struct SysInstancedBufferInit<T: TInstancedBuffer + Component>(PhantomData<T>);
+///
+/// 实例数据 Buffer 组件初始化
+/// T: 实例数据buffer
+pub struct SysInstancedBufferInitFunc<T: TInstancedBuffer + Component>(PhantomData<T>);
+impl<T: TInstancedBuffer + Component> TSystemStageInfo for SysInstancedBufferInitFunc<T> {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysGeometryStatesInit::key(),
+        ]
+    }
+}
 #[setup]
-impl<T: TInstancedBuffer + Component> SysInstancedBufferInit<T> {
+impl<T: TInstancedBuffer + Component> SysInstancedBufferInitFunc<T> {
     #[system]
     pub fn tick(
         mut sources: Query<
             GameObject,
             (
+                ObjectID,
                 &T,
-                Write<vertex_buffer_useinfo::AssetResVBSlot1>, Write<vertex_buffer_useinfo::AssetResVBSlot2>, Write<vertex_buffer_useinfo::AssetResVBSlot3>, Write<vertex_buffer_useinfo::AssetResVBSlot4>,
-                Write<vertex_buffer_useinfo::AssetResVBSlot5>, Write<vertex_buffer_useinfo::AssetResVBSlot6>, Write<vertex_buffer_useinfo::AssetResVBSlot7>, Write<vertex_buffer_useinfo::AssetResVBSlot8>, 
-                Write<vertex_buffer_useinfo::AssetResVBSlot9>, Write<vertex_buffer_useinfo::AssetResVBSlot10>, Write<vertex_buffer_useinfo::AssetResVBSlot11>, Write<vertex_buffer_useinfo::AssetResVBSlot12>,  
-                Write<vertex_buffer_useinfo::AssetResVBSlot13>,
             ),
             Changed<T>
         >,
+        mut res01: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot01>,
+        mut res02: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot02>,
+        mut res03: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot03>,
+        mut res04: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot04>,
+        mut res05: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot05>,
+        mut res06: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot06>,
+        mut res07: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot07>,
+        mut res08: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot08>,
+        mut res09: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot09>,
+        mut res10: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot10>,
+        mut res11: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot11>,
+        mut res12: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot12>,
+        mut res13: Commands<GameObject, vertex_buffer_useinfo::AssetResVBSlot13>,
     ) {
         sources.iter_mut().for_each(|(
-            buffer,
-            mut res1, mut res2, mut res3, mut res4, 
-            mut res5, mut res6, mut res7, mut res8, 
-            mut res9, mut res10, mut res11, mut res12, 
-            mut res13,
+            id_source, buffer,
         )| {
-            println!(">> Sys{}Init", T::display_name());
+            log::info!(">> Sys{}Init", T::display_name());
     
             match buffer.slot() {
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot01 => {
-                    res1.write(vertex_buffer_useinfo::AssetResVBSlot1::from(buffer.key()));
+                    res01.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot01::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot02 => {
-                    res2.write(vertex_buffer_useinfo::AssetResVBSlot2::from(buffer.key()));
+                    res02.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot02::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot03 => {
-                    res3.write(vertex_buffer_useinfo::AssetResVBSlot3::from(buffer.key()));
+                    res03.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot03::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot04 => {
-                    res4.write(vertex_buffer_useinfo::AssetResVBSlot4::from(buffer.key()));
+                    res04.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot04::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot05 => {
-                    res5.write(vertex_buffer_useinfo::AssetResVBSlot5::from(buffer.key()));
+                    res05.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot05::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot06 => {
-                    res6.write(vertex_buffer_useinfo::AssetResVBSlot6::from(buffer.key()));
+                    res06.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot06::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot07 => {
-                    res7.write(vertex_buffer_useinfo::AssetResVBSlot7::from(buffer.key()));
+                    res07.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot07::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot08 => {
-                    res8.write(vertex_buffer_useinfo::AssetResVBSlot8::from(buffer.key()));
+                    res08.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot08::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot09 => {
-                    res9.write(vertex_buffer_useinfo::AssetResVBSlot9::from(buffer.key()));
+                    res09.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot09::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot10 => {
-                    res10.write(vertex_buffer_useinfo::AssetResVBSlot10::from(buffer.key()));
+                    res10.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot10::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot11 => {
-                    res11.write(vertex_buffer_useinfo::AssetResVBSlot11::from(buffer.key()));
+                    res11.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot11::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot12 => {
-                    res12.write(vertex_buffer_useinfo::AssetResVBSlot12::from(buffer.key()));
+                    res12.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot12::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot13 => {
-                    res13.write(vertex_buffer_useinfo::AssetResVBSlot13::from(buffer.key()));
+                    res13.insert(id_source, vertex_buffer_useinfo::AssetResVBSlot13::from(buffer.key()));
                 },
                 vertex_buffer_useinfo::EVertexBufferSlot::Slot14 => {
                     // if let Some(desc) = desc14.get_mut() {

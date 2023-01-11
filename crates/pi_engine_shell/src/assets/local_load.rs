@@ -19,7 +19,7 @@ impl Plugin for PluginLocalLoad {
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                    println!("Load {}", path);
+                    log::debug!("Load {}", path);
                     let r = std::fs::read(path.clone()).unwrap();
                     on_load(&path, r);
                 })

@@ -1,7 +1,7 @@
 use pi_ecs::{prelude::{Setup, }};
-use pi_engine_shell::{plugin::Plugin};
+use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
 
-use super::{int::IntUniform, uniform::SysUpdateValueUniform};
+use super::{int::IntUniform, uniform::{SysUpdateValueUniform, SysEffectValueUniformUpdate}};
 
 
 pub struct PluginIntSlot;
@@ -12,7 +12,7 @@ impl Plugin for PluginIntSlot {
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
         let world = engine.world_mut();
-        SysUpdateValueUniform::<IntUniform>::setup(world, stages.uniform_update());
+        SysUpdateValueUniform::<IntUniform>::setup(world, stages.query_stage::<SysEffectValueUniformUpdate>(ERunStageChap::Command));
 
         Ok(())
     }

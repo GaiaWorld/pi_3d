@@ -1,7 +1,7 @@
 use pi_render::rhi::{dyn_uniform_buffer::{DynUniformBuffer, BindOffset, Bind, AsBind}, device::RenderDevice, buffer::Buffer, RenderQueue};
 
-pub struct RenderDynUniformBuffer(DynUniformBuffer);
-impl RenderDynUniformBuffer {
+pub struct render_resource::uniform_buffer::RenderDynUniformBuffer(DynUniformBuffer);
+impl render_resource::uniform_buffer::RenderDynUniformBuffer {
     pub fn new(device: &RenderDevice) -> Self {
         let limits = device.limits();
         let min_uniform_buffer_offset_alignment = limits.min_uniform_buffer_offset_alignment;
@@ -25,12 +25,12 @@ impl RenderDynUniformBuffer {
         self.0.write_buffer(device, queue)
     }
 }
-impl AsRef<DynUniformBuffer> for RenderDynUniformBuffer {
+impl AsRef<DynUniformBuffer> for render_resource::uniform_buffer::RenderDynUniformBuffer {
     fn as_ref(&self) -> &DynUniformBuffer {
         &self.0
     }
 }
-impl AsMut<DynUniformBuffer> for RenderDynUniformBuffer {
+impl AsMut<DynUniformBuffer> for render_resource::uniform_buffer::RenderDynUniformBuffer {
     fn as_mut(&mut self) -> &mut DynUniformBuffer {
         &mut self.0
     }

@@ -3,7 +3,7 @@ use render_data_container::{VertexBufferPool, EVertexDataFormat, VertexBuffer};
 
 use crate::geometry::vertex_buffer_useinfo;
 
-use super::{instanced_buffer::TInstancedBuffer, types::TInstancedData};
+use super::{instanced_buffer::TInstancedBuffer, types::{TInstancedData, TInstanceFlag}, sys_instance::SysInstancedBufferInitFunc};
 
 pub struct InstanceColor(pub Vector4);
 impl TInstancedData for InstanceColor {
@@ -57,3 +57,15 @@ impl TInstancedBuffer for InstancedBufferColor {
         vertex_buffer_useinfo::EVertexBufferSlot::from_u8_unsafe(self.slot as u8)
     }
 }
+
+pub struct InstancedColorDirty(pub bool);
+impl TInstanceFlag for InstancedColorDirty {
+    fn dirty(&self) -> bool {
+        self.0
+    }
+    fn reset(&mut self) {
+        self.0 = false;
+    }
+}
+
+pub type SysInstanceBufferColorInit = SysInstancedBufferInitFunc<InstancedBufferColor>;

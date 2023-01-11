@@ -17,7 +17,7 @@ impl Plugin for PluginAxis {
         engine: &mut EnginShell,
         stages: &mut RunStage,
     ) -> Result<(), ErrorPlugin> {
-        println!("PluginAxis");
+        log::debug!("PluginAxis");
         let key = KeyShaderEffect(Atom::from(AxisShader::KEY));
         engine.regist_material_meta(key, AxisShader::meta());
 

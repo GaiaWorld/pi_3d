@@ -1,8 +1,9 @@
 use pi_ecs::prelude::{Setup};
+use pi_engine_shell::run_stage::ERunStageChap;
 
 use crate::{plugin::Plugin};
 
-use self::{command::{SysTransformNodeCommand, SingleTransformNodeCommandList, SysTreeCommand, SingleTreeCommandList}, transform_node_sys::{LocalRotationMatrixCalc, LocalMatrixCalc, WorldMatrixCalc}};
+use self::{command::{SysTransformNodeCommand, SingleTransformNodeCommandList, SysTreeCommand, SingleTreeCommandList}, transform_node_sys::{SysLocalMatrixCalc, SysWorldMatrixCalc}};
 
 pub mod transform_node;
 pub mod transform_node_sys;
@@ -18,11 +19,10 @@ impl Plugin for PluginTransformNode {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysTreeCommand::setup(world, stages.command_stage());
-        SysTransformNodeCommand::setup(world, stages.command_stage());
-        LocalRotationMatrixCalc::setup(world, stages.local_matrix_stage());
-        LocalMatrixCalc::setup(world, stages.local_matrix_stage());
-        WorldMatrixCalc::setup(world, stages.world_matrix());
+        SysTreeCommand::setup(world, stages.query_stage::<SysTreeCommand>(ERunStageChap::Command));
+        SysTransformNodeCommand::setup(world, stages.query_stage::<SysTransformNodeCommand>(ERunStageChap::Command));
+        SysLocalMatrixCalc::setup(world, stages.query_stage::<SysLocalMatrixCalc>(ERunStageChap::Command));
+        SysWorldMatrixCalc::setup(world, stages.query_stage::<SysWorldMatrixCalc>(ERunStageChap::Command));
 
         world.insert_resource(SingleTreeCommandList{ list: vec![] });
         world.insert_resource(SingleTransformNodeCommandList{ list: vec![] });

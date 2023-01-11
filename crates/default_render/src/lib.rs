@@ -4,6 +4,7 @@ use interface::InterfaceDefaultMaterial;
 use pi_atom::Atom;
 use pi_ecs::{prelude::{Setup}};
 
+use pi_engine_shell::run_stage::ERunStageChap;
 use pi_scene_context::{plugin::{ErrorPlugin}, engine::{self, Engine}, materials::{material::{MaterialID}, shader_effect::InterfaceMaterialMeta}};
 use render_shader::shader::KeyShaderEffect;
 use shader::DefaultShader;
@@ -24,7 +25,7 @@ impl pi_engine_shell::plugin::Plugin for PluginDefaultMaterial {
     ) -> Result<(), ErrorPlugin> {
 
         let world = engine.world_mut();
-        SysDefaultMaterialCommand::setup(world, stages.command_stage());
+        SysDefaultMaterialCommand::setup(world, stages.query_stage::<SysDefaultMaterialCommand>(ERunStageChap::Command));
 
         let world = engine.world_mut();
         world.insert_resource(SingeDefaultMaterialCommandList::default());

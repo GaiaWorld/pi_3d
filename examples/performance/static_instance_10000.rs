@@ -4,7 +4,7 @@ use std::{any::TypeId, sync::Arc, time::{Instant, Duration}, ops::RangeBounds};
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, run_stage::{SysCommonUserCommand, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
@@ -63,7 +63,7 @@ impl Plugin for PluginTest {
 
         let world = engine.world_mut();
 
-        SysTest::setup(world, stages.command_stage());
+        SysTest::setup(world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);
@@ -117,6 +117,7 @@ impl PluginTest {
 }
 
 pub fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let mut shell = AppShell::new(
         RenderOptions {
             backends: wgpu::Backends::VULKAN,

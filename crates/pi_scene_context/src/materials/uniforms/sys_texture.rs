@@ -1,19 +1,25 @@
 use std::{marker::PhantomData, mem::replace};
 
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
-use pi_ecs::{prelude::{Query, Res, ResMut, Setup}, query::{Write, Changed, Or}, entity};
+use pi_ecs::{prelude::{Query, Res, ResMut, Setup, Commands}, query::{Write, Changed, Or}, entity};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, assets::image_texture_load::{CalcImageLoad, ImageAwait}, engine_shell::EnginShell};
+use pi_engine_shell::{object::{GameObject, ObjectID}, assets::image_texture_load::{CalcImageLoad, ImageAwait, SysImageLoad}, engine_shell::EnginShell, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::{device::RenderDevice, asset::TextureRes};
 use pi_share::Share;
 use render_resource::{sampler::{SamplerPool, SamplerDesc}, ImageAssetKey};
 use render_shader::unifrom_code::{UniformPropertyName, MaterialTextureBindDesc};
 
-use crate::materials::{bind_group::{RenderBindGroupKey, RenderBindGroupPool}, shader_effect::AssetResShaderEffectMeta};
+use crate::{
+    materials::{shader_effect::AssetResShaderEffectMeta},
+    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+};
 
-use super::{texture_uniform::{MaterialTextureBindGroupID, TForTextureBindGroup}, texture::{ValueTextureKey, TextureSlot1, TextureResSlot1, TextureResSlot3, TextureResSlot4, TextureResSlot2, TextureSlot2, TextureSlot3, TextureSlot4, UniformSampler, SamplerSlot1, UniformTexture, SamplerSlot2, SamplerSlot3, SamplerSlot4, ETextureSlot}};
+use super::{
+    texture_uniform::{MaterialTextureBindGroupID, TForTextureBindGroup},
+    texture::{ValueTextureKey, TextureSlot01, TextureResSlot01, TextureResSlot03, TextureResSlot04, TextureResSlot02, TextureSlot02, TextureSlot03, TextureSlot04, UniformSampler, SamplerSlot01, UniformTexture, SamplerSlot02, SamplerSlot03, SamplerSlot04, ETextureSlot}
+};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum ECommand {
     TexturePath(ObjectID, UniformPropertyName, Option<ImageAssetKey>),
     Sampler(ObjectID, UniformPropertyName, SamplerDesc),
@@ -22,63 +28,70 @@ enum ECommand {
 #[derive(Debug, Default)]
 struct SingleTextureCommands(pub Vec<ECommand>);
 
-struct SysTextureChange;
+pub struct SysTextureCommand;
+impl TSystemStageInfo for SysTextureCommand {
+}
 #[setup]
-impl SysTextureChange {
+impl SysTextureCommand {
     #[system]
-    pub fn cmd(
+    fn cmd(
         mut cmds: ResMut<SingleTextureCommands>,
         mut items: Query<
             GameObject,
-            (
-                &AssetResShaderEffectMeta
-                , Write<TextureSlot1>, Write<SamplerSlot1>
-                , Write<TextureSlot2>, Write<SamplerSlot2>
-                , Write<TextureSlot3>, Write<SamplerSlot3>
-                , Write<TextureSlot4>, Write<SamplerSlot4>
-                , Write<MaterialTextureBindGroupID>
-            )
+            &AssetResShaderEffectMeta
         >,
         device: Res<RenderDevice>,
         mut samplerpool: ResMut<SamplerPool>,
+        mut slot01_cmd: Commands<GameObject, TextureSlot01>,
+        mut samp01_cmd: Commands<GameObject, SamplerSlot01>,
+        mut slot02_cmd: Commands<GameObject, TextureSlot02>,
+        mut samp02_cmd: Commands<GameObject, SamplerSlot02>,
+        mut slot03_cmd: Commands<GameObject, TextureSlot03>,
+        mut samp03_cmd: Commands<GameObject, SamplerSlot03>,
+        mut slot04_cmd: Commands<GameObject, TextureSlot04>,
+        mut samp04_cmd: Commands<GameObject, SamplerSlot04>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
         list.drain(..).for_each(|cmd| {
-            match cmd {
+            match cmd.clone() {
                 ECommand::TexturePath(entity, slotname, path) => {
                     if let Some(mut item) = items.get_mut(entity) {
-                        if let Ok(index) = item.0.query_tex_slot(&slotname) {
+                        if let Ok(index) = item.query_tex_slot(&slotname) {
                             if index == 0 {
-                                if let Some(path) = path { item.1.write(TextureSlot1::new(path)); } else { item.1.remove(); };
+                                if let Some(path) = path { slot01_cmd.insert(entity.clone(), TextureSlot01::new(path)); } else { slot01_cmd.delete(entity.clone()); };
                             }
                             else if index == 1 {
-                                if let Some(path) = path { item.3.write(TextureSlot2::new(path)); } else { item.3.remove(); };
+                                if let Some(path) = path { slot02_cmd.insert(entity.clone(), TextureSlot02::new(path)); } else { slot02_cmd.delete(entity.clone()); };
                             }
                             else if index == 2 {
-                                if let Some(path) = path { item.5.write(TextureSlot3::new(path)); } else { item.5.remove(); };
+                                if let Some(path) = path { slot03_cmd.insert(entity.clone(), TextureSlot03::new(path)); } else { slot03_cmd.delete(entity.clone()); };
                             }
                             else if index == 3 {
-                                if let Some(path) = path { item.7.write(TextureSlot4::new(path)); } else { item.7.remove(); };
+                                if let Some(path) = path { slot04_cmd.insert(entity.clone(), TextureSlot04::new(path)); } else { slot04_cmd.delete(entity.clone()); };
                             }
                         }
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
                 ECommand::Sampler(entity, slotname, sampler) => {
                     if let Some(mut item) = items.get_mut(entity) {
-                        if let Ok(index) = item.0.query_tex_slot(&slotname) {
+                        if let Ok(index) = item.query_tex_slot(&slotname) {
                             if index == 0 {
-                                item.2.write(SamplerSlot1::new(&sampler, &device, &mut samplerpool));
+                                samp01_cmd.insert(entity.clone(), SamplerSlot01::new(&sampler, &device, &mut samplerpool));
                             }
                             else if index == 1 {
-                                item.4.write(SamplerSlot2::new(&sampler, &device, &mut samplerpool));
+                                samp02_cmd.insert(entity.clone(), SamplerSlot02::new(&sampler, &device, &mut samplerpool));
                             }
                             else if index == 2 {
-                                item.6.write(SamplerSlot3::new(&sampler, &device, &mut samplerpool));
+                                samp03_cmd.insert(entity.clone(), SamplerSlot03::new(&sampler, &device, &mut samplerpool));
                             }
                             else if index == 3 {
-                                item.8.write(SamplerSlot4::new(&sampler, &device, &mut samplerpool));
+                                samp04_cmd.insert(entity.clone(), SamplerSlot04::new(&sampler, &device, &mut samplerpool));
                             }
                         }
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
             }
@@ -86,7 +99,21 @@ impl SysTextureChange {
     }
 }
 
-struct SysTextureResReady1;
+pub type SysTextureSlot01Load = CalcImageLoad<TextureSlot01, TextureResSlot01>;
+pub type SysTextureSlot02Load = CalcImageLoad<TextureSlot02, TextureResSlot02>;
+pub type SysTextureSlot03Load = CalcImageLoad<TextureSlot03, TextureResSlot03>;
+pub type SysTextureSlot04Load = CalcImageLoad<TextureSlot04, TextureResSlot04>;
+
+pub struct SysTextureReady;
+impl TSystemStageInfo for SysTextureReady {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysTextureCommand::key(), SysImageLoad::key(), 
+        ]
+    }
+}
+
+pub struct SysTextureResReady1;
 #[setup]
 impl SysTextureResReady1 {
     #[system]
@@ -95,23 +122,23 @@ impl SysTextureResReady1 {
             GameObject,
             (
                 &MaterialTextureBindGroupID, &AssetResShaderEffectMeta,
-                &TextureResSlot1, &SamplerSlot1
+                &TextureResSlot01, &SamplerSlot01
             ),
             Or<(
-                Changed<TextureResSlot1>, Changed<SamplerSlot1>
+                Changed<TextureResSlot01>, Changed<SamplerSlot01>
             )>
         >,
         mut bindgrouppool: ResMut<RenderBindGroupPool>,
         device: Res<RenderDevice>,
     ) {
         items.iter().for_each(|(bindgroup, binddesc, tex1, sampler1)| {
-            println!("SysTextureResReady1 >");
+            log::debug!("SysTextureResReady1 >");
             if let Some(binddesc) = &binddesc.textures {
                 if binddesc.list.len() == 1 {
-                    println!("SysTextureResReady1 >>");
+                    log::debug!("SysTextureResReady1 >>");
                     if let Some(group) = bindgrouppool.get_mut(&bindgroup.0) {
-                        println!("SysTextureResReady1 >>>");
-                        binddesc.bind_group(&device, group, &[tex1.texture()], &[sampler1.sampler()]);
+                        log::debug!("SysTextureResReady1 >>>");
+                        // binddesc.bind_group(&device, group, &[tex1.texture()], &[sampler1.sampler()]);
                     }
                 }
             }
@@ -119,7 +146,7 @@ impl SysTextureResReady1 {
     }
 }
 
-struct SysTextureResReady2;
+pub struct SysTextureResReady2;
 #[setup]
 impl SysTextureResReady2 {
     #[system]
@@ -128,12 +155,12 @@ impl SysTextureResReady2 {
             GameObject,
             (
                 &MaterialTextureBindGroupID, &MaterialTextureBindDesc
-                , &TextureResSlot1, &SamplerSlot1
-                , &TextureResSlot2, &SamplerSlot2
+                , &TextureResSlot01, &SamplerSlot01
+                , &TextureResSlot02, &SamplerSlot02
             ),
             Or<(
-                Changed<TextureResSlot1>, Changed<SamplerSlot1>
-                , Changed<TextureResSlot2>, Changed<SamplerSlot2>
+                Changed<TextureResSlot01>, Changed<SamplerSlot01>
+                , Changed<TextureResSlot02>, Changed<SamplerSlot02>
             )>
         >,
         mut bindgrouppool: ResMut<RenderBindGroupPool>,
@@ -152,11 +179,6 @@ impl SysTextureResReady2 {
         });
     }
 }
-
-pub type SysTextureSlot1Load = CalcImageLoad<TextureSlot1, TextureResSlot1>;
-pub type SysTextureSlot2Load = CalcImageLoad<TextureSlot2, TextureResSlot2>;
-pub type SysTextureSlot3Load = CalcImageLoad<TextureSlot3, TextureResSlot3>;
-pub type SysTextureSlot4Load = CalcImageLoad<TextureSlot4, TextureResSlot4>;
 
 pub trait InterfaceMaterialTexture {
     fn set_texture(
@@ -208,7 +230,7 @@ impl pi_engine_shell::plugin::Plugin for PluginTextureSlot {
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysTextureChange::setup(world, stages.command_stage());
+        SysTextureCommand::setup(world, stages.query_stage::<SysTextureCommand>(ERunStageChap::Command));
 
         if world.get_resource::<Share<AssetMgr<TextureRes>>>().is_none() {
             world.insert_resource(
@@ -216,18 +238,18 @@ impl pi_engine_shell::plugin::Plugin for PluginTextureSlot {
             );
         }
         world.insert_resource(SingleTextureCommands::default());
-        world.insert_resource(ImageAwait::<TextureSlot1>::default());
-        world.insert_resource(ImageAwait::<TextureSlot2>::default());
-        world.insert_resource(ImageAwait::<TextureSlot3>::default());
-        world.insert_resource(ImageAwait::<TextureSlot4>::default());
+        world.insert_resource(ImageAwait::<TextureSlot01>::default());
+        world.insert_resource(ImageAwait::<TextureSlot02>::default());
+        world.insert_resource(ImageAwait::<TextureSlot03>::default());
+        world.insert_resource(ImageAwait::<TextureSlot04>::default());
 
-        SysTextureSlot1Load::setup(world, stages.uniform_update());
-        SysTextureSlot2Load::setup(world, stages.uniform_update());
-        SysTextureSlot3Load::setup(world, stages.uniform_update());
-        SysTextureSlot4Load::setup(world, stages.uniform_update());
+        SysTextureSlot01Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
+        SysTextureSlot02Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
+        SysTextureSlot03Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
+        SysTextureSlot04Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
 
-        SysTextureResReady1::setup(world, stages.between_uniform_update_and_filter_culling());
-        SysTextureResReady2::setup(world, stages.between_uniform_update_and_filter_culling());
+        // SysTextureResReady1::setup(world, stages.query_stage::<SysTextureReady>(ERunStageChap::Command));
+        // SysTextureResReady2::setup(world, stages.query_stage::<SysTextureReady>(ERunStageChap::Command));
 
         Ok(())
     }

@@ -2,8 +2,6 @@
 use pi_render::rhi::dyn_uniform_buffer::Uniform;
 use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Number};
 
-use crate::{bytes_write_to_memory, meshes::model::BuildinModelBind};
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct TransformNode;
@@ -113,14 +111,14 @@ pub fn calc_world_matrix(
 
     CoordinateSytem3::matrix4_decompose_rotation(&w_m, Some(g_s), Some(g_r), Some(g_p));
 
-    // println!("calc_world_matrix:");
-    // println!("{}", w_m);
-    // println!("absolute_scaling:");
-    // println!("{}", g_s);
-    // println!("absolute_rotation:");
-    // println!("{}", g_r);
-    // println!("absolute_position:");
-    // println!("{}", g_p);
+    // log::debug!("calc_world_matrix:");
+    // log::debug!("{}", w_m);
+    // log::debug!("absolute_scaling:");
+    // log::debug!("{}", g_s);
+    // log::debug!("absolute_rotation:");
+    // log::debug!("{}", g_r);
+    // log::debug!("absolute_position:");
+    // log::debug!("{}", g_p);
 
     g_i.clone_from(&Isometry3::from_parts(Translation3::new(g_p.x, g_p.y, g_p.z), Quaternion::from_matrix(&g_r.matrix())));
 }

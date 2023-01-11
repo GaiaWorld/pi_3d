@@ -25,7 +25,7 @@ impl InterfaceDefaultMaterial for pi_engine_shell::engine_shell::EnginShell {
     fn create_default_material(
         & self,
     ) -> ObjectID {
-        //  println!("create_default_material");
+        //  log::debug!("create_default_material");
         let entity = self.new_object();
 
         self.as_default_material(entity);

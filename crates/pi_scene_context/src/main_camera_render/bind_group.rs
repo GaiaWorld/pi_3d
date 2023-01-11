@@ -1,105 +1,67 @@
-use pi_ecs::{prelude::{ResMut, Query, Res}, query::{Changed, Or}};
+use pi_ecs::{prelude::{Query, ResMut, Res, Commands}, query::Changed};
 use pi_ecs_macros::setup;
-use pi_render::{rhi::{device::RenderDevice, bind_group::BindGroup}};
-
+use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
+use pi_render::rhi::device::RenderDevice;
+use render_resource::uniform_buffer::RenderDynUniformBuffer;
+use render_shader::shader_set::ShaderSetSceneAbout;
 
 use crate::{
-    object::{ObjectID, GameObject},
-    cameras::{camera::{CameraRenderData, CameraViewMatrix, CameraProjectionMatrix, CameraTransformMatrix, CameraGlobalPosition, CameraDirection}},
-    scene::scene_time::{SceneTime},
-    environment::{fog::SceneFog, ambient_light::AmbientLight},
-    materials::{bind_group::{RenderBindGroup, RenderBindGroupKey, RenderBindGroupPool}, uniform_buffer::SingleDynUnifromBufferReBindFlag},
-    shaders::FragmentUniformBind,
+    scene::{
+        scene_time::SceneTime,
+        environment::fog::SceneFog,
+    },
     flags::SceneID,
-    resources::RenderDynUniformBuffer
+    bindgroup::{
+        RenderBindGroupKey, RenderBindGroupPool,
+        uniform_buffer::{SysDynUnifromBufferUpdate, DynUnifromBufferReBindFlag},
+    }
 };
 
+use super::command::SysMainCameraRenderCommand;
 
-pub struct IDMainCameraRenderBindGroup(pub RenderBindGroupKey);
-impl IDMainCameraRenderBindGroup {
-    pub const LABEL: &'static str = "MainCameraRenderBindGroup";
-    pub const SET: u32 = 0;
 
-    pub fn layout_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+pub struct SysMainCameraRendererBindGroup;
+impl TSystemStageInfo for SysMainCameraRendererBindGroup {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            CameraRenderData::ENTRY,
-            SceneTime::ENTRY,
-            SceneFog::ENTRY,
-            AmbientLight::ENTRY,
+            SysDynUnifromBufferUpdate::key()
         ]
     }
-
-    pub fn bind_group(
-        device: &RenderDevice,
-        group: &mut RenderBindGroup,
-        dynbuffer: &RenderDynUniformBuffer,
-    ) {
-        group.bind_group = Some(
-            BindGroup::from(
-                device.create_bind_group(
-                    &wgpu::BindGroupDescriptor {
-                        label: Some(Self::LABEL),
-                        layout: &group.layout,
-                        entries: &[
-                            CameraRenderData::dyn_entry(dynbuffer),
-                            SceneTime::dyn_entry(dynbuffer),
-                            SceneFog::dyn_entry(dynbuffer),
-                            AmbientLight::dyn_entry(dynbuffer),
-                        ],
-                    }
-                )
-            )
-        ); 
-    }
 }
-
-pub struct SysMainCameraRenderBindGroupUpdate;
 #[setup]
-impl SysMainCameraRenderBindGroupUpdate {
+impl SysMainCameraRendererBindGroup {
     #[system]
-    pub fn tick(
-        device: Res<RenderDevice>,
+    fn sys(
+        scenes: Query<GameObject, (&SceneTime, &SceneFog)>,
+        renderers: Query<GameObject, (ObjectID, &SceneID, &ShaderSetSceneAbout, &DynUnifromBufferReBindFlag), Changed<DynUnifromBufferReBindFlag>>,
+        mut bindgrouppool: ResMut<RenderBindGroupPool>,
         dynbuffer: Res<RenderDynUniformBuffer>,
-        dynbuffer_flag: Res<SingleDynUnifromBufferReBindFlag>,
-        mut bindgroups: ResMut<RenderBindGroupPool>,
-        id: ResMut<IDMainCameraRenderBindGroup>,
+        device: Res<RenderDevice>,
+        mut flag_delete: Commands<GameObject, DynUnifromBufferReBindFlag>,
     ) {
-        // println!("Sys MainCameraRender BindGroup Update");
-        if dynbuffer_flag.0 {
-            match bindgroups.get_mut(&id.0) {
-                Some(mut group) => {
-                    // println!("Sys MainCameraRender BindGroup Update bind_group");
-                    IDMainCameraRenderBindGroup::bind_group(&device, &mut group, &dynbuffer);
-                },
-                None => todo!(),
-            }
-        }
-    }
-}
-
-pub struct SysMainCameraRenderUniformUpdate;
-#[setup]
-impl SysMainCameraRenderUniformUpdate {
-    #[system]
-    pub fn tick(
-        // query_scenes: Query<GameObject, (ObjectID, &SceneTime, &SceneFog, &AmbientLight)>,
-        mut query_scenes: Query<GameObject, (ObjectID, &SceneTime)>,
-        mut query_cameras: Query<GameObject, (&SceneID, &CameraRenderData, &CameraViewMatrix, &CameraProjectionMatrix, &CameraTransformMatrix, &CameraGlobalPosition, &CameraDirection), Or<(Changed<CameraViewMatrix>, Changed<CameraProjectionMatrix>, Changed<CameraTransformMatrix>, Changed<CameraGlobalPosition>)>>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
-    ) {
-        //  println!("Sys MainCameraRender Uniform Update");
-        query_scenes.iter_mut().for_each(|(sceneid, scene_time)| {
-            query_cameras.iter_mut().for_each(|(camera_scene, camera_data, view_matrix, project_matrix, transform_matrix, position, direction)| {
-                if sceneid == camera_scene.0 {
-                    println!("MainCameraRender Uniform Update set_uniform");
-                    dynbuffer.as_mut().set_uniform(&scene_time.bind_offset, scene_time);
-                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, view_matrix);
-                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, project_matrix);
-                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, transform_matrix);
-                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, position);
-                    dynbuffer.as_mut().set_uniform(&camera_data.bind_offset, direction);
+        renderers.iter().for_each(|(id_renderer, id_scene, renderer_set, flag)|{
+                if let Some((scenetime, scenefog)) = scenes.get(id_scene.0) {
+                    if renderer_set.brdf() == false && renderer_set.env() == false {
+                        if let Some(group) = bindgrouppool.get_mut(&RenderBindGroupKey::SceneAbout(id_renderer)) {
+                            let entries = renderer_set.bind_group_entries(
+                                &dynbuffer,
+                                None, 
+                                None,
+                                None,
+                                None
+                            );
+    
+                            group.bind_group = Some(
+                                device.create_bind_group(&wgpu::BindGroupDescriptor {
+                                    label: Some(renderer_set.label()),
+                                    layout: &group.layout,
+                                    entries: entries.as_slice()
+                                })
+                            );
+                            flag_delete.delete(id_renderer);
+                        }
+                    }
                 }
-            });
         });
     }
 }

@@ -1,8 +1,8 @@
 use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::{Handle, Asset};
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{engine_shell::EnginShell, plugin::Plugin, object::{ObjectID, GameObject}, assets::sync_load::PluginAssetSyncLoad};
+use pi_engine_shell::{engine_shell::EnginShell, plugin::Plugin, object::{ObjectID, GameObject}, assets::sync_load::{PluginAssetSyncLoad, AssetSyncLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::{device::RenderDevice, pipeline::RenderPipeline};
 use render_pipeline_key::{pipeline_key::{PipelineStateKeyCalcolator, PipelineStateKey, gen_pipeline_key}, fragment_state::gen_fragment_state_key};
 use render_shader::shader::KeyShader;
@@ -37,21 +37,22 @@ enum ECommand {
 struct CommandListRenderPipeline {
     pub list: Vec<ECommand>,
 }
-struct SysCommand;
+pub struct SysRenderPipelineCommand;
+impl TSystemStageInfo for SysRenderPipelineCommand {
+
+}
 #[setup]
-impl SysCommand {
+impl SysRenderPipelineCommand {
     #[system]
-    pub fn cmd(
+    fn cmd(
         mut cmds: ResMut<CommandListRenderPipeline>,
-        mut items: Query<GameObject, Write<AssetkeyRenderPipeline>>,
+        mut items: Commands<GameObject, AssetkeyRenderPipeline>,
     ) {
         let mut list = std::mem::replace(&mut cmds.list, vec![]);
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ECommand::Use(entity, key) => {
-                    if let Some(mut item) = items.get_mut(entity) {
-                        item.write(AssetkeyRenderPipeline(key.clone()));
-                    }
+                    items.insert(entity, AssetkeyRenderPipeline(key.clone()));
                 },
             }
         });
@@ -95,6 +96,9 @@ impl InterfaceRenderPipeline for EnginShell {
     }
 }
 
+pub type SysRenderPipelineLoad = AssetSyncLoad<KeyRenderPipeline, AssetkeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, SysRenderPipelineCommand>;
+pub type PluginRenderPipelineLoad = PluginAssetSyncLoad::<KeyRenderPipeline, AssetkeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, SysRenderPipelineCommand>;
+
 pub struct PluginRenderPipeline;
 impl Plugin for PluginRenderPipeline {
     fn init(
@@ -103,11 +107,11 @@ impl Plugin for PluginRenderPipeline {
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
 
-        PluginAssetSyncLoad::<KeyRenderPipeline, AssetkeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline>::new(false, 5 * 1024 * 1024, 60 * 1000).init(engine, stages);
+        PluginRenderPipelineLoad::new(false, 5 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
         let world = engine.world_mut();
         world.insert_resource(CommandListRenderPipeline::default());
-        SysCommand::setup(world, stages.command_stage());
+        SysRenderPipelineCommand::setup(world, stages.query_stage::<SysRenderPipelineCommand>(ERunStageChap::Command));
 
         Ok(())
     }

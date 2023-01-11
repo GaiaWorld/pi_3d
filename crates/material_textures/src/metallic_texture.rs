@@ -77,7 +77,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(MetallicTextureSampler(samplerpool.get(key).unwrap()));
-                        println!("MetallicTextureSampler Write");
+                        log::debug!("MetallicTextureSampler Write");
                     }
                 },
             }

@@ -1,7 +1,8 @@
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
+use render_shader::shader_bind::ShaderBindEffectValue;
 use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, shader_effect::UniformPropertyInt}};
 
-use super::value_uniform::MaterialValueBind;
+
 
 pub enum IntUniform {
     Slot0(u32),
@@ -15,7 +16,7 @@ pub enum IntUniform {
     Slot8(u32, [i32; 8]),
 }
 impl FromValueUniformStatistics for IntUniform {
-    fn new(value: &MaterialValueBind) -> Self {
+    fn new(value: &ShaderBindEffectValue) -> Self {
         if value.int_count == 1 {
             Self::Slot1(value.int_begin, [0])
         }

@@ -1,16 +1,51 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Commands}, query::Write};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Number};
 
-use crate::{bytes_write_to_memory, object::{ObjectID, GameObject}};
+use crate::{bytes_write_to_memory, object::{ObjectID, GameObject}, viewer::{ViewerViewMatrix, ViewerProjectionMatrix, ViewerTransformMatrix, ViewerGlobalPosition, ViewerDirection}};
 
-use super::{free_camera::FreeCameraParam, target_camera::TargetCameraParam, camera::{CameraTransformMatrix, CameraGlobalPosition, CameraDirection, CameraProjectionMatrix, CameraViewMatrix, CameraParam, EFreeCameraMode, EFixedMode}};
+use super::{free_camera::FreeCameraParam, target_camera::TargetCameraParam, camera::{CameraParam, EFreeCameraMode, EFixedMode}};
+
+
+#[derive(Debug, Default)]
+pub struct SingleCameraCreateList {
+    pub list: Vec<ObjectID>,
+}
+pub struct SysCameraCreate;
+impl TSystemStageInfo for SysCameraCreate {
+
+}
+#[setup]
+impl SysCameraCreate {
+    #[system]
+    pub fn cmds(
+        mut cmds: ResMut<SingleCameraCreateList>,
+        mut entity_delete: EntityDelete<GameObject>,
+        mut param_cmd: Commands<GameObject, CameraParam>,
+        mut view_cmd: Commands<GameObject, ViewerViewMatrix>,
+        mut proj_cmd: Commands<GameObject, ViewerProjectionMatrix>,
+        mut tran_cmd: Commands<GameObject, ViewerTransformMatrix>,
+        mut gpos_cmd: Commands<GameObject, ViewerGlobalPosition>,
+        mut vdir_cmd: Commands<GameObject, ViewerDirection>,
+    ) {
+        let mut list = replace(&mut cmds.list, vec![]);
+
+        list.drain(..).for_each(|obj| {
+            param_cmd.insert(obj.clone(), CameraParam::default());
+            view_cmd.insert(obj.clone(), ViewerViewMatrix::default());
+            proj_cmd.insert(obj.clone(), ViewerProjectionMatrix::default());
+            tran_cmd.insert(obj.clone(), ViewerTransformMatrix::default());
+            gpos_cmd.insert(obj.clone(), ViewerGlobalPosition::default());
+            vdir_cmd.insert(obj.clone(), ViewerDirection::default());
+        });
+    }
+}
 
 #[derive(Debug)]
 pub enum CameraCommand {
-    Create(ObjectID),
     Destroy(ObjectID),
     ModifyMode(ObjectID, EFreeCameraMode),
     ModifyFov(ObjectID, Number),
@@ -25,31 +60,25 @@ pub struct SingleCameraCommandList {
 }
 
 pub struct SysCameraCommand;
+impl TSystemStageInfo for SysCameraCommand {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysCameraCreate::key()
+        ]
+    }
+}
 #[setup]
 impl SysCameraCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleCameraCommandList>,
-        mut cameras: Query<GameObject, (Write<CameraParam>, Write<CameraViewMatrix>, Write<CameraProjectionMatrix>, Write<CameraTransformMatrix>, Write<CameraGlobalPosition>, Write<CameraDirection>)>,
+        mut cameras: Query<GameObject, &mut CameraParam>,
         mut entity_delete: EntityDelete<GameObject>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
-                CameraCommand::Create(entity) => {
-                    match cameras.get_mut(entity) {
-                        Some(mut camera) => {
-                            camera.0.write(CameraParam::default());
-                            camera.1.write(CameraViewMatrix::default());
-                            camera.2.write(CameraProjectionMatrix::default());
-                            camera.3.write(CameraTransformMatrix::default());
-                            camera.4.write(CameraGlobalPosition::default());
-                            camera.5.write(CameraDirection::default());
-                        },
-                        None => todo!(),
-                    }
-                },
                 CameraCommand::Destroy(entity) => {
                     entity_delete.despawn(entity);
                 },
@@ -80,16 +109,12 @@ impl SysCameraCommand {
                 CameraCommand::ModifyOrthSize(entity, value) => {
                     match cameras.get_mut(entity) {
                         Some(mut camera) => {
-                            match camera.0.get_mut() {
-                                Some(camera) => {
-                                    camera.orth_size = value;
-                                    camera.dirty = true;
-                                },
-                                None => todo!(),
-                            }
-                            camera.0.notify_modify();
+                            camera.orth_size = value;
+                            camera.dirty = true;
                         },
-                        None => todo!(),
+                        None => {
+                            cmds.list.push(cmd);
+                        },
                     }
                 },
             }
@@ -112,23 +137,20 @@ pub struct SingleTargetCameraCommandList {
 }
 
 pub struct SysTargetCameraCommand;
+impl TSystemStageInfo for SysTargetCameraCommand {
+}
 #[setup]
 impl SysTargetCameraCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleTargetCameraCommandList>,
-        mut cameras: Query<GameObject, Write<TargetCameraParam>>,
         mut entity_delete: EntityDelete<GameObject>,
+        mut camera_cmd: Commands<GameObject, TargetCameraParam>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 TargetCameraCommand::Create(entity) => {
-                    match cameras.get_mut(entity) {
-                        Some(mut camera) => {
-                            camera.write(TargetCameraParam::default());
-                        },
-                        None => todo!(),
-                    }
+                    camera_cmd.insert(entity, TargetCameraParam::default());
                 },
                 TargetCameraCommand::Destroy(entity) => {
                     entity_delete.despawn(entity);
@@ -151,22 +173,19 @@ pub struct SingleFreeCameraCommandList {
 }
 
 pub struct SysFreeCameraCommand;
+impl TSystemStageInfo for SysFreeCameraCommand {
+}
 #[setup]
 impl SysFreeCameraCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleFreeCameraCommandList>,
-        mut cameras: Query<GameObject, Write<FreeCameraParam>>,
+        mut cameras: Commands<GameObject, FreeCameraParam>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 FreeCameraCommand::Create(entity) => {
-                    match cameras.get_mut(entity) {
-                        Some(mut camera) => {
-                            camera.write(FreeCameraParam::default());
-                        },
-                        None => todo!(),
-                    }
+                    cameras.insert(entity, FreeCameraParam::default());
                 },
             }
         });

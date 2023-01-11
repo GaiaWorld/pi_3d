@@ -1,12 +1,11 @@
 
 use pi_render::rhi::dyn_uniform_buffer::{Uniform, Bind, BindOffset};
 
-use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory, resources::RenderDynUniformBuffer};
+use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory, };
 
 pub struct SceneTime {
     pub time: f32,
     pub delta_tims: f32,
-    pub bind_offset: BindOffset,
     pub dirty: bool,
 }
 impl SceneTime {
@@ -16,13 +15,10 @@ impl SceneTime {
     pub const TIME_OFFSIZE: usize = 0 * 4;
     pub const DELTA_TIME_OFFSIZE: usize = Self::TIME_OFFSIZE + Self::TIME * 4;
 
-    pub fn new(
-        dynbuffer: &mut RenderDynUniformBuffer,
-    ) -> Self {
+    pub fn new() -> Self {
         Self {
             time: 0.,
             delta_tims: 0.,
-            bind_offset: dynbuffer.alloc_binding::<Self>(),
             dirty: true,
         }
     }
@@ -36,16 +32,4 @@ impl Uniform for SceneTime {
         bytes_write_to_memory(bytemuck::cast_slice(&time), index as usize + Self::DELTA_TIME_OFFSIZE, buffer);
     }
 
-}
-impl FragmentUniformBind for SceneTime {
-    const ID: u32 = 1;
-    const SIZE: usize = Self::DELTA_TIME_OFFSIZE + Self::DELTA_TIME * 4;
-}
-impl Bind for SceneTime {
-    fn index() -> pi_render::rhi::dyn_uniform_buffer::BindIndex {
-        pi_render::rhi::dyn_uniform_buffer::BindIndex::new(Self::ID as usize)
-    }
-    fn min_size() -> usize {
-        Self::SIZE
-    }
 }

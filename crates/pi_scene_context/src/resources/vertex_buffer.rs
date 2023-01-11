@@ -1,6 +1,6 @@
 use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::Handle;
-use pi_engine_shell::{plugin::Plugin, assets::sync_load::PluginAssetSyncLoad};
+use pi_engine_shell::{plugin::Plugin, assets::sync_load::{PluginAssetSyncLoad, AssetSyncLoad}, run_stage::SysCommonUserCommand};
 use render_data_container::{VertexBuffer, KeyVertexBuffer, EVertexDataFormat};
 
 
@@ -16,6 +16,9 @@ impl From<Handle<VertexBuffer>> for AssetResVertexBuffer {
     }
 }
 
+pub type SysVertexBufferLoad = AssetSyncLoad<KeyVertexBuffer, AssetKeyVertexBuffer, VertexBuffer, AssetResVertexBuffer, SysCommonUserCommand>;
+type PluginVertexBufferLoad = PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVertexBuffer, VertexBuffer, AssetResVertexBuffer, SysCommonUserCommand>;
+
 pub struct PluginVertexBuffer;
 impl Plugin for PluginVertexBuffer {
     fn init(
@@ -23,7 +26,7 @@ impl Plugin for PluginVertexBuffer {
         engine: &mut pi_engine_shell::engine_shell::EnginShell,
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVertexBuffer, VertexBuffer, AssetResVertexBuffer>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
+        PluginVertexBufferLoad::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
         Ok(())
     }

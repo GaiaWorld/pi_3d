@@ -1,7 +1,7 @@
 use render_data_container::{TRenderGeometry, VertexBufferUse};
 use render_geometry::{vertex_data::TVertexBufferDesc, indices::{IndicesBufferDesc, AssetResBufferIndices}};
 
-use super::vertex_buffer_useinfo::{AssetResVBSlot1, AssetDescVBSlot1, TVertexBufferUseInfo, TAssetResVertexBuffer, AssetResVBSlot2, AssetResVBSlot3, AssetResVBSlot4, AssetDescVBSlot2, AssetDescVBSlot3, AssetDescVBSlot4, AssetResVBSlot5, AssetDescVBSlot5};
+use super::vertex_buffer_useinfo::{AssetResVBSlot01, AssetDescVBSlot01, TVertexBufferUseInfo, TAssetResVertexBuffer, AssetResVBSlot02, AssetResVBSlot03, AssetResVBSlot04, AssetDescVBSlot02, AssetDescVBSlot03, AssetDescVBSlot04, AssetResVBSlot05, AssetDescVBSlot05};
 
 pub struct RenderGeometryEable(pub bool);
 
@@ -38,9 +38,9 @@ pub struct RenderGeometry {
 }
 
 impl From<
-    (&AssetDescVBSlot1, &AssetResVBSlot1)
+    (&AssetDescVBSlot01, &AssetResVBSlot01)
 > for RenderGeometry {
-    fn from(value: (&AssetDescVBSlot1, &AssetResVBSlot1)) -> Self {
+    fn from(value: (&AssetDescVBSlot01, &AssetResVBSlot01)) -> Self {
         let mut vertices = vec![];
         let mut instances = vec![];
 
@@ -56,14 +56,14 @@ impl From<
     }
 }
 impl From<
-    (   &AssetDescVBSlot1, &AssetResVBSlot1
-        , &AssetDescVBSlot2, &AssetResVBSlot2
+    (   &AssetDescVBSlot01, &AssetResVBSlot01
+        , &AssetDescVBSlot02, &AssetResVBSlot02
     )
 > for RenderGeometry {
     fn from(
         value: (
-            &AssetDescVBSlot1, &AssetResVBSlot1
-            , &AssetDescVBSlot2, &AssetResVBSlot2
+            &AssetDescVBSlot01, &AssetResVBSlot01
+            , &AssetDescVBSlot02, &AssetResVBSlot02
         )
     ) -> Self {
         let mut vertices = vec![];
@@ -83,16 +83,16 @@ impl From<
 }
 
 impl From<
-    (   &AssetDescVBSlot1, &AssetResVBSlot1
-        , &AssetDescVBSlot2, &AssetResVBSlot2
-        , &AssetDescVBSlot3, &AssetResVBSlot3
+    (   &AssetDescVBSlot01, &AssetResVBSlot01
+        , &AssetDescVBSlot02, &AssetResVBSlot02
+        , &AssetDescVBSlot03, &AssetResVBSlot03
     )
 > for RenderGeometry {
     fn from(
         value: (
-            &AssetDescVBSlot1, &AssetResVBSlot1
-            , &AssetDescVBSlot2, &AssetResVBSlot2
-            , &AssetDescVBSlot3, &AssetResVBSlot3
+            &AssetDescVBSlot01, &AssetResVBSlot01
+            , &AssetDescVBSlot02, &AssetResVBSlot02
+            , &AssetDescVBSlot03, &AssetResVBSlot03
         )
     ) -> Self {
         let mut vertices = vec![];
@@ -114,18 +114,18 @@ impl From<
     }
 }
 impl From<
-    (   &AssetDescVBSlot1, &AssetResVBSlot1
-        , &AssetDescVBSlot2, &AssetResVBSlot2
-        , &AssetDescVBSlot3, &AssetResVBSlot3
-        , &AssetDescVBSlot4, &AssetResVBSlot4
+    (   &AssetDescVBSlot01, &AssetResVBSlot01
+        , &AssetDescVBSlot02, &AssetResVBSlot02
+        , &AssetDescVBSlot03, &AssetResVBSlot03
+        , &AssetDescVBSlot04, &AssetResVBSlot04
     )
 > for RenderGeometry {
     fn from(
         value: (
-            &AssetDescVBSlot1, &AssetResVBSlot1
-            , &AssetDescVBSlot2, &AssetResVBSlot2
-            , &AssetDescVBSlot3, &AssetResVBSlot3
-            , &AssetDescVBSlot4, &AssetResVBSlot4
+            &AssetDescVBSlot01, &AssetResVBSlot01
+            , &AssetDescVBSlot02, &AssetResVBSlot02
+            , &AssetDescVBSlot03, &AssetResVBSlot03
+            , &AssetDescVBSlot04, &AssetResVBSlot04
         )
     ) -> Self {
         let mut vertices = vec![];
@@ -150,20 +150,20 @@ impl From<
     }
 }
 impl From<
-    (   &AssetDescVBSlot1, &AssetResVBSlot1
-        , &AssetDescVBSlot2, &AssetResVBSlot2
-        , &AssetDescVBSlot3, &AssetResVBSlot3
-        , &AssetDescVBSlot4, &AssetResVBSlot4
-        , &AssetDescVBSlot5, &AssetResVBSlot5
+    (   &AssetDescVBSlot01, &AssetResVBSlot01
+        , &AssetDescVBSlot02, &AssetResVBSlot02
+        , &AssetDescVBSlot03, &AssetResVBSlot03
+        , &AssetDescVBSlot04, &AssetResVBSlot04
+        , &AssetDescVBSlot05, &AssetResVBSlot05
     )
 > for RenderGeometry {
     fn from(
         value: (
-            &AssetDescVBSlot1, &AssetResVBSlot1
-            , &AssetDescVBSlot2, &AssetResVBSlot2
-            , &AssetDescVBSlot3, &AssetResVBSlot3
-            , &AssetDescVBSlot4, &AssetResVBSlot4
-            , &AssetDescVBSlot5, &AssetResVBSlot5
+            &AssetDescVBSlot01, &AssetResVBSlot01
+            , &AssetDescVBSlot02, &AssetResVBSlot02
+            , &AssetDescVBSlot03, &AssetResVBSlot03
+            , &AssetDescVBSlot04, &AssetResVBSlot04
+            , &AssetDescVBSlot05, &AssetResVBSlot05
         )
     ) -> Self {
         let mut vertices = vec![];

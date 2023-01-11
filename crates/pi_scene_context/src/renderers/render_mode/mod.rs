@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write, sys::system};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Command, Commands}, query::Write, sys::system};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 
@@ -17,24 +18,25 @@ pub enum ERenderMode {
 }
 
 #[derive(Debug, Default)]
-struct SingleRenderModeCommandList {
+pub struct SingleRenderModeCommandList {
     pub list: Vec<(ObjectID, ERenderMode)>,
 }
 
-struct SysRenderModeCommand;
+pub struct SysRenderModeCommand;
+impl TSystemStageInfo for SysRenderModeCommand {
+
+}
 #[setup]
 impl SysRenderModeCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderModeCommandList>,
-        mut items: Query<GameObject, Write<RenderMode>>,
+        mut items: Commands<GameObject, RenderMode>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
-        list.drain(..).for_each(|cmd| {
-            if let Some(mut mat) = items.get_mut(cmd.0) {
-                mat.write(RenderMode(cmd.1));
-            }
+        list.drain(..).for_each(|(obj, value)| {
+            items.insert(obj, RenderMode(value))
         });
     }
 }
@@ -70,7 +72,7 @@ impl crate::Plugin for PluginRenderMode {
         let world = engine.world_mut();
 
         world.insert_resource(SingleRenderModeCommandList::default());
-        SysRenderModeCommand::setup(world, stages.command_stage());
+        SysRenderModeCommand::setup(world, stages.query_stage::<SysRenderModeCommand>(ERunStageChap::Command));
 
         Ok(())
     }

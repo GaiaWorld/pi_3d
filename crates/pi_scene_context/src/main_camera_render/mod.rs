@@ -2,22 +2,20 @@
 use pi_atom::Atom;
 use pi_ecs::{prelude::{Setup, Query, Res}, query::With};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{InterfaceObject, GameObject}, assets::sync_load::{PluginAssetSyncLoad, PluginAssetSyncNotNeedLoad}};
+use pi_engine_shell::{object::{InterfaceObject, GameObject}, assets::sync_load::{PluginAssetSyncLoad, PluginAssetSyncNotNeedLoad}, run_stage::{SysCommonUserCommand, ERunStageChap}};
 use pi_render::{graph::{NodeId, graph::RenderGraph}, rhi::{device::RenderDevice}};
 
 use crate::{
     cameras::camera::{CameraViewport, CameraRenderData},
-    renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectBindGroup, RenderObjectID}, pipeline::{ResRenderPipeline, KeyRenderPipeline}},
+    renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectBindGroup, RendererID}, pipeline::{ResRenderPipeline, KeyRenderPipeline}},
     object::{ObjectID},
     plugin::Plugin,
-    materials::{bind_group::{RenderBindGroup, RenderBindGroupPool}}
+    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
 };
 
 use self::{
     command::{SingleMainCameraRenderCommandList, SysMainCameraRenderCommand},
-    graph::SingleMainCameraOpaqueRenderNode, draw_sort_sys::{DrawSortTick, SysMainCameraFilter},
-    bind_group::{SysMainCameraRenderBindGroupUpdate, SysMainCameraRenderUniformUpdate, IDMainCameraRenderBindGroup}, 
-    pipeline::{SysMaterialMainCameraChangeByMesh, SysMaterialMainCameraChangeByMat, SysMainCameraPipeline}
+    graph::SingleMainCameraOpaqueRenderNode, draw_sort_sys::{DrawSortTick, SysModelListUpdateByCamera, SysModelListAfterCullinUpdateByCamera, SysModelListUpdateByGeometry, SysModelListAfferCullingUpdateByModelWorldMatrix, SysModelListAfterCullinUpdateByGeometry}, renderer_binds_sys::{SysRendererInitForCamera, SysRendererInitBindForCamera, SysCameraBindUpdate}, bind_group::SysMainCameraRendererBindGroup,
 };
 
 pub mod command;
@@ -26,6 +24,7 @@ pub mod graph;
 pub mod draw_sort_sys;
 pub mod interface;
 pub mod pipeline;
+pub mod renderer_binds_sys;
 
 pub struct MainCameraRenderer {
     pub ready: bool,
@@ -76,34 +75,6 @@ impl MainCameraRenderer {
 }
 
 
-struct SysMainCameraRenderReset;
-#[setup]
-impl SysMainCameraRenderReset {
-    #[system]
-    pub fn reset(
-        maincameras: Query<GameObject, (&CameraRenderData, &RenderObjectID)>,
-        mut renders: Query<GameObject, &mut MainCameraRenderer>,
-        id_bind_group_main_camera: Res<IDMainCameraRenderBindGroup>,
-        bind_groups: Res<RenderBindGroupPool>,
-    ) {
-        let id_bind_group_main_camera = id_bind_group_main_camera.0.clone();
-        maincameras.iter().for_each(|(cameradata, renderid)| {
-            if bind_groups.get(&id_bind_group_main_camera).unwrap().bind_group.is_some() {
-                if let Some(mut render) = renders.get_mut(renderid.0) {
-                    let camera_bind_group = RenderObjectBindGroup {
-                        bind_group: id_bind_group_main_camera.clone(),
-                        offsets: vec![
-                            *cameradata.bind_offset,
-                            0, 0, 0,
-                        ],
-                    };
-                    render.reset(camera_bind_group);
-                }
-            }
-        });
-    }
-}
-
 pub struct PluginMainCameraRender;
 impl Plugin for PluginMainCameraRender {
     fn init(
@@ -116,25 +87,30 @@ impl Plugin for PluginMainCameraRender {
         let world = engine.world_mut();
         let device = world.get_resource::<RenderDevice>().unwrap().clone();
 
-        let main_camera_bind_group_id = Atom::from(IDMainCameraRenderBindGroup::LABEL);
-        world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, main_camera_bind_group_id.clone(), IDMainCameraRenderBindGroup::layout_entries().as_slice(), IDMainCameraRenderBindGroup::SET);
+        // let main_camera_bind_group_id = Atom::from(IDMainCameraRenderBindGroup::LABEL);
+        // world.get_resource_mut::<RenderBindGroupPool>().unwrap().creat(&device, main_camera_bind_group_id.clone(), IDMainCameraRenderBindGroup::layout_entries().as_slice(), IDMainCameraRenderBindGroup::SET);
 
         let world = engine.world_mut();
 
-        SysMaterialMainCameraChangeByMesh::setup(world, stages.command_stage());
-        SysMaterialMainCameraChangeByMat::setup(world, stages.command_stage());
-        SysMainCameraPipeline::setup(world, stages.command_stage());
+        SysMainCameraRenderCommand::setup(world, stages.query_stage::<SysMainCameraRenderCommand>(ERunStageChap::Command));
+        SysMainCameraRendererBindGroup::setup(world, stages.query_stage::<SysMainCameraRendererBindGroup>(ERunStageChap::Uniform));
+        DrawSortTick::setup(world, stages.query_stage::<DrawSortTick>(ERunStageChap::Uniform));
 
-        SysMainCameraRenderCommand::setup(world, stages.command_stage());
-        DrawSortTick::setup(world, stages.render_sort());
-        SysMainCameraRenderUniformUpdate::setup(world, stages.uniform_update());
-        SysMainCameraRenderBindGroupUpdate::setup(world, stages.between_uniform_update_and_filter_culling());
-        SysMainCameraRenderReset::setup(world, stages.between_uniform_update_and_filter_culling());
-        SysMainCameraFilter::setup(world, stages.filter_culling());
+        SysModelListUpdateByCamera::setup(world, stages.query_stage::<SysModelListUpdateByCamera>(ERunStageChap::Command));
+        SysModelListUpdateByGeometry::setup(world, stages.query_stage::<SysModelListUpdateByGeometry>(ERunStageChap::Command));
         
+        SysModelListAfterCullinUpdateByCamera::setup(world, stages.query_stage::<SysModelListAfterCullinUpdateByCamera>(ERunStageChap::Command));
+        SysModelListAfterCullinUpdateByGeometry::setup(world, stages.query_stage::<SysModelListAfterCullinUpdateByGeometry>(ERunStageChap::Command));
+        SysModelListAfferCullingUpdateByModelWorldMatrix::setup(world, stages.query_stage::<SysModelListAfferCullingUpdateByModelWorldMatrix>(ERunStageChap::Command));
+
+        SysRendererInitForCamera::setup(world, stages.query_stage::<SysRendererInitForCamera>(ERunStageChap::Command));
+
+        SysRendererInitBindForCamera::setup(world, stages.query_stage::<SysRendererInitBindForCamera>(ERunStageChap::Command));
+        SysCameraBindUpdate::setup(world, stages.query_stage::<SysCameraBindUpdate>(ERunStageChap::Command));
+
         world.insert_resource(SingleMainCameraRenderCommandList::default());
 
-        world.insert_resource(IDMainCameraRenderBindGroup(main_camera_bind_group_id));
+        // world.insert_resource(IDMainCameraRenderBindGroup(main_camera_bind_group_id));
 
         Ok(())
     }

@@ -78,7 +78,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(LightmapTextureSampler(samplerpool.get(key).unwrap()));
-                        println!("LightmapTextureSampler Write");
+                        log::debug!("LightmapTextureSampler Write");
                     }
                 },
             }

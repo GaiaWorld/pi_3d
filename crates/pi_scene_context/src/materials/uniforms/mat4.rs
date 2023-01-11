@@ -2,9 +2,10 @@ use std::ops::Range;
 
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
 use pi_scene_math::Number;
+use render_shader::shader_bind::ShaderBindEffectValue;
 use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, shader_effect::UniformPropertyMat4}};
 
-use super::{value_uniform::MaterialValueBind, update_data};
+use super::{update_data};
 
 
 pub enum Mat4Uniform {
@@ -19,7 +20,7 @@ pub enum Mat4Uniform {
     Slot8(u32, [Number; 8 * 16]),
 }
 impl FromValueUniformStatistics for Mat4Uniform {
-    fn new(value: &MaterialValueBind) -> Self {
+    fn new(value: &ShaderBindEffectValue) -> Self {
         if value.mat4_count == 1 {
             Self::Slot1(value.mat4_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
         }

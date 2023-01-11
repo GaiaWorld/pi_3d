@@ -3,13 +3,13 @@ use std::mem::replace;
 
 use derive_deref::{Deref, DerefMut};
 use pi_assets::{mgr::AssetMgr, asset::{Handle, GarbageEmpty, Asset}};
-use pi_ecs::{prelude::{Id, ResMut, Query, Res, Setup}, query::{Write, Changed, Or}};
+use pi_ecs::{prelude::{Id, ResMut, Query, Res, Setup, Commands}, query::{Write, Changed, Or}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{assets::sync_load::{PluginAssetSyncLoad, InterfaceAssetSyncCreate, AssetSyncWait, PluginAssetSyncNotNeedLoad}, engine_shell::EnginShell};
+use pi_engine_shell::{assets::sync_load::{PluginAssetSyncLoad, InterfaceAssetSyncCreate, AssetSyncWait, PluginAssetSyncNotNeedLoad, AssetSyncLoad}, engine_shell::EnginShell, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::device::RenderDevice;
 use pi_scene_math::{Matrix, Matrix2, Vector4, Vector2, Number};
 use pi_share::Share;
-use render_shader::{shader::{KeyShaderEffect, ResShader, KeyShader, ShaderEffectMeta as ShaderEffectDesc}, skin_code::ESkinCode, scene_about_code::ERenderTag, unifrom_code::{UniformPropertyName, ErrorUniformSlot, TUnifromShaderProperty, MaterialValueBindDesc}};
+use render_shader::{shader::{KeyShaderEffect, ResShader, KeyShader, ShaderEffectMeta as ShaderEffectDesc}, unifrom_code::{UniformPropertyName, ErrorUniformSlot, TUnifromShaderProperty, MaterialValueBindDesc}};
 
 use crate::{object::{ObjectID, GameObject}, renderers::render_mode::ERenderMode};
 
@@ -110,27 +110,29 @@ impl AssetResShaderEffectMeta {
 }
 
 #[derive(Debug)]
-enum ECommand {
+pub enum ECommand {
     Use(ObjectID, KeyShaderEffect),
 }
 #[derive(Debug, Default)]
-struct SingleShaderEffectCommands(pub Vec<ECommand>);
-struct SysShaderEffectCommands;
+pub struct SingleShaderEffectCommands(pub Vec<ECommand>);
+
+pub struct SysShaderEffectCommands;
+impl TSystemStageInfo for SysShaderEffectCommands {
+    
+}
 #[setup]
 impl SysShaderEffectCommands {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleShaderEffectCommands>,
-        mut items: Query<GameObject, Write<AssetKeyShaderEffect>>,
+        mut items: Commands<GameObject, AssetKeyShaderEffect>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ECommand::Use(entity, key) => {
-                    if let Some(mut item) = items.get(entity) {
-                        item.write(AssetKeyShaderEffect(key));
-                    }
+                    items.insert(entity, AssetKeyShaderEffect(key));
                 },
             }
         });
@@ -183,7 +185,8 @@ impl InterfaceMaterialMeta for EnginShell {
 }
 
 
-type PluginAssetShaderEffectLoad = PluginAssetSyncLoad::<KeyShaderEffect, AssetKeyShaderEffect, ResShaderEffectMeta, AssetResShaderEffectMeta>;
+pub type SysAssetShaderEffectLoad = AssetSyncLoad::<KeyShaderEffect, AssetKeyShaderEffect, ResShaderEffectMeta, AssetResShaderEffectMeta, SysShaderEffectCommands>;
+type PluginAssetShaderEffectLoad = PluginAssetSyncLoad::<KeyShaderEffect, AssetKeyShaderEffect, ResShaderEffectMeta, AssetResShaderEffectMeta, SysShaderEffectCommands>;
 
 pub struct PluginShaderEffect;
 impl pi_engine_shell::plugin::Plugin for PluginShaderEffect {
@@ -192,14 +195,14 @@ impl pi_engine_shell::plugin::Plugin for PluginShaderEffect {
         engine: &mut EnginShell,
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-        PluginAssetSyncNotNeedLoad::<KeyShader, ResShader>::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
-
-        PluginAssetShaderEffectLoad::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
         let world = engine.world_mut();
         world.insert_resource(SingleShaderEffectCommands::default());
 
-        SysShaderEffectCommands::setup(world, stages.command_stage());
+        SysShaderEffectCommands::setup(world, stages.query_stage::<SysShaderEffectCommands>(ERunStageChap::Command));
+
+        PluginAssetSyncNotNeedLoad::<KeyShader, ResShader>::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
+        PluginAssetShaderEffectLoad::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
         Ok(())
     }

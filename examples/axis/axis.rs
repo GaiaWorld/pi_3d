@@ -7,7 +7,7 @@ use pi_engine_shell::{
     engine_shell::{AppShell, EnginShell},
     frame_time::InterfaceFrameTime,
     object::{GameObject, ObjectID},
-    plugin::Plugin,
+    plugin::Plugin, run_stage::{SysCommonUserCommand, ERunStageChap},
 };
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
@@ -38,11 +38,11 @@ impl SysTest {
             item.1 = item.1 + 16.0;
             item.2 = item.2 + 16.0;
             item.3 = item.3 + 16.0;
-            // // println!("=========== item.1: {}, item.2: {}, item.3: {}", item.1, item.2, item.3);
+            // // log::debug!("=========== item.1: {}, item.2: {}, item.3: {}", item.1, item.2, item.3);
             let x = item.1 % 4000.0 / 4000.0 * 3.1415926 * 2.;
             let y = item.2 % 4000.0 / 4000.0 * 3.1415926 * 2.;
             let z = item.3 % 4000.0 / 4000.0 * 3.1415926 * 2.;
-            // println!("=========== x: {}, y: {}, z: {}", x, y, z);
+            // log::debug!("=========== x: {}, y: {}, z: {}", x, y, z);
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 20., 0., 5.)));
             // transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(2.7394686, 2.7394686, 2.7394686)));
             transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
@@ -62,7 +62,7 @@ impl Plugin for PluginTest {
         
         PluginAxisBuilder.init(engine, stages);
 
-        SysTest::setup(&mut world, stages.command_stage());
+        SysTest::setup(&mut world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);
 

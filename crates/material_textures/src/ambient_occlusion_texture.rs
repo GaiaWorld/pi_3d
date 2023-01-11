@@ -78,7 +78,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(AmbientOcclusionTextureSampler(samplerpool.get(key).unwrap()));
-                        println!("AmbientOcclusionTextureSampler Write");
+                        log::debug!("AmbientOcclusionTextureSampler Write");
                     }
                 },
             }

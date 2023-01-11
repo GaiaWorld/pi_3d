@@ -9,9 +9,9 @@ impl SceneUniformTickUpdate {
     #[system]
     pub fn tick(
         query_scenes: Query<GameObject, (&SceneTime, &SceneFog, &AmbientLight)>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+        mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
     ) {
-        //  println!("Scene Uniform Tick Update");
+        //  log::debug!("Scene Uniform Tick Update");
         query_scenes.iter().for_each(|(time, fog, ambl)| {
             dynbuffer.set_uniform::<SceneTime>(&time.bind_offset, time);
             dynbuffer.set_uniform::<SceneFog>(&fog.bind_offset, fog);

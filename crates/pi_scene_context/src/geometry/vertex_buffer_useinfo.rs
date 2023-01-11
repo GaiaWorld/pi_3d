@@ -113,26 +113,26 @@ pub trait TAssetResVertexBuffer {
 
 // ============== 1
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot1(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot1 {
+pub struct AssetKeyVBSlot01(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot01 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot1 {
+pub struct AssetDescVBSlot01 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot1 {
+impl From<VertexBufferDesc> for AssetDescVBSlot01 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot1 {
+impl TAsVertexBufferKey for AssetDescVBSlot01 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot1 {
+impl TVertexBufferUseInfo for AssetDescVBSlot01 {
     const ASK_SLOT_COUNT: u8 = 1;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -145,18 +145,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot1 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot1(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot1 {
+pub struct AssetResVBSlot01(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot01 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot1 {
+impl From<KeyVertexBuffer> for AssetResVBSlot01 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot1 {
+impl TAssetResVertexBuffer for AssetResVBSlot01 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -164,26 +164,26 @@ impl TAssetResVertexBuffer for AssetResVBSlot1 {
 
 // ============== 2
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot2(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot2 {
+pub struct AssetKeyVBSlot02(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot02 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot2 {
+pub struct AssetDescVBSlot02 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot2 {
+impl From<VertexBufferDesc> for AssetDescVBSlot02 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot2 {
+impl TAsVertexBufferKey for AssetDescVBSlot02 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot2 {
+impl TVertexBufferUseInfo for AssetDescVBSlot02 {
     const ASK_SLOT_COUNT: u8 = 2;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -196,18 +196,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot2 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot2(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot2 {
+pub struct AssetResVBSlot02(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot02 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot2 {
+impl From<KeyVertexBuffer> for AssetResVBSlot02 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot2 {
+impl TAssetResVertexBuffer for AssetResVBSlot02 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -215,26 +215,26 @@ impl TAssetResVertexBuffer for AssetResVBSlot2 {
 
 // ============== 3
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot3(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot3 {
+pub struct AssetKeyVBSlot03(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot03 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot3 {
+pub struct AssetDescVBSlot03 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot3 {
+impl From<VertexBufferDesc> for AssetDescVBSlot03 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot3 {
+impl TAsVertexBufferKey for AssetDescVBSlot03 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot3 {
+impl TVertexBufferUseInfo for AssetDescVBSlot03 {
     const ASK_SLOT_COUNT: u8 = 3;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -247,18 +247,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot3 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot3(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot3 {
+pub struct AssetResVBSlot03(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot03 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot3 {
+impl From<KeyVertexBuffer> for AssetResVBSlot03 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot3 {
+impl TAssetResVertexBuffer for AssetResVBSlot03 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -266,26 +266,26 @@ impl TAssetResVertexBuffer for AssetResVBSlot3 {
 
 // ============== 4
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot4(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot4 {
+pub struct AssetKeyVBSlot04(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot04 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot4 {
+pub struct AssetDescVBSlot04 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot4 {
+impl From<VertexBufferDesc> for AssetDescVBSlot04 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot4 {
+impl TAsVertexBufferKey for AssetDescVBSlot04 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot4 {
+impl TVertexBufferUseInfo for AssetDescVBSlot04 {
     const ASK_SLOT_COUNT: u8 = 4;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -298,18 +298,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot4 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot4(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot4 {
+pub struct AssetResVBSlot04(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot04 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot4 {
+impl From<KeyVertexBuffer> for AssetResVBSlot04 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot4 {
+impl TAssetResVertexBuffer for AssetResVBSlot04 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -317,26 +317,26 @@ impl TAssetResVertexBuffer for AssetResVBSlot4 {
 
 // ============== 5
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot5(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot5 {
+pub struct AssetKeyVBSlot05(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot05 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot5 {
+pub struct AssetDescVBSlot05 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot5 {
+impl From<VertexBufferDesc> for AssetDescVBSlot05 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot5 {
+impl TAsVertexBufferKey for AssetDescVBSlot05 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot5 {
+impl TVertexBufferUseInfo for AssetDescVBSlot05 {
     const ASK_SLOT_COUNT: u8 = 5;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -349,18 +349,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot5 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot5(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot5 {
+pub struct AssetResVBSlot05(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot05 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot5 {
+impl From<KeyVertexBuffer> for AssetResVBSlot05 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot5 {
+impl TAssetResVertexBuffer for AssetResVBSlot05 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -368,26 +368,26 @@ impl TAssetResVertexBuffer for AssetResVBSlot5 {
 
 // ============== 6
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot6(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot6 {
+pub struct AssetKeyVBSlot06(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot06 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot6 {
+pub struct AssetDescVBSlot06 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot6 {
+impl From<VertexBufferDesc> for AssetDescVBSlot06 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot6 {
+impl TAsVertexBufferKey for AssetDescVBSlot06 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot6 {
+impl TVertexBufferUseInfo for AssetDescVBSlot06 {
     const ASK_SLOT_COUNT: u8 = 6;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -400,18 +400,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot6 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot6(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot6 {
+pub struct AssetResVBSlot06(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot06 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot6 {
+impl From<KeyVertexBuffer> for AssetResVBSlot06 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot6 {
+impl TAssetResVertexBuffer for AssetResVBSlot06 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -419,27 +419,27 @@ impl TAssetResVertexBuffer for AssetResVBSlot6 {
 
 // ============== 7
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot7(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot7 {
+pub struct AssetKeyVBSlot07(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot07 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
 
-pub struct AssetDescVBSlot7 {
+pub struct AssetDescVBSlot07 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot7 {
+impl From<VertexBufferDesc> for AssetDescVBSlot07 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot7 {
+impl TAsVertexBufferKey for AssetDescVBSlot07 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot7 {
+impl TVertexBufferUseInfo for AssetDescVBSlot07 {
     const ASK_SLOT_COUNT: u8 = 7;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -452,18 +452,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot7 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot7(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot7 {
+pub struct AssetResVBSlot07(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot07 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot7 {
+impl From<KeyVertexBuffer> for AssetResVBSlot07 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot7 {
+impl TAssetResVertexBuffer for AssetResVBSlot07 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -471,26 +471,26 @@ impl TAssetResVertexBuffer for AssetResVBSlot7 {
 
 // ============== 8
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot8(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot8 {
+pub struct AssetKeyVBSlot08(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot08 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot8 {
+pub struct AssetDescVBSlot08 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot8 {
+impl From<VertexBufferDesc> for AssetDescVBSlot08 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot8 {
+impl TAsVertexBufferKey for AssetDescVBSlot08 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot8 {
+impl TVertexBufferUseInfo for AssetDescVBSlot08 {
     const ASK_SLOT_COUNT: u8 = 8;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -503,18 +503,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot8 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot8(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot8 {
+pub struct AssetResVBSlot08(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot08 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot8 {
+impl From<KeyVertexBuffer> for AssetResVBSlot08 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot8 {
+impl TAssetResVertexBuffer for AssetResVBSlot08 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }
@@ -522,26 +522,26 @@ impl TAssetResVertexBuffer for AssetResVBSlot8 {
 
 // ============== 9
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]
-pub struct AssetKeyVBSlot9(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot9 {
+pub struct AssetKeyVBSlot09(pub KeyVertexBuffer);
+impl AsKeyVertexBuffer for AssetKeyVBSlot09 {
     fn create(desc: &VertexBufferDesc) -> Self {
         Self(desc.bufferkey().clone())
     }
 }
-pub struct AssetDescVBSlot9 {
+pub struct AssetDescVBSlot09 {
     pub desc: VertexBufferDesc,
 }
-impl From<VertexBufferDesc> for AssetDescVBSlot9 {
+impl From<VertexBufferDesc> for AssetDescVBSlot09 {
     fn from(value: VertexBufferDesc) -> Self {
         Self { desc: value }
     }
 }
-impl TAsVertexBufferKey for AssetDescVBSlot9 {
+impl TAsVertexBufferKey for AssetDescVBSlot09 {
     fn key(&self) -> &KeyVertexBuffer {
         self.desc.bufferkey()
     }
 }
-impl TVertexBufferUseInfo for AssetDescVBSlot9 {
+impl TVertexBufferUseInfo for AssetDescVBSlot09 {
     const ASK_SLOT_COUNT: u8 = 9;
 
     fn desc(&self) -> &VertexBufferDesc {
@@ -554,18 +554,18 @@ impl TVertexBufferUseInfo for AssetDescVBSlot9 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot9(pub VertexBufferUse);
-impl From<Handle<VertexBuffer>> for AssetResVBSlot9 {
+pub struct AssetResVBSlot09(pub VertexBufferUse);
+impl From<Handle<VertexBuffer>> for AssetResVBSlot09 {
     fn from(value: Handle<VertexBuffer>) -> Self {
         Self(VertexBufferUse::Handle(value))
     }
 }
-impl From<KeyVertexBuffer> for AssetResVBSlot9 {
+impl From<KeyVertexBuffer> for AssetResVBSlot09 {
     fn from(value: KeyVertexBuffer) -> Self {
         Self(VertexBufferUse::Arc(value))
     }
 }
-impl TAssetResVertexBuffer for AssetResVBSlot9 {
+impl TAssetResVertexBuffer for AssetResVBSlot09 {
     fn buffer(&self) -> VertexBufferUse {
         self.0.clone()
     }

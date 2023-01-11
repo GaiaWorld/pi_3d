@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{query::Write, prelude::{Query, ResMut, Setup}, sys::system};
+use pi_ecs::{query::Write, prelude::{Query, ResMut, Setup, Commands}, sys::system};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 
@@ -27,46 +28,42 @@ impl Default for PrimitiveState {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum ERenderPrimitiveCommand {
+pub enum ERenderPrimitiveCommand {
     Default(ObjectID),
     Line(ObjectID),
     New(ObjectID, PrimitiveState),
 }
 
 #[derive(Debug, Default)]
-struct SingleRenderPrimitiveCommandList {
+pub struct SingleRenderPrimitiveCommandList {
     pub list: Vec<ERenderPrimitiveCommand>,
 }
 
-struct SysRenderPrimitiveCommand;
+pub struct SysRenderPrimitiveCommand;
+impl TSystemStageInfo for SysRenderPrimitiveCommand {
+
+}
 #[setup]
 impl SysRenderPrimitiveCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderPrimitiveCommandList>,
-        mut blends: Query<GameObject, (Write<PrimitiveState>)>,
+        mut blends: Commands<GameObject, PrimitiveState>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ERenderPrimitiveCommand::Default(entity) => {
-                    if let Some((mut blend)) = blends.get_mut(entity) {
-                        
-                        blend.write(PrimitiveState::default());
-                    }
+                    blends.insert(entity, PrimitiveState::default());
                 },
                 ERenderPrimitiveCommand::Line(entity) => {
-                    if let Some((mut blend)) = blends.get_mut(entity) {
-                        let mut value = PrimitiveState::default();
-                        value.state.topology = wgpu::PrimitiveTopology::LineStrip;
-                        blend.write(value);
-                    }
+                    let mut value = PrimitiveState::default();
+                    value.state.topology = wgpu::PrimitiveTopology::LineStrip;
+                    blends.insert(entity, value);
                 },
                 ERenderPrimitiveCommand::New(entity, value) => {
-                    if let Some((mut blend)) = blends.get_mut(entity) {
-                        blend.write(value);
-                    }
+                    blends.insert(entity, value);
                 },
             }
         });
@@ -107,7 +104,7 @@ impl crate::Plugin for PluginRenderPrimitive {
 
         world.insert_resource(SingleRenderPrimitiveCommandList::default());
 
-        SysRenderPrimitiveCommand::setup(world, stages.command_stage());
+        SysRenderPrimitiveCommand::setup(world, stages.query_stage::<SysRenderPrimitiveCommand>(ERunStageChap::Command));
 
         Ok(())
     }

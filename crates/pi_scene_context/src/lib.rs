@@ -12,7 +12,6 @@ pub mod flags;
 pub mod shaders;
 pub mod resources;
 pub mod engine;
-pub mod environment;
 pub mod geometry;
 pub mod materials;
 pub mod postprocess;
@@ -21,6 +20,9 @@ pub mod layer_mask;
 pub mod plugin;
 pub mod run_stage;
 pub mod object;
+pub mod viewer;
+pub mod bindgroup;
+pub mod light;
 
 
 pub fn bytes_write_to_memory(

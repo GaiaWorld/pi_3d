@@ -7,7 +7,7 @@ use pi_engine_shell::{
     engine_shell::{AppShell, EnginShell},
     frame_time::InterfaceFrameTime,
     object::{GameObject, ObjectID},
-    plugin::Plugin,
+    plugin::Plugin, run_stage::{SysCommonUserCommand, ERunStageChap},
 };
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
@@ -58,7 +58,7 @@ impl SysTest {
             let z = item.2 % 4000.0 / 4000.0 * 3.1415926 * 2.;
             let m = Matrix::from_euler_angles(0., 0., z);
             
-            println!("====== m: {:?}", m);
+            log::debug!("====== m: {:?}", m);
             transform_commands.0.push(ECommand::Mat4(
                 item.0,
                 1,
@@ -81,7 +81,7 @@ impl Plugin for PluginTest {
 
         let mut world = engine.world_mut().clone();
 
-        SysTest::setup(&mut world, stages.command_stage());
+        SysTest::setup(&mut world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);

@@ -1,15 +1,20 @@
 use std::{time::Instant, ops::Range};
 
+use pi_engine_shell::object::ObjectID;
+use pi_hash::XHashMap;
 use render_data_container::VertexBufferPool;
 
-use crate::{materials::bind_group::RenderBindGroupPool, renderers::render_object::TempDrawInfoRecord};
+use crate::{
+    renderers::render_object::TempDrawInfoRecord,
+    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+};
 
 use super::render_object::{RenderObjectBindGroup, RenderObjectMetaOpaque, RenderObjectMetaTransparent, DrawObject};
 
 
 pub trait DrawList<T: DrawObject> {
     fn bindgroups(&self) -> &Vec<RenderObjectBindGroup>;
-    fn drawlist(&self) -> &Vec<T>;
+    fn drawlist(&self) -> &XHashMap<ObjectID, Vec<T>>;
     fn render<'a>(
         &self,
         commands: &'a mut wgpu::CommandEncoder,
@@ -64,83 +69,117 @@ pub trait DrawList<T: DrawObject> {
 
         time = Instant::now();
 
-        draws.iter().for_each(|draw| {
-            renderpass.set_pipeline(draw.pipeline());
-            draw.bind_groups().iter().for_each(|bindinfo| {
-                match bindgrouppool.get(&bindinfo.bind_group) {
-                    Some(render_bind_group) => {
-                        match &render_bind_group.bind_group {
-                            Some(group) => {
-                                renderpass.set_bind_group(render_bind_group.set, &group, &bindinfo.offsets);
-                            },
-                            None => todo!(),
-                        }
-                    },
-                    None => todo!(),
-                }
-            });
-
-            let mut vertex_range = 0..0;
-            let mut instance_range = 0..1;
-            draw.vertices().iter().for_each(|item| {
-                if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
-                    renderpass.set_vertex_buffer(item.slot, item.slice(vbpool));
-                    vertex_range = item.value_range(vbpool);
-                }
-            });
-
-            draw.instances().iter().for_each(|item| {
-                if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
-                    renderpass.set_vertex_buffer(item.slot, item.slice(vbpool));
-                    instance_range = item.value_range(vbpool);
-                }
-            });
-
-            match &draw.indices() {
-                Some(indices) => {
-                    if temp_vertex_record.record_indices_and_check_diff_with_last(indices) {
-                        renderpass.set_index_buffer(indices.slice(vbpool), indices.format);
+        draws.iter().for_each(|(_, draws)| {
+            draws.iter().for_each(|draw| {
+                renderpass.set_pipeline(draw.pipeline());
+                draw.bind_groups().iter().for_each(|bindinfo| {
+                    match bindgrouppool.get(&bindinfo.bind_group) {
+                        Some(render_bind_group) => {
+                            match &render_bind_group.bind_group {
+                                Some(group) => {
+                                    renderpass.set_bind_group(render_bind_group.set, &group, &bindinfo.offsets);
+                                },
+                                None => todo!(),
+                            }
+                        },
+                        None => todo!(),
                     }
+                });
+    
+                let mut vertex_range = 0..0;
+                let mut instance_range = 0..1;
+                draw.vertices().iter().for_each(|item| {
+                    if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
+                        renderpass.set_vertex_buffer(item.slot, item.slice(vbpool));
+                        vertex_range = item.value_range(vbpool);
+                    }
+                });
+    
+                draw.instances().iter().for_each(|item| {
+                    if temp_vertex_record.record_vertex_and_check_diff_with_last(item) {
+                        renderpass.set_vertex_buffer(item.slot, item.slice(vbpool));
+                        instance_range = item.value_range(vbpool);
+                    }
+                });
+    
+                match &draw.indices() {
+                    Some(indices) => {
+                        if temp_vertex_record.record_indices_and_check_diff_with_last(indices) {
+                            renderpass.set_index_buffer(indices.slice(vbpool), indices.format);
+                        }
 
-                    renderpass.draw_indexed(indices.value_range(vbpool), 0 as i32, instance_range);
-                },
-                None => {
-                    renderpass.draw(vertex_range, instance_range);
-                },
-            }
+                        renderpass.draw_indexed(indices.value_range(vbpool), 0 as i32, instance_range);
+                    },
+                    None => {
+                        renderpass.draw(vertex_range, instance_range);
+                    },
+                }
+            })
         });
         
         let time1 = Instant::now();
-        println!("DrawList: {:?}", time1 - time);
+        log::info!("DrawList: {:?}", time1 - time);
     }
 }
 
 #[derive(Default)]
 pub struct RenderObjectOpaqueList {
     pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub draws: Vec<RenderObjectMetaOpaque>,
+    pub draws: XHashMap<ObjectID, Vec<RenderObjectMetaOpaque>>,
 }
 impl DrawList<RenderObjectMetaOpaque> for RenderObjectOpaqueList {
     fn bindgroups(&self) -> &Vec<RenderObjectBindGroup> {
         &self.bind_groups
     }
 
-    fn drawlist(&self) -> &Vec<RenderObjectMetaOpaque> {
+    fn drawlist(&self) -> &XHashMap<ObjectID, Vec<RenderObjectMetaOpaque>> {
         &self.draws
+    }
+}
+impl RenderObjectOpaqueList {
+    pub fn push(&mut self, obj: &ObjectID, draw: RenderObjectMetaOpaque) {
+        let list = if let Some(draws) = self.draws.get_mut(obj) {
+            draws
+        } else {
+            self.draws.insert(obj.clone(), vec![]);
+            self.draws.get_mut(obj).unwrap()
+        };
+
+        list.push(draw);
+    }
+
+    pub fn remove(&mut self, obj: &ObjectID) {
+        self.draws.remove(obj);
     }
 }
 
 #[derive(Default)]
 pub struct RenderObjectTransparentList {
     pub bind_groups: Vec<RenderObjectBindGroup>,
-    pub draws: Vec<RenderObjectMetaTransparent>,
+    pub draws: XHashMap<ObjectID, Vec<RenderObjectMetaTransparent>>,
 }
 impl DrawList<RenderObjectMetaTransparent> for RenderObjectTransparentList {
     fn bindgroups(&self) -> &Vec<RenderObjectBindGroup> {
         &self.bind_groups
     }
 
-    fn drawlist(&self) -> &Vec<RenderObjectMetaTransparent> {
+    fn drawlist(&self) -> &XHashMap<ObjectID, Vec<RenderObjectMetaTransparent>> {
         &self.draws
+    }
+}
+impl RenderObjectTransparentList {
+    pub fn push(&mut self, obj: &ObjectID, draw: RenderObjectMetaTransparent) {
+        let list = if let Some(draws) = self.draws.get_mut(obj) {
+            draws
+        } else {
+            self.draws.insert(obj.clone(), vec![]);
+            self.draws.get_mut(obj).unwrap()
+        };
+
+        list.push(draw);
+    }
+
+    pub fn remove(&mut self, obj: &ObjectID) {
+        self.draws.remove(obj);
     }
 }

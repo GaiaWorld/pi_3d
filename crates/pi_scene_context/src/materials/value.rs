@@ -1,15 +1,14 @@
 
 use pi_scene_math::{Vector4, Matrix, Matrix2, Vector2, Number};
 use pi_share::ThreadSync;
-
-use super::uniforms::value_uniform::MaterialValueBind;
+use render_shader::shader_bind::ShaderBindEffectValue;
 
 pub trait Value {
     fn name(&self) -> &str;
 }
 
 pub trait FromValueUniformStatistics: ThreadSync + 'static {
-    fn new(value: &MaterialValueBind) -> Self;
+    fn new(value: &ShaderBindEffectValue) -> Self;
 }
 
 pub trait ValueSlotIndex {

@@ -18,36 +18,25 @@ pub struct SingleTransparentCommandList {
 }
 
 pub struct SysTransparentCommandTick;
+impl TSystemStageInfo for SysTransparentCommandTick {
+
+}
 #[setup]
 impl SysTransparentCommandTick {
     #[system]
     pub fn tick(
         cmds: ResMut<SingleTransparentCommandList>,
-        meshes: Query<GameObject, Write<Transparent>>,
+        mut meshes: Commands<GameObject, Transparent>,
     ) {
         let list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 TransparentCommand::Apply(mesh) => {
-                    match meshes.get_mut(mesh) {
-                        Some(mesh) => {
-                            mesh.insert_no_notify(Transparent);
-                        },
-                        _ => {
-
-                        }
-                    }
+                    meshes.insert(mesh, Transparent);
                 },
                 TransparentCommand::Undo(mesh) => {
-                    match meshes.get_mut(mesh) {
-                        Some(mesh) => {
-                            mesh.remove();
-                        },
-                        _ => {
-
-                        }
-                    }
+                    meshes.delete(mesh);
                 },
             }
         });
@@ -96,7 +85,7 @@ impl crate::Plugin for PluginTransparent {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         engine.world_mut().insert_resource(SingleTransparentCommandList::default());
 
-        SysTransparentCommandTick::setup(engine.world_mut(), stages.command_stage());
+        SysTransparentCommandTick::setup(engine.world_mut(), stages.query_stage::<SysTransparentCommandTick>());
 
         Ok(())
     }

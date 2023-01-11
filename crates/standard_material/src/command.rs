@@ -5,7 +5,7 @@ use pi_ecs::{prelude::{ResMut, Query, EntityDelete}, query::Write};
 use pi_ecs_macros::setup;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::material::MaterialID, resources::RenderDynUniformBuffer};
+use pi_scene_context::{object::{ObjectID, GameObject}, materials::material::MaterialID, };
 
 use super::{standard_material::{StandardMaterialPropertype, SingleStandardMaterialBindDynInfoSet}};
 
@@ -28,7 +28,7 @@ impl SysDefaultMaterialCommand {
     pub fn cmd(
         mut cmds: ResMut<SingeDefaultMaterialCommandList>,
         mut materials: Query<GameObject, Write<StandardMaterialPropertype>>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+        mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
         mut matrecord: ResMut<SingleStandardMaterialBindDynInfoSet>,
         mut entity_delete: EntityDelete<GameObject>,
     ) {
@@ -39,7 +39,7 @@ impl SysDefaultMaterialCommand {
                 DefaultMaterialCommand::Create(entity) => {
                     match materials.get_mut(entity) {
                         Some(mut mat) => {
-                            //  println!("DefaultMaterialCommand Create");
+                            //  log::debug!("DefaultMaterialCommand Create");
                             mat.write(StandardMaterialPropertype::new(&mut dynbuffer));
                             matrecord.add(MaterialID(entity));
                             mat.notify_modify();

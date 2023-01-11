@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 
@@ -21,36 +22,25 @@ pub struct SingleOpaqueCommandList {
 }
 
 pub struct SysOpaqueCommandTick;
+impl TSystemStageInfo for SysOpaqueCommandTick {
+
+}
 #[setup]
 impl SysOpaqueCommandTick {
     #[system]
     pub fn tick(
         mut cmds: ResMut<SingleOpaqueCommandList>,
-        mut meshes: Query<GameObject, Write<Opaque>>,
+        mut meshes: Commands<GameObject, Opaque>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 OpaqueCommand::Apply(mesh) => {
-                    match meshes.get_mut(mesh) {
-                        Some(mut mesh) => {
-                            mesh.insert_no_notify(Opaque);
-                        },
-                        _ => {
-
-                        }
-                    }
+                    meshes.insert(mesh, Opaque);
                 },
                 OpaqueCommand::Undo(mesh) => {
-                    match meshes.get_mut(mesh) {
-                        Some(mut mesh) => {
-                            mesh.remove();
-                        },
-                        _ => {
-
-                        }
-                    }
+                    meshes.delete(mesh);
                 },
             }
         });
@@ -102,7 +92,7 @@ impl crate::Plugin for PluginOpaque {
 
         world.insert_resource(SingleOpaqueCommandList::default());
 
-        SysOpaqueCommandTick::setup(world, stages.command_stage());
+        SysOpaqueCommandTick::setup(world, stages.query_stage::<SysOpaqueCommandTick>(ERunStageChap::Command));
 
         Ok(())
     }

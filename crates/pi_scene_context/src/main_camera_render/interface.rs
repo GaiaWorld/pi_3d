@@ -1,6 +1,6 @@
 use pi_engine_shell::object::InterfaceObject;
 
-use crate::{renderers::render_object::RenderObjectID, object::ObjectID};
+use crate::{renderers::render_object::RendererID, object::ObjectID};
 
 use super::command::{SingleMainCameraRenderCommandList, MainCameraRenderCommand};
 
@@ -23,7 +23,7 @@ impl InterfaceMainCamera for crate::engine::Engine {
 
             let world = self.world();
             let commands = world.get_resource_mut::<SingleMainCameraRenderCommandList>().unwrap();
-            commands.list.push(MainCameraRenderCommand::Active(object, RenderObjectID(render_id), None));
+            commands.list.push(MainCameraRenderCommand::Active(object, RendererID(render_id), None));
         } else {
             //
         }

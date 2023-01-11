@@ -166,7 +166,7 @@ fn generate_sphere2(mut resolution: f32) -> (Vec<f32>, Vec<f32>, Vec<u32>, Vec<f
     resolution *= resolution;
     loop {
         let dist = dist_square(triangles[0].a, triangles[0].b);
-        println!("dist: {}", dist);
+        log::debug!("dist: {}", dist);
         // 当三角形各边长度都不大于resolution时就不再进一步细分
         if dist > resolution {
             let t = triangles.pop_front().unwrap();

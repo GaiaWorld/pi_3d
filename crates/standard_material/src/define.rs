@@ -34,7 +34,7 @@ impl SysStandardMaterialDefinesUpdate {
         diff2: Query<GameObject, (ObjectID), Changed<EmissiveTexture>>,
         mut define: Query<GameObject, Write<StandardMaterialDefines>>,
     ) {
-        println!("SysStandardMaterialDefinesUpdate:");
+        log::debug!("SysStandardMaterialDefinesUpdate:");
         diff1.iter().for_each(|(entity, _) | {
             if let Some(diffine) = define.get_mut(entity) {
                 if let Some(diffine) = diffine.get_mut() {

@@ -1,8 +1,11 @@
 
 
 use pi_ecs::prelude::Setup;
+use pi_engine_shell::run_stage::ERunStageChap;
 
-use self::{command::{SysCameraCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList}, camera_sys::{TargetCameraViewMatrixCalc, SysCameraTransformMatrix, SysCameraProjectionCalc}};
+use crate::viewer::{PluginViewer, sys::SysViewerUpdated};
+
+use self::{command::{SysCameraCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList, SysCameraCreate}, target_camera::TargetCameraParam, camera::CameraParam};
 
 pub mod camera;
 pub mod free_camera;
@@ -11,6 +14,8 @@ pub mod target_camera;
 pub mod camera_sys;
 pub mod command;
 pub mod interface;
+
+pub type SysViewerUpdatedForCamera = SysViewerUpdated<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysCameraCommand>;
 
 pub struct PluginCamera;
 impl crate::Plugin for PluginCamera {
@@ -21,16 +26,16 @@ impl crate::Plugin for PluginCamera {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysCameraCommand::setup(world, stages.command_stage());
-        SysTargetCameraCommand::setup(world, stages.command_stage());
-        SysFreeCameraCommand::setup(world, stages.command_stage());
-        SysCameraProjectionCalc::setup(world, stages.after_world_matrix());
-        TargetCameraViewMatrixCalc::setup(world, stages.after_world_matrix());
-        SysCameraTransformMatrix::setup(world, stages.after_world_matrix());
+        SysCameraCreate::setup(world, stages.query_stage::<SysCameraCreate>(ERunStageChap::Command));
+        SysCameraCommand::setup(world, stages.query_stage::<SysCameraCommand>(ERunStageChap::Command));
+        SysTargetCameraCommand::setup(world, stages.query_stage::<SysTargetCameraCommand>(ERunStageChap::Command));
+        SysFreeCameraCommand::setup(world, stages.query_stage::<SysFreeCameraCommand>(ERunStageChap::Command));
 
         world.insert_resource(SingleCameraCommandList::default());
         world.insert_resource(SingleTargetCameraCommandList::default());
         world.insert_resource(SingleFreeCameraCommandList::default());
+
+        PluginViewer::<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysCameraCommand>::default().init(engine, stages);
 
         Ok(())
     }

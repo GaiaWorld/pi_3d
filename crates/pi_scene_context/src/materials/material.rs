@@ -2,8 +2,9 @@
 use std::mem::replace;
 
 use derive_deref::{Deref, DerefMut};
-use pi_ecs::{prelude::{Id, ResMut, Query}, query::{Write, With}};
+use pi_ecs::{prelude::{Id, ResMut, Query, Commands}, query::{Write, With}};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Number, Matrix, Vector4, Vector2, Matrix2};
 use render_shader::shader::{KeyShaderEffect, ResShader, KeyShader};
 
@@ -27,19 +28,23 @@ pub enum ECommand {
 
 #[derive(Debug, Default)]
 pub struct SingleValueUniformCommands(pub Vec<ECommand>);
-pub struct SysValueUniformComand;
+
+pub struct SysEffectValueUniformComand;
+impl TSystemStageInfo for SysEffectValueUniformComand {
+
+}
 #[setup]
-impl SysValueUniformComand {
+impl SysEffectValueUniformComand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleValueUniformCommands>,
-        mut mat4: Query<GameObject, Write<Mat4Uniform>, With<Mat4Uniform>>,
-        mut mat2: Query<GameObject, Write<Mat2Uniform>, With<Mat2Uniform>>,
-        mut vec4: Query<GameObject, Write<Vec4Uniform>, With<Vec4Uniform>>,
-        mut vec2: Query<GameObject, Write<Vec2Uniform>, With<Vec2Uniform>>,
-        mut float: Query<GameObject, Write<FloatUniform>, With<FloatUniform>>,
-        mut int: Query<GameObject, Write<IntUniform>, With<IntUniform>>,
-        mut uint: Query<GameObject, Write<UintUniform>, With<UintUniform>>,
+        mut mat4:   Query<GameObject, &mut Mat4Uniform, With<Mat4Uniform>>,
+        mut mat2:   Query<GameObject, &mut Mat2Uniform, With<Mat2Uniform>>,
+        mut vec4:   Query<GameObject, &mut Vec4Uniform, With<Vec4Uniform>>,
+        mut vec2:   Query<GameObject, &mut Vec2Uniform, With<Vec2Uniform>>,
+        mut float:  Query<GameObject, &mut FloatUniform, With<FloatUniform>>,
+        mut int:    Query<GameObject, &mut IntUniform, With<IntUniform>>,
+        mut uint:   Query<GameObject, &mut UintUniform, With<UintUniform>>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -47,72 +52,51 @@ impl SysValueUniformComand {
             match cmd {
                 ECommand::Mat4  (entity, slot, value, ismust) => {
                     if let Some(mut item) = mat4.get_mut(entity) {
-                        if let Some(mut modify) = item.get_mut() {
-                            modify.set(slot, value.as_slice());
-                            item.notify_modify();
-                        } else if ismust {
-                            cmds.0.push(cmd);
-                        }
+                        item.set(slot, value.as_slice());
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
                 ECommand::Mat2  (entity, slot, value, ismust) => {
                     if let Some(mut item) = mat2.get_mut(entity) {
-                        if let Some(mut modify) = item.get_mut() {
-                            modify.set(slot, value.as_slice());
-                            item.notify_modify();
-                        } else if ismust {
-                            cmds.0.push(cmd);
-                        }
+                        item.set(slot, value.as_slice());
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
                 ECommand::Vec4  (entity, slot, value, ismust) => {
                     if let Some(mut item) = vec4.get_mut(entity) {
-                        if let Some(mut modify) = item.get_mut() {
-                            modify.set(slot, value.as_slice());
-                            item.notify_modify();
-                        } else if ismust {
-                            cmds.0.push(cmd);
-                        }
+                        item.set(slot, value.as_slice());
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
                 ECommand::Vec2  (entity, slot, value, ismust) => {
                     if let Some(mut item) = vec2.get_mut(entity) {
-                        if let Some(mut modify) = item.get_mut() {
-                            modify.set(slot, value.as_slice());
-                            item.notify_modify();
-                        } else if ismust {
-                            cmds.0.push(cmd);
-                        }
+                        item.set(slot, value.as_slice());
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
                 ECommand::Float (entity, slot, value, ismust) => {
                     if let Some(mut item) = float.get_mut(entity) {
-                        if let Some(mut modify) = item.get_mut() {
-                            modify.set(slot, value);
-                            item.notify_modify();
-                        } else if ismust {
-                            cmds.0.push(cmd);
-                        }
+                        item.set(slot, value);
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
                 ECommand::Int   (entity, slot, value, ismust) => {
                     if let Some(mut item) = int.get_mut(entity) {
-                        if let Some(mut modify) = item.get_mut() {
-                            modify.set(slot, value);
-                            item.notify_modify();
-                        } else if ismust {
-                            cmds.0.push(cmd);
-                        }
+                        item.set(slot, value);
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
                 ECommand::Uint  (entity, slot, value, ismust) => {
                     if let Some(mut item) = uint.get_mut(entity) {
-                        if let Some(mut modify) = item.get_mut() {
-                            modify.set(slot, value);
-                            item.notify_modify();
-                        } else if ismust {
-                            cmds.0.push(cmd);
-                        }
+                        item.set(slot, value);
+                    } else {
+                        cmds.0.push(cmd);
                     }
                 },
             }
@@ -139,22 +123,20 @@ pub struct SingleMaterialIDCommandList {
 }
 
 pub struct SysMaterialIDCommand;
+impl TSystemStageInfo for SysMaterialIDCommand {
+
+}
 #[setup]
 impl SysMaterialIDCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleMaterialIDCommandList>,
-        mut materials: Query<GameObject, Write<MaterialID>>,
+        mut material_cmd: Commands<GameObject, MaterialID>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
-                MaterialIDCommand::Use(mat, id) => {
-                    match materials.get_mut(mat) {
-                        Some(mut mat) => {
-                            mat.write(id);
-                        },
-                        None => todo!(),
-                    }
+                MaterialIDCommand::Use(obj, id) => {
+                    material_cmd.insert(obj, id);
                 },
                 MaterialIDCommand::UnUse(mat, id) => {
                     

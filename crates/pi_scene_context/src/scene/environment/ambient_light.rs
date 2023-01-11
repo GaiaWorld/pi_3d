@@ -1,6 +1,6 @@
 use pi_render::rhi::dyn_uniform_buffer::{Uniform, Bind, BindOffset};
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, resources::RenderDynUniformBuffer};
+use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}};
 
 
 pub struct AmbientLight {
@@ -14,7 +14,7 @@ impl AmbientLight {
     pub const AMBIENT_LIGHT_OFFSIZE: usize = 0 * 4;
 
     pub fn new(
-        dynbuffer: &mut RenderDynUniformBuffer,
+        dynbuffer: &mut render_resource::uniform_buffer::RenderDynUniformBuffer,
     ) -> Self {
         Self {
             color: (1., 1., 1.),

@@ -15,7 +15,7 @@ impl Plugin for PluginWaterMaterial {
         engine: &mut pi_engine_shell::engine_shell::EnginShell,
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
-        println!("PluginWaterMaterial");
+        log::debug!("PluginWaterMaterial");
         let key = KeyShaderEffect(Atom::from(WaterShader::KEY));
         engine.regist_material_meta(key, WaterShader::meta());
 

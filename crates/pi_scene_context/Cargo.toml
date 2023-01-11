@@ -86,3 +86,6 @@ pi_render = { path = "../../../pi_render" }
 
 [patch."https://github.com/GaiaWorld/pi_scene"]
 pi_scene = { path = "../../../pi_scene" }
+
+[patch."https://github.com/GaiaWorld/pi_ecs"]
+pi_ecs = { path = "../../../pi_ecs" }

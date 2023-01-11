@@ -1,7 +1,7 @@
 use pi_ecs::{prelude::{Setup, }};
-use pi_engine_shell::{plugin::Plugin};
+use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
 
-use super::{uniform::SysUpdateValueUniform, float::FloatUniform};
+use super::{uniform::{SysUpdateValueUniform, SysEffectValueUniformUpdate}, float::FloatUniform};
 
 pub struct PluginFloatSlot;
 impl Plugin for PluginFloatSlot {
@@ -12,7 +12,7 @@ impl Plugin for PluginFloatSlot {
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysUpdateValueUniform::<FloatUniform>::setup(world, stages.uniform_update());
+        SysUpdateValueUniform::<FloatUniform>::setup(world, stages.query_stage::<SysEffectValueUniformUpdate>(ERunStageChap::Command));
 
         Ok(())
     }

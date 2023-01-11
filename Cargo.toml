@@ -52,6 +52,9 @@ smallvec = "1.9"
 crossbeam="0.8"
 futures = "0.3"
 
+[patch."https://github.com/GaiaWorld/pi_ecs"]
+pi_ecs = { path = "../pi_ecs" }
+
 [[example]]
 name = "cube"
 path = "examples/cube/cube.rs"

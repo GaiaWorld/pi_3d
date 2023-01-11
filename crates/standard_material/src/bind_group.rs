@@ -4,7 +4,7 @@ use pi_ecs::{prelude::{Res, Query, ResMut, query}, query::Changed};
 use pi_ecs_macros::setup;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, device::RenderDevice, texture::{TextureView, Sampler}, asset::{RenderRes, TextureRes}};
 
-use pi_scene_context::{materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, resources::RenderDynUniformBuffer};
+use pi_scene_context::{materials::{bind_group::RenderBindGroup, uniform_buffer::SingleDynUnifromBufferReBindFlag}, object::{GameObject, ObjectID}, meshes::model::BuildinModelBind, shaders::{FragmentUniformBind, FragmentUniformBindTexture, FragmentUniformBindTextureSampler}, };
 use pi_slotmap::DefaultKey;
 
 use crate::{define::{StandardMaterialMode, StandardMaterialDefines}, emissive::EmissiveTexture};
@@ -44,7 +44,7 @@ impl StandardMaterialBindGroup {
         &self,
         device: &RenderDevice,
         group: &mut RenderBindGroup,
-        dynbuffer: &RenderDynUniformBuffer,
+        dynbuffer: &render_resource::uniform_buffer::RenderDynUniformBuffer,
     ) {
         group.bind_group = Some(
             BindGroup::from(
@@ -136,18 +136,18 @@ impl SysDefaultMaterialBindGroupUpdate {
     pub fn tick(
         materials: Query<GameObject, (&StandardMaterialDefines, &StandardMaterialBindGroup)>,
         device: Res<RenderDevice>,
-        dynbuffer: Res<RenderDynUniformBuffer>,
+        dynbuffer: Res<render_resource::uniform_buffer::RenderDynUniformBuffer>,
         dynbuffer_flag: Res<SingleDynUnifromBufferReBindFlag>,
         mut standard_bindgroup: ResMut<SingleStandardBindGroupList>,
         mut bindgroups: Query<GameObject, &mut RenderBindGroup>,
     ) {
-        // println!("Sys DefaultMaterial BindGroup Update");
+        // log::debug!("Sys DefaultMaterial BindGroup Update");
         if dynbuffer_flag.0 {
             materials.iter().for_each(|(define, material)| {
                 match standard_bindgroup.value_map.get_mut(&define.mode()) {
                     Some(mut group) => {
                         
-                        // println!("IDDefaultMaterialBindGroup bind_group");
+                        // log::debug!("IDDefaultMaterialBindGroup bind_group");
                         material.bind_group(&device, group, &dynbuffer);
                     },
                     None => {
@@ -171,7 +171,7 @@ impl SysStandardMaterialTextureBindGroupUpdate {
         mut bindgroups: ResMut<SingleStandardBindGroupList>,
         textures: Query<GameObject, &Texture2D>,
     ) {
-        // println!("Sys DefaultMaterial BindGroup Update");
+        // log::debug!("Sys DefaultMaterial BindGroup Update");
         items.iter().for_each(|(define, material, emissive)| {
             let deffinemode = define.mode();
             match bindgroups.texture_map.get_mut(&deffinemode) {

@@ -19,7 +19,7 @@ use pi_scene_context::{
         render_target_state::RenderTargetState, render_mode::{RenderMode, ERenderMode},
     },
     flags::{SceneID},
-    resources::{SingleRenderObjectPipelinePool, RenderDynUniformBuffer},
+    resources::{SingleRenderObjectPipelinePool, render_resource::uniform_buffer::RenderDynUniformBuffer},
     cameras::camera::{CameraRenderData, CameraGlobalPosition},
     materials::{material::MaterialID, bind_group::RenderBindGroup},
     meshes::model::BuildinModelBind,
@@ -49,13 +49,13 @@ impl DefaultModelUniformUpdate {
     pub fn tick(
         meshes: Query<GameObject, (&GlobalTransform, &MaterialID, &BuildinModelBind), With<DirtyGlobalTransform>>,
         materials: Query<GameObject, &StandardMaterialPropertype>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+        mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
     ) {
-        //  println!("DefaultMaterial Uniform TickUpdate");
+        //  log::debug!("DefaultMaterial Uniform TickUpdate");
         meshes.iter().for_each(|(transform, mat_id, model)| {
             match materials.get(mat_id.0) {
                 Some(_) => {
-                    //  println!("DefaultMaterial >>>>>>>>>>>> ");
+                    //  log::debug!("DefaultMaterial >>>>>>>>>>>> ");
                     dynbuffer.as_mut().set_uniform::<GlobalTransform>(&model.bind_offset, transform);
                 },
                 None => {
@@ -72,9 +72,9 @@ impl StandardMaterialUniformUpdate {
     #[system]
     pub fn tick(
         materials: Query<GameObject, &StandardMaterialPropertype, Changed<StandardMaterialPropertype>>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
+        mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
     ) {
-        //  println!("DefaultMaterial Uniform TickUpdate");
+        //  log::debug!("DefaultMaterial Uniform TickUpdate");
         materials.iter().for_each(|(material)| {
             dynbuffer.as_mut().set_uniform::<StandardMaterialPropertype>(&material.bind_offset, &material);
         });
@@ -134,14 +134,14 @@ impl StandardMaterialFilter {
         let time = Instant::now();
 
         query_camera.iter().for_each(|(renderid, sceneid, layermask, camerapos)| {
-            //  println!("Camera >>>>>>>>>>>>>>>");
+            //  log::debug!("Camera >>>>>>>>>>>>>>>");
     
             if bind_groups(id_bind_group_standard).unwrap().bind_group.is_some() {
-                // println!("Main Camera >>>>>>>>>>>>>>>");
+                // log::debug!("Main Camera >>>>>>>>>>>>>>>");
 
                 match query_renderers.get_mut(renderid.0) {
                     Some(mut renderer) => {
-                        // println!("opaque List >>>>>>>>>>>>>>> {:?}", renderid.0);
+                        // log::debug!("opaque List >>>>>>>>>>>>>>> {:?}", renderid.0);
                         if renderer.ready {
                             collect_opaque_normal_depth(
                                 sceneid.0,
@@ -161,7 +161,7 @@ impl StandardMaterialFilter {
         });
         // let _use_time = Instant::now() - pre_frame_time;
         let time1 = Instant::now();
-        println!("DefaultMaterialFilter: {:?}", time1 - time);
+        log::debug!("DefaultMaterialFilter: {:?}", time1 - time);
     }
 }
 
@@ -179,7 +179,7 @@ fn collect_opaque_normal_depth(
 ) {
     query.iter().for_each(|(matid, sceneid, layer, rendersort, pipeline, globaltransform, position, normal, indice, model, rendermode)| {
 
-        // println!("opaque draw obj >>>>>>>>>>>>>>> {:?}, {:?}, {:?}, {:?}", sceneid, item.1.0, layermask, item.5);
+        // log::debug!("opaque draw obj >>>>>>>>>>>>>>> {:?}, {:?}, {:?}, {:?}", sceneid, item.1.0, layermask, item.5);
         if camera_sceneid == sceneid.0 && layermask.include(&layer) {
             match materials.get(matid.0) {
                 Some(mat) => {

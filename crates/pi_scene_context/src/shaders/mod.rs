@@ -2,7 +2,7 @@ use pi_render::rhi::{bind_group_layout::BindGroupLayout, dyn_uniform_buffer::{Bi
 use render_shader::shader::ResShader;
 
 
-use crate::{geometry::VDK, materials::MBKK, resources::RenderDynUniformBuffer};
+use crate::{geometry::VDK, materials::MBKK, };
 
 
 pub trait TRenderShader {
@@ -47,13 +47,13 @@ pub trait FragmentUniformBind {
 
     fn entry<'a>(
         bind_offset: &BindOffset,
-        buff: &'a RenderDynUniformBuffer,
+        buff: &'a render_resource::uniform_buffer::RenderDynUniformBuffer,
     ) -> wgpu::BindGroupEntry<'a> {
         bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), **bind_offset, Self::SIZE as u32)
     }
 
     fn dyn_entry<'a>(
-        buff: &'a RenderDynUniformBuffer,
+        buff: &'a render_resource::uniform_buffer::RenderDynUniformBuffer,
     ) -> wgpu::BindGroupEntry<'a> {
         bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), 0, Self::SIZE as u32)
     }

@@ -1,10 +1,13 @@
 use pi_ecs::prelude::{Setup};
+use pi_engine_shell::run_stage::ERunStageChap;
 
-use self::{material::{SingleMaterialIDCommandList, SysMaterialIDCommand, SingleValueUniformCommands, SysValueUniformComand}, uniform_buffer::{SysDynUnifromBufferUpdate, SingleDynUnifromBufferReBindFlag}, bind_group::RenderBindGroupPool, shader_effect::{PluginShaderEffect}, uniforms::PluginMaterialUniforms};
+use self::{
+    material::{SingleMaterialIDCommandList, SysMaterialIDCommand, SingleValueUniformCommands, SysEffectValueUniformComand},
+    shader_effect::{PluginShaderEffect},
+    uniforms::PluginMaterialUniforms
+};
 
 pub mod material;
-pub mod bind_group;
-pub mod uniform_buffer;
 pub mod material_meta;
 pub mod uniforms;
 pub mod value;
@@ -20,17 +23,14 @@ impl crate::Plugin for PluginMaterial {
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         PluginShaderEffect.init(engine, stages);
-        PluginMaterialUniforms.init(engine, stages);
 
         let world = engine.world_mut();
         world.insert_resource(SingleMaterialIDCommandList::default());
-        world.insert_resource(SingleDynUnifromBufferReBindFlag::default());
-        world.insert_resource(RenderBindGroupPool::default());
         world.insert_resource(SingleValueUniformCommands::default());
         
-        SysValueUniformComand::setup(world, stages.command_stage());
-        SysMaterialIDCommand::setup(world, stages.command_stage());
-        SysDynUnifromBufferUpdate::setup(world, stages.between_uniform_update_and_filter_culling());
+        SysMaterialIDCommand::setup(world, stages.query_stage::<SysMaterialIDCommand>(ERunStageChap::Command));
+        SysEffectValueUniformComand::setup(world, stages.query_stage::<SysEffectValueUniformComand>(ERunStageChap::Command));
+        PluginMaterialUniforms.init(engine, stages);
 
         Ok(())
     }

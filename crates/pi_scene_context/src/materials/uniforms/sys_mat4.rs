@@ -1,7 +1,7 @@
 use pi_ecs::{prelude::{Setup, }};
-use pi_engine_shell::{plugin::Plugin};
+use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
 
-use super::{uniform::SysUpdateValueUniform, mat4::Mat4Uniform};
+use super::{uniform::{SysUpdateValueUniform, SysEffectValueUniformUpdate}, mat4::Mat4Uniform};
 
 pub struct PluginMat4Slot;
 impl pi_engine_shell::plugin::Plugin for PluginMat4Slot {
@@ -12,7 +12,7 @@ impl pi_engine_shell::plugin::Plugin for PluginMat4Slot {
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysUpdateValueUniform::<Mat4Uniform>::setup(world, stages.uniform_update());
+        SysUpdateValueUniform::<Mat4Uniform>::setup(world, stages.query_stage::<SysEffectValueUniformUpdate>(ERunStageChap::Command));
 
         Ok(())
     }

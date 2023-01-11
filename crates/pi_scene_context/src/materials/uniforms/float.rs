@@ -1,8 +1,9 @@
 use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
 use pi_scene_math::Number;
+use render_shader::shader_bind::ShaderBindEffectValue;
 use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, shader_effect::UniformPropertyFloat}};
 
-use super::value_uniform::MaterialValueBind;
+
 
 pub enum FloatUniform {
     Slot0(u32),
@@ -16,7 +17,7 @@ pub enum FloatUniform {
     Slot8(u32, [Number; 8]),
 }
 impl FromValueUniformStatistics for FloatUniform {
-    fn new(value: &MaterialValueBind) -> Self {
+    fn new(value: &ShaderBindEffectValue) -> Self {
         if value.float_count == 1 {
             Self::Slot1(value.float_begin, [0.])
         }

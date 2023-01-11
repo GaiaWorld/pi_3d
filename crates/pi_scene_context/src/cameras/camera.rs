@@ -1,69 +1,8 @@
 use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
 use pi_scene_math::{Vector3, Matrix, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
+use render_shader::shader_bind::ShaderBindSceneAboutCamera;
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, resources::RenderDynUniformBuffer};
-
-#[derive(Debug, Clone)]
-pub struct CameraViewMatrix(pub Matrix);
-impl Default for CameraViewMatrix {
-    fn default() -> Self {
-        Self(Matrix::default())
-    }
-}
-impl Uniform for CameraViewMatrix {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        bytes_write_to_memory(bytemuck::cast_slice(self.0.transpose().as_slice()), index as usize + CameraRenderData::PI_MATRIX_V_OFFSIZE, buffer);
-    }
-}
-#[derive(Debug, Clone)]
-pub struct CameraProjectionMatrix(pub Matrix);
-impl Default for CameraProjectionMatrix {
-    fn default() -> Self {
-        Self(Matrix::default())
-    }
-}
-impl Uniform for CameraProjectionMatrix {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        bytes_write_to_memory(bytemuck::cast_slice(self.0.transpose().as_slice()), index as usize + CameraRenderData::PI_MATRIX_P_OFFSIZE, buffer);
-    }
-}
-#[derive(Debug, Clone)]
-pub struct CameraTransformMatrix(pub Matrix);
-impl Default for CameraTransformMatrix {
-    fn default() -> Self {
-        Self(Matrix::default())
-    }
-}
-impl Uniform for CameraTransformMatrix {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        //  println!(">>>>>>>>> {:?}", self.0.as_slice());
-        bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + CameraRenderData::PI_MATRIX_VP_OFFSIZE, buffer);
-    }
-}
-#[derive(Debug, Clone)]
-pub struct CameraGlobalPosition(pub Vector3);
-impl Default for CameraGlobalPosition {
-    fn default() -> Self {
-        Self(Vector3::new(0., 0., -1.))
-    }
-}
-impl Uniform for CameraGlobalPosition {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + CameraRenderData::PI_CAMERA_POSITION_OFFSIZE, buffer);
-    }
-}
-#[derive(Debug, Clone)]
-pub struct CameraDirection(pub Vector3);
-impl Default for CameraDirection {
-    fn default() -> Self {
-        Self(Vector3::new(0., 0., 1.))
-    }
-}
-impl Uniform for CameraDirection {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + CameraRenderData::PI_ORTHCAMERA_DIRECT_OFFSIZE, buffer);
-    }
-}
+use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, viewer::{TViewerProjectMatrix, ViewerProjectionMatrix}};
 
 pub struct CameraRenderData {
     pub bind_offset: BindOffset,
@@ -82,7 +21,7 @@ impl CameraRenderData {
     pub const PI_ORTHCAMERA_DIRECT_OFFSIZE: usize = Self::PI_CAMERA_POSITION_OFFSIZE + Self::PI_CAMERA_POSITION * 4;
 
     pub fn new(
-        dynbuffer: &mut RenderDynUniformBuffer,
+        dynbuffer: &mut render_resource::uniform_buffer::RenderDynUniformBuffer,
     ) -> Self {
         Self {
             bind_offset: dynbuffer.alloc_binding::<Self>(),
@@ -101,6 +40,9 @@ impl Bind for CameraRenderData {
         Self::SIZE
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub struct Camera;
 
 #[derive(Debug, Clone)]
 pub struct CameraViewport {
@@ -131,6 +73,15 @@ pub enum EFreeCameraMode {
     Perspective,
     Orthograhic,
 }
+
+#[derive(Debug, Clone, Copy)]
+pub struct CameraNearFar(pub Number, pub Number);
+
+#[derive(Debug, Clone, Copy)]
+pub struct CameraOrthograhicParam(pub Number, pub Number, pub Number, pub Number);
+
+#[derive(Debug, Clone, Copy)]
+pub struct CameraPerspectiveParam(pub Number);
 
 #[derive(Debug, Clone)]
 pub struct CameraParam {
@@ -163,20 +114,19 @@ impl Default for CameraParam {
         }
     }
 }
-impl CameraParam {
-    ///
-    /// * `aspect` width / height pixels ratio
-    pub fn project_matrix(&self, c_p_m: &mut CameraProjectionMatrix, aspect: Number) {
+impl TViewerProjectMatrix for CameraParam {
+    fn project_matrix(&self, aspect: Number) -> ViewerProjectionMatrix {
         match self.mode {
             EFreeCameraMode::Perspective => {
-                c_p_m.0 = match self.fixed_mode {
+                let m = match self.fixed_mode {
                     EFixedMode::VerticalFixed => CoordinateSytem3::perspective_lh(self.fov, aspect, self.minz, self.maxz, true),
                     EFixedMode::HorizontalFixed => CoordinateSytem3::perspective_lh(self.fov, aspect, self.minz, self.maxz, false),
                 };
+                ViewerProjectionMatrix(m)
             },
             EFreeCameraMode::Orthograhic => {
                 let value = self.orth_size;
-                c_p_m.0 = match self.fixed_mode {
+                let m = match self.fixed_mode {
                     EFixedMode::VerticalFixed => {
                         let left = -value * aspect;
                         let right = value * aspect;
@@ -192,7 +142,8 @@ impl CameraParam {
                         CoordinateSytem3::orthographic_lh(left, right, bottom, top, self.minz, self.maxz)
                     },
                 };
+                ViewerProjectionMatrix(m)
             },
-        };
+        }
     }
 }

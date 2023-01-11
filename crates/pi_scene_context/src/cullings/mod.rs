@@ -1,6 +1,7 @@
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 use pi_scene_math::{
     Vector3,
 };
@@ -45,22 +46,21 @@ pub struct SingleCullingCommandList {
 }
 
 pub struct SysCullingCommand;
+impl TSystemStageInfo for SysCullingCommand {
+
+}
 #[setup]
 impl SysCullingCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleCullingCommandList>,
-        mut objects: Query<GameObject, Write<BoundingInfo>>,
+        mut objects: Commands<GameObject, BoundingInfo>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 CullingCommand::Bounding(entity, min, max) => {
-                    match objects.get_mut(entity) {
-                        Some(mut item) => {
-                            item.insert_no_notify(BoundingInfo::new(min, max));
-                        },
-                        None => todo!(),
-                    }
+                    
+                    objects.insert(entity, BoundingInfo::new(min, max));
                 },
             }
         })
@@ -76,8 +76,8 @@ impl crate::Plugin for PluginCulling {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysCullingCommand::setup(world, stages.command_stage());
-        SysCameraCulling::setup(world, stages.after_world_matrix());
+        SysCullingCommand::setup(world, stages.query_stage::<SysCullingCommand>(ERunStageChap::Command));
+        SysCameraCulling::setup(world, stages.query_stage::<SysCameraCulling>(ERunStageChap::Command));
 
         world.insert_resource(SingleCullingCommandList::default());
 

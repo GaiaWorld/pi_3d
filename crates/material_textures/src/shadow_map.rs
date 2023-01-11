@@ -78,7 +78,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(ShadowMapSampler(samplerpool.get(key).unwrap()));
-                        println!("ShadowMapSampler Write");
+                        log::debug!("ShadowMapSampler Write");
                     }
                 },
             }

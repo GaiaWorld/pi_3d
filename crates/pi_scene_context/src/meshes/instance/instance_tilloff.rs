@@ -1,9 +1,4 @@
-use crate::geometry::instance::instance_tilloff::{InstancedBufferTillOff, InstanceTillOff};
-
-use super::sys_instance::{SysInstancedBufferInit, SysInstanceBufferUpdate};
+use crate::{geometry::instance::{instance_tilloff::{InstancedBufferTillOff, InstanceTillOff, InstanceTillOffDirty}, sys_instance::SysInstanceBufferUpdateFunc}, meshes::command::SysMeshCommand};
 
 
-pub struct InstanceTillOffDirty;
-
-pub type SysInstanceBufferTillOffInit = SysInstancedBufferInit<InstancedBufferTillOff>;
-pub type SysInstanceBufferTillOffUpdate = SysInstanceBufferUpdate<InstancedBufferTillOff, InstanceTillOff, InstanceTillOffDirty>;
+pub type SysInstanceBufferTillOffUpdate = SysInstanceBufferUpdateFunc<InstancedBufferTillOff, InstanceTillOff, InstanceTillOffDirty, SysMeshCommand>;

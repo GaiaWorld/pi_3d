@@ -3,7 +3,7 @@ use pi_scene_math::Number;
 
 use crate::{object::{ObjectID}, transforms::{interface::InterfaceTransformNode}, scene::interface::InterfaceScene};
 
-use super::command::{SingleCameraCommandList, SingleTargetCameraCommandList, CameraCommand, TargetCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand};
+use super::command::{SingleCameraCommandList, SingleTargetCameraCommandList, CameraCommand, TargetCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand, SingleCameraCreateList};
 
 pub trait InterfaceCamera {
     fn create_free_camera(
@@ -59,8 +59,8 @@ impl InterfaceCamera for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
-        commands.list.push(CameraCommand::Create(object));
+        let commands = world.get_resource_mut::<SingleCameraCreateList>().unwrap();
+        commands.list.push(object);
 
         self
     }

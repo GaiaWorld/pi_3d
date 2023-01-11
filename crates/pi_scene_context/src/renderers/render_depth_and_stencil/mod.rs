@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::{Write, WithOut}, sys::system};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::{Write, WithOut}, sys::system};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 
@@ -64,45 +65,41 @@ impl RenderDepthAndStencil {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum ERenderDepthAndStencilCommand {
+pub enum ERenderDepthAndStencilCommand {
     Disable(ObjectID),
     DepthStencil(ObjectID, RenderDepthAndStencil),
 }
 
 #[derive(Debug, Default)]
-struct SingleRenderDepthAndStencilCommandList {
+pub struct SingleRenderDepthAndStencilCommandList {
     pub list: Vec<ERenderDepthAndStencilCommand>,
 }
 
-struct SysRenderDepthAndStencilCommand;
+pub struct SysRenderDepthAndStencilCommand;
+impl TSystemStageInfo for SysRenderDepthAndStencilCommand {
+    
+}
 #[setup]
 impl SysRenderDepthAndStencilCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderDepthAndStencilCommandList>,
-        mut items: Query<GameObject, (Write<RenderDepthAndStencil>)>,
+        mut items: Query<GameObject, &mut RenderDepthAndStencil>,
+        mut item_cmd: Commands<GameObject, RenderDepthAndStencil>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ERenderDepthAndStencilCommand::Disable(entity) => {
                     if let Some((mut item)) = items.get_mut(entity) {
-                        match item.get_mut() {
-                            Some(item) => {
-                                item.depth = false;
-                                item.stencil = false;
-                            },
-                            None => {
-                                item.insert_no_notify(RenderDepthAndStencil::default());
-                            },
-                        }
-                        item.notify_modify();
+                        item.depth = false;
+                        item.stencil = false;
+                    } else {
+                        item_cmd.insert(entity, RenderDepthAndStencil::default());
                     }
                 },
                 ERenderDepthAndStencilCommand::DepthStencil(entity, value) => {
-                    if let Some((mut item)) = items.get_mut(entity) {
-                        item.write(value);
-                    }
+                    item_cmd.insert(entity, value);
                 },
             }
         });
@@ -159,7 +156,7 @@ impl crate::Plugin for PluginRenderDepthAndStencil {
 
         world.insert_resource(SingleRenderDepthAndStencilCommandList::default());
 
-        SysRenderDepthAndStencilCommand::setup(world, stages.command_stage());
+        SysRenderDepthAndStencilCommand::setup(world, stages.query_stage::<SysRenderDepthAndStencilCommand>(ERunStageChap::Command));
 
         Ok(())
     }

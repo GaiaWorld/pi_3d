@@ -4,7 +4,7 @@ use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup, Res}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, engine_shell, plugin::Plugin, assets::image_texture_load::CalcImageLoad};
+use pi_engine_shell::{object::{ObjectID, GameObject}, engine_shell, plugin::Plugin, assets::image_texture_load::{CalcImageLoad, SysImageLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::{asset::TextureRes, texture::Sampler, device::RenderDevice};
 use pi_scene_context::{shaders::{FragmentUniformBindTexture, FragmentUniformBindTextureSampler}};
 use render_resource::{ImageAssetKey, sampler::{SamplerDesc, SamplerPool}};
@@ -46,6 +46,7 @@ enum ECommand {
 struct SingleCommands {
     pub list: Vec<ECommand>,
 }
+impl TSystemStageInfo for SingleCommands {}
 #[setup]
 impl SingleCommands {
     #[system]
@@ -78,7 +79,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(EmissiveTextureSampler(samplerpool.get(key).unwrap()));
-                        println!("EmissiveTextureSampler Write");
+                        log::debug!("EmissiveTextureSampler Write");
                     }
                 },
             }
@@ -136,8 +137,8 @@ impl Plugin for PluginEmissiveTexture {
 
         world.insert_resource(SingleCommands::default());
 
-        EmissiveTextureLoad::setup(world, stages.command_stage());
-        SingleCommands::setup(world, stages.command_stage());
+        EmissiveTextureLoad::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
+        SingleCommands::setup(world, stages.query_stage::<SingleCommands>(ERunStageChap::Command));
         
         Ok(())
     }

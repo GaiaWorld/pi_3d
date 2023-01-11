@@ -8,15 +8,16 @@ use parry3d::{
 };
 use pi_ecs::{prelude::{Res, Setup, Query}, query::Write,};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
 use pi_spatialtree::OctTree;
 
 use crate::{
-    cameras::camera::{CameraParam, CameraProjectionMatrix, CameraViewport},
+    cameras::camera::{CameraParam, },
     engine::Engine,
     object::GameObject,
     plugin::{ErrorPlugin, Plugin},
-    run_stage::RunStage,
+    run_stage::RunStage, viewer::{command::Viewport, ViewerProjectionMatrix},
 };
 
 use super::{
@@ -103,8 +104,8 @@ fn intersects(a: &AABB<f32>, b: &AABB<f32>) -> bool {
 
 pub fn compute_frustum(
     camera: &CameraParam,
-    view_port: &CameraViewport,
-    project_matrix: &CameraProjectionMatrix,
+    view_port: &Viewport,
+    project_matrix: &ViewerProjectionMatrix,
 ) -> Option<ConvexPolyhedron> {
     let aspect = (view_port.w - view_port.x) / (view_port.h - view_port.y);
     let projection = Perspective3::new(aspect, camera.fov * 2.0, camera.minz, camera.maxz);
@@ -160,7 +161,7 @@ impl Plugin for PluginBoundingQuadTree {
     ) -> Result<(), ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysCameraCullingQuadTree::setup(world, stages.after_world_matrix());
+        SysCameraCullingQuadTree::setup(world, stages.query_stage::<SysCameraCullingQuadTree>(ERunStageChap::Command));
 
         let max = Vector3::new(100f32, 100f32, 100f32);
         let min = max / 100f32;
@@ -226,15 +227,18 @@ impl InterfaceQuadTree for Engine {
 }
 
 pub struct SysCameraCullingQuadTree;
+impl TSystemStageInfo for SysCameraCullingQuadTree {
+
+}
 #[setup]
 impl SysCameraCullingQuadTree {
     #[system]
     pub fn tick(
         tree: Res<BoundingQuadTree>,
-        cameras: Query<GameObject, (&CameraParam, &CameraViewport, &CameraProjectionMatrix)>,
+        cameras: Query<GameObject, (&CameraParam, &Viewport, &ViewerProjectionMatrix)>,
         mut objects: Query<GameObject, Write<IsCulled>>,
     ) {
-        //  println!("Scene Camera Culling:");
+        //  log::debug!("Scene Camera Culling:");
         cameras.iter().for_each(|camera| {
             if let Some(frustum) = compute_frustum(&camera.0, &camera.1, &camera.2) {
                 objects

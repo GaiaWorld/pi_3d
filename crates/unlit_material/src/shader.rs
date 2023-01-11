@@ -21,8 +21,6 @@ impl UnlitShader {
     pub fn meta() -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
-                set: 1,
-                bind: 1,
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
                 mat4_list: vec![],
                 mat2_list: vec![],
@@ -39,7 +37,6 @@ impl UnlitShader {
                 uint_list: vec![],
             },
             Some(MaterialTextureBindDesc {
-                set: 2,
                 list: vec![UniformTextureDesc::new2d(
                     UniformPropertyName::from("_MainTex"),
                     wgpu::ShaderStages::FRAGMENT,

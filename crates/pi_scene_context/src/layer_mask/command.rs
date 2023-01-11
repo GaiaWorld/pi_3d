@@ -1,6 +1,7 @@
 
-use pi_ecs::{prelude::{ResMut, Query}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Commands}, query::Write};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, SysCommonUserCommand};
 
 use crate::{object::{ObjectID, GameObject}};
 
@@ -16,22 +17,20 @@ pub struct SingleLayerMaskCommandList {
 }
 
 pub struct SysLayerMaskCommand;
+impl TSystemStageInfo for SysLayerMaskCommand {
+    
+}
 #[setup]
 impl SysLayerMaskCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleLayerMaskCommandList>,
-        mut objects: Query<GameObject, Write<LayerMask>>,
+        mut layer_cmd: Commands<GameObject, LayerMask>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 LayerMaskCommand::Set(entity, layer) => {
-                    match objects.get_mut(entity) {
-                        Some(mut object) => {
-                            object.insert_no_notify(layer);
-                        },
-                        None => todo!(),
-                    }
+                    layer_cmd.insert(entity, layer);
                 },
             }
         });

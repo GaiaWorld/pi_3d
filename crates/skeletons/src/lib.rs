@@ -17,7 +17,7 @@ impl Plugin for PluginBones {
         engine: &mut EnginShell,
         stages: &mut RunStage,
     ) -> Result<(), ErrorPlugin> {
-        println!("PluginBones");
+        log::debug!("PluginBones");
         let key = KeyShaderEffect(Atom::from(SkinShader::KEY));
         engine.regist_material_meta(key, SkinShader::meta());
 

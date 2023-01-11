@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::{Write, WithOut}, sys::system};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::{Write, WithOut}, sys::system};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 
@@ -46,44 +47,40 @@ impl RenderBlend {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum ERenderBlendCommand {
+pub enum ERenderBlendCommand {
     Disable(ObjectID),
     Blend(ObjectID, RenderBlend),
 }
 
 #[derive(Debug, Default)]
-struct SingleRenderBlendCommandList {
+pub struct SingleRenderBlendCommandList {
     pub list: Vec<ERenderBlendCommand>,
 }
 
-struct SysRenderBlendCommand;
+pub struct SysRenderBlendCommand;
+impl TSystemStageInfo for SysRenderBlendCommand {
+
+}
 #[setup]
 impl SysRenderBlendCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderBlendCommandList>,
-        mut blends: Query<GameObject, (Write<RenderBlend>)>,
+        mut items: Query<GameObject, &mut RenderBlend>,
+        mut blends: Commands<GameObject, RenderBlend>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ERenderBlendCommand::Disable(entity) => {
-                    if let Some((mut blend)) = blends.get_mut(entity) {
-                        match blend.get_mut() {
-                            Some(blend) => {
-                                blend.enable = false;
-                            },
-                            None => {
-                                blend.write(RenderBlend::default());
-                            },
-                        }
-                        blend.notify_modify();
+                    if let Some(mut item) = items.get_mut(entity) {
+                        item.enable = false;
+                    } else {
+                        blends.insert(entity, RenderBlend::default());
                     }
                 },
                 ERenderBlendCommand::Blend(entity, value) => {
-                    if let Some((mut blend)) = blends.get_mut(entity) {
-                        blend.write(value);
-                    }
+                    blends.insert(entity, value);
                 },
             }
         });
@@ -140,7 +137,7 @@ impl crate::Plugin for PluginRenderBlend {
 
         world.insert_resource(SingleRenderBlendCommandList::default());
 
-        SysRenderBlendCommand::setup(world, stages.command_stage());
+        SysRenderBlendCommand::setup(world, stages.query_stage::<SysRenderBlendCommand>(ERunStageChap::Command));
 
         Ok(())
     }

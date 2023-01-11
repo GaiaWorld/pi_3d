@@ -1,12 +1,17 @@
 
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Res}, query::{Write, With}, storage::Local};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Res, Commands}, query::{Write, With}, storage::Local};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_render::rhi::device::RenderDevice;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::{material::MaterialID, bind_group::{RenderBindGroupPool, RenderBindGroupKey}, uniforms::{vec4::Vec4Uniform, texture::TextureSlot1, texture_uniform::MaterialTextureBindGroupID}, shader_effect::AssetResShaderEffectMeta}, resources::RenderDynUniformBuffer};
+use pi_scene_context::{
+    object::{ObjectID, GameObject},
+    materials::{uniforms::{vec4::Vec4Uniform, texture::TextureSlot01, texture_uniform::MaterialTextureBindGroupID}, shader_effect::AssetResShaderEffectMeta},
+    bindgroup::{RenderBindGroup, RenderBindGroupKey, RenderBindGroupPool}
+};
 use render_resource::ImageAssetKey;
 
 #[derive(Debug, Clone)]
@@ -20,31 +25,28 @@ pub struct SingleUnlitMaterialCommandList {
     pub list: Vec<EUnlitMaterialCommand>,
 }
 pub struct SysUnlitMaterialCommand;
+impl TSystemStageInfo for SysUnlitMaterialCommand {}
 #[setup]
 impl SysUnlitMaterialCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleUnlitMaterialCommandList>,
-        mut materials: Query<
+        mut material_vec4: Query<
             GameObject,
-            (Write<Vec4Uniform>, Write<TextureSlot1>),
-            (With<AssetResShaderEffectMeta>, With<MaterialTextureBindGroupID>)
+            &mut Vec4Uniform,
+            With<AssetResShaderEffectMeta>
         >,
+        mut tex01_cmd: Commands<GameObject, TextureSlot01>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 EUnlitMaterialCommand::EmissiveColor(entity, color) => {
-                    match materials.get_mut(entity) {
-                        Some((mut valueuniform, texuniform)) => {
-                            if let Some(prop) = valueuniform.get_mut() {
-                                let a = prop.value(0)[3];
-                                prop.set(0, &[color.0, color.1, color.2, a]);
-                                valueuniform.notify_modify();
-                            } else {
-                                cmds.list.push(cmd.clone());
-                            }
+                    match material_vec4.get_mut(entity) {
+                        Some(mut valueuniform) => {
+                            let a = valueuniform.value(0)[3];
+                            valueuniform.set(0, &[color.0, color.1, color.2, a]);
                         },
                         None => {
                             cmds.list.push(cmd.clone());
@@ -52,18 +54,14 @@ impl SysUnlitMaterialCommand {
                     }
                 },
                 EUnlitMaterialCommand::EmissiveIntensity(entity, intensity) => {
-                    match materials.get_mut(entity) {
-                        Some((mut valueuniform, texuniform)) => {
-                            if let Some(prop) = valueuniform.get_mut() {
-                                let t = prop.value(0);
-                                let r = t[0];
-                                let g = t[1];
-                                let b = t[2];
-                                prop.set(0, &[r, g, b, intensity]);
-                                valueuniform.notify_modify();
-                            } else {
-                                cmds.list.push(cmd.clone());
-                            }
+                    match material_vec4.get_mut(entity) {
+                        Some(mut valueuniform) => {
+                            
+                            let t = valueuniform.value(0);
+                            let r = t[0];
+                            let g = t[1];
+                            let b = t[2];
+                            valueuniform.set(0, &[r, g, b, intensity]);
                         },
                         None => {
                             cmds.list.push(cmd.clone());
@@ -71,14 +69,7 @@ impl SysUnlitMaterialCommand {
                     }
                 },
                 EUnlitMaterialCommand::EmissiveTexture(entity, imagepath) => {
-                    match materials.get_mut(entity) {
-                        Some((mut valueuniform, mut texuniform)) => {
-                            texuniform.write(TextureSlot1(imagepath.clone()));
-                        },
-                        None => {
-                            cmds.list.push(EUnlitMaterialCommand::EmissiveTexture(entity, imagepath));
-                        },
-                    }
+                    tex01_cmd.insert(entity, TextureSlot01(imagepath.clone()));
                 },
             }
         });

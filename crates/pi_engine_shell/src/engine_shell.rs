@@ -22,14 +22,12 @@ impl AppShell {
     pub fn new(
         options: RenderOptions,
     ) -> Self {
-        println!(">>>> new");
+        log::debug!(">>>> new");
 
         let event_loop = winit::event_loop::EventLoop::new();
         let window = Arc::new(winit::window::Window::new(&event_loop).unwrap());
-
-        env_logger::init();
         
-        println!(">>>> new 0");
+        log::debug!(">>>> new 0");
         let runtime = AsyncRuntimeBuilder::default_worker_thread(None, None, None, None);
 
         let mut world = World::new();
@@ -41,7 +39,7 @@ impl AppShell {
         let rt = runtime.clone();
 
         let _ = runtime.spawn(runtime.alloc(), async move {
-            println!(">>>> render_graphic");
+            log::debug!(">>>> render_graphic");
             let render_stages = init_render(&mut world, options.clone(), window.clone(), rt.clone()).await;
 
             *result1.write() = Some(
@@ -82,7 +80,7 @@ impl AppShell {
         runtime: WorkerRuntime,
     ) -> Self {
 
-        let runstages = RunStage::default();
+        let runstages = RunStage::new();
     
         Self::window(&mut world, window.clone());
         let render_graphic = world.get_resource_mut::<RenderGraph>().unwrap();
@@ -101,7 +99,7 @@ impl AppShell {
         &mut self,
         mut plugin: T
     ) -> &mut Self {
-        println!(">>>> add_plugin");
+        log::debug!(">>>> add_plugin");
         plugin.init(&mut self.engine.as_mut().unwrap(), &mut self.runstages);
         
         self
@@ -132,7 +130,7 @@ impl AppShell {
     }
 
     pub fn run(&mut self) {
-        println!(">>>> run");
+        log::debug!(">>>> run");
 
         let event_loop = replace(&mut self.event_loop, None).unwrap();
         let window = self.window.clone();
@@ -141,6 +139,7 @@ impl AppShell {
         MULTI_MEDIA_RUNTIME
             .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
                 loop {
+                    log::debug!("====== Run ================");
                     engine._run().await;
                 }
             })
@@ -204,7 +203,7 @@ impl EnginShell {
         
         unsafe { 
             let world: &mut World = &mut self.world;
-            //  println!("Engine Tick Run: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            //  log::debug!("Engine Tick Run: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             let node_archetype_id = self.node_archetype_id;
             world.archetypes_mut()[node_archetype_id].flush();
         }
@@ -218,6 +217,8 @@ impl EnginShell {
         PluginFrameTime.init(&mut self.world, &mut first_stage);
         stages.push(Arc::new(first_stage.build(&self.world)));
 
+        runstages.log();
+
         for stage in runstages.drain() {
             stages.push(Arc::new(stage.build(&self.world)));
         }
@@ -228,7 +229,7 @@ impl EnginShell {
         let mut last_stage = StageBuilder::new();
         let last_run = move |end: Res<DispatchEnd>| {
             let mut l = end.0.lock();
-            // println!("set end true, {:?}, {:p}", *l, &end.0);
+            // log::debug!("set end true, {:?}, {:p}", *l, &end.0);
             *l = true;
         };
         last_stage.add_node(IntoSystem::system(last_run, &mut self.world));

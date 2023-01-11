@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 
@@ -18,19 +19,20 @@ struct SingleRenderGroupCommandList {
     pub list: Vec<(ObjectID, RenderGroup)>,
 }
 struct SysRenderGroupCommand;
+impl TSystemStageInfo for SysRenderGroupCommand {
+
+}
 #[setup]
 impl SysRenderGroupCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderGroupCommandList>,
-        mut meshes: Query<GameObject, Write<RenderGroup>>,
+        mut rendergroup_cmd: Commands<GameObject, RenderGroup>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
-        list.drain(..).for_each(|cmd| {
-            if let Some(mut mesh) = meshes.get_mut(cmd.0) {
-                mesh.insert_no_notify(cmd.1);
-            }
+        list.drain(..).for_each(|(obj, value)| {
+            rendergroup_cmd.insert(obj, value);
         });
     }
 }
@@ -66,7 +68,7 @@ impl crate::Plugin for PluginRenderGroup {
         let world = engine.world_mut();
 
         world.insert_resource(SingleRenderGroupCommandList::default());
-        SysRenderGroupCommand::setup(world, stages.command_stage());
+        SysRenderGroupCommand::setup(world, stages.query_stage::<SysRenderGroupCommand>(ERunStageChap::Command));
         
         Ok(())
     }

@@ -1,9 +1,3 @@
-use crate::geometry::instance::instance_color::{InstancedBufferColor, InstanceColor};
+use crate::{geometry::instance::{instance_color::{InstancedBufferColor, InstanceColor, InstancedColorDirty}, sys_instance::SysInstanceBufferUpdateFunc}, meshes::command::SysMeshCommand};
 
-use super::sys_instance::{SysInstancedBufferInit, SysInstanceBufferUpdate};
-
-
-pub struct InstancedColorDirty;
-
-pub type SysInstanceBufferColorInit = SysInstancedBufferInit<InstancedBufferColor>;
-pub type SysInstanceBufferColorUpdate = SysInstanceBufferUpdate<InstancedBufferColor, InstanceColor, InstancedColorDirty>;
+pub type SysInstanceBufferColorUpdate = SysInstanceBufferUpdateFunc<InstancedBufferColor, InstanceColor, InstancedColorDirty, SysMeshCommand>;

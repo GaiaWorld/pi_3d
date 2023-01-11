@@ -1,10 +1,11 @@
 #![feature(box_into_inner)]
 
 use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
+use log::{trace, warn};
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, run_stage::{SysCommonUserCommand, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
@@ -61,7 +62,7 @@ impl Plugin for PluginTest {
 
         let world = engine.world_mut();
 
-        SysTest::setup(world, stages.command_stage());
+        SysTest::setup(world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);
@@ -78,7 +79,7 @@ impl PluginTest {
         let tes_size = 2;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
-        engine.frame_time(2000);
+        engine.frame_time(20);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -99,17 +100,34 @@ impl PluginTest {
                     // engine.depth_stencil(cube, RenderDepthAndStencil { depth: true, stencil: false, depth_compare: wgpu::CompareFunction::LessEqual });
                     // engine.use_material(cube, MaterialID(matid));
                     engine.use_default_material(cube);
-                    engine.transform_position(cube, Vector3::new(i as f32 * 1. - (tes_size) as f32 * 0.5, j as f32 * 1. - (tes_size) as f32 * 0.5, k as f32 * 1. - (tes_size) as f32 * 0.5));
+                    engine.transform_position(cube, Vector3::new(i as f32 * 2. - (tes_size) as f32 * 0.5, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
                     engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 1., j as f32 * 1., k as f32 * 1.));
                     engine.layer_mask(cube, LayerMask::default());
-                    // testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
+                    testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
                 }
             }
         }
     }
 }
 
+struct MyLogger;
+
+impl log::Log for MyLogger {
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        metadata.level() <= log::Level::Info
+    }
+
+    fn log(&self, record: &log::Record) {
+        if self.enabled(record.metadata()) {
+            println!("{} - {}", record.level(), record.args());
+        }
+    }
+    fn flush(&self) {}
+}
+
 pub fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     let mut shell = AppShell::new(
         RenderOptions {
             backends: wgpu::Backends::VULKAN,

@@ -1,10 +1,5 @@
 
-use crate::{geometry::instance::instance_world_matrix::InstancedBufferWorldMatrix, meshes::model::RenderWorldMatrix};
-
-use super::sys_instance::{SysInstancedBufferInit, SysInstanceBufferUpdate};
+use crate::{geometry::instance::{instance_world_matrix::{InstancedBufferWorldMatrix, InstancedWorldMatrixDirty}, sys_instance::SysInstanceBufferUpdateFunc}, meshes::model::{RenderWorldMatrix, SysRenderMatrixUpdate}};
 
 
-pub struct InstancedWorldMatrixDirty;
-
-pub type SysInstanceBufferWorldMatrixInit = SysInstancedBufferInit<InstancedBufferWorldMatrix>;
-pub type SysInstanceBufferWorldMatrixUpdate = SysInstanceBufferUpdate<InstancedBufferWorldMatrix, RenderWorldMatrix, InstancedWorldMatrixDirty>;
+pub type SysInstanceBufferWorldMatrixUpdate = SysInstanceBufferUpdateFunc<InstancedBufferWorldMatrix, RenderWorldMatrix, InstancedWorldMatrixDirty, SysRenderMatrixUpdate>;

@@ -2,7 +2,7 @@
 use command::{SysUnlitMaterialCommand, SingleUnlitMaterialCommandList};
 use pi_atom::Atom;
 use pi_ecs::prelude::Setup;
-use pi_engine_shell::plugin::Plugin;
+use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
 use pi_scene_context::materials::shader_effect::InterfaceMaterialMeta;
 use render_shader::shader::KeyShaderEffect;
 use shader::UnlitShader;
@@ -25,7 +25,7 @@ impl Plugin for PluginUnlitMaterial {
         let world = engine.world_mut();
         world.insert_resource(SingleUnlitMaterialCommandList::default());
 
-        SysUnlitMaterialCommand::setup(world, stages.command_stage());
+        SysUnlitMaterialCommand::setup(world, stages.query_stage::<SysUnlitMaterialCommand>(ERunStageChap::Command));
         
         Ok(())
     }

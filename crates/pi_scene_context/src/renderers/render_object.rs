@@ -2,13 +2,17 @@ use pi_assets::asset::Handle;
 use pi_slotmap::{DefaultKey};
 use render_data_container::{VertexBuffer, KeyVertexBuffer, RenderVertices, RenderIndices};
 
-use crate::{geometry::GBID, object::{ObjectID}, renderers::render_sort::{RenderSortParam}, materials::bind_group::{RenderBindGroupKey}, };
+use crate::{
+    object::{ObjectID},
+    renderers::render_sort::{RenderSortParam},
+    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+};
 
 use super::pipeline::{AssetResRenderPipeline, ResRenderPipeline};
 pub use super::render_object_list::*;
 
 #[derive(Debug, Clone, Copy)]
-pub struct RenderObjectID(pub ObjectID);
+pub struct RendererID(pub ObjectID);
 
 pub trait DrawObject {
     fn bind_groups(&self) -> &Vec<RenderObjectBindGroup>;

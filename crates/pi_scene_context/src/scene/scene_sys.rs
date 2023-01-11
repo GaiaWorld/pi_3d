@@ -2,10 +2,26 @@
 
 use pi_ecs::prelude::{Query, ResMut};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::TSystemStageInfo;
 
-use crate::{object::GameObject, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::scene_time::SceneTime};
+use crate::{
+    object::GameObject,
+    scene::{
+        scene_time::SceneTime,
+        environment::{fog::SceneFog, ambient_light::AmbientLight}
+    }
+};
+
+use super::command::SysSceneCommand;
 
 pub struct SysDirtySceneTick;
+impl TSystemStageInfo for SysDirtySceneTick {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysSceneCommand::key()
+        ]
+    }
+}
 #[setup]
 impl SysDirtySceneTick {
     #[system]

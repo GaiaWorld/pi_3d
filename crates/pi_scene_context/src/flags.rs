@@ -15,7 +15,7 @@ pub struct SceneCameraID06;
 
 pub struct CullingFlag(pub bool);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SceneID(pub ObjectID);
 #[derive(Debug)]
 pub struct CameraID(pub usize);

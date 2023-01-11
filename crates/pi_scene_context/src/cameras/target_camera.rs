@@ -1,7 +1,7 @@
 
 use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRotation}, coordiante_system::CoordinateSytem3, Isometry3, Number, Rotation3};
 
-use super::{camera::{CameraGlobalPosition, CameraViewMatrix}};
+use crate::viewer::{TViewerViewMatrix, ViewerGlobalPosition, ViewerViewMatrix};
 
 
 /// 通过 设置 target 目标点 调整相机
@@ -21,6 +21,55 @@ impl Default for TargetCameraParam {
             up: CoordinateSytem3::up(),
             ignore_parent_scale: false,
             dirty: true,
+        }
+    }
+}
+
+impl TViewerViewMatrix for TargetCameraParam {
+    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &crate::transforms::transform_node::LocalPosition, parent: Option<&crate::transforms::transform_node::GlobalTransform>) -> (crate::viewer::ViewerViewMatrix, crate::viewer::ViewerGlobalPosition) {
+        if self.ignore_parent_scale {
+            match parent {
+                Some(parent) => {
+                    let transformation = &parent.matrix;
+                    let mut eye = Vector3::zeros();
+                    CoordinateSytem3::transform_coordinates(&local_pos.0, transformation, &mut eye);
+
+                    let mut target = Vector3::zeros();
+                    CoordinateSytem3::transform_coordinates(&self.target, transformation, &mut target);
+
+                    let mut up = Vector3::zeros();
+                    CoordinateSytem3::transform_coordinates(&self.up, transformation, &mut up);
+
+                    let mut iso = Isometry3::identity();
+                    coordsys.lookat(&eye, &target, &up, &mut iso);
+
+                    (ViewerViewMatrix(iso.to_matrix()), ViewerGlobalPosition(eye))
+                },
+                None => {
+                    let mut iso = Isometry3::identity();
+                    let eye = local_pos.0.clone();
+                    coordsys.lookat(&eye, &self.target, &self.up, &mut iso);
+                    
+                    (ViewerViewMatrix(iso.to_matrix()), ViewerGlobalPosition(eye))
+                },
+            }
+        } else {
+            let mut iso = Isometry3::identity();
+            coordsys.lookat(&local_pos.0, &self.target, &self.up, &mut iso);
+    
+            let eye = match parent {
+                Some(parent) => {
+                    iso = iso.inv_mul(&parent.iso);
+                    let temp = iso.translation.vector;
+                    iso.inverse_mut();
+                    temp
+                },
+                None => {
+                    iso.translation.vector
+                },
+            };
+
+            (ViewerViewMatrix(iso.to_matrix()), ViewerGlobalPosition(eye))
         }
     }
 }
@@ -61,53 +110,5 @@ impl TargetCameraParam {
         let rz = 0.;
 
         coordsys.rotation_matrix_mut_yaw_pitch_roll(ry, rx, rz, rotation);
-    }
-    pub fn view_matrix(&self, coordsys: &CoordinateSytem3, view_matrix: &mut CameraViewMatrix, global_position: &mut CameraGlobalPosition, l_p: &Vector3, p_m: Option<&Matrix>, p_iso: Option<&Isometry3>) {
-        if self.ignore_parent_scale {
-            match p_m {
-                Some(parent_world) => {
-                    let transformation = parent_world;
-                    let mut eye = Vector3::zeros();
-                    CoordinateSytem3::transform_coordinates(l_p, transformation, &mut eye);
-                    global_position.0.copy_from(&eye);
-
-                    let mut target = Vector3::zeros();
-                    CoordinateSytem3::transform_coordinates(&self.target, transformation, &mut target);
-
-                    let mut up = Vector3::zeros();
-                    CoordinateSytem3::transform_coordinates(&self.up, transformation, &mut up);
-
-                    let mut iso = Isometry3::identity();
-                    coordsys.lookat(&eye, &target, &up, &mut iso);
-
-                    view_matrix.0.clone_from(&iso.to_matrix());
-                },
-                None => {
-                    let mut iso = Isometry3::identity();
-                    let eye = l_p;
-                    coordsys.lookat(&eye, &self.target, &self.up, &mut iso);
-                    
-                    view_matrix.0.clone_from(&iso.to_matrix());
-                    global_position.0.copy_from(&eye);
-                },
-            }
-        } else {
-            let mut iso = Isometry3::identity();
-            let eye = l_p;
-            coordsys.lookat(eye, &self.target, &self.up, &mut iso);
-    
-            match p_iso {
-                Some(parent_iso) => {
-                    iso = iso.inv_mul(parent_iso);
-                    global_position.0 = iso.translation.vector;
-                    iso.inverse_mut();
-                },
-                None => {
-                    global_position.0 = iso.translation.vector;
-                },
-            }
-
-            view_matrix.0.clone_from(&iso.to_matrix());
-        }
     }
 }

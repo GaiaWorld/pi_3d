@@ -1,7 +1,8 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
 use pi_ecs_macros::setup;
+use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{GameObject, ObjectID};
 
@@ -64,24 +65,25 @@ impl Ord for RenderSortParam {
 }
 
 #[derive(Debug, Default)]
-struct SingleRenderSortCommandList {
+pub struct SingleRenderSortCommandList {
     pub list: Vec<(ObjectID, RenderSortParam)>
 }
 
-struct SysRenderSortCommand;
+pub struct SysRenderSortCommand;
+impl TSystemStageInfo for SysRenderSortCommand {
+
+}
 #[setup]
 impl SysRenderSortCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleRenderSortCommandList>,
-        mut items: Query<GameObject, Write<RenderSortParam>>,
+        mut items: Commands<GameObject, RenderSortParam>,
     ) {
         let mut  list = replace(&mut cmds.list, vec![]);
 
-        list.drain(..).for_each(|cmd| {
-            if let Some(mut item) = items.get_mut(cmd.0) {
-                item.write(cmd.1);
-            }
+        list.drain(..).for_each(|(obj, value)| {
+            items.insert(obj, value);
         });
     }
 }
@@ -117,7 +119,7 @@ impl crate::Plugin for PluginRenderSort {
         let world = engine.world_mut();
 
         world.insert_resource(SingleRenderSortCommandList::default());
-        SysRenderSortCommand::setup(world, stages.command_stage());
+        SysRenderSortCommand::setup(world, stages.query_stage::<SysRenderSortCommand>(ERunStageChap::Command));
 
         Ok(())
     }

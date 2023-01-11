@@ -1,4 +1,5 @@
 use pi_ecs::{prelude::{Setup}};
+use pi_engine_shell::run_stage::ERunStageChap;
 
 use crate::{plugin::Plugin, };
 
@@ -9,6 +10,7 @@ pub mod coordinate_system;
 pub mod scene_sys;
 pub mod command;
 pub mod interface;
+pub mod environment;
 
 pub struct PluginScene;
 impl Plugin for PluginScene {
@@ -21,8 +23,8 @@ impl Plugin for PluginScene {
 
         world.insert_resource(SingleSceneCommandList::default());
 
-        SysDirtySceneTick::setup(world, stages.dirty_state_stage());
-        SysSceneCommand::setup(world, stages.command_stage());
+        SysSceneCommand::setup(world, stages.query_stage::<SysSceneCommand>(ERunStageChap::Command));
+        SysDirtySceneTick::setup(world, stages.query_stage::<SysDirtySceneTick>(ERunStageChap::Command));
 
         Ok(())
     }

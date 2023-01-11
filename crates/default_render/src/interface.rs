@@ -34,7 +34,7 @@ impl InterfaceDefaultMaterial for crate::engine::Engine {
     fn create_default_material(
         & self,
     ) -> ObjectID {
-        //  println!("create_default_material");
+        //  log::debug!("create_default_material");
         let entity = self.new_object();
 
         self.as_material(entity, KeyShaderEffect(Atom::from(DefaultShader::KEY)));
@@ -60,7 +60,7 @@ impl InterfaceDefaultMaterial for crate::engine::Engine {
         let commands = world.get_resource_mut::<SingeDefaultMaterialCommandList>().unwrap();
         commands.list.push(DefaultMaterialCommand::EmissiveColor(entity, color));
 
-        println!("emissive_color >>>>>>>>>>");
+        log::debug!("emissive_color >>>>>>>>>>");
 
         self
     }
