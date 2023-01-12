@@ -4,13 +4,13 @@ use std::{any::TypeId, sync::Arc, time::{Instant, Duration}, ops::RangeBounds};
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad, run_stage::{SysCommonUserCommand, ERunStageChap}};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad, run_stage::{ERunStageChap, TSystemStageInfo}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    meshes::{cube::{InterfaceCube, CubeBuilder}, interface::InterfaceMesh},
+    meshes::{interface::InterfaceMesh},
     main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::render_depth_and_stencil::{InterfaceRenderDepthAndStencil, RenderDepthAndStencil}, materials::{material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
 };
@@ -21,6 +21,7 @@ use render_data_container::KeyVertexBuffer;
 use render_geometry::vertex_data::VertexBufferDesc;
 use render_resource::sampler::SamplerDesc;
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
+use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder};
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -28,6 +29,7 @@ pub struct SingleTestData {
 }
 
 pub struct SysTest;
+impl TSystemStageInfo for SysTest {}
 #[setup]
 impl SysTest {
     #[system]
@@ -67,7 +69,7 @@ impl Plugin for PluginTest {
 
         let world = engine.world_mut();
 
-        SysTest::setup(world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
+        SysTest::setup(world, stages.query_stage::<SysTest>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);
@@ -81,7 +83,7 @@ impl PluginTest {
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
 
-        let tes_size = 10;
+        let tes_size = 40;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
         engine.frame_time(2);
@@ -98,15 +100,19 @@ impl PluginTest {
         // engine.emissive_intensity(entity, intensity);
         let unlitmaterial = engine.create_unlit_material();
         engine.set_texture_sampler(unlitmaterial, "_MainTex", SamplerDesc::default());
-        engine.emissive_texture(unlitmaterial, render_resource::ImageAssetKey::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"));
+
+        let binding = std::env::current_dir().unwrap().join("assets/images/bubbles.png");
+        let image = binding.as_os_str().to_str().unwrap();
+        let image = "E:/Rust/PI/pi_3d/assets/images/bubbles.png";
+        engine.emissive_texture(unlitmaterial, render_resource::ImageAssetKey::from(image));
 
         let source = engine.create_mesh(scene01);
-        let mut attrs = CubeBuilder::attrs_desc();
+        let mut attrs = CubeBuilder::attrs_meta();
         attrs.push(VertexBufferDesc::instance_world_matrix());
         attrs.push(VertexBufferDesc::instance_color());
         attrs.push(VertexBufferDesc::instance_tilloff());
         engine.use_geometry(source, attrs);
-        engine.use_indices(source, CubeBuilder::indices_desc());
+        engine.use_indices(source, CubeBuilder::indices_meta());
         engine.use_material(source, MaterialID(unlitmaterial));
         engine.layer_mask(source, LayerMask::default());
 
@@ -120,7 +126,7 @@ impl PluginTest {
                     engine.set_instance_tilloff(cube, Vector4::new(1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
                     engine.transform_position(cube, Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
                     engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 0.2, j as f32 * 0.2, k as f32 * 0.2));
-                    // testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
+                    testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
                 }
             }
         }

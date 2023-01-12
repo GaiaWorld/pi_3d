@@ -1,8 +1,8 @@
-use pi_ecs::{prelude::{Query, ResMut, Commands}, query::{Changed, Or, With}};
+use pi_ecs::{prelude::{Query, ResMut}, query::{Changed, Or, With}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::{TSystemStageInfo, SysCommonUserCommand}};
+use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::{TSystemStageInfo}};
 use render_resource::uniform_buffer::RenderDynUniformBuffer;
-use render_shader::{shader_set::{ShaderSetSceneAbout, ShaderSetSceneAboutBindOffset}, set_bind::ShaderSetBind};
+use render_shader::{shader_set::{ShaderSetSceneAboutBindOffset}};
 
 use crate::{
     flags::SceneID,
@@ -21,7 +21,7 @@ pub struct SysRendererInitForCamera;
 impl TSystemStageInfo for SysRendererInitForCamera {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysCommonUserCommand::key(), SysSceneCommand::key(), SysViewerUpdatedForCamera::key()
+            SysSceneCommand::key(), SysViewerUpdatedForCamera::key()
         ]
     }
 }
@@ -70,7 +70,7 @@ pub struct SysRendererInitBindForCamera;
 impl TSystemStageInfo for SysRendererInitBindForCamera {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysCommonUserCommand::key(), SysRendererInitForCamera::key(), SysViewerUpdatedForCamera::key()
+            SysRendererInitForCamera::key(), SysViewerUpdatedForCamera::key()
         ]
     }
 }

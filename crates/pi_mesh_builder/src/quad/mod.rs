@@ -7,15 +7,13 @@ use pi_share::Share;
 use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
 use render_geometry::{indices::{IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
 
-use crate::{
+use pi_scene_context::{
     plugin::{Plugin, ErrorPlugin},
     object::{ObjectID},
     engine::Engine,
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, meshes::interface::InterfaceMesh
 };
-
-use super::interface::InterfaceMesh;
 
 pub struct QuadBuilder;
 impl QuadBuilder {
@@ -24,6 +22,20 @@ impl QuadBuilder {
     const KEY_BUFFER_NORMAL:    &'static str = "QuadNormal";
     const KEY_BUFFER_UV:        &'static str = "QuadUV";
     const KEY_BUFFER_INDICES:   &'static str = "QuadIndices";
+    pub fn attrs_meta() -> Vec<VertexBufferDesc> {
+        let keypos = KeyVertexBuffer::from(Self::KEY_BUFFER_POSITION);
+        let keynormal = KeyVertexBuffer::from(Self::KEY_BUFFER_NORMAL);
+        let keyuv = KeyVertexBuffer::from(Self::KEY_BUFFER_UV);
+        vec![
+            VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
+            VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
+            VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
+        ]
+    }
+    pub fn indices_meta() -> IndicesBufferDesc {
+        let key = KeyVertexBuffer::from(Self::KEY_BUFFER_INDICES);
+        IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
+    }
     pub fn position(
         device: &RenderDevice,
         queue: &RenderQueue,
@@ -148,7 +160,7 @@ impl Plugin for PluginQuadBuilder {
     fn init(
         &mut self,
         engine: &mut Engine,
-        stages: &mut crate::run_stage::RunStage,
+        stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
         engine.regist_quad();
 

@@ -1,8 +1,7 @@
-use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
-use pi_scene_math::{Vector3, Matrix, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
-use render_shader::shader_bind::ShaderBindSceneAboutCamera;
+use pi_render::rhi::{dyn_uniform_buffer::{BindOffset, Bind}};
+use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}, viewer::{TViewerProjectMatrix, ViewerProjectionMatrix}};
+use crate::{shaders::{FragmentUniformBind}, viewer::{TViewerProjectMatrix, ViewerProjectionMatrix}};
 
 pub struct CameraRenderData {
     pub bind_offset: BindOffset,

@@ -1,16 +1,14 @@
 
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Res, Commands}, query::{Write, With}, storage::Local};
+use pi_ecs::{prelude::{ResMut, Query, Commands}, query::{With}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
-use pi_render::rhi::device::RenderDevice;
 use pi_scene_math::Number;
 
 use pi_scene_context::{
     object::{ObjectID, GameObject},
-    materials::{uniforms::{vec4::Vec4Uniform, texture::TextureSlot01, texture_uniform::MaterialTextureBindGroupID}, shader_effect::AssetResShaderEffectMeta},
-    bindgroup::{RenderBindGroup, RenderBindGroupKey, RenderBindGroupPool}
+    materials::{uniforms::{vec4::Vec4Uniform, texture::TextureSlot01}, shader_effect::AssetResShaderEffectMeta},
 };
 use render_resource::ImageAssetKey;
 

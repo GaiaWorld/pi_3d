@@ -6,15 +6,11 @@ use crate::{object::ObjectID, geometry::instance::{instance_world_matrix::SysIns
 
 use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysRenderMatrixUniformUpdate, SysRenderMatrixUpdate, SysModelAboutUpdate}, instance::{world_matrix::{SysInstanceBufferWorldMatrixUpdate}, instance_color::{SysInstanceBufferColorUpdate}, instance_tilloff::{SysInstanceBufferTillOffUpdate}}, bind_group::SysModelAboutBindGroup};
 
-pub mod cube;
-pub mod plane;
 pub mod model;
 pub mod command;
 pub mod interface;
 pub mod alpha_index;
 pub mod render_group;
-pub mod ball;
-pub mod quad;
 pub mod instance;
 pub mod abstract_mesh;
 pub mod skeleton;

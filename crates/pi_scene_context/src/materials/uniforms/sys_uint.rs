@@ -1,5 +1,5 @@
 use pi_ecs::{prelude::{Setup, }};
-use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
+use pi_engine_shell::{run_stage::ERunStageChap};
 
 use super::{uniform::{SysUpdateValueUniform, SysEffectValueUniformUpdate}, uint::UintUniform};
 

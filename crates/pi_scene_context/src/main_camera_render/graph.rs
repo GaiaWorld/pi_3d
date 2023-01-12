@@ -1,7 +1,6 @@
 use std::time::Instant;
 
 use futures::FutureExt;
-use pi_assets::mgr::AssetMgr;
 use pi_ecs::query::QueryState;
 use pi_futures::BoxFuture;
 use pi_render::{graph::{node::Node, RenderContext}, rhi::{texture::ScreenTexture}};
@@ -10,9 +9,7 @@ use render_data_container::VertexBufferPool;
 use crate::{
     renderers::{render_object_list::DrawList, renderer::Renderer},
     object::{ObjectID, GameObject},
-    main_camera_render::MainCameraRenderer,
-    resources::{SingleRenderObjectPipelinePool},
-    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+    bindgroup::{RenderBindGroupPool}
 };
 
 pub struct SingleMainCameraOpaqueRenderNode {

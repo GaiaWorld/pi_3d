@@ -1,6 +1,5 @@
-use lazy_static::__Deref;
+
 use pi_atom::Atom;
-use pi_render::rhi::{dyn_uniform_buffer::{BindOffset, AsBind}, device::RenderDevice, bind_group::BindGroup};
 
 #[derive(Debug)]
 pub struct ValueBindDesc {

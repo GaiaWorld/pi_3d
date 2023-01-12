@@ -7,7 +7,7 @@ use parry3d::{
     na::{Isometry3, Point3},
     shape::{ConvexPolyhedron, Cuboid},
 };
-use pi_ecs::{prelude::{Res, Query, Commands}, query::{Write, Changed, With}};use pi_ecs::prelude::Setup;
+use pi_ecs::{prelude::{Res, Query, Commands}, query::{Changed}};use pi_ecs::prelude::Setup;
 use pi_ecs_macros::setup;
 use pi_engine_shell::{run_stage::{TSystemStageInfo, ERunStageChap}, object::ObjectID};
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
@@ -17,7 +17,7 @@ use crate::{
     cameras::camera::{CameraParam},
     engine::Engine,
     plugin::{ErrorPlugin, Plugin},
-    run_stage::RunStage, object::GameObject, viewer::{ViewerProjectionMatrix, command::Viewport}, flags::{CameraID, SceneID}, layer_mask::LayerMask,
+    run_stage::RunStage, object::GameObject, viewer::{ViewerProjectionMatrix, command::Viewport}, flags::{SceneID}, layer_mask::LayerMask,
 };
 
 use super::{

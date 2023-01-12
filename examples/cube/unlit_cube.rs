@@ -5,13 +5,12 @@ use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
 use default_render::interface::InterfaceDefaultMaterial;
 use material_textures::{PluginMaterialTextures, main_texture::{PluginMainTexture, InterfaceMainTexture}};
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad, run_stage::{SysCommonUserCommand, ERunStageChap}};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    meshes::cube::InterfaceCube,
     main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}, renderers::{render_blend::{InterfaceRenderBlend, RenderBlend}, render_mode::{InterfaceRenderMode, ERenderMode}}
 };
@@ -20,6 +19,7 @@ use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
 use render_resource::{ImageAssetKey, sampler::SamplerDesc};
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
+use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder};
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -27,6 +27,7 @@ pub struct SingleTestData {
 }
 
 pub struct SysTest;
+impl TSystemStageInfo for SysTest {}
 #[setup]
 impl SysTest {
     #[system]
@@ -67,7 +68,7 @@ impl Plugin for PluginTest {
 
         let world = engine.world_mut();
 
-        SysTest::setup(world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
+        SysTest::setup(world, stages.query_stage::<SysTest>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);

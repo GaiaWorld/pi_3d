@@ -1,12 +1,10 @@
 
 use std::mem::replace;
 
-use derive_deref::{Deref, DerefMut};
-use pi_ecs::{prelude::{Id, ResMut, Query, Commands}, query::{Write, With}};
+use pi_ecs::{prelude::{ResMut, Query, Commands}, query::{With}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Number, Matrix, Vector4, Vector2, Matrix2};
-use render_shader::shader::{KeyShaderEffect, ResShader, KeyShader};
 
 use crate::{object::{ObjectID, GameObject}, renderers::render_mode::ERenderMode};
 
@@ -144,6 +142,17 @@ impl SysMaterialIDCommand {
             }
         });
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum UniformModifier {
+    Mat4(usize, Matrix),
+    Mat2(usize, Matrix2),
+    Vec4(usize, Vector4),
+    Vec2(usize, Vector2),
+    Float(usize, Number),
+    Int32(usize, i32),
+    Uint32(usize, u32),
 }
 
 pub trait InterfaceMaterial {

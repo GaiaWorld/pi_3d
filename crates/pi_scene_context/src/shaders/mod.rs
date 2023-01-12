@@ -1,8 +1,6 @@
-use pi_render::rhi::{bind_group_layout::BindGroupLayout, dyn_uniform_buffer::{BindOffset}, texture::{TextureView, Sampler}};
+use pi_render::rhi::{dyn_uniform_buffer::{BindOffset}, texture::{Sampler}};
 use render_shader::shader::ResShader;
 
-
-use crate::{geometry::VDK, materials::MBKK, };
 
 
 pub trait TRenderShader {

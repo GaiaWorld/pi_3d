@@ -1,6 +1,6 @@
-use std::{time::Instant, vec};
+use std::{vec};
 
-use pi_ecs::{prelude::{Query, Res, Commands}, query::{Changed, With, Or}};
+use pi_ecs::{prelude::{Query}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::ObjectID, run_stage::TSystemStageInfo};
 
@@ -12,15 +12,15 @@ use crate::{
     flags::SceneID,
     layer_mask::{LayerMask, command::SysLayerMaskCommand},
     transforms::{transform_node::{WorldMatrix}, transform_node_sys::SysWorldMatrixCalc},
-    meshes::{model::BuildinModelBind, abstract_mesh::AbstructMesh, command::SysMeshCommand, Mesh},
+    meshes::{command::SysMeshCommand},
     geometry::{geometry::{RenderGeometry}, sys_vertex_buffer_use::{SysRenderGeometryInit}},
     scene::command::SysSceneCommand,
     viewer::{ViewerGlobalPosition, ViewerViewMatrix},
     cameras::{SysViewerUpdatedForCamera, camera::CameraParam},
-    bindgroup::uniform_buffer::{SysDynUnifromBufferUpdate, DynUnifromBufferReBindFlag},
+    bindgroup::uniform_buffer::{SysDynUnifromBufferUpdate},
 };
 
-use super::{MainCameraRenderer, command::SysMainCameraRenderCommand};
+use super::{MainCameraRenderer};
 
 pub struct SysModelListUpdateByCamera;
 impl TSystemStageInfo for SysModelListUpdateByCamera {

@@ -3,7 +3,7 @@ use pi_render::graph::{graph::RenderGraph, NodeId};
 
 use crate::{cameras::camera::CameraViewport, main_camera_render::graph::SingleMainCameraOpaqueRenderNode};
 
-use super::{render_object::{RenderObjectTransparentList, RenderObjectOpaqueList, RenderObjectBindGroup}, render_mode::ERenderMode};
+use super::{render_object::{RenderObjectTransparentList, RenderObjectOpaqueList, RenderObjectBindGroup}};
 
 pub type TPassTag = u16;
 

@@ -3,6 +3,7 @@ use pi_ecs::prelude::Setup;
 use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
 use pi_hash::XHashMap;
 use pi_render::rhi::{bind_group_layout::BindGroupLayout, bind_group::BindGroup, device::RenderDevice};
+use render_resource::uniform_buffer::RenderDynUniformBuffer;
 
 use crate::object::{ObjectID};
 
@@ -139,9 +140,13 @@ impl Plugin for PluginRenderBindGroup {
         engine: &mut pi_engine_shell::engine_shell::EnginShell,
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-        engine.world_mut().insert_resource(RenderBindGroupPool::default());
+        let world = engine.world_mut();
+        let device = world.get_resource::<RenderDevice>().unwrap();
+        let dynbuffer = RenderDynUniformBuffer::new(device);
+        world.insert_resource(RenderBindGroupPool::default());
+        world.insert_resource(dynbuffer);
         
-        SysDynUnifromBufferUpdate::setup(engine.world_mut(), stages.query_stage::<SysDynUnifromBufferUpdate>(ERunStageChap::Uniform));
+        SysDynUnifromBufferUpdate::setup(world, stages.query_stage::<SysDynUnifromBufferUpdate>(ERunStageChap::Uniform));
 
         Ok(())
     }

@@ -9,15 +9,13 @@ use pi_share::Share;
 use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
 use render_geometry::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
 
-use crate::{
+use pi_scene_context::{
     plugin::{Plugin, ErrorPlugin},
     object::{ObjectID},
     engine::Engine, 
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc, indices::InterfaceBufferIndices}
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc, indices::InterfaceBufferIndices}, meshes::interface::InterfaceMesh
 };
-
-use super::interface::InterfaceMesh;
 
 
 pub struct BallBuilder;
@@ -127,7 +125,7 @@ impl Plugin for PluginBallBuilder {
     fn init(
         &mut self,
         engine: &mut Engine,
-        stages: &mut crate::run_stage::RunStage,
+        stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
 
         Ok(())

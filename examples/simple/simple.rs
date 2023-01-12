@@ -1,25 +1,21 @@
 #![feature(box_into_inner)]
 
-use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
 
-use default_render::interface::InterfaceDefaultMaterial;
-use material_textures::{PluginMaterialTextures, main_texture::{PluginMainTexture, InterfaceMainTexture}};
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_render::rhi::options::RenderOptions;
-use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
+use pi_scene_context::{
+    plugin::Plugin,
+    transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    meshes::quad::{InterfaceQuad, PluginQuadBuilder},
     main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}
 };
-use pi_ecs::prelude::{ResMut, Setup};
-use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
 use render_resource::sampler::SamplerDesc;
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
+use pi_mesh_builder::quad::{InterfaceQuad, PluginQuadBuilder};
 
 
 #[derive(Debug)]
@@ -34,9 +30,6 @@ impl Plugin for PluginTest {
         PluginBundleDefault.init(engine, stages);
 
         PluginQuadBuilder.init(engine, stages);
-
-        PluginMaterialTextures.init(engine, stages);
-        PluginMainTexture.init(engine, stages);
         PluginUnlitMaterial.init(engine, stages);
 
         Ok(())

@@ -2,15 +2,15 @@
 use std::time::Instant;
 
 use pi_ecs_macros::{setup};
-use pi_ecs::{prelude::{Query, Commands}, query::{Write, Changed, Or}};
+use pi_ecs::{prelude::{Query, Commands}, query::{Changed, Or}};
 use pi_ecs_utils::prelude::EntityTree;
 use pi_engine_shell::run_stage::TSystemStageInfo;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolRotation, TToolMatrix}, Matrix, Rotation3};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix}, Matrix};
 use pi_slotmap_tree::Storage;
 
 use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem};
 
-use super::{transform_node::{GlobalTransform, LocalMatrix, LocalRotation, LocalEulerAngles, LocalRotationQuaternion, LocalRoationWithQuaternion, LocalPosition, LocalScaling, WorldMatrix, WorldMatrixInv}, command::SysTransformNodeCommand};
+use super::{transform_node::{GlobalTransform, LocalMatrix, LocalRotation, LocalPosition, LocalScaling, WorldMatrix, WorldMatrixInv}, command::SysTransformNodeCommand};
 
 
 pub struct SysLocalMatrixCalc;

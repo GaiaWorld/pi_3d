@@ -5,9 +5,8 @@ use pi_engine_shell::{object::ObjectID, run_stage::ERunStageChap};
 use pi_futures::BoxFuture;
 use pi_render::{components::view::{target_alloc::ShareTargetView}, graph::{node::Node}, };
 use render_derive::NodeParam;
-use render_shader::shader::{KeyShader, ResShader};
 
-use self::{render_blend::PluginRenderBlend, render_depth_and_stencil::PluginRenderDepthAndStencil, render_primitive::PluginRenderPrimitive, render_mode::PluginRenderMode, render_sort::PluginRenderSort, render_item_info::{RenderItemInfo, RendererItemsModifyByMaterialChange, RendererItemsReset, RendererItemsModifyByModelChange}, renderer_binds_sys::{SysSceneBindUpdate,}};
+use self::{render_blend::PluginRenderBlend, render_depth_and_stencil::PluginRenderDepthAndStencil, render_primitive::PluginRenderPrimitive, render_mode::PluginRenderMode, render_sort::PluginRenderSort, render_item_info::{RendererItemsModifyByMaterialChange, RendererItemsReset, RendererItemsModifyByModelChange}, renderer_binds_sys::{SysSceneBindUpdate,}};
 
 pub mod pipeline;
 pub mod render_object;

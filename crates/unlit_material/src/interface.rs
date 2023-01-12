@@ -1,7 +1,7 @@
 use pi_atom::Atom;
 use pi_engine_shell::object::InterfaceObject;
 
-use pi_scene_context::{object::ObjectID, materials::{material::{SingleMaterialIDCommandList, MaterialIDCommand}, shader_effect::InterfaceMaterialMeta}};
+use pi_scene_context::{object::ObjectID, materials::{ shader_effect::InterfaceMaterialMeta}};
 use render_resource::ImageAssetKey;
 use render_shader::shader::KeyShaderEffect;
 

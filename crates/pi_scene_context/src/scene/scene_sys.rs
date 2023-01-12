@@ -1,6 +1,6 @@
 
 
-use pi_ecs::prelude::{Query, ResMut};
+use pi_ecs::prelude::{Query};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 
@@ -8,7 +8,7 @@ use crate::{
     object::GameObject,
     scene::{
         scene_time::SceneTime,
-        environment::{fog::SceneFog, ambient_light::AmbientLight}
+        environment::{fog::SceneFog}
     }
 };
 

@@ -107,28 +107,42 @@ pub trait TSystemStageInfo {
     }
 }
 
-pub struct SysCommonUserCommand;
-impl TSystemStageInfo for SysCommonUserCommand {
-
-}
-
+#[derive(Debug, Clone, Copy)]
+///
+/// * 在运行阶段之上封装了 章节管理
+/// * 每章节可以有多个阶段,章节内部的阶段间有顺序
+/// * 每章节间有顺序
+/// * 一个章节内阶段结束才能进入下个章节
+/// * 当 一个System需要等待多个System的结束, 且编码时无法确定依赖的System时, 应该将该System放入下一章节
 pub enum ERunStageChap {
     Command,
+    Logic01,
+    Logic02,
     Uniform,
 }
 
 pub struct RunStage {
     command: RunStageSub,
+    logic01: RunStageSub,
+    logic02: RunStageSub,
     uniform_update: RunStageSub,
     list: Vec<StageBuilder>,
 }
 impl RunStage {
     pub fn new() -> Self {
-        Self { command: RunStageSub::new(), uniform_update: RunStageSub::new(), list: vec![]}
+        Self { command: RunStageSub::new(), uniform_update: RunStageSub::new(), logic01: RunStageSub::new(), logic02: RunStageSub::new(), list: vec![]}
     }
+    /// * 获取System在指定章节内的 阶段
+    /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
     pub fn query_stage<T: TSystemStageInfo>(&mut self, chap: ERunStageChap) -> &mut StageBuilder {
         match chap {
             ERunStageChap::Command => {
+                self.command.query_stage::<T>()
+            },
+            ERunStageChap::Logic01 => {
+                self.command.query_stage::<T>()
+            },
+            ERunStageChap::Logic02 => {
                 self.command.query_stage::<T>()
             },
             ERunStageChap::Uniform => {
@@ -140,7 +154,15 @@ impl RunStage {
         self.command.drain().for_each(|item| {
             self.list.push(item);
         });
-        
+
+        self.logic01.drain().for_each(|item| {
+            self.list.push(item);
+        });
+
+        self.logic02.drain().for_each(|item| {
+            self.list.push(item);
+        });
+
         self.uniform_update.drain().for_each(|item| {
             self.list.push(item);
         });
@@ -184,10 +206,11 @@ impl RunStageSub {
         };
 
         result.query_stage::<SysPre>();
-        result.query_stage::<SysCommonUserCommand>();
 
         result
     }
+    ///
+    /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
     pub fn query_stage<T: TSystemStageInfo>(&mut self) -> &mut StageBuilder {
         let sys_key = T::key();
         let parent_keys = T::depends();

@@ -8,7 +8,7 @@ use pi_hash::XHashMap;
 use pi_render::rhi::{RenderQueue, device::RenderDevice};
 use pi_share::{ThreadSync, Share};
 
-use crate::{run_stage::{RunStage, KeySystem, TSystemStageInfo, SysCommonUserCommand, ERunStageChap}, plugin::{ErrorPlugin, Plugin}, object::{GameObject, ObjectID}, engine_shell::EnginShell};
+use crate::{run_stage::{RunStage, KeySystem, TSystemStageInfo, ERunStageChap}, plugin::{ErrorPlugin, Plugin}, object::{GameObject, ObjectID}, engine_shell::EnginShell};
 
 #[derive(Debug, Default)]
 pub struct AssetSyncWait<
@@ -57,7 +57,7 @@ impl<
 > TSystemStageInfo for AssetSyncLoad<K0, K, D, R, S> {
     fn depends() -> Vec<KeySystem> {
         vec![
-            SysCommonUserCommand::key(), S::key(), 
+            S::key(), 
         ]
     }
 }

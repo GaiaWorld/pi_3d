@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
-use pi_ecs::{prelude::{Component, Query, Setup, ResMut, Commands}, query::{Changed, Write, WithOut, Or}};
+use pi_ecs::{prelude::{Component, Query, Setup, ResMut, Commands}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::{TSystemStageInfo, SysCommonUserCommand, ERunStageChap}};
-use render_data_container::{RenderVertices, VertexBufferPool, KeyVertexBuffer};
+use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::{TSystemStageInfo, ERunStageChap}};
+use render_data_container::{RenderVertices, VertexBufferPool};
 use render_geometry::vertex_data::TVertexBufferDesc;
 use render_shader::instance_code::EInstanceCode;
 
-use crate::{geometry::{geometry::RenderVerticesFrom, instance::{instanced_buffer::TInstancedBuffer, InstanceSourceRecord, InstanceList, InstanceSource}}, meshes::command::SysMeshCommand};
+use crate::{geometry::{geometry::RenderVerticesFrom, instance::{instanced_buffer::TInstancedBuffer, InstanceList}}};
 
 use super::{vertex_buffer_useinfo::{TVertexBufferUseInfo, AssetDescVBSlot01, AssetDescVBSlot02, AssetDescVBSlot03, AssetDescVBSlot05, AssetDescVBSlot06, AssetDescVBSlot07, AssetDescVBSlot08, AssetDescVBSlot09, AssetDescVBSlot04, AssetResVBSlot01, AssetResVBSlot02, AssetResVBSlot03, AssetResVBSlot04, AssetResVBSlot05, AssetResVBSlot06, AssetResVBSlot07, AssetResVBSlot08, AssetResVBSlot09, AsKeyVertexBuffer, AssetKeyVBSlot01, AssetKeyVBSlot02, AssetKeyVBSlot03, AssetKeyVBSlot04, AssetKeyVBSlot05, AssetKeyVBSlot06, AssetKeyVBSlot07, AssetKeyVBSlot08, AssetKeyVBSlot09, AssetKeyVBSlot10, AssetKeyVBSlot11, AssetKeyVBSlot12, AssetKeyVBSlot13, AssetDescVBSlot10, AssetDescVBSlot11, AssetDescVBSlot12, AssetDescVBSlot13, TAssetResVertexBuffer, AssetResVBSlot10, AssetResVBSlot11, AssetResVBSlot12, AssetResVBSlot13}, GeometryDesc, geometry::{RenderGeometry, RenderGeometryEable}, instance::{instance_world_matrix::InstancedBufferWorldMatrix, instance_color::InstancedBufferColor, instance_tilloff::InstancedBufferTillOff}, SysGeometryVBCommand, SysVertexBufferLoad};
 

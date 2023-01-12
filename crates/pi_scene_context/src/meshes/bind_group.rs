@@ -12,9 +12,6 @@ use crate::{
     }
 };
 
-use super::model::SysModelAboutUpdate;
-
-
 
 pub struct SysModelAboutBindGroup;
 impl TSystemStageInfo for SysModelAboutBindGroup {

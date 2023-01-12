@@ -1,11 +1,11 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Number};
 
-use crate::{bytes_write_to_memory, object::{ObjectID, GameObject}, viewer::{ViewerViewMatrix, ViewerProjectionMatrix, ViewerTransformMatrix, ViewerGlobalPosition, ViewerDirection}};
+use crate::{object::{ObjectID, GameObject}, viewer::{ViewerViewMatrix, ViewerProjectionMatrix, ViewerTransformMatrix, ViewerGlobalPosition, ViewerDirection}};
 
 use super::{free_camera::FreeCameraParam, target_camera::TargetCameraParam, camera::{CameraParam, EFreeCameraMode, EFixedMode}};
 

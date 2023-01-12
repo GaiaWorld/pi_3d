@@ -1,6 +1,6 @@
 
 use pi_engine_shell::object::InterfaceObject;
-use pi_scene_math::Vector3;
+use pi_scene_math::{Vector3, Quaternion};
 
 use crate::{object::{ObjectID}, scene::{interface::InterfaceScene}};
 
@@ -28,11 +28,23 @@ pub trait InterfaceTransformNode {
         node: ObjectID,
         parent: ObjectID,
     ) -> & Self;
-    
+
+    fn transform_scaling(
+        & self,
+        node: ObjectID,
+        scaling: Vector3
+    ) -> & Self;
+
     fn transform_rotation_euler(
         & self,
         node: ObjectID,
         euler_angle: Vector3
+    ) -> & Self;
+
+    fn transform_rotation_quaternion(
+        & self,
+        node: ObjectID,
+        quat: Quaternion
     ) -> & Self;
 }
 impl InterfaceTransformNode for crate::engine::Engine {
@@ -105,5 +117,30 @@ impl InterfaceTransformNode for crate::engine::Engine {
         self
     }
 
+    fn transform_rotation_quaternion(
+        & self,
+        node: ObjectID,
+        quat: Quaternion
+    ) -> & Self {
+        let world = self.world();
+
+        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
+        commands.list.push(TransformNodeCommand::ModifyRotationQuaternion(node, quat));
+
+        self
+    }
+
+    fn transform_scaling(
+        & self,
+        node: ObjectID,
+        scaling: Vector3
+    ) -> & Self {
+        let world = self.world();
+
+        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
+        commands.list.push(TransformNodeCommand::ModifyScaling(node, scaling));
+
+        self
+    }
 }
 

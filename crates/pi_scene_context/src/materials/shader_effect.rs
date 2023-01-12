@@ -2,16 +2,16 @@
 use std::mem::replace;
 
 use derive_deref::{Deref, DerefMut};
-use pi_assets::{mgr::AssetMgr, asset::{Handle, GarbageEmpty, Asset}};
-use pi_ecs::{prelude::{Id, ResMut, Query, Res, Setup, Commands}, query::{Write, Changed, Or}};
+use pi_assets::{mgr::AssetMgr, asset::{Handle, Asset}};
+use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{assets::sync_load::{PluginAssetSyncLoad, InterfaceAssetSyncCreate, AssetSyncWait, PluginAssetSyncNotNeedLoad, AssetSyncLoad}, engine_shell::EnginShell, run_stage::{TSystemStageInfo, ERunStageChap}};
-use pi_render::rhi::device::RenderDevice;
+
 use pi_scene_math::{Matrix, Matrix2, Vector4, Vector2, Number};
 use pi_share::Share;
 use render_shader::{shader::{KeyShaderEffect, ResShader, KeyShader, ShaderEffectMeta as ShaderEffectDesc}, unifrom_code::{UniformPropertyName, ErrorUniformSlot, TUnifromShaderProperty, MaterialValueBindDesc}};
 
-use crate::{object::{ObjectID, GameObject}, renderers::render_mode::ERenderMode};
+use crate::{object::{ObjectID, GameObject}};
 
 #[derive(Clone, Debug)]
 pub struct UniformPropertyMat4(pub UniformPropertyName, pub Matrix);

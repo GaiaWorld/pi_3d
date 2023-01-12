@@ -1,7 +1,7 @@
 
-use pi_ecs::{prelude::{ResMut, Query, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Commands}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::{TSystemStageInfo, SysCommonUserCommand};
+use pi_engine_shell::run_stage::{TSystemStageInfo};
 
 use crate::{object::{ObjectID, GameObject}};
 

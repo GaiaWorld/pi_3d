@@ -21,7 +21,7 @@ use pi_render::rhi::{
     RenderQueue,
 };
 use pi_share::{Share, ThreadSync};
-use crate::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo, SysCommonUserCommand}};
+use crate::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo}};
 
 #[derive(Clone, DerefMut, Deref)]
 pub struct ImageAwait<T>(Share<SegQueue<(ObjectID, Atom, Handle<TextureRes>)>>, PhantomData<T>);
@@ -30,24 +30,15 @@ impl<T> Default for ImageAwait<T> {
     fn default() -> Self { Self(Share::new(SegQueue::new()), PhantomData) }
 }
 
-pub struct SysImageLoad;
-impl TSystemStageInfo for SysImageLoad {
-    fn depends() -> Vec<crate::run_stage::KeySystem> {
-        vec![
-            SysCommonUserCommand::key()
-        ]
-    }
-}
-
-pub struct CalcImageLoad<S: std::ops::Deref<Target = Atom>, D: From<Handle<TextureRes>>>(PhantomData<(S, D)>);
-impl<S, D> CalcImageLoad<S, D> 
+pub struct CalcImageLoad<K: std::ops::Deref<Target = Atom>, D: From<Handle<TextureRes>>>(PhantomData<(K, D)>);
+impl<K, D> CalcImageLoad<K, D> 
 where
-    S: std::ops::Deref<Target = Atom> + 'static + ThreadSync,
+    K: std::ops::Deref<Target = Atom> + 'static + ThreadSync,
     D: From<Handle<TextureRes>> + 'static + ThreadSync,
 {
     pub fn setup(world: &mut World, stage_builder: &mut StageBuilder) {
-        SysKeyImageChange::<S, D>::setup(world, stage_builder);
-        SysKeyImageCheck::<S, D>::setup(world, stage_builder);
+        SysKeyImageChange::<K, D>::setup(world, stage_builder);
+        SysKeyImageCheck::<K, D>::setup(world, stage_builder);
     }
 }
 
@@ -142,19 +133,19 @@ where
 //     }
 // }
 
-pub struct SysKeyImageChange<S: std::ops::Deref<Target = Atom>, D: From<Handle<TextureRes>>>(PhantomData<(S, D)>);
+pub struct SysKeyImageChange<K: std::ops::Deref<Target = Atom>, D: From<Handle<TextureRes>>>(PhantomData<(K, D)>);
 #[setup]
-impl<S, D> SysKeyImageChange<S, D> 
+impl<K, D> SysKeyImageChange<K, D> 
 where
-    S: std::ops::Deref<Target = Atom> + 'static + ThreadSync,
+    K: std::ops::Deref<Target = Atom> + 'static + ThreadSync,
     D: From<Handle<TextureRes>> + 'static + ThreadSync,
 {
     #[system]
     pub fn image_change(
-        query: Query<GameObject, (ObjectID, &S), Changed<S>>,
+        query: Query<GameObject, (ObjectID, &K), Changed<K>>,
         mut image_cmd: Commands<GameObject, D>,
         texture_assets_mgr: Res<Share<AssetMgr<TextureRes>>>,
-        image_await: Res<ImageAwait<S>>,
+        image_await: Res<ImageAwait<K>>,
         queue: Res<RenderQueue>,
         device: Res<RenderDevice>,
     ) {

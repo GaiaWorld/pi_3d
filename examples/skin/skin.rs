@@ -7,7 +7,7 @@ use pi_engine_shell::{
     engine_shell::{AppShell, EnginShell},
     frame_time::InterfaceFrameTime,
     object::{GameObject, ObjectID},
-    plugin::Plugin, run_stage::{SysCommonUserCommand, ERunStageChap},
+    plugin::Plugin, run_stage::{TSystemStageInfo, ERunStageChap},
 };
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
@@ -31,6 +31,7 @@ pub struct SingleTestData {
 }
 
 pub struct SysTest;
+impl TSystemStageInfo for SysTest {}
 #[setup]
 impl SysTest {
     #[system]
@@ -81,7 +82,7 @@ impl Plugin for PluginTest {
 
         let mut world = engine.world_mut().clone();
 
-        SysTest::setup(&mut world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
+        SysTest::setup(&mut world, stages.query_stage::<SysTest>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);

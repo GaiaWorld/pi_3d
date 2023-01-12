@@ -1,11 +1,8 @@
-use std::ops::Range;
 
-use derive_deref::{Deref, DerefMut};
-use pi_assets::asset::Handle;
-use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{assets::sync_load::{PluginAssetSyncLoad, AssetSyncLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
-use render_data_container::{EVertexDataFormat, VertexBuffer, KeyVertexBuffer, TVertexBufferMeta, TIndicesMeta};
+use render_data_container::{VertexBuffer, KeyVertexBuffer};
 use render_geometry::indices::{IndicesBufferDesc, AssetKeyBufferIndices, AssetResBufferIndices};
 
 use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};

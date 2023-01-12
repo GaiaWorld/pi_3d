@@ -1,16 +1,14 @@
 
-use pi_atom::Atom;
-use pi_ecs::{prelude::{Setup, Query, Res}, query::With};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{InterfaceObject, GameObject}, assets::sync_load::{PluginAssetSyncLoad, PluginAssetSyncNotNeedLoad}, run_stage::{SysCommonUserCommand, ERunStageChap}};
+
+use pi_ecs::{prelude::{Setup}};
+use pi_engine_shell::{assets::sync_load::{PluginAssetSyncNotNeedLoad}, run_stage::{ERunStageChap}};
 use pi_render::{graph::{NodeId, graph::RenderGraph}, rhi::{device::RenderDevice}};
 
 use crate::{
-    cameras::camera::{CameraViewport, CameraRenderData},
-    renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectBindGroup, RendererID}, pipeline::{ResRenderPipeline, KeyRenderPipeline}},
+    cameras::camera::{CameraViewport},
+    renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectBindGroup}, pipeline::{ResRenderPipeline, KeyRenderPipeline}},
     object::{ObjectID},
     plugin::Plugin,
-    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
 };
 
 use self::{

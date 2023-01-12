@@ -1,7 +1,15 @@
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime, run_stage::{SysCommonUserCommand, ERunStageChap}};
+use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
-use pi_scene_context::{plugin::Plugin, object::ObjectID, transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode}, scene::{interface::InterfaceScene}, cameras::interface::InterfaceCamera, meshes::cube::InterfaceCube, main_camera_render::interface::InterfaceMainCamera, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
+use pi_scene_context::{
+    plugin::Plugin,
+    object::ObjectID,
+    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
+    scene::{interface::InterfaceScene},
+    cameras::interface::InterfaceCamera,
+    main_camera_render::interface::InterfaceMainCamera,
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}
+};
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
@@ -13,6 +21,7 @@ pub struct SingleTestData {
 }
 
 pub struct SysTest;
+impl TSystemStageInfo for SysTest {}
 #[setup]
 impl SysTest {
     #[system]
@@ -44,7 +53,7 @@ impl Plugin for PluginTest {
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
         let mut world = engine.world_mut().clone();
 
-        SysTest::setup(&mut world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
+        SysTest::setup(&mut world, stages.query_stage::<SysTest>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);

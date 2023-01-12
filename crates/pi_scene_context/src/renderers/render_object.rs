@@ -1,14 +1,13 @@
 use pi_assets::asset::Handle;
-use pi_slotmap::{DefaultKey};
-use render_data_container::{VertexBuffer, KeyVertexBuffer, RenderVertices, RenderIndices};
+use render_data_container::{VertexBuffer, RenderVertices, RenderIndices};
 
 use crate::{
     object::{ObjectID},
     renderers::render_sort::{RenderSortParam},
-    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+    bindgroup::{RenderBindGroupKey}
 };
 
-use super::pipeline::{AssetResRenderPipeline, ResRenderPipeline};
+use super::pipeline::{ResRenderPipeline};
 pub use super::render_object_list::*;
 
 #[derive(Debug, Clone, Copy)]

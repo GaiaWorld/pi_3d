@@ -7,10 +7,6 @@ use pi_scene_context::{
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
     main_camera_render::interface::InterfaceMainCamera,
-    meshes::{
-        cube::InterfaceCube,
-        quad::{InterfaceQuad, PluginQuadBuilder},
-    },
     object::ObjectID,
     plugin::Plugin,
     scene::interface::InterfaceScene,
@@ -21,6 +17,10 @@ use pi_scene_context::{
 };
 use pi_scene_math::Vector3;
 use procedural_texture::water::interface::InterfaceWaterMaterial;
+use pi_mesh_builder::{
+    cube::InterfaceCube,
+    quad::{InterfaceQuad, PluginQuadBuilder},
+};
 
 pub struct PluginTest;
 impl Plugin for PluginTest {

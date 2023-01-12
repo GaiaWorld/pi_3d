@@ -1,6 +1,6 @@
-use pi_render::rhi::{dyn_uniform_buffer::{Uniform, BindOffset, Bind}};
+use pi_render::rhi::{dyn_uniform_buffer::{Uniform}};
 
-use crate::{shaders::{FragmentUniformBind}, bytes_write_to_memory};
+use crate::{bytes_write_to_memory};
 
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

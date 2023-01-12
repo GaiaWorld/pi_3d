@@ -1,6 +1,5 @@
 use parry3d::shape::ConvexPolyhedron;
 use pi_scene_math::{Vector3, Matrix, frustum::FrustumPlanes};
-use pi_slotmap::{KeyData, Key};
 
 use crate::object::ObjectID;
 

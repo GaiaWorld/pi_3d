@@ -1,6 +1,6 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::{Write, WithOut}, sys::system};
+use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, };
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 

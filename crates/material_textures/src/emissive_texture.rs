@@ -4,7 +4,7 @@ use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::Handle;
 use pi_ecs::{prelude::{ResMut, Query, Setup, Res}, query::Write};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, engine_shell, plugin::Plugin, assets::image_texture_load::{CalcImageLoad, SysImageLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
+use pi_engine_shell::{object::{ObjectID, GameObject}, engine_shell, plugin::Plugin, assets::image_texture_load::{CalcImageLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::{asset::TextureRes, texture::Sampler, device::RenderDevice};
 use pi_scene_context::{shaders::{FragmentUniformBindTexture, FragmentUniformBindTextureSampler}};
 use render_resource::{ImageAssetKey, sampler::{SamplerDesc, SamplerPool}};
@@ -126,6 +126,14 @@ impl InterfaceEmissiveTexture for engine_shell::EnginShell {
     }
 }
 
+struct SysLoad;
+impl TSystemStageInfo for SysLoad {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SingleCommands::key()
+        ]
+    }
+}
 pub struct PluginEmissiveTexture;
 impl Plugin for PluginEmissiveTexture {
     fn init(
@@ -137,8 +145,8 @@ impl Plugin for PluginEmissiveTexture {
 
         world.insert_resource(SingleCommands::default());
 
-        EmissiveTextureLoad::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
         SingleCommands::setup(world, stages.query_stage::<SingleCommands>(ERunStageChap::Command));
+        EmissiveTextureLoad::setup(world, stages.query_stage::<SysLoad>(ERunStageChap::Command));
         
         Ok(())
     }

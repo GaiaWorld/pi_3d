@@ -1,5 +1,5 @@
 
-use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Commands, Setup}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 use pi_scene_math::{

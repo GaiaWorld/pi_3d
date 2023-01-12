@@ -1,6 +1,6 @@
 use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::{Handle, Asset};
-use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{engine_shell::EnginShell, plugin::Plugin, object::{ObjectID, GameObject}, assets::sync_load::{PluginAssetSyncLoad, AssetSyncLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::{device::RenderDevice, pipeline::RenderPipeline};

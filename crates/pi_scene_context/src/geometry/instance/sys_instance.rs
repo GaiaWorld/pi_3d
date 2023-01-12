@@ -1,12 +1,12 @@
-use std::{ops::Range, sync::Arc, time::Instant, marker::PhantomData};
+use std::{ops::Range, time::Instant, marker::PhantomData};
 
-use pi_ecs::{prelude::{Query, ResMut, Res, Component, Commands}, query::{Or, Changed, Write}};
+use pi_ecs::{prelude::{Query, ResMut, Res, Component, Commands}, query::{Changed}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use render_data_container::{VertexBufferPool};
 
-use crate::{geometry::{vertex_buffer_useinfo, geometry::RenderGeometryEable, instance::{instanced_buffer::TInstancedBuffer, types::TInstancedData}, sys_vertex_buffer_use::{SysGeometryStatesInit, SysRenderGeometryInit}}};
+use crate::{geometry::{vertex_buffer_useinfo, geometry::RenderGeometryEable, instance::{instanced_buffer::TInstancedBuffer, types::TInstancedData}, sys_vertex_buffer_use::{SysGeometryStatesInit}}};
 
 use super::{InstanceList, types::TInstanceFlag};
 

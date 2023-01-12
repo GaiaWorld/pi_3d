@@ -1,9 +1,9 @@
-use std::{marker::PhantomData, mem::replace};
+use std::{ mem::replace};
 
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
-use pi_ecs::{prelude::{Query, Res, ResMut, Setup, Commands}, query::{Write, Changed, Or}, entity};
+use pi_ecs::{prelude::{Query, Res, ResMut, Setup, Commands}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, assets::image_texture_load::{CalcImageLoad, ImageAwait, SysImageLoad}, engine_shell::EnginShell, run_stage::{TSystemStageInfo, ERunStageChap}};
+use pi_engine_shell::{object::{GameObject, ObjectID}, assets::image_texture_load::{CalcImageLoad, ImageAwait}, engine_shell::EnginShell, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::{device::RenderDevice, asset::TextureRes};
 use pi_share::Share;
 use render_resource::{sampler::{SamplerPool, SamplerDesc}, ImageAssetKey};
@@ -11,12 +11,12 @@ use render_shader::unifrom_code::{UniformPropertyName, MaterialTextureBindDesc};
 
 use crate::{
     materials::{shader_effect::AssetResShaderEffectMeta},
-    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+    bindgroup::{RenderBindGroupPool}
 };
 
 use super::{
     texture_uniform::{MaterialTextureBindGroupID, TForTextureBindGroup},
-    texture::{ValueTextureKey, TextureSlot01, TextureResSlot01, TextureResSlot03, TextureResSlot04, TextureResSlot02, TextureSlot02, TextureSlot03, TextureSlot04, UniformSampler, SamplerSlot01, UniformTexture, SamplerSlot02, SamplerSlot03, SamplerSlot04, ETextureSlot}
+    texture::{ValueTextureKey, TextureSlot01, TextureResSlot01, TextureResSlot03, TextureResSlot04, TextureResSlot02, TextureSlot02, TextureSlot03, TextureSlot04, UniformSampler, SamplerSlot01, UniformTexture, SamplerSlot02, SamplerSlot03, SamplerSlot04}
 };
 
 #[derive(Debug, Clone)]
@@ -99,6 +99,15 @@ impl SysTextureCommand {
     }
 }
 
+pub struct SysTextureLoad;
+impl TSystemStageInfo for SysTextureLoad {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysTextureCommand::key()
+        ]
+    }
+}
+
 pub type SysTextureSlot01Load = CalcImageLoad<TextureSlot01, TextureResSlot01>;
 pub type SysTextureSlot02Load = CalcImageLoad<TextureSlot02, TextureResSlot02>;
 pub type SysTextureSlot03Load = CalcImageLoad<TextureSlot03, TextureResSlot03>;
@@ -108,7 +117,7 @@ pub struct SysTextureReady;
 impl TSystemStageInfo for SysTextureReady {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysTextureCommand::key(), SysImageLoad::key(), 
+            SysTextureLoad::key(), 
         ]
     }
 }
@@ -243,10 +252,10 @@ impl pi_engine_shell::plugin::Plugin for PluginTextureSlot {
         world.insert_resource(ImageAwait::<TextureSlot03>::default());
         world.insert_resource(ImageAwait::<TextureSlot04>::default());
 
-        SysTextureSlot01Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
-        SysTextureSlot02Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
-        SysTextureSlot03Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
-        SysTextureSlot04Load::setup(world, stages.query_stage::<SysImageLoad>(ERunStageChap::Command));
+        SysTextureSlot01Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
+        SysTextureSlot02Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
+        SysTextureSlot03Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
+        SysTextureSlot04Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
 
         // SysTextureResReady1::setup(world, stages.query_stage::<SysTextureReady>(ERunStageChap::Command));
         // SysTextureResReady2::setup(world, stages.query_stage::<SysTextureReady>(ERunStageChap::Command));

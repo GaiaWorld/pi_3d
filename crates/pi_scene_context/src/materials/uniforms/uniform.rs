@@ -1,8 +1,8 @@
-use std::{marker::PhantomData, mem::transmute};
+use std::{marker::PhantomData};
 
-use pi_ecs::{prelude::{ResMut, Query, Res, Component, Commands}, query::{Write, Changed, Or}};
+use pi_ecs::{prelude::{ResMut, Query, Res, Component, Commands}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo, assets::image_texture_load::SysImageLoad};
+use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
 use pi_render::rhi::{device::RenderDevice, dyn_uniform_buffer::Uniform};
 use render_shader::{shader_bind::{ShaderBindEffectValue}, shader_set::ShaderSetEffectAbout, set_bind::ShaderSetBind};
 
@@ -210,13 +210,13 @@ impl SysEffectBindgroupUpdateTex01 {
         >,
         mut flag_delete: Commands<GameObject, DynUnifromBufferReBindFlag>,
     ) {
-        log::info!("SysEffectBindgroupUpdateTex01:");
+        log::trace!("SysEffectBindgroupUpdateTex01:");
         items.iter().for_each(|(
             obj,
             effect_set, flag,
             tex1, samp1
         )| {
-            log::info!("SysEffectBindgroupUpdateTex01: {}", effect_set.tex_count());
+            log::debug!("SysEffectBindgroupUpdateTex01: {}", effect_set.tex_count());
             if effect_set.tex_count() == 1 {
                 match bindgroups.get_mut(&RenderBindGroupKey::EffectAbout(obj.clone())) {
                     Some(mut group) => {

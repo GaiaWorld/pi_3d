@@ -4,21 +4,23 @@ use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, run_stage::{SysCommonUserCommand, ERunStageChap}};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    meshes::{cube::{InterfaceCube, CubeBuilder}, interface::InterfaceMesh},
+    meshes::{interface::InterfaceMesh},
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::render_depth_and_stencil::{InterfaceRenderDepthAndStencil, RenderDepthAndStencil}, materials::material::{InterfaceMaterial, MaterialID}, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, 
+    materials::material::{InterfaceMaterial, MaterialID},
+    geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use render_data_container::KeyVertexBuffer;
 use render_geometry::vertex_data::VertexBufferDesc;
+use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder};
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -26,6 +28,7 @@ pub struct SingleTestData {
 }
 
 pub struct SysTest;
+impl TSystemStageInfo for SysTest {}
 #[setup]
 impl SysTest {
     #[system]
@@ -63,7 +66,7 @@ impl Plugin for PluginTest {
 
         let world = engine.world_mut();
 
-        SysTest::setup(world, stages.query_stage::<SysCommonUserCommand>(ERunStageChap::Command));
+        SysTest::setup(world, stages.query_stage::<SysTest>(ERunStageChap::Command));
 
         let testdata = SingleTestData::default();
         world.insert_resource(testdata);
@@ -94,10 +97,10 @@ impl PluginTest {
         // engine.emissive_intensity(entity, intensity);
 
         let source = engine.create_mesh(scene01);
-        let mut attrs = CubeBuilder::attrs_desc();
+        let mut attrs = CubeBuilder::attrs_meta();
         attrs.push(VertexBufferDesc::instance_world_matrix());
         engine.use_geometry(source, attrs);
-        engine.use_indices(source, CubeBuilder::indices_desc());
+        engine.use_indices(source, CubeBuilder::indices_meta());
         engine.use_default_material(source);
         engine.layer_mask(source, LayerMask::default());
 

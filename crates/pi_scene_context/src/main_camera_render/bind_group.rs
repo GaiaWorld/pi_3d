@@ -17,8 +17,6 @@ use crate::{
     }
 };
 
-use super::command::SysMainCameraRenderCommand;
-
 
 pub struct SysMainCameraRendererBindGroup;
 impl TSystemStageInfo for SysMainCameraRendererBindGroup {

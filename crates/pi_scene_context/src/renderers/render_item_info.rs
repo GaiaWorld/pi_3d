@@ -19,13 +19,12 @@ use render_shader::{
 
 use crate::{
     materials::{
-        material::{MaterialID, SysMaterialIDCommand},
+        material::{MaterialID},
         shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta},
     },
     geometry::{AssetKeyVBLayouts, AssetResVBLayouts, geometry::{RenderGeometry, RenderIndicesFrom}}, 
     transforms::transform_node::GlobalTransform,
-    main_camera_render::{draw_sort_sys::SysModelListAfferCullingUpdateByModelWorldMatrix, renderer_binds_sys::SysRendererInitForCamera},
-    meshes::{command::SysMeshCommand, model::SysModelAboutUpdate}, viewer::ViewerGlobalPosition,
+    viewer::ViewerGlobalPosition,
     bindgroup::{
         RenderBindGroupKey, RenderBindGroupPool,
         uniform_buffer::{SysDynUnifromBufferUpdate, DynUnifromBufferReBindFlag},
@@ -36,9 +35,9 @@ use super::{
     ModelListAfterCulling,
     render_object::{RendererID, RenderObjectMetaOpaque, RenderObjectBindGroup, RenderObjectMetaTransparent},
     pipeline::{KeyRenderPipeline, ResRenderPipeline, pipeline_state_key, render_pipeline},
-    render_primitive::{PrimitiveState, SysRenderPrimitiveCommand},
-    render_depth_and_stencil::{RenderDepthAndStencil, SysRenderDepthAndStencilCommand},
-    render_blend::{RenderBlend, SysRenderBlendCommand},
+    render_primitive::{PrimitiveState},
+    render_depth_and_stencil::{RenderDepthAndStencil},
+    render_blend::{RenderBlend},
     render_target_state::RenderTargetState,
     renderer::Renderer,
     render_sort::RenderSortParam,

@@ -1,4 +1,4 @@
-use std::{time::Instant, ops::Range};
+use std::{time::Instant};
 
 use pi_engine_shell::object::ObjectID;
 use pi_hash::XHashMap;
@@ -6,7 +6,7 @@ use render_data_container::VertexBufferPool;
 
 use crate::{
     renderers::render_object::TempDrawInfoRecord,
-    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+    bindgroup::{RenderBindGroupPool}
 };
 
 use super::render_object::{RenderObjectBindGroup, RenderObjectMetaOpaque, RenderObjectMetaTransparent, DrawObject};

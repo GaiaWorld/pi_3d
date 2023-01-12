@@ -14,6 +14,7 @@ members = ["crates/*"]
 [dependencies]
 pi_scene_context = { path = "crates/pi_scene_context" }
 pi_engine_shell = { path = "crates/pi_engine_shell" }
+pi_mesh_builder = { path = "crates/pi_mesh_builder" }
 default_render = { path = "crates/default_render" }
 material_textures = { path = "crates/material_textures" }
 skybox = { path = "crates/skybox" }
@@ -62,6 +63,10 @@ path = "examples/cube/cube.rs"
 [[example]]
 name = "unlit_cube"
 path = "examples/cube/unlit_cube.rs"
+
+[[example]]
+name = "simple"
+path = "examples/simple/simple.rs"
 
 [[example]]
 name = "quad"

@@ -3,7 +3,7 @@ use std::ops::Range;
 use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::Handle;
 use render_data_container::{KeyVertexBuffer, VertexBuffer, VertexBufferUse};
-use render_geometry::vertex_data::{TVertexBufferDesc, VertexBufferDesc};
+use render_geometry::vertex_data::{VertexBufferDesc};
 
 pub trait AsKeyVertexBuffer {
     fn create(desc: &VertexBufferDesc) -> Self;

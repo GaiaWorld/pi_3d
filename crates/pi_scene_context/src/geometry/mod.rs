@@ -3,9 +3,9 @@ use std::mem::replace;
 use derive_deref::{Deref, DerefMut};
 use pi_assets::{mgr::AssetMgr, asset::Handle};
 use pi_atom::Atom;
-use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{engine_shell::EnginShell, object::GameObject, assets::sync_load::{AssetSyncWait, PluginAssetSyncLoad, InterfaceAssetSyncCreate, AssetSyncLoad}, run_stage::{TSystemStageInfo, SysCommonUserCommand, ERunStageChap}};
+use pi_engine_shell::{engine_shell::EnginShell, object::GameObject, assets::sync_load::{AssetSyncWait, PluginAssetSyncLoad, InterfaceAssetSyncCreate, AssetSyncLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_share::Share;
 use render_data_container::{vertex_layout_key::KeyVertexLayouts, KeyVertexBuffer, VertexBuffer, VertexBufferPool};
 use render_geometry::{vertex_data::{VertexBufferLayouts, VertexBufferDesc}, indices::{AssetKeyBufferIndices, AssetResBufferIndices}};
@@ -22,6 +22,7 @@ pub mod sys_vertex_buffer_use;
 pub mod geometry;
 pub mod indices;
 pub mod instance;
+pub mod vertex_buffer;
 
 pub type VDK = usize;
 pub type GBID = Atom;
@@ -201,6 +202,7 @@ impl Plugin for PluginBuildinGeometry {
         PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot08, VertexBuffer, AssetResVBSlot08, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
         PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot09, VertexBuffer, AssetResVBSlot09, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
+        // PluginVertexBufferLoad::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
         PluginVertexBuffers.init(engine, stages);
 
         Ok(())

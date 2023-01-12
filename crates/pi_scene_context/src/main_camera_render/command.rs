@@ -10,7 +10,6 @@ use render_shader::{set_bind::ShaderSetBind, shader_set::{ShaderSetSceneAbout, S
 use crate::{
     renderers::{render_object::RendererID, renderer::Renderer, ModelList, ModelListAfterCulling},
     object::{ObjectID, GameObject},
-    cameras::camera::{CameraRenderData, CameraViewport},
     postprocess::Postprocess, flags::SceneID,
     viewer::{command::Viewport, ViewerID, ViewerViewMatrix, ViewerProjectionMatrix, ViewerTransformMatrix, ViewerGlobalPosition, ViewerDirection},
     scene::{

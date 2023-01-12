@@ -7,15 +7,13 @@ use pi_share::Share;
 use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
 use render_geometry::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
 
-use crate::{
+use pi_scene_context::{
     plugin::{Plugin, ErrorPlugin},
     object::{ObjectID},
     engine::Engine, 
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, meshes::interface::InterfaceMesh
 };
-
-use super::interface::InterfaceMesh;
 
 pub struct CubeBuilder;
 impl CubeBuilder {
@@ -24,7 +22,7 @@ impl CubeBuilder {
     const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
     const KEY_BUFFER_UV:        &'static str = "CubeUV";
     const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
-    pub fn attrs_desc() -> Vec<VertexBufferDesc> {
+    pub fn attrs_meta() -> Vec<VertexBufferDesc> {
         let keypos = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_POSITION);
         let keynormal = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_NORMAL);
         let keyuv = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_UV);
@@ -34,7 +32,7 @@ impl CubeBuilder {
             VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
         ]
     }
-    pub fn indices_desc() -> IndicesBufferDesc {
+    pub fn indices_meta() -> IndicesBufferDesc {
         let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
         IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
     }
@@ -155,9 +153,9 @@ impl InterfaceCube for Engine {
 
         self.use_geometry(
             entity,
-            CubeBuilder::attrs_desc()
+            CubeBuilder::attrs_meta()
         );
-        self.use_indices(entity, CubeBuilder::indices_desc());
+        self.use_indices(entity, CubeBuilder::indices_meta());
 
         entity
     }
@@ -168,7 +166,7 @@ impl Plugin for PluginCubeBuilder {
     fn init(
         &mut self,
         engine: &mut Engine,
-        stages: &mut crate::run_stage::RunStage,
+        stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), ErrorPlugin> {
         engine.regist_cube();
 

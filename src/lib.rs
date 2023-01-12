@@ -1,12 +1,13 @@
 use default_render::PluginDefaultMaterial;
+use pi_mesh_builder::{cube::PluginCubeBuilder, ball::PluginBallBuilder};
 use pi_scene_context::{
     renderers::PluginRenderer,
-    meshes::{cube::PluginCubeBuilder, PluginMesh, ball::PluginBallBuilder},
+    meshes::{PluginMesh,},
     main_camera_render::PluginMainCameraRender, layer_mask::PluginLayerMask, materials::PluginMaterial,
     cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
     cameras::PluginCamera,
     transforms::PluginTransformNode,
-    scene::PluginScene, resources::PluginResource, geometry::{PluginBuildinGeometry, indices::PluginBufferIndices}, bindgroup::PluginRenderBindGroup
+    scene::PluginScene, geometry::{PluginBuildinGeometry, indices::PluginBufferIndices}, bindgroup::PluginRenderBindGroup
 };
 
 pub struct PluginBundleDefault;
@@ -19,7 +20,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         let world = engine.world_mut();
 
         PluginRenderBindGroup.init(engine, stages);
-        PluginResource.init(engine, stages);
         PluginScene.init(engine, stages);
         PluginTransformNode.init(engine, stages);
         PluginCamera.init(engine, stages);
@@ -40,15 +40,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCubeBuilder.init(engine, stages);
 
         PluginRenderer.init(engine, stages);
-
-        // skybox::interface::PluginSkyboxMaterial.init(engine, stages);
-        // skybox::PluginSkybox.init(engine, stages);
-
-        // procedural_texture::perlin_noise::interface::PluginPerlinNoiseMaterial.init(engine, stages);
-        // procedural_texture::PluginTestPerlinNoise.init(engine, stages);
-
-        // procedural_texture::cloud::interface::PluginCloudMaterial.init(engine, stages);
-        // procedural_texture::PluginTestPerlinNoise.init(engine, stages);
 
         PluginBoundingOctTree.init(engine, stages);
         PluginBallBuilder.init(engine, stages);

@@ -1,4 +1,4 @@
-use pi_ecs::{prelude::{Setup, ResMut, Res, Query, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Res, Query, Commands}, };
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
 use pi_render::rhi::{device::RenderDevice, RenderQueue};

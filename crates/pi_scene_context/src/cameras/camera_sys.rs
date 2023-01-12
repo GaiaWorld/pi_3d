@@ -1,11 +1,9 @@
-use pi_ecs::{prelude::{Query, Commands}, query::{Write, With, Or, Changed}};
+use pi_ecs::{prelude::{Query, Commands}};
 use pi_ecs_macros::setup;
-use pi_ecs_utils::prelude::EntityTree;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, Rotation3};
-use pi_slotmap_tree::Storage;
 
-use crate::{transforms::{transform_node::{GlobalTransform, LocalPosition, WorldMatrix, LocalRotation, }, command::SysTransformNodeCommand}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}, renderers::render_object::RendererID};
+use crate::{transforms::{transform_node::{LocalPosition, LocalRotation}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}};
 
 
 pub struct TargetCameraEffectLocalRotation;

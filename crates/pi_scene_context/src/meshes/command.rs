@@ -1,15 +1,13 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Commands}, query::Write};
+use pi_ecs::{prelude::{ResMut, Query, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Vector4, Matrix};
-use render_data_container::VertexBufferPool;
-use render_shader::instance_code::EInstanceCode;
 
-use crate::{object::{ObjectID, GameObject}, renderers::{render_blend::RenderBlend, render_primitive::PrimitiveState, render_depth_and_stencil::RenderDepthAndStencil}, layer_mask::LayerMask,  geometry::{instance::{instance_color::{InstanceColor, InstancedColorDirty}, instance_tilloff::{InstanceTillOff, InstanceTillOffDirty}, InstanceList, InstanceSource, InstanceSourceRecord, instance_world_matrix::InstancedWorldMatrixDirty}, indices::SysGeometryCommand}, transforms::command::SysTransformNodeCommand};
+use crate::{object::{ObjectID, GameObject}, geometry::{instance::{instance_color::{InstanceColor, InstancedColorDirty}, instance_tilloff::{InstanceTillOff, InstanceTillOffDirty}, InstanceList, InstanceSource, InstanceSourceRecord, instance_world_matrix::InstancedWorldMatrixDirty}}, transforms::command::SysTransformNodeCommand};
 
-use super::{model::{BuildinModelBind, RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty}, abstract_mesh::AbstructMesh, Mesh};
+use super::{model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty}, abstract_mesh::AbstructMesh, Mesh};
 
 #[derive(Debug)]
 pub enum MeshCommand {
