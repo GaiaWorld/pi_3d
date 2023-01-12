@@ -174,8 +174,8 @@ impl TSystemStageInfo for SysVertexBufferLoad {
     }
 }
 
-pub struct PluginBuildinGeometry;
-impl Plugin for PluginBuildinGeometry {
+pub struct PluginGeometry;
+impl Plugin for PluginGeometry {
     fn init(
         &mut self,
         engine: &mut crate::engine::Engine,

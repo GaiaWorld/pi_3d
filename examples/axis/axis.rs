@@ -1,12 +1,12 @@
-use std::time::Instant;
+
 
 use pi_3d::PluginBundleDefault;
-use pi_ecs::prelude::{Res, ResMut, Setup};
+use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{
     engine_shell::{AppShell, EnginShell},
     frame_time::InterfaceFrameTime,
-    object::{GameObject, ObjectID},
+    object::{ObjectID},
     plugin::Plugin, run_stage::{TSystemStageInfo, ERunStageChap},
 };
 use pi_render::rhi::options::RenderOptions;
@@ -14,11 +14,11 @@ use pi_scene_context::{
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
     main_camera_render::interface::InterfaceMainCamera,
-    materials::{material::{ECommand, InterfaceMaterial, MaterialID, SingleValueUniformCommands}, uniforms::uint::UintUniform},
+    materials::{material::{InterfaceMaterial}},
     scene::interface::InterfaceScene,
     transforms::{interface::InterfaceTransformNode, command::{SingleTransformNodeCommandList, TransformNodeCommand}},
 };
-use pi_scene_math::{Matrix, Vector3};
+use pi_scene_math::{Vector3};
 use axis::{axis::{InterfaceAxis, PluginAxisBuilder}, interface::InterfaceAxisMaterial, PluginAxis};
 
 #[derive(Debug, Default)]
@@ -85,7 +85,7 @@ impl PluginTest {
 
         let axis_box = engine.new_axis(scene01);
         let material = engine.create_axis_material();
-        engine.use_material(axis_box, MaterialID(material));
+        engine.use_material(axis_box, material);
 
         engine.layer_mask(camera01, LayerMask::default());
         engine.layer_mask(axis_box, LayerMask::default());

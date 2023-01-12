@@ -7,7 +7,7 @@ use pi_scene_context::{
     cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
     cameras::PluginCamera,
     transforms::PluginTransformNode,
-    scene::PluginScene, geometry::{PluginBuildinGeometry, indices::PluginBufferIndices}, bindgroup::PluginRenderBindGroup
+    scene::PluginScene, geometry::{PluginGeometry, indices::PluginBufferIndices}, bindgroup::PluginRenderBindGroup
 };
 
 pub struct PluginBundleDefault;
@@ -26,10 +26,8 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCulling.init(engine, stages);
 
         PluginBufferIndices.init(engine, stages);
-        PluginBuildinGeometry.init(engine, stages);
-        // PluginBufferPosition.init(engine, stages);
-        // PluginAttributeIndices.init(engine, stages);
-        // PluginBufferUV.init(engine, stages);
+        PluginGeometry.init(engine, stages);
+
         PluginMesh.init(engine, stages);
         PluginMaterial.init(engine, stages);
         PluginLayerMask.init(engine, stages);
@@ -37,12 +35,12 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginMainCameraRender.init(engine, stages);
 
         PluginDefaultMaterial.init(engine, stages);
-        PluginCubeBuilder.init(engine, stages);
 
         PluginRenderer.init(engine, stages);
-
         PluginBoundingOctTree.init(engine, stages);
-        PluginBallBuilder.init(engine, stages);
+
+        // PluginCubeBuilder.init(engine, stages);
+        // PluginBallBuilder.init(engine, stages);
         Ok(())
     }
 }

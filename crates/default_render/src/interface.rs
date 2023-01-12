@@ -47,7 +47,7 @@ impl InterfaceDefaultMaterial for crate::engine::Engine {
     ) -> &Self {
 
         let id = self.world().get_resource::<SingleIDBaseDefaultMaterial>().unwrap();
-        self.use_material(entity, id.0);
+        self.use_material(entity, id.0.0.clone());
 
         self
     }

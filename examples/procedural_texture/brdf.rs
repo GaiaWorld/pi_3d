@@ -1,20 +1,17 @@
 use material_textures::{PluginMaterialTextures, main_texture::PluginMainTexture};
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, object::InterfaceObject, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
+use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_mesh_builder::quad::{InterfaceQuad, PluginQuadBuilder};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     plugin::Plugin,
-    object::ObjectID,
-    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
+    transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera, 
     main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{shader_effect::InterfaceMaterialMeta, material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}
+    materials::{material::{InterfaceMaterial}, uniforms::sys_texture::InterfaceMaterialTexture}
 };
-use pi_ecs::prelude::{ResMut, Setup};
-use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
 use procedural_texture::brdf::{PluginBRDFMaterial, interface::InterfaceBRDFMaterial};
 use render_resource::sampler::SamplerDesc;
@@ -35,7 +32,6 @@ impl Plugin for PluginTest {
 
         PluginMaterialTextures.init(engine, stages);
         PluginMainTexture.init(engine, stages);
-        PluginUnlitMaterial.init(engine, stages);
         
         Ok(())
     }
@@ -61,7 +57,7 @@ impl PluginTest {
         engine.set_texture_sampler(material, "_MainTex", SamplerDesc::default());
         engine.emissive_texture(material, render_resource::ImageAssetKey::from("E:/rust_render/pi_3d/assets/images/fractal.png"));
 
-        engine.use_material(sky_box, MaterialID(material));
+        engine.use_material(sky_box, material);
 
         engine.layer_mask(camera01, LayerMask::default());
         engine.layer_mask(sky_box, LayerMask::default());

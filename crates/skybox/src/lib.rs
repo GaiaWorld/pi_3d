@@ -21,7 +21,7 @@ impl InterfaceSkybox for EnginShell {
         let material = self.world().get_resource::<SingleSkyboxMaterial>().unwrap();
 
         let entity = self.new_cube(scene);
-        self.use_material(entity, material.0.clone());
+        self.use_material(entity, material.0.0.clone());
 
         entity
     }

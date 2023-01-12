@@ -1,19 +1,15 @@
 use pi_3d::PluginBundleDefault;
-use pi_ecs::prelude::{ResMut, Setup};
-use pi_ecs_macros::setup;
 use pi_engine_shell::{engine_shell::{AppShell, EnginShell}, frame_time::InterfaceFrameTime};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
     main_camera_render::interface::InterfaceMainCamera,
-    object::ObjectID,
     plugin::Plugin,
     scene::interface::InterfaceScene,
     transforms::{
-        command::{SingleTransformNodeCommandList, TransformNodeCommand},
         interface::InterfaceTransformNode,
-    }, materials::material::{MaterialID, InterfaceMaterial},
+    }, materials::material::{InterfaceMaterial},
 };
 use pi_scene_math::Vector3;
 use procedural_texture::water::interface::InterfaceWaterMaterial;
@@ -50,7 +46,7 @@ impl PluginTest {
 
         let sky_box = engine.new_quad(scene01);
         let material = engine.create_water_material();
-        engine.use_material(sky_box, MaterialID(material));
+        engine.use_material(sky_box, material);
 
         engine.layer_mask(camera01, LayerMask::default());
         engine.layer_mask(sky_box, LayerMask::default());

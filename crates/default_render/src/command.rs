@@ -6,7 +6,7 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::{uniforms::vec4::{Vec4Uniform}, shader_effect::AssetResShaderEffectMeta}};
+use pi_scene_context::{object::{ObjectID, GameObject}, materials::{uniforms::{vec4::{Vec4Uniform}, uniform::SysMaterialMetaChange}, shader_effect::AssetResShaderEffectMeta}};
 
 
 pub enum DefaultMaterialCommand {
@@ -18,7 +18,13 @@ pub struct SingeDefaultMaterialCommandList {
     pub list: Vec<DefaultMaterialCommand>,
 }
 pub struct SysDefaultMaterialCommand;
-impl TSystemStageInfo for SysDefaultMaterialCommand {}
+impl TSystemStageInfo for SysDefaultMaterialCommand {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysMaterialMetaChange::key()
+        ]
+    }
+}
 #[setup]
 impl SysDefaultMaterialCommand {
     #[system]

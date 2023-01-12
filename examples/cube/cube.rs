@@ -1,23 +1,22 @@
 #![feature(box_into_inner)]
 
-use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
-use log::{trace, warn};
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, run_stage::{TSystemStageInfo, ERunStageChap}};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}, assets::local_load::PluginLocalLoad, setup::TSetup};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::render_depth_and_stencil::{InterfaceRenderDepthAndStencil, RenderDepthAndStencil}, materials::material::{InterfaceMaterial, MaterialID}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder};
+use pi_mesh_builder::{cube::{InterfaceCube, PluginCubeBuilder}, ball::PluginBallBuilder};
+use unlit_material::PluginUnlitMaterial;
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -58,8 +57,11 @@ impl Plugin for PluginTest {
         engine: &mut pi_scene_context::engine::Engine,
         stages: &mut pi_scene_context::run_stage::RunStage,
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-
+        PluginLocalLoad.init(engine, stages);
         PluginBundleDefault.init(engine, stages);
+        PluginUnlitMaterial.init(engine, stages);
+
+        PluginCubeBuilder.init(engine, stages);
 
         let world = engine.world_mut();
 
@@ -73,7 +75,7 @@ impl Plugin for PluginTest {
 }
 
 impl PluginTest {
-    pub fn setup(
+    fn setup(
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
 
@@ -111,20 +113,6 @@ impl PluginTest {
     }
 }
 
-struct MyLogger;
-
-impl log::Log for MyLogger {
-    fn enabled(&self, metadata: &log::Metadata) -> bool {
-        metadata.level() <= log::Level::Info
-    }
-
-    fn log(&self, record: &log::Record) {
-        if self.enabled(record.metadata()) {
-            println!("{} - {}", record.level(), record.args());
-        }
-    }
-    fn flush(&self) {}
-}
 
 pub fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();

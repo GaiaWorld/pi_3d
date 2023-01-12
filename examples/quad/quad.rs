@@ -1,20 +1,17 @@
 #![feature(box_into_inner)]
 
-use std::{any::TypeId, sync::Arc, time::{Instant, Duration}};
-
-use default_render::interface::InterfaceDefaultMaterial;
 use material_textures::{PluginMaterialTextures, main_texture::{PluginMainTexture, InterfaceMainTexture}};
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_mesh_builder::quad::{PluginQuadBuilder, InterfaceQuad};
 use pi_render::rhi::options::RenderOptions;
-use pi_scene_context::{plugin::Plugin, object::ObjectID,
+use pi_scene_context::{plugin::Plugin,
     transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}
+    materials::{material::{InterfaceMaterial}, uniforms::sys_texture::InterfaceMaterialTexture}
 };
 use pi_scene_math::Vector3;
 use render_resource::sampler::SamplerDesc;
@@ -31,11 +28,7 @@ impl Plugin for PluginTest {
     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
         PluginLocalLoad.init(engine, stages);
         PluginBundleDefault.init(engine, stages);
-
         PluginQuadBuilder.init(engine, stages);
-
-        PluginMaterialTextures.init(engine, stages);
-        PluginMainTexture.init(engine, stages);
         PluginUnlitMaterial.init(engine, stages);
 
         Ok(())
@@ -63,7 +56,7 @@ impl PluginTest {
 
         
         let quad = engine.new_quad(scene01);
-        engine.use_material(quad, MaterialID(unlitmaterial));
+        engine.use_material(quad, unlitmaterial);
         engine.layer_mask(quad, LayerMask::default());
     }
 }

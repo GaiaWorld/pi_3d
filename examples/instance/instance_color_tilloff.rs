@@ -1,10 +1,8 @@
 #![feature(box_into_inner)]
 
-use std::{any::TypeId, sync::Arc, time::{Instant, Duration}, ops::RangeBounds};
 
-use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, setup::TSetup, assets::local_load::PluginLocalLoad, run_stage::{ERunStageChap, TSystemStageInfo}};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad, run_stage::{ERunStageChap, TSystemStageInfo}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
@@ -12,16 +10,15 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     cameras::interface::InterfaceCamera,
     meshes::{interface::InterfaceMesh},
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::render_depth_and_stencil::{InterfaceRenderDepthAndStencil, RenderDepthAndStencil}, materials::{material::{InterfaceMaterial, MaterialID}, uniforms::sys_texture::InterfaceMaterialTexture}, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial}, uniforms::sys_texture::InterfaceMaterialTexture}, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::{Vector3, Vector4};
-use render_data_container::KeyVertexBuffer;
 use render_geometry::vertex_data::VertexBufferDesc;
 use render_resource::sampler::SamplerDesc;
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
-use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder};
+use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder, PluginCubeBuilder};
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -66,6 +63,7 @@ impl Plugin for PluginTest {
         PluginLocalLoad.init(engine, stages);
         PluginBundleDefault.init(engine, stages);
         PluginUnlitMaterial.init(engine, stages);
+        PluginCubeBuilder.init(engine, stages);
 
         let world = engine.world_mut();
 
@@ -113,7 +111,7 @@ impl PluginTest {
         attrs.push(VertexBufferDesc::instance_tilloff());
         engine.use_geometry(source, attrs);
         engine.use_indices(source, CubeBuilder::indices_meta());
-        engine.use_material(source, MaterialID(unlitmaterial));
+        engine.use_material(source, unlitmaterial);
         engine.layer_mask(source, LayerMask::default());
 
         let cell_col = 4.;

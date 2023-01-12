@@ -159,7 +159,7 @@ pub trait InterfaceMaterial {
     fn use_material(
         & self,
         object: ObjectID,
-        material: MaterialID,
+        material: ObjectID,
     );
     fn set_uniform_mat4(
         &self,
@@ -216,12 +216,12 @@ impl InterfaceMaterial for crate::engine::Engine {
     fn use_material(
         & self,
         object: ObjectID,
-        material: MaterialID,
+        material: ObjectID,
     ) {
         let world = self.world();
 
         let commands = world.get_resource_mut::<SingleMaterialIDCommandList>().unwrap();
-        commands.list.push(MaterialIDCommand::Use(object, material));
+        commands.list.push(MaterialIDCommand::Use(object, MaterialID(material)));
     }
 
     fn set_uniform_mat4(
