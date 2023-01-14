@@ -1,7 +1,10 @@
+use std::{hash::{Hash, Hasher}, fmt::Debug};
+
 use pi_engine_shell::object::ObjectID;
+use pi_hash::DefaultHasher;
 use pi_render::graph::{graph::RenderGraph, NodeId};
 
-use crate::{cameras::camera::CameraViewport, main_camera_render::graph::SingleMainCameraOpaqueRenderNode};
+use crate::{cameras::camera::CameraViewport, main_camera_render::graph::SingleMainCameraOpaqueRenderNode, viewer::command::Viewport};
 
 use super::{render_object::{RenderObjectTransparentList, RenderObjectOpaqueList, RenderObjectBindGroup}};
 
@@ -24,9 +27,12 @@ pub const PASS_TAG_14: TPassTag = 0b0010_0000_0000_0000;
 pub const PASS_TAG_15: TPassTag = 0b0100_0000_0000_0000;
 pub const PASS_TAG_16: TPassTag = 0b1000_0000_0000_0000;
 
+#[derive(Debug, Default)]
+pub struct RendererHasher(pub DefaultHasher);
+
 pub struct Renderer {
     pub ready: bool,
-    pub viewport: CameraViewport,
+    pub viewport: Viewport,
     pub opaque_graphic: Option<NodeId>,
     pub skybox_graphic: Option<NodeId>,
     pub transparent_graphic: Option<NodeId>,
@@ -36,12 +42,13 @@ pub struct Renderer {
 }
 impl Renderer {
     pub fn new(
+        name: &'static str,
         object_id: ObjectID,
         rg: &mut RenderGraph,
     ) -> Self {
-        let opaque_graphic = rg.add_node("MainCameraOpaque", SingleMainCameraOpaqueRenderNode::new(object_id)).unwrap();
+        let opaque_graphic = rg.add_node(name, SingleMainCameraOpaqueRenderNode::new(object_id)).unwrap();
         Self {
-            viewport: CameraViewport::default(),
+            viewport: Viewport::default(),
             opaque_graphic: Some(opaque_graphic),
             skybox_graphic: None,
             transparent_graphic: None,

@@ -33,6 +33,8 @@ impl AppShell {
         let mut world = World::new();
         world.insert_resource(crate::DispatchEnd::default());
         
+        world.insert_resource(window.clone());
+        
         let mut result: Share<ShareRwLock<Option<(World, RenderStage, Arc<winit::window::Window>, RenderOptions)>>> = Share::new(ShareRwLock::new(None));
         
         let result1 = result.clone();
@@ -114,19 +116,22 @@ impl AppShell {
 
     pub fn ready(
         &mut self,
-    ) {
+    ) -> &mut Self {
         let render_stage = replace(&mut self.render_stages, None).unwrap();
         self.engine.as_mut().unwrap().ready(
             &mut self.runstages,
             render_stage
         );
+
+        self
     }
 
     pub fn setup(
         &mut self,
         setup: &SetupFn,
-    ) {
+    ) -> &mut Self {
         setup(self.engine.as_ref().unwrap());
+        self
     }
 
     pub fn run(&mut self) {

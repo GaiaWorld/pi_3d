@@ -1,25 +1,15 @@
 use pi_engine_shell::object::InterfaceObject;
-use pi_scene_math::Number;
+use pi_scene_math::{Number, Vector3};
 
-use crate::{object::{ObjectID}, transforms::{interface::InterfaceTransformNode}, scene::interface::InterfaceScene};
+use crate::{object::{ObjectID}, transforms::{interface::InterfaceTransformNode}, scene::interface::InterfaceScene, layer_mask::{command::{LayerMaskCommand, SingleLayerMaskCommandList}, LayerMask}};
 
-use super::command::{SingleCameraCommandList, SingleTargetCameraCommandList, CameraCommand, TargetCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand, SingleCameraCreateList};
+use super::command::{SingleCameraCommandList, SingleTargetCameraCommandList, CameraCommand, TargetCameraCommand, SingleFreeCameraCommandList, FreeCameraCommand, SingleCameraCreateList, ECameraCreateCommand};
 
 pub trait InterfaceCamera {
     fn create_free_camera(
         &self,
         scene: ObjectID,
     ) -> ObjectID;
-
-    fn as_camera(
-        &self,
-        object: ObjectID,
-    ) -> &Self;
-
-    fn as_target_camera(
-        & self,
-        object: ObjectID,
-    ) -> &Self;
 
     fn as_free_camera(
         & self,
@@ -31,6 +21,12 @@ pub trait InterfaceCamera {
         object: ObjectID,
         size: Number,
     ) -> & Self;
+
+    fn camera_target(
+        & self,
+        object: ObjectID,
+        value: Vector3,
+    ) -> &Self;
 }
 
 impl InterfaceCamera for crate::engine::Engine {
@@ -46,35 +42,9 @@ impl InterfaceCamera for crate::engine::Engine {
         self.as_transform_node(entity);
         self.transform_parent(entity, scene);
 
-        self.as_camera(entity);
-        self.as_target_camera(entity);
         self.as_free_camera(entity);
 
         entity
-    }
-
-    fn as_camera(
-        & self,
-        object: ObjectID,
-    ) -> & Self {
-        let world = self.world();
-
-        let commands = world.get_resource_mut::<SingleCameraCreateList>().unwrap();
-        commands.list.push(object);
-
-        self
-    }
-
-    fn as_target_camera(
-        & self,
-        object: ObjectID,
-    ) -> & Self {
-        let world = self.world();
-
-        let commands = world.get_resource_mut::<SingleTargetCameraCommandList>().unwrap();
-        commands.list.push(TargetCameraCommand::Create(object));
-
-        self
     }
 
     fn as_free_camera(
@@ -83,8 +53,8 @@ impl InterfaceCamera for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleFreeCameraCommandList>().unwrap();
-        commands.list.push(FreeCameraCommand::Create(object));
+        let commands = world.get_resource_mut::<SingleCameraCreateList>().unwrap();
+        commands.list.push(ECameraCreateCommand::FreeCamera(object));
 
         self
     }
@@ -98,6 +68,19 @@ impl InterfaceCamera for crate::engine::Engine {
 
         let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
         commands.list.push(CameraCommand::ModifyOrthSize(object, size));
+
+        self
+    }
+
+    fn camera_target(
+        & self,
+        object: ObjectID,
+        value: Vector3,
+    ) -> &Self {
+        let world = self.world();
+
+        let commands = world.get_resource_mut::<SingleTargetCameraCommandList>().unwrap();
+        commands.list.push(TargetCameraCommand::Target(object, value));
 
         self
     }

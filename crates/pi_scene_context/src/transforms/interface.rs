@@ -2,7 +2,7 @@
 use pi_engine_shell::object::InterfaceObject;
 use pi_scene_math::{Vector3, Quaternion};
 
-use crate::{object::{ObjectID}, scene::{interface::InterfaceScene}};
+use crate::{object::{ObjectID}, scene::{interface::InterfaceScene}, layer_mask::{command::{SingleLayerMaskCommandList, LayerMaskCommand}, LayerMask}};
 
 use super::{command::{SingleTreeCommandList, TreeCommand, TransformNodeCommand, SingleTransformNodeCommandList}};
 
@@ -73,6 +73,9 @@ impl InterfaceTransformNode for crate::engine::Engine {
 
         let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
         commands.list.push(TransformNodeCommand::Create(object));
+
+        let commands = world.get_resource_mut::<SingleLayerMaskCommandList>().unwrap();
+        commands.list.push(LayerMaskCommand::Set(object, LayerMask::default()));
         
         self
     }

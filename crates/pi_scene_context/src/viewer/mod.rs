@@ -8,7 +8,7 @@ use render_shader::shader_bind::ShaderBindSceneAboutCamera;
 
 use crate::{bytes_write_to_memory, transforms::transform_node::{GlobalTransform, LocalPosition}};
 
-use self::{command::{SingleViewerCommands, SysViewerCommand}, sys::{SysViewerViewMatrixByViewCalc, SysViewerViewMatrixUpdateByLocalPos, SysViewerViewMatrixUpdateByParentModify, SysViewerProjectionCalc, SysViewerUpdated}};
+use self::{command::{SingleViewerCommands, SysViewerCommand}, sys::{SysViewerViewMatrixByViewCalc, SysViewerViewMatrixUpdateByParentModify, SysViewerProjectionCalc, SysViewerUpdated}};
 
 pub mod command;
 pub mod sys;
@@ -102,7 +102,7 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewe
         }
 
         SysViewerViewMatrixByViewCalc::<T, S>::setup(world, stages.query_stage::<SysViewerViewMatrixByViewCalc::<T, S>>(ERunStageChap::Command));
-        SysViewerViewMatrixUpdateByLocalPos::<T>::setup(world, stages.query_stage::<SysViewerViewMatrixUpdateByLocalPos::<T>>(ERunStageChap::Command));
+        // SysViewerViewMatrixUpdateByLocalPos::<T>::setup(world, stages.query_stage::<SysViewerViewMatrixUpdateByLocalPos::<T>>(ERunStageChap::Command));
         SysViewerViewMatrixUpdateByParentModify::<T>::setup(world, stages.query_stage::<SysViewerViewMatrixUpdateByParentModify::<T>>(ERunStageChap::Command));
         SysViewerProjectionCalc::<T2, S2>::setup(world, stages.query_stage::<SysViewerProjectionCalc::<T2, S2>>(ERunStageChap::Command));
         SysViewerUpdated::<T, S, T2, S2>::setup(world, stages.query_stage::<SysViewerUpdated::<T, S, T2, S2>>(ERunStageChap::Command));

@@ -5,7 +5,7 @@ use pi_engine_shell::{assets::sync_load::{PluginAssetSyncNotNeedLoad}, run_stage
 use pi_render::{graph::{NodeId, graph::RenderGraph}, rhi::{device::RenderDevice}};
 
 use crate::{
-    cameras::camera::{CameraViewport},
+    cameras::{camera::{CameraViewport}},
     renderers::{render_object::{RenderObjectOpaqueList, RenderObjectTransparentList, RenderObjectBindGroup}, pipeline::{ResRenderPipeline, KeyRenderPipeline}},
     object::{ObjectID},
     plugin::Plugin,
@@ -96,15 +96,15 @@ impl Plugin for PluginMainCameraRender {
 
         SysModelListUpdateByCamera::setup(world, stages.query_stage::<SysModelListUpdateByCamera>(ERunStageChap::Command));
         SysModelListUpdateByGeometry::setup(world, stages.query_stage::<SysModelListUpdateByGeometry>(ERunStageChap::Command));
-        
-        SysModelListAfterCullinUpdateByCamera::setup(world, stages.query_stage::<SysModelListAfterCullinUpdateByCamera>(ERunStageChap::Command));
-        SysModelListAfterCullinUpdateByGeometry::setup(world, stages.query_stage::<SysModelListAfterCullinUpdateByGeometry>(ERunStageChap::Command));
-        SysModelListAfferCullingUpdateByModelWorldMatrix::setup(world, stages.query_stage::<SysModelListAfferCullingUpdateByModelWorldMatrix>(ERunStageChap::Command));
 
         SysRendererInitForCamera::setup(world, stages.query_stage::<SysRendererInitForCamera>(ERunStageChap::Command));
 
         SysRendererInitBindForCamera::setup(world, stages.query_stage::<SysRendererInitBindForCamera>(ERunStageChap::Command));
         SysCameraBindUpdate::setup(world, stages.query_stage::<SysCameraBindUpdate>(ERunStageChap::Command));
+        
+        SysModelListAfterCullinUpdateByCamera::setup(world, stages.query_stage::<SysModelListAfterCullinUpdateByCamera>(ERunStageChap::Command));
+        SysModelListAfterCullinUpdateByGeometry::setup(world, stages.query_stage::<SysModelListAfterCullinUpdateByGeometry>(ERunStageChap::Command));
+        SysModelListAfferCullingUpdateByModelWorldMatrix::setup(world, stages.query_stage::<SysModelListAfferCullingUpdateByModelWorldMatrix>(ERunStageChap::Command));
 
         world.insert_resource(SingleMainCameraRenderCommandList::default());
 

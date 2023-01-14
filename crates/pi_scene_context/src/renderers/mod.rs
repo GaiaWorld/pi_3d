@@ -1,12 +1,13 @@
 
 use futures::FutureExt;
+use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
 use pi_ecs::prelude::Setup;
 use pi_engine_shell::{object::ObjectID, run_stage::ERunStageChap};
 use pi_futures::BoxFuture;
-use pi_render::{components::view::{target_alloc::ShareTargetView}, graph::{node::Node}, };
+use pi_render::{components::view::{target_alloc::{ShareTargetView, SafeAtlasAllocator}}, graph::{node::Node}, rhi::asset::RenderRes, };
 use render_derive::NodeParam;
 
-use self::{render_blend::PluginRenderBlend, render_depth_and_stencil::PluginRenderDepthAndStencil, render_primitive::PluginRenderPrimitive, render_mode::PluginRenderMode, render_sort::PluginRenderSort, render_item_info::{RendererItemsModifyByMaterialChange, RendererItemsReset, RendererItemsModifyByModelChange}, renderer_binds_sys::{SysSceneBindUpdate,}};
+use self::{render_blend::PluginRenderBlend, render_depth_and_stencil::PluginRenderDepthAndStencil, render_primitive::PluginRenderPrimitive, render_mode::PluginRenderMode, render_sort::PluginRenderSort, render_item_info::{RendererItemsModifyByMaterialChange, RendererItemsReset, RendererItemsModifyByModelChange}, renderer_binds_sys::{SysSceneBindUpdate,}, renderer::RendererHasher};
 
 pub mod pipeline;
 pub mod render_object;
@@ -21,6 +22,7 @@ pub mod render_target_state;
 pub mod render_object_list;
 pub mod render_item_info;
 pub mod renderer_binds_sys;
+pub mod graphic;
 
 
 pub struct SingleScreenClearGraphicNodeKey(pub String);
@@ -72,9 +74,17 @@ impl crate::Plugin for PluginRenderer {
         PluginRenderSort.init(engine, stages);
 
         let world = engine.world_mut();
+        world.insert_resource(RendererHasher::default());
+        world.insert_resource(AssetMgr::<RenderRes<wgpu::TextureView>>::new(
+            GarbageEmpty(), 
+            false,
+            60 * 1024 * 1024, 
+            3 * 60 * 1000
+        ));
+        
         RendererItemsReset::setup(world, stages.query_stage::<RendererItemsReset>(ERunStageChap::Uniform));
-        RendererItemsModifyByModelChange::setup(world, stages.query_stage::<RendererItemsModifyByModelChange>(ERunStageChap::Uniform));
-        RendererItemsModifyByMaterialChange::setup(world, stages.query_stage::<RendererItemsModifyByMaterialChange>(ERunStageChap::Uniform));
+        // RendererItemsModifyByModelChange::setup(world, stages.query_stage::<RendererItemsModifyByModelChange>(ERunStageChap::Uniform));
+        // RendererItemsModifyByMaterialChange::setup(world, stages.query_stage::<RendererItemsModifyByMaterialChange>(ERunStageChap::Uniform));
         SysSceneBindUpdate::setup(world, stages.query_stage::<SysSceneBindUpdate>(ERunStageChap::Command));
 
         Ok(())

@@ -40,24 +40,16 @@ pi_graph = "0.1"
 
 pi_animation = { git = "https://github.com/GaiaWorld/pi_animation" }
 
-# render_utils = { git = "https://github.com/GaiaWorld/pi_render" }
-render_utils = { path = "../../../pi_render/crates/render_utils" }
-# render_pipeline_key = { git = "https://github.com/GaiaWorld/pi_render" }
-render_pipeline_key = { path = "../../../pi_render/crates/render_pipeline_key" }
-# render_data_container = { git = "https://github.com/GaiaWorld/pi_render" }
-render_data_container = { path = "../../../pi_render/crates/render_data_container" }
-# render_geometry = { git = "https://github.com/GaiaWorld/pi_render" }
-render_geometry = { path = "../../../pi_render/crates/render_geometry" }
-# render_material = { git = "https://github.com/GaiaWorld/pi_render" }
-render_material = { path = "../../../pi_render/crates/render_material" }
-# pi_render = { git = "https://github.com/GaiaWorld/pi_render" }
-pi_render = { path = "../../../pi_render" }
-render_derive = {path = "../../../pi_render/crates/render_derive"}
-render_resource = { path = "../../../pi_render/crates/render_resource" }
-render_shader = { path = "../../../pi_render/crates/render_shader" }
+pi_render = { git = "https://github.com/GaiaWorld/pi_render" }
+render_utils = { git = "https://github.com/GaiaWorld/pi_render" }
+render_pipeline_key = { git = "https://github.com/GaiaWorld/pi_render" }
+render_data_container = { git = "https://github.com/GaiaWorld/pi_render" }
+render_geometry = { git = "https://github.com/GaiaWorld/pi_render" }
+render_resource = { git = "https://github.com/GaiaWorld/pi_render" }
+render_derive = { git = "https://github.com/GaiaWorld/pi_render" }
+render_shader = { git = "https://github.com/GaiaWorld/pi_render" }
 
-# pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
-pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
+pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 
 pi_atom = { version="0.2", features = ["serde"] }
 pi_assets = "0.10"
@@ -83,9 +75,17 @@ pi_animation = { path = "../../../pi_animation" }
 
 [patch."https://github.com/GaiaWorld/pi_render"]
 pi_render = { path = "../../../pi_render" }
+render_utils = { path = "../../../pi_render/crates/render_utils" }
+render_pipeline_key = { path = "../../../pi_render/crates/render_pipeline_key" }
+render_data_container = { path = "../../../pi_render/crates/render_data_container" }
+render_geometry = { path = "../../../pi_render/crates/render_geometry" }
+render_resource = { path = "../../../pi_render/crates/render_resource" }
+render_derive = { path = "../../../pi_render/crates/render_derive" }
+render_shader = { path = "../../../pi_render/crates/render_shader" }
 
 [patch."https://github.com/GaiaWorld/pi_scene"]
 pi_scene = { path = "../../../pi_scene" }
+pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
 
 [patch."https://github.com/GaiaWorld/pi_ecs"]
 pi_ecs = { path = "../../../pi_ecs" }

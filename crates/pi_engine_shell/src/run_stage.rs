@@ -185,6 +185,22 @@ impl RunStage {
 
         std::fs::write(root_dir.join(file_name), text);
     }
+    pub fn levels(&self) {
+        
+        
+        let root_dir = std::env::current_dir().unwrap();
+        
+        let file_name = "Levels.txt";
+
+        let mut text = String::from("");
+
+        text += self.command.log().as_str();
+        text += "\r\n--------------------------------------------------\r\n";
+
+        text += self.uniform_update.log().as_str();
+
+        std::fs::write(root_dir.join(file_name), text);
+    }
 }
 
 struct RunStageSub {
@@ -384,6 +400,34 @@ impl RunStageSub {
                 }
             });
         }
+
+        text
+    }
+    pub fn levels(&self) -> String {
+
+        let mut text = String::from("");
+
+        // text += "Stages: Flags: ";
+        // text += self.flags.len().to_string().as_str();
+        // text += ", Levels: ";
+        // text += self.stages.len().to_string().as_str();
+        // text += "\r\n";
+
+        // let mut temp_syss = vec![];
+        // let childs = self.sys_childs.get(&SysPre::key()).unwrap();
+
+        // let mut tempspace = String::from("  ");
+        // for flag in self.flags.iter() {
+        //     tempspace += "  ";
+
+        //     self.sys_flags.iter().for_each(|(k, v)| {
+        //         if v == flag {
+        //             text += tempspace.as_str();
+        //             text += k;
+        //             text += "\r\n";
+        //         }
+        //     });
+        // }
 
         text
     }

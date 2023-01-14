@@ -22,6 +22,7 @@ use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder, PluginCubeBuilder};
 #[derive(Debug, Default)]
 pub struct SingleTestData {
     pub transforms: Vec<(ObjectID, f32, f32, f32)>,
+    pub scaling: Vec<(ObjectID, f32)>,
 }
 
 pub struct SysTest;
@@ -46,6 +47,13 @@ impl SysTest {
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 3., 0., 0.)));
             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
             transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
+        });
+        
+        list.scaling.iter_mut().for_each(|mut item| {
+            item.1 = item.1 + 16.0;
+            let x = ((item.1 % 10000.0 / 10000.0 * 3.14159926 * 2.).cos() + 1.0) * 4.0 + 0.5;
+            // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
+            transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x, x, 1.)));
         });
     }
 }
@@ -78,7 +86,7 @@ impl PluginTest {
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
 
-        let tes_size = 100;
+        let tes_size = 50;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
         engine.frame_time(2);
@@ -102,6 +110,11 @@ impl PluginTest {
         engine.use_indices(source, CubeBuilder::indices_meta());
         engine.use_default_material(source);
         engine.layer_mask(source, LayerMask::default());
+
+        let root = engine.create_transform_node(scene01);
+        testdata.scaling.push((root, 0.));
+
+        engine.transform_parent(source, root);
 
         for i in 0..tes_size {
             for j in 0..tes_size {

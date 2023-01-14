@@ -3,7 +3,7 @@
 use pi_ecs::prelude::Setup;
 use pi_engine_shell::run_stage::ERunStageChap;
 
-use crate::viewer::{PluginViewer, sys::SysViewerUpdated};
+use crate::{viewer::{PluginViewer, sys::SysViewerUpdated}, transforms::transform_node_sys::SysWorldMatrixCalc};
 
 use self::{command::{SysCameraCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList, SysCameraCreate}, target_camera::TargetCameraParam, camera::CameraParam};
 
@@ -15,7 +15,7 @@ pub mod camera_sys;
 pub mod command;
 pub mod interface;
 
-pub type SysViewerUpdatedForCamera = SysViewerUpdated<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysCameraCommand>;
+pub type SysViewerUpdatedForCamera = SysViewerUpdated<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysWorldMatrixCalc>;
 
 pub struct PluginCamera;
 impl crate::Plugin for PluginCamera {
@@ -35,7 +35,7 @@ impl crate::Plugin for PluginCamera {
         world.insert_resource(SingleTargetCameraCommandList::default());
         world.insert_resource(SingleFreeCameraCommandList::default());
 
-        PluginViewer::<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysCameraCommand>::default().init(engine, stages);
+        PluginViewer::<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysWorldMatrixCalc>::default().init(engine, stages);
 
         Ok(())
     }

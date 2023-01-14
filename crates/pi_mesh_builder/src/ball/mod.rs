@@ -90,9 +90,11 @@ impl InterfaceBall for Engine {
 
         let device = world.get_resource::<RenderDevice>().unwrap();
         let queue = world.get_resource::<RenderQueue>().unwrap();
+        println!(">>>>>>>>>>>>>>>>>>>> 0");
 
         let (positions, normals, indices, uvs) = generate_sphere(sectors, stacks);
 
+        println!(">>>>>>>>>>>>>>>>>>>> 1");
         let flag = String::from("#") + sectors.to_string().as_str() + "#" + stacks.to_string().as_str();
         let keypos = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_POSITION) + flag.as_str());
         self.create_vertex_buffer(keypos.clone(), BallBuilder::position(device, queue, positions.as_slice()));

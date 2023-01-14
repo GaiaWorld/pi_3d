@@ -147,7 +147,7 @@ impl SysCameraBindUpdate {
     ) {
         log::debug!("SysCameraBindUpdate:");
         cameras.iter().for_each(|(id_renderer, view_matrix, pro_matrix, vp_matrix, camera_pos, camera_dir)| {
-            log::debug!("SysCameraBindUpdate: 0");
+            log::info!("SysCameraBindUpdate: 0");
             if let Some((renderer_bindoff)) = renderers.get(id_renderer.0.clone()) {
                 dynbuffer.as_mut().set_uniform(renderer_bindoff.camera().bind_offset(), view_matrix);
                 dynbuffer.as_mut().set_uniform(renderer_bindoff.camera().bind_offset(), pro_matrix);

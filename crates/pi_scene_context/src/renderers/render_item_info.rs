@@ -381,6 +381,9 @@ fn collect_render_item(
             0, 8
         )
     };
+
+    log::info!("Pipeline: {:?}, Shader: {:?}", pipeline_key, shader_key);
+
     let id_scene_about = RenderBindGroupKey::SceneAbout(id_scene.clone());
     let id_model_about = RenderBindGroupKey::ModelAbout(id_model.clone());
     let id_effect_about = RenderBindGroupKey::EffectAbout(id_mat.clone());

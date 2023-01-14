@@ -1,4 +1,4 @@
-use std::mem::replace;
+use std::{mem::replace, hash::{Hash, Hasher}};
 
 use pi_ecs::prelude::*;
 use pi_ecs_macros::setup;
@@ -8,7 +8,7 @@ use render_resource::uniform_buffer::RenderDynUniformBuffer;
 use render_shader::{set_bind::ShaderSetBind, shader_set::{ShaderSetSceneAbout, ShaderSetSceneAboutBindOffset}};
 
 use crate::{
-    renderers::{render_object::RendererID, renderer::Renderer, ModelList, ModelListAfterCulling},
+    renderers::{render_object::RendererID, renderer::{Renderer, RendererHasher}, ModelList, ModelListAfterCulling},
     object::{ObjectID, GameObject},
     postprocess::Postprocess, flags::SceneID,
     viewer::{command::Viewport, ViewerID, ViewerViewMatrix, ViewerProjectionMatrix, ViewerTransformMatrix, ViewerGlobalPosition, ViewerDirection},
@@ -61,6 +61,7 @@ impl SysMainCameraRenderCommand {
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
         mut bindgrouppool: ResMut<RenderBindGroupPool>,
         device: Res<RenderDevice>,
+        mut renderer_hasher: ResMut<RendererHasher>,
     ) {
         let render_graphic = &mut render_graphic;
 
@@ -72,7 +73,11 @@ impl SysMainCameraRenderCommand {
                 MainCameraRenderCommand::Active(entity, render_id, viewport) => {
                     if let Some(id_scene) = cameras.get(entity.clone()) {
                         if let Some((scene_time, scene_fog)) = scenes.get(id_scene.0) {
-                            let renderer = Renderer::new(render_id.0.clone(), render_graphic);
+                            render_id.0.hash(&mut renderer_hasher.0);
+                            let hash = renderer_hasher.0.finish();
+                            let name = hash.to_string();
+
+                            let mut renderer = Renderer::new("MainCameraOpaque", render_id.0.clone(), render_graphic);
                             render_graphic.add_depend("Clear", "MainCameraOpaque");
                             render_graphic.set_finish("MainCameraOpaque", true);
         

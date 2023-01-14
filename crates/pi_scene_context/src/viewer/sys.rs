@@ -16,7 +16,7 @@ pub(crate) struct SysViewerViewMatrixByViewCalc<T: TViewerViewMatrix + Component
 impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static> TSystemStageInfo for SysViewerViewMatrixByViewCalc<T, S> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            S::key(), SysTransformNodeCommand::key()
+            S::key(), SysTransformNodeCommand::key(), 
         ]
     }
 }
@@ -31,7 +31,7 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static> SysViewerV
         idtree: EntityTree<GameObject>,
     ) {
         //  log::debug!("View Matrix Calc:");
-        let coordsys = CoordinateSytem3::left();
+        let coordsys = CoordinateSytem3::right();
         for (entity, viewcalc, l_position) in query_cameras.iter_mut() {
             match idtree.get_up(entity) {
                 Some(level) => {
@@ -75,7 +75,7 @@ impl<T: TViewerViewMatrix + Component> SysViewerViewMatrixUpdateByParentModify<T
         idtree: EntityTree<GameObject>,
     ) {
         //  log::debug!("View Matrix Calc:");
-        let coordsys = CoordinateSytem3::left();
+        let coordsys = CoordinateSytem3::right();
         for (entity, viewcalc, l_position) in query_cameras.iter_mut() {
             match idtree.get_up(entity) {
                 Some(parent_id) => {
@@ -94,49 +94,49 @@ impl<T: TViewerViewMatrix + Component> SysViewerViewMatrixUpdateByParentModify<T
     }
 }
 
-pub(crate) struct SysViewerViewMatrixUpdateByLocalPos<T: TViewerViewMatrix + Component>(PhantomData<T>);
-impl<T: TViewerViewMatrix + Component> TSystemStageInfo for SysViewerViewMatrixUpdateByLocalPos<T> {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysTransformNodeCommand::key()
-        ]
-    }
-}
-#[setup]
-impl<T: TViewerViewMatrix + Component> SysViewerViewMatrixUpdateByLocalPos<T> {
-    #[system]
-    pub fn calc(
-        mut viewers: Query<GameObject, (ObjectID, &T, &LocalPosition), Changed<LocalPosition>>,
-        transforms: Query<GameObject, &GlobalTransform>,
-        mut view_cmd: Commands<GameObject, ViewerViewMatrix>,
-        mut pos_cmd: Commands<GameObject, ViewerGlobalPosition>,
-        idtree: EntityTree<GameObject>,
-    ) {
-        //  log::debug!("View Matrix Calc:");
-        let coordsys = CoordinateSytem3::left();
-        for (entity, viewcalc, l_position) in viewers.iter_mut() {
-            match idtree.get_up(entity) {
-                Some(level) => {
-                    let parent_id = level.parent();
-                    if let Some(parent) = transforms.get(parent_id) {
-                        let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&parent));
-                        view_cmd.insert(entity, viewmatrix);
-                        pos_cmd.insert(entity, pos);
-                    } else {
-                        let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, None);
-                        view_cmd.insert(entity, viewmatrix);
-                        pos_cmd.insert(entity, pos);
-                    }
-                },
-                None => {
-                    let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, None);
-                    view_cmd.insert(entity, viewmatrix);
-                    pos_cmd.insert(entity, pos);
-                },
-            };
-        }
-    }
-}
+// pub(crate) struct SysViewerViewMatrixUpdateByLocalPos<T: TViewerViewMatrix + Component>(PhantomData<T>);
+// impl<T: TViewerViewMatrix + Component> TSystemStageInfo for SysViewerViewMatrixUpdateByLocalPos<T> {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysTransformNodeCommand::key(), SysViewerViewMatrixByViewCalc::
+//         ]
+//     }
+// }
+// #[setup]
+// impl<T: TViewerViewMatrix + Component> SysViewerViewMatrixUpdateByLocalPos<T> {
+//     #[system]
+//     pub fn calc(
+//         mut viewers: Query<GameObject, (ObjectID, &T, &LocalPosition), Changed<LocalPosition>>,
+//         transforms: Query<GameObject, &GlobalTransform>,
+//         mut view_cmd: Commands<GameObject, ViewerViewMatrix>,
+//         mut pos_cmd: Commands<GameObject, ViewerGlobalPosition>,
+//         idtree: EntityTree<GameObject>,
+//     ) {
+//         //  log::debug!("View Matrix Calc:");
+//         let coordsys = CoordinateSytem3::left();
+//         for (entity, viewcalc, l_position) in viewers.iter_mut() {
+//             match idtree.get_up(entity) {
+//                 Some(level) => {
+//                     let parent_id = level.parent();
+//                     if let Some(parent) = transforms.get(parent_id) {
+//                         let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&parent));
+//                         view_cmd.insert(entity, viewmatrix);
+//                         pos_cmd.insert(entity, pos);
+//                     } else {
+//                         let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, None);
+//                         view_cmd.insert(entity, viewmatrix);
+//                         pos_cmd.insert(entity, pos);
+//                     }
+//                 },
+//                 None => {
+//                     let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, None);
+//                     view_cmd.insert(entity, viewmatrix);
+//                     pos_cmd.insert(entity, pos);
+//                 },
+//             };
+//         }
+//     }
+// }
 
 
 pub(crate) struct SysViewerProjectionCalc<T: TViewerProjectMatrix + Component, S: TSystemStageInfo + 'static>(PhantomData<(T, S)>);
@@ -166,7 +166,7 @@ pub struct SysViewerUpdated<T: TViewerViewMatrix + Component, S: TSystemStageInf
 impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewerProjectMatrix + Component, S2: TSystemStageInfo + 'static> TSystemStageInfo for SysViewerUpdated<T, S, T2, S2> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysViewerViewMatrixByViewCalc::<T, S>::key(), SysViewerViewMatrixUpdateByLocalPos::<T>::key(), SysViewerViewMatrixUpdateByParentModify::<T>::key(), SysViewerProjectionCalc::<T2, S2>::key(), 
+            SysViewerViewMatrixByViewCalc::<T, S>::key(), SysViewerViewMatrixUpdateByParentModify::<T>::key(), SysViewerProjectionCalc::<T2, S2>::key(), 
         ]
     }
 }

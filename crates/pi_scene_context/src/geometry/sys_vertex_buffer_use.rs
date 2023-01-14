@@ -42,7 +42,7 @@ where
     pub fn material_change(
         mut items: Query<
             GameObject,
-            (ObjectID, &GeometryDesc, &mut EInstanceCode, &mut InstanceList),
+            (ObjectID, &GeometryDesc, &mut EInstanceCode, &InstanceList),
             Changed<GeometryDesc>,
         >,
         mut vbpool: ResMut<VertexBufferPool>,
