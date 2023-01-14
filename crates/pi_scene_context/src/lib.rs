@@ -23,6 +23,7 @@ pub mod object;
 pub mod viewer;
 pub mod bindgroup;
 pub mod light;
+pub mod skeleton;
 
 
 pub fn bytes_write_to_memory(
