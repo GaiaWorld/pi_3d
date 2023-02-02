@@ -10,7 +10,7 @@ use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageIn
 
 use crate::{scene::{scene_time::SceneTime, command::SysSceneCommand}, flags::SceneID};
 
-use super::base::{AssetTypeFrameCurve, AnimationGroups, SceneAnimationContext};
+use super::base::{AssetTypeFrameCurve, AnimationGroups, SceneAnimationContext, GlobalAnimeAbout};
 
 
 #[derive(Debug)]
@@ -24,6 +24,7 @@ pub(crate) enum EModifyCommand {
     PauseAnimationGroup(ObjectID, Atom),
     StartAnimationGroupPercent(ObjectID, Atom, KeyFrameCurveValue, ELoopMode, KeyFrameCurveValue, KeyFrameCurveValue, FramePerSecond, AnimationAmountCalc),
     AddTargetAnimation(ObjectID, ObjectID, Atom, AnimationInfo),
+    DestroyAnimationGroup(ObjectID),
 }
 #[derive(Default)]
 pub(crate) struct SingleModifyCommands(pub(crate) Vec<EModifyCommand>);
@@ -79,6 +80,7 @@ impl SysAnimeModifyCommand {
         mut cmds: ResMut<SingleModifyCommands>,
         mut sce: Query<GameObject, &mut SceneAnimationContext>,
         mut obj: Query<GameObject, (&SceneID, &mut AnimationGroups)>,
+        mut globalinfo: ResMut<GlobalAnimeAbout>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -108,6 +110,17 @@ impl SysAnimeModifyCommand {
                             if let Some(mut ctx) = sce.get_mut(id_scene.0) {
                                 ctx.0.add_target_animation(animation, id_group.clone(), id_target);
                             }
+                        }
+                    }
+                },
+                EModifyCommand::DestroyAnimationGroup(id_obj) => {
+                    if let Some((id_scene, mut groups)) = obj.get_mut(id_obj) {
+                        if let Some(mut ctx) = sce.get_mut(id_scene.0) {
+                            groups.map.iter().for_each(|(_, id_group)| {
+                                ctx.0.del_animation_group(id_group.clone()).drain(..).for_each(|item| {
+                                    globalinfo.dispose_animations.push(item);
+                                });
+                            });
                         }
                     }
                 },

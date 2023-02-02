@@ -27,7 +27,6 @@ pub trait InterfaceAnimeAsset {
 
     fn create_animation<D: FrameDataValue + Component>(
         &self,
-        key_curve: &Atom,
         curve: AssetTypeFrameCurve<D>,
     ) -> AnimationInfo;
 }
@@ -64,6 +63,11 @@ pub trait InterfaceAnimationGroup {
         id_obj: ObjectID,
         key_animegroup: &Atom,
     ) -> &Self;
+
+    fn dispose_animation_group(
+        &self,
+        id_obj: ObjectID,
+    ) -> &Self;
 }
 
 impl InterfaceAnimeAsset for crate::engine::Engine {
@@ -96,14 +100,13 @@ impl InterfaceAnimeAsset for crate::engine::Engine {
 
     fn create_animation<D: FrameDataValue + Component>(
         &self,
-        key_curve: &Atom,
         curve: AssetTypeFrameCurve<D>,
     ) -> AnimationInfo {
         let world = self.world();
 
         let type_ctx = world.get_resource_mut::<TypeAnimeContext<D>>().unwrap();
 
-        type_ctx.ctx.create_animation(0, key_curve.clone(), curve)
+        type_ctx.ctx.create_animation(0, curve)
     }
 }
 
@@ -168,6 +171,19 @@ impl InterfaceAnimationGroup for crate::engine::Engine {
         let cmds = world.get_resource_mut::<SingleModifyCommands>().unwrap();
 
         cmds.0.push(EModifyCommand::PauseAnimationGroup(id_obj, key_animegroup.clone()));
+
+        self
+    }
+
+    fn dispose_animation_group(
+        &self,
+        id_obj: ObjectID,
+    ) -> &Self {
+        let world = self.world();
+
+        let cmds = world.get_resource_mut::<SingleModifyCommands>().unwrap();
+
+        cmds.0.push(EModifyCommand::DestroyAnimationGroup(id_obj));
 
         self
     }

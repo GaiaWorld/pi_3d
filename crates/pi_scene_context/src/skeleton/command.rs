@@ -7,7 +7,7 @@ use pi_render::rhi::device::RenderDevice;
 use render_resource::{sampler::SamplerPool, uniform_buffer::RenderDynUniformBuffer};
 use render_shader::{skin_code::{ESkinBonesPerVertex, ESkinCode, EBoneCount}, shader_bind::ShaderBindModelAboutSkin};
 
-use super::{skeleton::Skeleton, SkeletonID, skin_texture::SkinTexture, bone::Bone, SkeletonBonesDirty};
+use super::{skeleton::Skeleton, SkeletonID, skin_texture::SkinTexture, bone::BoneMatrix, SkeletonBonesDirty};
 
 
 
@@ -33,7 +33,7 @@ impl SysSkinCreateCommand {
         mut skeleton_cmd: Commands<GameObject, Skeleton>,
         mut bonedirty_cmd: Commands<GameObject, SkeletonBonesDirty>,
         mut skeltex_cmd: Commands<GameObject, SkinTexture>,
-        mut bone_cmd: Commands<GameObject, Bone>,
+        mut bone_cmd: Commands<GameObject, SkeletonID>,
         device: Res<RenderDevice>,
         mut samplerpool: ResMut<SamplerPool>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
@@ -46,7 +46,7 @@ impl SysSkinCreateCommand {
                     let bone_count = bones.len();
 
                     bones.iter().for_each(|id_bone| {
-                        bone_cmd.insert(id_bone.clone(), Bone(id_skin.clone()));
+                        bone_cmd.insert(id_bone.clone(), SkeletonID(id_skin.clone()));
                     });
 
                     let bonecount = EBoneCount::new(bone_count as u8 + 1);

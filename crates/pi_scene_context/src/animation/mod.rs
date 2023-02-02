@@ -10,7 +10,7 @@ use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageIn
 
 use crate::scene::scene_time::SceneTime;
 
-use self::{base::{GlobalAnimeAbout, TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve}, system::{SysSceneAnime, SysTypeAnime}, command::{SingleControlCommands, SingleModifyCommands, SysAnimeControlCommand, SysAnimeModifyCommand}};
+use self::{base::{GlobalAnimeAbout, TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve}, system::{SysSceneAnime, SysTypeAnime, SysTypeAnimeDispose}, command::{SingleControlCommands, SingleModifyCommands, SysAnimeControlCommand, SysAnimeModifyCommand}};
 
 pub mod base;
 pub mod command;
@@ -38,6 +38,7 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
             let mut globalaboput = GlobalAnimeAbout {
                 ty_alloc: KeyFrameDataTypeAllocator::default(),
                 runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap::<ObjectID>::default(),
+                dispose_animations: vec![],
             };
             let ty = globalaboput.ty_alloc.alloc().expect("");
             world.insert_resource(globalaboput);
@@ -59,11 +60,12 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
         let mut runtime_info_map = &mut world.get_resource_mut::<GlobalAnimeAbout>().unwrap().runtimeinfos;
 
         let type_ctx = TypeAnimeContext::<D> {
-            ctx: TypeAnimationContext::<Atom, D, AssetTypeFrameCurve<D>>::new(ty, &mut runtime_info_map),
+            ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, &mut runtime_info_map),
         };
 
         world.insert_resource(type_ctx);
 
+        SysTypeAnimeDispose::<D>::setup(world, stages.query_stage::<SysTypeAnimeDispose::<D>>(ERunStageChap::Initial));
         SysTypeAnime::<D>::setup(world, stages.query_stage::<SysTypeAnime::<D>>(ERunStageChap::Anime));
         
         Ok(())

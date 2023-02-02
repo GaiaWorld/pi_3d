@@ -63,3 +63,6 @@ render_shader = { path = "../../../pi_render/crates/render_shader" }
 [patch."https://github.com/GaiaWorld/pi_scene"]
 pi_scene = { path = "../../../pi_scene" }
 pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
+
+[patch."https://github.com/GaiaWorld/pi_hal"]
+pi_hal = { path = "../../../pi_hal" }

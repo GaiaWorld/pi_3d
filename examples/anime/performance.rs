@@ -48,7 +48,7 @@ impl PluginTest {
     ) {
 
         let tes_size = 100;
-        engine.frame_time(2);
+        engine.frame_time(4);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -103,7 +103,7 @@ impl PluginTest {
                     } else {
                         engine.creat_anim_curve::<LocalEulerAngles>(&key_curve0, curve)
                     };
-                    let animation = engine.create_animation::<LocalEulerAngles>(&key_curve0, asset_curve);
+                    let animation = engine.create_animation::<LocalEulerAngles>(asset_curve);
 
 
                     engine.create_target_animation(source, cube, &key_group, animation);

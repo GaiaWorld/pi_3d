@@ -63,6 +63,8 @@ impl SysFrameTime {
         }
 
         frame.last = Instant::now();
+        
+        log::info!("Frame Time: {:?}", frame.last - last);
     }
 }
 

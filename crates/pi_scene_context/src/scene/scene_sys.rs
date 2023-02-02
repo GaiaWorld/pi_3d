@@ -1,8 +1,8 @@
 
 
-use pi_ecs::prelude::{Query};
+use pi_ecs::prelude::{Query, Res};
 use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::TSystemStageInfo;
+use pi_engine_shell::{run_stage::TSystemStageInfo, frame_time::SingleFrameTimeCommand};
 
 use crate::{
     object::GameObject,
@@ -25,10 +25,11 @@ impl TSystemStageInfo for SysDirtySceneTick {
 impl SysDirtySceneTick {
     #[system]
     pub fn tick(
-        mut query_scenes: Query<GameObject, (&mut SceneTime, &SceneFog)>
+        mut query_scenes: Query<GameObject, (&mut SceneTime, &SceneFog)>,
+        frame: Res<SingleFrameTimeCommand>,
     ) {
         query_scenes.iter_mut().for_each(|(mut scene_time, mut scene_fog)| {
-            scene_time.update(16);
+            scene_time.update(frame.frame_ms);
             scene_time.dirty = false;
         });
     }

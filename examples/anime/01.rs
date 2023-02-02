@@ -46,7 +46,7 @@ impl PluginTest {
     ) {
 
         let tes_size = 5;
-        engine.frame_time(20);
+        engine.frame_time(4);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -67,12 +67,31 @@ impl PluginTest {
             engine.creat_anim_curve::<LocalPosition>(&key_curve0, curve)
         };
 
-        let animation = engine.create_animation(&key_curve0, asset_curve);
+        let animation = engine.create_animation(asset_curve);
 
         let key_group = pi_atom::Atom::from("key_group");
         engine.create_animation_group(cube, &key_group)
             .create_target_animation(cube, cube, &key_group, animation)
-            .start_animation_group(cube, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 50, AnimationAmountCalc::default());
+            .start_animation_group(cube, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 200, AnimationAmountCalc::default());
+            
+        // =========================================
+        let cube = engine.new_cube(scene01);
+        engine.use_default_material(cube).transform_position(cube, Vector3::new(0., 2., 0.));
+
+        let key_curve0 = pi_atom::Atom::from("key_curve1");
+        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(-3., 2., 0.)), LocalPosition(Vector3::new(6., 2., 0.)), 30, 30, EEasingMode::None);
+        let asset_curve = if let Some(curve) = engine.check_anim_curve::<LocalPosition>(&key_curve0) {
+            curve
+        } else {
+            engine.creat_anim_curve::<LocalPosition>(&key_curve0, curve)
+        };
+        let animation = engine.create_animation(asset_curve);
+        let key_group = pi_atom::Atom::from("key_group2");
+        engine.create_animation_group(cube, &key_group)
+            .create_target_animation(cube, cube, &key_group, animation)
+            .start_animation_group(cube, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 200, AnimationAmountCalc::default());
+        
+            engine.dispose_animation_group(cube);
     }
 }
 

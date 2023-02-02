@@ -33,7 +33,7 @@ impl<F: FrameDataValue+ 'static> TTypeFrameCurve<F> for AssetTypeFrameCurve<F> {
 }
 
 pub struct TypeAnimeContext<D: FrameDataValue + 'static> {
-    pub ctx: TypeAnimationContext<Atom, D, AssetTypeFrameCurve<D>>,
+    pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
 }
 
 #[derive(Debug, Default)]
@@ -44,6 +44,7 @@ pub struct AnimationGroups {
 pub struct GlobalAnimeAbout {
     pub ty_alloc: KeyFrameDataTypeAllocator,
     pub runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap<ObjectID>,
+    pub dispose_animations: Vec<AnimationInfo>,
 }
 
 pub struct SceneAnimationContext(pub(crate) AnimationContextAmount<ObjectID, AnimationGroupManagerDefault<ObjectID>>);

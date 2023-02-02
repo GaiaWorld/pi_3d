@@ -6,7 +6,7 @@ use render_resource::uniform_buffer::RenderDynUniformBuffer;
 
 use crate::transforms::{transform_node_sys::SysWorldMatrixCalc, transform_node::WorldMatrix};
 
-use super::{skeleton::Skeleton, skin_texture::SkinTexture, SkeletonBonesDirty, bone::Bone, skin_buffer::TempSkinBufferData};
+use super::{skeleton::Skeleton, skin_texture::SkinTexture, SkeletonBonesDirty, bone::BoneMatrix, skin_buffer::TempSkinBufferData, SkeletonID};
 
 pub struct SysSkinDirtyByBonesMatrix;
 impl TSystemStageInfo for SysSkinDirtyByBonesMatrix {
@@ -21,7 +21,7 @@ impl SysSkinDirtyByBonesMatrix {
     #[system]
     fn sys(
         mut skeletons: Commands<GameObject, SkeletonBonesDirty>,
-        bones: Query<GameObject, &Bone, Changed<WorldMatrix>>,
+        bones: Query<GameObject, &SkeletonID, Changed<WorldMatrix>>,
     ) {
         bones.iter().for_each(|bone| {
             skeletons.insert(bone.0.clone(), SkeletonBonesDirty(true));

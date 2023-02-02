@@ -40,7 +40,7 @@ impl PluginTest {
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
 
-        engine.frame_time(2);
+        engine.frame_time(4);
 
         // Test Code
         let scene01 = engine.create_scene();

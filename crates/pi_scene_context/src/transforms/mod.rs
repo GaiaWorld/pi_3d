@@ -14,6 +14,7 @@ pub mod command;
 pub mod interface;
 pub mod animation;
 pub mod tree_left_right;
+pub mod object;
 
 pub struct PluginTransformNode;
 impl Plugin for PluginTransformNode {
