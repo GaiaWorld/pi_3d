@@ -59,7 +59,6 @@ impl SysCullingCommand {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 CullingCommand::Bounding(entity, min, max) => {
-                    
                     objects.insert(entity, BoundingInfo::new(min, max));
                 },
             }
@@ -76,7 +75,7 @@ impl crate::Plugin for PluginCulling {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysCullingCommand::setup(world, stages.query_stage::<SysCullingCommand>(ERunStageChap::Command));
+        SysCullingCommand::setup(world, stages.query_stage::<SysCullingCommand>(ERunStageChap::Initial));
         SysCameraCulling::setup(world, stages.query_stage::<SysCameraCulling>(ERunStageChap::Command));
 
         world.insert_resource(SingleCullingCommandList::default());

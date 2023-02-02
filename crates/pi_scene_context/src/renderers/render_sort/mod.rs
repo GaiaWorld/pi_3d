@@ -119,7 +119,7 @@ impl crate::Plugin for PluginRenderSort {
         let world = engine.world_mut();
 
         world.insert_resource(SingleRenderSortCommandList::default());
-        SysRenderSortCommand::setup(world, stages.query_stage::<SysRenderSortCommand>(ERunStageChap::Command));
+        SysRenderSortCommand::setup(world, stages.query_stage::<SysRenderSortCommand>(ERunStageChap::Initial));
 
         Ok(())
     }

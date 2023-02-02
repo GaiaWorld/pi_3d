@@ -4,7 +4,7 @@ use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     plugin::Plugin,
     object::ObjectID,
-    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
+    transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     main_camera_render::interface::InterfaceMainCamera,
@@ -27,7 +27,7 @@ impl SysTest {
     #[system]
     pub fn sys(
         mut list: ResMut<SingleTestData>,
-        mut transform_commands: ResMut<SingleTransformNodeCommandList>,
+        mut transform_commands: ResMut<SingleTransformNodeModifyCommandList>,
     ) {
         list.transforms.iter_mut().for_each(|mut item| {
             item.1 = item.1 + 16.0;
@@ -39,7 +39,7 @@ impl SysTest {
             let z = item.3 % 4000.0 / 4000.0 * 3.1415926 * 2.;
             log::debug!("=========== x: {}, y: {}, z: {}", x, y, z);
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 20., 0., 5.)));
-            transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
+            transform_commands.list.push(ETransformNodeModifyCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
         });
     }
 }

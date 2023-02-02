@@ -4,7 +4,16 @@ use pi_engine_shell::run_stage::ERunStageChap;
 
 use crate::{object::ObjectID, geometry::instance::{instance_world_matrix::SysInstanceBufferWorldMatrixInit, instance_color::SysInstanceBufferColorInit, instance_tilloff::SysInstanceBufferTillOffInit, InstanceSourceRecord}};
 
-use self::{command::{SysMeshCommand, SingleMeshCommandList}, model::{SysRenderMatrixUniformUpdate, SysRenderMatrixUpdate, SysModelAboutUpdate}, instance::{world_matrix::{SysInstanceBufferWorldMatrixUpdate}, instance_color::{SysInstanceBufferColorUpdate}, instance_tilloff::{SysInstanceBufferTillOffUpdate}}, bind_group::SysModelAboutBindGroup};
+use self::{
+    command::{SysMeshCreateCommand, SingleMeshCreateCommandList, SysMeshModifyCommand, SysInstanceMeshCreateCommand, SysInstanceMeshModifyCommand, SingleMeshModifyCommandList, SingleInstanceMeshCreateCommandList, SingleInstanceMeshModifyCommandList}, 
+    model::{SysRenderMatrixUniformUpdate, SysRenderMatrixUpdate, SysModelAboutUpdate},
+    instance::{
+        world_matrix::{SysInstanceBufferWorldMatrixUpdate},
+        instance_color::{SysInstanceBufferColorUpdate},
+        instance_tilloff::{SysInstanceBufferTillOffUpdate}
+    },
+    bind_group::SysModelAboutBindGroup, alpha_index::PluginAlphaIndex
+};
 
 pub mod model;
 pub mod command;
@@ -30,24 +39,33 @@ impl crate::Plugin for PluginMesh {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysMeshCommand::setup(world, stages.query_stage::<SysMeshCommand>(ERunStageChap::Command));
+        SysMeshCreateCommand::setup(world, stages.query_stage::<SysMeshCreateCommand>(ERunStageChap::Initial));
+        SysMeshModifyCommand::setup(world, stages.query_stage::<SysMeshModifyCommand>(ERunStageChap::Initial));
+        SysInstanceMeshCreateCommand::setup(world, stages.query_stage::<SysInstanceMeshCreateCommand>(ERunStageChap::Initial));
+        SysInstanceMeshModifyCommand::setup(world, stages.query_stage::<SysInstanceMeshModifyCommand>(ERunStageChap::Initial));
+    
         SysModelAboutUpdate::setup(world, stages.query_stage::<SysModelAboutUpdate>(ERunStageChap::Command));
         SysRenderMatrixUpdate::setup(world, stages.query_stage::<SysRenderMatrixUpdate>(ERunStageChap::Command));
         SysRenderMatrixUniformUpdate::setup(world, stages.query_stage::<SysRenderMatrixUniformUpdate>(ERunStageChap::Command));
 
-        SysInstanceBufferWorldMatrixInit::setup(world, stages.query_stage::<SysInstanceBufferWorldMatrixInit>(ERunStageChap::Command));
+        SysInstanceBufferWorldMatrixInit::setup(world, stages.query_stage::<SysInstanceBufferWorldMatrixInit>(ERunStageChap::Initial));
         SysInstanceBufferWorldMatrixUpdate::setup(world, stages.query_stage::<SysInstanceBufferWorldMatrixUpdate>(ERunStageChap::Uniform));
         
-        SysInstanceBufferColorInit::setup(world, stages.query_stage::<SysInstanceBufferColorInit>(ERunStageChap::Command));
+        SysInstanceBufferColorInit::setup(world, stages.query_stage::<SysInstanceBufferColorInit>(ERunStageChap::Initial));
         SysInstanceBufferColorUpdate::setup(world, stages.query_stage::<SysInstanceBufferColorUpdate>(ERunStageChap::Uniform));
 
-        SysInstanceBufferTillOffInit::setup(world, stages.query_stage::<SysInstanceBufferTillOffInit>(ERunStageChap::Command));
+        SysInstanceBufferTillOffInit::setup(world, stages.query_stage::<SysInstanceBufferTillOffInit>(ERunStageChap::Initial));
         SysInstanceBufferTillOffUpdate::setup(world, stages.query_stage::<SysInstanceBufferTillOffUpdate>(ERunStageChap::Uniform));
 
         SysModelAboutBindGroup::setup(world, stages.query_stage::<SysModelAboutBindGroup>(ERunStageChap::Uniform));
 
-        world.insert_resource(SingleMeshCommandList::default());
+        world.insert_resource(SingleMeshCreateCommandList::default());
+        world.insert_resource(SingleMeshModifyCommandList::default());
+        world.insert_resource(SingleInstanceMeshCreateCommandList::default());
+        world.insert_resource(SingleInstanceMeshModifyCommandList::default());
         world.insert_resource(InstanceSourceRecord { counter: 0 });
+
+        PluginAlphaIndex.init(engine, stages);
 
         Ok(())
     }

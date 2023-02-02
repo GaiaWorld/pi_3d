@@ -5,7 +5,7 @@ use pi_3d::PluginBundleDefault;
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
+    transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     meshes::{interface::InterfaceMesh},
@@ -31,7 +31,7 @@ impl SysTest {
     #[system]
     pub fn sys(
         mut list: ResMut<SingleTestData>,
-        mut transform_commands: ResMut<SingleTransformNodeCommandList>,
+        mut transform_commands: ResMut<SingleTransformNodeModifyCommandList>,
     ) {
         list.transforms.iter_mut().for_each(|mut item| {
             item.1 = item.1 + 16.0;
@@ -45,7 +45,7 @@ impl SysTest {
             let z = z0 * 3.1415926 * 2.;
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 3., 0., 0.)));
             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
-            transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
+            transform_commands.list.push(ETransformNodeModifyCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
         });
     }
 }
@@ -116,6 +116,7 @@ impl PluginTest {
 }
 
 pub fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let mut shell = AppShell::new(
         RenderOptions {
             backends: wgpu::Backends::VULKAN,

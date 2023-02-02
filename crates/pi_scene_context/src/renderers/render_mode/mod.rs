@@ -72,7 +72,7 @@ impl crate::Plugin for PluginRenderMode {
         let world = engine.world_mut();
 
         world.insert_resource(SingleRenderModeCommandList::default());
-        SysRenderModeCommand::setup(world, stages.query_stage::<SysRenderModeCommand>(ERunStageChap::Command));
+        SysRenderModeCommand::setup(world, stages.query_stage::<SysRenderModeCommand>(ERunStageChap::Initial));
 
         Ok(())
     }

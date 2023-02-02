@@ -7,7 +7,7 @@ use render_data_container::{RenderVertices, VertexBufferPool};
 use render_geometry::vertex_data::TVertexBufferDesc;
 use render_shader::instance_code::EInstanceCode;
 
-use crate::{geometry::{geometry::RenderVerticesFrom, instance::{instanced_buffer::TInstancedBuffer, InstanceList}}};
+use crate::{geometry::{geometry::RenderVerticesFrom, instance::{instanced_buffer::TInstancedBuffer, InstanceList}}, meshes::command::SysMeshModifyCommand};
 
 use super::{vertex_buffer_useinfo::{TVertexBufferUseInfo, AssetDescVBSlot01, AssetDescVBSlot02, AssetDescVBSlot03, AssetDescVBSlot05, AssetDescVBSlot06, AssetDescVBSlot07, AssetDescVBSlot08, AssetDescVBSlot09, AssetDescVBSlot04, AssetResVBSlot01, AssetResVBSlot02, AssetResVBSlot03, AssetResVBSlot04, AssetResVBSlot05, AssetResVBSlot06, AssetResVBSlot07, AssetResVBSlot08, AssetResVBSlot09, AsKeyVertexBuffer, AssetKeyVBSlot01, AssetKeyVBSlot02, AssetKeyVBSlot03, AssetKeyVBSlot04, AssetKeyVBSlot05, AssetKeyVBSlot06, AssetKeyVBSlot07, AssetKeyVBSlot08, AssetKeyVBSlot09, AssetKeyVBSlot10, AssetKeyVBSlot11, AssetKeyVBSlot12, AssetKeyVBSlot13, AssetDescVBSlot10, AssetDescVBSlot11, AssetDescVBSlot12, AssetDescVBSlot13, TAssetResVertexBuffer, AssetResVBSlot10, AssetResVBSlot11, AssetResVBSlot12, AssetResVBSlot13}, GeometryDesc, geometry::{RenderGeometry, RenderGeometryEable}, instance::{instance_world_matrix::InstancedBufferWorldMatrix, instance_color::InstancedBufferColor, instance_tilloff::InstancedBufferTillOff}, SysGeometryVBCommand, SysVertexBufferLoad};
 
@@ -15,23 +15,12 @@ pub struct SysGeometryStatesInit;
 impl TSystemStageInfo for SysGeometryStatesInit {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysGeometryVBCommand::key(),
+            SysGeometryVBCommand::key(), SysMeshModifyCommand::key(),
         ]
     }
 }
 
 pub struct SysGeometryChangeInitSlot<D: TVertexBufferUseInfo + Component, D1: AsKeyVertexBuffer + Component>(PhantomData<(D, D1)>);
-impl<D, D1> TSystemStageInfo for SysGeometryChangeInitSlot<D, D1>
-where
-    D: TVertexBufferUseInfo + Component,
-    D1: AsKeyVertexBuffer + Component,
-{
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysGeometryVBCommand::key(), 
-        ]
-    }
-}
 #[setup]
 impl<D, D1> SysGeometryChangeInitSlot<D, D1>
 where
@@ -58,7 +47,7 @@ where
             statistics, mut instance_code, ins_list
         )| {
             if statistics.slot_count() >= D::ASK_SLOT_COUNT as usize {
-                log::info!("SysGeometryChangeIntSlot: Slot {}", D::ASK_SLOT_COUNT);
+                log::debug!("SysGeometryChangeIntSlot: Slot {}", D::ASK_SLOT_COUNT);
                 let slot_index = D::ASK_SLOT_COUNT as usize - 1;
                 let desc = statistics.get_desc(slot_index);
                 let instance_kind = desc.instance_kind();
@@ -81,13 +70,13 @@ where
                             render_geometry::vertex_data::EInstanceKind::Color => {
                                 let buff = InstancedBufferColor::new(slot_index, buff_id, &mut vbpool);
                                 ins_color_cmd.insert(obj.clone(), buff);
-                                log::info!("Instance Color");
+                                log::debug!("Instance Color");
                                 instance_code.0 = instance_code.0 | EInstanceCode::COLOR;
                             },
                             render_geometry::vertex_data::EInstanceKind::TillOffset => {
                                 let buff = InstancedBufferTillOff::new(slot_index, buff_id, &mut vbpool);
                                 ins_tilloff_cmd.insert(obj.clone(), buff);
-                                log::info!("Instance TillOffset");
+                                log::debug!("Instance TillOffset");
                                 instance_code.0 = instance_code.0 | EInstanceCode::TILL_OFF_1;
                             },
                             _ => { },
@@ -421,7 +410,7 @@ impl pi_engine_shell::plugin::Plugin for PluginVertexBuffers {
 
         let world = engine.world_mut();
 
-        let stage_builder = stages.query_stage::<SysGeometryStatesInit>(ERunStageChap::Command);
+        let stage_builder = stages.query_stage::<SysGeometryStatesInit>(ERunStageChap::Initial);
 
         SysGeometryChangeSlot01::setup(world, stage_builder);
         SysGeometryChangeSlot02::setup(world, stage_builder);
@@ -437,7 +426,7 @@ impl pi_engine_shell::plugin::Plugin for PluginVertexBuffers {
         SysGeometryChangeSlot12::setup(world, stage_builder);
         SysGeometryChangeSlot13::setup(world, stage_builder);
 
-        let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Command);
+        let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Initial);
         SysGeometryVBUpdateSlot01::setup(world, stage_builder);
         SysGeometryVBUpdateSlot02::setup(world, stage_builder);
         SysGeometryVBUpdateSlot03::setup(world, stage_builder);

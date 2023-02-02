@@ -28,7 +28,7 @@ impl crate::Plugin for PluginMaterial {
         world.insert_resource(SingleMaterialIDCommandList::default());
         world.insert_resource(SingleValueUniformCommands::default());
         
-        SysMaterialIDCommand::setup(world, stages.query_stage::<SysMaterialIDCommand>(ERunStageChap::Command));
+        SysMaterialIDCommand::setup(world, stages.query_stage::<SysMaterialIDCommand>(ERunStageChap::Initial));
         SysEffectValueUniformComand::setup(world, stages.query_stage::<SysEffectValueUniformComand>(ERunStageChap::Command));
         PluginMaterialUniforms.init(engine, stages);
 

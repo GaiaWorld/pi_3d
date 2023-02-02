@@ -115,6 +115,8 @@ pub trait TSystemStageInfo {
 /// * 一个章节内阶段结束才能进入下个章节
 /// * 当 一个System需要等待多个System的结束, 且编码时无法确定依赖的System时, 应该将该System放入下一章节
 pub enum ERunStageChap {
+    Initial,
+    Anime,
     Command,
     Logic01,
     Logic02,
@@ -122,6 +124,8 @@ pub enum ERunStageChap {
 }
 
 pub struct RunStage {
+    initial: RunStageSub,
+    anime: RunStageSub,
     command: RunStageSub,
     logic01: RunStageSub,
     logic02: RunStageSub,
@@ -130,20 +134,26 @@ pub struct RunStage {
 }
 impl RunStage {
     pub fn new() -> Self {
-        Self { command: RunStageSub::new(), uniform_update: RunStageSub::new(), logic01: RunStageSub::new(), logic02: RunStageSub::new(), list: vec![]}
+        Self { initial: RunStageSub::new(), anime: RunStageSub::new(), command: RunStageSub::new(), uniform_update: RunStageSub::new(), logic01: RunStageSub::new(), logic02: RunStageSub::new(), list: vec![]}
     }
     /// * 获取System在指定章节内的 阶段
     /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
     pub fn query_stage<T: TSystemStageInfo>(&mut self, chap: ERunStageChap) -> &mut StageBuilder {
         match chap {
+            ERunStageChap::Initial => {
+                self.initial.query_stage::<T>()
+            },
+            ERunStageChap::Anime => {
+                self.anime.query_stage::<T>()
+            },
             ERunStageChap::Command => {
                 self.command.query_stage::<T>()
             },
             ERunStageChap::Logic01 => {
-                self.command.query_stage::<T>()
+                self.logic01.query_stage::<T>()
             },
             ERunStageChap::Logic02 => {
-                self.command.query_stage::<T>()
+                self.logic02.query_stage::<T>()
             },
             ERunStageChap::Uniform => {
                 self.uniform_update.query_stage::<T>()
@@ -151,6 +161,14 @@ impl RunStage {
         }
     }
     pub fn drain(&mut self) -> Drain<StageBuilder> {
+        self.initial.drain().for_each(|item| {
+            self.list.push(item);
+        });
+
+        self.anime.drain().for_each(|item| {
+            self.list.push(item);
+        });
+
         self.command.drain().for_each(|item| {
             self.list.push(item);
         });
@@ -177,6 +195,12 @@ impl RunStage {
         let file_name = "Stages.txt";
 
         let mut text = String::from("");
+
+        text += self.initial.log().as_str();
+        text += "\r\n--------------------------------------------------\r\n";
+        
+        text += self.anime.log().as_str();
+        text += "\r\n--------------------------------------------------\r\n";
 
         text += self.command.log().as_str();
         text += "\r\n--------------------------------------------------\r\n";

@@ -23,8 +23,8 @@ impl Plugin for PluginScene {
 
         world.insert_resource(SingleSceneCommandList::default());
 
-        SysSceneCommand::setup(world, stages.query_stage::<SysSceneCommand>(ERunStageChap::Command));
-        SysDirtySceneTick::setup(world, stages.query_stage::<SysDirtySceneTick>(ERunStageChap::Command));
+        SysSceneCommand::setup(world, stages.query_stage::<SysSceneCommand>(ERunStageChap::Initial));
+        SysDirtySceneTick::setup(world, stages.query_stage::<SysDirtySceneTick>(ERunStageChap::Initial));
 
         Ok(())
     }

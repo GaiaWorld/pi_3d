@@ -69,6 +69,7 @@ pub trait DrawList<T: DrawObject> {
 
         time = Instant::now();
 
+        let mut draw_count = 0;
         draws.iter().for_each(|(_, draws)| {
             draws.iter().for_each(|draw| {
                 renderpass.set_pipeline(draw.pipeline());
@@ -114,11 +115,12 @@ pub trait DrawList<T: DrawObject> {
                         renderpass.draw(vertex_range, instance_range);
                     },
                 }
+                draw_count += 1;
             })
         });
         
         let time1 = Instant::now();
-        log::info!("DrawList: {:?}", time1 - time);
+        log::info!("DrawList: {}, {:?}", draw_count, time1 - time);
     }
 }
 

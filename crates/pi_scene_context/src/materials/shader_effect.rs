@@ -199,7 +199,7 @@ impl pi_engine_shell::plugin::Plugin for PluginShaderEffect {
         let world = engine.world_mut();
         world.insert_resource(SingleShaderEffectCommands::default());
 
-        SysShaderEffectCommands::setup(world, stages.query_stage::<SysShaderEffectCommands>(ERunStageChap::Command));
+        SysShaderEffectCommands::setup(world, stages.query_stage::<SysShaderEffectCommands>(ERunStageChap::Initial));
 
         PluginAssetSyncNotNeedLoad::<KeyShader, ResShader>::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
         PluginAssetShaderEffectLoad::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);

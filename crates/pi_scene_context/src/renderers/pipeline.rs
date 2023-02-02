@@ -75,47 +75,47 @@ impl AssetResRenderPipeline {
     }
 }
 
-pub trait InterfaceRenderPipeline {
-    fn use_render_pipeline(
-        &self,
-        entity: ObjectID,
-        key: KeyRenderPipeline,
-    ) -> &Self;
-}
+// pub trait InterfaceRenderPipeline {
+//     fn use_render_pipeline(
+//         &self,
+//         entity: ObjectID,
+//         key: KeyRenderPipeline,
+//     ) -> &Self;
+// }
 
-impl InterfaceRenderPipeline for EnginShell {
-    fn use_render_pipeline(
-        &self,
-        entity: ObjectID,
-        key: KeyRenderPipeline,
-    ) -> &Self  {
-        let commands = self.world().get_resource_mut::<CommandListRenderPipeline>().unwrap();
-        commands.list.push(ECommand::Use(entity, key));
+// impl InterfaceRenderPipeline for EnginShell {
+//     fn use_render_pipeline(
+//         &self,
+//         entity: ObjectID,
+//         key: KeyRenderPipeline,
+//     ) -> &Self  {
+//         let commands = self.world().get_resource_mut::<CommandListRenderPipeline>().unwrap();
+//         commands.list.push(ECommand::Use(entity, key));
 
-        self
-    }
-}
+//         self
+//     }
+// }
 
-pub type SysRenderPipelineLoad = AssetSyncLoad<KeyRenderPipeline, AssetkeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, SysRenderPipelineCommand>;
-pub type PluginRenderPipelineLoad = PluginAssetSyncLoad::<KeyRenderPipeline, AssetkeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, SysRenderPipelineCommand>;
+// pub type SysRenderPipelineLoad = AssetSyncLoad<KeyRenderPipeline, AssetkeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, SysRenderPipelineCommand>;
+// pub type PluginRenderPipelineLoad = PluginAssetSyncLoad::<KeyRenderPipeline, AssetkeyRenderPipeline, ResRenderPipeline, AssetResRenderPipeline, SysRenderPipelineCommand>;
 
-pub struct PluginRenderPipeline;
-impl Plugin for PluginRenderPipeline {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
+// pub struct PluginRenderPipeline;
+// impl Plugin for PluginRenderPipeline {
+//     fn init(
+//         &mut self,
+//         engine: &mut crate::engine::Engine,
+//         stages: &mut crate::run_stage::RunStage,
+//     ) -> Result<(), crate::plugin::ErrorPlugin> {
 
-        PluginRenderPipelineLoad::new(false, 5 * 1024 * 1024, 60 * 1000).init(engine, stages);
+//         PluginRenderPipelineLoad::new(false, 5 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
-        let world = engine.world_mut();
-        world.insert_resource(CommandListRenderPipeline::default());
-        SysRenderPipelineCommand::setup(world, stages.query_stage::<SysRenderPipelineCommand>(ERunStageChap::Command));
+//         let world = engine.world_mut();
+//         world.insert_resource(CommandListRenderPipeline::default());
+//         SysRenderPipelineCommand::setup(world, stages.query_stage::<SysRenderPipelineCommand>(ERunStageChap::Command));
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }
 
 pub fn pipeline_state_key(
     targets: &[Option<wgpu::ColorTargetState>],

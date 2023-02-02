@@ -241,6 +241,7 @@ impl EnginShell {
         stages.push(Arc::new(last_stage.build(&self.world)));
 
         self.single_dispatcher.init(stages, &self.world);
+
     }
 
     pub fn world(&self) -> &World {

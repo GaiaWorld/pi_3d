@@ -6,7 +6,7 @@ use pi_scene_math::{Vector3, Quaternion, Rotation3};
 
 use crate::{object::{ObjectID, GameObject}, };
 
-use super::{transform_node::{LocalPosition, LocalRotation, LocalRotationQuaternion, LocalEulerAngles, LocalScaling, GlobalTransform}};
+use super::{transform_node::{LocalPosition, LocalRotation, LocalRotationQuaternion, LocalEulerAngles, LocalScaling, GlobalTransform}, tree_left_right::{TreeLeftRoot, TreeRightRoot}};
 
 pub enum TreeCommand {
     Append(ObjectID, ObjectID),
@@ -18,7 +18,11 @@ pub struct SingleTreeCommandList {
 }
 pub struct SysTreeCommand;
 impl TSystemStageInfo for SysTreeCommand {
-    
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysTransformNodeCreateCommand::key()
+        ]
+    }
 }
 #[setup]
 impl SysTreeCommand {
@@ -26,6 +30,7 @@ impl SysTreeCommand {
     pub fn cmd(
         mut cmds: ResMut<SingleTreeCommandList>,
         entitys: Query<GameObject, ObjectID>,
+        mut scenes: Query<GameObject, (&mut TreeLeftRoot, &mut TreeRightRoot)>,
         mut tree: EntityTreeMut<GameObject>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
@@ -44,28 +49,22 @@ impl SysTreeCommand {
 }
 
 
-pub enum TransformNodeCommand {
+pub enum ETransformNodeCreateCommand {
     Create(ObjectID),
-    Destroy(ObjectID),
-    ModifyPosition(ObjectID, Vector3),
-    ModifyRotation(ObjectID, Vector3),
-    ModifyScaling(ObjectID, Vector3),
-    ModifyRotationQuaternion(ObjectID, Quaternion),
-    ModifyTarget(ObjectID, Vector3),
 }
-pub struct SingleTransformNodeCommandList {
-    pub list: Vec<TransformNodeCommand>,
+pub struct SingleTransformNodeCreateCommandList {
+    pub list: Vec<ETransformNodeCreateCommand>,
 }
 
-pub struct SysTransformNodeCommand;
-impl TSystemStageInfo for SysTransformNodeCommand {
+pub struct SysTransformNodeCreateCommand;
+impl TSystemStageInfo for SysTransformNodeCreateCommand {
 
 }
 #[setup]
-impl SysTransformNodeCommand {
+impl SysTransformNodeCreateCommand {
     #[system]
     pub fn cmd(
-        mut cmds: ResMut<SingleTransformNodeCommandList>,
+        mut cmds: ResMut<SingleTransformNodeCreateCommandList>,
         mut delete: EntityDelete<GameObject>,
         mut gtr_cmd: Commands<GameObject, GlobalTransform>,
         mut pos_cmd: Commands<GameObject, LocalPosition>,
@@ -76,7 +75,7 @@ impl SysTransformNodeCommand {
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
-                TransformNodeCommand::Create(node) => {
+                ETransformNodeCreateCommand::Create(node) => {
                     pos_cmd.insert(node, LocalPosition(Vector3::new(0., 0., 0.)));
                     scl_cmd.insert(node, LocalScaling(Vector3::new(1., 1., 1.)));
                     rot_cmd.insert(node, LocalRotation(Rotation3::identity()));
@@ -84,13 +83,53 @@ impl SysTransformNodeCommand {
                     eul_cmd.insert(node, LocalEulerAngles(Vector3::new(0., 0., 0.)));
                     gtr_cmd.insert(node, GlobalTransform::default());
                 },
-                TransformNodeCommand::Destroy(node) => {
+            }
+        });
+    }
+}
+
+pub enum ETransformNodeModifyCommand {
+    Destroy(ObjectID),
+    ModifyPosition(ObjectID, Vector3),
+    ModifyRotation(ObjectID, Vector3),
+    ModifyScaling(ObjectID, Vector3),
+    ModifyRotationQuaternion(ObjectID, Quaternion),
+    ModifyTarget(ObjectID, Vector3),
+}
+pub struct SingleTransformNodeModifyCommandList {
+    pub list: Vec<ETransformNodeModifyCommand>,
+}
+
+pub struct SysTransformNodeModifyCommand;
+impl TSystemStageInfo for SysTransformNodeModifyCommand {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysTransformNodeCreateCommand::key()
+        ]
+    }
+}
+#[setup]
+impl SysTransformNodeModifyCommand {
+    #[system]
+    pub fn cmd(
+        mut cmds: ResMut<SingleTransformNodeModifyCommandList>,
+        mut delete: EntityDelete<GameObject>,
+        mut gtr_cmd: Commands<GameObject, GlobalTransform>,
+        mut pos_cmd: Commands<GameObject, LocalPosition>,
+        mut scl_cmd: Commands<GameObject, LocalScaling>,
+        mut rot_cmd: Commands<GameObject, LocalRotation>,
+        mut qua_cmd: Commands<GameObject, LocalRotationQuaternion>,
+        mut eul_cmd: Commands<GameObject, LocalEulerAngles>,
+    ) {
+        cmds.list.drain(..).for_each(|cmd| {
+            match cmd {
+                ETransformNodeModifyCommand::Destroy(node) => {
                     delete.despawn(node);
                 },
-                TransformNodeCommand::ModifyPosition(node, value) => {
+                ETransformNodeModifyCommand::ModifyPosition(node, value) => {
                     pos_cmd.insert(node, LocalPosition(value));
                 },
-                TransformNodeCommand::ModifyRotation(node, value) => {
+                ETransformNodeModifyCommand::ModifyRotation(node, value) => {
                     
                     let rotation = Rotation3::from_euler_angles(value.y, value.x, value.z);
                     let quaternion = Quaternion::from_rotation_matrix(&rotation); 
@@ -98,10 +137,10 @@ impl SysTransformNodeCommand {
                     rot_cmd.insert(node, LocalRotation(rotation));
                     eul_cmd.insert(node, LocalEulerAngles(value));     
                 },
-                TransformNodeCommand::ModifyScaling(node, value) => {
+                ETransformNodeModifyCommand::ModifyScaling(node, value) => {
                     scl_cmd.insert(node, LocalScaling(value));    
                 },
-                TransformNodeCommand::ModifyRotationQuaternion(node, value) => {
+                ETransformNodeModifyCommand::ModifyRotationQuaternion(node, value) => {
                     let rotation = value.to_rotation_matrix();
                     let mut euler = Vector3::new(0., 0., 0.);
                     let (z, x, y) = rotation.euler_angles();
@@ -111,7 +150,7 @@ impl SysTransformNodeCommand {
                     rot_cmd.insert(node, LocalRotation(rotation));
                     eul_cmd.insert(node, LocalEulerAngles(euler));    
                 },
-                TransformNodeCommand::ModifyTarget(_, _) => todo!(),
+                ETransformNodeModifyCommand::ModifyTarget(_, _) => todo!(),
             }
         });
     }

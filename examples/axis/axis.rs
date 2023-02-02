@@ -16,7 +16,7 @@ use pi_scene_context::{
     main_camera_render::interface::InterfaceMainCamera,
     materials::{material::{InterfaceMaterial}},
     scene::interface::InterfaceScene,
-    transforms::{interface::InterfaceTransformNode, command::{SingleTransformNodeCommandList, TransformNodeCommand}},
+    transforms::{interface::InterfaceTransformNode, command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}},
 };
 use pi_scene_math::{Vector3};
 use axis::{axis::{InterfaceAxis, PluginAxisBuilder}, interface::InterfaceAxisMaterial, PluginAxis};
@@ -33,7 +33,7 @@ impl SysTest {
     #[system]
     pub fn sys(
         mut list: ResMut<SingleTestData>,
-        mut transform_commands: ResMut<SingleTransformNodeCommandList>,
+        mut transform_commands: ResMut<SingleTransformNodeModifyCommandList>,
     ) {
         list.transforms.iter_mut().for_each(|mut item| {
             item.1 = item.1 + 16.0;
@@ -46,7 +46,7 @@ impl SysTest {
             // log::debug!("=========== x: {}, y: {}, z: {}", x, y, z);
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 20., 0., 5.)));
             // transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(2.7394686, 2.7394686, 2.7394686)));
-            transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
+            transform_commands.list.push(ETransformNodeModifyCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
         });
     }
 }

@@ -156,7 +156,7 @@ impl crate::Plugin for PluginRenderDepthAndStencil {
 
         world.insert_resource(SingleRenderDepthAndStencilCommandList::default());
 
-        SysRenderDepthAndStencilCommand::setup(world, stages.query_stage::<SysRenderDepthAndStencilCommand>(ERunStageChap::Command));
+        SysRenderDepthAndStencilCommand::setup(world, stages.query_stage::<SysRenderDepthAndStencilCommand>(ERunStageChap::Initial));
 
         Ok(())
     }

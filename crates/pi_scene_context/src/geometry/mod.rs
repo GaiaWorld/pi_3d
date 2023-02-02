@@ -71,8 +71,6 @@ impl SysGeometryVBCommand {
         mut geo_vb_cmd: Commands<GameObject, AssetKeyVBLayouts>,
         mut geo_enable_cmd: Commands<GameObject, RenderGeometryEable>,
         mut inscode_cmd: Commands<GameObject, EInstanceCode>,
-        mut ins_list_cmd: Commands<GameObject, InstanceList>,
-        mut ins_record: ResMut<InstanceSourceRecord>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -84,7 +82,6 @@ impl SysGeometryVBCommand {
                     geo_vb_cmd.insert(entity.clone(), AssetKeyVBLayouts(key));
                     geo_enable_cmd.insert(entity.clone(), RenderGeometryEable(true));
                     inscode_cmd.insert(entity.clone(), EInstanceCode(EInstanceCode::NONE));
-                    ins_list_cmd.insert(entity, InstanceList::new(&mut ins_record));
                 },
             }
         });
@@ -184,12 +181,12 @@ impl Plugin for PluginGeometry {
         let world = engine.world_mut();
         world.insert_resource(SingleGeometryVBCommands::default());
         world.insert_resource(VertexBufferPool::default());
-        SysGeometryVBCommand::setup(world, stages.query_stage::<SysGeometryVBCommand>(ERunStageChap::Command));
+        SysGeometryVBCommand::setup(world, stages.query_stage::<SysGeometryVBCommand>(ERunStageChap::Initial));
 
-        stages.query_stage::<SysGeometryStatesInit>(ERunStageChap::Command);
+        stages.query_stage::<SysGeometryStatesInit>(ERunStageChap::Initial);
 
         PluginAssetSyncLoad::<KeyVertexLayouts, AssetKeyVBLayouts, VertexBufferLayouts, AssetResVBLayouts, SysGeometryStatesInit>::new(false, 2 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Command);
+        stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Initial);
 
         PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
         PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot01, VertexBuffer, AssetResVBSlot01, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);

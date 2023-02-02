@@ -36,10 +36,13 @@ render_derive = { git = "https://github.com/GaiaWorld/pi_render" }
 render_shader = { git = "https://github.com/GaiaWorld/pi_render" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_animation = { git = "https://github.com/GaiaWorld/pi_animation.git" }
+pi_curves = { git = "https://github.com/GaiaWorld/pi_curves.git" }
 
 pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
 pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
+pi_atom = { version="0.2", features = ["serde"] }
 
 wgpu = "0.13"
 env_logger = "0.9"
@@ -64,6 +67,12 @@ render_shader = { path = "../pi_render/crates/render_shader" }
 [patch."https://github.com/GaiaWorld/pi_scene"]
 pi_scene = { path = "../pi_scene" }
 pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
+
+[patch."https://github.com/GaiaWorld/pi_animation"]
+pi_animation = { path = "../pi_animation" }
+
+[patch."https://github.com/GaiaWorld/pi_curves"]
+pi_curves = { path = "../pi_curves" }
 
 [[example]]
 name = "cube"
@@ -132,3 +141,15 @@ path = "examples/skin/skin.rs"
 [[example]]
 name = "axis"
 path = "examples/axis/axis.rs"
+
+[[example]]
+name = "skin_simple"
+path = "examples/skeleton/simple.rs"
+
+[[example]]
+name = "anime_01"
+path = "examples/anime/01.rs"
+
+[[example]]
+name = "anime_performance"
+path = "examples/anime/performance.rs"

@@ -92,7 +92,7 @@ impl crate::Plugin for PluginOpaque {
 
         world.insert_resource(SingleOpaqueCommandList::default());
 
-        SysOpaqueCommandTick::setup(world, stages.query_stage::<SysOpaqueCommandTick>(ERunStageChap::Command));
+        SysOpaqueCommandTick::setup(world, stages.query_stage::<SysOpaqueCommandTick>(ERunStageChap::Initial));
 
         Ok(())
     }

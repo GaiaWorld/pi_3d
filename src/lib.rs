@@ -23,12 +23,12 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginScene.init(engine, stages);
         PluginTransformNode.init(engine, stages);
         PluginCamera.init(engine, stages);
-        PluginCulling.init(engine, stages);
+        PluginMesh.init(engine, stages);
 
+        PluginCulling.init(engine, stages);
         PluginBufferIndices.init(engine, stages);
         PluginGeometry.init(engine, stages);
 
-        PluginMesh.init(engine, stages);
         PluginMaterial.init(engine, stages);
         PluginLayerMask.init(engine, stages);
 

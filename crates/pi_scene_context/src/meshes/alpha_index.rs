@@ -66,7 +66,7 @@ impl crate::Plugin for PluginAlphaIndex {
         let world = engine.world_mut();
 
         world.insert_resource(SingleAlphaIndexCommandList::default());
-        SysAlphaIndexCommand::setup(world, stages.query_stage::<SysAlphaIndexCommand>(ERunStageChap::Command));
+        SysAlphaIndexCommand::setup(world, stages.query_stage::<SysAlphaIndexCommand>(ERunStageChap::Initial));
         
         Ok(())
     }

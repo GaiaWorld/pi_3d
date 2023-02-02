@@ -21,12 +21,12 @@ impl Default for Viewport {
 }
 
 #[derive(Debug)]
-pub enum ViewerCommand {
+pub enum EViewerCommand {
     Viewport(ObjectID, Viewport)
 }
 
 #[derive(Debug, Default)]
-pub struct SingleViewerCommands(pub Vec<ViewerCommand>);
+pub struct SingleViewerCommands(pub Vec<EViewerCommand>);
 
 pub struct SysViewerCommand;
 impl TSystemStageInfo for SysViewerCommand {}
@@ -41,7 +41,7 @@ impl SysViewerCommand {
 
         list.drain(..).for_each(|cmd| {
             match cmd {
-                ViewerCommand::Viewport(obj, viewport) => {
+                EViewerCommand::Viewport(obj, viewport) => {
                     viewport_cmd.insert(obj, viewport);
                 },
             }

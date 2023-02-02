@@ -21,7 +21,7 @@ pub struct SysRendererInitForCamera;
 impl TSystemStageInfo for SysRendererInitForCamera {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysSceneCommand::key(), SysViewerUpdatedForCamera::key()
+            SysViewerUpdatedForCamera::key()
         ]
     }
 }

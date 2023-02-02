@@ -26,7 +26,7 @@ impl crate::Plugin for PluginCamera {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysCameraCreate::setup(world, stages.query_stage::<SysCameraCreate>(ERunStageChap::Command));
+        SysCameraCreate::setup(world, stages.query_stage::<SysCameraCreate>(ERunStageChap::Initial));
         SysCameraCommand::setup(world, stages.query_stage::<SysCameraCommand>(ERunStageChap::Command));
         SysTargetCameraCommand::setup(world, stages.query_stage::<SysTargetCameraCommand>(ERunStageChap::Command));
         SysFreeCameraCommand::setup(world, stages.query_stage::<SysFreeCameraCommand>(ERunStageChap::Command));

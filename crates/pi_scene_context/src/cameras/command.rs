@@ -81,7 +81,6 @@ pub struct SysCameraCommand;
 impl TSystemStageInfo for SysCameraCommand {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysCameraCreate::key()
         ]
     }
 }
@@ -153,7 +152,6 @@ pub struct SysTargetCameraCommand;
 impl TSystemStageInfo for SysTargetCameraCommand {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysCameraCreate::key()
         ]
     }
 }
@@ -193,7 +191,6 @@ pub struct SysFreeCameraCommand;
 impl TSystemStageInfo for SysFreeCameraCommand {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysCameraCreate::key()
         ]
     }
 }

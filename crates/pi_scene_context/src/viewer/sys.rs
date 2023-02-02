@@ -7,7 +7,7 @@ use pi_engine_shell::{run_stage::TSystemStageInfo, object::{GameObject, ObjectID
 use pi_scene_math::coordiante_system::CoordinateSytem3;
 use pi_slotmap_tree::Storage;
 
-use crate::transforms::{command::SysTransformNodeCommand, transform_node::{LocalPosition, GlobalTransform}, transform_node_sys::SysWorldMatrixCalc};
+use crate::transforms::{transform_node::{LocalPosition, GlobalTransform}, transform_node_sys::SysWorldMatrixCalc};
 
 use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, ViewerTransformMatrix, TViewerViewMatrix, TViewerProjectMatrix};
 
@@ -16,7 +16,7 @@ pub(crate) struct SysViewerViewMatrixByViewCalc<T: TViewerViewMatrix + Component
 impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static> TSystemStageInfo for SysViewerViewMatrixByViewCalc<T, S> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            S::key(), SysTransformNodeCommand::key(), 
+            S::key(),
         ]
     }
 }
@@ -31,7 +31,7 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static> SysViewerV
         idtree: EntityTree<GameObject>,
     ) {
         //  log::debug!("View Matrix Calc:");
-        let coordsys = CoordinateSytem3::right();
+        let coordsys = CoordinateSytem3::left();
         for (entity, viewcalc, l_position) in query_cameras.iter_mut() {
             match idtree.get_up(entity) {
                 Some(level) => {
@@ -75,7 +75,7 @@ impl<T: TViewerViewMatrix + Component> SysViewerViewMatrixUpdateByParentModify<T
         idtree: EntityTree<GameObject>,
     ) {
         //  log::debug!("View Matrix Calc:");
-        let coordsys = CoordinateSytem3::right();
+        let coordsys = CoordinateSytem3::left();
         for (entity, viewcalc, l_position) in query_cameras.iter_mut() {
             match idtree.get_up(entity) {
                 Some(parent_id) => {

@@ -28,7 +28,7 @@ use crate::{
     bindgroup::{
         RenderBindGroupKey, RenderBindGroupPool,
         uniform_buffer::{SysDynUnifromBufferUpdate, DynUnifromBufferReBindFlag},
-    }
+    }, skeleton::skeleton::Skeleton
 };
 
 use super::{
@@ -345,6 +345,7 @@ fn collect_render_item(
         &RenderSortParam, &GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
     ),
     effect_state: (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &ShaderSetEffectAbout, &ShaderBindEffectValue),
+    // skeleton_state: Option<(&Skeleton)>,
     asset_mgr_shaders: &Share<AssetMgr<ResShader>>,
     asset_mgr_pipelines: &Share<AssetMgr<ResRenderPipeline>>,
     device: &RenderDevice,
@@ -382,8 +383,6 @@ fn collect_render_item(
         )
     };
 
-    log::info!("Pipeline: {:?}, Shader: {:?}", pipeline_key, shader_key);
-
     let id_scene_about = RenderBindGroupKey::SceneAbout(id_scene.clone());
     let id_model_about = RenderBindGroupKey::ModelAbout(id_model.clone());
     let id_effect_about = RenderBindGroupKey::EffectAbout(id_mat.clone());
@@ -391,6 +390,8 @@ fn collect_render_item(
     let pipeline = if let Some(pipeline) = asset_mgr_pipelines.get(&pipeline_key) {
         pipeline
     } else {
+        log::debug!("Pipeline: {:?}, Shader: {:?}", pipeline_key, shader_key);
+
         let mut bind_group_layouts = vec![];
 
         let layout = layoutpool.get_layout(&id_scene_about);

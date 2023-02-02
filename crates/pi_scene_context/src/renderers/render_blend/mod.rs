@@ -137,7 +137,7 @@ impl crate::Plugin for PluginRenderBlend {
 
         world.insert_resource(SingleRenderBlendCommandList::default());
 
-        SysRenderBlendCommand::setup(world, stages.query_stage::<SysRenderBlendCommand>(ERunStageChap::Command));
+        SysRenderBlendCommand::setup(world, stages.query_stage::<SysRenderBlendCommand>(ERunStageChap::Initial));
 
         Ok(())
     }

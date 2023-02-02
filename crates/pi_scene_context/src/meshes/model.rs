@@ -12,10 +12,10 @@ use crate::{
     shaders::FragmentUniformBind,  bytes_write_to_memory,
     transforms::{transform_node::{WorldMatrix, WorldMatrixInv}, transform_node_sys::SysWorldMatrixCalc},
     geometry::instance::{types::{TInstancedData, InstancedValue, TInstanceFlag}, InstanceSource, instance_world_matrix::InstancedWorldMatrixDirty},
-    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}
+    bindgroup::{RenderBindGroupKey, RenderBindGroupPool}, skeleton::{SkeletonID, skeleton::Skeleton, skin_texture::SkinTexture}
 };
 
-use super::{abstract_mesh::AbstructMesh, command::SysMeshCommand, Mesh};
+use super::{abstract_mesh::AbstructMesh, Mesh};
 
 /// 对应 EModelAboutBind::ModelMatrix
 /// 必须,固定使用,bind固定
@@ -115,7 +115,6 @@ pub struct SysModelAboutUpdate;
 impl TSystemStageInfo for SysModelAboutUpdate {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysMeshCommand::key(), // Skin
         ]
     }
 }
@@ -125,9 +124,10 @@ impl SysModelAboutUpdate {
     pub fn sys(
         models: Query<
             GameObject,
-            (ObjectID, &Mesh, Option<&ESkinCode>),
-            Or<(Changed<Mesh>, Changed<ESkinCode>)>,
+            (ObjectID, &Mesh, Option<&SkeletonID>),
+            Or<(Changed<Mesh>, Changed<SkeletonID>)>,
         >,
+        skeletons: Query<GameObject, &Skeleton>,
         mut about_cmd: Commands<GameObject, ShaderSetModelAbout>,
         mut about_bindoff_cmd: Commands<GameObject, ShaderSetModelAboutBindOffset>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
@@ -137,13 +137,21 @@ impl SysModelAboutUpdate {
         log::debug!("SysModelAboutUpdateBySkin: ");
         models.iter().for_each(|(entity, _, skin)| {
             log::debug!("SysModelAboutUpdateBySkin: 0");
-            let skin = if let Some(skin) = skin {
-                Some(*skin)
+            let (model_set, model_bindoff) = if let Some(skin) = skin {
+                if let Some(skeleton) = skeletons.get(skin.0.clone()) {
+                    let model_set = ShaderSetModelAbout::new(ShaderSetBind::SET_MODEL_ABOUT, skeleton.mode);
+                    let model_bindoff = model_set.bind_offset(&mut dynbuffer, Some(skeleton.bind.clone()));
+                    
+                    (model_set, model_bindoff)
+                } else {
+                    return;
+                }
             } else {
-                None
+                let model_set = ShaderSetModelAbout::new(ShaderSetBind::SET_MODEL_ABOUT, ESkinCode::None);
+                let model_bindoff = model_set.bind_offset(&mut dynbuffer, None);
+
+                (model_set, model_bindoff)
             };
-            let model_set = ShaderSetModelAbout::new(ShaderSetBind::SET_MODEL_ABOUT, skin);
-            let model_bindoff = model_set.bind_offset(&mut dynbuffer);
             
             let layout_entries = model_set.layout_entries();
             bindgrouppool.creat(&device, RenderBindGroupKey::ModelAbout(entity.clone()), layout_entries.as_slice(), ShaderSetBind::SET_MODEL_ABOUT);
@@ -206,7 +214,7 @@ impl SysRenderMatrixUniformUpdate {
         mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
     ) {
         meshes.iter_mut().for_each(|(model, worldmatrix, worldmatrix_inv, mut flag)| {
-            log::info!("SysModelUniformUpdate:");
+            // log::info!("SysModelUniformUpdate:");
 
             if flag.0 {
                 let temp = BuildinModelTemp(&worldmatrix.0, &worldmatrix_inv.0);

@@ -24,6 +24,7 @@ pub mod viewer;
 pub mod bindgroup;
 pub mod light;
 pub mod skeleton;
+pub mod animation;
 
 
 pub fn bytes_write_to_memory(

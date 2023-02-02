@@ -6,7 +6,7 @@ use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInf
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
 use render_data_container::{VertexBufferPool};
 
-use crate::{geometry::{vertex_buffer_useinfo, geometry::RenderGeometryEable, instance::{instanced_buffer::TInstancedBuffer, types::TInstancedData}, sys_vertex_buffer_use::{SysGeometryStatesInit}}};
+use crate::{geometry::{vertex_buffer_useinfo, geometry::RenderGeometryEable, instance::{instanced_buffer::TInstancedBuffer, types::TInstancedData}, sys_vertex_buffer_use::{SysGeometryStatesInit}}, meshes::command::SysMeshCreateCommand};
 
 use super::{InstanceList, types::TInstanceFlag};
 
@@ -180,7 +180,7 @@ pub struct SysInstancedBufferInitFunc<T: TInstancedBuffer + Component>(PhantomDa
 impl<T: TInstancedBuffer + Component> TSystemStageInfo for SysInstancedBufferInitFunc<T> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysGeometryStatesInit::key(),
+            SysMeshCreateCommand::key()
         ]
     }
 }

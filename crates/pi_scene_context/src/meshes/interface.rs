@@ -1,9 +1,9 @@
 use pi_engine_shell::object::InterfaceObject;
 use pi_scene_math::Vector4;
 
-use crate::{object::ObjectID, transforms::interface::InterfaceTransformNode, scene::interface::InterfaceScene, renderers::{render_mode::{InterfaceRenderMode, ERenderMode}, render_sort::{InterfaceRenderSort, RenderSortParam}, render_blend::InterfaceRenderBlend, render_depth_and_stencil::InterfaceRenderDepthAndStencil, render_primitive::{InterfaceRenderPrimitive, PrimitiveState}}, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
+use crate::{object::ObjectID, transforms::interface::InterfaceTransformNode, scene::interface::InterfaceScene, renderers::{render_mode::{InterfaceRenderMode, ERenderMode}, render_sort::{InterfaceRenderSort, RenderSortParam}, render_blend::InterfaceRenderBlend, render_depth_and_stencil::InterfaceRenderDepthAndStencil, render_primitive::{InterfaceRenderPrimitive, PrimitiveState, ECullMode, EPolygonMode, EFrontFace}}, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
 
-use super::command::{SingleMeshCommandList, MeshCommand};
+use super::command::{SingleMeshCreateCommandList, EMeshCreateCommand, EInstanceMeshCreateCommand, SingleInstanceMeshCreateCommandList, SingleInstanceMeshModifyCommandList, EInstanceMeshModifyCommand};
 
 
 pub trait InterfaceMesh {
@@ -65,8 +65,8 @@ impl InterfaceMesh for crate::engine::Engine {
         self.as_transform_node(entity);
         self.transform_parent(entity, scene);
 
-        let commands = world.get_resource_mut::<SingleMeshCommandList>().unwrap();
-        commands.list.push(MeshCommand::CreateInstance(source, entity));
+        let commands = world.get_resource_mut::<SingleInstanceMeshCreateCommandList>().unwrap();
+        commands.list.push(EInstanceMeshCreateCommand::CreateInstance(source, entity));
 
         entity
     }
@@ -76,8 +76,8 @@ impl InterfaceMesh for crate::engine::Engine {
         instance: ObjectID,
         color: Vector4,
     ) -> &Self {
-        let commands = self.world().get_resource_mut::<SingleMeshCommandList>().unwrap();
-        commands.list.push(MeshCommand::InstanceColor(instance, color));
+        let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
+        commands.list.push(EInstanceMeshModifyCommand::InstanceColor(instance, color));
 
         self
     }
@@ -87,8 +87,8 @@ impl InterfaceMesh for crate::engine::Engine {
         instance: ObjectID,
         value: Vector4,
     ) -> &Self {
-        let commands = self.world().get_resource_mut::<SingleMeshCommandList>().unwrap();
-        commands.list.push(MeshCommand::InstanceTillOff(instance, value));
+        let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
+        commands.list.push(EInstanceMeshModifyCommand::InstanceTillOff(instance, value));
 
         self
     }
@@ -99,15 +99,17 @@ impl InterfaceMesh for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleMeshCommandList>().unwrap();
-        commands.list.push(MeshCommand::Create(object));
+        let commands = world.get_resource_mut::<SingleMeshCreateCommandList>().unwrap();
+        commands.list.push(EMeshCreateCommand::Create(object));
 
         self.render_sort(object, RenderSortParam::opaque());
         self.render_mode(object, ERenderMode::Opaque);
         self.disable_blend(object);
         self.disable_depth_stencil(object);
         self.layer_mask(object, LayerMask::default());
-        self.primitive(object, PrimitiveState::default());
+        self.cull_mode(object, ECullMode::Back);
+        self.polygon_mode(object, EPolygonMode::Fill);
+        self.front_face(object, EFrontFace::Ccw);
 
         self
     }

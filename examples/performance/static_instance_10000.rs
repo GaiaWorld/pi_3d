@@ -6,7 +6,7 @@ use pi_3d::PluginBundleDefault;
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::{SingleTransformNodeCommandList, TransformNodeCommand}, interface::InterfaceTransformNode},
+    transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     meshes::{interface::InterfaceMesh},
@@ -32,7 +32,7 @@ impl SysTest {
     #[system]
     pub fn sys(
         mut list: ResMut<SingleTestData>,
-        mut transform_commands: ResMut<SingleTransformNodeCommandList>,
+        mut transform_commands: ResMut<SingleTransformNodeModifyCommandList>,
     ) {
         list.transforms.iter_mut().for_each(|mut item| {
             item.1 = item.1 + 16.0;
@@ -46,14 +46,14 @@ impl SysTest {
             let z = z0 * 3.1415926 * 2.;
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 3., 0., 0.)));
             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
-            transform_commands.list.push(TransformNodeCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
+            transform_commands.list.push(ETransformNodeModifyCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
         });
         
         list.scaling.iter_mut().for_each(|mut item| {
             item.1 = item.1 + 16.0;
             let x = ((item.1 % 10000.0 / 10000.0 * 3.14159926 * 2.).cos() + 1.0) * 4.0 + 0.5;
             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
-            transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x, x, 1.)));
+            transform_commands.list.push(ETransformNodeModifyCommand::ModifyScaling(item.0, Vector3::new(x, x, 1.)));
         });
     }
 }
@@ -86,7 +86,7 @@ impl PluginTest {
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
 
-        let tes_size = 50;
+        let tes_size = 100;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
         engine.frame_time(2);

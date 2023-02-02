@@ -19,7 +19,6 @@ pub struct SysSceneBindUpdate;
 impl TSystemStageInfo for SysSceneBindUpdate {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysSceneCommand::key(), SysMainCameraRenderCommand::key(),
         ]
     }
 }

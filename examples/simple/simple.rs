@@ -12,7 +12,7 @@ use pi_scene_context::{
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial}}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial}}, renderers::render_primitive::{InterfaceRenderPrimitive, EFrontFace}
 };
 use pi_scene_math::Vector3;
 use pi_mesh_builder::{quad::{InterfaceQuad}, cube::{PluginCubeBuilder, InterfaceCube}, ball::{PluginBallBuilder, InterfaceBall}};
@@ -51,6 +51,7 @@ fn test(
     engine.use_material(ball, unlitmaterial);
     // 修改球体的偏移
     engine.transform_position(ball, Vector3::new(2., 2., 0.));
+    engine.front_face(ball, EFrontFace::Cw);
     
     // let axis_box = engine.new_axis(scene01);
     // // 使用材质

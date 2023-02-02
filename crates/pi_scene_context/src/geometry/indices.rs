@@ -15,12 +15,12 @@ pub enum ECommand {
 pub struct CommandListBufferIndices {
     pub list: Vec<ECommand>,
 }
-pub struct SysGeometryCommand;
-impl TSystemStageInfo for SysGeometryCommand {
+pub struct SysGeometryIndicesCommand;
+impl TSystemStageInfo for SysGeometryIndicesCommand {
 
 }
 #[setup]
-impl SysGeometryCommand {
+impl SysGeometryIndicesCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<CommandListBufferIndices>,
@@ -59,7 +59,7 @@ impl InterfaceBufferIndices for Engine {
     }
 }
 
-pub type SysInstanceBufferLoad = AssetSyncLoad<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices, SysGeometryCommand>;
+pub type SysInstanceBufferLoad = AssetSyncLoad<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices, SysGeometryIndicesCommand>;
 
 pub struct PluginBufferIndices;
 impl Plugin for PluginBufferIndices {
@@ -71,9 +71,9 @@ impl Plugin for PluginBufferIndices {
 
         let world = engine.world_mut();
         world.insert_resource(CommandListBufferIndices::default());
-        SysGeometryCommand::setup(world, stages.query_stage::<SysGeometryCommand>(ERunStageChap::Command));
+        SysGeometryIndicesCommand::setup(world, stages.query_stage::<SysGeometryIndicesCommand>(ERunStageChap::Initial));
 
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices, SysGeometryCommand>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
+        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices, SysGeometryIndicesCommand>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
         Ok(())
     }

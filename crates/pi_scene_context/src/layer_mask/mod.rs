@@ -34,7 +34,7 @@ impl Plugin for PluginLayerMask {
     ) -> Result<(), crate::plugin::ErrorPlugin> {
         let world = engine.world_mut();
 
-        SysLayerMaskCommand::setup(world, stages.query_stage::<SysLayerMaskCommand>(ERunStageChap::Command));
+        SysLayerMaskCommand::setup(world, stages.query_stage::<SysLayerMaskCommand>(ERunStageChap::Initial));
 
         world.insert_resource(SingleLayerMaskCommandList::default());
 

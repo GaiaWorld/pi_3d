@@ -18,7 +18,6 @@ pub struct SysDirtySceneTick;
 impl TSystemStageInfo for SysDirtySceneTick {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysSceneCommand::key()
         ]
     }
 }
@@ -29,6 +28,7 @@ impl SysDirtySceneTick {
         mut query_scenes: Query<GameObject, (&mut SceneTime, &SceneFog)>
     ) {
         query_scenes.iter_mut().for_each(|(mut scene_time, mut scene_fog)| {
+            scene_time.update(16);
             scene_time.dirty = false;
         });
     }

@@ -22,10 +22,12 @@ impl InterfaceScene for crate::engine::Engine {
         & self,
     ) -> ObjectID {
         let entity = self.new_object();
+        let left = self.new_object();
+        let right = self.new_object();
         let world = self.world();
 
         let commands = world.get_resource_mut::<SingleSceneCommandList>().unwrap();
-        commands.list.push(SceneCommand::Create(entity));
+        commands.list.push(SceneCommand::Create(entity, left, right));
 
         entity
     }

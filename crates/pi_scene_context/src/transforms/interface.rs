@@ -1,10 +1,10 @@
 
-use pi_engine_shell::object::InterfaceObject;
+use pi_engine_shell::{object::InterfaceObject};
 use pi_scene_math::{Vector3, Quaternion};
 
 use crate::{object::{ObjectID}, scene::{interface::InterfaceScene}, layer_mask::{command::{SingleLayerMaskCommandList, LayerMaskCommand}, LayerMask}};
 
-use super::{command::{SingleTreeCommandList, TreeCommand, TransformNodeCommand, SingleTransformNodeCommandList}};
+use super::{command::{SingleTreeCommandList, TreeCommand, ETransformNodeCreateCommand, SingleTransformNodeCreateCommandList, SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, };
 
 pub trait InterfaceTransformNode {
     fn create_transform_node(
@@ -71,8 +71,8 @@ impl InterfaceTransformNode for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
-        commands.list.push(TransformNodeCommand::Create(object));
+        let commands = world.get_resource_mut::<SingleTransformNodeCreateCommandList>().unwrap();
+        commands.list.push(ETransformNodeCreateCommand::Create(object));
 
         let commands = world.get_resource_mut::<SingleLayerMaskCommandList>().unwrap();
         commands.list.push(LayerMaskCommand::Set(object, LayerMask::default()));
@@ -87,8 +87,8 @@ impl InterfaceTransformNode for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
-        commands.list.push(TransformNodeCommand::ModifyPosition(node, position));
+        let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+        commands.list.push(ETransformNodeModifyCommand::ModifyPosition(node, position));
 
         self
     }
@@ -100,8 +100,8 @@ impl InterfaceTransformNode for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
-        commands.list.push(TransformNodeCommand::ModifyRotation(node, euler_angle));
+        let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+        commands.list.push(ETransformNodeModifyCommand::ModifyRotation(node, euler_angle));
 
         self
     }
@@ -127,8 +127,8 @@ impl InterfaceTransformNode for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
-        commands.list.push(TransformNodeCommand::ModifyRotationQuaternion(node, quat));
+        let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+        commands.list.push(ETransformNodeModifyCommand::ModifyRotationQuaternion(node, quat));
 
         self
     }
@@ -140,8 +140,8 @@ impl InterfaceTransformNode for crate::engine::Engine {
     ) -> & Self {
         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleTransformNodeCommandList>().unwrap();
-        commands.list.push(TransformNodeCommand::ModifyScaling(node, scaling));
+        let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+        commands.list.push(ETransformNodeModifyCommand::ModifyScaling(node, scaling));
 
         self
     }

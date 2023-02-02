@@ -12,7 +12,6 @@ use crate::{
     flags::SceneID,
     layer_mask::{LayerMask, command::SysLayerMaskCommand},
     transforms::{transform_node::{WorldMatrix}, transform_node_sys::SysWorldMatrixCalc},
-    meshes::{command::SysMeshCommand},
     geometry::{geometry::{RenderGeometry, RenderGeometryEable}, sys_vertex_buffer_use::{SysRenderGeometryInit}},
     scene::command::SysSceneCommand,
     viewer::{ViewerGlobalPosition, ViewerViewMatrix},
@@ -23,12 +22,8 @@ use crate::{
 use super::{MainCameraRenderer};
 
 pub struct SysModelListUpdateByCamera;
-impl TSystemStageInfo for SysModelListUpdateByCamera {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysLayerMaskCommand::key(), SysSceneCommand::key(), SysMeshCommand::key(), SysRenderGeometryInit::key(), 
-        ]
-    }
+impl TSystemStageInfo for SysModelListUpdateByCamera { 
+
 }
 #[setup]
 impl SysModelListUpdateByCamera {
@@ -65,7 +60,7 @@ pub struct SysModelListAfterCullinUpdateByCamera;
 impl TSystemStageInfo for SysModelListAfterCullinUpdateByCamera {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysViewerUpdatedForCamera::key(), SysRenderGeometryInit::key(), SysModelListUpdateByCamera::key(), SysModelListUpdateByGeometry::key()
+            SysViewerUpdatedForCamera::key(), SysModelListUpdateByCamera::key(), SysModelListUpdateByGeometry::key()
         ]
     }
 }
@@ -106,7 +101,7 @@ pub struct SysModelListUpdateByGeometry;
 impl TSystemStageInfo for SysModelListUpdateByGeometry {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysRenderGeometryInit::key(), SysSceneCommand::key(), SysLayerMaskCommand::key(), SysWorldMatrixCalc::key(), SysModelListUpdateByCamera::key(),
+            SysWorldMatrixCalc::key(), SysModelListUpdateByCamera::key(),
         ]
     }
 }
@@ -154,7 +149,7 @@ pub struct SysModelListAfterCullinUpdateByGeometry;
 impl TSystemStageInfo for SysModelListAfterCullinUpdateByGeometry {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysViewerUpdatedForCamera::key(), SysRenderGeometryInit::key(), SysWorldMatrixCalc::key(), SysModelListAfterCullinUpdateByCamera::key()
+            SysViewerUpdatedForCamera::key(), SysWorldMatrixCalc::key(), SysModelListAfterCullinUpdateByCamera::key()
         ]
     }
 }

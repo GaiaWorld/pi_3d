@@ -90,7 +90,7 @@ impl Plugin for PluginMainCameraRender {
 
         let world = engine.world_mut();
 
-        SysMainCameraRenderCommand::setup(world, stages.query_stage::<SysMainCameraRenderCommand>(ERunStageChap::Command));
+        SysMainCameraRenderCommand::setup(world, stages.query_stage::<SysMainCameraRenderCommand>(ERunStageChap::Initial));
         SysMainCameraRendererBindGroup::setup(world, stages.query_stage::<SysMainCameraRendererBindGroup>(ERunStageChap::Uniform));
         DrawSortTick::setup(world, stages.query_stage::<DrawSortTick>(ERunStageChap::Uniform));
 

@@ -142,6 +142,8 @@ impl Plugin for PluginRenderBindGroup {
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
         let world = engine.world_mut();
         let device = world.get_resource::<RenderDevice>().unwrap();
+        
+        // log::info!("{:?}", device.limits());
         let dynbuffer = RenderDynUniformBuffer::new(device);
         world.insert_resource(RenderBindGroupPool::default());
         world.insert_resource(dynbuffer);

@@ -140,8 +140,14 @@ impl Node for SingleMainCameraOpaqueRenderNode {
     
                     let bindgrouppool = world.get_resource::<RenderBindGroupPool>().unwrap();
                     let vbpool = world.get_resource::<VertexBufferPool>().unwrap();
-                    renderer.opaque_draws.render(&mut commands, target.as_ref(), depth_stencil_attachment.clone(), bindgrouppool, vbpool);
-                    renderer.transparent_draws.render(&mut commands, target.as_ref(), depth_stencil_attachment, bindgrouppool, vbpool);
+
+                    main_camera_renderer(
+                        renderer,
+                        &mut commands,
+                        target.as_ref(),
+                        depth_stencil_attachment,
+                        bindgrouppool, vbpool
+                    );
                 }
 
                 // To Screen
@@ -165,4 +171,16 @@ impl Node for SingleMainCameraOpaqueRenderNode {
             Ok(())
         }.boxed()
     }
+}
+
+pub fn main_camera_renderer<'a>(
+    renderer: &'a Renderer,
+    commands: &'a mut wgpu::CommandEncoder,
+    target_view: &wgpu::TextureView,
+    depth_stencil_attachment: Option<wgpu::RenderPassDepthStencilAttachment>,
+    bindgrouppool: &RenderBindGroupPool,
+    vbpool: &VertexBufferPool,
+) {
+    renderer.opaque_draws.render(commands, target_view, depth_stencil_attachment.clone(), bindgrouppool, vbpool);
+    renderer.transparent_draws.render(commands, target_view, depth_stencil_attachment, bindgrouppool, vbpool);
 }

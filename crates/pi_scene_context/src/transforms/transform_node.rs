@@ -1,4 +1,5 @@
 
+use ncollide3d::utils::IsometryOps;
 use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Number};
 
 
@@ -7,12 +8,50 @@ pub struct TransformNode;
 
 #[derive(Debug, Clone)]
 pub struct LocalPosition(pub Vector3);
+impl pi_curves::curve::frame::FrameDataValue for LocalPosition {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0.lerp(&rhs.0, amount))
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 + rhs.0.scale(amount))
+    }
+    fn size() -> usize {
+        3 * 4
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct LocalEulerAngles(pub Vector3);
+impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0.lerp(&rhs.0, amount))
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 + rhs.0.scale(amount))
+    }
+    fn size() -> usize {
+        3 * 4
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct LocalRotationQuaternion(pub Quaternion);
+impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let temp = self.0.lerp(&rhs.0, amount);
+        Self(Quaternion::from_quaternion(temp))
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        log::warn!("LocalRotationQuaternion has not 'append' operation!");
+        self.clone()
+    }
+    fn size() -> usize {
+        4 * 4
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct LocalRoationWithQuaternion(pub bool);
@@ -22,6 +61,18 @@ pub struct LocalRotation(pub Rotation3);
 
 #[derive(Debug, Clone)]
 pub struct LocalScaling(pub Vector3);
+impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0.lerp(&rhs.0, amount))
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 + rhs.0.scale(amount))
+    }
+    fn size() -> usize {
+        3 * 4
+    }
+}
 
 
 #[derive(Debug, Clone)]
@@ -29,6 +80,18 @@ pub struct LocalMatrix(pub Matrix, pub bool);
 impl LocalMatrix {
     pub fn new(m: Matrix) -> Self {
         Self(m, true)
+    }
+}
+impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0.scale(1.0 - amount) + rhs.0.scale(amount), true)
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 + rhs.0.scale(amount), true)
+    }
+    fn size() -> usize {
+        16 * 4
     }
 }
 

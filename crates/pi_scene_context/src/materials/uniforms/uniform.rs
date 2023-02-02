@@ -29,11 +29,6 @@ use super::{
 
 pub struct SysMaterialMetaChange;
 impl TSystemStageInfo for SysMaterialMetaChange {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysAssetShaderEffectLoad::key(), SysShaderEffectCommands::key()
-        ]
-    }
 }
 #[setup]
 impl SysMaterialMetaChange {

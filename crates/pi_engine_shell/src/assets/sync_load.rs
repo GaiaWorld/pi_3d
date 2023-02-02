@@ -244,8 +244,8 @@ where
             world.insert_resource(AssetMgr::<D>::new(GarbageEmpty(), self.0, self.1, self.2));
         }
 
-        AssetSyncLoad::<K0, K, D, R, S>::setup(world, stages.query_stage::<AssetSyncLoad::<K0, K, D, R, S>>(ERunStageChap::Command));
-        AssetSyncLoadCheck::<K0, K, D, R>::setup(world, stages.query_stage::<AssetSyncLoadCheck::<K0, K, D, R>>(ERunStageChap::Command));
+        AssetSyncLoad::<K0, K, D, R, S>::setup(world, stages.query_stage::<AssetSyncLoad::<K0, K, D, R, S>>(ERunStageChap::Initial));
+        AssetSyncLoadCheck::<K0, K, D, R>::setup(world, stages.query_stage::<AssetSyncLoadCheck::<K0, K, D, R>>(ERunStageChap::Initial));
 
         Ok(())
     }

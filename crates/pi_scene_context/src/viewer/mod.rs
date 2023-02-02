@@ -98,7 +98,7 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewe
 
         if world.get_resource::<SingleViewerCommands>().is_none() {
             world.insert_resource(SingleViewerCommands::default());
-            SysViewerCommand::setup(world, stages.query_stage::<SysViewerCommand>(ERunStageChap::Command));
+            SysViewerCommand::setup(world, stages.query_stage::<SysViewerCommand>(ERunStageChap::Initial));
         }
 
         SysViewerViewMatrixByViewCalc::<T, S>::setup(world, stages.query_stage::<SysViewerViewMatrixByViewCalc::<T, S>>(ERunStageChap::Command));
