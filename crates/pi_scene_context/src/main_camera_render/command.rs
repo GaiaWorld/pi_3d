@@ -1,7 +1,7 @@
 use std::{mem::replace, hash::{Hash, Hasher}};
 
 use pi_ecs::prelude::*;
-use pi_ecs_macros::setup;
+use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_render::{graph::graph::RenderGraph, rhi::device::RenderDevice};
 use render_resource::uniform_buffer::RenderDynUniformBuffer;
@@ -41,10 +41,21 @@ impl TSystemStageInfo for SysMainCameraRenderCommand {
 }
 #[setup]
 impl SysMainCameraRenderCommand {
+    /// 视口被销毁则需要销毁对应渲染器
+    #[listen(entity=(GameObject, Delete))]
+    fn listen(
+        e: Event,
+        viewers: Query<GameObject, &RendererID>,
+        mut delete: EntityDelete<GameObject>,
+    ) {
+        if let Some(id_render) = viewers.get_by_entity(e.id) {
+            delete.despawn(id_render.0);
+        }
+    }
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleMainCameraRenderCommandList>,
-        cameras: Query<GameObject, &SceneID>,
+        cameras: Query<GameObject, (&SceneID, Option<&RendererID>)>,
         scenes: Query<GameObject, (&SceneTime, &SceneFog)>,
         mut camera_modellist_cmd: Commands<GameObject, ModelList>,
         mut camera_filter_cmd: Commands<GameObject, ModelListAfterCulling>,
@@ -62,6 +73,7 @@ impl SysMainCameraRenderCommand {
         mut bindgrouppool: ResMut<RenderBindGroupPool>,
         device: Res<RenderDevice>,
         mut renderer_hasher: ResMut<RendererHasher>,
+        mut delete: EntityDelete<GameObject>,
     ) {
         let render_graphic = &mut render_graphic;
 
@@ -71,7 +83,10 @@ impl SysMainCameraRenderCommand {
             log::debug!("SysMainCameraRenderCommand:");
             match cmd {
                 MainCameraRenderCommand::Active(entity, render_id, viewport) => {
-                    if let Some(id_scene) = cameras.get(entity.clone()) {
+                    if let Some((id_scene, id_render)) = cameras.get(entity.clone()) {
+                        if let Some(id_render) = id_render {
+                            delete.despawn(id_render.0);
+                        }
                         if let Some((scene_time, scene_fog)) = scenes.get(id_scene.0) {
                             render_id.0.hash(&mut renderer_hasher.0);
                             let hash = renderer_hasher.0.finish();

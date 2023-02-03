@@ -1,9 +1,9 @@
 use std::{sync::Arc, marker::PhantomData, mem::replace};
 
-use pi_animation::{type_animation_context::{TTypeFrameCurve, TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID, loop_mode::ELoopMode, amount::AnimationAmountCalc};
+use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID, loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_listener::{OnStart, OnFrameEvent, OnLoop, OnEnd}};
 use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
 use pi_atom::Atom;
-use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FramePerSecond};
+use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FramePerSecond, FrameIndex};
 use pi_ecs::prelude::{Query, ResMut, Component, Commands, Setup};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo, ERunStageChap}, plugin::Plugin, setup};
@@ -24,7 +24,6 @@ pub(crate) enum EModifyCommand {
     PauseAnimationGroup(ObjectID, Atom),
     StartAnimationGroupPercent(ObjectID, Atom, KeyFrameCurveValue, ELoopMode, KeyFrameCurveValue, KeyFrameCurveValue, FramePerSecond, AnimationAmountCalc),
     AddTargetAnimation(ObjectID, ObjectID, Atom, AnimationInfo),
-    DestroyAnimationGroup(ObjectID),
 }
 #[derive(Default)]
 pub(crate) struct SingleModifyCommands(pub(crate) Vec<EModifyCommand>);
@@ -113,18 +112,15 @@ impl SysAnimeModifyCommand {
                         }
                     }
                 },
-                EModifyCommand::DestroyAnimationGroup(id_obj) => {
-                    if let Some((id_scene, mut groups)) = obj.get_mut(id_obj) {
-                        if let Some(mut ctx) = sce.get_mut(id_scene.0) {
-                            groups.map.iter().for_each(|(_, id_group)| {
-                                ctx.0.del_animation_group(id_group.clone()).drain(..).for_each(|item| {
-                                    globalinfo.dispose_animations.push(item);
-                                });
-                            });
-                        }
-                    }
-                },
             }
         })
     }
+}
+
+enum EEventCommand {
+    AddAnimationGroupFrameEvent(ObjectID, Atom, FrameIndex, Atom),
+    ListenAnimationGroupStart(ObjectID, Atom, OnStart),
+    ListenAnimationGroupFrame(ObjectID, Atom, OnFrameEvent<Atom>),
+    ListenAnimationGroupLoop(ObjectID, Atom, OnLoop),
+    ListenAnimationGroupEnd(ObjectID, Atom, OnEnd),
 }

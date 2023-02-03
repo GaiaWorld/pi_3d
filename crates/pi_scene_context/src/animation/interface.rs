@@ -1,6 +1,6 @@
 use std::{sync::Arc, marker::PhantomData};
 
-use pi_animation::{type_animation_context::{TTypeFrameCurve, TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID, amount::AnimationAmountCalc, loop_mode::ELoopMode};
+use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID, amount::AnimationAmountCalc, loop_mode::ELoopMode, animation_listener::{OnStart, OnFrameEvent, OnLoop, OnEnd}};
 use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
 use pi_atom::Atom;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FramePerSecond};
@@ -63,10 +63,33 @@ pub trait InterfaceAnimationGroup {
         id_obj: ObjectID,
         key_animegroup: &Atom,
     ) -> &Self;
-
-    fn dispose_animation_group(
+    
+    fn listen_animation_group_start(
         &self,
         id_obj: ObjectID,
+        key: &Atom,
+        call: OnStart,
+    ) -> &Self;
+    
+    fn listen_animation_group_frame(
+        &self,
+        id_obj: ObjectID,
+        key: &Atom,
+        call: OnFrameEvent<Atom>,
+    ) -> &Self;
+    
+    fn listen_animation_group_loop(
+        &self,
+        id_obj: ObjectID,
+        key: &Atom,
+        call: OnLoop,
+    ) -> &Self;
+    
+    fn listen_animation_group_end(
+        &self,
+        id_obj: ObjectID,
+        key: &Atom,
+        call: OnEnd,
     ) -> &Self;
 }
 
@@ -175,16 +198,40 @@ impl InterfaceAnimationGroup for crate::engine::Engine {
         self
     }
 
-    fn dispose_animation_group(
+    fn listen_animation_group_start(
         &self,
         id_obj: ObjectID,
+        key: &Atom,
+        call: OnStart,
     ) -> &Self {
-        let world = self.world();
-
-        let cmds = world.get_resource_mut::<SingleModifyCommands>().unwrap();
-
-        cmds.0.push(EModifyCommand::DestroyAnimationGroup(id_obj));
-
-        self
+        todo!()
     }
+
+    fn listen_animation_group_frame(
+        &self,
+        id_obj: ObjectID,
+        key: &Atom,
+        call: OnFrameEvent<Atom>,
+    ) -> &Self {
+        todo!()
+    }
+
+    fn listen_animation_group_loop(
+        &self,
+        id_obj: ObjectID,
+        key: &Atom,
+        call: OnLoop,
+    ) -> &Self {
+        todo!()
+    }
+
+    fn listen_animation_group_end(
+        &self,
+        id_obj: ObjectID,
+        key: &Atom,
+        call: OnEnd,
+    ) -> &Self {
+        todo!()
+    }
+
 }

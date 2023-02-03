@@ -13,7 +13,6 @@ use super::{free_camera::FreeCameraParam, target_camera::TargetCameraParam, came
 pub enum ECameraCreateCommand {
     FreeCamera(ObjectID),
     ArcRotateCamera(ObjectID),
-    Destroy(ObjectID),
 }
 
 #[derive(Debug, Default)]
@@ -29,7 +28,6 @@ impl SysCameraCreate {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleCameraCreateList>,
-        mut entity_delete: EntityDelete<GameObject>,
         mut param_cmd: Commands<GameObject, CameraParam>,
         mut view_cmd: Commands<GameObject, ViewerViewMatrix>,
         mut proj_cmd: Commands<GameObject, ViewerProjectionMatrix>,
@@ -55,9 +53,6 @@ impl SysCameraCreate {
                 ECameraCreateCommand::ArcRotateCamera(obj) => {
 
                 },
-                ECameraCreateCommand::Destroy(obj) => {
-                    entity_delete.despawn(obj);
-                }
             }
         });
     }

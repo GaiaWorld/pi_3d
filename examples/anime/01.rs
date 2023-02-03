@@ -3,9 +3,10 @@
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
+use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_frame_event::CurveFrameEvent, animation_listener::{AnimationListener, EAnimationEventResult}};
+use pi_atom::Atom;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}, assets::local_load::PluginLocalLoad, setup::TSetup};
+use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}, assets::local_load::PluginLocalLoad, setup::TSetup, object::InterfaceObject};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode, transform_node::LocalPosition},
@@ -72,14 +73,14 @@ impl PluginTest {
         let key_group = pi_atom::Atom::from("key_group");
         engine.create_animation_group(cube, &key_group)
             .create_target_animation(cube, cube, &key_group, animation)
-            .start_animation_group(cube, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 200, AnimationAmountCalc::default());
+            .start_animation_group(cube, &key_group, 1.0, ELoopMode::Positive(None), 0., 1., 200, AnimationAmountCalc::default());
             
         // =========================================
         let cube = engine.new_cube(scene01);
         engine.use_default_material(cube).transform_position(cube, Vector3::new(0., 2., 0.));
 
         let key_curve0 = pi_atom::Atom::from("key_curve1");
-        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(-3., 2., 0.)), LocalPosition(Vector3::new(6., 2., 0.)), 30, 30, EEasingMode::None);
+        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(-3., 2., 0.)), LocalPosition(Vector3::new(6., 0., 0.)), 30, 30, EEasingMode::ElasticInOut);
         let asset_curve = if let Some(curve) = engine.check_anim_curve::<LocalPosition>(&key_curve0) {
             curve
         } else {
@@ -89,9 +90,10 @@ impl PluginTest {
         let key_group = pi_atom::Atom::from("key_group2");
         engine.create_animation_group(cube, &key_group)
             .create_target_animation(cube, cube, &key_group, animation)
-            .start_animation_group(cube, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 200, AnimationAmountCalc::default());
+            .start_animation_group(cube, &key_group, 1.0, ELoopMode::Positive(None), 0., 1., 200, AnimationAmountCalc::default());
         
-            engine.dispose_animation_group(cube);
+            
+        // 创建帧事件
     }
 }
 

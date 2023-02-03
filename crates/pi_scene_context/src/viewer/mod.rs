@@ -13,6 +13,7 @@ use self::{command::{SingleViewerCommands, SysViewerCommand}, sys::{SysViewerVie
 pub mod command;
 pub mod sys;
 
+/// 视口ID - 可能是 相机、灯光
 pub struct ViewerID(pub ObjectID);
 
 #[derive(Debug, Clone)]

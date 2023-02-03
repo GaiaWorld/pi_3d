@@ -8,7 +8,7 @@ use pi_render::{rhi::options::RenderOptions, RenderStage, init_render, graph::gr
 use pi_share::{Share, ShareRwLock};
 use winit::event_loop::EventLoop;
 
-use crate::{frame_time::PluginFrameTime, shell_node::ScreenClearNode, object::GameObject, DispatchEnd, run_stage::RunStage, plugin::Plugin, setup::{TSetup, SetupFn}};
+use crate::{frame_time::PluginFrameTime, shell_node::ScreenClearNode, object::{GameObject, ObjectID, PluginObject}, DispatchEnd, run_stage::RunStage, plugin::Plugin, setup::{TSetup, SetupFn}};
 
 pub struct AppShell {
     event_loop: Option<EventLoop<()>>,
@@ -220,6 +220,7 @@ impl EnginShell {
         let mut stages = vec![];
         let mut first_stage = StageBuilder::new();
         PluginFrameTime.init(&mut self.world, &mut first_stage);
+        PluginObject.init(&mut self.world, &mut first_stage);
         stages.push(Arc::new(first_stage.build(&self.world)));
 
         runstages.log();

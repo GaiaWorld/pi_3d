@@ -1,7 +1,7 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Commands, EntityDelete}};
-use pi_ecs_macros::setup;
+use pi_ecs::{prelude::{ResMut, Query, Commands, EntityDelete, Event}};
+use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Vector4, Matrix};
 
@@ -86,20 +86,19 @@ impl SysMeshModifyCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleMeshModifyCommandList>,
-        mut meshes: Query<GameObject, &mut InstanceList>,
-        mut delete: EntityDelete<GameObject>,
+        meshes: Query<GameObject, &mut InstanceList>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 EMeshModifyCommand::Destroy(id_mesh) => {
-                    if let Some(instances) = meshes.get(id_mesh) {
-                        instances.list.iter().for_each(|id_instance| {
-                            delete.despawn(id_instance.clone());
-                        });
-                    }
-                    delete.despawn(id_mesh);
+                    // if let Some(instances) = meshes.get(id_mesh) {
+                    //     instances.list.iter().for_each(|id_instance| {
+                    //         delete.despawn(id_instance.clone());
+                    //     });
+                    // }
+                    // delete.despawn(id_mesh);
                 },
             }
         });
@@ -199,6 +198,19 @@ impl TSystemStageInfo for SysInstanceMeshModifyCommand {
 }
 #[setup]
 impl SysInstanceMeshModifyCommand {
+    /// Mesh 销毁时 附带销毁InstancedMesh
+    #[listen(entity=(GameObject, Delete))]
+    fn listen(
+        e: Event,
+        meshes: Query<GameObject, &InstanceList>,
+        mut delete: EntityDelete<GameObject>,
+    ) {
+        if let Some(instances) = meshes.get_by_entity(e.id) {
+            instances.list.iter().for_each(|id| {
+                delete.despawn(id.clone());
+            });
+        }
+    }
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleInstanceMeshModifyCommandList>,

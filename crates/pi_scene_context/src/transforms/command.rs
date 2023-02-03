@@ -1,8 +1,9 @@
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Commands}};
-use pi_ecs_macros::setup;
-use pi_ecs_utils::prelude::EntityTreeMut;
+use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Commands, Event}};
+use pi_ecs_macros::{setup, listen};
+use pi_ecs_utils::prelude::{EntityTreeMut, EntityTree};
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Vector3, Quaternion, Rotation3};
+use pi_slotmap_tree::Storage;
 
 use crate::{object::{ObjectID, GameObject}, };
 
@@ -65,7 +66,6 @@ impl SysTransformNodeCreateCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleTransformNodeCreateCommandList>,
-        mut delete: EntityDelete<GameObject>,
         mut gtr_cmd: Commands<GameObject, GlobalTransform>,
         mut pos_cmd: Commands<GameObject, LocalPosition>,
         mut scl_cmd: Commands<GameObject, LocalScaling>,
@@ -89,7 +89,6 @@ impl SysTransformNodeCreateCommand {
 }
 
 pub enum ETransformNodeModifyCommand {
-    Destroy(ObjectID),
     ModifyPosition(ObjectID, Vector3),
     ModifyRotation(ObjectID, Vector3),
     ModifyScaling(ObjectID, Vector3),
@@ -113,7 +112,6 @@ impl SysTransformNodeModifyCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleTransformNodeModifyCommandList>,
-        mut delete: EntityDelete<GameObject>,
         mut gtr_cmd: Commands<GameObject, GlobalTransform>,
         mut pos_cmd: Commands<GameObject, LocalPosition>,
         mut scl_cmd: Commands<GameObject, LocalScaling>,
@@ -123,9 +121,6 @@ impl SysTransformNodeModifyCommand {
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
-                ETransformNodeModifyCommand::Destroy(node) => {
-                    delete.despawn(node);
-                },
                 ETransformNodeModifyCommand::ModifyPosition(node, value) => {
                     pos_cmd.insert(node, LocalPosition(value));
                 },

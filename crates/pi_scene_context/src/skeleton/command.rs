@@ -1,7 +1,7 @@
 use std::{mem::replace, sync::Arc};
 
-use pi_ecs::prelude::{ResMut, Commands, Query, EntityDelete, Res};
-use pi_ecs_macros::setup;
+use pi_ecs::prelude::{ResMut, Commands, Query, EntityDelete, Res, Event};
+use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
 use pi_render::rhi::device::RenderDevice;
 use render_resource::{sampler::SamplerPool, uniform_buffer::RenderDynUniformBuffer};
@@ -74,7 +74,6 @@ impl SysSkinCreateCommand {
 
 pub enum ESkinModifyCommand {
     Use(ObjectID, ObjectID),
-    Destroy(ObjectID),
 }
 
 #[derive(Default)]
@@ -90,12 +89,32 @@ impl TSystemStageInfo for SysSkinModifyCommand {
 }
 #[setup]
 impl SysSkinModifyCommand {
+    #[listen(entity=(GameObject, Delete))]
+    fn listen(
+        e: Event,
+        meshes: Query<GameObject, (ObjectID, &SkeletonID)>,
+        mut skeletons: Query<GameObject, &mut Skeleton>,
+    ) {
+        if let Some((obj, id_skl)) = meshes.get_by_entity(e.id) {
+            if let Some(mut skl) = skeletons.get_mut(id_skl.0) {
+                match skl.meshes.binary_search(&obj) {
+                    Ok(index) => {
+                        let len = skl.meshes.len() - 1;
+                        for i in index..len {
+                            skl.meshes[i] = skl.meshes[i + 1];
+                        }
+                        skl.meshes.pop();
+                    },
+                    Err(_) => todo!(),
+                }
+            }
+        }
+    }
     #[system]
     fn cmds(
         mut cmds: ResMut<SingleSkinModifyCommands>,
         mut skeletons: Query<GameObject, &mut Skeleton>,
         mut useskin_cmd: Commands<GameObject, SkeletonID>,
-        mut delete: EntityDelete<GameObject>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -103,14 +122,16 @@ impl SysSkinModifyCommand {
             match cmd {
                 ESkinModifyCommand::Use(id_obj, id_skin) => {
                     if let Some(mut skeleton) = skeletons.get_mut(id_skin) {
-                        if skeleton.meshes.contains(&id_obj) == false {
-                            skeleton.meshes.push(id_obj);
+                        match skeleton.meshes.binary_search(&id_obj) {
+                            Ok(_) => {
+                                
+                            },
+                            Err(index) => {
+                                skeleton.meshes.insert(index, id_obj);
+                            },
                         }
                         useskin_cmd.insert(id_obj, SkeletonID(id_skin));
                     }
-                },
-                ESkinModifyCommand::Destroy(id_skin) => {
-                    delete.despawn(id_skin);
                 },
             }
         });

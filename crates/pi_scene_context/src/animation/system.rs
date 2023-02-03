@@ -1,16 +1,16 @@
-use std::{sync::Arc, marker::PhantomData, time::Instant, fmt::Debug};
+use std::{sync::Arc, marker::PhantomData, time::Instant, fmt::Debug, mem::replace};
 
-use pi_animation::{type_animation_context::{TTypeFrameCurve, TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID};
+use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID};
 use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
 use pi_atom::Atom;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}, frame_curve::FrameCurve};
-use pi_ecs::prelude::{Query, ResMut, Component, Commands, Setup, Res};
-use pi_ecs_macros::setup;
+use pi_ecs::prelude::{Query, ResMut, Component, Commands, Setup, Res, Event};
+use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo, ERunStageChap}, plugin::Plugin, setup};
 
-use crate::scene::scene_time::SceneTime;
+use crate::{scene::scene_time::SceneTime, flags::SceneID};
 
-use super::{base::{TypeAnimeContext, GlobalAnimeAbout, SceneAnimationContext}, command::SysAnimeModifyCommand};
+use super::{base::{TypeAnimeContext, GlobalAnimeAbout, SceneAnimationContext, AnimationGroups}, command::SysAnimeModifyCommand};
 
 /// 动画进度计算
 pub struct SysSceneAnime;
@@ -19,6 +19,25 @@ impl TSystemStageInfo for SysSceneAnime {
 }
 #[setup]
 impl SysSceneAnime {
+    #[listen(entity=(GameObject, Delete))]
+    fn listen(
+        e: Event,
+        items: Query<GameObject, (&SceneID, &AnimationGroups)>,
+        mut scenes: Query<GameObject, &mut SceneAnimationContext>,
+    ) {
+        
+        log::info!("Obj Dispose > SysSceneAnime 0");
+        if let Some((id_scene, groups)) = items.get_by_entity(e.id) {
+            log::info!("Obj Dispose > SysSceneAnime 1");
+            if let Some(mut ctx) = scenes.get_mut(id_scene.0) {
+                log::info!("Obj Dispose > SysSceneAnime 2");
+                groups.map.iter().for_each(|(_, id_group)| {
+                    ctx.0.pause(id_group.clone());
+                    ctx.1.push(id_group.clone());
+                });
+            }
+        }
+    }
     #[system]
     fn sys(
         mut scenes: Query<GameObject, (&mut SceneAnimationContext, &SceneTime)>,
@@ -29,6 +48,13 @@ impl SysSceneAnime {
         runtimeinfos.dispose_animations.clear();
         runtimeinfos.runtimeinfos.reset();
         scenes.iter_mut().for_each(|(mut ctx, scene_time)| {
+
+            let mut dispose_groups = replace(&mut ctx.1, vec![]);
+
+            dispose_groups.drain(..).for_each(|id_group| {
+                ctx.0.del_animation_group(id_group);
+            });
+
             ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos)
         });
 
@@ -62,7 +88,7 @@ impl<D: FrameDataValue + Component + Debug> SysTypeAnime<D> {
             for info in list {
                 if let Some(Some(curve)) = curves.get(info.curve_id) {
                     // println!(">>>>>>>>>>>>>>>>>{}", info.amount_in_second);
-                    let value = curve.curve().interple(info.amount_in_second);
+                    let value = curve.as_ref().interple(info.amount_in_second);
                     // let result = AnimeResult {
                     //     value,
                     //     attr: info.attr,
@@ -95,16 +121,24 @@ impl<D: FrameDataValue + Component + Debug> TSystemStageInfo for SysTypeAnimeDis
 
 #[setup]
 impl<D: FrameDataValue + Component + Debug> SysTypeAnimeDispose<D> {
-    #[system]
-    fn sys(
+    #[listen(entity=(GameObject, Delete))]
+    fn listen(
+        e: Event,
+        items: Query<GameObject, (&SceneID, &AnimationGroups)>,
+        mut scenes: Query<GameObject, &mut SceneAnimationContext>,
         mut type_ctx: ResMut<TypeAnimeContext<D>>,
-        runinfos: Res<GlobalAnimeAbout>,
     ) {
-        let ty = type_ctx.ctx.ty();
-        runinfos.dispose_animations.iter().for_each(|item| {
-            if item.ty == ty {
-                type_ctx.ctx.remove_one(item);
+        if let Some((id_scene, groups)) = items.get_by_entity(e.id) {
+            if let Some(ctx) = scenes.get_mut(id_scene.0) {
+                log::info!("Obj Dispose > SysTypeAnimeDispose");
+                groups.map.iter().for_each(|(_, id_group)| {
+                    if let Some(group) = ctx.0.animation_group(id_group.clone()) {
+                        group.animations().iter().for_each(|item| {
+                            type_ctx.ctx.remove_one(&item.animation);
+                        });
+                    }
+                });
             }
-        });
+        }
     }
 }

@@ -13,6 +13,8 @@ use render_shader::{shader::{KeyShaderEffect, ResShader, KeyShader, ShaderEffect
 
 use crate::{object::{ObjectID, GameObject}};
 
+use super::material::MaterialUsedList;
+
 #[derive(Clone, Debug)]
 pub struct UniformPropertyMat4(pub UniformPropertyName, pub Matrix);
 impl TUnifromShaderProperty for UniformPropertyMat4 {
@@ -126,6 +128,7 @@ impl SysShaderEffectCommands {
     pub fn cmds(
         mut cmds: ResMut<SingleShaderEffectCommands>,
         mut items: Commands<GameObject, AssetKeyShaderEffect>,
+        mut usedlist: Commands<GameObject, MaterialUsedList>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -133,6 +136,7 @@ impl SysShaderEffectCommands {
             match cmd {
                 ECommand::Use(entity, key) => {
                     items.insert(entity, AssetKeyShaderEffect(key));
+                    usedlist.insert(entity, MaterialUsedList::default())
                 },
             }
         });

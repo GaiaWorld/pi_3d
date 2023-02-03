@@ -1,6 +1,6 @@
 use std::{sync::Arc, marker::PhantomData, fmt::Debug};
 
-use pi_animation::{type_animation_context::{TTypeFrameCurve, TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID};
+use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID};
 use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
 use pi_atom::Atom;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}, frame_curve::FrameCurve};
@@ -16,6 +16,7 @@ pub mod base;
 pub mod command;
 pub mod system;
 pub mod interface;
+pub mod listen;
 
 
 pub struct PluginTypeAnime<D: FrameDataValue + Component + Debug>(bool, usize, usize, PhantomData<D>);
@@ -39,6 +40,7 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
                 ty_alloc: KeyFrameDataTypeAllocator::default(),
                 runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap::<ObjectID>::default(),
                 dispose_animations: vec![],
+                dispose_animationgroups: vec![],
             };
             let ty = globalaboput.ty_alloc.alloc().expect("");
             world.insert_resource(globalaboput);

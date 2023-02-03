@@ -12,7 +12,6 @@ use super::{standard_material::{StandardMaterialPropertype, SingleStandardMateri
 
 pub enum DefaultMaterialCommand {
     Create(ObjectID),
-    Destroy(ObjectID),
     Clear(),
     EmissiveColor(ObjectID, Number, Number, Number),
     EmissiveIntensity(ObjectID, Number),
@@ -30,7 +29,6 @@ impl SysDefaultMaterialCommand {
         mut materials: Query<GameObject, Write<StandardMaterialPropertype>>,
         mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
         mut matrecord: ResMut<SingleStandardMaterialBindDynInfoSet>,
-        mut entity_delete: EntityDelete<GameObject>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
@@ -48,9 +46,6 @@ impl SysDefaultMaterialCommand {
                             
                         },
                     }
-                },
-                DefaultMaterialCommand::Destroy(entity) => {
-                    entity_delete.despawn(entity);
                 },
                 DefaultMaterialCommand::Clear() => {
                     matrecord.list().drain(..).for_each(|entity| {

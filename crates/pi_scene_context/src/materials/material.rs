@@ -1,8 +1,8 @@
 
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Commands}, query::{With}};
-use pi_ecs_macros::setup;
+use pi_ecs::{prelude::{ResMut, Query, Commands, Event}, query::{With}};
+use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Number, Matrix, Vector4, Vector2, Matrix2};
 
@@ -36,13 +36,13 @@ impl SysEffectValueUniformComand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleValueUniformCommands>,
-        mut mat4:   Query<GameObject, &mut Mat4Uniform, With<Mat4Uniform>>,
-        mut mat2:   Query<GameObject, &mut Mat2Uniform, With<Mat2Uniform>>,
-        mut vec4:   Query<GameObject, &mut Vec4Uniform, With<Vec4Uniform>>,
-        mut vec2:   Query<GameObject, &mut Vec2Uniform, With<Vec2Uniform>>,
-        mut float:  Query<GameObject, &mut FloatUniform, With<FloatUniform>>,
-        mut int:    Query<GameObject, &mut IntUniform, With<IntUniform>>,
-        mut uint:   Query<GameObject, &mut UintUniform, With<UintUniform>>,
+        mut mat4:   Query<GameObject, &mut Mat4Uniform,     With<Mat4Uniform>>,
+        mut mat2:   Query<GameObject, &mut Mat2Uniform,     With<Mat2Uniform>>,
+        mut vec4:   Query<GameObject, &mut Vec4Uniform,     With<Vec4Uniform>>,
+        mut vec2:   Query<GameObject, &mut Vec2Uniform,     With<Vec2Uniform>>,
+        mut float:  Query<GameObject, &mut FloatUniform,    With<FloatUniform>>,
+        mut int:    Query<GameObject, &mut IntUniform,      With<IntUniform>>,
+        mut uint:   Query<GameObject, &mut UintUniform,     With<UintUniform>>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -109,6 +109,10 @@ impl SysEffectValueUniformComand {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MaterialID (pub ObjectID);
 
+/// 材质被哪些实体使用
+#[derive(Debug, Default)]
+pub struct MaterialUsedList(pub Vec<ObjectID>);
+
 #[derive(Debug)]
 pub enum MaterialIDCommand {
     Use(ObjectID, MaterialID),
@@ -126,18 +130,65 @@ impl TSystemStageInfo for SysMaterialIDCommand {
 }
 #[setup]
 impl SysMaterialIDCommand {
+    #[listen(entity=(GameObject, Delete))]
+    fn listen(
+        e: Event,
+        items: Query<GameObject, (ObjectID, &MaterialID)>,
+        mut material: Query<GameObject, &mut MaterialUsedList>,
+    ) {
+        if let Some((obj, id_mat)) = items.get_by_entity(e.id) {
+            if let Some(mut list) = material.get_mut(id_mat.0) {
+                match list.0.binary_search(&obj) {
+                    Ok(index) => {
+                        let len = list.0.len() - 1;
+                        for i in index..len {
+                            list.0[i] = list.0[i + 1];
+                        }
+                        list.0.pop();
+                    },
+                    Err(index) => {
+                        // list.0.insert(index, obj);
+                    },
+                }
+            }
+        }
+    }
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleMaterialIDCommandList>,
         mut material_cmd: Commands<GameObject, MaterialID>,
+        mut material: Query<GameObject, &mut MaterialUsedList>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
-                MaterialIDCommand::Use(obj, id) => {
-                    material_cmd.insert(obj, id);
+                MaterialIDCommand::Use(obj, id_mat) => {
+                    if let Some(mut list) = material.get_mut(id_mat.0) {
+                        match list.0.binary_search(&obj) {
+                            Ok(index) => {
+                                // list.0.insert(index, obj);
+                            },
+                            Err(index) => {
+                                list.0.insert(index, obj);
+                            },
+                        }
+                    }
+                    material_cmd.insert(obj, id_mat);
                 },
-                MaterialIDCommand::UnUse(mat, id) => {
-                    
+                MaterialIDCommand::UnUse(obj, id_mat) => {
+                    if let Some(mut list) = material.get_mut(id_mat.0) {
+                        match list.0.binary_search(&obj) {
+                            Ok(index) => {
+                                let len = list.0.len() - 1;
+                                for i in index..len {
+                                    list.0[index] = list.0[index + 1];
+                                }
+                                list.0.pop();
+                            },
+                            Err(index) => {
+                                // list.0.insert(index, obj);
+                            },
+                        }
+                    }
                 },
             }
         });
