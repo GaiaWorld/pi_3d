@@ -41,11 +41,11 @@ impl SysRendererInitForCamera {
         renderers: Query<GameObject, &ShaderSetSceneAboutBindOffset>,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
-        log::debug!("SysRendererInitForCamera: ");
+        // log::debug!("SysRendererInitForCamera: ");
         cameras.iter().for_each(|(id_camera, id_scene, id_renderer, view_matrix, pro_matrix, vp_matrix, camera_pos, camera_dir)| {
-            log::debug!("SysRendererInitForCamera: 0");
+            // log::debug!("SysRendererInitForCamera: 0");
             if let Some((scene_time, scene_fog)) = scenes.get(id_scene.0.clone()) {
-                log::debug!("SysRendererInitForCamera: 1");
+                // log::debug!("SysRendererInitForCamera: 1");
 
                 if let Some(renderer_bindoff) = renderers.get(id_renderer.0) {
                     dynbuffer.as_mut().set_uniform(renderer_bindoff.camera().bind_offset(), view_matrix);
@@ -94,9 +94,9 @@ impl SysRendererInitBindForCamera {
         >,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
-        log::debug!("SysRendererInitBindForCamera:");
+        // log::debug!("SysRendererInitBindForCamera:");
         renderers.iter().for_each(|(id_scene, id_viewerer, renderer_bindoff)| {
-            log::debug!("SysRendererInitBindForCamera: 0");
+            // log::debug!("SysRendererInitBindForCamera: 0");
             if let (
                 Some((scene_time, scene_fog)),
                 Some((view_matrix, pro_matrix, vp_matrix, camera_pos, camera_dir))
@@ -145,9 +145,9 @@ impl SysCameraBindUpdate {
         >,
         mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
-        log::debug!("SysCameraBindUpdate:");
+        // log::debug!("SysCameraBindUpdate:");
         cameras.iter().for_each(|(id_renderer, view_matrix, pro_matrix, vp_matrix, camera_pos, camera_dir)| {
-            log::info!("SysCameraBindUpdate: 0");
+            // log::info!("SysCameraBindUpdate: 0");
             if let Some((renderer_bindoff)) = renderers.get(id_renderer.0.clone()) {
                 dynbuffer.as_mut().set_uniform(renderer_bindoff.camera().bind_offset(), view_matrix);
                 dynbuffer.as_mut().set_uniform(renderer_bindoff.camera().bind_offset(), pro_matrix);

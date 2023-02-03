@@ -25,7 +25,7 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static> SysViewerV
     #[system]
     pub fn calc(
         mut query_cameras: Query<GameObject, (ObjectID, &T, &LocalPosition), Changed<T>>,
-        transforms: Query<GameObject, &GlobalTransform>,
+        mut transforms: Query<GameObject, &mut GlobalTransform>,
         mut view_cmd: Commands<GameObject, ViewerViewMatrix>,
         mut pos_cmd: Commands<GameObject, ViewerGlobalPosition>,
         idtree: EntityTree<GameObject>,
@@ -36,8 +36,8 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static> SysViewerV
             match idtree.get_up(entity) {
                 Some(level) => {
                     let parent_id = level.parent();
-                    if let Some(parent) = transforms.get(parent_id) {
-                        let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&parent));
+                    if let Some(mut parent) = transforms.get_mut(parent_id) {
+                        let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&mut parent));
                         view_cmd.insert(entity, viewmatrix);
                         pos_cmd.insert(entity, pos);
                     } else {
@@ -69,7 +69,7 @@ impl<T: TViewerViewMatrix + Component> SysViewerViewMatrixUpdateByParentModify<T
     #[system]
     pub fn calc(
         mut query_cameras: Query<GameObject, (ObjectID, &T, &LocalPosition)>,
-        dirty_globals: Query<GameObject, &GlobalTransform, Changed<GlobalTransform>>,
+        mut dirty_globals: Query<GameObject, &mut GlobalTransform, Changed<GlobalTransform>>,
         mut view_cmd: Commands<GameObject, ViewerViewMatrix>,
         mut pos_cmd: Commands<GameObject, ViewerGlobalPosition>,
         idtree: EntityTree<GameObject>,
@@ -80,8 +80,8 @@ impl<T: TViewerViewMatrix + Component> SysViewerViewMatrixUpdateByParentModify<T
             match idtree.get_up(entity) {
                 Some(parent_id) => {
                     let parent_id = parent_id.parent();
-                    if let Some(parent) = dirty_globals.get(parent_id) {
-                        let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&parent));
+                    if let Some(mut parent) = dirty_globals.get_mut(parent_id) {
+                        let (viewmatrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&mut parent));
                         view_cmd.insert(entity, viewmatrix);
                         pos_cmd.insert(entity, pos);
                     }

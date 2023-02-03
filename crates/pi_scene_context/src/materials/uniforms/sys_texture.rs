@@ -141,12 +141,12 @@ impl SysTextureResReady1 {
         device: Res<RenderDevice>,
     ) {
         items.iter().for_each(|(bindgroup, binddesc, tex1, sampler1)| {
-            log::debug!("SysTextureResReady1 >");
+            // log::debug!("SysTextureResReady1 >");
             if let Some(binddesc) = &binddesc.textures {
                 if binddesc.list.len() == 1 {
-                    log::debug!("SysTextureResReady1 >>");
+                    // log::debug!("SysTextureResReady1 >>");
                     if let Some(group) = bindgrouppool.get_mut(&bindgroup.0) {
-                        log::debug!("SysTextureResReady1 >>>");
+                        // log::debug!("SysTextureResReady1 >>>");
                         // binddesc.bind_group(&device, group, &[tex1.texture()], &[sampler1.sampler()]);
                     }
                 }

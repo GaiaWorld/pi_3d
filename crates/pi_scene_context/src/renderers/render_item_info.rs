@@ -90,13 +90,13 @@ impl RendererItemsReset {
             GameObject,
             (ObjectID, &ShaderSetSceneAbout, &ShaderSetSceneAboutBindOffset, &mut Renderer)
         >,
-        meshes: Query<
+        mut meshes: Query<
             GameObject,
             (
                 ObjectID,
                 &MaterialID, &AssetKeyVBLayouts, &AssetResVBLayouts, &EInstanceCode,
                 &RenderBlend, &RenderDepthAndStencil, &PrimitiveState, 
-                &RenderSortParam, &GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
+                &RenderSortParam, &mut GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
             ),
         >,
         materials: Query<
@@ -134,27 +134,27 @@ impl RendererItemsReset {
                     return;
                 }
 
-                log::debug!("RendererItemsReset: 1, {}", cullinglist.0.len());
+                // log::debug!("RendererItemsReset: 1, {}", cullinglist.0.len());
                 cullinglist.0.iter().for_each(|entity| {
-                    log::debug!("RendererItemsReset: 2");
+                    // log::debug!("RendererItemsReset: 2");
 
                     if let Some((
                         entity,
                         matid, keyvb, vb, instance, 
                         blend, depth_stencil, primitive,
-                        rendersort, gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff
-                    )) = meshes.get(entity.clone()) {
-                        log::debug!("RendererItemsReset: 3");
+                        rendersort, mut gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff
+                    )) = meshes.get_mut(entity.clone()) {
+                        // log::debug!("RendererItemsReset: 3");
 
                         if let Some((matkey, matmeta, effect_set, effect_bindoff)) = materials.get(matid.0) {
-                            log::debug!("RendererItemsReset: 4");
+                            // log::debug!("RendererItemsReset: 4");
                             
                             collect_render_item(
                                 &rendererid.0,
                                 &entity,
                                 &matid.0,
                                 (scene_set, &camerapos.0.clone(), &mut renderer),
-                                (keyvb, vb, instance, blend, depth_stencil, primitive, rendersort, gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff),
+                                (keyvb, vb, instance, blend, depth_stencil, primitive, rendersort, &mut gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff),
                                 (matkey, matmeta, effect_set, effect_bindoff),
                                 &asset_mgr_shaders,
                                 &asset_mgr_pipelines,
@@ -193,13 +193,13 @@ impl RendererItemsModifyByModelChange {
             GameObject,
             (ObjectID, &ShaderSetSceneAbout, &mut Renderer)
         >,
-        meshes: Query<
+        mut meshes: Query<
             GameObject,
             (
                 ObjectID,
                 &MaterialID, &AssetKeyVBLayouts, &AssetResVBLayouts, &EInstanceCode,
                 &RenderBlend, &RenderDepthAndStencil, &PrimitiveState, 
-                &RenderSortParam, &GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
+                &RenderSortParam, &mut GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
             ),
             Or<(Changed<MaterialID>, Changed<AssetResVBLayouts>, Changed<RenderBlend>, Changed<RenderDepthAndStencil>, Changed<PrimitiveState>, Changed<ShaderSetModelAbout>, Changed<ShaderSetModelAboutBindOffset>, Changed<RenderGeometry>)>
         >,
@@ -215,11 +215,11 @@ impl RendererItemsModifyByModelChange {
         layoutpool: Res<RenderBindGroupPool>,
     ) {
         log::debug!("RendererItemsModifyByModelChange: ");
-        meshes.iter().for_each(|(
+        meshes.iter_mut().for_each(|(
             entity,
             matid, keyvb, vb, instance, 
             blend, depth_stencil, primitive,
-            rendersort, gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff
+            rendersort, mut gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff
         )| {
             viewers.iter().for_each(|(view_id, cullinglist, rendererid, camerapos)| {
                 log::debug!("RendererItemsModifyByModelChange: 0");
@@ -237,7 +237,7 @@ impl RendererItemsModifyByModelChange {
                                 &entity,
                                 &matid.0,
                                 (scene_set, &camerapos.0.clone(), &mut renderer),
-                                (keyvb, vb, instance, blend, depth_stencil, primitive, rendersort, gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff),
+                                (keyvb, vb, instance, blend, depth_stencil, primitive, rendersort, &mut gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff),
                                 (matkey, matmeta, effect_set, effect_bindoff),
                                 &asset_mgr_shaders,
                                 &asset_mgr_pipelines,
@@ -279,7 +279,7 @@ impl RendererItemsModifyByMaterialChange {
                 ObjectID,
                 &MaterialID, &AssetKeyVBLayouts, &AssetResVBLayouts, &EInstanceCode,
                 &RenderBlend, &RenderDepthAndStencil, &PrimitiveState, 
-                &RenderSortParam, &GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
+                &RenderSortParam, &mut GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
             ),
         >,
         materials: Query<
@@ -295,23 +295,23 @@ impl RendererItemsModifyByMaterialChange {
         device: Res<RenderDevice>,
         layoutpool: Res<RenderBindGroupPool>,
     ) {
-        log::debug!("RendererItemsModifyByMaterialChange: ");
+        // log::debug!("RendererItemsModifyByMaterialChange: ");
         materials.iter().for_each(|(id_mat, matkey, matmeta, effect_set, effect_bindoff)| {
             viewers.iter().for_each(|(view_id, cullinglist, rendererid, camerapos)| {
-                log::debug!("RendererItemsModifyByMaterialChange: 0");
-                meshes.iter().for_each(|(
+                // log::debug!("RendererItemsModifyByMaterialChange: 0");
+                meshes.iter_mut().for_each(|(
                     entity,
                     matid, keyvb, vb, instance, 
                     blend, depth_stencil, primitive,
-                    rendersort, gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff
+                    rendersort, mut gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff
                 )| {
-                    log::debug!("RendererItemsModifyByMaterialChange: 1");
+                    // log::debug!("RendererItemsModifyByMaterialChange: 1");
                     if matid.0 == id_mat {
-                        log::debug!("RendererItemsModifyByMaterialChange: 2");
+                        // log::debug!("RendererItemsModifyByMaterialChange: 2");
                         if cullinglist.0.contains(&entity) {
                             if let Some((scene_id, scene_set, mut renderer)) = renderers.get_mut(rendererid.0.clone()) {
 
-                                log::debug!("RendererItemsModifyByMaterialChange: 3");
+                                // log::debug!("RendererItemsModifyByMaterialChange: 3");
                                 renderer.remove(&entity);
     
                                 collect_render_item(
@@ -319,7 +319,7 @@ impl RendererItemsModifyByMaterialChange {
                                     &entity,
                                     &matid.0,
                                     (scene_set, &camerapos.0.clone(), &mut renderer),
-                                    (keyvb, vb, instance, blend, depth_stencil, primitive, rendersort, gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff),
+                                    (keyvb, vb, instance, blend, depth_stencil, primitive, rendersort, &mut gtransform, rendermode, rendergeo, indice_desc, indices_res, model_set, model_bindoff),
                                     (matkey, matmeta, effect_set, effect_bindoff),
                                     &asset_mgr_shaders,
                                     &asset_mgr_pipelines,
@@ -341,8 +341,8 @@ fn collect_render_item(
     id_model: &ObjectID,
     id_mat: &ObjectID,
     scene_state: (&ShaderSetSceneAbout, &Vector3, &mut Renderer),
-    model_state: (&AssetKeyVBLayouts, &AssetResVBLayouts, &EInstanceCode, &RenderBlend, &RenderDepthAndStencil, &PrimitiveState,
-        &RenderSortParam, &GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
+    mut model_state: (&AssetKeyVBLayouts, &AssetResVBLayouts, &EInstanceCode, &RenderBlend, &RenderDepthAndStencil, &PrimitiveState,
+        &RenderSortParam, &mut GlobalTransform, &RenderMode, &RenderGeometry, Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>, &ShaderSetModelAbout, &ShaderSetModelAboutBindOffset
     ),
     effect_state: (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &ShaderSetEffectAbout, &ShaderBindEffectValue),
     // skeleton_state: Option<(&Skeleton)>,
@@ -390,7 +390,7 @@ fn collect_render_item(
     let pipeline = if let Some(pipeline) = asset_mgr_pipelines.get(&pipeline_key) {
         pipeline
     } else {
-        log::debug!("Pipeline: {:?}, Shader: {:?}", pipeline_key, shader_key);
+        // log::debug!("Pipeline: {:?}, Shader: {:?}", pipeline_key, shader_key);
 
         let mut bind_group_layouts = vec![];
 
@@ -457,15 +457,15 @@ fn collect_render_item(
         return;
     }
 
-    let view_distance = camerapos.metric_distance(&gtransform.position);
+    let view_distance = camerapos.metric_distance(gtransform.position());
 
-    log::debug!(">>>>>>>>>>>>>>>>> rendermode {:?}", rendermode.0);
+    // log::debug!(">>>>>>>>>>>>>>>>> rendermode {:?}", rendermode.0);
     match rendermode.0 {
         ERenderMode::AlphaTest => {
 
         },
         ERenderMode::Opaque => {
-            log::debug!(">>>>>>>>>>>>>>>>> Opaque");
+            // log::debug!(">>>>>>>>>>>>>>>>> Opaque");
             let meta = RenderObjectMetaOpaque {
                 bind_groups,
                 pipeline: pipeline,
@@ -479,7 +479,7 @@ fn collect_render_item(
         },
         ERenderMode::Skybox => todo!(),
         ERenderMode::Transparent => {
-            log::debug!(">>>>>>>>>>>>>>>>> Transparent");
+            // log::debug!(">>>>>>>>>>>>>>>>> Transparent");
             let meta = RenderObjectMetaTransparent {
                 bind_groups,
                 pipeline: pipeline,

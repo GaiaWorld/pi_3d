@@ -52,11 +52,11 @@ impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: TInstanc
                 desc09, desc10, desc11, desc12, 
             )
         )| {
-            log::trace!("SysInstanceBufferUpdateFunc:");
+            // log::trace!("SysInstanceBufferUpdateFunc:");
             if flag.dirty() == false {
                 return;
             }
-            log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.list.len());
+            // log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.list.len());
             let mut list = vec![];
             inslist.list.iter().for_each(|insid| {
                 if let Some(instance) = instances.get(insid.clone()) {
@@ -71,7 +71,7 @@ impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: TInstanc
                 geodisable.0 = true;
                 flag.reset();
                 buffer.update::<D>(list.as_slice(), &mut vbpool, &device, &queue);
-                log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
+                // log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
                 match buffer.slot() {
                     vertex_buffer_useinfo::EVertexBufferSlot::Slot01 => {
                         if let Some(mut desc) = desc01 {
@@ -168,7 +168,7 @@ impl<T: TInstancedBuffer + Component, D: TInstancedData + Component, F: TInstanc
         });
         
         let time1 = Instant::now();
-        log::debug!("SysInstancedBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
+        log::info!("SysInstancedBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
     }
 }
 

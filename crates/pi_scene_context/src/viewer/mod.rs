@@ -80,7 +80,7 @@ impl Uniform for ViewerDirection {
 }
 
 pub trait TViewerViewMatrix {
-    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition);
+    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&mut GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition);
 }
 
 pub trait TViewerProjectMatrix {

@@ -22,12 +22,10 @@ impl AppShell {
     pub fn new(
         options: RenderOptions,
     ) -> Self {
-        log::debug!(">>>> new");
 
         let event_loop = winit::event_loop::EventLoop::new();
         let window = Arc::new(winit::window::Window::new(&event_loop).unwrap());
-        
-        log::debug!(">>>> new 0");
+
         let runtime = AsyncRuntimeBuilder::default_worker_thread(None, None, None, None);
 
         let mut world = World::new();

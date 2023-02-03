@@ -26,7 +26,7 @@ impl Default for TargetCameraParam {
 }
 
 impl TViewerViewMatrix for TargetCameraParam {
-    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &crate::transforms::transform_node::LocalPosition, parent: Option<&crate::transforms::transform_node::GlobalTransform>) -> (crate::viewer::ViewerViewMatrix, crate::viewer::ViewerGlobalPosition) {
+    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &crate::transforms::transform_node::LocalPosition, parent: Option<&mut crate::transforms::transform_node::GlobalTransform>) -> (crate::viewer::ViewerViewMatrix, crate::viewer::ViewerGlobalPosition) {
         if self.ignore_parent_scale == false {
             match parent {
                 Some(parent) => {
@@ -57,14 +57,12 @@ impl TViewerViewMatrix for TargetCameraParam {
                 },
             }
         } else {
-            log::info!("Viewwwwwwwwwwwwwwwwwwwwwwwwwwww");
             let mut iso = Isometry3::identity();
             coordsys.lookat(&local_pos.0, &self.target, &self.up, &mut iso);
     
             let eye = match parent {
                 Some(parent) => {
-                    log::info!("000000000000000000000");
-                    iso = iso.inv_mul(&parent.iso);
+                    iso = iso.inv_mul(parent.iso());
                     iso.inverse_mut();
 
                     let mut eye = local_pos.0.clone();

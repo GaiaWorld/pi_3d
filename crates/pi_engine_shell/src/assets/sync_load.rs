@@ -133,7 +133,6 @@ where
         // log::debug!("check_await: ");
         let mut data_list = std::mem::replace(&mut list_await.1, vec![]);
         data_list.drain(..).for_each(|(key, data)| {
-            log::debug!(" check_await {:?}", key);
             if let Some(list) = list_await.0.get_mut(&key) {
                 let mut ids = std::mem::replace(list, vec![]);
                 ids.drain(..).for_each(|id| {
@@ -142,7 +141,7 @@ where
                         Some(key0) => {
                             // key 已经修改，不需要设置
                             if key == *key0.deref() {
-                                log::debug!("{:?}", key);
+                                // log::debug!("{:?}", key);
                                 data_cmd.insert(id, R::from(data.clone()));
                             }
                         }

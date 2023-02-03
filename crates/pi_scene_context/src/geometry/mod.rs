@@ -34,7 +34,7 @@ pub struct AssetKeyVBLayouts(pub KeyVertexLayouts);
 pub struct AssetResVBLayouts(pub Handle<VertexBufferLayouts>);
 impl From<Handle<VertexBufferLayouts>> for AssetResVBLayouts {
     fn from(value: Handle<VertexBufferLayouts>) -> Self {
-        log::debug!("AssetResVBLayouts OK");
+        // log::debug!("AssetResVBLayouts OK");
         Self(value)
     }
 }
@@ -77,7 +77,7 @@ impl SysGeometryVBCommand {
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ECommand::Desc(entity, descs, key) => {
-                    log::debug!(">>>>  GeometryDesc ");
+                    // log::debug!(">>>>  GeometryDesc ");
                     geo_desc_cmd.insert(entity.clone(), GeometryDesc { list: descs });
                     geo_vb_cmd.insert(entity.clone(), AssetKeyVBLayouts(key));
                     geo_enable_cmd.insert(entity.clone(), RenderGeometryEable(true));

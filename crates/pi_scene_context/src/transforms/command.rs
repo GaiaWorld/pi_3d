@@ -126,24 +126,24 @@ impl SysTransformNodeModifyCommand {
                 },
                 ETransformNodeModifyCommand::ModifyRotation(node, value) => {
                     
-                    let rotation = Rotation3::from_euler_angles(value.y, value.x, value.z);
-                    let quaternion = Quaternion::from_rotation_matrix(&rotation); 
-                    qua_cmd.insert(node, LocalRotationQuaternion(quaternion));
-                    rot_cmd.insert(node, LocalRotation(rotation));
+                    // let rotation = Rotation3::from_euler_angles(value.y, value.x, value.z);
+                    // let quaternion = Quaternion::from_rotation_matrix(&rotation); 
+                    // qua_cmd.insert(node, LocalRotationQuaternion(quaternion));
+                    // rot_cmd.insert(node, LocalRotation(rotation));
                     eul_cmd.insert(node, LocalEulerAngles(value));     
                 },
                 ETransformNodeModifyCommand::ModifyScaling(node, value) => {
                     scl_cmd.insert(node, LocalScaling(value));    
                 },
                 ETransformNodeModifyCommand::ModifyRotationQuaternion(node, value) => {
-                    let rotation = value.to_rotation_matrix();
-                    let mut euler = Vector3::new(0., 0., 0.);
-                    let (z, x, y) = rotation.euler_angles();
-                    euler.copy_from_slice(&[x, y, z]);
+                    // let rotation = value.to_rotation_matrix();
+                    // let mut euler = Vector3::new(0., 0., 0.);
+                    // let (z, x, y) = rotation.euler_angles();
+                    // euler.copy_from_slice(&[x, y, z]);
 
                     qua_cmd.insert(node, LocalRotationQuaternion(value));
-                    rot_cmd.insert(node, LocalRotation(rotation));
-                    eul_cmd.insert(node, LocalEulerAngles(euler));    
+                    // rot_cmd.insert(node, LocalRotation(rotation));
+                    // eul_cmd.insert(node, LocalEulerAngles(euler));    
                 },
                 ETransformNodeModifyCommand::ModifyTarget(_, _) => todo!(),
             }

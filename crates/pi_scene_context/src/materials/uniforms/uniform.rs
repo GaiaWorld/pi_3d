@@ -54,7 +54,7 @@ impl SysMaterialMetaChange {
         mut effect_set_cmd: Commands<GameObject, ShaderSetEffectAbout>,
         mut effect_bindoff_cmd: Commands<GameObject, ShaderBindEffectValue>,
     ) {
-        log::debug!("SysMaterialMetaChange: ");
+        // log::debug!("SysMaterialMetaChange: ");
         materials.iter_mut().for_each(|(
             matid,
             effect_key, effect,

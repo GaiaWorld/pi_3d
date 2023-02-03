@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use pi_ecs::{prelude::{ResMut, Query, Res, Commands}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
@@ -134,9 +136,9 @@ impl SysModelAboutUpdate {
         mut bindgrouppool: ResMut<RenderBindGroupPool>,
         device: Res<RenderDevice>,
     ) {
-        log::debug!("SysModelAboutUpdateBySkin: ");
+        // log::debug!("SysModelAboutUpdateBySkin: ");
         models.iter().for_each(|(entity, _, skin)| {
-            log::debug!("SysModelAboutUpdateBySkin: 0");
+            // log::debug!("SysModelAboutUpdateBySkin: 0");
             let (model_set, model_bindoff) = if let Some(skin) = skin {
                 if let Some(skeleton) = skeletons.get(skin.0.clone()) {
                     let model_set = ShaderSetModelAbout::new(ShaderSetBind::SET_MODEL_ABOUT, skeleton.mode);
@@ -183,6 +185,8 @@ impl SysRenderMatrixUpdate {
         >,
         mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
     ) {
+        let time = Instant::now();
+
         meshes.iter_mut().for_each(|(obj, _, worldmatrix, worldmatrix_inv, mut render_wm, mut render_wminv, mut dirty, id_source)| {
             // log::debug!("SysModelUniformUpdate:");
             render_wm.0.clone_from(&worldmatrix.0);
@@ -190,11 +194,14 @@ impl SysRenderMatrixUpdate {
             dirty.0 = true;
 
             if let Some(id_source) = id_source {
-                if let Some(mut flag) = source_mesh.get(id_source.0) {
+                if let Some(mut flag) = source_mesh.get_mut(id_source.0) {
                     flag.0 = true;
                 }
             }
         });
+        
+        let time1 = Instant::now();
+        log::info!("SysRenderMatrixUpdate: {:?}", time1 - time);
     }
 }
 

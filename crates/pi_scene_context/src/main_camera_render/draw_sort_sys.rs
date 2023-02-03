@@ -39,14 +39,14 @@ impl SysModelListUpdateByCamera {
             (ObjectID, &SceneID, &LayerMask, &RenderGeometry),
         >,
     ) {
-        log::debug!("SysModelListUpdateByCamera: ");
+        // log::debug!("SysModelListUpdateByCamera: ");
         cameras.iter_mut().for_each(|(camera, scene, layer, _, mut modellist)| {
-            log::debug!("SysModelListUpdateByCamera: 0");
+            // log::debug!("SysModelListUpdateByCamera: 0");
             let mut list = vec![];
             items.iter().for_each(|(obj, iscene, ilayer, _)| {
-                log::debug!("SysModelListUpdateByCamera: 1");
+                // log::debug!("SysModelListUpdateByCamera: 1");
                 if iscene == scene && layer.include(ilayer) {
-                    log::debug!("SysModelListUpdateByCamera: 2");
+                    // log::debug!("SysModelListUpdateByCamera: 2");
                     list.push(obj.clone());
                 }
             });
@@ -78,14 +78,14 @@ impl SysModelListAfterCullinUpdateByCamera {
             (ObjectID, &WorldMatrix, &RenderGeometry, &RenderGeometryEable)
         >,
     ) {
-        log::debug!("SysModelListAfterCullinUpdateByCamera: ");
+        // log::debug!("SysModelListAfterCullinUpdateByCamera: ");
         cameras.iter_mut().for_each(|(camera, models, camerapos, cameraview, mut cullings)| {
-            log::debug!("SysModelListAfterCullinUpdateByCamera: 0");
+            // log::debug!("SysModelListAfterCullinUpdateByCamera: 0");
             let mut list = vec![];
             models.0.iter().for_each(|objid| {
-                log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
+                // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
                 if let Some((_, worldmat, _, geo_enable)) = items.get(objid.clone()) {
-                    log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
+                    // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
                     if geo_enable.0 {
                         list.push(objid.clone());
                     }
@@ -119,14 +119,14 @@ impl SysModelListUpdateByGeometry {
             Or<(Changed<RenderGeometry>, Changed<SceneID>, Changed<LayerMask>, Changed<RenderGeometryEable>)>
         >
     ) {
-        log::debug!("SysModelListUpdateByGeometry: ");
+        // log::debug!("SysModelListUpdateByGeometry: ");
         items.iter().for_each(|(obj, iscene, ilayer, _, geo_enable)| {
-            log::debug!("SysModelListUpdateByGeometry: 1");
+            // log::debug!("SysModelListUpdateByGeometry: 1");
             if geo_enable.0 {
                 cameras.iter_mut().for_each(|(camera, scene, layer, mut model_list)| {
-                    log::debug!("SysModelListUpdateByGeometry: 2");
+                    // log::debug!("SysModelListUpdateByGeometry: 2");
                     if iscene == scene && layer.include(ilayer) {
-                        log::debug!("SysModelListUpdateByGeometry: 3");
+                        // log::debug!("SysModelListUpdateByGeometry: 3");
                         if model_list.0.contains(&obj) == false {
                             model_list.0.push(obj.clone());
                         }
@@ -167,14 +167,14 @@ impl SysModelListAfterCullinUpdateByGeometry {
             Or<(Changed<RenderGeometry>, Changed<WorldMatrix>, Changed<RenderGeometryEable>)>
         >,
     ) {
-        log::debug!("SysModelListAfterCullinUpdateByGeometry: ");
+        // log::debug!("SysModelListAfterCullinUpdateByGeometry: ");
         items.iter().for_each(|(obj, worldmat, _, geo_enable)| {
-            log::debug!("SysModelListAfterCullinUpdateByGeometry: 0");
+            // log::debug!("SysModelListAfterCullinUpdateByGeometry: 0");
             if geo_enable.0 {
                 cameras.iter_mut().for_each(|(camera, models, camerapos, cameraview, mut cullings)| {
-                    log::debug!("SysModelListAfterCullinUpdateByGeometry: 1, {}", models.0.len());
+                    // log::debug!("SysModelListAfterCullinUpdateByGeometry: 1, {}", models.0.len());
                     if models.0.contains(&obj) == true && cullings.0.contains(&obj) == false {
-                        log::debug!("SysModelListAfterCullinUpdateByGeometry: 2");
+                        // log::debug!("SysModelListAfterCullinUpdateByGeometry: 2");
                         cullings.0.push(obj.clone());
                     }
                 });
@@ -204,10 +204,10 @@ impl SysModelListAfferCullingUpdateByModelWorldMatrix {
             Changed<WorldMatrix>
         >
     ) {
-        log::debug!("SysModelListAfferCullingUpdateByModelWorldMatrix: ");
+        // log::debug!("SysModelListAfferCullingUpdateByModelWorldMatrix: ");
         items.iter().for_each(|(obj, worldmat)| {
             cameras.iter_mut().for_each(|(camera, modellist, cullinglist, camerapos, cameraview)| {
-                log::debug!("SysModelListAfferCullingUpdateByModelWorldMatrix: 0");
+                // log::debug!("SysModelListAfferCullingUpdateByModelWorldMatrix: 0");
                 // if modellist.0.contains(obj) {
                 //     if iscene == scene && layer.include(ilayer) {
                 //         if cullinglist.0.contains(obj) == false {

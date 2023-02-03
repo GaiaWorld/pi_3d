@@ -47,7 +47,7 @@ where
             statistics, mut instance_code, ins_list
         )| {
             if statistics.slot_count() >= D::ASK_SLOT_COUNT as usize {
-                log::debug!("SysGeometryChangeIntSlot: Slot {}", D::ASK_SLOT_COUNT);
+                // log::debug!("SysGeometryChangeIntSlot: Slot {}", D::ASK_SLOT_COUNT);
                 let slot_index = D::ASK_SLOT_COUNT as usize - 1;
                 let desc = statistics.get_desc(slot_index);
                 let instance_kind = desc.instance_kind();
@@ -70,13 +70,13 @@ where
                             render_geometry::vertex_data::EInstanceKind::Color => {
                                 let buff = InstancedBufferColor::new(slot_index, buff_id, &mut vbpool);
                                 ins_color_cmd.insert(obj.clone(), buff);
-                                log::debug!("Instance Color");
+                                // log::debug!("Instance Color");
                                 instance_code.0 = instance_code.0 | EInstanceCode::COLOR;
                             },
                             render_geometry::vertex_data::EInstanceKind::TillOffset => {
                                 let buff = InstancedBufferTillOff::new(slot_index, buff_id, &mut vbpool);
                                 ins_tilloff_cmd.insert(obj.clone(), buff);
-                                log::debug!("Instance TillOffset");
+                                // log::debug!("Instance TillOffset");
                                 instance_code.0 = instance_code.0 | EInstanceCode::TILL_OFF_1;
                             },
                             _ => { },
@@ -132,15 +132,15 @@ impl SysGeometryVBUpdateSlot01
         >,
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
-        log::debug!("SysGeometryVBUpdateSlot1: ");
+        // log::debug!("SysGeometryVBUpdateSlot1: ");
         items.iter_mut().for_each(|(
             id_geo
             , desc
             , key1, res1
         )| {
-            log::debug!(" > {}", desc.slot_count());
+            // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 1 {
-                log::debug!("SysGeometryVBUpdateSlot1: 0");
+                // log::debug!("SysGeometryVBUpdateSlot1: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                 ];
@@ -171,16 +171,16 @@ impl SysGeometryVBUpdateSlot02
         >,
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
-        log::debug!("SysGeometryVBUpdateSlot2: ");
+        // log::debug!("SysGeometryVBUpdateSlot2: ");
         items.iter_mut().for_each(|(
             id_geo
             , desc
             , key1, res1
             , key2, res2
         )| {
-            log::debug!(" > {}", desc.slot_count());
+            // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 2 {
-                log::debug!("SysGeometryVBUpdateSlot2: 0");
+                // log::debug!("SysGeometryVBUpdateSlot2: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -215,7 +215,7 @@ impl SysGeometryVBUpdateSlot03
         >,
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
-        log::debug!("SysGeometryVBUpdateSlot3: ");
+        // log::debug!("SysGeometryVBUpdateSlot3: ");
         items.iter_mut().for_each(|(
             id_geo
             , desc
@@ -223,9 +223,9 @@ impl SysGeometryVBUpdateSlot03
             , key2, res2
             , key3, res3
         )| {
-            log::debug!(" > {}", desc.slot_count());
+            // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 3 {
-                log::debug!("SysGeometryVBUpdateSlot3: 0");
+                // log::debug!("SysGeometryVBUpdateSlot3: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -263,7 +263,7 @@ impl SysGeometryVBUpdateSlot04
         >,
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
-        log::debug!("SysGeometryVBUpdateSlot4: ");
+        // log::debug!("SysGeometryVBUpdateSlot4: ");
         items.iter_mut().for_each(|(
             id_geo
             , desc
@@ -272,9 +272,9 @@ impl SysGeometryVBUpdateSlot04
             , key3, res3
             , key4, res4
         )| {
-            log::debug!(" > {}", desc.slot_count());
+            // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 4 {
-                log::debug!("SysGeometryVBUpdateSlot4: 0");
+                // log::debug!("SysGeometryVBUpdateSlot4: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -315,7 +315,7 @@ impl SysGeometryVBUpdateSlot05
         >,
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
-        log::debug!("SysGeometryVBUpdateSlot5: ");
+        // log::debug!("SysGeometryVBUpdateSlot5: ");
         items.iter_mut().for_each(|(
             id_geo
             , desc
@@ -325,9 +325,9 @@ impl SysGeometryVBUpdateSlot05
             , key4, res4
             , key5, res5
         )| {
-            log::debug!(" > {}", desc.slot_count());
+            // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 5 {
-                log::info!("SysGeometryVBUpdateSlot5: 0");
+                // log::info!("SysGeometryVBUpdateSlot5: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -371,7 +371,7 @@ impl SysGeometryVBUpdateSlot06
         >,
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
-        log::debug!("SysGeometryVBUpdateSlot6: ");
+        // log::debug!("SysGeometryVBUpdateSlot6: ");
         items.iter_mut().for_each(|(
             
             id_geo
@@ -383,9 +383,9 @@ impl SysGeometryVBUpdateSlot06
             , key5, res5
             , key6, res6
         )| {
-            log::debug!(" > {}", desc.slot_count());
+            // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 6 {
-                log::info!("SysGeometryVBUpdateSlot6: 0");
+                // log::info!("SysGeometryVBUpdateSlot6: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),

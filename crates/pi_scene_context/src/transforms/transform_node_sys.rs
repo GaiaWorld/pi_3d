@@ -80,12 +80,15 @@ impl SysLocalMatrixCalc {
         mut localmatrixs: Query<GameObject, (ObjectID, &LocalPosition, &LocalScaling, &LocalRotation), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
         mut lm_cmd: Commands<GameObject, LocalMatrix>,
     ) {
+        let time = Instant::now();
         localmatrixs.iter_mut().for_each(|(obj, position, scaling, rotation)| {
-             log::debug!("LocalMatrixCalc:");
+            log::debug!("LocalMatrixCalc:");
             let mut matrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
             lm_cmd.insert(obj, LocalMatrix(matrix, true));
         });
+        let time1 = Instant::now();
+        log::info!("Local Matrix Calc: {:?}", time1 - time);
     }
 }
 
@@ -296,9 +299,12 @@ fn calc_world_one(
             let real_dirty = p_dirty || lmatrix.1 ;
             lmatrix.1 = false;
             if real_dirty {
-                log::debug!(">>>>> GlobalTransform 2");
+                // log::debug!(">>>>> GlobalTransform 2");
                 let transform = GlobalTransform::calc(&p_m, &lmatrix);
-                temp_list.push((entity, true, transform.matrix.clone()));
+                let matrix = transform.matrix.clone();
+                // let matrix = lmatrix.0.clone();
+
+                temp_list.push((entity, true, matrix.clone()));
 
                 wm_cmd.insert(entity, WorldMatrix::new(transform.matrix.clone()));
                 wminv_cmd.insert(entity, WorldMatrixInv::new(transform.matrix_inv.clone()));
@@ -324,9 +330,10 @@ fn calc_world_root(
         Some((mut lmatrix, transform)) => {
             if lmatrix.1 {
                 lmatrix.1 = false;
-                log::debug!(">>>>> GlobalTransform 0");
+                // log::debug!(">>>>> GlobalTransform 0");
                 let transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
                 let matrix = transform.matrix.clone();
+                // let matrix = lmatrix.0.clone();
 
                 wm_cmd.insert(entity, WorldMatrix::new(transform.matrix.clone()));
                 wminv_cmd.insert(entity, WorldMatrixInv::new(transform.matrix_inv.clone()));
@@ -338,7 +345,7 @@ fn calc_world_root(
             }
         },
         None => {
-            log::debug!(">>>>> WorldMatrixCalc Root");
+            // log::debug!(">>>>> WorldMatrixCalc Root");
             (entity, false, Matrix::identity())
         },
     }

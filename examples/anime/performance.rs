@@ -111,13 +111,13 @@ impl PluginTest {
             }
         }
 
-        engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 50, AnimationAmountCalc::default());
+        engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 200, AnimationAmountCalc::default());
     }
 }
 
 
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut shell = AppShell::new(
         RenderOptions {

@@ -113,43 +113,49 @@ impl WorldMatrixInv {
 
 #[derive(Debug, Clone)]
 pub struct GlobalTransform {
-    pub position: Vector3,
-    pub scaling: Vector3,
-    pub rotation: Rotation3,
+    pub position: Option<Vector3>,
+    pub scaling: Option<Vector3>,
+    pub rotation: Option<Rotation3>,
     pub matrix: Matrix,
     pub matrix_inv: Matrix,
-    pub iso: Isometry3,
+    pub iso: Option<Isometry3>,
 }
 impl Default for GlobalTransform {
     fn default() -> Self {
         Self {
-            position: Vector3::new(0., 0., 0.),
-            scaling: Vector3::new(1., 1., 1.),
-            rotation: Rotation3::identity(),
+            position: None,
+            scaling: None,
+            rotation: None,
             matrix: Matrix::identity(),
             matrix_inv: Matrix::identity(),
-            iso: Isometry3::identity(),
+            iso: None,
         }
     }
 }
 impl GlobalTransform {
-    pub fn euler_angles(&self) -> (Number, Number, Number) {
-        self.rotation.euler_angles()
+    pub fn euler_angles(&mut self) -> (Number, Number, Number) {
+        self.decompose();
+        self.rotation.unwrap().euler_angles()
     }
-    pub fn rotation_quaternion(&self) -> Quaternion {
-        Quaternion::from_rotation_matrix(&self.rotation)
+    pub fn rotation_quaternion(&mut self) -> Quaternion {
+        self.decompose();
+        Quaternion::from_rotation_matrix(&self.rotation.unwrap())
+    }
+    pub fn position(&mut self) -> &Vector3 {
+        self.decompose();
+        self.position.as_ref().unwrap()
+    }
+    pub fn scaling(&mut self) -> &Vector3 {
+        self.decompose();
+        self.scaling.as_ref().unwrap()
+    }
+    pub fn iso(&mut self) -> &Isometry3 {
+        self.decompose();
+        self.iso.as_ref().unwrap()
     }
     pub fn calc(p_m: &Matrix, l_matrix: &LocalMatrix) -> Self {
         let mut result = Self::default();
-        calc_world_matrix(
-            p_m,
-            &l_matrix.0,
-            &mut result.matrix,
-            &mut result.position,
-            &mut result.rotation,
-            &mut result.scaling,
-            &mut result.iso,
-        );
+        result.matrix.copy_from(&(p_m * l_matrix.0));
 
         match result.matrix.try_inverse() {
             Some(inv) => result.matrix_inv = inv,
@@ -158,29 +164,27 @@ impl GlobalTransform {
 
         result
     }
-}
+    fn decompose(&mut self) {
+        if self.rotation.is_none() {
+            let mut g_r = Rotation3::identity();
+            let mut g_p = Vector3::new(0., 0., 0.);
+            let mut g_s = Vector3::new(1., 1., 1.);
+            CoordinateSytem3::matrix4_decompose_rotation(&self.matrix, Some(&mut g_s), Some(&mut g_r), Some(&mut g_p));
 
-pub fn calc_world_matrix(
-    p_m: &Matrix,
-    l_m: &Matrix,
-    w_m: &mut Matrix,
-    g_p: &mut Vector3,
-    g_r: &mut Rotation3,
-    g_s: &mut Vector3,
-    g_i: &mut Isometry3,
-) {
-    w_m.copy_from(&(p_m * l_m));
-
-    CoordinateSytem3::matrix4_decompose_rotation(&w_m, Some(g_s), Some(g_r), Some(g_p));
-
-    // log::debug!("calc_world_matrix:");
-    // log::debug!("{}", w_m);
-    // log::debug!("absolute_scaling:");
-    // log::debug!("{}", g_s);
-    // log::debug!("absolute_rotation:");
-    // log::debug!("{}", g_r);
-    // log::debug!("absolute_position:");
-    // log::debug!("{}", g_p);
-
-    g_i.clone_from(&Isometry3::from_parts(Translation3::new(g_p.x, g_p.y, g_p.z), Quaternion::from_matrix(&g_r.matrix())));
+            // log::debug!("calc_world_matrix:");
+            // log::debug!("{}", w_m);
+            // log::debug!("absolute_scaling:");
+            // log::debug!("{}", g_s);
+            // log::debug!("absolute_rotation:");
+            // log::debug!("{}", g_r);
+            // log::debug!("absolute_position:");
+            // log::debug!("{}", g_p);
+        
+            let iso = Isometry3::from_parts(Translation3::new(g_p.x, g_p.y, g_p.z), Quaternion::from_matrix(&g_r.matrix()));
+            self.iso = Some(iso);
+            self.rotation = Some(g_r);
+            self.scaling = Some(g_s);
+            self.position = Some(g_p);
+        }
+    }
 }
