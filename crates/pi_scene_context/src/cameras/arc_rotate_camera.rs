@@ -21,9 +21,9 @@ impl Default for ArcRotateCamera {
 
 impl ArcRotateCamera {
     pub fn apply(&self, camera: &TargetCameraParam) {
-        let mut cosa = self.alpha.cos();
-        let mut sina = self.alpha.sin();
-        let mut cosb = self.beta.cos();
+        let cosa = self.alpha.cos();
+        let sina = self.alpha.sin();
+        let cosb = self.beta.cos();
         let mut sinb = self.beta.sin();
 
         if sinb == 0. { sinb = 0.00001; };

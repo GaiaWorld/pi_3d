@@ -9,7 +9,6 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}
 };
 use pi_ecs::prelude::{ResMut, Setup};

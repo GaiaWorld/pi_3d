@@ -1,10 +1,9 @@
 
 use command::{SysUnlitMaterialCommand, SingleUnlitMaterialCommandList};
-use pi_atom::Atom;
 use pi_ecs::prelude::Setup;
 use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
-use pi_scene_context::materials::shader_effect::InterfaceMaterialMeta;
-use render_shader::shader::KeyShaderEffect;
+use pi_render::renderer::shader::KeyShaderMeta;
+use pi_scene_context::materials::interface::InterfaceMaterialMeta;
 use shader::UnlitShader;
 
 pub mod shader;
@@ -19,7 +18,7 @@ impl Plugin for PluginUnlitMaterial {
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
 
-        let key = KeyShaderEffect(Atom::from(UnlitShader::KEY));
+        let key = KeyShaderMeta::from(UnlitShader::KEY);
         engine.regist_material_meta(key, UnlitShader::meta());
 
         let world = engine.world_mut();

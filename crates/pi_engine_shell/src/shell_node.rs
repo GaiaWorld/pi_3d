@@ -1,7 +1,6 @@
 
 use futures::FutureExt;
-use pi_ecs::prelude::GraphNode;
-use pi_render::{graph::{node::{Node, ParamUsage}, RenderContext}, depend_graph, components::view::target_alloc::{ShareTargetView, SafeAtlasAllocator, TargetDescriptor, TextureDescriptor}, rhi::texture::ScreenTexture };
+use pi_render::{graph::{node::{Node, ParamUsage}, RenderContext}, components::view::target_alloc::{ShareTargetView, SafeAtlasAllocator, TargetDescriptor, TextureDescriptor}, rhi::texture::ScreenTexture };
 use render_derive::NodeParam;
 use smallvec::SmallVec;
 

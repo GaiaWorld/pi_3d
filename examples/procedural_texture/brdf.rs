@@ -1,21 +1,19 @@
-use material_textures::{PluginMaterialTextures, main_texture::PluginMainTexture};
+
 use pi_3d::PluginBundleDefault;
+use pi_atom::Atom;
 use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_mesh_builder::quad::{InterfaceQuad, PluginQuadBuilder};
-use pi_render::rhi::options::RenderOptions;
+use pi_render::{rhi::options::RenderOptions, renderer::{texture::KeyTexture, sampler::KeySampler}, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam};
 use pi_scene_context::{
     plugin::Plugin,
     transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera, 
-    main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{material::{InterfaceMaterial}, uniforms::sys_texture::InterfaceMaterialTexture}
+    materials::{interface::{InterfaceMaterial}}
 };
 use pi_scene_math::Vector3;
 use procedural_texture::brdf::{PluginBRDFMaterial, interface::InterfaceBRDFMaterial};
-use render_resource::sampler::SamplerDesc;
-use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 
 
 #[derive(Debug)]
@@ -29,9 +27,6 @@ impl Plugin for PluginTest {
         PluginQuadBuilder.init(engine, stages);
 
         PluginLocalLoad.init(engine, stages);
-
-        PluginMaterialTextures.init(engine, stages);
-        PluginMainTexture.init(engine, stages);
         
         Ok(())
     }
@@ -54,8 +49,16 @@ impl PluginTest {
         let sky_box = engine.new_quad(scene01);
         let material = engine.create_brdf_material();
 
-        engine.set_texture_sampler(material, "_MainTex", SamplerDesc::default());
-        engine.emissive_texture(material, render_resource::ImageAssetKey::from("E:/rust_render/pi_3d/assets/images/fractal.png"));
+        engine.set_texture(
+            material,
+            UniformTextureWithSamplerParam {
+                slotname: Atom::from("_MainTex"),
+                filter: true,
+                sample: KeySampler::default(),
+                url: KeyTexture::from("E:/rust_render/pi_3d/assets/images/fractal.png"),
+            },
+            false
+        );
 
         engine.use_material(sky_box, material);
 

@@ -6,9 +6,8 @@ use pi_scene_context::{
     transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{material::{InterfaceMaterial}}
+    materials::{interface::{InterfaceMaterial}}
 };
 
 use pi_scene_math::Vector3;

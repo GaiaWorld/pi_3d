@@ -4,17 +4,12 @@ use pi_engine_shell::{
     plugin::{ErrorPlugin, Plugin},
     run_stage::RunStage,
 };
-use pi_render::rhi::{device::RenderDevice, RenderQueue};
+use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer::KeyVertexBuffer, vertex_buffer_desc::VertexBufferDesc, attributes::{VertexAttribute, EVertexDataKind}, indices::IndicesBufferDesc}};
 use pi_scene_context::{
     geometry::{indices::InterfaceBufferIndices, TInterfaceGeomtery},
     meshes::interface::InterfaceMesh,
     scene::interface::InterfaceScene,
     transforms::interface::InterfaceTransformNode,
-};
-use render_data_container::{EVertexDataFormat, KeyVertexBuffer, VertexBuffer};
-use render_geometry::{
-    indices::IndicesBufferDesc,
-    vertex_data::{EVertexDataKind, VertexAttribute, VertexBufferDesc},
 };
 
 pub struct AxisBuilder;
@@ -23,21 +18,20 @@ impl AxisBuilder {
     const KEY_BUFFER_COLOR4: &'static str = "AxisColor";
     const KEY_BUFFER_INDICES: &'static str = "AxisIndices";
 
-    pub fn position(device: &RenderDevice, queue: &RenderQueue) -> VertexBuffer {
-        let mut position = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-        let mut x_axis = vec![
+    pub fn position() -> Vec<f32> {
+        let mut x_axis: Vec<f32> = vec![
             -0.03, 0.03, 0.03, -0.03, -0.03, 0.03, -0.03, 0., -0.03,
              0.9,  0.03, 0.03,  0.9,  -0.03, 0.03,  0.9,  0., -0.03,
              0.9,  0.06, 0.06,  0.9,  -0.06, 0.06,  0.9,  0., -0.06, 1., 0., 0.,
         ];
 
-        let mut y_axis = vec![
+        let mut y_axis: Vec<f32> = vec![
             -0.03, -0.03, 0.03, 0.03, -0.03, 0.03, 0., -0.03, -0.03, 
             -0.03,  0.9,  0.03, 0.03,  0.9,  0.03, 0.,  0.9,  -0.03,
             -0.06,  0.9,  0.06, 0.06,  0.9,  0.06, 0.0, 0.9,  -0.06, 0., 1., 0.,
         ];
 
-        let mut z_axis = vec![
+        let mut z_axis: Vec<f32> = vec![
             -0.03, -0.03, -0.03, 0.03, -0.03, -0.03, 0., 0.03, -0.03, 
             -0.03, -0.03,  0.9,  0.03, -0.03,  0.9,  0., 0.03,  0.9,
             -0.06, -0.06,  0.9,  0.06, -0.06,  0.9,  0., 0.06,  0.9, 0., 0., 1.,
@@ -48,12 +42,10 @@ impl AxisBuilder {
         data.append(&mut y_axis);
         data.append(&mut z_axis);
 
-        position.update_f32(&data, 0);
-        position.update_buffer(device, queue);
-        position
+        data
     }
 
-    pub fn indices(device: &RenderDevice, queue: &RenderQueue) -> VertexBuffer {
+    pub fn indices() -> Vec<u16> {
         let mut x_axis = vec![
             0, 1, 2,
             0, 1, 4, 0, 4, 3,
@@ -90,21 +82,15 @@ impl AxisBuilder {
         data.append(&mut y_axis);
         data.append(&mut z_axis);
         
-        let mut indices = VertexBuffer::new(false, EVertexDataFormat::U16, true);
-        indices.update_u16(&data, 0);
-        indices.update_buffer(device, queue);
-        indices
+        data
     }
-    pub fn colors(device: &RenderDevice, queue: &RenderQueue) -> VertexBuffer {
-        let data = [
+    pub fn colors() -> [f32; 120] {
+        let data: [f32; 120] = [
             1., 0., 0., 1., 1., 0., 0., 1., 1., 0., 0., 1., 1., 0., 0., 1.,1., 0., 0., 1., 1., 0., 0., 1.,1., 0., 0., 1., 1., 0., 0., 1.,1., 0., 0., 1., 1., 0., 0., 1.,
             0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1.,0., 1., 0., 1., 0., 1., 0., 1.,0., 1., 0., 1., 0., 1., 0., 1.,0., 1., 0., 1., 0., 1., 0., 1.,
             0., 0., 1., 1., 0., 0., 1., 1., 0., 0., 1., 1., 0., 0., 1., 1.,0., 0., 1., 1., 0., 0., 1., 1.,0., 0., 1., 1., 0., 0., 1., 1.,0., 0., 1., 1., 0., 0., 1., 1.,
         ];
-        let mut indices = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-        indices.update_f32(&data, 0);
-        indices.update_buffer(device, queue);
-        indices
+        data
     }
 }
 
@@ -120,13 +106,13 @@ impl InterfaceAxis for EnginShell {
         let queue = world.get_resource::<RenderQueue>().unwrap();
 
         let keypos = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION);
-        self.create_vertex_buffer(keypos.clone(), AxisBuilder::position(device, queue));
+        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(&AxisBuilder::position()));
 
         let keycolor = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4);
-        self.create_vertex_buffer(keycolor.clone(), AxisBuilder::colors(device, queue));
+        self.create_vertex_buffer(keycolor.clone(), bytemuck::cast_slice(&AxisBuilder::colors()));
 
         let key = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_INDICES);
-        self.create_vertex_buffer(key.clone(), AxisBuilder::indices(device, queue));
+        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(&AxisBuilder::indices()));
 
         self
     }

@@ -28,12 +28,9 @@ unlit_material = { path = "crates/unlit_material" }
 
 pi_render = { git = "https://github.com/GaiaWorld/pi_render" }
 render_utils = { git = "https://github.com/GaiaWorld/pi_render" }
-render_pipeline_key = { git = "https://github.com/GaiaWorld/pi_render" }
-render_data_container = { git = "https://github.com/GaiaWorld/pi_render" }
-render_geometry = { git = "https://github.com/GaiaWorld/pi_render" }
-render_resource = { git = "https://github.com/GaiaWorld/pi_render" }
 render_derive = { git = "https://github.com/GaiaWorld/pi_render" }
-render_shader = { git = "https://github.com/GaiaWorld/pi_render" }
+render_compile = { git = "https://github.com/GaiaWorld/pi_render" }
+render_macro_utils = { git = "https://github.com/GaiaWorld/pi_render" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_animation = { git = "https://github.com/GaiaWorld/pi_animation.git" }
@@ -51,6 +48,7 @@ log = "0.4"
 smallvec = "1.9"
 crossbeam="0.8"
 futures = "0.3"
+bytemuck = { version = "1.4", features = ["derive"] }
 
 [patch."https://github.com/GaiaWorld/pi_ecs"]
 pi_ecs = { path = "../pi_ecs" }
@@ -61,12 +59,9 @@ pi_hal = { path = "../pi_hal" }
 [patch."https://github.com/GaiaWorld/pi_render"]
 pi_render = { path = "../pi_render" }
 render_utils = { path = "../pi_render/crates/render_utils" }
-render_pipeline_key = { path = "../pi_render/crates/render_pipeline_key" }
-render_data_container = { path = "../pi_render/crates/render_data_container" }
-render_geometry = { path = "../pi_render/crates/render_geometry" }
-render_resource = { path = "../pi_render/crates/render_resource" }
 render_derive = { path = "../pi_render/crates/render_derive" }
-render_shader = { path = "../pi_render/crates/render_shader" }
+render_compile = { path = "../pi_render/crates/render_compile" }
+render_macro_utils = { path = "../pi_render/crates/render_macro_utils" }
 
 [patch."https://github.com/GaiaWorld/pi_scene"]
 pi_scene = { path = "../pi_scene" }
@@ -77,6 +72,9 @@ pi_animation = { path = "../pi_animation" }
 
 [patch."https://github.com/GaiaWorld/pi_curves"]
 pi_curves = { path = "../pi_curves" }
+
+[patch."http://ser.yinengyun.com:10082/tech/winit.git"]
+winit = { path = "../winit" }
 
 [[example]]
 name = "cube"
@@ -138,9 +136,9 @@ path = "examples/procedural_texture/water.rs"
 name = "brdf"
 path = "examples/procedural_texture/brdf.rs"
 
-[[example]]
-name = "skin"
-path = "examples/skin/skin.rs"
+# [[example]]
+# name = "skin"
+# path = "examples/skin/skin.rs"
 
 [[example]]
 name = "axis"
@@ -153,6 +151,10 @@ path = "examples/skeleton/simple.rs"
 [[example]]
 name = "anime_01"
 path = "examples/anime/01.rs"
+
+[[example]]
+name = "anime_camera"
+path = "examples/anime/camera.rs"
 
 [[example]]
 name = "anime_performance"

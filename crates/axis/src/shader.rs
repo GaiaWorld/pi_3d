@@ -1,15 +1,7 @@
 use pi_atom::Atom;
-use pi_render::rhi::device::RenderDevice;
+use pi_render::render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyMat4}, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet};
 use pi_scene_context::materials::shader_effect::{
-    ShaderEffectMeta, UniformPropertyFloat, UniformPropertyMat4, UniformPropertyVec2,
-    UniformPropertyVec4,
-};
-use pi_scene_math::{Matrix, Vector2, Vector4};
-use render_shader::{
-    block_code::{BlockCode, BlockCodeAtom},
-    shader::KeyShaderEffect,
-    unifrom_code::MaterialValueBindDesc,
-    varying_code::{Varying, Varyings},
+    ShaderEffectMeta
 };
 
 pub struct AxisShader {
@@ -27,10 +19,10 @@ impl AxisShader {
                 mat4_list: vec![
                     UniformPropertyMat4(
                         Atom::from("u_jointMat0"),
-                        Matrix::new(
+                        [
                             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
                             0.0, 1.0,
-                        ),
+                        ],
                     ),
                 ],
                 mat2_list: vec![],
@@ -40,7 +32,7 @@ impl AxisShader {
                 int_list: vec![],
                 uint_list: vec![],
             },
-            None,
+            vec![],
             Varyings(vec![
                 Varying{ format: Atom::from("vec4"), name: Atom::from("v_color") }, 
             ]),
@@ -52,6 +44,7 @@ impl AxisShader {
                 define: Atom::from(include_str!("./assets/axis_define.frag")),
                 running: Atom::from(include_str!("./assets/axis.frag")),
             },
+            ShaderDefinesSet::default(),
         )
     }
 }

@@ -1,9 +1,11 @@
-use pi_ecs::{prelude::{Query, Commands}};
+use pi_ecs::{prelude::{Query, Commands}, query::{Or, Changed}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, Rotation3};
 
 use crate::{transforms::{transform_node::{LocalPosition, LocalRotation}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}};
+
+use super::{camera::{EFreeCameraMode, CameraFov, CameraNearFar, CameraOrthSize, EFixedMode, CameraParam, CameraViewport}, command::SysCameraParamCommand};
 
 
 pub struct TargetCameraEffectLocalRotation;
@@ -22,6 +24,35 @@ impl TargetCameraEffectLocalRotation {
             let mut rotation = Rotation3::identity();
             target_camera.calc_rotation(&coordsys, &lposition.0, &mut rotation);
             rot_cmd.insert(obj, LocalRotation(rotation));
+        });
+    }
+}
+
+pub struct SysCameraParamUpdate;
+impl TSystemStageInfo for SysCameraParamUpdate {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysCameraParamCommand::key()
+        ]
+    }
+}
+#[setup]
+impl SysCameraParamUpdate {
+    #[system]
+    fn sys(
+        cameras: Query<
+            GameObject,
+            (
+                ObjectID,
+                &EFreeCameraMode, &CameraFov, &CameraNearFar, &CameraOrthSize, &EFixedMode, &CameraViewport
+            ),
+            Or<(Changed<EFreeCameraMode>, Changed<CameraFov>, Changed<CameraNearFar>, Changed<CameraOrthSize>, Changed<EFixedMode>, Changed<CameraViewport>)>
+        >,
+        mut param_cmd: Commands<GameObject, CameraParam>,
+    ) {
+        cameras.iter().for_each(|(id_camera, mode, fov, nearfar, size, fixmode, viewport)| {
+            let param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
+            param_cmd.insert(id_camera, param);
         });
     }
 }

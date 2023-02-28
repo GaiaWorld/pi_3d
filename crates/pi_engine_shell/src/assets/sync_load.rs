@@ -35,11 +35,11 @@ impl<
 }
 
 ///
-/// K0: 资产在资源缓存表的 资产Key
-/// K: 在功能中的 资产Key的Component 包装
-/// D: 资产在资源缓存表的 资产数据
-/// R: 在功能中的 资产数据的Component 包装
-/// S: 资产Key 的更新System
+/// * K0: 资产在资源缓存表的 资产Key
+/// * K: 在功能中的 资产Key的Component 包装
+/// * D: 资产在资源缓存表的 资产数据
+/// * R: 在功能中的 资产数据的Component 包装
+/// * S: 资产Key 的更新System
 pub struct AssetSyncLoad<
     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
     K: Deref<Target = K0> + Component,
@@ -80,10 +80,12 @@ where
     ) {
         log::debug!("AssetSyncLoad: {} , {}", std::any::type_name::<K>(), std::any::type_name::<S>());
         query.iter().for_each(|(entity, key)| {
-            let result = AssetMgr::load(&assets_mgr, key);
+            let result = AssetMgr::load(&assets_mgr, key.clone());
+            // log::info!("AssetSyncLoad: {:?}", key.deref());
             
             match result {
                 LoadResult::Ok(r) => {
+                    // log::info!("AssetSyncLoad: Loaded {:?}", key.deref());
                     data_cmd.insert(entity, R::from(r));
                 },
                 _ => {
@@ -141,7 +143,7 @@ where
                         Some(key0) => {
                             // key 已经修改，不需要设置
                             if key == *key0.deref() {
-                                // log::debug!("{:?}", key);
+                                // log::info!("AssetSyncLoad: Loaded {:?}", key);
                                 data_cmd.insert(id, R::from(data.clone()));
                             }
                         }

@@ -1,13 +1,17 @@
-use std::{mem::replace, sync::Arc};
+use std::{mem::replace};
 
-use pi_ecs::prelude::{ResMut, Commands, Query, EntityDelete, Res, Event};
+use pi_assets::mgr::AssetMgr;
+use pi_ecs::prelude::{ResMut, Commands, Query, Res, Event};
 use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
-use pi_render::rhi::device::RenderDevice;
-use render_resource::{sampler::SamplerPool, uniform_buffer::RenderDynUniformBuffer};
-use render_shader::{skin_code::{ESkinBonesPerVertex, ESkinCode, EBoneCount}, shader_bind::ShaderBindModelAboutSkin};
+use pi_render::{rhi::device::RenderDevice, renderer::{bind_buffer::{BindBufferAllocator}, sampler::SamplerRes}, render_3d::shader::skin_code::{ESkinBonesPerVertex, EBoneCount, ESkinCode}};
+use pi_share::Share;
 
-use super::{skeleton::Skeleton, SkeletonID, skin_texture::SkinTexture, bone::BoneMatrix, SkeletonBonesDirty};
+use super::{
+    skeleton::Skeleton,
+    SkeletonID,
+    SkeletonBonesDirty
+};
 
 
 
@@ -32,11 +36,11 @@ impl SysSkinCreateCommand {
         mut cmds: ResMut<SingleSkinCreateCommands>,
         mut skeleton_cmd: Commands<GameObject, Skeleton>,
         mut bonedirty_cmd: Commands<GameObject, SkeletonBonesDirty>,
-        mut skeltex_cmd: Commands<GameObject, SkinTexture>,
+        // mut skeltex_cmd: Commands<GameObject, SkinTexture>,
         mut bone_cmd: Commands<GameObject, SkeletonID>,
+        mut dynbuffer: ResMut<BindBufferAllocator>,
+        samplerpool: Res<Share<AssetMgr<SamplerRes>>>,
         device: Res<RenderDevice>,
-        mut samplerpool: ResMut<SamplerPool>,
-        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -52,16 +56,16 @@ impl SysSkinCreateCommand {
                     let bonecount = EBoneCount::new(bone_count as u8 + 1);
 
                     let mode = ESkinCode::UBO(bonemode, bonecount);
-                    let bind = ShaderBindModelAboutSkin::new_ubo(bonecount, &mut dynbuffer);
-                    let skin = Skeleton {
+                    if let Some(skeleton) = Skeleton::new(
                         root,
                         bones,
                         mode,
-                        meshes: vec![],
-                        bind: Arc::new(bind)
-                    };
-                    skeleton_cmd.insert(id_skin, skin);
-                    bonedirty_cmd.insert(id_skin, SkeletonBonesDirty(true));
+                        &device,
+                        &mut dynbuffer,
+                    ) {
+                        skeleton_cmd.insert(id_skin, skeleton);
+                        bonedirty_cmd.insert(id_skin, SkeletonBonesDirty(true));
+                    }
                 },
                 ESkinCreateCommand::Row(_, _, _) => todo!(),
                 ESkinCreateCommand::RowCache(_, _, _) => todo!(),

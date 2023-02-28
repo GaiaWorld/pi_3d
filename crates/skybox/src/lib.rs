@@ -1,8 +1,8 @@
 use pi_atom::Atom;
 use pi_engine_shell::{plugin::{Plugin, ErrorPlugin}, engine_shell::EnginShell, run_stage::RunStage, object::{ObjectID, InterfaceObject}};
 use pi_mesh_builder::cube::InterfaceCube;
-use pi_scene_context::{materials::{shader_effect::InterfaceMaterialMeta, material::{InterfaceMaterial, MaterialID}}};
-use render_shader::shader::KeyShaderEffect;
+use pi_render::renderer::shader::KeyShaderMeta;
+use pi_scene_context::{materials::{interface::{InterfaceMaterialMeta, InterfaceMaterial}, material::{MaterialID}}, pass::EPassTag};
 use shader::SkyboxShader;
 
 pub mod command;
@@ -34,13 +34,12 @@ impl Plugin for PluginSkybox {
         engine: &mut EnginShell,
         _: &mut RunStage,
     ) -> Result<(), ErrorPlugin> {
-        engine.regist_material_meta(KeyShaderEffect(Atom::from(SkyboxShader::KEY)), SkyboxShader::meta());
+        engine.regist_material_meta(KeyShaderMeta::from(SkyboxShader::KEY), SkyboxShader::meta());
         
         let material = engine.new_object();
-        engine.as_material(material, KeyShaderEffect(Atom::from(SkyboxShader::KEY)));
+        engine.as_material(material, KeyShaderMeta::from(SkyboxShader::KEY), EPassTag::Sky);
         engine.world_mut().insert_resource(SingleSkyboxMaterial(MaterialID(material)));
-        
-        let position_id = engine.new_object();
+
         Ok(())
     }
 }

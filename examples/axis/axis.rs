@@ -1,6 +1,7 @@
 
 
 use pi_3d::PluginBundleDefault;
+use pi_atom::Atom;
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{
@@ -13,10 +14,9 @@ use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    main_camera_render::interface::InterfaceMainCamera,
-    materials::{material::{InterfaceMaterial}},
+    materials::{interface::{InterfaceMaterial}},
     scene::interface::InterfaceScene,
-    transforms::{interface::InterfaceTransformNode, command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}},
+    transforms::{interface::InterfaceTransformNode, command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}}, renderers::graphic::RendererGraphicDesc, pass::{EPassTag, PassTagOrders},
 };
 use pi_scene_math::{Vector3};
 use axis::{axis::{InterfaceAxis, PluginAxisBuilder}, interface::InterfaceAxisMaterial, PluginAxis};
@@ -82,6 +82,7 @@ impl PluginTest {
         engine.active_camera(camera01, true);
         engine.transform_position(camera01, Vector3::new(0., 0., -5.));
         engine.free_camera_orth_size(camera01, 1 as f32);
+        engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque]) });
 
         let axis_box = engine.new_axis(scene01);
         let material = engine.create_axis_material();

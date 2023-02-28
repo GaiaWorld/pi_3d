@@ -1,7 +1,7 @@
 use pi_engine_shell::object::InterfaceObject;
 use pi_scene_math::Vector4;
 
-use crate::{object::ObjectID, transforms::interface::InterfaceTransformNode, scene::interface::InterfaceScene, renderers::{render_mode::{InterfaceRenderMode, ERenderMode}, render_sort::{InterfaceRenderSort, RenderSortParam}, render_blend::InterfaceRenderBlend, render_depth_and_stencil::InterfaceRenderDepthAndStencil, render_primitive::{InterfaceRenderPrimitive, PrimitiveState, ECullMode, EPolygonMode, EFrontFace}}, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
+use crate::{object::ObjectID, transforms::interface::InterfaceTransformNode, scene::interface::InterfaceScene, renderers::{render_mode::{InterfaceRenderMode, ERenderMode}, render_sort::{InterfaceRenderSort, TransparentSortParam}, render_blend::InterfaceRenderBlend, render_depth_and_stencil::InterfaceRenderDepthAndStencil, render_primitive::{InterfaceRenderPrimitive, PrimitiveState, ECullMode, EPolygonMode, EFrontFace}}, layer_mask::{interface::InterfaceLayerMask, LayerMask}};
 
 use super::command::{SingleMeshCreateCommandList, EMeshCreateCommand, EInstanceMeshCreateCommand, SingleInstanceMeshCreateCommandList, SingleInstanceMeshModifyCommandList, EInstanceMeshModifyCommand};
 
@@ -102,7 +102,7 @@ impl InterfaceMesh for crate::engine::Engine {
         let commands = world.get_resource_mut::<SingleMeshCreateCommandList>().unwrap();
         commands.list.push(EMeshCreateCommand::Create(object));
 
-        self.render_sort(object, RenderSortParam::opaque());
+        self.render_sort(object, TransparentSortParam::opaque());
         self.render_mode(object, ERenderMode::Opaque);
         self.disable_blend(object);
         self.disable_depth_stencil(object);

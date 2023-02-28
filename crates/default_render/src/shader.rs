@@ -1,7 +1,7 @@
 use pi_atom::Atom;
-use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyVec4, ShaderEffectValueUniformDesc, UniformPropertyInt};
-use pi_scene_math::Vector4;
-use render_shader::{unifrom_code::MaterialValueBindDesc, varying_code::{Varyings, Varying}, block_code::{BlockCodeAtom}};
+use pi_hash::XHashMap;
+use pi_render::render_3d::shader::{uniform_value::UniformPropertyInt, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, ShaderEffectValueUniformDesc};
 
 pub struct DefaultShader;
 impl DefaultShader {
@@ -18,7 +18,7 @@ impl DefaultShader {
                 int_list: vec![UniformPropertyInt(Atom::from("debug_normal"), 0)],
                 uint_list: vec![],
             },
-            None,
+            vec![],
             Varyings(
                 vec![
                     Varying { 
@@ -43,6 +43,7 @@ impl DefaultShader {
                 define: Atom::from(include_str!("./default_define.frag")), 
                 running: Atom::from(include_str!("./default.frag"))
             },
+            ShaderDefinesSet::default()
         )
     }
 }

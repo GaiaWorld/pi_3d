@@ -1,20 +1,18 @@
 #![feature(box_into_inner)]
 
-use material_textures::{PluginMaterialTextures, main_texture::{PluginMainTexture, InterfaceMainTexture}};
 use pi_3d::PluginBundleDefault;
+use pi_atom::Atom;
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_mesh_builder::quad::{PluginQuadBuilder, InterfaceQuad};
-use pi_render::rhi::options::RenderOptions;
+use pi_render::{rhi::options::RenderOptions, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam, renderer::{sampler::KeySampler, texture::KeyTexture}};
 use pi_scene_context::{plugin::Plugin,
     transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    main_camera_render::interface::InterfaceMainCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{material::{InterfaceMaterial}, uniforms::sys_texture::InterfaceMaterialTexture}
+    materials::{interface::{InterfaceMaterial}}, pass::{EPassTag, PassTagOrders}, renderers::graphic::RendererGraphicDesc
 };
 use pi_scene_math::Vector3;
-use render_resource::sampler::SamplerDesc;
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 
 
@@ -49,10 +47,20 @@ impl PluginTest {
         engine.layer_mask(camera01, LayerMask::default());
         engine.transform_position(camera01, Vector3::new(0., 0., -10.));
         engine.free_camera_orth_size(camera01, 1 as f32);
+        engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent]) });
 
-        let unlitmaterial = engine.create_unlit_material();
-		engine.set_texture_sampler(unlitmaterial, "_MainTex", SamplerDesc::default());
-        engine.emissive_texture(unlitmaterial, render_resource::ImageAssetKey::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"));
+
+        let unlitmaterial = engine.create_unlit_material(EPassTag::Opaque);
+		engine.set_texture(
+            unlitmaterial, 
+            UniformTextureWithSamplerParam {
+                slotname: Atom::from("_MainTex"),
+                filter: true,
+                sample: KeySampler::default(),
+                url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"),
+            },
+            false
+        );
 
         
         let quad = engine.new_quad(scene01);

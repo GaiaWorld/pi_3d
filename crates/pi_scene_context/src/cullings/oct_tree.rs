@@ -108,7 +108,7 @@ pub fn compute_frustum(
     project_matrix: &ViewerProjectionMatrix,
 ) -> Option<ConvexPolyhedron> {
     let aspect = (view_port.w - view_port.x) / (view_port.h - view_port.y);
-    let projection = Perspective3::new(aspect, camera.fov * 2.0, camera.minz, camera.maxz);
+    let projection = Perspective3::new(aspect, camera.fov.0 * 2.0, camera.nearfar.0, camera.nearfar.1);
 
     let view_projection = projection.as_matrix() * project_matrix.0;
     let t = view_projection.try_inverse().unwrap();

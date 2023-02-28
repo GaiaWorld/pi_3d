@@ -1,6 +1,12 @@
-use pi_render::rhi::{dyn_uniform_buffer::{Uniform}};
 
-use crate::{bytes_write_to_memory};
+use pi_ecs::query::Changed;
+use pi_ecs::prelude::Query;
+use pi_ecs_macros::setup;
+use pi_engine_shell::{object::GameObject, run_stage::TSystemStageInfo};
+use pi_render::render_3d::binds::scene::effect::ShaderBindSceneAboutEffect;
+
+
+use super::BindSceneEffect;
 
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -70,20 +76,77 @@ impl SceneFog {
             self.intensity = value;
         }
     }
-}
-impl Uniform for SceneFog {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        let values = vec![self.color.0, self.color.1, self.color.2, 1.];
-        bytes_write_to_memory(bytemuck::cast_slice(&values), index as usize + SceneFog::FOG_COLOR_OFFSIZE, buffer);
-
+    pub fn data(&self, data: &mut Vec<f32>) {
         let mode: f32 = match self.mode {
             EFogMode::None => 0.,
             EFogMode::Linear => 1.,
             EFogMode::Exp => 2.,
             EFogMode::Exp2 => 3.,
         };
-        let values = vec![mode, self.start, self.end, self.intensity];
-        bytes_write_to_memory(bytemuck::cast_slice(&values), index as usize + SceneFog::FOG_PARAM_OFFSIZE, buffer);
+
+        let temp = [
+            self.color.0, self.color.1, self.color.2, 1.,
+            mode, self.start, self.end, self.intensity
+        ];
+        
+        temp.iter().for_each(|v| {
+            data.push(*v);
+        });
+    }
+    pub fn update(&self, bind: &BindSceneEffect) {
+        let mode: f32 = match self.mode {
+            EFogMode::None => 0.,
+            EFogMode::Linear => 1.,
+            EFogMode::Exp => 2.,
+            EFogMode::Exp2 => 3.,
+        };
+        let values = vec![
+            self.color.0, self.color.1, self.color.2, 1.
+            ,mode, self.start, self.end, self.intensity
+        ];
+        bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_INFO as usize, bytemuck::cast_slice(&values));
     }
 }
+// impl WriteBuffer for SceneFog {
+//     fn write_into(&self, index: u32, buffer: &mut [u8]) {
+//         let values = vec![self.color.0, self.color.1, self.color.2, 1.];
+//         bytes_write_to_memory(bytemuck::cast_slice(&values), index as usize + SceneFog::FOG_COLOR_OFFSIZE, buffer);
 
+//         let mode: f32 = match self.mode {
+//             EFogMode::None => 0.,
+//             EFogMode::Linear => 1.,
+//             EFogMode::Exp => 2.,
+//             EFogMode::Exp2 => 3.,
+//         };
+//         let values = vec![mode, self.start, self.end, self.intensity];
+//         bytes_write_to_memory(bytemuck::cast_slice(&values), index as usize + SceneFog::FOG_PARAM_OFFSIZE, buffer);
+//     }
+
+//     fn byte_len(&self) -> u32 {
+//         32
+//     }
+
+//     fn offset(&self) -> u32 {
+//         0
+//     }
+// }
+
+pub struct SysSceneFogUpdate;
+impl TSystemStageInfo for SysSceneFogUpdate {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            // SysSceneCreateCommand::key()
+        ]
+    }
+}
+#[setup]
+impl SysSceneFogUpdate {
+    #[system]
+    fn sys(
+        mut scenes: Query<GameObject, (&SceneFog, &mut BindSceneEffect), Changed<SceneFog>>,
+    ) {
+        scenes.iter_mut().for_each(|(item, mut bind)| {
+            item.update(&mut bind);
+        });
+    }
+}

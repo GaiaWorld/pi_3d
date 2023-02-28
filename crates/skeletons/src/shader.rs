@@ -1,15 +1,15 @@
 use pi_atom::Atom;
+use pi_hash::XHashMap;
 use pi_render::rhi::device::RenderDevice;
 use pi_scene_context::materials::shader_effect::{
-    ShaderEffectMeta, UniformPropertyFloat, UniformPropertyMat4, UniformPropertyVec2,
-    UniformPropertyVec4,
+    ShaderEffectMeta,
 };
 use pi_scene_math::{Matrix, Vector2, Vector4};
 use render_shader::{
     block_code::{BlockCode, BlockCodeAtom},
     shader::KeyShaderEffect,
-    unifrom_code::MaterialValueBindDesc,
-    varying_code::{Varying, Varyings},
+    unifrom_code::{MaterialValueBindDesc, UniformPropertyMat4},
+    varying_code::{Varying, Varyings}, shader_defines::ShaderDefinesSet,
 };
 
 pub struct SkinShader {
@@ -27,31 +27,31 @@ impl SkinShader {
                 mat4_list: vec![
                     UniformPropertyMat4(
                         Atom::from("u_jointMat0"),
-                        Matrix::new(
+                        [
                             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
                             0.0, 1.0,
-                        ),
+                        ],
                     ),
                     UniformPropertyMat4(
                         Atom::from("u_jointMat1"),
-                        Matrix::new(
+                        [
                             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0,
                             0.0, 1.0,
-                        ),
+                        ],
                     ),
                     UniformPropertyMat4(
                         Atom::from("u_jointMat2"),
-                        Matrix::new(
+                        [
                             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
                             0.0, 1.0,
-                        ),
+                        ],
                     ),
                     UniformPropertyMat4(
                         Atom::from("u_jointMat3"),
-                        Matrix::new(
+                        [
                             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
                             0.0, 1.0,
-                        ),
+                        ],
                     ),
                 ],
                 mat2_list: vec![],
@@ -61,7 +61,7 @@ impl SkinShader {
                 int_list: vec![],
                 uint_list: vec![],
             },
-            None,
+            vec![],
             Varyings(vec![]),
             BlockCodeAtom {
                 define: Atom::from(include_str!("./assets/skin_define.vert")),
@@ -71,6 +71,7 @@ impl SkinShader {
                 define: Atom::from(include_str!("./assets/skin_define.frag")),
                 running: Atom::from(include_str!("./assets/skin.frag")),
             },
+            ShaderDefinesSet::default()
         )
     }
 }

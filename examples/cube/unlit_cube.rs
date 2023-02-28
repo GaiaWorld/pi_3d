@@ -1,19 +1,18 @@
 #![feature(box_into_inner)]
 
 use pi_3d::PluginBundleDefault;
+use pi_atom::Atom;
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad, run_stage::{TSystemStageInfo, ERunStageChap}};
-use pi_render::rhi::options::RenderOptions;
+use pi_render::{rhi::options::RenderOptions, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam, renderer::{sampler::KeySampler, texture::KeyTexture}};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial}, uniforms::sys_texture::InterfaceMaterialTexture}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{interface::{InterfaceMaterial}}, pass::{EPassTag, PassTagOrders}, renderers::graphic::RendererGraphicDesc
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use render_resource::{sampler::SamplerDesc};
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 use pi_mesh_builder::cube::{InterfaceCube, PluginCubeBuilder};
 
@@ -92,10 +91,20 @@ impl PluginTest {
         engine.layer_mask(camera01, LayerMask::default());
         engine.transform_position(camera01, Vector3::new(0., 0., -10.));
         engine.free_camera_orth_size(camera01, tes_size as f32);
+        engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Sky]) });
 
-        let unlitmaterial = engine.create_unlit_material();
-        engine.set_texture_sampler(unlitmaterial, "_MainTex", SamplerDesc::default());
-        engine.emissive_texture(unlitmaterial, render_resource::ImageAssetKey::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"));
+
+        let unlitmaterial = engine.create_unlit_material(EPassTag::Sky);
+        engine.set_texture(
+            unlitmaterial,
+            UniformTextureWithSamplerParam {
+                slotname: Atom::from("_MainTex"),
+                filter: true,
+                sample: KeySampler::default(),
+                url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"),
+            },
+            false
+        );
 
         for i in 0..tes_size {
             for j in 0..tes_size {

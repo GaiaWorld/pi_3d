@@ -5,7 +5,7 @@ use self::{sys::{SysSkinTextureUpdate, SysSkinDirtyByBonesMatrix}, command::{Sys
 
 pub mod bone;
 pub mod skeleton;
-pub mod skin_texture;
+// pub mod skin_texture;
 pub mod skin_buffer;
 pub mod sys;
 pub mod command;

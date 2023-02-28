@@ -2,8 +2,8 @@
 use pi_atom::Atom;
 use pi_engine_shell::{object::InterfaceObject};
 
-use pi_scene_context::{object::ObjectID, materials::{material::{InterfaceMaterial}, shader_effect::InterfaceMaterialMeta}};
-use render_shader::shader::{KeyShaderEffect};
+use pi_render::renderer::shader::KeyShaderMeta;
+use pi_scene_context::{object::ObjectID, materials::{interface::{InterfaceMaterial}, interface::InterfaceMaterialMeta}, pass::EPassTag};
 
 use crate::shader::DefaultShader;
 
@@ -13,6 +13,7 @@ use super::{command::{SingeDefaultMaterialCommandList, DefaultMaterialCommand}, 
 pub trait InterfaceDefaultMaterial {
     fn create_default_material(
         & self,
+        pass: EPassTag,
     ) -> ObjectID;
     fn use_default_material(
         &self,
@@ -33,11 +34,12 @@ pub trait InterfaceDefaultMaterial {
 impl InterfaceDefaultMaterial for crate::engine::Engine {
     fn create_default_material(
         & self,
+        pass: EPassTag,
     ) -> ObjectID {
         //  log::debug!("create_default_material");
         let entity = self.new_object();
 
-        self.as_material(entity, KeyShaderEffect(Atom::from(DefaultShader::KEY)));
+        self.as_material(entity, KeyShaderMeta::from(DefaultShader::KEY), pass);
 
         entity
     }

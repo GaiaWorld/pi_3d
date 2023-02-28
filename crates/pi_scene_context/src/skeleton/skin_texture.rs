@@ -1,20 +1,21 @@
 use std::sync::Arc;
 
-use pi_render::rhi::{device::RenderDevice, texture::Sampler, dyn_uniform_buffer::Uniform};
-use render_resource::{data_texture2d::DataTexture2D, sampler::{SamplerPool, SamplerDesc, EAnisotropyClamp}};
-use render_shader::shader_bind::ShaderBindModelAboutSkin;
+use pi_assets::{asset::Handle, mgr::AssetMgr};
+use pi_render::{rhi::{device::RenderDevice, texture::Sampler}, renderer::sampler::{SamplerRes, EAnisotropyClamp, SamplerDesc}};
+use pi_share::Share;
+use render_data_container::FContainer;
 
 use crate::bytes_write_to_memory;
 
 
 pub struct SkinTexture {
-    pub tex: Arc<DataTexture2D>,
-    pub sampler: Sampler,
+    // pub tex: Handle<DataTexture2D>,
+    pub sampler: Handle<SamplerRes>,
     row: u32,
 }
 
 impl SkinTexture {
-    pub fn new(device: &RenderDevice, samplerpool: &mut SamplerPool, bone_count: u32, frames: u32) -> Self {
+    pub fn new(device: &RenderDevice, asset_sampler: &Share<AssetMgr<SamplerRes>>, bone_count: u32, frames: u32) -> Self {
         let tex = DataTexture2D::new_rgba_f32(device, (bone_count + 1) * 4, frames);
 
         let desc = SamplerDesc {
@@ -28,11 +29,16 @@ impl SkinTexture {
             anisotropy_clamp: EAnisotropyClamp::None,
             border_color: None,
         };
-        samplerpool.create(&desc, &device);
-        let sampler = samplerpool.get(SamplerPool::cacl_key(&desc)).unwrap();
+
+        let sampler = if let Some(sampler) = asset_sampler.get(&desc) {
+            sampler
+        } else {
+            let sampler = device.create_sampler(&desc.to_sampler_description());
+            asset_sampler.insert(desc, SamplerRes(sampler)).unwrap()
+        };
 
         Self {
-            tex: Arc::new(tex),
+            // tex: Arc::new(tex),
             sampler,
             row: frames,
         }
@@ -43,10 +49,10 @@ impl SkinTexture {
     }
 }
 
-impl Uniform for SkinTexture {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        let size = self.tex.size();
-        let data = vec![size.width as f32, size.height as f32, 1.0 / size.width as f32, 1.0 / size.height as f32];
-        bytes_write_to_memory(bytemuck::cast_slice(data.as_slice()), index as usize + ShaderBindModelAboutSkin::OFFSET_BONE_TEX_SIZE as usize, buffer);
-    }
-}
+// impl Uniform for SkinTexture {
+//     fn write_into(&self, index: u32, buffer: &mut [u8]) {
+//         let size = self.tex.size();
+//         let data = vec![size.width as f32, size.height as f32, 1.0 / size.width as f32, 1.0 / size.height as f32];
+//         bytes_write_to_memory(bytemuck::cast_slice(data.as_slice()), index as usize + ShaderBindModelAboutSkin::OFFSET_BONE_TEX_SIZE as usize, buffer);
+//     }
+// }

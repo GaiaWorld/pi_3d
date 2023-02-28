@@ -6,7 +6,7 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::Number;
 
-use pi_scene_context::{object::{ObjectID, GameObject}, materials::{uniforms::{vec4::{Vec4Uniform}, uniform::SysMaterialMetaChange}, shader_effect::AssetResShaderEffectMeta}};
+use pi_scene_context::{object::{ObjectID, GameObject}, materials::{uniforms::{sys_uniform::SysMaterialMetaChange, uniform::BindEffectValues}, shader_effect::AssetResShaderEffectMeta}};
 
 
 pub enum DefaultMaterialCommand {
@@ -32,7 +32,7 @@ impl SysDefaultMaterialCommand {
         mut cmds: ResMut<SingeDefaultMaterialCommandList>,
         mut materials: Query<
             GameObject,
-            &mut Vec4Uniform,
+            &mut BindEffectValues,
             With<AssetResShaderEffectMeta>
         >,
     ) {
@@ -43,8 +43,8 @@ impl SysDefaultMaterialCommand {
                 DefaultMaterialCommand::EmissiveColor(entity, color) => {
                     match materials.get_mut(entity.clone()) {
                         Some(mut prop) => {
-                            let a = prop.value(0)[3];
-                            prop.set(0, &[color.0, color.1, color.2, a]);
+                            let a = prop.vec4_.value(0)[3];
+                            prop.vec4(0, &[color.0, color.1, color.2, a]);
                         },
                         None => {
                             cmds.list.push(cmd);
@@ -54,11 +54,11 @@ impl SysDefaultMaterialCommand {
                 DefaultMaterialCommand::EmissiveIntensity(entity, intensity) => {
                     match materials.get_mut(entity) {
                         Some(mut prop) => {
-                            let t = prop.value(0);
+                            let t = prop.vec4_.value(0);
                             let r = t[0];
                             let g = t[1];
                             let b = t[2];
-                            prop.set(0, &[r, g, b, intensity]);
+                            prop.vec4(0, &[r, g, b, intensity]);
                         },
                         None => {
                             cmds.list.push(cmd);

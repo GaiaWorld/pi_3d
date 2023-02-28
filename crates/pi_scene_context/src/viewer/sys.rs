@@ -7,9 +7,9 @@ use pi_engine_shell::{run_stage::TSystemStageInfo, object::{GameObject, ObjectID
 use pi_scene_math::coordiante_system::CoordinateSytem3;
 use pi_slotmap_tree::Storage;
 
-use crate::transforms::{transform_node::{LocalPosition, GlobalTransform}, transform_node_sys::SysWorldMatrixCalc};
+use crate::{transforms::{transform_node::{LocalPosition, GlobalTransform}, transform_node_sys::SysWorldMatrixCalc}};
 
-use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, ViewerTransformMatrix, TViewerViewMatrix, TViewerProjectMatrix};
+use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, ViewerTransformMatrix, TViewerViewMatrix, TViewerProjectMatrix, command::SysViewerRendererCommandTick, BindViewer, ViewerDirection};
 
 
 pub(crate) struct SysViewerViewMatrixByViewCalc<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static>(PhantomData<(T, S)>);
@@ -162,8 +162,18 @@ impl<T: TViewerProjectMatrix + Component, S: TSystemStageInfo + 'static> SysView
     }
 }
 
-pub struct SysViewerUpdated<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewerProjectMatrix + Component, S2: TSystemStageInfo + 'static>(PhantomData<(T, S, T2, S2)>);
-impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewerProjectMatrix + Component, S2: TSystemStageInfo + 'static> TSystemStageInfo for SysViewerUpdated<T, S, T2, S2> {
+pub struct SysViewerTransformUpdated<
+    T: TViewerViewMatrix + Component,
+    S: TSystemStageInfo + 'static,
+    T2: TViewerProjectMatrix + Component,
+    S2: TSystemStageInfo + 'static
+>(PhantomData<(T, S, T2, S2)>);
+impl<
+    T: TViewerViewMatrix + Component,
+    S: TSystemStageInfo + 'static,
+    T2: TViewerProjectMatrix + Component,
+    S2: TSystemStageInfo + 'static
+> TSystemStageInfo for SysViewerTransformUpdated<T, S, T2, S2> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
             SysViewerViewMatrixByViewCalc::<T, S>::key(), SysViewerViewMatrixUpdateByParentModify::<T>::key(), SysViewerProjectionCalc::<T2, S2>::key(), 
@@ -171,7 +181,12 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewe
     }
 }
 #[setup]
-impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewerProjectMatrix + Component, S2: TSystemStageInfo + 'static> SysViewerUpdated<T, S, T2, S2> {
+impl<
+    T: TViewerViewMatrix + Component,
+    S: TSystemStageInfo + 'static,
+    T2: TViewerProjectMatrix + Component,
+    S2: TSystemStageInfo + 'static
+> SysViewerTransformUpdated<T, S, T2, S2> {
     #[system]
     pub fn calc(
         mut viewers: Query<GameObject, (ObjectID, &T, &T2, &ViewerViewMatrix, &ViewerProjectionMatrix), Or<(Changed<ViewerViewMatrix>, Changed<ViewerProjectionMatrix>)>>,
@@ -213,3 +228,54 @@ impl<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static, T2: TViewe
     }
 }
 
+pub struct SysViewerUpdated<
+    T: TViewerViewMatrix + Component,
+    S: TSystemStageInfo + 'static,
+    T2: TViewerProjectMatrix + Component,
+    S2: TSystemStageInfo + 'static
+>(PhantomData<(T, S, T2, S2)>);
+impl<
+    T: TViewerViewMatrix + Component,
+    S: TSystemStageInfo + 'static,
+    T2: TViewerProjectMatrix + Component,
+    S2: TSystemStageInfo + 'static
+> TSystemStageInfo for SysViewerUpdated<T, S, T2, S2> {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysViewerRendererCommandTick::key(), SysViewerTransformUpdated::<T, S, T2, S2>::key(), 
+        ]
+    }
+}
+#[setup]
+impl <
+    T: TViewerViewMatrix + Component,
+    S: TSystemStageInfo + 'static,
+    T2: TViewerProjectMatrix + Component,
+    S2: TSystemStageInfo + 'static
+> SysViewerUpdated<T, S, T2, S2> {
+    #[system]
+    fn sys(
+        viewers: Query<
+            GameObject,
+            (&BindViewer, &ViewerViewMatrix, &ViewerProjectionMatrix, &ViewerTransformMatrix, &ViewerGlobalPosition, &ViewerDirection),
+            Or<(
+                Changed<BindViewer>, Changed<ViewerTransformMatrix>, 
+            )>
+        >
+    ) {
+        viewers.iter().for_each(
+            |(
+                bind,
+                viewmatrix, projmatrix, transmatrix, position, direction
+            )| {
+                log::info!("SysViewerUpdated: {:?}, {:?}", bind.0.data().offset(), bind.0.data().size());
+
+                viewmatrix.update(bind.0.data());
+                projmatrix.update(bind.0.data());
+                transmatrix.update(bind.0.data());
+                position.update(bind.0.data());
+                direction.update(bind.0.data());
+            }
+        );
+    }
+}

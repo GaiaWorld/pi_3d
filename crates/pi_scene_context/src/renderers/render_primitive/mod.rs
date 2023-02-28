@@ -116,7 +116,7 @@ impl TSystemStageInfo for SysRenderPrimitiveCommand {
 impl SysRenderPrimitiveCommand {
     #[system]
     fn sys(
-        mut item: Query<GameObject, (ObjectID, &ECullMode, &EPolygonMode, &EFrontFace), Or<(Changed<ECullMode>, Changed<ECullMode>, Changed<ECullMode>)>>,
+        mut item: Query<GameObject, (ObjectID, &ECullMode, &EPolygonMode, &EFrontFace), Or<(Changed<ECullMode>, Changed<EPolygonMode>, Changed<EFrontFace>)>>,
         mut cmd: Commands<GameObject, PrimitiveState>
     ) {
         item.iter().for_each(|(id_obj, cull, polygon, front)| {

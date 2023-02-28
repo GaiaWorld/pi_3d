@@ -1,7 +1,7 @@
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyFloat};
-use render_shader::{shader::{}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta};
+use pi_render::{render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyVec4, UniformPropertyFloat}, uniform_texture::UniformTexture2DDesc, UniformPropertyName, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet}, renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage}};
 
 pub struct PerlinNoiseShader {
     pub vs_module: wgpu::ShaderModule,
@@ -27,7 +27,7 @@ impl PerlinNoiseShader {
                 int_list: vec![],
                 uint_list: vec![],
             },
-            None,
+            vec![],
             Varyings(
                 vec![
                 ]
@@ -40,6 +40,7 @@ impl PerlinNoiseShader {
                 define: Atom::from(include_str!("./perlin_noise_define.frag")),
                 running: Atom::from(include_str!("./perlin_noise.frag"))
             },
+            ShaderDefinesSet::default()
         )
     }
 }

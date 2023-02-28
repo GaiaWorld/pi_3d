@@ -1,12 +1,8 @@
 
 
-use pi_assets::mgr::AssetMgr;
+use pi_assets::{mgr::AssetMgr, asset::Handle};
 use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAssetSyncCreate, AssetSyncWait}};
-use pi_render::rhi::{device::RenderDevice, RenderQueue};
-use pi_share::Share;
-use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
-use render_geometry::{indices::{IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
-
+use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer_desc::VertexBufferDesc, vertex_buffer::{KeyVertexBuffer, EVertexBufferRange, VertexBufferAllocator}, attributes::{EVertexDataKind, VertexAttribute}, indices::IndicesBufferDesc}};
 use pi_scene_context::{
     plugin::{Plugin, ErrorPlugin},
     object::{ObjectID},
@@ -22,71 +18,61 @@ impl QuadBuilder {
     const KEY_BUFFER_NORMAL:    &'static str = "QuadNormal";
     const KEY_BUFFER_UV:        &'static str = "QuadUV";
     const KEY_BUFFER_INDICES:   &'static str = "QuadIndices";
+    const KEY_BUFFER:           &'static str = "CubeBuildin";
     pub fn attrs_meta() -> Vec<VertexBufferDesc> {
-        let keypos = KeyVertexBuffer::from(Self::KEY_BUFFER_POSITION);
-        let keynormal = KeyVertexBuffer::from(Self::KEY_BUFFER_NORMAL);
-        let keyuv = KeyVertexBuffer::from(Self::KEY_BUFFER_UV);
+        let keypos = KeyVertexBuffer::from(Self::KEY_BUFFER);
         vec![
-            VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
-            VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
-            VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
+            VertexBufferDesc::vertices(
+                keypos, 
+                None, 
+                vec![
+                    VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
+                    VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },
+                    VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }
+                ]
+            ),
         ]
     }
     pub fn indices_meta() -> IndicesBufferDesc {
         let key = KeyVertexBuffer::from(Self::KEY_BUFFER_INDICES);
         IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
     }
-    pub fn position(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-    ) -> VertexBuffer {
-        let mut position = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-        let mut data = [
-            -1., -1., 0.,   1., -1., 0.,   1., 1., 0.,  -1., 1., 0.,  
-        ];
-
-        position.update_f32(&data, 0);
-        position.update_buffer(device, queue);
-
-        position
+    pub fn position() -> [f32; 12] {
+        [
+            -1., -1., 0.,   
+            1., -1., 0.,   
+            1., 1., 0.,  
+            -1., 1., 0.,  
+        ]
     }
-    pub fn normal(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-    ) -> VertexBuffer {
-
-        let data = [
-            0., 0., 1.,     0., 0., 1.,     0., 0., 1.,     0., 0., 1.,
-        ];
-        let mut normals = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-        normals.update_f32(&data, 0);
-        normals.update_buffer(device, queue);
-        normals
+    pub fn normal() -> [f32; 12] {
+        [
+            0., 0., 1.,     
+            0., 0., 1.,     
+            0., 0., 1.,     
+            0., 0., 1.,
+        ]
     }
-    pub fn indices(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-    ) -> VertexBuffer {
-        let data = [
+    pub fn vertices() -> [f32; 32] {
+        [
+            -1., -1.,  0.,      0., 0., 1.,     0., 0.,    
+             1., -1.,  0.,      0., 0., 1.,     1., 0.,   
+             1.,  1.,  0.,      0., 0., 1.,     1., 1.,     
+            -1.,  1.,  0.,      0., 0., 1.,     0., 1.,
+        ]
+    }
+    pub fn indices() -> [u16;6] {
+        [
             0, 1, 2, 0, 2, 3
-        ];
-        let mut indices = VertexBuffer::new(false, EVertexDataFormat::U16, true);
-        indices.update_u16(&data, 0);
-        indices.update_buffer(device, queue);
-
-        indices
+        ]
     }
-    pub fn uvs(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-    ) -> VertexBuffer {
-        let data = [
-            0., 0.,   1., 0.,   1., 1.,     0., 1.,
-        ];
-        let mut indices = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-        indices.update_f32(&data, 0);
-        indices.update_buffer(device, queue);
-        indices
+    pub fn uvs() -> [f32; 8] {
+        [
+            0., 0.,   
+            1., 0.,   
+            1., 1.,     
+            0., 1.,
+        ]
     }
 }
 
@@ -104,21 +90,8 @@ impl InterfaceQuad for Engine {
     fn regist_quad(
         &self
     ) -> &Self {
-        let world = self.world();
-        let device = world.get_resource::<RenderDevice>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-
-        let keypos = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_POSITION);
-        self.create_vertex_buffer(keypos.clone(), QuadBuilder::position(device, queue));
-
-        let keynormal = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_NORMAL);
-        self.create_vertex_buffer(keynormal.clone(), QuadBuilder::normal(device, queue));
-        
-        let keyuv = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_UV);
-        self.create_vertex_buffer(keyuv.clone(), QuadBuilder::uvs(device, queue));
-
-        let key = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES);
-        self.create_vertex_buffer(key.clone(), QuadBuilder::indices(device, queue));
+        self.create_vertex_buffer(KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER), bytemuck::cast_slice(&QuadBuilder::vertices()));
+        self.create_vertex_buffer(KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&QuadBuilder::indices()));
 
         self
     }
@@ -132,24 +105,12 @@ impl InterfaceQuad for Engine {
                                     .as_transform_node(entity)
                                     .transform_parent(entity, scene)
                                     .as_mesh(entity);
-
-        let keypos = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_POSITION);
-
-        let keynormal = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_NORMAL);
-        
-        let keyuv = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_UV);
-
-        let key = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES);
         
         self.use_geometry(
             entity,
-            vec![
-                VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
-                VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
-                VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
-            ]
+            QuadBuilder::attrs_meta()
         );
-        self.use_indices(entity, IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key });
+        self.use_indices(entity, QuadBuilder::indices_meta());
 
         entity
     }

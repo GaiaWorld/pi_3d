@@ -3,14 +3,14 @@
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
+use pi_atom::Atom;
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}, assets::local_load::PluginLocalLoad, setup::TSetup};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::graphic::RendererGraphicDesc, pass::{EPassTag, PassTagOrders}, materials::interface::InterfaceMaterial
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
@@ -78,11 +78,9 @@ impl PluginTest {
     fn setup(
         engine: &pi_engine_shell::engine_shell::EnginShell,
     ) {
-
-        let tes_size = 2;
         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
 
-        engine.frame_time(20);
+        engine.frame_time(2000);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -90,26 +88,18 @@ impl PluginTest {
         engine.active_camera(camera01, true);
         engine.layer_mask(camera01, LayerMask::default());
         engine.transform_position(camera01, Vector3::new(0., 0., -10.));
-        engine.free_camera_orth_size(camera01, tes_size as f32);
+        engine.free_camera_orth_size(camera01, 4 as f32);
+        engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent]) });
+
 
         // let matid = engine.create_default_material();
         // engine.emissive_intensity(entity, intensity);
 
-        for i in 0..tes_size {
-            for j in 0..tes_size {
-                for k in 0..1 {
-                    let cube = engine.new_cube(scene01);
-                    
-                    // engine.depth_stencil(cube, RenderDepthAndStencil { depth: true, stencil: false, depth_compare: wgpu::CompareFunction::LessEqual });
-                    // engine.use_material(cube, MaterialID(matid));
-                    engine.use_default_material(cube);
-                    engine.transform_position(cube, Vector3::new(i as f32 * 2. - (tes_size) as f32 * 0.5, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
-                    engine.transform_rotation_euler(cube, Vector3::new(i as f32 * 1., j as f32 * 1., k as f32 * 1.));
-                    engine.layer_mask(cube, LayerMask::default());
-                    testdata.transforms.push((cube, i as f32 * 100., j as f32 * 100., k as f32 * 100.));
-                }
-            }
-        }
+        let cube = engine.new_cube(scene01);
+        let mat = engine.create_default_material(EPassTag::Opaque);
+        engine.use_material(cube, mat);
+        engine.layer_mask(cube, LayerMask::default());
+        testdata.transforms.push((cube, 0., 0., 0.));
     }
 }
 

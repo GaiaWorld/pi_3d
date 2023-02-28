@@ -4,6 +4,7 @@
 use axis::axis::{PluginAxisBuilder, InterfaceAxis};
 use default_render::{interface::InterfaceDefaultMaterial, PluginDefaultMaterial};
 use pi_3d::PluginBundleDefault;
+use pi_atom::Atom;
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
@@ -11,8 +12,7 @@ use pi_scene_context::{
     transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial}}, renderers::render_primitive::{InterfaceRenderPrimitive, EFrontFace}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{interface::{InterfaceMaterial}}, renderers::{render_primitive::{InterfaceRenderPrimitive, EFrontFace}, graphic::RendererGraphicDesc}, pass::{EPassTag, PassTagOrders}
 };
 use pi_scene_math::Vector3;
 use pi_mesh_builder::{quad::{InterfaceQuad}, cube::{PluginCubeBuilder, InterfaceCube}, ball::{PluginBallBuilder, InterfaceBall}};
@@ -34,9 +34,11 @@ fn test(
     engine.transform_position(camera01, Vector3::new(-5., 5., -10.));
     // 修改相机尺寸
     engine.free_camera_orth_size(camera01, 4 as f32);
+    engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent]) });
+
 
     // 创建一个材质 (默认材质: 渲染顶点颜色;默认材质为PluginBundleDefault已注册的材质)
-    let unlitmaterial = engine.create_default_material();
+    let unlitmaterial = engine.create_default_material(EPassTag::Opaque);
     
     // 创建一个立方体(标准立方体,尺寸为1,中心点在原点)(接口内部已自动初始化立方体为 TransformNode、Mesh)
     let cube = engine.new_cube(scene01);

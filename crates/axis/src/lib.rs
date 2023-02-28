@@ -5,9 +5,8 @@ pub mod interface;
 
 
 use pi_engine_shell::{plugin::{Plugin, ErrorPlugin}, engine_shell::EnginShell, run_stage::RunStage};
-use pi_scene_context::materials::shader_effect::InterfaceMaterialMeta;
-use render_shader::shader::KeyShaderEffect;
-use pi_atom::Atom;
+use pi_render::renderer::shader::KeyShaderMeta;
+use pi_scene_context::materials::interface::InterfaceMaterialMeta;
 use crate::shader::AxisShader;
 
 pub struct PluginAxis;
@@ -18,7 +17,7 @@ impl Plugin for PluginAxis {
         stages: &mut RunStage,
     ) -> Result<(), ErrorPlugin> {
         log::debug!("PluginAxis");
-        let key = KeyShaderEffect(Atom::from(AxisShader::KEY));
+        let key = KeyShaderMeta::from(AxisShader::KEY);
         engine.regist_material_meta(key, AxisShader::meta());
 
         Ok(())

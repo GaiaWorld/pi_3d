@@ -1,6 +1,7 @@
-use pi_render::rhi::{internal::bytemuck, dyn_uniform_buffer::Uniform};
-use render_shader::shader_bind::ShaderBindEffectValue;
-use crate::{bytes_write_to_memory, materials::{value::{FromValueUniformStatistics}, shader_effect::UniformPropertyUint}};
+
+use pi_render::{rhi::{internal::bytemuck}, renderer::bind_buffer::BindBufferRange, render_3d::{binds::effect_value::ShaderBindEffectValue, shader::uniform_value::UniformPropertyUint}};
+
+use crate::materials::value::FromValueUniformStatistics;
 
 
 
@@ -100,19 +101,17 @@ impl UintUniform {
             },
         }
     }
-}
-impl Uniform for UintUniform {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
+    pub fn update(&self, range: &BindBufferRange) {
         match self {
-            UintUniform::Slot0(_) => {},
-            UintUniform::Slot1(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
-            UintUniform::Slot2(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
-            UintUniform::Slot3(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
-            UintUniform::Slot4(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
-            UintUniform::Slot5(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
-            UintUniform::Slot6(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
-            UintUniform::Slot7(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
-            UintUniform::Slot8(offset, data) => bytes_write_to_memory(bytemuck::cast_slice(data), index as usize + *offset as usize, buffer),
+            Self::Slot0(_) => {},
+            Self::Slot1(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot2(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot3(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot4(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot5(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot6(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot7(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot8(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
         }
     }
 }

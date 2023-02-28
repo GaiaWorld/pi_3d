@@ -3,23 +3,24 @@
 
 use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
+use pi_atom::Atom;
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad, run_stage::{ERunStageChap, TSystemStageInfo}};
-use pi_render::rhi::{options::RenderOptions, device::RenderDevice, RenderQueue};
+use pi_render::{rhi::{options::RenderOptions, device::RenderDevice, RenderQueue}, render_3d::shader::{uniform_texture::UniformTextureWithSamplerParam, skin_code::ESkinBonesPerVertex}, renderer::{sampler::KeySampler, texture::KeyTexture, attributes::{VertexAttribute, EVertexDataKind}, vertex_buffer_desc::VertexBufferDesc}};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     meshes::{interface::InterfaceMesh},
-    main_camera_render::interface::InterfaceMainCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{material::{InterfaceMaterial}, uniforms::sys_texture::InterfaceMaterialTexture}, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, skeleton::{PluginSkeleton, interface::TInterfaceSkeleton}, renderers::render_primitive::{InterfaceRenderPrimitive, ECullMode}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask},
+    materials::{interface::{InterfaceMaterial}},
+    geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices},
+    skeleton::{PluginSkeleton, interface::TInterfaceSkeleton}, 
+    renderers::render_primitive::{InterfaceRenderPrimitive, ECullMode},
+    pass::EPassTag
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::{Vector3, Vector4};
-use render_data_container::{EVertexDataFormat, VertexBuffer};
-use render_geometry::vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind};
-use render_resource::sampler::SamplerDesc;
-use render_shader::skin_code::ESkinBonesPerVertex;
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder, PluginCubeBuilder};
 
@@ -100,9 +101,17 @@ impl PluginTest {
 
         // let matid = engine.create_default_material();
         // engine.emissive_intensity(entity, intensity);
-        let unlitmaterial = engine.create_unlit_material();
-        engine.set_texture_sampler(unlitmaterial, "_MainTex", SamplerDesc::default());
-        engine.emissive_texture(unlitmaterial, render_resource::ImageAssetKey::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"));
+        let unlitmaterial = engine.create_unlit_material(EPassTag::Opaque);
+        engine.set_texture(
+            unlitmaterial, 
+            UniformTextureWithSamplerParam {
+                slotname: Atom::from("_MainTex"),
+                filter: true,
+                sample: KeySampler::default(),
+                url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"),
+            },
+            false
+        );
 
         let source = engine.create_mesh(scene01);
         let mut attrs = CubeBuilder::attrs_meta();
@@ -124,7 +133,7 @@ impl PluginTest {
 
         let device = engine.world().get_resource::<RenderDevice>().unwrap();
         let queue = engine.world().get_resource::<RenderQueue>().unwrap();
-        let data = [
+        let data: [u16; 48] = [
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
             1, 1, 1, 1, 1, 1, 1, 1, 
@@ -132,14 +141,12 @@ impl PluginTest {
             3, 3, 3, 3, 3, 3, 3, 3, 
             4, 4, 4, 4, 4, 4, 4, 4
         ];
-        let mut jointbuff = VertexBuffer::new(false, EVertexDataFormat::U16, false);
-        jointbuff.update_u16(&data, 0);
-        jointbuff.update_buffer(device, queue);
         // normals
         let jointkey = pi_atom::Atom::from("TestJoint");
+        engine.create_vertex_buffer(jointkey.clone(), bytemuck::cast_slice(&data));
+
         let format = wgpu::VertexFormat::Uint16x2;
         let jointdesc = VertexBufferDesc::vertices(jointkey.clone(), None, vec![VertexAttribute { kind: EVertexDataKind::MatricesIndices1, format }]);
-        engine.create_vertex_buffer(jointkey.clone(), jointbuff);
         attrs.push(jointdesc);
 
         engine.use_geometry(source, attrs);

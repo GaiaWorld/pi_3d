@@ -1,13 +1,10 @@
 
 use std::{collections::VecDeque, f32::consts::PI};
 
-use pi_assets::mgr::AssetMgr;
+use pi_assets::{mgr::AssetMgr, asset::Handle};
 use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAssetSyncCreate, AssetSyncWait}};
-use pi_render::rhi::{device::RenderDevice, RenderQueue};
+use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer::{KeyVertexBuffer, VertexBufferAllocator, EVertexBufferRange}, vertex_buffer_desc::VertexBufferDesc, attributes::{VertexAttribute, EVertexDataKind}, indices::IndicesBufferDesc}};
 use pi_scene_math::Vector3;
-use pi_share::Share;
-use render_data_container::{VertexBuffer, EVertexDataFormat, KeyVertexBuffer};
-use render_geometry::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_data::{VertexBufferDesc, VertexAttribute, EVertexDataKind}};
 
 use pi_scene_context::{
     plugin::{Plugin, ErrorPlugin},
@@ -25,53 +22,6 @@ impl BallBuilder {
     const KEY_BUFFER_NORMAL:    &'static str = "BallNormal";
     const KEY_BUFFER_UV:        &'static str = "BallUV";
     const KEY_BUFFER_INDICES:   &'static str = "BallIndices";
-    pub fn position(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-        data: &[f32],
-    ) -> VertexBuffer {
-        let mut position = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-
-        let len = data.len();
-        position.update_f32(&data, 0);
-        position.update_buffer(device, queue);
-        position
-    }
-    pub fn normal(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-        data: &[f32],
-    ) -> VertexBuffer {
-        let len = data.len();
-
-        let mut normals = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-        normals.update_f32(&data, 0);
-        normals.update_buffer(device, queue);
-        normals
-    }
-    pub fn indices(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-        data: &[u16],
-    ) -> VertexBuffer {
-        let len = data.len();
-        let mut indices = VertexBuffer::new(false, EVertexDataFormat::U16, true);
-        indices.update_u16(&data, 0);
-        indices.update_buffer(device, queue);
-        indices
-    }
-
-    pub fn uv(
-        device: &RenderDevice,
-        queue: &RenderQueue,
-        data: &[f32],
-    ) -> VertexBuffer {
-        let len = data.len();
-        let mut uvs = VertexBuffer::new(false, EVertexDataFormat::F32, false);
-        uvs.update_f32(&data, 0);
-        uvs.update_buffer(device, queue);
-        uvs
-    }
 }
 
 pub trait InterfaceBall {
@@ -97,16 +47,16 @@ impl InterfaceBall for Engine {
         println!(">>>>>>>>>>>>>>>>>>>> 1");
         let flag = String::from("#") + sectors.to_string().as_str() + "#" + stacks.to_string().as_str();
         let keypos = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_POSITION) + flag.as_str());
-        self.create_vertex_buffer(keypos.clone(), BallBuilder::position(device, queue, positions.as_slice()));
+        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(positions.as_slice()));
 
         let keynormal = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_NORMAL) + flag.as_str());
-        self.create_vertex_buffer(keynormal.clone(), BallBuilder::normal(device, queue, normals.as_slice()));
+        self.create_vertex_buffer(keynormal.clone(), bytemuck::cast_slice(normals.as_slice()));
         
         let keyuv = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_UV) + flag.as_str());
-        self.create_vertex_buffer(keyuv.clone(), BallBuilder::uv(device, queue, uvs.as_slice()));
+        self.create_vertex_buffer(keyuv.clone(), bytemuck::cast_slice(uvs.as_slice()));
 
         let key = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_INDICES) + flag.as_str());
-        self.create_vertex_buffer(key.clone(), BallBuilder::indices(device, queue, indices.as_slice()));
+        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(indices.as_slice()));
 
         self.use_geometry(
             entity,

@@ -1,9 +1,8 @@
 
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyFloat, UniformPropertyVec4};
-use pi_scene_math::Vector4;
-use render_shader::{shader::{}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::{MaterialValueBindDesc, UniformTextureDesc, UniformPropertyName, MaterialTextureBindDesc}};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta};
+use pi_render::{render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyVec4, UniformPropertyFloat}, uniform_texture::UniformTexture2DDesc, UniformPropertyName, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet}, renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage}};
 
 pub struct BRDFShader {
     pub vs_module: wgpu::ShaderModule,
@@ -19,18 +18,21 @@ impl BRDFShader {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
                 mat4_list: vec![],
                 mat2_list: vec![],
-                vec4_list: vec![UniformPropertyVec4(Atom::from("skyColor"), Vector4::new(0.15, 0.68, 1.0, 1.0)),],
+                vec4_list: vec![UniformPropertyVec4(Atom::from("skyColor"), [0.15, 0.68, 1.0, 1.0]),],
                 vec2_list: vec![],
                 float_list: vec![],
                 int_list: vec![],
                 uint_list: vec![],
             },
-            Some(MaterialTextureBindDesc {
-                list: vec![UniformTextureDesc::new2d(
+            vec![
+                UniformTexture2DDesc::new(
                     UniformPropertyName::from("_MainTex"),
-                    wgpu::ShaderStages::FRAGMENT,
-                )],
-            }),
+                    wgpu::TextureSampleType::Float { filterable: false },
+                    false,
+                    EShaderStage::FRAGMENT,
+                    EDefaultTexture::White,
+                )
+            ],
             Varyings(
                 vec![
                     Varying{ format: Atom::from("vec2"), name: Atom::from("v_UV") }, 
@@ -44,6 +46,7 @@ impl BRDFShader {
                 define: Atom::from(include_str!("./brdf_define.frag")),
                 running: Atom::from(include_str!("./brdf.frag"))
             },
+            ShaderDefinesSet::default()
         )
     }
 }

@@ -1,9 +1,8 @@
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Commands, Event}};
-use pi_ecs_macros::{setup, listen};
-use pi_ecs_utils::prelude::{EntityTreeMut, EntityTree};
+use pi_ecs::{prelude::{ResMut, Query, Commands}};
+use pi_ecs_macros::{setup};
+use pi_ecs_utils::prelude::{EntityTreeMut};
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{Vector3, Quaternion, Rotation3};
-use pi_slotmap_tree::Storage;
 
 use crate::{object::{ObjectID, GameObject}, };
 

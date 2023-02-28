@@ -2,8 +2,7 @@
 use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{assets::sync_load::{PluginAssetSyncLoad, AssetSyncLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
-use render_data_container::{VertexBuffer, KeyVertexBuffer};
-use render_geometry::indices::{IndicesBufferDesc, AssetKeyBufferIndices, AssetResBufferIndices};
+use pi_render::renderer::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_buffer::{KeyVertexBuffer, EVertexBufferRange}};
 
 use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};
 
@@ -59,7 +58,7 @@ impl InterfaceBufferIndices for Engine {
     }
 }
 
-pub type SysInstanceBufferLoad = AssetSyncLoad<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices, SysGeometryIndicesCommand>;
+pub type SysInstanceBufferLoad = AssetSyncLoad<KeyVertexBuffer, AssetKeyBufferIndices, EVertexBufferRange, AssetResBufferIndices, SysGeometryIndicesCommand>;
 
 pub struct PluginBufferIndices;
 impl Plugin for PluginBufferIndices {
@@ -73,7 +72,7 @@ impl Plugin for PluginBufferIndices {
         world.insert_resource(CommandListBufferIndices::default());
         SysGeometryIndicesCommand::setup(world, stages.query_stage::<SysGeometryIndicesCommand>(ERunStageChap::Initial));
 
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferIndices, VertexBuffer, AssetResBufferIndices, SysGeometryIndicesCommand>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
+        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferIndices, EVertexBufferRange, AssetResBufferIndices, SysGeometryIndicesCommand>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
         Ok(())
     }

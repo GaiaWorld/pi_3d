@@ -1,16 +1,16 @@
-use std::{sync::Arc, marker::PhantomData, mem::replace};
+use std::{mem::replace};
 
-use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID, loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_listener::{OnStart, OnFrameEvent, OnLoop, OnEnd}};
-use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
+use pi_animation::{animation::AnimationInfo, loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_listener::{OnStart, OnFrameEvent, OnLoop, OnEnd}};
+
 use pi_atom::Atom;
-use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FramePerSecond, FrameIndex};
-use pi_ecs::prelude::{Query, ResMut, Component, Commands, Setup};
+use pi_curves::curve::{frame::{KeyFrameCurveValue}, FramePerSecond, FrameIndex};
+use pi_ecs::prelude::{Query, ResMut};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo, ERunStageChap}, plugin::Plugin, setup};
+use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo}};
 
-use crate::{scene::{scene_time::SceneTime, command::SysSceneCommand}, flags::SceneID};
+use crate::{scene::{command::SysSceneCreateCommand}, flags::SceneID};
 
-use super::base::{AssetTypeFrameCurve, AnimationGroups, SceneAnimationContext, GlobalAnimeAbout};
+use super::base::{AnimationGroups, SceneAnimationContext, GlobalAnimeAbout};
 
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ pub struct SysAnimeControlCommand;
 impl TSystemStageInfo for SysAnimeControlCommand {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysSceneCommand::key()
+            SysSceneCreateCommand::key()
         ]
     }
 }

@@ -1,7 +1,7 @@
 
+use pi_render::render_3d::binds::effect_value::ShaderBindEffectValue;
 use pi_scene_math::{Vector4, Matrix, Matrix2, Vector2, Number};
 use pi_share::ThreadSync;
-use render_shader::shader_bind::ShaderBindEffectValue;
 
 pub trait Value {
     fn name(&self) -> &str;

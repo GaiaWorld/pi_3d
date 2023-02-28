@@ -1,15 +1,8 @@
 use pi_atom::Atom;
-use pi_render::rhi::device::RenderDevice;
 use pi_scene_context::materials::shader_effect::{
-    ShaderEffectMeta, UniformPropertyFloat, UniformPropertyVec2, UniformPropertyVec4,
+    ShaderEffectMeta,
 };
-use pi_scene_math::{Vector2, Vector4};
-use render_shader::{
-    block_code::{BlockCode, BlockCodeAtom},
-    shader::KeyShaderEffect,
-    unifrom_code::MaterialValueBindDesc,
-    varying_code::{Varying, Varyings},
-};
+use pi_render::{render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyVec4, UniformPropertyFloat}, uniform_texture::UniformTexture2DDesc, UniformPropertyName, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet}, renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage}};
 
 pub struct WaterShader {
     pub vs_module: wgpu::ShaderModule,
@@ -26,10 +19,10 @@ impl WaterShader {
                 mat4_list: vec![],
                 mat2_list: vec![],
                 vec4_list: vec![
-                    UniformPropertyVec4(Atom::from("sea_base"), Vector4::new(0.0, 0.09, 0.18, 1.0)),
+                    UniformPropertyVec4(Atom::from("sea_base"), [0.0, 0.09, 0.18, 1.]),
                     UniformPropertyVec4(
                         Atom::from("sea_water_color"),
-                        Vector4::new(0.48, 0.54, 0.36, 1.0),
+                        [0.48, 0.54, 0.36, 1.0],
                     ),
                 ],
                 vec2_list: vec![],
@@ -42,7 +35,7 @@ impl WaterShader {
                 int_list: vec![],
                 uint_list: vec![],
             },
-            None,
+            vec![],
             Varyings(vec![]),
             BlockCodeAtom {
                 define: Atom::from(""),
@@ -52,6 +45,7 @@ impl WaterShader {
                 define: Atom::from(include_str!("./water_define.frag")),
                 running: Atom::from(include_str!("./water.frag")),
             },
+            ShaderDefinesSet::default()
         )
     }
 }

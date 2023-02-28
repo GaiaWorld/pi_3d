@@ -12,7 +12,8 @@ use pi_scene_context::{
     transforms::interface::InterfaceTransformNode,
 };
 use render_data_container::{EVertexDataFormat, KeyVertexBuffer, VertexBuffer};
-use render_geometry::{vertex_data::{VertexAttribute, EVertexDataKind, VertexBufferDesc}, indices::IndicesBufferDesc};
+use render_geometry::{vertex_buffer_desc::{VertexBufferDesc}, vertex_attribute::VertexAttribute, indices::IndicesBufferDesc};
+use render_shader::attributes::EVertexDataKind;
 
 pub struct SkinBuilder;
 impl SkinBuilder {

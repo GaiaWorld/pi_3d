@@ -1,5 +1,5 @@
 use pi_engine_shell::object::{ObjectID, InterfaceObject};
-use render_shader::skin_code::ESkinBonesPerVertex;
+use pi_render::render_3d::shader::skin_code::ESkinBonesPerVertex;
 
 use super::command::{SingleSkinCreateCommands, ESkinCreateCommand, SingleSkinModifyCommands, ESkinModifyCommand};
 

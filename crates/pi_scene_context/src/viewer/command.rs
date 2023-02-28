@@ -1,9 +1,23 @@
-use std::mem::replace;
+use std::{mem::replace};
 
-use pi_ecs::prelude::{ResMut, Commands};
-use pi_ecs_macros::setup;
+use pi_ecs::prelude::{ResMut, Commands, Event, Query, EntityDelete};
+use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
+use pi_render::{
+    graph::graph::RenderGraph,
+};
 use pi_scene_math::Number;
+
+use crate::{
+    renderers::{render_object::RendererID, graphic::RendererGraphicDesc, ViewerRenderersInfo, renderer::Renderer},
+    flags::SceneID,
+    postprocess::Postprocess,
+    pass::PassTagOrders
+};
+
+use super::{
+    ViewerID
+};
 
 
 
@@ -20,29 +34,90 @@ impl Default for Viewport {
     }
 }
 
+
 #[derive(Debug)]
-pub enum EViewerCommand {
-    Viewport(ObjectID, Viewport)
+pub enum ERendererCommand {
+    Active(ObjectID, RendererID, RendererGraphicDesc, Option<Viewport>),
 }
 
 #[derive(Debug, Default)]
-pub struct SingleViewerCommands(pub Vec<EViewerCommand>);
+pub struct SingleRendererCommandList {
+    pub list: Vec<ERendererCommand>,
+}
 
-pub struct SysViewerCommand;
-impl TSystemStageInfo for SysViewerCommand {}
+#[derive(Debug, Default)]
+pub struct SysViewerRendererCommandTick;
+impl TSystemStageInfo for SysViewerRendererCommandTick {
+}
 #[setup]
-impl SysViewerCommand {
+impl SysViewerRendererCommandTick {
+    /// 视口被销毁则需要销毁对应渲染器
+    #[listen(entity=(GameObject, Delete))]
+    fn listen(
+        e: Event,
+        viewers: Query<GameObject, &RendererID>,
+        mut delete: EntityDelete<GameObject>,
+    ) {
+        if let Some(id_render) = viewers.get_by_entity(e.id) {
+            delete.despawn(id_render.0);
+        }
+    }
     #[system]
     pub fn cmd(
-        mut cmds: ResMut<SingleViewerCommands>,
-        mut viewport_cmd: Commands<GameObject, Viewport>,
+        mut cmds: ResMut<SingleRendererCommandList>,
+        mut viewers: Query<GameObject, (&SceneID, &ViewerRenderersInfo)>,
+        mut viewer_info_cmd: Commands<GameObject, ViewerRenderersInfo>,
+        mut postprocess_cmd: Commands<GameObject, Postprocess>,
+        mut renderer_orders_cmd: Commands<GameObject, PassTagOrders>,
+        mut renderer_cmd: Commands<GameObject, Renderer>,
+        mut renderer_viewport_cmd: Commands<GameObject, Viewport>,
+        mut renderer_viewer_cmd: Commands<GameObject, ViewerID>,
+        mut render_graphic: ResMut<RenderGraph>,
+        mut delete: EntityDelete<GameObject>,
     ) {
-        let mut list = replace(&mut cmds.0, vec![]);
+        let render_graphic = &mut render_graphic;
+
+        let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
+            log::info!("SysRendererCommandTick:");
             match cmd {
-                EViewerCommand::Viewport(obj, viewport) => {
-                    viewport_cmd.insert(obj, viewport);
+                ERendererCommand::Active(id_viewer, id_renderer, graphic_desc, viewport) => {
+                    if let Some((id_scene, viewer_renderers)) = viewers.get(id_viewer.clone()) {
+                        let mut viewer_renderers = viewer_renderers.clone();
+                        if let Some((render, id_render)) = viewer_renderers.map.get(&graphic_desc.curr) {
+                            delete.despawn(id_render.0);
+                            render_graphic.remove_node(render.curr.to_string());
+                        }
+                        viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), id_renderer.clone()));
+                        viewer_info_cmd.insert(id_viewer, viewer_renderers);
+
+                        
+                        let renderer = Renderer::new(&graphic_desc.curr, id_renderer.0.clone(), render_graphic);
+                        if let Some(key_pre) = &graphic_desc.pre {
+                            render_graphic.add_depend(key_pre.to_string(), graphic_desc.curr.to_string());
+                        }
+                        if let Some(key_next) = &graphic_desc.next {
+                            render_graphic.add_depend(graphic_desc.curr.to_string(), key_next.to_string());
+                        } else {
+                            render_graphic.set_finish(graphic_desc.curr.to_string(), true);
+                        }
+                        
+                        match viewport {
+                            Some(viewport) => {
+                                renderer_viewport_cmd.insert(id_renderer.0.clone(), viewport);
+                            },
+                            None => {
+                                renderer_viewport_cmd.insert(id_renderer.0.clone(), Viewport::default());
+                            },
+                        };
+
+                        // Renderer Modify
+                        renderer_orders_cmd.insert(id_renderer.0.clone(), graphic_desc.passorders.clone());
+                        renderer_cmd.insert(id_renderer.0.clone(), renderer);
+                        renderer_viewer_cmd.insert(id_renderer.0.clone(), ViewerID(id_viewer));
+                        postprocess_cmd.insert(id_renderer.0.clone(), Postprocess::default());
+                    }
                 },
             }
         });

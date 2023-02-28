@@ -3,9 +3,9 @@
 use pi_ecs::prelude::Setup;
 use pi_engine_shell::run_stage::ERunStageChap;
 
-use crate::{viewer::{PluginViewer, sys::SysViewerUpdated}, transforms::transform_node_sys::SysWorldMatrixCalc};
+use crate::{viewer::{PluginViewer, sys::SysViewerTransformUpdated, command::{SingleRendererCommandList, SysViewerRendererCommandTick}, sys_culling::{SysModelListUpdateByViewer, SysModelListUpdateByModel, SysModelListAfterCullingTick}}, transforms::transform_node_sys::SysWorldMatrixCalc};
 
-use self::{command::{SysCameraCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList, SysCameraCreate}, target_camera::TargetCameraParam, camera::CameraParam};
+use self::{command::{SysCameraParamCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList, SysCameraCreate}, target_camera::TargetCameraParam, camera::CameraParam, camera_sys::SysCameraParamUpdate};
 
 pub mod camera;
 pub mod free_camera;
@@ -15,7 +15,7 @@ pub mod camera_sys;
 pub mod command;
 pub mod interface;
 
-pub type SysViewerUpdatedForCamera = SysViewerUpdated<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysWorldMatrixCalc>;
+pub type SysViewerUpdatedForCamera = SysViewerTransformUpdated<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysWorldMatrixCalc>;
 
 pub struct PluginCamera;
 impl crate::Plugin for PluginCamera {
@@ -27,7 +27,18 @@ impl crate::Plugin for PluginCamera {
         let world = engine.world_mut();
 
         SysCameraCreate::setup(world, stages.query_stage::<SysCameraCreate>(ERunStageChap::Initial));
-        SysCameraCommand::setup(world, stages.query_stage::<SysCameraCommand>(ERunStageChap::Command));
+
+        if world.get_resource::<SingleRendererCommandList>().is_none() {
+            world.insert_resource(SingleRendererCommandList::default());
+            // 依赖的 ViewerRenderersInfo 初始化的 System 应该在 Initial 阶段
+            SysViewerRendererCommandTick::setup(world, stages.query_stage::<SysViewerRendererCommandTick>(ERunStageChap::Command));
+            SysModelListUpdateByViewer::setup(world, stages.query_stage::<SysModelListUpdateByViewer>(ERunStageChap::Command));
+            SysModelListUpdateByModel::setup(world, stages.query_stage::<SysModelListUpdateByModel>(ERunStageChap::Command));
+            SysModelListAfterCullingTick::setup(world, stages.query_stage::<SysModelListAfterCullingTick>(ERunStageChap::Command));
+        }
+
+        SysCameraParamCommand::setup(world, stages.query_stage::<SysCameraParamCommand>(ERunStageChap::Command));
+        SysCameraParamUpdate::setup(world, stages.query_stage::<SysCameraParamUpdate>(ERunStageChap::Command));
         SysTargetCameraCommand::setup(world, stages.query_stage::<SysTargetCameraCommand>(ERunStageChap::Command));
         SysFreeCameraCommand::setup(world, stages.query_stage::<SysFreeCameraCommand>(ERunStageChap::Command));
 

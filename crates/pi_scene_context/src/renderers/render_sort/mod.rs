@@ -6,14 +6,33 @@ use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{GameObject, ObjectID};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
+pub enum ERenderSortParam {
+    Opaque(OpaqueSortParam),
+    Tansparent(TransparentSortParam),
+}
+
+#[derive(Debug, Clone, Copy, PartialOrd)]
+pub struct OpaqueSortParam {
+    pub disance: f32,
+}
+impl PartialEq for OpaqueSortParam {
+    fn eq(&self, other: &Self) -> bool {
+        self.disance == other.disance
+    }
+}
+impl Eq for OpaqueSortParam {
+    fn assert_receiver_is_total_eq(&self) {}
+}
+
 #[derive(Debug, Clone, Copy)]
-pub struct RenderSortParam {
+pub struct TransparentSortParam {
     /// 同 渲染类型 中的 渲染分组
     pub group: u8,
     /// 同 渲染分组 中的 渲染顺序
     pub index: u32,
 }
-impl RenderSortParam {
+impl TransparentSortParam {
     pub fn opaque() -> Self {
         Self {
             group: 0,
@@ -39,17 +58,17 @@ impl RenderSortParam {
         }
     }
 }
-impl PartialEq for RenderSortParam {
+impl PartialEq for TransparentSortParam {
     fn eq(&self, other: &Self) -> bool {
         self.group == other.group && self.index == other.index
     }
 }
-impl Eq for RenderSortParam {
+impl Eq for TransparentSortParam {
     fn assert_receiver_is_total_eq(&self) {
 
     }
 }
-impl PartialOrd for RenderSortParam {
+impl PartialOrd for TransparentSortParam {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match self.group.partial_cmp(&other.group) {
             Some(core::cmp::Ordering::Equal) => {}
@@ -58,7 +77,7 @@ impl PartialOrd for RenderSortParam {
         self.index.partial_cmp(&other.index)
     }
 }
-impl Ord for RenderSortParam {
+impl Ord for TransparentSortParam {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
     }
@@ -66,7 +85,7 @@ impl Ord for RenderSortParam {
 
 #[derive(Debug, Default)]
 pub struct SingleRenderSortCommandList {
-    pub list: Vec<(ObjectID, RenderSortParam)>
+    pub list: Vec<(ObjectID, TransparentSortParam)>
 }
 
 pub struct SysRenderSortCommand;
@@ -78,7 +97,7 @@ impl SysRenderSortCommand {
     #[system]
     pub fn cmds(
         mut cmds: ResMut<SingleRenderSortCommandList>,
-        mut items: Commands<GameObject, RenderSortParam>,
+        mut items: Commands<GameObject, TransparentSortParam>,
     ) {
         let mut  list = replace(&mut cmds.list, vec![]);
 
@@ -92,7 +111,7 @@ pub trait InterfaceRenderSort {
     fn render_sort(
         &self,
         entity: ObjectID,
-        value: RenderSortParam,
+        value: TransparentSortParam,
     ) -> &Self;
 }
 
@@ -100,7 +119,7 @@ impl InterfaceRenderSort for crate::engine::Engine {
     fn render_sort(
         &self,
         entity: ObjectID,
-        value: RenderSortParam,
+        value: TransparentSortParam,
     ) -> &Self {
         let commands = self.world().get_resource_mut::<SingleRenderSortCommandList>().unwrap();
         commands.list.push((entity, value));

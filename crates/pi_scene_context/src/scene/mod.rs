@@ -3,11 +3,9 @@ use pi_engine_shell::run_stage::ERunStageChap;
 
 use crate::{plugin::Plugin, };
 
-use self::{scene_sys::SysDirtySceneTick, command::{SysSceneCommand, SingleSceneCommandList}};
+use self::{command::{SysSceneCreateCommand, SingleSceneCommandList}, environment::{fog::SysSceneFogUpdate, ambient_light::SysSceneAmbientUpdate, scene_time::SysSceneTimeUpdate, }};
 
-pub mod scene_time;
 pub mod coordinate_system;
-pub mod scene_sys;
 pub mod command;
 pub mod interface;
 pub mod environment;
@@ -23,8 +21,11 @@ impl Plugin for PluginScene {
 
         world.insert_resource(SingleSceneCommandList::default());
 
-        SysSceneCommand::setup(world, stages.query_stage::<SysSceneCommand>(ERunStageChap::Initial));
-        SysDirtySceneTick::setup(world, stages.query_stage::<SysDirtySceneTick>(ERunStageChap::Initial));
+        SysSceneCreateCommand::setup(world, stages.query_stage::<SysSceneCreateCommand>(ERunStageChap::Initial));
+
+        SysSceneTimeUpdate::setup(world, stages.query_stage::<SysSceneTimeUpdate>(ERunStageChap::Command));
+        SysSceneFogUpdate::setup(world, stages.query_stage::<SysSceneFogUpdate>(ERunStageChap::Command));
+        SysSceneAmbientUpdate::setup(world, stages.query_stage::<SysSceneAmbientUpdate>(ERunStageChap::Command));
 
         Ok(())
     }

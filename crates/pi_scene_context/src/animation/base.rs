@@ -1,15 +1,12 @@
-use std::{sync::Arc, marker::PhantomData};
 
-use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID};
-use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
+use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, animation_group::AnimationGroupID};
+use pi_assets::{asset::{Handle}};
 use pi_atom::Atom;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}, frame_curve::FrameCurve};
-use pi_ecs::prelude::{Query, ResMut, Component, Commands, Setup};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo, ERunStageChap}, plugin::Plugin, setup};
+use pi_engine_shell::{object::{ObjectID}};
 use pi_hash::XHashMap;
 
-use crate::{scene::scene_time::SceneTime, flags::SceneID};
+use crate::{ flags::SceneID};
 
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Asset for TypeFrameCurve<F> {

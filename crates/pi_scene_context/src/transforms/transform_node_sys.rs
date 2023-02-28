@@ -30,7 +30,7 @@ impl SysLocalEulerModifyCalc {
         mut rot_cmd: Commands<GameObject, LocalRotation>,
     ) {
         localmatrixs.iter_mut().for_each(|(obj, euler, mut quat)| {
-            let rotation = Rotation3::from_euler_angles(euler.0.y, euler.0.x, euler.0.z);
+            let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
             let quaternion = Quaternion::from_rotation_matrix(&rotation); 
             quat.0 = quaternion;
             rot_cmd.insert(obj, LocalRotation(rotation));

@@ -1,26 +1,26 @@
-use pi_render::rhi::dyn_uniform_buffer::{Uniform, Bind, BindOffset};
 
-use crate::{bytes_write_to_memory, shaders::{FragmentUniformBind}};
+use pi_ecs::{prelude::Query, query::Changed};
+use pi_ecs_macros::setup;
+use pi_engine_shell::{object::GameObject, run_stage::TSystemStageInfo};
+use pi_render::render_3d::binds::scene::effect::ShaderBindSceneAboutEffect;
+
+use super::BindSceneEffect;
 
 
 pub struct AmbientLight {
     color: (f32, f32, f32),
     intensity: f32,
     pub dirty: bool,
-    pub bind_offset: BindOffset,
 }
 impl AmbientLight {
     pub const AMBIENT_LIGHT: usize = 4;
     pub const AMBIENT_LIGHT_OFFSIZE: usize = 0 * 4;
 
-    pub fn new(
-        dynbuffer: &mut render_resource::uniform_buffer::RenderDynUniformBuffer,
-    ) -> Self {
+    pub fn new() -> Self {
         Self {
             color: (1., 1., 1.),
             intensity: 1.0,
             dirty: true,
-            bind_offset: dynbuffer.alloc_binding::<Self>(),
         }
     }
     pub fn color(&mut self, value: (f32, f32, f32)) {
@@ -35,22 +35,28 @@ impl AmbientLight {
             self.intensity = value;
         }
     }
-}
-impl Uniform for AmbientLight {
-    fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        let value = vec![self.color.0, self.color.1, self.color.2, self.intensity];
-        bytes_write_to_memory(bytemuck::cast_slice(&value), index as usize + Self::AMBIENT_LIGHT_OFFSIZE, buffer);
+    pub fn update(&self, bind: &BindSceneEffect) {
+        let values = vec![self.color.0, self.color.1, self.color.2, self.intensity];
+        bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_AMBIENT as usize, bytemuck::cast_slice(&values));
     }
 }
-impl FragmentUniformBind for AmbientLight {
-    const ID: u32 = 3;
-    const SIZE: usize = Self::AMBIENT_LIGHT_OFFSIZE + Self::AMBIENT_LIGHT * 4;
-}
-impl Bind for AmbientLight {
-    fn index() -> pi_render::rhi::dyn_uniform_buffer::BindIndex {
-        pi_render::rhi::dyn_uniform_buffer::BindIndex::new(Self::ID as usize)
+
+pub struct SysSceneAmbientUpdate;
+impl TSystemStageInfo for SysSceneAmbientUpdate {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            // SysSceneCreateCommand::key()
+        ]
     }
-    fn min_size() -> usize {
-        Self::SIZE
+}
+#[setup]
+impl SysSceneAmbientUpdate {
+    #[system]
+    fn sys(
+        mut scenes: Query<GameObject, (&AmbientLight, &mut BindSceneEffect), Changed<AmbientLight>>,
+    ) {
+        scenes.iter_mut().for_each(|(item, mut bind)| {
+            item.update(&mut bind);
+        });
     }
 }

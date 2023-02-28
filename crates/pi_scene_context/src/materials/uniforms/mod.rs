@@ -1,18 +1,30 @@
+use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
+use pi_atom::Atom;
 use pi_ecs::prelude::Setup;
-use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap};
+use pi_engine_shell::{plugin::Plugin, run_stage::ERunStageChap, assets::image_texture_load::ImageAwait};
+use pi_render::{rhi::{asset::TextureRes, device::RenderDevice, RenderQueue}, renderer::{sampler::SamplerRes, buildin_data::{EDefaultTexture, DefaultTexture}}};
 use pi_scene_math::Number;
+use pi_share::Share;
 
-use self::{sys_float::PluginFloatSlot, sys_uint::PluginUintSlot, sys_int::PluginIntSlot, sys_mat2::PluginMat2Slot, sys_mat4::PluginMat4Slot, sys_vec2::PluginVec2Slot, sys_vec4::PluginVec4Slot, sys_texture::PluginTextureSlot, uniform::{SysMaterialMetaChange, SysEffectValueBindgroupUpdate, SysEffectBindgroupUpdateTex01, SysEffectBindgroupUpdateTex02, SysEffectBindgroupUpdateTex03, SysEffectBindgroupUpdateTex04, SysEffectTexBindgroupUpdate}};
+use self::{
+    sys_texture::{SysTextureSlot01Load, SysTextureLoad, SysTextureSlot02Load, SysTextureSlot03Load, SysTextureSlot04Load, SysTextureResReady1, SysTextureResReady2},
+    sys_uniform::{
+        SysMaterialMetaChange, 
+        SysBindValueUpdate, SysMaterialTexturesChange, SingleUniformCommands, SysUniformComand
+    },
+    texture::{TextureSlot01, TextureSlot02, TextureSlot03, TextureSlot04},
+    sys_pass::{SysEffectValueToModelByMaterialModify, SysEffectTexturesToModelByMaterialModify}
+};
 
 pub mod value_uniform;
 pub mod texture_uniform;
-pub mod sys_mat4;
-pub mod sys_mat2;
-pub mod sys_float;
-pub mod sys_int;
-pub mod sys_uint;
-pub mod sys_vec2;
-pub mod sys_vec4;
+// pub mod sys_mat4;
+// pub mod sys_mat2;
+// pub mod sys_float;
+// pub mod sys_int;
+// pub mod sys_uint;
+// pub mod sys_vec2;
+// pub mod sys_vec4;
 pub mod uniform;
 pub mod float;
 pub mod vec2;
@@ -25,6 +37,8 @@ pub mod boolean;
 pub mod byte;
 pub mod texture;
 pub mod sys_texture;
+pub mod sys_uniform;
+pub mod sys_pass;
 
 pub(crate) fn update_data(
     data: &mut [Number],
@@ -47,23 +61,77 @@ impl Plugin for PluginMaterialUniforms {
         stages: &mut pi_engine_shell::run_stage::RunStage,
     ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
         let world = engine.world_mut();
+
+        world.insert_resource(SingleUniformCommands::default());
+
+        // 材质设置
         SysMaterialMetaChange::setup(world, stages.query_stage::<SysMaterialMetaChange>(ERunStageChap::Command));
+        SysUniformComand::setup(world, stages.query_stage::<SysUniformComand>(ERunStageChap::Command));
+        SysBindValueUpdate::setup(world, stages.query_stage::<SysBindValueUpdate>(ERunStageChap::Command));
+        SysMaterialTexturesChange::setup(world, stages.query_stage::<SysMaterialTexturesChange>(ERunStageChap::Command));
 
-        SysEffectValueBindgroupUpdate::setup(world, stages.query_stage::<SysEffectValueBindgroupUpdate>(ERunStageChap::Uniform));
-        SysEffectBindgroupUpdateTex01::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
-        SysEffectBindgroupUpdateTex02::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
-        SysEffectBindgroupUpdateTex03::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
-        SysEffectBindgroupUpdateTex04::setup(world, stages.query_stage::<SysEffectTexBindgroupUpdate>(ERunStageChap::Uniform));
+        // 纹理属性
+        {
+            // 默认纹理数据
+            {
+                if world.get_resource::<Share<AssetMgr<SamplerRes>>>().is_none() {
+                    world.insert_resource(
+                        AssetMgr::<SamplerRes>::new(GarbageEmpty(), false, 60 * 1024, 60 * 1000)
+                    );
+                };
+                let asset_tex = if let Some(asset) = world.get_resource::<Share<AssetMgr<TextureRes>>>() {
+                    asset
+                } else {
+                    world.insert_resource(
+                        AssetMgr::<TextureRes>::new(GarbageEmpty(), false, 60 * 1024 * 1024, 60 * 1000)
+                    );
+                    world.get_resource::<Share<AssetMgr<TextureRes>>>().unwrap()
+                };
+                let device = world.get_resource::<RenderDevice>().unwrap();
+                let queue = world.get_resource::<RenderQueue>().unwrap();
+                let desc = wgpu::TextureViewDescriptor::default();
+                // 
+                let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D1);
+                let texture = texture.create_view(&desc);
+                asset_tex.insert(Atom::from(DefaultTexture::WHITE_1D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+                // 
+                let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D2);
+                let texture = texture.create_view(&desc);
+                asset_tex.insert(Atom::from(DefaultTexture::WHITE_2D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+                // 
+                let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D3);
+                let texture = texture.create_view(&desc);
+                asset_tex.insert(Atom::from(DefaultTexture::WHITE_3D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+                // 
+                let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D1);
+                let texture = texture.create_view(&desc);
+                asset_tex.insert(Atom::from(DefaultTexture::BLACK_1D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+                // 
+                let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D2);
+                let texture = texture.create_view(&desc);
+                asset_tex.insert(Atom::from(DefaultTexture::BLACK_2D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+                // 
+                let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D3);
+                let texture = texture.create_view(&desc);
+                asset_tex.insert(Atom::from(DefaultTexture::BLACK_3D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+            }
 
-        PluginFloatSlot.init(engine, stages);
-        PluginIntSlot.init(engine, stages);
-        PluginMat2Slot.init(engine, stages);
-        PluginMat4Slot.init(engine, stages);
-        PluginUintSlot.init(engine, stages);
-        PluginVec2Slot.init(engine, stages);
-        PluginVec4Slot.init(engine, stages);
+            world.insert_resource(ImageAwait::<TextureSlot01>::default());
+            world.insert_resource(ImageAwait::<TextureSlot02>::default());
+            world.insert_resource(ImageAwait::<TextureSlot03>::default());
+            world.insert_resource(ImageAwait::<TextureSlot04>::default());
 
-        PluginTextureSlot.init(engine, stages);
+            SysTextureSlot01Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
+            SysTextureSlot02Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
+            SysTextureSlot03Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
+            SysTextureSlot04Load::setup(world, stages.query_stage::<SysTextureLoad>(ERunStageChap::Command));
+
+            SysTextureResReady1::setup(world, stages.query_stage::<SysTextureResReady1>(ERunStageChap::Command));
+            SysTextureResReady2::setup(world, stages.query_stage::<SysTextureResReady2>(ERunStageChap::Command));
+        }
+
+        SysEffectValueToModelByMaterialModify::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify>(ERunStageChap::Command));
 
         Ok(())
     }

@@ -1,10 +1,10 @@
 use pi_ecs::prelude::{Setup};
-use pi_engine_shell::run_stage::ERunStageChap;
+use pi_engine_shell::{run_stage::ERunStageChap, assets::sync_load::{PluginAssetSyncNotNeedLoad, AssetSyncLoad, PluginAssetSyncLoad}};
+use pi_render::{renderer::shader::{KeyShaderMeta, KeyShader}, render_3d::shader::shader::{Shader3D, KeyShader3D}};
 
 use self::{
-    material::{SingleMaterialIDCommandList, SysMaterialIDCommand, SingleValueUniformCommands, SysEffectValueUniformComand},
-    shader_effect::{PluginShaderEffect},
-    uniforms::PluginMaterialUniforms
+    command::{SingleMaterialIDCommandList, SysMaterialIDCommand, SingleMatCreateCommands, SysMaterailCreateCommands},
+    uniforms::PluginMaterialUniforms, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta, ShaderEffectMeta}
 };
 
 pub mod material;
@@ -12,8 +12,13 @@ pub mod material_meta;
 pub mod uniforms;
 pub mod value;
 pub mod shader_effect;
+pub mod command;
+pub mod interface;
 
 pub type MBKK = usize;
+
+
+type PluginAssetShaderEffectLoad = PluginAssetSyncLoad::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta, SysMaterailCreateCommands>;
 
 pub struct PluginMaterial;
 impl crate::Plugin for PluginMaterial {
@@ -22,14 +27,18 @@ impl crate::Plugin for PluginMaterial {
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        PluginShaderEffect.init(engine, stages);
+        let world = engine.world_mut();
+        world.insert_resource(SingleMatCreateCommands::default());
+        world.insert_resource(SingleMaterialIDCommandList::default());
+
+        SysMaterailCreateCommands::setup(world, stages.query_stage::<SysMaterailCreateCommands>(ERunStageChap::Initial));
+
+        PluginAssetSyncNotNeedLoad::<KeyShader3D, Shader3D>::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
+        PluginAssetShaderEffectLoad::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
 
         let world = engine.world_mut();
-        world.insert_resource(SingleMaterialIDCommandList::default());
-        world.insert_resource(SingleValueUniformCommands::default());
-        
         SysMaterialIDCommand::setup(world, stages.query_stage::<SysMaterialIDCommand>(ERunStageChap::Initial));
-        SysEffectValueUniformComand::setup(world, stages.query_stage::<SysEffectValueUniformComand>(ERunStageChap::Command));
+
         PluginMaterialUniforms.init(engine, stages);
 
         Ok(())

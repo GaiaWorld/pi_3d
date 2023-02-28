@@ -1,14 +1,11 @@
-use std::{sync::Arc, marker::PhantomData, fmt::Debug};
+use std::{marker::PhantomData, fmt::Debug};
 
-use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_result_pool::TypeAnimationResultPoolDefault, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, target_animation::TargetAnimation, animation_group::AnimationGroupID};
-use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
-use pi_atom::Atom;
-use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}, frame_curve::FrameCurve};
-use pi_ecs::prelude::{Query, ResMut, Component, Commands, Setup};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo, ERunStageChap}, plugin::Plugin, setup};
+use pi_animation::{type_animation_context::{TypeAnimationContext}};
+use pi_assets::{asset::{GarbageEmpty}, mgr::AssetMgr};
 
-use crate::scene::scene_time::SceneTime;
+use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}};
+use pi_ecs::prelude::{Component, Setup};
+use pi_engine_shell::{object::{ObjectID}, run_stage::{ERunStageChap}, plugin::Plugin};
 
 use self::{base::{GlobalAnimeAbout, TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve}, system::{SysSceneAnime, SysTypeAnime, SysTypeAnimeDispose}, command::{SingleControlCommands, SingleModifyCommands, SysAnimeControlCommand, SysAnimeModifyCommand}};
 

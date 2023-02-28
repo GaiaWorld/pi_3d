@@ -1,70 +1,21 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}};
+use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
+use pi_render::renderer::pipeline::DepthStencilState;
 
 use crate::object::{ObjectID, GameObject};
 
-#[derive(Debug, Clone, Copy)]
-pub struct RenderDepthAndStencil {
-    pub depth: bool,
-    pub stencil: bool,
-    pub depth_compare: wgpu::CompareFunction,
-}
+#[derive(Debug, Clone)]
+pub struct RenderDepthAndStencil(pub Option<DepthStencilState>);
 impl Default for RenderDepthAndStencil {
     fn default() -> Self {
-        Self {
-            depth: false,
-            stencil: false,
-            depth_compare: wgpu::CompareFunction::LessEqual,
-        }
-    }
-}
-impl RenderDepthAndStencil {
-    pub fn state(
-        &self
-    ) -> Option<wgpu::DepthStencilState> {
-        match (self.depth, self.stencil) {
-            (true, true) => {
-                Some(
-                    wgpu::DepthStencilState {
-                        format: wgpu::TextureFormat::Depth24PlusStencil8,
-                        depth_write_enabled: true,
-                        depth_compare: self.depth_compare,
-                        stencil: wgpu::StencilState::default(),
-                        bias: wgpu::DepthBiasState::default(),
-                    }
-                )
-            },
-            (true, false) => {
-                Some(
-                    wgpu::DepthStencilState {
-                        format: wgpu::TextureFormat::Depth24PlusStencil8,
-                        depth_write_enabled: true,
-                        depth_compare: self.depth_compare,
-                        stencil: wgpu::StencilState::default(),
-                        bias: wgpu::DepthBiasState::default(),
-                    }
-                )
-            },
-            (false, true) => {
-                Some(
-                    wgpu::DepthStencilState {
-                        format: wgpu::TextureFormat::Depth24PlusStencil8,
-                        depth_write_enabled: false,
-                        depth_compare: self.depth_compare,
-                        stencil: wgpu::StencilState::default(),
-                        bias: wgpu::DepthBiasState::default(),
-                    }
-                )
-            },
-            (false, false) => None,
-        }
+        Self(None)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum ERenderDepthAndStencilCommand {
     Disable(ObjectID),
     DepthStencil(ObjectID, RenderDepthAndStencil),
@@ -84,19 +35,13 @@ impl SysRenderDepthAndStencilCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderDepthAndStencilCommandList>,
-        mut items: Query<GameObject, &mut RenderDepthAndStencil>,
         mut item_cmd: Commands<GameObject, RenderDepthAndStencil>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ERenderDepthAndStencilCommand::Disable(entity) => {
-                    if let Some((mut item)) = items.get_mut(entity) {
-                        item.depth = false;
-                        item.stencil = false;
-                    } else {
-                        item_cmd.insert(entity, RenderDepthAndStencil::default());
-                    }
+                    item_cmd.insert(entity, RenderDepthAndStencil::default());
                 },
                 ERenderDepthAndStencilCommand::DepthStencil(entity, value) => {
                     item_cmd.insert(entity, value);

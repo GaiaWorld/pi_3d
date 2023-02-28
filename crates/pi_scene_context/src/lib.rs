@@ -15,7 +15,6 @@ pub mod engine;
 pub mod geometry;
 pub mod materials;
 pub mod postprocess;
-pub mod main_camera_render;
 pub mod layer_mask;
 pub mod plugin;
 pub mod run_stage;
@@ -25,6 +24,7 @@ pub mod bindgroup;
 pub mod light;
 pub mod skeleton;
 pub mod animation;
+pub mod pass;
 
 
 pub fn bytes_write_to_memory(

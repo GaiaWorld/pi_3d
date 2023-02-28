@@ -1,34 +1,14 @@
 #![feature(box_into_inner)]
 
-use pi_graph::NGraph;
-use pi_hal::runtime::MULTI_MEDIA_RUNTIME;
-use pi_render::{
-    components::view::{
-        render_window::{RenderWindow, RenderWindows},
-        target_alloc::ShareTargetView,
-    },
-    init_render,
-    rhi::{options::RenderOptions, device::RenderDevice, dyn_uniform_buffer::{Uniform, Bind}, RenderQueue}, graph::graph::RenderGraph, RenderStage,
-};
-use pi_scene_math::Vector3;
-use winit::event_loop::EventLoop;
-use std::{any::TypeId, sync::Arc, time::Instant, mem::replace, borrow::BorrowMut};
-use wgpu::PresentMode;
+use std::{sync::Arc, time::Instant, };
+
 
 use pi_async::{
-    prelude::{Mutex, WorkerRuntime},
-    rt::{AsyncRuntime, AsyncRuntimeBuilder},
+    prelude::{Mutex},
 };
-use pi_ecs::{
-    entity::Id,
-    prelude::{
-        ArchetypeId, IntoSystem, Query, Res, ResMut, Setup, SingleDispatcher, StageBuilder, System,
-        World, Dispatcher, ExecNode,
-    },
-};
-use pi_share::{Share, ShareMutex, ShareRwLock};
 
-use self::{shell_node::ScreenClearNode, frame_time::PluginFrameTime};
+use pi_share::{ShareMutex};
+
 
 pub mod shell_node;
 pub mod frame_time;

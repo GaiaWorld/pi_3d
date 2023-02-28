@@ -1,7 +1,8 @@
 
+use pi_assets::{asset::Handle, mgr::AssetMgr};
+use pi_render::{renderer::{attributes::EVertexDataKind, vertex_buffer::{EVertexBufferRange, VertexBufferAllocator, KeyVertexBuffer}}, rhi::{device::RenderDevice, RenderQueue}};
 use pi_scene_math::{Matrix, Matrix2, Vector4, Vector2, Number};
-use render_data_container::VertexBuffer;
-use render_geometry::vertex_data::EVertexDataKind;
+use pi_share::Share;
 
 use crate::transforms::transform_node::WorldMatrix;
 
@@ -12,11 +13,16 @@ pub trait TInstanceFlag {
 
 pub trait TInstancedData {
     fn vertex_kind(&self) -> EVertexDataKind;
-    fn value(&self) -> &InstancedValue;
-    fn size() -> usize;
-    fn bytes_size() -> usize;
-    fn local_offset(&self) -> usize;
-    fn write_instance_buffer(&self, buffer: &mut VertexBuffer, offset: usize);
+    fn collect(list: &Vec<&Self>, key: KeyVertexBuffer, device: &RenderDevice, queue: &RenderQueue, allocator: &mut VertexBufferAllocator, asset_mgr: &Share<AssetMgr<EVertexBufferRange>>) -> Option<Handle<EVertexBufferRange>> ;
+    // fn size() -> usize;
+    // fn bytes_size() -> usize;
+    // fn local_offset(&self) -> usize;
+}
+
+pub fn instance_datas<T: TInstancedData>(
+    list: &[T],
+) {
+    
 }
 
 impl TInstancedData for WorldMatrix {
@@ -24,24 +30,32 @@ impl TInstancedData for WorldMatrix {
         EVertexDataKind::InsWorldRow1
     }
 
-    fn value(&self) -> &InstancedValue {
-        todo!()
-    }
+    // fn size() -> usize {
+    //     16
+    // }
 
-    fn size() -> usize {
-        16
-    }
+    // fn bytes_size() -> usize {
+    //     16 * 4
+    // }
 
-    fn bytes_size() -> usize {
-        16 * 4
-    }
+    // fn local_offset(&self) -> usize {
+    //     0
+    // }
 
-    fn local_offset(&self) -> usize {
-        0
-    }
+    fn collect(list: &Vec<&Self>, key: KeyVertexBuffer, device: &RenderDevice, queue: &RenderQueue, allocator: &mut VertexBufferAllocator, asset_mgr: &Share<AssetMgr<EVertexBufferRange>>) -> Option<Handle<EVertexBufferRange>> {
+        let mut result = vec![];
 
-    fn write_instance_buffer(&self, buffer: &mut VertexBuffer, offset: usize) {
-        buffer.update_f32(self.0.as_slice(), offset);
+        list.iter().for_each(|v| {
+            v.0.as_slice().iter().for_each(|v| {
+                result.push(*v);
+            })
+        });
+
+        if let Some(buffer) = allocator.create_not_updatable_buffer(device, queue, bytemuck::cast_slice(&result)) {
+            asset_mgr.insert(key, buffer)
+        } else {
+            None
+        }
     }
 }
 
@@ -81,29 +95,34 @@ impl InstancedValue {
             },
         }
     }
-    pub fn write(&self, buffer: &mut VertexBuffer, offset: usize) {
-        match self {
-            InstancedValue::Mat4(value) => {
-                buffer.update_f32(value.as_slice(), offset);
+    pub fn write(&self, buffer: &EVertexBufferRange, offset: usize) {
+        match buffer {
+            EVertexBufferRange::Updatable(buffer, _) => {
+                match self {
+                    InstancedValue::Mat4(value) => {
+                        buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
+                    },
+                    InstancedValue::Mat2(value) =>  {
+                        buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
+                    },
+                    InstancedValue::Vec4(value) =>  {
+                        buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
+                    },
+                    InstancedValue::Vec2(value) =>  {
+                        buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
+                    },
+                    InstancedValue::Float(value) =>  {
+                        buffer.write_data(offset, bytemuck::cast_slice(&[*value]))
+                    },
+                    InstancedValue::Int(value) =>  {
+                        buffer.write_data(offset, bytemuck::cast_slice(&[*value]))
+                    },
+                    InstancedValue::Uint(value) =>  {
+                        buffer.write_data(offset, bytemuck::cast_slice(&[*value]))
+                    },
+                }
             },
-            InstancedValue::Mat2(value) =>  {
-                buffer.update_f32(value.as_slice(), offset);
-            },
-            InstancedValue::Vec4(value) =>  {
-                buffer.update_f32(value.as_slice(), offset);
-            },
-            InstancedValue::Vec2(value) =>  {
-                buffer.update_f32(value.as_slice(), offset);
-            },
-            InstancedValue::Float(value) =>  {
-                buffer.update_f32(&[*value], offset);
-            },
-            InstancedValue::Int(value) =>  {
-                buffer.update_i32(&[*value], offset);
-            },
-            InstancedValue::Uint(value) =>  {
-                buffer.update_u32(&[*value], offset);
-            },
+            EVertexBufferRange::NotUpdatable(_) => todo!(),
         }
     }
 }

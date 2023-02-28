@@ -1,5 +1,4 @@
-use pi_render::rhi::{dyn_uniform_buffer::{BindOffset}, texture::{Sampler}};
-use render_shader::shader::ResShader;
+use pi_render::{rhi::{texture::{Sampler}}, render_3d::shader::shader::Shader3D};
 
 
 
@@ -10,7 +9,7 @@ pub trait TRenderShader {
     fn fs_entry_point(&self) -> &'static str;
     fn defines(&self) {}
 }
-impl TRenderShader for ResShader {
+impl TRenderShader for Shader3D {
     fn vs_module(&self) -> &wgpu::ShaderModule {
         &self.vs
     }
@@ -43,18 +42,18 @@ pub trait FragmentUniformBind {
         count: None,
     };
 
-    fn entry<'a>(
-        bind_offset: &BindOffset,
-        buff: &'a render_resource::uniform_buffer::RenderDynUniformBuffer,
-    ) -> wgpu::BindGroupEntry<'a> {
-        bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), **bind_offset, Self::SIZE as u32)
-    }
+    // fn entry<'a>(
+    //     bind_offset: &BindOffset,
+    //     buff: &'a render_resource::uniform_buffer::RenderDynUniformBuffer,
+    // ) -> wgpu::BindGroupEntry<'a> {
+    //     bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), **bind_offset, Self::SIZE as u32)
+    // }
 
-    fn dyn_entry<'a>(
-        buff: &'a render_resource::uniform_buffer::RenderDynUniformBuffer,
-    ) -> wgpu::BindGroupEntry<'a> {
-        bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), 0, Self::SIZE as u32)
-    }
+    // fn dyn_entry<'a>(
+    //     buff: &'a render_resource::uniform_buffer::RenderDynUniformBuffer,
+    // ) -> wgpu::BindGroupEntry<'a> {
+    //     bind_group_entry_buffer(Self::ID as u32, buff.buffer().unwrap(), 0, Self::SIZE as u32)
+    // }
 }
 
 pub trait FragmentUniformBindTexture {

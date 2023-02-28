@@ -4,12 +4,11 @@ use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    main_camera_render::interface::InterfaceMainCamera,
     plugin::Plugin,
     scene::interface::InterfaceScene,
     transforms::{
         interface::InterfaceTransformNode,
-    }, materials::material::{InterfaceMaterial},
+    }, materials::interface::{InterfaceMaterial},
 };
 use pi_scene_math::Vector3;
 use procedural_texture::water::interface::InterfaceWaterMaterial;

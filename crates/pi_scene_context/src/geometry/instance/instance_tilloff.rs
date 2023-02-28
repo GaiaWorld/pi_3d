@@ -1,60 +1,62 @@
+use pi_assets::{asset::Handle, mgr::AssetMgr};
+use pi_render::{renderer::{attributes::EVertexDataKind, vertex_buffer::{EVertexBufferRange, VertexBufferAllocator, KeyVertexBuffer}, instance::{types::{TInstancedData, TInstanceFlag}, instanced_buffer::TInstancedBuffer}, vertex_buffer_desc::EVertexBufferSlot}, rhi::{device::RenderDevice, RenderQueue}};
 use pi_scene_math::Vector4;
-use render_data_container::{VertexBufferPool, EVertexDataFormat, VertexBuffer};
+use pi_share::Share;
 
 use crate::geometry::vertex_buffer_useinfo;
 
-use super::{instanced_buffer::TInstancedBuffer, types::{TInstancedData, TInstanceFlag}, sys_instance::SysInstancedBufferInitFunc};
-
 pub struct InstanceTillOff(pub Vector4);
 impl TInstancedData for InstanceTillOff {
-    fn vertex_kind(&self) -> render_geometry::vertex_data::EVertexDataKind {
+    fn vertex_kind(&self) -> EVertexDataKind {
         todo!()
     }
 
-    fn value(&self) -> &super::types::InstancedValue {
-        todo!()
+    fn collect(list: &Vec<&Self>, key: KeyVertexBuffer, device: &RenderDevice, queue: &RenderQueue, allocator: &mut VertexBufferAllocator, asset_mgr: &Share<AssetMgr<EVertexBufferRange>>) -> Option<Handle<EVertexBufferRange>> {
+        let mut result = vec![];
+
+        list.iter().for_each(|v| {
+            v.0.as_slice().iter().for_each(|v| {
+                result.push(*v);
+            })
+        });
+
+        if let Some(buffer) = allocator.create_not_updatable_buffer(device, queue, bytemuck::cast_slice(&result)) {
+            asset_mgr.insert(key, buffer)
+        } else {
+            None
+        }
     }
 
-    fn size() -> usize {
-        4
-    }
-    fn bytes_size() -> usize {
-        4 * 4
-    }
+    // fn size() -> usize {
+    //     4
+    // }
+    // fn bytes_size() -> usize {
+    //     4 * 4
+    // }
 
-    fn local_offset(&self) -> usize {
-        0
-    }
-
-    fn write_instance_buffer(&self, buffer: &mut VertexBuffer, offset: usize) {
-        buffer.update_f32(self.0.as_slice(), offset);
-    }
+    // fn local_offset(&self) -> usize {
+    //     0
+    // }
 }
 
 pub struct InstancedBufferTillOff {
     pub slot: usize,
-    key: render_data_container::KeyVertexBuffer,
+    pub id: String,
+    pub index: usize,
+    // buffer: Handle<EVertexBufferRange>,
 }
 impl TInstancedBuffer for InstancedBufferTillOff {
     fn display_name() -> String {
-        String::from("InstanceTillOff")
-    }
-    fn new(index: usize, id: String, pool: &mut VertexBufferPool) -> Self {
-        let buffer: VertexBuffer = VertexBuffer::new(true, EVertexDataFormat::F32, false);
-        let key = render_data_container::KeyVertexBuffer::from(id + "TillOff");
-        pool.map.insert(key.clone(), buffer);
-
-        Self {
-            slot: index,
-            key
-        }
-    }
-    fn key(&self) -> render_data_container::KeyVertexBuffer {
-        self.key.clone()
+        String::from("InstancedBufferTillOff")
     }
 
-    fn slot(&self) -> crate::geometry::vertex_buffer_useinfo::EVertexBufferSlot {
-        vertex_buffer_useinfo::EVertexBufferSlot::from_u8_unsafe(self.slot as u8)
+    fn slot(&self) -> EVertexBufferSlot {
+        EVertexBufferSlot::from_u8_unsafe(self.slot as u8)
+    }
+
+    fn id(&mut self) -> KeyVertexBuffer {
+        self.index += 1;
+        KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
     }
 }
 
@@ -67,5 +69,3 @@ impl TInstanceFlag for InstanceTillOffDirty {
         self.0 = false;
     }
 }
-
-pub type SysInstanceBufferTillOffInit = SysInstancedBufferInitFunc<InstancedBufferTillOff>;

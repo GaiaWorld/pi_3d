@@ -1,13 +1,6 @@
 use pi_atom::Atom;
-use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyVec4};
-use pi_scene_math::Vector4;
-use render_shader::{
-    block_code::{BlockCodeAtom},
-    unifrom_code::{
-        MaterialTextureBindDesc, MaterialValueBindDesc, UniformPropertyName, UniformTextureDesc,
-    },
-    varying_code::{Varying, Varyings},
-};
+use pi_render::{render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyVec4}, uniform_texture::UniformTexture2DDesc, UniformPropertyName, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet}, renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage}};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta};
 
 pub struct UnlitShader {
     pub vs_module: wgpu::ShaderModule,
@@ -24,10 +17,10 @@ impl UnlitShader {
                 mat4_list: vec![],
                 mat2_list: vec![],
                 vec4_list: vec![
-                    UniformPropertyVec4(Atom::from("emissive"), Vector4::new(1., 1., 1., 1.)),
+                    UniformPropertyVec4(Atom::from("emissive"), [1., 1., 1., 1.]),
                     UniformPropertyVec4(
                         Atom::from("emissive_scaleoffset"),
-                        Vector4::new(1., 1., 0., 0.),
+                        [1., 1., 0., 0.],
                     ),
                 ],
                 vec2_list: vec![],
@@ -35,12 +28,15 @@ impl UnlitShader {
                 int_list: vec![],
                 uint_list: vec![],
             },
-            Some(MaterialTextureBindDesc {
-                list: vec![UniformTextureDesc::new2d(
+            vec![
+                UniformTexture2DDesc::new(
                     UniformPropertyName::from("_MainTex"),
-                    wgpu::ShaderStages::FRAGMENT,
-                )],
-            }),
+                    wgpu::TextureSampleType::Float { filterable: true },
+                    false,
+                    EShaderStage::FRAGMENT,
+                    EDefaultTexture::White
+                )
+            ],
             Varyings(vec![
                 Varying {
                     format: Atom::from("vec3"),
@@ -67,6 +63,7 @@ impl UnlitShader {
                 define: Atom::from(include_str!("./unlit_define.frag")),
                 running: Atom::from(include_str!("./unlit.frag")),
             },
+            ShaderDefinesSet::default()
         )
     }
 }

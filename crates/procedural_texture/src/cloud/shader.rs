@@ -1,8 +1,8 @@
 use pi_atom::Atom;
 use pi_render::rhi::{device::RenderDevice};
-use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, UniformPropertyVec4, UniformPropertyFloat};
-use pi_scene_math::Vector4;
-use render_shader::{shader::{KeyShaderEffect}, block_code::{BlockCode, BlockCodeAtom}, varying_code::{Varying, Varyings}, unifrom_code::MaterialValueBindDesc};
+use pi_scene_context::materials::shader_effect::{ShaderEffectMeta};
+use pi_render::{render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyVec4, UniformPropertyFloat}, uniform_texture::UniformTexture2DDesc, UniformPropertyName, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet}, renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage}};
+
 
 pub struct CloudShader {
     pub vs_module: wgpu::ShaderModule,
@@ -19,8 +19,8 @@ impl CloudShader {
                 mat4_list: vec![],
                 mat2_list: vec![],
                 vec4_list: vec![
-                    UniformPropertyVec4(Atom::from("skyColor"), Vector4::new(0.15, 0.68, 1.0, 1.0)),
-                    UniformPropertyVec4(Atom::from("cloudColor"), Vector4::new(1., 1., 1., 1.)),
+                    UniformPropertyVec4(Atom::from("skyColor"), [0.15, 0.68, 1.0, 1.0]),
+                    UniformPropertyVec4(Atom::from("cloudColor"), [1., 1., 1., 1.]),
                 ],
                 vec2_list: vec![],
                 float_list: vec![
@@ -32,7 +32,7 @@ impl CloudShader {
                 int_list: vec![],
                 uint_list: vec![],
             },
-            None,
+            vec![],
             Varyings(
                 vec![
                 ]
@@ -45,6 +45,7 @@ impl CloudShader {
                 define: Atom::from(include_str!("./cloud_define.frag")),
                 running: Atom::from(include_str!("./cloud.frag"))
             },
+            ShaderDefinesSet::default()
         )
     }
 }
