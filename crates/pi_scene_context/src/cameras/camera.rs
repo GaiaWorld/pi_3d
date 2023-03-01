@@ -9,10 +9,18 @@ pub struct Camera;
 
 #[derive(Debug, Clone)]
 pub struct CameraViewport {
+    /// 0. ~ 1.
     pub x: f32,
+    /// 0. ~ 1.
     pub y: f32,
+    /// 0. ~ 1.
     pub w: f32,
+    /// 0. ~ 1.
     pub h: f32,
+    /// 0. ~ 1.
+    pub mindepth: f32,
+    /// 0. ~ 1.
+    pub maxdepth: f32,
 }
 impl Default for CameraViewport {
     fn default() -> Self {
@@ -20,7 +28,9 @@ impl Default for CameraViewport {
             x: 0.,
             y: 0.,
             w: 1.,
-            h: 1.
+            h: 1.,
+            mindepth: 0.,
+            maxdepth: 1.,
         }
     }
 }

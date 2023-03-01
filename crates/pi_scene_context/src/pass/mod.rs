@@ -2,6 +2,7 @@
 use std::sync::Arc;
 
 use pi_assets::asset::Handle;
+use pi_engine_shell::object::ObjectID;
 use pi_render::{render_3d::{binds::effect_value::ShaderBindEffectValue, bind_groups::{texture_sampler::{EffectTextureSamplers, BindGroupTextureSamplers}, scene::BindGroupScene, model::BindGroupModel}, shader::shader_effect_meta::ShaderEffectMeta}, renderer::shader::KeyShaderMeta};
 
 use crate::geometry::geometry::RenderGeometry;
@@ -47,6 +48,18 @@ impl EPassTag {
     pub const PASS_TAG_06: PassTag = 0b0000_0000_0010_0000;
     pub const PASS_TAG_07: PassTag = 0b0000_0000_0100_0000;
     pub const PASS_TAG_08: PassTag = 0b0000_0000_1000_0000;
+    pub fn index(&self) -> usize {
+        match self {
+            EPassTag::ShadowCast => 1,
+            EPassTag::Opaque => 2,
+            EPassTag::Sky => 3,
+            EPassTag::Water => 4,
+            EPassTag::AlphaTest => 5,
+            EPassTag::Transparent => 6,
+            EPassTag::OpaqueExtend => 7,
+            EPassTag::TransparentExtend => 8,
+        }
+    }
     pub fn as_pass(&self) -> PassTag {
         match self {
             EPassTag::ShadowCast => Self::PASS_TAG_01,
@@ -397,3 +410,6 @@ impl TPassData<Option<BindGroupTextureSamplers>> for Pass08BindGroupTextureSampl
     fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
     fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
 }
+
+#[derive(Default, Clone)]
+pub struct RecordPassDraw(pub [Option<ObjectID>; 8]);

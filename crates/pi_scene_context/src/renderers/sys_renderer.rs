@@ -1,11 +1,11 @@
-use std::{marker::PhantomData, time::Instant};
+use std::{marker::PhantomData, time::Instant, sync::Arc};
 
 use pi_assets::{mgr::AssetMgr, asset::Handle};
 use pi_ecs::{prelude::{Query, Commands, Res, Component}, query::{Or, Changed}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
 use pi_render::{
-    rhi::device::RenderDevice,
+    rhi::{device::RenderDevice, asset::RenderRes},
     render_3d::{
         bind_groups::{scene::BindGroupScene, model::BindGroupModel, texture_sampler::BindGroupTextureSamplers},
         shader::{shader::{KeyShader3D, Shader3D, EKeyShader3DSetBlock}, instance_code::EInstanceCode, shader_effect_meta::ShaderEffectMeta}
@@ -18,7 +18,7 @@ use pi_render::{
     }
 };
 use pi_share::Share;
-use crate::{viewer::{ViewerID, ModelListAfterCulling}, pass::*, geometry::{geometry::{RenderGeometry}}};
+use crate::{viewer::{ViewerID, ModelListAfterCulling}, pass::*, geometry::{geometry::{RenderGeometry}}, cameras::camera::CameraViewport};
 
 use super::{
     render_primitive::PrimitiveState,
@@ -167,12 +167,12 @@ pub type SysPass08ShaderUpdate = SysPassShaderUpdate<Pass08Ready, Pass08BindGrou
 
 pub struct SysPassDrawUpdate<
     SS: TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> + Component,
-    D: TPassData<Option<DrawObj3D>> + Component,
+    D: TPassData<Option<Arc<DrawObj3D>>> + Component,
     T: TSystemStageInfo + Component,
 >(pub(crate) PhantomData<(SS, D, T)>);
 impl<
     SS: TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> + Component,
-    D: TPassData<Option<DrawObj3D>> + Component,
+    D: TPassData<Option<Arc<DrawObj3D>>> + Component,
     T: TSystemStageInfo + Component,
 > TSystemStageInfo for SysPassDrawUpdate<SS, D, T> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
@@ -184,7 +184,7 @@ impl<
 #[setup]
 impl<
     SS: TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> + Component,
-    D: TPassData<Option<DrawObj3D>> + Component,
+    D: TPassData<Option<Arc<DrawObj3D>>> + Component,
     T: TSystemStageInfo + Component,
 > SysPassDrawUpdate<SS, D, T> {
     #[system]
@@ -204,7 +204,7 @@ impl<
             >
         >,
         mut draw_cmd: Commands<GameObject, D>,
-        asset_mgr_pipeline: Res<Share<AssetMgr<Pipeline3D>>>,
+        asset_mgr_pipeline: Res<Share<AssetMgr<RenderRes<Pipeline3D>>>>,
         device: Res<RenderDevice>,
     ) {
         let time1 = Instant::now();
@@ -236,14 +236,16 @@ impl<
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
                     };
 
-                    if let Some(pipeline) = Pipeline3D::create(key_state, key_shader.clone(), shader.clone(), key_bindgroup_layouts, bind_group_layouts, key_vertex_layouts, &asset_mgr_pipeline, &device) {
-                        
+                    if let Some(pipeline) = KeyPipeline3D::create(key_state, key_shader.clone(), shader.clone(), key_bindgroup_layouts, bind_group_layouts, key_vertex_layouts, &asset_mgr_pipeline, &device) {
+
                         let draw = DrawObj3D {
-                            pipeline: Pipeline3DUsage(pipeline),
-                            bindgroups: bindgroups.clone(),
-                            geometry: rendergeo.clone(),
+                            pipeline: Some(pipeline),
+                            bindgroups: bindgroups.groups(),
+                            vertices: rendergeo.vertices(),
+                            instances: rendergeo.instances(),
+                            indices: rendergeo.indices.clone(),
                         };
-                        draw_cmd.insert(id_obj.clone(), D::new(Some(draw)));
+                        draw_cmd.insert(id_obj.clone(), D::new(Some(Arc::new(draw))));
                     } else {
                         draw_cmd.insert(id_obj.clone(), D::new(None));
                     }
@@ -349,7 +351,7 @@ impl SysRendererDraws {
         >,
         viewers: Query<
             GameObject,
-            &ModelListAfterCulling,
+            (&ModelListAfterCulling, Option<&CameraViewport>),
         >,
         models: Query<
             GameObject,
@@ -363,7 +365,12 @@ impl SysRendererDraws {
 
         renderers.iter_mut().for_each(|(id_viewer, mut renderer, passtag_orders)| {
             renderer.clear();
-            if let Some(list_model) = viewers.get(id_viewer.0) {
+            if let Some((list_model, viewport)) = viewers.get(id_viewer.0) {
+                if let Some(viewport) = viewport {
+                    renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);
+                } else {
+                    renderer.draws.viewport = (0., 0., 1., 1., 0., 1.);
+                }
                 list_model.0.iter().for_each(|id_obj| {
                     if let Some(draws) = models.get(id_obj.clone()) {
                         collect_draw(&mut renderer, passtag_orders, draws);

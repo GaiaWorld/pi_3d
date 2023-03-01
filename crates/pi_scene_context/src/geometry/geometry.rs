@@ -1,4 +1,7 @@
-use pi_render::renderer::{indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::{RenderVertices, RenderIndices}, draw_obj::TGeometry};
+use std::ops::Range;
+
+use pi_map::vecmap::VecMap;
+use pi_render::renderer::{indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::{RenderVertices, RenderIndices, EVerticesBufferUsage}};
 
 use super::vertex_buffer_useinfo::{
     AssetResVBSlot01, AssetDescVBSlot01,
@@ -18,7 +21,7 @@ impl RenderVerticesFrom for RenderVertices {
     fn create<T0: TVertexBufferUseInfo, T1: TAssetResVertexBuffer>(useinfo: &T0, res: &T1) -> Self {
         Self {
             slot: T0::slot(),
-            buffer: res.buffer(),
+            buffer: EVerticesBufferUsage::Other(res.buffer()),
             buffer_range: useinfo.range(),
             size_per_value: useinfo.desc().stride()
         }
@@ -31,7 +34,7 @@ pub trait RenderIndicesFrom {
 impl RenderIndicesFrom for RenderIndices {
     fn create(item: (&IndicesBufferDesc, &AssetResBufferIndices)) -> Self {
         Self {
-            buffer: item.1.0.clone(),
+            buffer: EVerticesBufferUsage::Other(item.1.0.clone()),
             buffer_range: item.0.buffer_range.clone(),
             format: item.0.format,
         }
@@ -43,6 +46,29 @@ pub struct RenderGeometry {
     pub vertices: Vec<RenderVertices>,
     pub instances: Vec<RenderVertices>,
     pub indices: Option<RenderIndices>,
+}
+impl RenderGeometry {
+    pub fn vertices(&self) -> VecMap<RenderVertices> {
+        let mut result = VecMap::default();
+        let mut index = 0;
+        self.vertices.iter().for_each(|item| {
+            result.insert(index, item.clone());
+            index += 1;
+        });
+        self.instances.iter().for_each(|item| {
+            result.insert(index, item.clone());
+            index += 1;
+        });
+
+        result
+    }
+    pub fn instances(&self) -> Range<u32> {
+        if let Some(item) = self.instances.get(0) {
+            item.value_range()
+        } else {
+            0..1
+        }
+    }
 }
 
 impl From<
@@ -260,18 +286,5 @@ impl RenderGeometry {
             instances,
             indices,
         }
-    }
-}
-impl TGeometry for RenderGeometry {
-    fn vertices(&self) -> &[RenderVertices] {
-        &self.vertices
-    }
-
-    fn instances(&self) -> &[RenderVertices] {
-        &self.instances
-    }
-
-    fn indices(&self) -> Option<&RenderIndices> {
-        self.indices.as_ref()
     }
 }

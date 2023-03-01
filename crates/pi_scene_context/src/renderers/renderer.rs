@@ -29,7 +29,7 @@ impl Renderer {
         Self {
             viewport: Viewport::default(),
             opaque_graphic: Some(opaque_graphic),
-            draws: DrawList3D { list: vec![] },
+            draws: DrawList3D { list: vec![], viewport: (0., 0., 10., 10., 0., 1.) },
             ready: false,
         }
     }

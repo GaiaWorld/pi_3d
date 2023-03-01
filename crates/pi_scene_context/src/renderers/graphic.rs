@@ -5,7 +5,7 @@ use pi_atom::Atom;
 use pi_ecs::query::QueryState;
 use pi_engine_shell::object::{ObjectID, GameObject};
 use pi_futures::BoxFuture;
-use pi_render::{components::view::target_alloc::ShareTargetView, graph::{param::OutParam, node::Node, RenderContext}, rhi::{device::RenderDevice, texture::ScreenTexture}};
+use pi_render::{components::view::target_alloc::ShareTargetView, graph::{param::OutParam, node::Node, RenderContext}, rhi::{device::RenderDevice, texture::ScreenTexture}, renderer::draw_obj_list::DrawList};
 
 use crate::{renderers::{renderer::Renderer}, pass::PassTagOrders};
 
@@ -75,31 +75,21 @@ impl Node for RenderNode {
 
     fn run<'a>(
         &'a mut self,
-        context: pi_render::graph::RenderContext,
+        mut context: pi_render::graph::RenderContext,
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         input: &'a Self::Input,
         usage: &'a pi_render::graph::node::ParamUsage,
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let time = Instant::now();
 
-        let RenderContext {
-            mut world, ..
-        } = context;
+        
 
         // let window = world.get_resource::<RenderWindow>().unwrap();
 
-        let query = QueryState::<GameObject, &Renderer>::new(&mut world);
-
-        let mut output = RendererGraphicParam::default();
-
+        let query = QueryState::<GameObject, &Renderer>::new(&mut context.world);
         //  log::debug!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
-        match query.get(&world, self.renderer_id) {
-            Some(renderer) => {
-                let window = world.get_resource::<Arc<winit::window::Window>>().unwrap();
-                let device = world.get_resource::<RenderDevice>().unwrap();
-                let width = window.inner_size().width;
-                let height = window.inner_size().height;
-
+        match query.get(&context.world, self.renderer_id) {
+            Some(mut renderer) => {
                 let currlist: Vec<ShareTargetView> = vec![];
 
                 // let atlas_allocator = world.get_resource::<Share<AssetMgr::<RenderRes<wgpu::TextureView>>>>().unwrap();
@@ -176,12 +166,19 @@ impl Node for RenderNode {
                 //     stencil_ops: None,
                 // });
 
-                let surface = world.get_resource::<ScreenTexture>().unwrap();
+                let mut vx = 0.;
+                let mut vy = 0.;
+                let mut vw = 0.;
+                let mut vh = 0.;
+
+                let mut output = RendererGraphicParam::default();
+                let window = context.world.get_resource::<Arc<winit::window::Window>>().unwrap();
+                let device = context.world.get_resource::<RenderDevice>().unwrap();
+                let width = window.inner_size().width;
+                let height = window.inner_size().height;
+                let surface = context.world.get_resource::<ScreenTexture>().unwrap();
                 let target = surface.view.as_ref().unwrap();
-
                 let depth_stencil_attachment = None;
-                
-
                 let ops = wgpu::Operations {
                     load: wgpu::LoadOp::Load,
                     store: true,
@@ -197,6 +194,9 @@ impl Node for RenderNode {
                     )
                 );
 
+                vw = width as f32;
+                vh = height as f32;
+
                 let mut renderpass = commands.begin_render_pass(
                     &wgpu::RenderPassDescriptor {
                         label: Some("RenderNode"),
@@ -205,9 +205,15 @@ impl Node for RenderNode {
                     }
                 );
 
-                renderpass.set_viewport(0., 0., 800., 600., 0., 1.);
+                let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
 
-                renderer.draws.render(&mut renderpass);
+                x = vw * x + vx;
+                y = vh * y + vy;
+                w = vw * w;
+                h = vh * h;
+
+                renderpass.set_viewport(x, y, w, h, min_depth, max_depth);
+                DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
 
                 // // To Screen
                 // {

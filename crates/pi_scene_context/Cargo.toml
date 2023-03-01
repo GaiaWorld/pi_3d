@@ -33,6 +33,7 @@ naga = { version = "0.9", features = [
 ] }
 bytemuck = { version = "1.4", features = ["derive"] }
 
+pi_map = "0.1"
 pi_slotmap = "0.1"
 pi_hash = "0.1"
 pi_share = "0.4"

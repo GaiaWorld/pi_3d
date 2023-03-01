@@ -6,7 +6,7 @@ use pi_ecs::prelude::Setup;
 use pi_engine_shell::{run_stage::ERunStageChap, assets::sync_load::PluginAssetSyncNotNeedLoad};
 use pi_futures::BoxFuture;
 use pi_hash::XHashMap;
-use pi_render::{components::view::{target_alloc::{ShareTargetView}}, graph::{node::Node}, rhi::asset::RenderRes, };
+use pi_render::{components::view::{target_alloc::{ShareTargetView}}, graph::{node::Node}, rhi::{asset::RenderRes, pipeline::RenderPipeline}, };
 use render_derive::NodeParam;
 
 use crate::{renderers::sys_renderer::SysRendererDraws};
@@ -97,8 +97,9 @@ impl crate::Plugin for PluginRenderer {
             3 * 60 * 1000
         ));
 
-        PluginAssetSyncNotNeedLoad::<KeyPipeline3D, Pipeline3D>::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
-
+        if world.get_resource::<AssetMgr::<RenderRes<RenderPipeline>>>().is_none() {
+            world.insert_resource(AssetMgr::<RenderRes<RenderPipeline>>::new(GarbageEmpty(), false, 10 * 1024 * 1024, 60 * 1000));
+        }
         let world = engine.world_mut();
         // RendererItemsReset::setup(world, stages.query_stage::<RendererItemsReset>(ERunStageChap::Uniform));
         // RendererItemsModifyByModelChange::setup(world, stages.query_stage::<RendererItemsModifyByModelChange>(ERunStageChap::Uniform));
