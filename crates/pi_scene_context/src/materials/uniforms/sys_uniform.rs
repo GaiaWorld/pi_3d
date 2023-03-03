@@ -1,9 +1,9 @@
 
 
-use std::{mem::replace, sync::Arc};
+use std::{mem::replace, sync::Arc, marker::PhantomData};
 
 use pi_assets::mgr::AssetMgr;
-use pi_ecs::{prelude::{ResMut, Query, Res, Commands}, query::{Changed, Or, With}};
+use pi_ecs::{prelude::{ResMut, Query, Res, Commands, Component}, query::{Changed, Or, With}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
 use pi_render::{rhi::{device::RenderDevice}, renderer::{bind_buffer::{BindBufferAllocator}, sampler::{SamplerRes, BindDataSampler}}, render_3d::{shader::uniform_texture::UniformTextureWithSamplerParam, binds::effect_sampler2d::{EffectBindSampler2D01, EffectBindSampler2D02, EffectBindSampler2D03, EffectBindSampler2D04}}};
@@ -15,12 +15,7 @@ use crate::{
         material::{MaterialUsedList},
         command::{SysMaterialIDCommand, SysMaterailCreateCommands, SysAssetShaderEffectLoad}
     },
-    pass::{
-        EPassTag,
-        Pass01BindEffectValue, Pass02BindEffectValue, Pass03BindEffectValue, Pass04BindEffectValue, Pass05BindEffectValue, Pass06BindEffectValue, Pass07BindEffectValue, Pass08BindEffectValue,
-        Pass01BindEffectTextures, Pass02BindEffectTextures, Pass03BindEffectTextures, Pass04BindEffectTextures, Pass05BindEffectTextures, Pass06BindEffectTextures, Pass07BindEffectTextures, Pass08BindEffectTextures,
-        Pass01Ready, Pass02Ready, Pass03Ready, Pass04Ready, Pass05Ready, Pass06Ready, Pass07Ready, Pass08Ready
-    }
+    pass::*
 };
 
 
@@ -51,7 +46,7 @@ pub struct SysUniformComand;
 impl TSystemStageInfo for SysUniformComand {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysMaterialMetaChange::key()
+            SysMaterialMetaChange::<PassID01>::key()
         ]
     }
 }
@@ -137,8 +132,8 @@ impl SysUniformComand {
 /// * Material 参数变化 影响 Model
 ///   * 没有纹理时 Model 的 Pass 即准备好
 ///   * 有纹理时 Model 的 Pass 需等待纹理加载好
-pub struct SysMaterialMetaChange;
-impl TSystemStageInfo for SysMaterialMetaChange {
+pub struct SysMaterialMetaChange<T: TPassID + Component>(PhantomData<T>);
+impl<T: TPassID + Component> TSystemStageInfo for SysMaterialMetaChange<T> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
             // SysAssetShaderEffectLoad::key(), 
@@ -146,7 +141,7 @@ impl TSystemStageInfo for SysMaterialMetaChange {
     }
 }
 #[setup]
-impl SysMaterialMetaChange {
+impl<T: TPassID + Component> SysMaterialMetaChange<T> {
     #[system]
     pub fn cmd(
         mut materials: Query<
@@ -156,16 +151,10 @@ impl SysMaterialMetaChange {
             ),
             Changed<AssetResShaderEffectMeta>
         >,
+        models: Query<GameObject, &T>,
         mut effect_values_cmd: Commands<GameObject, BindEffectValues>,
         mut effect_values_flag_cmd: Commands<GameObject, BindEffectValueDirty>,
-        mut ready01_cmd: Commands<GameObject, Pass01Ready>,
-        mut ready02_cmd: Commands<GameObject, Pass02Ready>,
-        mut ready03_cmd: Commands<GameObject, Pass03Ready>,
-        mut ready04_cmd: Commands<GameObject, Pass04Ready>,
-        mut ready05_cmd: Commands<GameObject, Pass05Ready>,
-        mut ready06_cmd: Commands<GameObject, Pass06Ready>,
-        mut ready07_cmd: Commands<GameObject, Pass07Ready>,
-        mut ready08_cmd: Commands<GameObject, Pass08Ready>,
+        mut ready01_cmd: Commands<GameObject, PassReady>,
         mut allocator: ResMut<BindBufferAllocator>,
         device: Res<RenderDevice>,
     ) {
@@ -188,17 +177,14 @@ impl SysMaterialMetaChange {
             } else {
                 None
             };
-            match passtag 
-            {
-                EPassTag::ShadowCast => list_model.0.iter().for_each(|(id_obj, _)| { ready01_cmd.insert(id_obj.clone(), Pass01Ready(data.clone())); }),
-                EPassTag::Opaque => list_model.0.iter().for_each(|(id_obj, _)| { ready02_cmd.insert(id_obj.clone(), Pass02Ready(data.clone())); }),
-                EPassTag::Sky => list_model.0.iter().for_each(|(id_obj, _)| { ready03_cmd.insert(id_obj.clone(), Pass03Ready(data.clone())); }),
-                EPassTag::Water => list_model.0.iter().for_each(|(id_obj, _)| { ready04_cmd.insert(id_obj.clone(), Pass04Ready(data.clone())); }),
-                EPassTag::Transparent => list_model.0.iter().for_each(|(id_obj, _)| { ready05_cmd.insert(id_obj.clone(), Pass05Ready(data.clone())); }),
-                EPassTag::AlphaTest => list_model.0.iter().for_each(|(id_obj, _)| { ready06_cmd.insert(id_obj.clone(), Pass06Ready(data.clone())); }),
-                EPassTag::OpaqueExtend => list_model.0.iter().for_each(|(id_obj, _)| { ready07_cmd.insert(id_obj.clone(), Pass07Ready(data.clone())); }),
-                EPassTag::TransparentExtend => list_model.0.iter().for_each(|(id_obj, _)| { ready08_cmd.insert(id_obj.clone(), Pass08Ready(data.clone())); }),
-            }
+            let pass = passtag.as_pass();
+            list_model.0.iter().for_each(|(id_obj, _)| {
+                if let Some(passid) = models.get(id_obj.clone()) {
+                    if pass & T::TAG == T::TAG {
+                        ready01_cmd.insert(passid.id(), PassReady(data.clone()));
+                    }
+                }
+            });
         });
     }
 }

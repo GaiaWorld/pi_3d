@@ -1,16 +1,18 @@
 use std::marker::PhantomData;
 
-use pi_ecs::{prelude::{Component, Query, Setup, Commands}, query::{Changed, Or}};
+use pi_assets::{asset::Handle, mgr::AssetMgr};
+use pi_ecs::{prelude::{Component, Query, Setup, Commands, ResMut, Res}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::{TSystemStageInfo, ERunStageChap}};
-use pi_render::{render_3d::shader::instance_code::EInstanceCode, renderer::{instance::EInstanceKind, indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::RenderVertices}};
+use pi_render::{render_3d::shader::instance_code::EInstanceCode, renderer::{instance::EInstanceKind, indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::RenderVertices, vertex_buffer::EVertexBufferRange, vertex_buffer_loader::{SingleVertexBufferDataMap, VertexBufferLoader}}};
+use pi_share::Share;
 
 use crate::{
     geometry::{
         geometry::RenderVerticesFrom,
         instance::{InstanceList}
     },
-    meshes::command::SysMeshModifyCommand
+    meshes::command::SysMeshModifyCommand,
 };
 
 use super::{
@@ -31,12 +33,12 @@ impl TSystemStageInfo for SysGeometryStatesInit {
     }
 }
 
-pub struct SysGeometryChangeInitSlot<D: TVertexBufferUseInfo + Component, D1: AsKeyVertexBuffer + Component>(PhantomData<(D, D1)>);
+pub struct SysGeometryChangeInitSlot<D: TVertexBufferUseInfo + Component, D1: From<Handle<EVertexBufferRange>> + Component>(PhantomData<(D, D1)>);
 #[setup]
 impl<D, D1> SysGeometryChangeInitSlot<D, D1>
 where
     D: TVertexBufferUseInfo + Component,
-    D1: AsKeyVertexBuffer + Component,
+    D1: From<Handle<EVertexBufferRange>> + Component,
 {
     #[system]
     fn sys(
@@ -46,7 +48,11 @@ where
             Changed<GeometryDesc>,
         >,
         mut slot_cmd: Commands<GameObject, D>,
-        mut slotkey_cmd: Commands<GameObject, D1>,
+        // mut slotkey_cmd: Commands<GameObject, D1>,
+        mut res_cmd: Commands<GameObject, D1>,
+        mut vb_data_map: ResMut<SingleVertexBufferDataMap>,
+        mut loader_01: ResMut<VertexBufferLoader<ObjectID, D1>>,
+        asset_mgr: Res<Share<AssetMgr<EVertexBufferRange>>>,
         mut geo_enable_cmd: Commands<GameObject, RenderGeometryEable>,
         mut ins_wm_cmd: Commands<GameObject, InstancedBufferWorldMatrix>,
         mut ins_color_cmd: Commands<GameObject, InstancedBufferColor>,
@@ -63,8 +69,12 @@ where
                 let instance_kind = desc.instance_kind();
                 match instance_kind {
                     EInstanceKind::None => {
-                        slotkey_cmd.insert(obj.clone(), D1::create(&desc));
-                        slot_cmd.insert(obj.clone(), D::from(desc));
+                        if let Some(data) = asset_mgr.get(&desc.key) {
+                            res_cmd.insert(obj, D1::from(data));
+                        } else {
+                            loader_01.request(obj, &desc.key, None, &mut vb_data_map);
+                        }
+                        slot_cmd.insert(obj, D::from(desc));
                     },
                     _ => {
                         let buff_id = ins_list.id();
@@ -99,28 +109,28 @@ where
 }
 
 
-pub type SysGeometryChangeSlot01 = SysGeometryChangeInitSlot<AssetDescVBSlot01, AssetKeyVBSlot01>;
-pub type SysGeometryChangeSlot02 = SysGeometryChangeInitSlot<AssetDescVBSlot02, AssetKeyVBSlot02>;
-pub type SysGeometryChangeSlot03 = SysGeometryChangeInitSlot<AssetDescVBSlot03, AssetKeyVBSlot03>;
-pub type SysGeometryChangeSlot04 = SysGeometryChangeInitSlot<AssetDescVBSlot04, AssetKeyVBSlot04>;
-pub type SysGeometryChangeSlot05 = SysGeometryChangeInitSlot<AssetDescVBSlot05, AssetKeyVBSlot05>;
-pub type SysGeometryChangeSlot06 = SysGeometryChangeInitSlot<AssetDescVBSlot06, AssetKeyVBSlot06>;
-pub type SysGeometryChangeSlot07 = SysGeometryChangeInitSlot<AssetDescVBSlot07, AssetKeyVBSlot07>;
-pub type SysGeometryChangeSlot08 = SysGeometryChangeInitSlot<AssetDescVBSlot08, AssetKeyVBSlot08>;
-pub type SysGeometryChangeSlot09 = SysGeometryChangeInitSlot<AssetDescVBSlot09, AssetKeyVBSlot09>;
-pub type SysGeometryChangeSlot10 = SysGeometryChangeInitSlot<AssetDescVBSlot10, AssetKeyVBSlot10>;
-pub type SysGeometryChangeSlot11 = SysGeometryChangeInitSlot<AssetDescVBSlot11, AssetKeyVBSlot11>;
-pub type SysGeometryChangeSlot12 = SysGeometryChangeInitSlot<AssetDescVBSlot12, AssetKeyVBSlot12>;
-pub type SysGeometryChangeSlot13 = SysGeometryChangeInitSlot<AssetDescVBSlot13, AssetKeyVBSlot13>;
-pub type SysGeometryChangeSlot14 = SysGeometryChangeInitSlot<AssetDescVBSlot14, AssetKeyVBSlot14>;
-pub type SysGeometryChangeSlot15 = SysGeometryChangeInitSlot<AssetDescVBSlot15, AssetKeyVBSlot15>;
-pub type SysGeometryChangeSlot16 = SysGeometryChangeInitSlot<AssetDescVBSlot16, AssetKeyVBSlot16>;
+pub type SysGeometryChangeSlot01 = SysGeometryChangeInitSlot<AssetDescVBSlot01, AssetResVBSlot01>;
+pub type SysGeometryChangeSlot02 = SysGeometryChangeInitSlot<AssetDescVBSlot02, AssetResVBSlot02>;
+pub type SysGeometryChangeSlot03 = SysGeometryChangeInitSlot<AssetDescVBSlot03, AssetResVBSlot03>;
+pub type SysGeometryChangeSlot04 = SysGeometryChangeInitSlot<AssetDescVBSlot04, AssetResVBSlot04>;
+pub type SysGeometryChangeSlot05 = SysGeometryChangeInitSlot<AssetDescVBSlot05, AssetResVBSlot05>;
+pub type SysGeometryChangeSlot06 = SysGeometryChangeInitSlot<AssetDescVBSlot06, AssetResVBSlot06>;
+pub type SysGeometryChangeSlot07 = SysGeometryChangeInitSlot<AssetDescVBSlot07, AssetResVBSlot07>;
+pub type SysGeometryChangeSlot08 = SysGeometryChangeInitSlot<AssetDescVBSlot08, AssetResVBSlot08>;
+pub type SysGeometryChangeSlot09 = SysGeometryChangeInitSlot<AssetDescVBSlot09, AssetResVBSlot09>;
+pub type SysGeometryChangeSlot10 = SysGeometryChangeInitSlot<AssetDescVBSlot10, AssetResVBSlot10>;
+pub type SysGeometryChangeSlot11 = SysGeometryChangeInitSlot<AssetDescVBSlot11, AssetResVBSlot11>;
+pub type SysGeometryChangeSlot12 = SysGeometryChangeInitSlot<AssetDescVBSlot12, AssetResVBSlot12>;
+pub type SysGeometryChangeSlot13 = SysGeometryChangeInitSlot<AssetDescVBSlot13, AssetResVBSlot13>;
+pub type SysGeometryChangeSlot14 = SysGeometryChangeInitSlot<AssetDescVBSlot14, AssetResVBSlot14>;
+pub type SysGeometryChangeSlot15 = SysGeometryChangeInitSlot<AssetDescVBSlot15, AssetResVBSlot15>;
+pub type SysGeometryChangeSlot16 = SysGeometryChangeInitSlot<AssetDescVBSlot16, AssetResVBSlot16>;
 
 pub struct SysRenderGeometryInit;
 impl TSystemStageInfo for SysRenderGeometryInit {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysGeometryStatesInit::key(), SysVertexBufferLoad::key()
+            SysVertexBufferLoad::key()
         ]
     }
 }
@@ -131,11 +141,11 @@ impl SysGeometryVBUpdateSlot01
 {
     #[system]
     pub fn slot_change(
-        mut items: Query<
+        items: Query<
             GameObject,
             (   
-                ObjectID,
-                &GeometryDesc
+                ObjectID
+                , &GeometryDesc
                 , &AssetDescVBSlot01, &AssetResVBSlot01
                 , Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>
             ),
@@ -148,7 +158,7 @@ impl SysGeometryVBUpdateSlot01
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot1: ");
-        items.iter_mut().for_each(|(
+        items.iter().for_each(|(
             id_geo
             , desc
             , key1, res1
@@ -172,11 +182,11 @@ impl SysGeometryVBUpdateSlot02
 {
     #[system]
     pub fn slot_change(
-        mut items: Query<
+        items: Query<
             GameObject,
             (   
-                ObjectID,
-                &GeometryDesc
+                ObjectID
+                , &GeometryDesc
                 , &AssetDescVBSlot01, &AssetResVBSlot01
                 , &AssetDescVBSlot02, &AssetResVBSlot02
                 , Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>
@@ -190,7 +200,7 @@ impl SysGeometryVBUpdateSlot02
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot2: ");
-        items.iter_mut().for_each(|(
+        items.iter().for_each(|(
             id_geo
             , desc
             , key1, res1
@@ -216,7 +226,7 @@ impl SysGeometryVBUpdateSlot03
 {
     #[system]
     pub fn slot_change(
-        mut items: Query<
+        items: Query<
             GameObject,
             (   
                 ObjectID
@@ -237,7 +247,7 @@ impl SysGeometryVBUpdateSlot03
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot3: ");
-        items.iter_mut().for_each(|(
+        items.iter().for_each(|(
             id_geo
             , desc
             , key1, res1
@@ -265,7 +275,7 @@ impl SysGeometryVBUpdateSlot04
 {
     #[system]
     pub fn slot_change(
-        mut items: Query<
+        items: Query<
             GameObject,
             (   
                 ObjectID
@@ -288,7 +298,7 @@ impl SysGeometryVBUpdateSlot04
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot4: ");
-        items.iter_mut().for_each(|(
+        items.iter().for_each(|(
             id_geo
             , desc
             , key1, res1
@@ -318,7 +328,7 @@ impl SysGeometryVBUpdateSlot05
 {
     #[system]
     pub fn slot_change(
-        mut items: Query<
+        items: Query<
             GameObject,
             (   
                 ObjectID
@@ -343,7 +353,7 @@ impl SysGeometryVBUpdateSlot05
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot5: ");
-        items.iter_mut().for_each(|(
+        items.iter().for_each(|(
             id_geo
             , desc
             , key1, res1
@@ -375,43 +385,43 @@ impl SysGeometryVBUpdateSlot06
 {
     #[system]
     pub fn slot_change(
-        mut items: Query<
+        items: Query<
             GameObject,
             (   
                 ObjectID
                 , &GeometryDesc
-                , &AssetDescVBSlot01, &AssetResVBSlot01
+                , (&AssetDescVBSlot01, &AssetResVBSlot01
                 , &AssetDescVBSlot02, &AssetResVBSlot02
                 , &AssetDescVBSlot03, &AssetResVBSlot03
                 , &AssetDescVBSlot04, &AssetResVBSlot04
                 , &AssetDescVBSlot05, &AssetResVBSlot05
-                , &AssetDescVBSlot06, &AssetResVBSlot06
+                , &AssetDescVBSlot06, &AssetResVBSlot06)
                 , Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>
             ),
             Or<(
                 
-                Changed<AssetDescVBSlot01>, Changed<AssetResVBSlot01>,
-                Changed<AssetDescVBSlot02>, Changed<AssetResVBSlot02>,
-                Changed<AssetDescVBSlot03>, Changed<AssetResVBSlot03>,
-                Changed<AssetDescVBSlot04>, Changed<AssetResVBSlot04>,
-                Changed<AssetDescVBSlot05>, Changed<AssetResVBSlot05>,
-                Changed<AssetDescVBSlot06>, Changed<AssetResVBSlot06>,
+                Changed<AssetResVBSlot01>,
+                Changed<AssetResVBSlot02>,
+                Changed<AssetResVBSlot03>,
+                Changed<AssetResVBSlot04>,
+                Changed<AssetResVBSlot05>,
+                Changed<AssetResVBSlot06>,
                 Changed<AssetResBufferIndices>
             )>
         >,
         mut geo_cmd: Commands<GameObject, RenderGeometry>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot6: ");
-        items.iter_mut().for_each(|(
+        items.iter().for_each(|(
             
             id_geo
             , desc
-            , key1, res1
+            , (key1, res1
             , key2, res2
             , key3, res3
             , key4, res4
             , key5, res5
-            , key6, res6
+            , key6, res6)
             , indicesdesc , indices
         )| {
             // log::debug!(" > {}", desc.slot_count());
@@ -460,7 +470,7 @@ impl pi_engine_shell::plugin::Plugin for PluginVertexBuffers {
         SysGeometryChangeSlot15::setup(world, stage_builder);
         SysGeometryChangeSlot16::setup(world, stage_builder);
 
-        let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Initial);
+        let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Uniform);
         SysGeometryVBUpdateSlot01::setup(world, stage_builder);
         SysGeometryVBUpdateSlot02::setup(world, stage_builder);
         SysGeometryVBUpdateSlot03::setup(world, stage_builder);

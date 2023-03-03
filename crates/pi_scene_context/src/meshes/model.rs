@@ -53,20 +53,16 @@ impl TInstancedData for RenderWorldMatrix {
         EVertexDataKind::InsWorldRow1
     }
 
-    fn collect(list: &Vec<&Self>, key: KeyVertexBuffer, device: &RenderDevice, queue: &RenderQueue, allocator: &mut VertexBufferAllocator, asset_mgr: &Share<AssetMgr<EVertexBufferRange>>) -> Option<Handle<EVertexBufferRange>> {
+    fn collect(list: &Vec<&Self>) -> Vec<u8> {
         let mut result = vec![];
 
         list.iter().for_each(|v| {
-            v.0.as_slice().iter().for_each(|v| {
+            bytemuck::cast_slice(v.0.as_slice()).iter().for_each(|v| {
                 result.push(*v);
             })
         });
 
-        if let Some(buffer) = allocator.create_not_updatable_buffer(device, queue, bytemuck::cast_slice(&result)) {
-            asset_mgr.insert(key, buffer)
-        } else {
-            None
-        }
+        result
     }
 
     // fn size() -> usize {

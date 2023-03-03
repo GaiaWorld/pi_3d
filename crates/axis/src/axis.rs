@@ -106,13 +106,13 @@ impl InterfaceAxis for EnginShell {
         let queue = world.get_resource::<RenderQueue>().unwrap();
 
         let keypos = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION);
-        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(&AxisBuilder::position()));
+        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(&AxisBuilder::position()).iter().map(|v| *v).collect::<Vec<u8>>());
 
         let keycolor = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4);
-        self.create_vertex_buffer(keycolor.clone(), bytemuck::cast_slice(&AxisBuilder::colors()));
+        self.create_vertex_buffer(keycolor.clone(), bytemuck::cast_slice(&AxisBuilder::colors()).iter().map(|v| *v).collect::<Vec<u8>>());
 
         let key = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_INDICES);
-        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(&AxisBuilder::indices()));
+        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(&AxisBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
 
         self
     }

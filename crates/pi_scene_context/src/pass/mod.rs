@@ -88,327 +88,159 @@ pub trait TPassData<T: Clone> {
     fn val(&self) -> &T;
 }
 
-pub struct Pass01Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass01Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct PassDirtyBindEffectValue(pub PassTag);
+pub struct PassDirtyBindEffectTextures(pub PassTag);
+pub struct FlagPassDirtyBindEffectValue;
+pub struct FlagPassDirtyBindEffectTextures;
+
+pub struct PassSource(pub ObjectID);
+
+pub trait TPass {
+    fn new() -> Self;
+    const TAG: PassTag;
 }
-pub struct Pass02Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass02Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct Pass01;
+impl TPass for Pass01 {
+    const TAG: PassTag = EPassTag::PASS_TAG_01;
+    fn new() -> Self { Self }
 }
-pub struct Pass03Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass03Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct Pass02;
+impl TPass for Pass02 {
+    const TAG: PassTag = EPassTag::PASS_TAG_02;
+    fn new() -> Self { Self }
 }
-pub struct Pass04Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass04Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct Pass03;
+impl TPass for Pass03 {
+    const TAG: PassTag = EPassTag::PASS_TAG_03;
+    fn new() -> Self { Self }
 }
-pub struct Pass05Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass05Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct Pass04;
+impl TPass for Pass04 {
+    const TAG: PassTag = EPassTag::PASS_TAG_04;
+    fn new() -> Self { Self }
 }
-pub struct Pass06Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass06Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct Pass05;
+impl TPass for Pass05 {
+    const TAG: PassTag = EPassTag::PASS_TAG_05;
+    fn new() -> Self { Self }
 }
-pub struct Pass07Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass07Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct Pass06;
+impl TPass for Pass06 {
+    const TAG: PassTag = EPassTag::PASS_TAG_06;
+    fn new() -> Self { Self }
 }
-pub struct Pass08Geometry(pub Option<RenderGeometry>);
-impl TPassData<Option<RenderGeometry>> for Pass08Geometry {
-    fn new(val: Option<RenderGeometry>) -> Self { Self(val) }
-    fn val(&self) -> &Option<RenderGeometry> { &self.0 }
+pub struct Pass07;
+impl TPass for Pass07 {
+    const TAG: PassTag = EPassTag::PASS_TAG_07;
+    fn new() -> Self { Self }
+}
+pub struct Pass08;
+impl TPass for Pass08 {
+    const TAG: PassTag = EPassTag::PASS_TAG_08;
+    fn new() -> Self { Self }
+}
+
+pub trait TPassID {
+    const TAG: PassTag;
+    fn new(id: ObjectID) -> Self;
+    fn id(&self) -> ObjectID;
+}
+pub struct PassID01(pub ObjectID);
+impl TPassID for PassID01 {
+    const TAG: PassTag = EPassTag::PASS_TAG_01;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
+}
+pub struct PassID02(pub ObjectID);
+impl TPassID for PassID02 {
+    const TAG: PassTag = EPassTag::PASS_TAG_02;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
+}
+pub struct PassID03(pub ObjectID);
+impl TPassID for PassID03 {
+    const TAG: PassTag = EPassTag::PASS_TAG_03;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
+}
+pub struct PassID04(pub ObjectID);
+impl TPassID for PassID04 {
+    const TAG: PassTag = EPassTag::PASS_TAG_04;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
+}
+pub struct PassID05(pub ObjectID);
+impl TPassID for PassID05 {
+    const TAG: PassTag = EPassTag::PASS_TAG_05;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
+}
+pub struct PassID06(pub ObjectID);
+impl TPassID for PassID06 {
+    const TAG: PassTag = EPassTag::PASS_TAG_06;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
+}
+pub struct PassID07(pub ObjectID);
+impl TPassID for PassID07 {
+    const TAG: PassTag = EPassTag::PASS_TAG_07;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
+}
+pub struct PassID08(pub ObjectID);
+impl TPassID for PassID08 {
+    const TAG: PassTag = EPassTag::PASS_TAG_08;
+    fn new(id: ObjectID) -> Self { Self(id) }
+    fn id(&self) -> ObjectID { self.0.clone() }
 }
 
 /// * 标识物体 已准备好的 Passs
 /// * 材质没有纹理时 在使用材质时即准备好
 /// * 材质有纹理时 在纹理准备好时才准备好
-pub struct Pass01Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass01Ready {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
-pub struct Pass02Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass02Ready {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
-pub struct Pass03Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass03Ready {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
-pub struct Pass04Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass04Ready {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
-pub struct Pass05Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass05Ready {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
-pub struct Pass06Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass06Ready {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
-pub struct Pass07Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass07Ready {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
-pub struct Pass08Ready(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for Pass08Ready {
+pub struct PassReady(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
+impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for PassReady {
     fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
     fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
 }
 
-pub struct Pass01BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass01BindEffectValue {
+pub struct PassBindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
+impl TPassData<Option<Arc<ShaderBindEffectValue>>> for PassBindEffectValue {
     fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
     fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
 }
 
-pub struct Pass02BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass02BindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
-pub struct Pass03BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass03BindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
-pub struct Pass04BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass04BindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
-pub struct Pass05BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass05BindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
-pub struct Pass06BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass06BindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
-pub struct Pass07BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass07BindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
-pub struct Pass08BindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for Pass08BindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
-
-pub struct Pass01BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass01BindEffectTextures {
+pub struct PassBindEffectTextures(pub Option<EffectTextureSamplers>);
+impl TPassData<Option<EffectTextureSamplers>> for PassBindEffectTextures {
     fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
     fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
 }
-pub struct Pass02BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass02BindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
-pub struct Pass03BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass03BindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
-pub struct Pass04BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass04BindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
-pub struct Pass05BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass05BindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
-pub struct Pass06BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass06BindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
-pub struct Pass07BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass07BindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
-pub struct Pass08BindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for Pass08BindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
-
 
 
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
 #[derive(Default, Clone)]
-pub struct Pass01BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass01BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass02BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass02BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass03BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass03BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass04BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass04BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass05BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass05BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass06BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass06BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass07BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass07BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass08BindGroupScene(pub Option<BindGroupScene>);
-impl TPassData<Option<BindGroupScene>> for Pass08BindGroupScene {
-    fn new(val: Option<BindGroupScene>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupScene> { &self.0 }
+pub struct PassBindGroupScene(pub Option<Arc<BindGroupScene>>);
+impl TPassData<Option<Arc<BindGroupScene>>> for PassBindGroupScene {
+    fn new(val: Option<Arc<BindGroupScene>>) -> Self { Self(val) }
+    fn val(&self) -> &Option<Arc<BindGroupScene>> { &self.0 }
 }
 
 /// * Set1
 /// * 更新依赖: BindModel, BindEffectValues
 #[derive(Default, Clone)]
-pub struct Pass01BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass01BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass02BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass02BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass03BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass03BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass04BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass04BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass05BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass05BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass06BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass06BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass07BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass07BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass08BindGroupModel(pub Option<BindGroupModel>);
-impl TPassData<Option<BindGroupModel>> for Pass08BindGroupModel {
-    fn new(val: Option<BindGroupModel>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupModel> { &self.0 }
+pub struct PassBindGroupModel(pub Option<Arc<BindGroupModel>>);
+impl TPassData<Option<Arc<BindGroupModel>>> for PassBindGroupModel {
+    fn new(val: Option<Arc<BindGroupModel>>) -> Self { Self(val) }
+    fn val(&self) -> &Option<Arc<BindGroupModel>> { &self.0 }
 }
 
 /// * Set2
 /// * 更新依赖: BindTextureSamplers
 #[derive(Default, Clone)]
-pub struct Pass01BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass01BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass02BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass02BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass03BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass03BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass04BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass04BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass05BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass05BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass06BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass06BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass07BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass07BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass08BindGroupTextureSamplers(pub Option<BindGroupTextureSamplers>);
-impl TPassData<Option<BindGroupTextureSamplers>> for Pass08BindGroupTextureSamplers {
-    fn new(val: Option<BindGroupTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroupTextureSamplers> { &self.0 }
+pub struct PassBindGroupTextureSamplers(pub Option<Arc<BindGroupTextureSamplers>>);
+impl TPassData<Option<Arc<BindGroupTextureSamplers>>> for PassBindGroupTextureSamplers {
+    fn new(val: Option<Arc<BindGroupTextureSamplers>>) -> Self { Self(val) }
+    fn val(&self) -> &Option<Arc<BindGroupTextureSamplers>> { &self.0 }
 }
 
 #[derive(Default, Clone)]

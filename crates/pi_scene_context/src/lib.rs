@@ -25,6 +25,7 @@ pub mod light;
 pub mod skeleton;
 pub mod animation;
 pub mod pass;
+pub mod state;
 
 
 pub fn bytes_write_to_memory(

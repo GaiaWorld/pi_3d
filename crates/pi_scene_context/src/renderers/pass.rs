@@ -1,170 +1,199 @@
 
 use std::sync::Arc;
 
-use pi_assets::asset::Handle;
-use pi_render::{render_3d::{shader::shader::{KeyShader3D, Shader3D, EKeyShader3DSetBlock}}, renderer::{bind_group::BindGroupUsage, pipeline::{KeyRenderPipeline}, draw_obj::{DrawObj, DrawBindGroups, DrawBindGroup}, draw_obj_list::{DrawList}}, rhi::{pipeline::RenderPipeline, asset::RenderRes}};
+use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
+use pi_ecs::prelude::Commands;
+use pi_engine_shell::object::{ObjectID, GameObject};
+use pi_hash::XHashMap;
+use pi_render::{
+    asset::{AssetDataCenter, AssetLoader},
+    render_3d::{
+        shader::{
+            shader::{KeyShader3D, Shader3D, EKeyShader3DSetBlock},
+            shader_effect_meta::ShaderEffectMeta,
+            instance_code::EInstanceCode
+        },
+        bind_groups::{scene::BindGroupScene, model::BindGroupModel, texture_sampler::BindGroupTextureSamplers}
+    },
+    rhi::{asset::RenderRes, device::RenderDevice}
+};
+use pi_share::Share;
 
-use crate::{pass::TPassData};
+use crate::{pass::{TPassData, EPassTag, PassTag}, geometry::geometry::RenderGeometry};
 
-#[derive(Debug, Clone)]
-pub struct BindGroups3D(pub [Option<BindGroupUsage>;4]);
-impl BindGroups3D {
-    pub fn groups(&self) -> DrawBindGroups {
-        let mut groups = DrawBindGroups::default();
-        for i in 0..4 {
-            if let Some(val) = &self.0[i as usize] {
-                let val = DrawBindGroup::GroupUsage(val.clone());
-                groups.insert_group(i, val);
-            }
-        }
-
-        groups
-    }
-}
-pub type KeyPipeline3D = KeyRenderPipeline<4, EKeyShader3DSetBlock>;
-pub type Pipeline3D = RenderPipeline;
-pub type Pipeline3DUsage = Handle<RenderRes<Pipeline3D>>;
-
-pub type DrawObj3D = DrawObj;
-pub type DrawList3D = DrawList;
+use super::base::*;
 
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
 #[derive(Default, Clone)]
-pub struct Pass01Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass01Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
+pub struct PassBindGroups(pub Option<BindGroups3D>);
+impl TPassData<Option<BindGroups3D>> for PassBindGroups {
+    fn new(val: Option<BindGroups3D>) -> Self { Self(val) }
+    fn val(&self) -> &Option<BindGroups3D> { &self.0 }
 }
+
+/// * Set0
+/// * 更新依赖: BindSceneEffect, BindViewer
 #[derive(Default, Clone)]
-pub struct Pass02Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass02Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
+pub struct PassShader(pub Option<Handle<Shader3D>>);
+impl TPassData<Option<Handle<Shader3D>>> for PassShader {
+    fn new(val: Option<Handle<Shader3D>>) -> Self { Self(val) }
+    fn val(&self) -> &Option<Handle<Shader3D>> { &self.0 }
 }
-#[derive(Default, Clone)]
-pub struct Pass03Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass03Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass04Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass04Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass05Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass05Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass06Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass06Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass07Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass07Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass08Shader(pub Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>);
-impl TPassData<Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>> for Pass08Shader {
-    fn new(val: Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShader3D, Handle<Shader3D>, BindGroups3D)> { &self.0 }
+impl From<(Handle<Shader3D>, Option<()>)> for PassShader {
+    fn from(value: (Handle<Shader3D>, Option<()>)) -> Self {
+        Self(Some(value.0))
+    }
 }
 
 #[derive(Default, Clone)]
-pub struct Pass01Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass01Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass02Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass02Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass03Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass03Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass04Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass04Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass05Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass05Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass06Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass06Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass07Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass07Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
-}
-#[derive(Default, Clone)]
-pub struct Pass08Pipeline(pub Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>);
-impl TPassData<Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>> for Pass08Pipeline {
-    fn new(val: Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyPipeline3D, Pipeline3DUsage, BindGroups3D)> { &self.0 }
+pub struct PassPipelineKey(pub Option<KeyPipeline3D>);
+impl TPassData<Option<KeyPipeline3D>> for PassPipelineKey {
+    fn new(val: Option<KeyPipeline3D>) -> Self { Self(val) }
+    fn val(&self) -> &Option<KeyPipeline3D> { &self.0 }
 }
 
-pub struct Pass01Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass01Draw {
+
+#[derive(Default, Clone)]
+pub struct PassPipeline(pub Option<Pipeline3DUsage>);
+impl TPassData<Option<Pipeline3DUsage>> for PassPipeline {
+    fn new(val: Option<Pipeline3DUsage>) -> Self { Self(val) }
+    fn val(&self) -> &Option<Pipeline3DUsage> { &self.0 }
+}
+impl From<(Pipeline3DUsage, Option<()>)> for PassPipeline {
+    fn from(value: (Pipeline3DUsage, Option<()>)) -> Self {
+        Self(Some(value.0))
+    }
+}
+
+pub struct PassDraw(pub Option<Arc<DrawObj3D>>);
+impl TPassData<Option<Arc<DrawObj3D>>> for PassDraw {
     fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
     fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
 }
-pub struct Pass02Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass02Draw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
-}
-pub struct Pass03Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass03Draw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
-}
-pub struct Pass04Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass04Draw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
-}
-pub struct Pass05Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass05Draw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
-}
-pub struct Pass06Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass06Draw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
-}
-pub struct Pass07Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass07Draw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
-}
-pub struct Pass08Draw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for Pass08Draw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
-}
+
+pub type AssetDataCenterShader3D = AssetDataCenter<KeyShader3D, Shader3D, ()>;
+pub type AssetLoaderShader3D = AssetLoader<KeyShader3D, ObjectID, Shader3D, (), PassShader>;
+
+pub type AssetDataCenterPipeline3D = AssetDataCenter<u64, Pipeline3D, ()>;
+pub type AssetLoaderPipeline3D = AssetLoader<u64, ObjectID, Pipeline3D, (), PassPipeline>;
+
+// #[derive(Debug, Default)]
+// pub struct Shader3DLoader {
+//     create_list: XHashMap<KeyShader3D, (Handle<ShaderEffectMeta>, EInstanceCode, BindGroupScene, BindGroupModel, Option<BindGroupTextureSamplers>)>,
+//     pass01_wait_list: XHashMap<KeyShader3D, Vec<ObjectID>>,
+// }
+// impl Shader3DLoader {
+//     pub fn new() -> Self {
+//         Self {
+//             create_list: XHashMap::default(),
+//             pass01_wait_list: XHashMap::default(),
+//         }
+//     }
+//     pub fn request(
+//         &mut self,
+//         idobj: ObjectID,
+//         key: &KeyShader3D,
+//         meta: Handle<ShaderEffectMeta>,
+//         instance: EInstanceCode,
+//         scene: &BindGroupScene,
+//         model: &BindGroupModel, 
+//         textures: Option<&BindGroupTextureSamplers>,
+//     ) {
+//         if self.create_list.get(key).is_none() {
+//             let textures = if let Some(textures) = textures {
+//                 Some(textures.clone())
+//             } else {
+//                 None
+//             };
+//             self.create_list.insert(key.clone(), (meta, instance.clone(), scene.clone(), model.clone(), textures));
+//             self.pass01_wait_list.insert(key.clone(), vec![]);
+//         }
+//         self.pass01_wait_list.get_mut(key).unwrap().push(idobj);
+//     }
+
+//     pub fn single_create(
+//         &mut self,
+//         device: &RenderDevice,
+//         asset_mgr: &Share<AssetMgr<Shader3D>>,
+//         shader_cmd: &mut Commands<GameObject, PassShader>,
+//     ) {
+//         self.create_list.drain().for_each(|(key, item)| {
+//             let (meta, instance, set_0, set_1, set_2) = item;
+//             let data = meta.build(device, &key.key_meta, &key.key_attributes, &instance, &set_0, &set_1, set_2.as_ref(), None);
+//             if let Some(shader) = asset_mgr.insert(key.clone(), data) {
+//                 let data = PassShaderData::create(shader.clone(), &set_0, &set_1, set_2.as_ref());
+//                 let data = Some(Arc::new(data));
+//                 if let Some(mut list) = self.pass01_wait_list.remove(&key) {
+//                     list.drain(..).for_each(|id| {
+//                         log::info!("single_create: Shader ");
+//                         shader_cmd.insert(id, PassShader(data.clone()));
+//                     })
+//                 }
+//             }
+//         });
+//     }
+// }
+
+// #[derive(Debug, Default)]
+// pub struct Pipeline3DLoader {
+//     create_list: XHashMap<KeyPipeline3D, (Handle<Shader3D>, BindGroups3D, RenderGeometry)>,
+//     pass01_wait_list: XHashMap<KeyPipeline3D, Vec<ObjectID>>,
+// }
+// impl Pipeline3DLoader {
+//     pub fn new() -> Self {
+//         Self {
+//             create_list: XHashMap::default(),
+//             pass01_wait_list: XHashMap::default(),
+//         }
+//     }
+//     pub fn request(
+//         &mut self,
+//         idobj: ObjectID,
+//         key: &KeyPipeline3D,
+//         shader: Handle<Shader3D>,
+//         bindgroups: BindGroups3D,
+//         rendergeo: RenderGeometry,
+//     ) {
+//         if self.create_list.get(key).is_none() {
+//             self.create_list.insert(key.clone(), (shader, bindgroups, rendergeo));
+//             self.pass01_wait_list.insert(key.clone(), vec![]);
+//         }
+//         self.pass01_wait_list.get_mut(key).unwrap().push(idobj);
+//     }
+
+//     pub fn single_create(
+//         &mut self, 
+//         asset_mgr: &Share<AssetMgr<RenderRes<Pipeline3D>>>,
+//         device: &RenderDevice,
+//         pass01: &mut Commands<GameObject, PassDraw>,
+//     ) {
+//         self.create_list.drain().for_each(|(key, item)| {
+//             let key_u64 = key.to_u64();
+
+//             let (shader, bindgroups, rendergeo) = item;
+//             let mut bind_group_layouts = [None, None, None, None];
+//             for i in 0..4 {
+//                 if let Some(val) = &bindgroups.0[i] {
+//                     bind_group_layouts[i] = Some(val.layout());
+//                 }
+//             }
+//             let pipeline = KeyPipeline3D::create(key.clone(), shader, bind_group_layouts, device);
+//             if let Some(pipeline) = asset_mgr.insert(key_u64, pipeline) {
+//                 let draw = DrawObj3D {
+//                     pipeline: Some(pipeline),
+//                     bindgroups: bindgroups.groups(),
+//                     vertices: rendergeo.vertices(),
+//                     instances: rendergeo.instances(),
+//                     indices: rendergeo.indices.clone(),
+//                 };
+//                 let data = Some(Arc::new(draw));
+//                 if let Some(mut list) = self.pass01_wait_list.remove(&key) {
+//                     list.drain(..).for_each(|id| {
+//                         pass01.insert(id, PassDraw(data.clone()));
+//                     })
+//                 }
+//             }
+//         });
+//     }
+// }

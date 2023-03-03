@@ -6,6 +6,8 @@ use pi_render::{rhi::{asset::TextureRes, device::RenderDevice, RenderQueue}, ren
 use pi_scene_math::Number;
 use pi_share::Share;
 
+use crate::pass::*;
+
 use self::{
     sys_texture::{SysTextureSlot01Load, SysTextureLoad, SysTextureSlot02Load, SysTextureSlot03Load, SysTextureSlot04Load, SysTextureResReady1, SysTextureResReady2},
     sys_uniform::{
@@ -65,7 +67,15 @@ impl Plugin for PluginMaterialUniforms {
         world.insert_resource(SingleUniformCommands::default());
 
         // 材质设置
-        SysMaterialMetaChange::setup(world, stages.query_stage::<SysMaterialMetaChange>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID01>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID01>>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID02>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID02>>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID03>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID03>>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID04>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID04>>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID05>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID05>>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID06>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID06>>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID07>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID07>>(ERunStageChap::Command));
+        SysMaterialMetaChange::<PassID08>::setup(world, stages.query_stage::<SysMaterialMetaChange::<PassID08>>(ERunStageChap::Command));
+
         SysUniformComand::setup(world, stages.query_stage::<SysUniformComand>(ERunStageChap::Command));
         SysBindValueUpdate::setup(world, stages.query_stage::<SysBindValueUpdate>(ERunStageChap::Command));
         SysMaterialTexturesChange::setup(world, stages.query_stage::<SysMaterialTexturesChange>(ERunStageChap::Command));
@@ -130,8 +140,23 @@ impl Plugin for PluginMaterialUniforms {
             SysTextureResReady2::setup(world, stages.query_stage::<SysTextureResReady2>(ERunStageChap::Command));
         }
 
-        SysEffectValueToModelByMaterialModify::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify>(ERunStageChap::Command));
-        SysEffectTexturesToModelByMaterialModify::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID01>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID01>>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID02>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID02>>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID03>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID03>>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID04>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID04>>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID05>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID05>>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID06>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID06>>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID07>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID07>>(ERunStageChap::Command));
+        SysEffectValueToModelByMaterialModify::<PassID08>::setup(world, stages.query_stage::<SysEffectValueToModelByMaterialModify::<PassID08>>(ERunStageChap::Command));
+
+        SysEffectTexturesToModelByMaterialModify::<PassID01>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID01>>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::<PassID02>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID02>>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::<PassID03>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID03>>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::<PassID04>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID04>>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::<PassID05>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID05>>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::<PassID06>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID06>>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::<PassID07>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID07>>(ERunStageChap::Command));
+        SysEffectTexturesToModelByMaterialModify::<PassID08>::setup(world, stages.query_stage::<SysEffectTexturesToModelByMaterialModify::<PassID08>>(ERunStageChap::Command));
 
         Ok(())
     }

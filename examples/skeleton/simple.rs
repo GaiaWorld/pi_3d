@@ -143,7 +143,7 @@ impl PluginTest {
         ];
         // normals
         let jointkey = pi_atom::Atom::from("TestJoint");
-        engine.create_vertex_buffer(jointkey.clone(), bytemuck::cast_slice(&data));
+        engine.create_vertex_buffer(jointkey.clone(), bytemuck::cast_slice(&data).iter().map(|v| *v).collect::<Vec<u8>>());
 
         let format = wgpu::VertexFormat::Uint16x2;
         let jointdesc = VertexBufferDesc::vertices(jointkey.clone(), None, vec![VertexAttribute { kind: EVertexDataKind::MatricesIndices1, format }]);

@@ -1,12 +1,13 @@
 use std::mem::replace;
 
-use pi_assets::{mgr::AssetMgr};
+use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
 use pi_atom::Atom;
 use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{engine_shell::EnginShell, object::GameObject, assets::sync_load::{AssetSyncWait, PluginAssetSyncLoad, InterfaceAssetSyncCreate}, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::{
     renderer::{
+        vertex_buffer_loader::{VertexBufferLoader, SingleVertexBufferDataMap},
         vertex_buffer_desc::VertexBufferDesc,
         vertex_buffer::{VertexBufferLayouts, KeyVertexBuffer, VertexBufferAllocator, EVertexBufferRange},
         indices::{AssetKeyBufferIndices, AssetResBufferIndices}
@@ -23,7 +24,7 @@ use crate::{object::ObjectID, plugin::Plugin};
 use self::{
     vertex_buffer_useinfo::*,
     sys_vertex_buffer_use::{PluginVertexBuffers, SysGeometryStatesInit},
-    geometry::RenderGeometryEable
+    geometry::RenderGeometryEable, load::SysVertexBufferLoad
 };
 
 pub mod vertex_buffer_useinfo;
@@ -31,6 +32,8 @@ pub mod sys_vertex_buffer_use;
 pub mod geometry;
 pub mod indices;
 pub mod instance;
+pub mod load;
+
 pub type VDK = usize;
 pub type GBID = Atom;
 
@@ -87,7 +90,7 @@ pub trait TInterfaceGeomtery {
     fn create_vertex_buffer(
         &self,
         key: KeyVertexBuffer,
-        buffer: &[u8],
+        buffer: Vec<u8>,
     ) -> &Self;
     fn use_geometry(
         &self,
@@ -100,38 +103,13 @@ impl TInterfaceGeomtery for EnginShell {
     fn create_vertex_buffer(
         &self,
         key: KeyVertexBuffer,
-        buffer: &[u8],
+        buffer: Vec<u8>,
     ) -> &Self {
         let world = self.world();
         let assert_mgr = world.get_resource::<Share<AssetMgr<EVertexBufferRange>>>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-        let device = world.get_resource::<RenderDevice>().unwrap();
         if !assert_mgr.check_asset(&key) {
-            let allocator = world.get_resource_mut::<VertexBufferAllocator>().unwrap();
-            if let Some(buffer) = allocator.create_not_updatable_buffer(&device, &queue, buffer) {
-                if let Some(buffer) = assert_mgr.insert(key.clone(), buffer) {
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyBufferIndices, EVertexBufferRange, AssetResBufferIndices>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot01, EVertexBufferRange, AssetResVBSlot01>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot02, EVertexBufferRange, AssetResVBSlot02>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot03, EVertexBufferRange, AssetResVBSlot03>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot04, EVertexBufferRange, AssetResVBSlot04>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot05, EVertexBufferRange, AssetResVBSlot05>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot06, EVertexBufferRange, AssetResVBSlot06>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot07, EVertexBufferRange, AssetResVBSlot07>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot08, EVertexBufferRange, AssetResVBSlot08>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                    let list_wait = world.get_resource_mut::<AssetSyncWait<KeyVertexBuffer, AssetKeyVBSlot09, EVertexBufferRange, AssetResVBSlot09>>().unwrap();
-                    list_wait.loaded(key.clone(), buffer.clone());
-                }
-            }
+            let data_map = world.get_resource_mut::<SingleVertexBufferDataMap>().unwrap();
+            data_map.add(&key, buffer);
         }
 
         self
@@ -148,15 +126,6 @@ impl TInterfaceGeomtery for EnginShell {
     }
 }
 
-pub struct SysVertexBufferLoad;
-impl TSystemStageInfo for SysVertexBufferLoad {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysGeometryStatesInit::key(),
-        ]
-    }
-}
-
 pub struct PluginGeometry;
 impl Plugin for PluginGeometry {
     fn init(
@@ -167,29 +136,29 @@ impl Plugin for PluginGeometry {
         let world = engine.world_mut();
         world.insert_resource(SingleGeometryVBCommands::default());
         world.insert_resource(VertexBufferAllocator::new());
+        world.insert_resource(AssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot01>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot02>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot03>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot04>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot05>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot06>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot07>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot08>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot09>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot10>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot11>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot12>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot13>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot14>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot15>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResVBSlot16>::default());
+        world.insert_resource(VertexBufferLoader::<ObjectID, AssetResBufferIndices>::default());
+
         SysGeometryVBCommand::setup(world, stages.query_stage::<SysGeometryVBCommand>(ERunStageChap::Initial));
-
+        SysVertexBufferLoad::setup(world, stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Uniform));
         stages.query_stage::<SysGeometryStatesInit>(ERunStageChap::Initial);
-        stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Initial);
-
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyBufferIndices, EVertexBufferRange, AssetResBufferIndices, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot01, EVertexBufferRange, AssetResVBSlot01, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot02, EVertexBufferRange, AssetResVBSlot02, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot03, EVertexBufferRange, AssetResVBSlot03, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot04, EVertexBufferRange, AssetResVBSlot04, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot05, EVertexBufferRange, AssetResVBSlot05, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot06, EVertexBufferRange, AssetResVBSlot06, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot07, EVertexBufferRange, AssetResVBSlot07, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot08, EVertexBufferRange, AssetResVBSlot08, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot09, EVertexBufferRange, AssetResVBSlot09, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot10, EVertexBufferRange, AssetResVBSlot10, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot11, EVertexBufferRange, AssetResVBSlot11, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot12, EVertexBufferRange, AssetResVBSlot12, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot13, EVertexBufferRange, AssetResVBSlot13, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot14, EVertexBufferRange, AssetResVBSlot14, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot15, EVertexBufferRange, AssetResVBSlot15, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-        PluginAssetSyncLoad::<KeyVertexBuffer, AssetKeyVBSlot16, EVertexBufferRange, AssetResVBSlot16, SysGeometryStatesInit>::new(false, 60 * 1024 * 1024, 60 * 1000).init(engine, stages);
-
         PluginVertexBuffers.init(engine, stages);
 
         Ok(())

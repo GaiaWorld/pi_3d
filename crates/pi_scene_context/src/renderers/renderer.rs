@@ -7,7 +7,7 @@ use pi_render::graph::{graph::RenderGraph, NodeId};
 
 use crate::{viewer::command::Viewport};
 
-use super::{graphic::RenderNode, pass::DrawList3D};
+use super::{graphic::RenderNode, base::DrawList3D};
 
 
 #[derive(Debug, Default)]

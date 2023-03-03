@@ -47,16 +47,16 @@ impl InterfaceBall for Engine {
         println!(">>>>>>>>>>>>>>>>>>>> 1");
         let flag = String::from("#") + sectors.to_string().as_str() + "#" + stacks.to_string().as_str();
         let keypos = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_POSITION) + flag.as_str());
-        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(positions.as_slice()));
+        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(positions.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
 
         let keynormal = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_NORMAL) + flag.as_str());
-        self.create_vertex_buffer(keynormal.clone(), bytemuck::cast_slice(normals.as_slice()));
+        self.create_vertex_buffer(keynormal.clone(), bytemuck::cast_slice(normals.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
         
         let keyuv = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_UV) + flag.as_str());
-        self.create_vertex_buffer(keyuv.clone(), bytemuck::cast_slice(uvs.as_slice()));
+        self.create_vertex_buffer(keyuv.clone(), bytemuck::cast_slice(uvs.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
 
         let key = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_INDICES) + flag.as_str());
-        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(indices.as_slice()));
+        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(indices.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
 
         self.use_geometry(
             entity,

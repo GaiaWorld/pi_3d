@@ -3,13 +3,13 @@ use futures::FutureExt;
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
 use pi_atom::Atom;
 use pi_ecs::prelude::Setup;
-use pi_engine_shell::{run_stage::ERunStageChap, assets::sync_load::PluginAssetSyncNotNeedLoad};
+use pi_engine_shell::{run_stage::ERunStageChap};
 use pi_futures::BoxFuture;
 use pi_hash::XHashMap;
-use pi_render::{components::view::{target_alloc::{ShareTargetView}}, graph::{node::Node}, rhi::{asset::RenderRes, pipeline::RenderPipeline}, };
+use pi_render::{components::view::{target_alloc::{ShareTargetView}}, graph::{node::Node}, rhi::{asset::RenderRes} };
 use render_derive::NodeParam;
 
-use crate::{renderers::sys_renderer::SysRendererDraws};
+use crate::{renderers::sys_renderer::SysRendererDraws, pass::*};
 
 use self::{
     render_blend::PluginRenderBlend,
@@ -23,7 +23,8 @@ use self::{
     graphic::RendererGraphicDesc,
     render_object::RendererID,
     sys_renderer_pre::{SysSet0ModifyByRendererID, SysSet0ModifyFromScene, SysSet1ModifyByRendererID, SysSet2ModifyByRendererID, SysSet1ModifyByModel, SysSet2ModifyByModel, SysBufferAllocatorUpdate},
-    sys_renderer::*, pass::{KeyPipeline3D, Pipeline3D}
+    sys_renderer::*,
+    pass::{AssetDataCenterShader3D, AssetDataCenterPipeline3D, AssetLoaderShader3D, AssetLoaderPipeline3D},
 };
 
 pub mod render_object;
@@ -40,6 +41,7 @@ pub mod sys_renderer_pre;
 pub mod sys_renderer;
 pub mod pass;
 pub mod command;
+pub mod base;
 
 
 #[derive(Debug, Clone, Default)]
@@ -97,9 +99,19 @@ impl crate::Plugin for PluginRenderer {
             3 * 60 * 1000
         ));
 
-        if world.get_resource::<AssetMgr::<RenderRes<RenderPipeline>>>().is_none() {
-            world.insert_resource(AssetMgr::<RenderRes<RenderPipeline>>::new(GarbageEmpty(), false, 10 * 1024 * 1024, 60 * 1000));
+        if world.get_resource::<AssetDataCenterShader3D>().is_none() {
+            world.insert_resource(AssetDataCenterShader3D::new(false, 10 * 1024 * 1024, 60 * 1000));
         }
+        if world.get_resource::<AssetDataCenterPipeline3D>().is_none() {
+            world.insert_resource(AssetDataCenterPipeline3D::new(false, 10 * 1024 * 1024, 60 * 1000));
+        }
+        if world.get_resource::<AssetLoaderShader3D>().is_none() {
+            world.insert_resource(AssetLoaderShader3D::default());
+        }
+        if world.get_resource::<AssetLoaderPipeline3D>().is_none() {
+            world.insert_resource(AssetLoaderPipeline3D::default());
+        }
+
         let world = engine.world_mut();
         // RendererItemsReset::setup(world, stages.query_stage::<RendererItemsReset>(ERunStageChap::Uniform));
         // RendererItemsModifyByModelChange::setup(world, stages.query_stage::<RendererItemsModifyByModelChange>(ERunStageChap::Uniform));
@@ -110,31 +122,118 @@ impl crate::Plugin for PluginRenderer {
         SysBufferAllocatorUpdate::setup(world, stages.query_stage::<SysBufferAllocatorUpdate>(ERunStageChap::Uniform));
         
         // Bindgroup
-        SysSet0ModifyByRendererID::setup(world, stages.query_stage::<SysSet0ModifyByRendererID>(ERunStageChap::Uniform));
-        SysSet0ModifyFromScene::setup(world, stages.query_stage::<SysSet0ModifyFromScene>(ERunStageChap::Uniform));
-        SysSet1ModifyByRendererID::setup(world, stages.query_stage::<SysSet1ModifyByRendererID>(ERunStageChap::Uniform));
-        SysSet1ModifyByModel::setup(world, stages.query_stage::<SysSet1ModifyByModel>(ERunStageChap::Uniform));
-        SysSet2ModifyByRendererID::setup(world, stages.query_stage::<SysSet2ModifyByRendererID>(ERunStageChap::Uniform));
-        SysSet2ModifyByModel::setup(world, stages.query_stage::<SysSet2ModifyByModel>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass01, PassID01>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass02, PassID02>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass03, PassID03>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass04, PassID04>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass05, PassID05>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass06, PassID06>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass07, PassID07>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysSet0ModifyByRendererID::<Pass08, PassID08>::setup(world, stages.query_stage::<SysSet0ModifyByRendererID::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysSet0ModifyFromScene::<Pass01, PassID01>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysSet0ModifyFromScene::<Pass02, PassID02>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysSet0ModifyFromScene::<Pass03, PassID03>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysSet0ModifyFromScene::<Pass04, PassID04>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysSet0ModifyFromScene::<Pass05, PassID05>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysSet0ModifyFromScene::<Pass06, PassID06>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysSet0ModifyFromScene::<Pass07, PassID07>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysSet0ModifyFromScene::<Pass08, PassID08>::setup(world, stages.query_stage::<SysSet0ModifyFromScene::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysSet1ModifyByRendererID::<Pass01, PassID01>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysSet1ModifyByRendererID::<Pass02, PassID02>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysSet1ModifyByRendererID::<Pass03, PassID03>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysSet1ModifyByRendererID::<Pass04, PassID04>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysSet1ModifyByRendererID::<Pass05, PassID05>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysSet1ModifyByRendererID::<Pass06, PassID06>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysSet1ModifyByRendererID::<Pass07, PassID07>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysSet1ModifyByRendererID::<Pass08, PassID08>::setup(world, stages.query_stage::<SysSet1ModifyByRendererID::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysSet1ModifyByModel::<Pass01, PassID01>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysSet1ModifyByModel::<Pass02, PassID02>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysSet1ModifyByModel::<Pass03, PassID03>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysSet1ModifyByModel::<Pass04, PassID04>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysSet1ModifyByModel::<Pass05, PassID05>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysSet1ModifyByModel::<Pass06, PassID06>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysSet1ModifyByModel::<Pass07, PassID07>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysSet1ModifyByModel::<Pass08, PassID08>::setup(world, stages.query_stage::<SysSet1ModifyByModel::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysSet2ModifyByRendererID::<Pass01, PassID01>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysSet2ModifyByRendererID::<Pass02, PassID02>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysSet2ModifyByRendererID::<Pass03, PassID03>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysSet2ModifyByRendererID::<Pass04, PassID04>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysSet2ModifyByRendererID::<Pass05, PassID05>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysSet2ModifyByRendererID::<Pass06, PassID06>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysSet2ModifyByRendererID::<Pass07, PassID07>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysSet2ModifyByRendererID::<Pass08, PassID08>::setup(world, stages.query_stage::<SysSet2ModifyByRendererID::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysSet2ModifyByModel::<Pass01, PassID01>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysSet2ModifyByModel::<Pass02, PassID02>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysSet2ModifyByModel::<Pass03, PassID03>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysSet2ModifyByModel::<Pass04, PassID04>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysSet2ModifyByModel::<Pass05, PassID05>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysSet2ModifyByModel::<Pass06, PassID06>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysSet2ModifyByModel::<Pass07, PassID07>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysSet2ModifyByModel::<Pass08, PassID08>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysPassBindGroups::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysPassBindGroups::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysPassBindGroups::<Pass03, PassID03>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysPassBindGroups::<Pass04, PassID04>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysPassBindGroups::<Pass05, PassID05>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysPassBindGroups::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysPassBindGroups::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysPassBindGroups::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass08, PassID08>>(ERunStageChap::Uniform));
 
         // Shader
-        SysPass01ShaderUpdate::setup(world, stages.query_stage::<SysPass01ShaderUpdate>(ERunStageChap::Uniform));
-        SysPass02ShaderUpdate::setup(world, stages.query_stage::<SysPass02ShaderUpdate>(ERunStageChap::Uniform));
-        SysPass03ShaderUpdate::setup(world, stages.query_stage::<SysPass03ShaderUpdate>(ERunStageChap::Uniform));
-        SysPass04ShaderUpdate::setup(world, stages.query_stage::<SysPass04ShaderUpdate>(ERunStageChap::Uniform));
-        SysPass05ShaderUpdate::setup(world, stages.query_stage::<SysPass05ShaderUpdate>(ERunStageChap::Uniform));
-        SysPass06ShaderUpdate::setup(world, stages.query_stage::<SysPass06ShaderUpdate>(ERunStageChap::Uniform));
-        SysPass07ShaderUpdate::setup(world, stages.query_stage::<SysPass07ShaderUpdate>(ERunStageChap::Uniform));
-        SysPass08ShaderUpdate::setup(world, stages.query_stage::<SysPass08ShaderUpdate>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass03, PassID03>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass04, PassID04>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass05, PassID05>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByModel::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassShaderRequestByModel::<Pass08, PassID08>>(ERunStageChap::Uniform));
 
-        SysPass01DrawUpdate::setup(world, stages.query_stage::<SysPass01DrawUpdate>(ERunStageChap::Uniform));
-        SysPass02DrawUpdate::setup(world, stages.query_stage::<SysPass02DrawUpdate>(ERunStageChap::Uniform));
-        SysPass03DrawUpdate::setup(world, stages.query_stage::<SysPass03DrawUpdate>(ERunStageChap::Uniform));
-        SysPass04DrawUpdate::setup(world, stages.query_stage::<SysPass04DrawUpdate>(ERunStageChap::Uniform));
-        SysPass05DrawUpdate::setup(world, stages.query_stage::<SysPass05DrawUpdate>(ERunStageChap::Uniform));
-        SysPass06DrawUpdate::setup(world, stages.query_stage::<SysPass06DrawUpdate>(ERunStageChap::Uniform));
-        SysPass07DrawUpdate::setup(world, stages.query_stage::<SysPass07DrawUpdate>(ERunStageChap::Uniform));
-        SysPass08DrawUpdate::setup(world, stages.query_stage::<SysPass08DrawUpdate>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass03, PassID03>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass04, PassID04>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass05, PassID05>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysPassShaderRequestByPass::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassShaderRequestByPass::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysPassShaderLoad::setup(world, stages.query_stage::<SysPassShaderLoad>(ERunStageChap::Uniform));
+
+        SysPassPipelineRequestByModel::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByModel::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByModel::<Pass03, PassID03>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByModel::<Pass04, PassID04>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByModel::<Pass05, PassID05>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByModel::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByModel::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByModel::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassPipelineRequestByModel::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysPassPipelineRequestByPass::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByPass::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByPass::<Pass03, PassID03>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByPass::<Pass04, PassID04>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByPass::<Pass05, PassID05>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByPass::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByPass::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysPassPipelineRequestByPass::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassPipelineRequestByPass::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysPassPipeline3DLoad::setup(world, stages.query_stage::<SysPassPipeline3DLoad>(ERunStageChap::Uniform));
+        
+        SysPassDraw::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassDraw::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysPassDraw::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassDraw::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysPassDraw::<Pass03, PassID03>::setup(world, stages.query_stage::<SysPassDraw::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysPassDraw::<Pass04, PassID04>::setup(world, stages.query_stage::<SysPassDraw::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysPassDraw::<Pass05, PassID05>::setup(world, stages.query_stage::<SysPassDraw::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysPassDraw::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassDraw::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysPassDraw::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassDraw::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysPassDraw::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassDraw::<Pass08, PassID08>>(ERunStageChap::Uniform));
 
         SysRendererDraws::setup(world, stages.query_stage::<SysRendererDraws>(ERunStageChap::Uniform));
 

@@ -12,7 +12,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode, transform_node::{LocalPosition, LocalEulerAngles, LocalScaling}},
     scene::{interface::InterfaceScene},
     cameras::{interface::InterfaceCamera, camera::EFreeCameraMode},
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::graphic::RendererGraphicDesc, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::graphic::RendererGraphicDesc, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, state::PluginStateToFile
 };
 use pi_ecs::{prelude::{ResMut, Setup}, storage::Local};
 use pi_ecs_macros::setup;
@@ -35,6 +35,7 @@ impl Plugin for PluginTest {
         PluginUnlitMaterial.init(engine, stages);
 
         PluginCubeBuilder.init(engine, stages);
+        PluginStateToFile.init(engine, stages);
 
         Ok(())
     }
@@ -105,7 +106,7 @@ impl PluginTest {
 
 
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let mut shell = AppShell::new(
         RenderOptions {

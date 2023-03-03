@@ -146,8 +146,8 @@ impl InterfaceCube for Engine {
     fn regist_cube(
         &self
     ) -> &Self {
-        self.create_vertex_buffer(KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()));
-        self.create_vertex_buffer(KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()));
+        self.create_vertex_buffer(KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        self.create_vertex_buffer(KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
 
         self
     }
