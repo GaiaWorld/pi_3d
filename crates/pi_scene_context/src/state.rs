@@ -6,7 +6,7 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::{run_stage::{TSystemStageInfo, ERunStageChap}, object::{GameObject, ObjectID}, plugin::Plugin};
 use pi_hash::XHashMap;
 
-use crate::{renderers::{sys_renderer::SysRendererDraws, base::{Pipeline3D, Pipeline3DUsage}, pass::{PassPipeline, PassBindGroups, PassShader, PassDraw}}, pass::{PassSource, TPassData, PassBindGroupScene, PassBindGroupModel, PassBindGroupTextureSamplers}, meshes::abstract_mesh::AbstructMesh, geometry::geometry::RenderGeometry};
+use crate::{renderers::{sys_renderer::{SysRendererDraws, SysPassDraw}, base::{Pipeline3D, Pipeline3DUsage}, pass::{PassPipeline, PassBindGroups, PassShader, PassDraw}}, pass::{PassSource, TPassData, PassBindGroupScene, PassBindGroupModel, PassBindGroupTextureSamplers, Pass01, PassID01}, meshes::abstract_mesh::AbstructMesh, geometry::geometry::RenderGeometry};
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -109,7 +109,7 @@ pub struct SysMeshState<T: TMeshState + Component>(PhantomData<T>);
 impl<T: TMeshState + Component> TSystemStageInfo for SysMeshState<T> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysRendererDraws::key()
+            SysPassDraw::<Pass01, PassID01>::key()
         ]
     }
 }

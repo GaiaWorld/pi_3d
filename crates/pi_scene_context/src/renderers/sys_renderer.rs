@@ -29,7 +29,7 @@ use super::{
     render_blend::RenderBlend,
     render_target_state::RenderTargetState,
     renderer::Renderer,
-    sys_renderer_pre::{SysSet0ModifyByRendererID, SysSet0ModifyFromScene, SysSet1ModifyByModel, SysSet2ModifyByRendererID, SysSet2ModifyByModel, SysSet1ModifyByRendererID, SysBufferAllocatorUpdate}
+    sys_renderer_pre::{SysSet0ModifyByRendererID, SysSet0ModifyFromScene, SysSet1ModifyByModel, SysSet2ModifyByRendererID, SysSet2ModifyByModel, SysSet1ModifyByRendererID, SysBufferAllocatorUpdate, SysBindGroupLoad}
 };
 
 
@@ -39,9 +39,7 @@ pub struct SysPassBindGroups<T: TPass + Component, I: TPassID + Component>(Phant
 impl<T: TPass + Component, I: TPassID + Component> TSystemStageInfo for SysPassBindGroups<T, I> {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysSet0ModifyByRendererID::<T, I>::key(), SysSet0ModifyFromScene::<T, I>::key(),
-            SysSet1ModifyByRendererID::<T, I>::key(), SysSet1ModifyByModel::<T, I>::key(),
-            SysSet2ModifyByRendererID::<T, I>::key(), SysSet2ModifyByModel::<T, I>::key(),
+            SysBindGroupLoad::key(),
         ]
     }
 }
@@ -266,7 +264,7 @@ impl SysPassShaderLoad {
         let time1 = Instant::now();
         shader_center.single_create().iter().for_each(|(key, value)| {
             shader_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
-                shader_cmd.insert(entity, component);
+                shader_cmd.insert(entity, PassShader::from(component));
             })
         });
 
@@ -459,7 +457,9 @@ impl SysPassPipeline3DLoad {
         let time1 = Instant::now();
 
         pipeline_center.single_create().iter().for_each(|(key, value)| {
-            pipeline_loader.loaded(key, value).drain(..).for_each(|(entity, component)| { pipeline_cmd.insert(entity, component) })
+            pipeline_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
+                pipeline_cmd.insert(entity, PassPipeline::from(component))
+            })
         });
 
         log::info!("SysPassDrawLoad: {:?}", Instant::now() - time1);

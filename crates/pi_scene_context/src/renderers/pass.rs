@@ -73,10 +73,10 @@ impl TPassData<Option<Arc<DrawObj3D>>> for PassDraw {
 }
 
 pub type AssetDataCenterShader3D = AssetDataCenter<KeyShader3D, Shader3D, ()>;
-pub type AssetLoaderShader3D = AssetLoader<KeyShader3D, ObjectID, Shader3D, (), PassShader>;
+pub type AssetLoaderShader3D = AssetLoader<KeyShader3D, ObjectID, Shader3D, ()>;
 
 pub type AssetDataCenterPipeline3D = AssetDataCenter<u64, Pipeline3D, ()>;
-pub type AssetLoaderPipeline3D = AssetLoader<u64, ObjectID, Pipeline3D, (), PassPipeline>;
+pub type AssetLoaderPipeline3D = AssetLoader<u64, ObjectID, Pipeline3D, ()>;
 
 // #[derive(Debug, Default)]
 // pub struct Shader3DLoader {

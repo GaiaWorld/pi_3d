@@ -21,12 +21,12 @@ impl BindGroups3D {
     pub fn key_set_blocks(&self) -> KeyShaderSetBlocks<4, EKeyShader3DSetBlock> {
         let mut key_set_blocks = [None, None, None, None];
 
-        key_set_blocks[0] = Some(EKeyShader3DSetBlock::Scene(self.scene.key.clone()));
+        key_set_blocks[0] = Some(EKeyShader3DSetBlock::Scene(self.scene.key().key_set.clone()));
 
-        key_set_blocks[1] = Some(EKeyShader3DSetBlock::Model(self.model.key.clone()));
+        key_set_blocks[1] = Some(EKeyShader3DSetBlock::Model(self.model.key().key.clone()));
 
         if let Some(set_2) = &self.textures {
-            key_set_blocks[2] = Some(EKeyShader3DSetBlock::TextureSampler(set_2.key.clone()));
+            key_set_blocks[2] = Some(EKeyShader3DSetBlock::TextureSampler(set_2.key().key.clone()));
         }
 
         KeyShaderSetBlocks(key_set_blocks)
@@ -34,12 +34,12 @@ impl BindGroups3D {
     pub fn bind_group_layouts(&self) -> [Option<Handle<BindGroupLayout>>; 4] {
         let mut bind_group_layouts = [None, None, None, None];
         
-        bind_group_layouts[0] = Some(self.scene.bind_group.layout());
+        bind_group_layouts[0] = Some(self.scene.bind_group().layout());
 
-        bind_group_layouts[1] = Some(self.model.bind_group.layout());
+        bind_group_layouts[1] = Some(self.model.bind_group().layout());
 
         if let Some(set_2) = &self.textures {
-            bind_group_layouts[2] = Some(set_2.bind_group.layout());
+            bind_group_layouts[2] = Some(set_2.bind_group().layout());
         }
 
         bind_group_layouts
@@ -47,12 +47,12 @@ impl BindGroups3D {
     pub fn key_bindgroup_layouts(&self) -> [Option<KeyBindGroupLayout>; 4] {
         let mut key_bindgroup_layouts = [None, None, None, None];
         
-        key_bindgroup_layouts[0] = Some(self.scene.bind_group.key_layout());
+        key_bindgroup_layouts[0] = Some(self.scene.bind_group().key_layout());
 
-        key_bindgroup_layouts[1] = Some(self.model.bind_group.key_layout());
+        key_bindgroup_layouts[1] = Some(self.model.bind_group().key_layout());
 
         if let Some(set_2) = &self.textures {
-            key_bindgroup_layouts[2] = Some(set_2.bind_group.key_layout());
+            key_bindgroup_layouts[2] = Some(set_2.bind_group().key_layout());
         }
 
         key_bindgroup_layouts
@@ -60,11 +60,11 @@ impl BindGroups3D {
     pub fn groups(&self) -> DrawBindGroups {
         let mut groups = DrawBindGroups::default();
         
-        groups.insert_group(0, DrawBindGroup::GroupUsage(self.scene.bind_group.clone()));
-        groups.insert_group(1, DrawBindGroup::GroupUsage(self.model.bind_group.clone()));
+        groups.insert_group(0, DrawBindGroup::GroupUsage(self.scene.bind_group().clone()));
+        groups.insert_group(1, DrawBindGroup::GroupUsage(self.model.bind_group().clone()));
 
         if let Some(set_2) = &self.textures {
-            groups.insert_group(2, DrawBindGroup::GroupUsage(set_2.bind_group.clone()));
+            groups.insert_group(2, DrawBindGroup::GroupUsage(set_2.bind_group().clone()));
         }
 
         groups

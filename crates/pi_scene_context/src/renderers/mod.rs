@@ -22,7 +22,7 @@ use self::{
     renderer::RendererHasher,
     graphic::RendererGraphicDesc,
     render_object::RendererID,
-    sys_renderer_pre::{SysSet0ModifyByRendererID, SysSet0ModifyFromScene, SysSet1ModifyByRendererID, SysSet2ModifyByRendererID, SysSet1ModifyByModel, SysSet2ModifyByModel, SysBufferAllocatorUpdate},
+    sys_renderer_pre::{SysSet0ModifyByRendererID, SysSet0ModifyFromScene, SysSet1ModifyByRendererID, SysSet2ModifyByRendererID, SysSet1ModifyByModel, SysSet2ModifyByModel, SysBufferAllocatorUpdate, SysBindGroupLoad},
     sys_renderer::*,
     pass::{AssetDataCenterShader3D, AssetDataCenterPipeline3D, AssetLoaderShader3D, AssetLoaderPipeline3D},
 };
@@ -175,6 +175,8 @@ impl crate::Plugin for PluginRenderer {
         SysSet2ModifyByModel::<Pass06, PassID06>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass06, PassID06>>(ERunStageChap::Uniform));
         SysSet2ModifyByModel::<Pass07, PassID07>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass07, PassID07>>(ERunStageChap::Uniform));
         SysSet2ModifyByModel::<Pass08, PassID08>::setup(world, stages.query_stage::<SysSet2ModifyByModel::<Pass08, PassID08>>(ERunStageChap::Uniform));
+
+        SysBindGroupLoad::setup(world, stages.query_stage::<SysBindGroupLoad>(ERunStageChap::Uniform));
 
         SysPassBindGroups::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass01, PassID01>>(ERunStageChap::Uniform));
         SysPassBindGroups::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassBindGroups::<Pass02, PassID02>>(ERunStageChap::Uniform));
