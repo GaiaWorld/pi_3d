@@ -4,7 +4,7 @@ use pi_assets::{asset::Handle, mgr::AssetMgr};
 use pi_ecs::{prelude::{Component, Query, Setup, Commands, ResMut, Res}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::{TSystemStageInfo, ERunStageChap}};
-use pi_render::{render_3d::shader::instance_code::EInstanceCode, renderer::{instance::EInstanceKind, indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::RenderVertices, vertex_buffer::EVertexBufferRange, vertex_buffer_loader::{SingleVertexBufferDataMap, VertexBufferLoader}}};
+use pi_render::{render_3d::shader::instance_code::EInstanceCode, renderer::{instance::EInstanceKind, indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::{RenderVertices, EVerticesBufferUsage}, vertex_buffer::EVertexBufferRange, vertex_buffer_loader::{SingleVertexBufferDataMap, VertexBufferLoader}}};
 use pi_share::Share;
 
 use crate::{
@@ -33,12 +33,12 @@ impl TSystemStageInfo for SysGeometryStatesInit {
     }
 }
 
-pub struct SysGeometryChangeInitSlot<D: TVertexBufferUseInfo + Component, D1: From<Handle<EVertexBufferRange>> + Component>(PhantomData<(D, D1)>);
+pub struct SysGeometryChangeInitSlot<D: TVertexBufferUseInfo + Component, D1: From<EVerticesBufferUsage> + Component>(PhantomData<(D, D1)>);
 #[setup]
 impl<D, D1> SysGeometryChangeInitSlot<D, D1>
 where
     D: TVertexBufferUseInfo + Component,
-    D1: From<Handle<EVertexBufferRange>> + Component,
+    D1: From<EVerticesBufferUsage> + Component,
 {
     #[system]
     fn sys(
@@ -70,7 +70,7 @@ where
                 match instance_kind {
                     EInstanceKind::None => {
                         if let Some(data) = asset_mgr.get(&desc.key) {
-                            res_cmd.insert(obj, D1::from(data));
+                            res_cmd.insert(obj, D1::from(EVerticesBufferUsage::Other(data)));
                         } else {
                             loader_01.request(obj, &desc.key, None, &mut vb_data_map);
                         }

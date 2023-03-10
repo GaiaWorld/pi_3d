@@ -152,7 +152,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByModel<T
                         }
                     } else {
                         if old_shader.val().is_some() {
-                            log::info!("SysPassShaderRequestByModel: No Ready");
+                            log::trace!("SysPassShaderRequestByModel: No Ready");
                             shader_cmd.insert(id_pass, PassShader(None));
                         }
                     }
@@ -160,7 +160,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByModel<T
             }
         );
 
-        log::info!("SysPassShaderRequestByModel: {:?}", Instant::now() - time1);
+        log::trace!("SysPassShaderRequestByModel: {:?}", Instant::now() - time1);
     }
 }
 
@@ -227,19 +227,19 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByPass<T,
                     }
                 } else {
                     if old_shader.val().is_some() {
-                        log::info!("SysPassShaderRequestByModel: No Geo");
+                        log::trace!("SysPassShaderRequestByModel: No Geo");
                         shader_cmd.insert(id_pass, PassShader(None));
                     }
                 }
             } else {
                 if old_shader.val().is_some() {
-                    log::info!("SysPassShaderRequestByModel: No Ready");
+                    log::trace!("SysPassShaderRequestByModel: No Ready");
                     shader_cmd.insert(id_pass, PassShader(None));
                 }
             }
         });
 
-        log::info!("SysPassShaderRequestByPass: {:?}", Instant::now() - time1);
+        log::trace!("SysPassShaderRequestByPass: {:?}", Instant::now() - time1);
     }
 }
 
@@ -268,7 +268,7 @@ impl SysPassShaderLoad {
             })
         });
 
-        log::info!("SysPassShaderLoad: {:?}", Instant::now() - time1);
+        log::trace!("SysPassShaderLoad: {:?}", Instant::now() - time1);
     }
 }
 
@@ -344,14 +344,14 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByModel
                     }
                 } else {
                     if old_draw.val().is_some() {
-                        log::info!("SysPassPipelineRequest: No Shader");
+                        log::trace!("SysPassPipelineRequest: No Shader");
                         pipeline_cmd.insert(id_pass, PassPipeline::new(None));
                     }
                 }
             }
         });
 
-        log::info!("SysPassPipelineRequest: {:?}", Instant::now() - time1);
+        log::trace!("SysPassPipelineRequest: {:?}", Instant::now() - time1);
     }
 }
 
@@ -423,16 +423,16 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByPass<
                         pipeline_loader.request(id_pass, &key_u64);
                     }
                 } else {
-                    log::info!("SysPassPipelineRequest: No Geo");
+                    log::trace!("SysPassPipelineRequest: No Geo");
                     pipeline_cmd.insert(id_pass, PassPipeline::new(None));
                 }
             } else {
-                log::info!("SysPassPipelineRequest: No Shader");
+                log::trace!("SysPassPipelineRequest: No Shader");
                 pipeline_cmd.insert(id_pass, PassPipeline::new(None));
             }
         });
 
-        log::info!("SysPassPipelineRequest: {:?}", Instant::now() - time1);
+        log::trace!("SysPassPipelineRequest: {:?}", Instant::now() - time1);
     }
 }
 
@@ -462,7 +462,7 @@ impl SysPassPipeline3DLoad {
             })
         });
 
-        log::info!("SysPassDrawLoad: {:?}", Instant::now() - time1);
+        log::trace!("SysPassDrawLoad: {:?}", Instant::now() - time1);
     }
 }
 
@@ -504,7 +504,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassDraw<T, I> {
             }
         });
 
-        log::info!("SysPassDrawLoad: {:?}", Instant::now() - time1);
+        log::trace!("SysPassDrawLoad: {:?}", Instant::now() - time1);
     }
 }
 
@@ -587,6 +587,6 @@ impl SysRendererDraws {
             }
         });
 
-        log::info!("SysRendererDraws: {:?}", Instant::now() - time1);
+        log::trace!("SysRendererDraws: {:?}", Instant::now() - time1);
     }
 }

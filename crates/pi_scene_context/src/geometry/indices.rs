@@ -3,7 +3,7 @@ use pi_assets::mgr::AssetMgr;
 use pi_ecs::{prelude::{ResMut, Setup, Commands, Res}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{assets::sync_load::{PluginAssetSyncLoad, AssetSyncLoad}, run_stage::{TSystemStageInfo, ERunStageChap}};
-use pi_render::renderer::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_buffer::{KeyVertexBuffer, EVertexBufferRange}, vertex_buffer_loader::{VertexBufferLoader, SingleVertexBufferDataMap}};
+use pi_render::renderer::{indices::{AssetKeyBufferIndices, AssetResBufferIndices, IndicesBufferDesc}, vertex_buffer::{KeyVertexBuffer, EVertexBufferRange}, vertex_buffer_loader::{VertexBufferLoader, SingleVertexBufferDataMap}, vertices::EVerticesBufferUsage};
 use pi_share::Share;
 
 use crate::{object::{ObjectID, GameObject}, plugin::Plugin, engine::Engine};
@@ -36,7 +36,7 @@ impl SysGeometryIndicesCommand {
             match cmd {
                 ECommand::Use(entity, desc) => {
                     if let Some(data) = asset_mgr.get(&desc.buffer) {
-                        res_cmd.insert(entity, AssetResBufferIndices::from(data));
+                        res_cmd.insert(entity, AssetResBufferIndices::from(EVerticesBufferUsage::Other(data)));
                     } else {
                         loader_01.request(entity, &desc.buffer, None, &mut vb_data_map);
                     }

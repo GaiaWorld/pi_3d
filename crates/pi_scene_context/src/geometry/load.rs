@@ -60,7 +60,10 @@ impl SysVertexBufferLoad {
         mut indices_loader: ResMut<VertexBufferLoader<ObjectID, AssetResBufferIndices>>,
         mut indices_cmd: Commands<GameObject, AssetResBufferIndices>,
     ) {
-        data_map.single_create(&device, &queue, &mut allocator, &asset_mgr).drain().for_each(|(key, range)| {
+        let mut data0 = data_map.single_create(&device, &queue, &mut allocator, &asset_mgr);
+        let mut data2 = data_map.single_create_instance(&device, &queue, &mut allocator);
+        data2.drain().for_each(|(k, v)| { data0.insert(k, v); });
+        data0.drain().for_each(|(key, range)| {
             vb01_loader.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 log::info!("SysVertexBufferLoad 01");
                 vb01_cmd.insert(id, data);

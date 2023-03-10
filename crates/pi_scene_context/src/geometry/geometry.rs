@@ -21,7 +21,7 @@ impl RenderVerticesFrom for RenderVertices {
     fn create<T0: TVertexBufferUseInfo, T1: TAssetResVertexBuffer>(useinfo: &T0, res: &T1) -> Self {
         Self {
             slot: T0::slot(),
-            buffer: EVerticesBufferUsage::Other(res.buffer()),
+            buffer: res.buffer(),
             buffer_range: useinfo.range(),
             size_per_value: useinfo.desc().stride()
         }
@@ -34,7 +34,7 @@ pub trait RenderIndicesFrom {
 impl RenderIndicesFrom for RenderIndices {
     fn create(item: (&IndicesBufferDesc, &AssetResBufferIndices)) -> Self {
         Self {
-            buffer: EVerticesBufferUsage::Other(item.1.0.clone()),
+            buffer: item.1.0.clone(),
             buffer_range: item.0.buffer_range.clone(),
             format: item.0.format,
         }

@@ -163,28 +163,27 @@ impl<T: TPassID + Component> SysMaterialMetaChange<T> {
             matid,
             effect_key, effect, list_model, passtag
         )| {
-            log::info!("SysMaterialMetaChange: ");
-            if let Some(effect_val_bind) = BindEffectValues::new(&device, effect_key.0.clone(), effect.0.clone(), &mut allocator) {
-                log::info!("SysMaterialMetaChange: 1");
-                effect_values_cmd.insert(matid, effect_val_bind);
-                effect_values_flag_cmd.insert(matid, BindEffectValueDirty(true));
-            } else {
-                effect_values_flag_cmd.insert(matid, BindEffectValueDirty(false));
-            }
-            
-            let data = if effect.textures.len() == 0 {
-                Some((effect_key.0.clone(), effect.0.clone()))
-            } else {
-                None
-            };
             let pass = passtag.as_pass();
-            list_model.0.iter().for_each(|(id_obj, _)| {
-                if let Some(passid) = models.get(id_obj.clone()) {
-                    if pass & T::TAG == T::TAG {
-                        ready01_cmd.insert(passid.id(), PassReady(data.clone()));
-                    }
+            if pass & T::TAG == T::TAG {
+                if let Some(effect_val_bind) = BindEffectValues::new(&device, effect_key.0.clone(), effect.0.clone(), &mut allocator) {
+                    log::info!("SysMaterialMetaChange: 1");
+                    effect_values_cmd.insert(matid, effect_val_bind);
+                    effect_values_flag_cmd.insert(matid, BindEffectValueDirty(true));
+                } else {
+                    effect_values_flag_cmd.insert(matid, BindEffectValueDirty(false));
                 }
-            });
+                
+                let data = if effect.textures.len() == 0 {
+                    Some((effect_key.0.clone(), effect.0.clone()))
+                } else {
+                    None
+                };
+                list_model.0.iter().for_each(|(id_obj, _)| {
+                    if let Some(passid) = models.get(id_obj.clone()) {
+                            ready01_cmd.insert(passid.id(), PassReady(data.clone()));
+                    }
+                });
+            }
         });
     }
 }

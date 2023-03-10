@@ -4,11 +4,10 @@ use std::marker::PhantomData;
 
 use pi_ecs::{prelude::{Query, Commands, Component}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
+use pi_engine_shell::{object::{GameObject}, run_stage::TSystemStageInfo};
 use pi_render::render_3d::bind_groups::texture_sampler::EffectTextureSamplers;
 use crate::{
     materials::{
-        value::FromValueUniformStatistics,
         material::{MaterialUsedList}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta},
     },
     pass::*

@@ -47,7 +47,7 @@ impl PluginTest {
     ) {
 
         let tes_size = 20;
-        engine.frame_time(10);
+        engine.frame_time(100);
 
         // Test Code
         let scene01 = engine.create_scene();
@@ -106,7 +106,7 @@ impl PluginTest {
 
 
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let mut shell = AppShell::new(
         RenderOptions {

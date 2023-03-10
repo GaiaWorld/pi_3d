@@ -196,7 +196,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet0ModifyByRendererID<T, 
                 return;
             }
             if active.0 {
-                // log::info!("SysSet0ModifyByRendererID: {:?}", list_model.0.len());
+                // log::trace!("SysSet0ModifyByRendererID: {:?}", list_model.0.len());
 
                 if let Some(bind_base_effect) = scenes.get(id_scene.0) {
                     let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()));
@@ -214,7 +214,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet0ModifyByRendererID<T, 
             }
         });
 
-        log::info!("SysSet0ModifyByRendererID: {:?}", Instant::now() - time1);
+        log::trace!("SysSet0ModifyByRendererID: {:?}", Instant::now() - time1);
     }
 }
 
@@ -255,7 +255,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet0ModifyFromScene<T, I> 
             viewers.iter().for_each(|(
                 id_camera, active, id_scene, bind_viewer, list_model, list_renderer
             )| {
-                // log::info!("SysSet0ModifyFromScene ||||||||||||||||||||||");
+                // log::trace!("SysSet0ModifyFromScene ||||||||||||||||||||||");
                 if active.0 && id_scene_obj == id_scene.0 {
                     let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()));
                     list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
@@ -272,7 +272,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet0ModifyFromScene<T, I> 
             });
         });
 
-        log::info!("SysSet0ModifyFromScene: {:?}", Instant::now() - time1);
+        log::trace!("SysSet0ModifyFromScene: {:?}", Instant::now() - time1);
     }
 }
 
@@ -321,12 +321,12 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByRendererID<T, 
             if active.0 == false {
                 return;
             }
-            // log::info!("SysSet1ModifyByRendererID: {:?}", list_model.0.len());
+            // log::trace!("SysSet1ModifyByRendererID: {:?}", list_model.0.len());
             
             list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
-                // log::info!("SysSet1ModifyByRendererID: 1111111111111111");
+                // log::trace!("SysSet1ModifyByRendererID: 1111111111111111");
                 let pass_tags = &desc.passorders;
-                // log::info!("SysSet1ModifyByRendererID: 2222222222222222");
+                // log::trace!("SysSet1ModifyByRendererID: 2222222222222222");
                 list_model.0.iter().for_each(|(id_obj, _)| {
                     if let Some(
                         (
@@ -350,7 +350,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByRendererID<T, 
             });
         });
 
-        log::info!("SysSet1ModifyByRendererID: {:?}", Instant::now() - time1);
+        log::trace!("SysSet1ModifyByRendererID: {:?}", Instant::now() - time1);
     }
 }
 
@@ -401,10 +401,10 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByModel<T, I> {
             if active.0 == false {
                 return;
             }
-            // log::info!("SysSet1ModifyByModel: {:?}", list_model.0.len());
+            // log::trace!("SysSet1ModifyByModel: {:?}", list_model.0.len());
             list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
                 let pass_tags = &desc.passorders;
-                // log::info!("SysSet1ModifyByModel: 1111111111111111111111");
+                // log::trace!("SysSet1ModifyByModel: 1111111111111111111111");
                 list_model.0.iter().for_each(|(id_obj, _)| {
                     if let Some(
                         (
@@ -414,7 +414,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByModel<T, I> {
                     ) = models.get(id_obj.clone()) {
                         // let bind_skl: Option<&BindSkinValue> = None;
                         // let id_skl: Option<&SkeletonID> = None;
-                        // log::info!("SysSet1ModifyByModel: 22222222222222222222222222");
+                        // log::trace!("SysSet1ModifyByModel: 22222222222222222222222222");
                         let bind_skin = match (bind_skl, id_skl) {
                             (None, None) => { None },
                             (Some(bind_skin), Some(_)) => { Some(bind_skin.0.clone()) },
@@ -431,7 +431,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByModel<T, I> {
             });
         });
 
-        log::info!("SysSet1ModifyByModel: {:?}", Instant::now() - time1);
+        log::trace!("SysSet1ModifyByModel: {:?}", Instant::now() - time1);
     }
 }
 
@@ -496,7 +496,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet2ModifyByRendererID<T, 
             });
         });
 
-        log::info!("SysSet2ModifyByRendererID: {:?}", Instant::now() - time1);
+        log::trace!("SysSet2ModifyByRendererID: {:?}", Instant::now() - time1);
     }
 }
 
@@ -536,7 +536,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet2ModifyByModel<T, I> {
             };
         });
 
-        log::info!("SysSet2ModifyByModel: {:?}", Instant::now() - time1);
+        log::trace!("SysSet2ModifyByModel: {:?}", Instant::now() - time1);
     }
 }
 

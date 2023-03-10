@@ -100,52 +100,52 @@ impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanc
                 log::info!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
                 match buffer.slot() {
                     EVertexBufferSlot::Slot01 => {
-                        loader_01.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_01.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot02 => {
-                        loader_02.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_02.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot03 => {
-                        loader_03.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_03.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot04 => {
-                        loader_04.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_04.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot05 => {
-                        loader_05.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_05.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot06 => {
-                        loader_06.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_06.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot07 => {
-                        loader_07.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_07.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot08 => {
-                        loader_08.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_08.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot09 => {
                         loader_09.request(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot10 => {
-                        loader_10.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_10.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot11 => {
-                        loader_11.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_11.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot12 => {
-                        loader_12.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_12.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot13 => {
-                        loader_13.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_13.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot14 => {
-                        loader_14.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_14.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot15 => {
-                        loader_15.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_15.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                     EVertexBufferSlot::Slot16 => {
-                        loader_16.request(id_obj, &key, data, &mut vb_data_map);
+                        loader_16.request_instance(id_obj, &key, data, &mut vb_data_map);
                     },
                 }
             }

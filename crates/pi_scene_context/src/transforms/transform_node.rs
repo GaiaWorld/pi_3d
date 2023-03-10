@@ -13,6 +13,22 @@ impl pi_curves::curve::frame::FrameDataValue for LocalPosition {
         Self(self.0.lerp(&rhs.0, amount))
     }
 
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let _1 = 1.;
+        let _2 = 2.;
+        let _3 = 3.;
+
+        let squared = amount * amount;
+        let cubed = amount * squared;
+        let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
+        let part2 = (-_2 * cubed) + (_3 * squared);
+        let part3 = (cubed - (_2 * squared)) + amount;
+        let part4 = cubed - squared;
+
+        let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
+        return Self(result);
+    }
+
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         Self(self.0 + rhs.0.scale(amount))
     }
@@ -28,6 +44,22 @@ impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
         Self(self.0.lerp(&rhs.0, amount))
     }
 
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let _1 = 1.;
+        let _2 = 2.;
+        let _3 = 3.;
+
+        let squared = amount * amount;
+        let cubed = amount * squared;
+        let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
+        let part2 = (-_2 * cubed) + (_3 * squared);
+        let part3 = (cubed - (_2 * squared)) + amount;
+        let part4 = cubed - squared;
+
+        let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
+        return Self(result);
+    }
+
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         Self(self.0 + rhs.0.scale(amount))
     }
@@ -40,8 +72,24 @@ impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
 pub struct LocalRotationQuaternion(pub Quaternion);
 impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
-        let temp = self.0.lerp(&rhs.0, amount);
-        Self(Quaternion::from_quaternion(temp))
+        let temp = self.0.slerp(&rhs.0, amount);
+        Self(temp)
+    }
+
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let _1 = 1.;
+        let _2 = 2.;
+        let _3 = 3.;
+
+        let squared = amount * amount;
+        let cubed = amount * squared;
+        let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
+        let part2 = (-_2 * cubed) + (_3 * squared);
+        let part3 = (cubed - (_2 * squared)) + amount;
+        let part4 = cubed - squared;
+
+        let result = (((value1.0.quaternion() * part1) + (value2.0.quaternion() * part2)) + (tangent1.0.quaternion() * part3)) + (tangent2.0.quaternion() * part4);
+        return Self(Quaternion::from_quaternion(result));
     }
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -66,6 +114,22 @@ impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
         Self(self.0.lerp(&rhs.0, amount))
     }
 
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let _1 = 1.;
+        let _2 = 2.;
+        let _3 = 3.;
+
+        let squared = amount * amount;
+        let cubed = amount * squared;
+        let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
+        let part2 = (-_2 * cubed) + (_3 * squared);
+        let part3 = (cubed - (_2 * squared)) + amount;
+        let part4 = cubed - squared;
+
+        let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
+        return Self(result);
+    }
+
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         Self(self.0 + rhs.0.scale(amount))
     }
@@ -86,6 +150,23 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         Self(self.0.scale(1.0 - amount) + rhs.0.scale(amount), true)
     }
+
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let _1 = 1.;
+        let _2 = 2.;
+        let _3 = 3.;
+
+        let squared = amount * amount;
+        let cubed = amount * squared;
+        let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
+        let part2 = (-_2 * cubed) + (_3 * squared);
+        let part3 = (cubed - (_2 * squared)) + amount;
+        let part4 = cubed - squared;
+
+        let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
+        return Self(result, true);
+    }
+
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         Self(self.0 + rhs.0.scale(amount), true)
@@ -180,7 +261,8 @@ impl GlobalTransform {
             // log::debug!("absolute_position:");
             // log::debug!("{}", g_p);
         
-            let iso = Isometry3::from_parts(Translation3::new(g_p.x, g_p.y, g_p.z), Quaternion::from_matrix(&g_r.matrix()));
+            let temp = g_p.as_slice();
+            let iso = Isometry3::from_parts(Translation3::new(temp[0], temp[1], temp[2]), Quaternion::from_matrix(&g_r.matrix()));
             self.iso = Some(iso);
             self.rotation = Some(g_r);
             self.scaling = Some(g_s);

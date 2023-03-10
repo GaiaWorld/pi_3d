@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::Handle;
-use pi_render::renderer::{vertex_buffer::{EVertexBufferRange, KeyVertexBuffer}, vertex_buffer_desc::VertexBufferDesc};
+use pi_render::renderer::{vertex_buffer::{EVertexBufferRange, KeyVertexBuffer}, vertex_buffer_desc::VertexBufferDesc, vertices::EVerticesBufferUsage};
 
 pub trait AsKeyVertexBuffer {
     fn create(desc: &VertexBufferDesc) -> Self;
@@ -20,7 +20,7 @@ pub trait TVertexBufferUseInfo: From<VertexBufferDesc> {
 }
 
 pub trait TAssetResVertexBuffer {
-    fn buffer(&self) -> Handle<EVertexBufferRange>;
+    fn buffer(&self) -> EVerticesBufferUsage;
 }
 
 // ============== 1
@@ -39,12 +39,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot01 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot01(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot01 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot01(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot01 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot01 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 2
@@ -63,12 +63,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot02 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot02(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot02 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot02(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot02 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot02 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 3
@@ -87,12 +87,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot03 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot03(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot03 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot03(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot03 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot03 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 4
@@ -111,12 +111,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot04 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot04(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot04 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot04(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot04 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot04 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 5
@@ -135,12 +135,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot05 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot05(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot05 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot05(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot05 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot05 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 6
@@ -159,12 +159,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot06 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot06(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot06 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot06(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot06 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot06 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 7
@@ -184,12 +184,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot07 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot07(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot07 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot07(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot07 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot07 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 8
@@ -208,12 +208,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot08 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot08(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot08 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot08(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot08 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot08 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 9
@@ -232,12 +232,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot09 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot09(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot09 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot09(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot09 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot09 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 10
@@ -256,12 +256,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot10{
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot10(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot10 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot10(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot10 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot10 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 11
@@ -280,12 +280,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot11 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot11(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot11 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot11(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot11 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot11 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 // ============== 12
@@ -304,12 +304,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot12 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot12(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot12 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot12(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot12 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot12 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 
@@ -329,12 +329,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot13 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot13(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot13 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot13(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot13 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot13 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 
@@ -354,12 +354,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot14 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot14(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot14 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot14(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot14 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot14 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 
@@ -380,12 +380,12 @@ impl TVertexBufferUseInfo for AssetDescVBSlot15 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot15(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot15 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot15(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot15 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot15 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
 
@@ -406,11 +406,11 @@ impl TVertexBufferUseInfo for AssetDescVBSlot16 {
 }
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct AssetResVBSlot16(pub Handle<EVertexBufferRange>);
-impl From<Handle<EVertexBufferRange>> for AssetResVBSlot16 {
-    fn from(value: Handle<EVertexBufferRange>) -> Self { Self(value) }
+pub struct AssetResVBSlot16(pub EVerticesBufferUsage);
+impl From<EVerticesBufferUsage> for AssetResVBSlot16 {
+    fn from(value: EVerticesBufferUsage) -> Self { Self(value) }
 }
 impl TAssetResVertexBuffer for AssetResVBSlot16 {
-    fn buffer(&self) -> Handle<EVertexBufferRange> { self.0.clone() }
+    fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
