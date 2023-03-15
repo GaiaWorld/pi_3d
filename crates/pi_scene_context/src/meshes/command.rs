@@ -11,7 +11,7 @@ use pi_share::Share;
 use crate::{
     object::{ObjectID, GameObject},
     geometry::{
-        instance::{instance_color::{InstanceColor, InstancedColorDirty}, instance_tilloff::{InstanceTillOff, InstanceTillOffDirty}, InstanceList, InstanceSource, InstanceSourceRecord, instance_world_matrix::InstancedWorldMatrixDirty}
+        instance::{instance_color::{InstanceColor, InstancedColorDirty}, instance_tilloff::{InstanceTillOff, InstanceTillOffDirty}, InstanceList, InstanceSource, InstanceSourceRecord, instance_world_matrix::InstancedWorldMatrixDirty}, vertex_buffer_useinfo::GeometryID
     },
     pass::*,
     renderers::pass::*, state::{MeshStates, DirtyMeshStates}
@@ -38,6 +38,7 @@ impl SysMeshCreateCommand {
     pub fn cmd(
         mut cmds: ResMut<SingleMeshCreateCommandList>,
         mut mesh_cmd: Commands<GameObject, Mesh>,
+        mut id_geo_cmd: Commands<GameObject, GeometryID>,
         mut meshstate_cmd: Commands<GameObject, MeshStates>,
         mut meshstateflag_cmd: Commands<GameObject, DirtyMeshStates>,
         mut absmesh_cmd: Commands<GameObject, AbstructMesh>,
@@ -90,19 +91,22 @@ impl SysMeshCreateCommand {
         list.drain(..).for_each(|cmd| {
             match cmd {
                 EMeshCreateCommand::Create(entity) => {
-                    mesh_cmd.insert(entity.clone(), Mesh);
-                    ins_list_cmd.insert(entity.clone(), InstanceList::new(&mut ins_record));
-                    absmesh_cmd.insert(entity.clone(), AbstructMesh);
-                    render_wm_cmd.insert(entity.clone(), RenderWorldMatrix(Matrix::identity()));
-                    render_wminv_cmd.insert(entity.clone(), RenderWorldMatrixInv(Matrix::identity()));
-                    wmdirty_cmd.insert(entity.clone(), RenderMatrixDirty(true));
-                    ins_wm_cmd.insert(entity.clone(), InstancedWorldMatrixDirty(true));
-                    ins_colordirty_cmd.insert(entity.clone(), InstancedColorDirty(true));
-                    ins_tilloffdirty_cmd.insert(entity.clone(), InstanceTillOffDirty(true));
-                    meshstate_cmd.insert(entity, MeshStates::default());
-                    meshstateflag_cmd.insert(entity, DirtyMeshStates);
-
                     if let Some(bind) = BindModel::new(&device, &mut allocator) {
+                        mesh_cmd.insert(entity.clone(), Mesh);
+                        id_geo_cmd.insert(entity, GeometryID(entity_cmd.spawn()));
+                        ins_list_cmd.insert(entity.clone(), InstanceList::new(&mut ins_record));
+                        absmesh_cmd.insert(entity.clone(), AbstructMesh);
+                        render_wm_cmd.insert(entity.clone(), RenderWorldMatrix(Matrix::identity()));
+                        render_wminv_cmd.insert(entity.clone(), RenderWorldMatrixInv(Matrix::identity()));
+                        wmdirty_cmd.insert(entity.clone(), RenderMatrixDirty(true));
+
+                        ins_wm_cmd.insert(entity.clone(), InstancedWorldMatrixDirty(true));
+                        ins_colordirty_cmd.insert(entity.clone(), InstancedColorDirty(true));
+                        ins_tilloffdirty_cmd.insert(entity.clone(), InstanceTillOffDirty(true));
+
+                        meshstate_cmd.insert(entity, MeshStates::default());
+                        meshstateflag_cmd.insert(entity, DirtyMeshStates);
+    
                         bind_model_cmd.insert(entity.clone(), bind);
                         
                         create_passobj::<Pass01,PassID01>(entity, &mut entity_cmd, &mut pass01_cmd, &mut passid01_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
@@ -303,13 +307,22 @@ impl SysInstanceMeshModifyCommand {
     #[listen(entity=(GameObject, Delete))]
     fn listen(
         e: Event,
-        meshes: Query<GameObject, &InstanceList>,
+        meshes: Query<GameObject, (&InstanceList, &PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08, &GeometryID)>,
         mut delete: EntityDelete<GameObject>,
     ) {
-        if let Some(instances) = meshes.get_by_entity(e.id) {
+        if let Some((instances, pass01, pass02, pass03, pass04, pass05, pass06, pass07, pass08, id_geo)) = meshes.get_by_entity(e.id) {
             instances.list.iter().for_each(|id| {
                 delete.despawn(id.clone());
             });
+            delete.despawn(pass01.id());
+            delete.despawn(pass02.id());
+            delete.despawn(pass03.id());
+            delete.despawn(pass04.id());
+            delete.despawn(pass05.id());
+            delete.despawn(pass06.id());
+            delete.despawn(pass07.id());
+            delete.despawn(pass08.id());
+            delete.despawn(id_geo.0.clone());
         }
     }
     #[system]

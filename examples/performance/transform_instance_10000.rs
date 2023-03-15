@@ -11,7 +11,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     cameras::interface::InterfaceCamera,
     meshes::{interface::InterfaceMesh},
     layer_mask::{interface::InterfaceLayerMask, LayerMask}, 
-    geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}
+    geometry::{TInterfaceGeomtery}, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
@@ -98,8 +98,7 @@ impl PluginTest {
         let source = engine.create_mesh(scene01);
         let mut attrs = CubeBuilder::attrs_meta();
         attrs.push(VertexBufferDesc::instance_world_matrix());
-        engine.use_geometry(source, attrs);
-        engine.use_indices(source, CubeBuilder::indices_meta());
+        engine.use_geometry(source, attrs, Some(CubeBuilder::indices_meta()));
         engine.use_default_material(source);
         engine.layer_mask(source, LayerMask::default());
 

@@ -38,10 +38,11 @@ impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanc
             GameObject,
             (
                 ObjectID,
-                &InstanceList, &mut T, &mut F, &mut RenderGeometryEable,
+                &InstanceList, &GeometryID, &mut F,
             ),
             Changed<F>
         >,
+        mut geometrys: Query<GameObject, &mut T>,
         mut geo_flag_cmd: Commands<GameObject, RenderGeometryEable>,
         mut loader_01: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot01>>,
         mut loader_02: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot02>>,
@@ -64,89 +65,88 @@ impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanc
         let time = Instant::now();
         sources.iter_mut().for_each(|(
             id_obj,
-            inslist, mut buffer, mut flag, mut geodisable,
+            inslist, id_geo, mut flag,
         )| {
             // log::trace!("SysInstanceBufferUpdateFunc:");
             if flag.dirty() == false {
                 return;
             }
-            log::info!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.list.len());
-            let mut list = vec![];
-            inslist.list.iter().for_each(|insid| {
-                if let Some(instance) = instances.get(insid.clone()) {
-                    list.push(instance);
-                }
-            });
-
-            if list.len() == 0 {
-                geodisable.0 = false;
-                geo_flag_cmd.insert(id_obj, RenderGeometryEable(false));
-            } else {
-                geodisable.0 = true;
-                geo_flag_cmd.insert(id_obj, RenderGeometryEable(true));
-                flag.reset();
-
-                let key = buffer.id();
-
-                let data = D::collect(&list);
-                log::info!("InstanceDataLen: {:?}", data.len());
-                let data = if data.len() > 0 {
-                    Some(data)
+            let id_geo = id_geo.0.clone();
+            if let Some(mut buffer) = geometrys.get_mut(id_geo.clone()) {
+                log::info!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.list.len());
+                let mut list = vec![];
+                inslist.list.iter().for_each(|insid| {
+                    if let Some(instance) = instances.get(insid.clone()) {
+                        list.push(instance);
+                    }
+                });
+    
+                if list.len() == 0 {
+                    //
                 } else {
-                    return;
-                };
-                    
-
-                log::info!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
-                match buffer.slot() {
-                    EVertexBufferSlot::Slot01 => {
-                        loader_01.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot02 => {
-                        loader_02.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot03 => {
-                        loader_03.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot04 => {
-                        loader_04.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot05 => {
-                        loader_05.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot06 => {
-                        loader_06.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot07 => {
-                        loader_07.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot08 => {
-                        loader_08.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot09 => {
-                        loader_09.request(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot10 => {
-                        loader_10.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot11 => {
-                        loader_11.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot12 => {
-                        loader_12.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot13 => {
-                        loader_13.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot14 => {
-                        loader_14.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot15 => {
-                        loader_15.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
-                    EVertexBufferSlot::Slot16 => {
-                        loader_16.request_instance(id_obj, &key, data, &mut vb_data_map);
-                    },
+                    flag.reset();
+    
+                    let key = buffer.id();
+    
+                    let data = D::collect(&list);
+                    log::info!("InstanceDataLen: {:?}", data.len());
+                    let data = if data.len() > 0 {
+                        Some(data)
+                    } else {
+                        return;
+                    };
+    
+                    log::info!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
+                    match buffer.slot() {
+                        EVertexBufferSlot::Slot01 => {
+                            loader_01.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot02 => {
+                            loader_02.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot03 => {
+                            loader_03.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot04 => {
+                            loader_04.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot05 => {
+                            loader_05.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot06 => {
+                            loader_06.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot07 => {
+                            loader_07.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot08 => {
+                            loader_08.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot09 => {
+                            loader_09.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot10 => {
+                            loader_10.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot11 => {
+                            loader_11.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot12 => {
+                            loader_12.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot13 => {
+                            loader_13.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot14 => {
+                            loader_14.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot15 => {
+                            loader_15.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                        EVertexBufferSlot::Slot16 => {
+                            loader_16.request_instance(id_geo, &key, data, &mut vb_data_map);
+                        },
+                    }
                 }
             }
         });

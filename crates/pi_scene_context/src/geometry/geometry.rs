@@ -287,4 +287,7 @@ impl RenderGeometry {
             indices,
         }
     }
+    pub fn vertex_range(&self) -> Range<u32> {
+        self.vertices[0].value_range()
+    }
 }

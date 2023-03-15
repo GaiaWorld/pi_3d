@@ -17,7 +17,7 @@ use pi_share::Share;
 use crate::{
     viewer::{ViewerID, ModelListAfterCulling},
     pass::*,
-    geometry::{geometry::{RenderGeometry}, sys_vertex_buffer_use::SysRenderGeometryInit},
+    geometry::{geometry::{RenderGeometry, RenderGeometryEable}, sys_vertex_buffer_use::SysRenderGeometryInit, vertex_buffer_useinfo::GeometryID},
     cameras::camera::CameraViewport,
 };
 
@@ -99,17 +99,12 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByModel<T
             GameObject,
             (
                 ObjectID,
-                &VertexBufferLayouts, 
-                &EInstanceCode,
+                &GeometryID, 
                 &I,
             ),
-            Or<
-                (
-                    Changed<VertexBufferLayouts>,
-                    Changed<EInstanceCode>,
-                )
-            >
+            Changed<GeometryID>,
         >,
+        geometrys: Query<GameObject, (&EInstanceCode, &VertexBufferLayouts)>, 
         passes: Query<GameObject, (&PassReady, &PassBindGroups, &PassShader), With<T>>,
         mut shader_cmd: Commands<GameObject, PassShader>,
         mut shader_center: ResMut<AssetDataCenterShader3D>,
@@ -119,8 +114,14 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByModel<T
         let time1 = Instant::now();
 
         models.iter().for_each(
-            |(id_model, vb, instance, passid)| {
+            |(id_model, id_geo, passid)| {
                 let id_pass = passid.id();
+                let (instance, vb) = if let Some(val) = geometrys.get(id_geo.0) {
+                    val
+                } else {
+                    shader_cmd.insert(id_pass, PassShader(None));
+                    return;
+                };
                 if let Some((ready, bindgroups, old_shader)) = passes.get(id_pass.clone()) {
                     if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
                         
@@ -181,9 +182,10 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByPass<T,
         models: Query<
             GameObject,
             (
-                &VertexBufferLayouts, &EInstanceCode, &I,
+                &GeometryID, &I,
             ),
         >,
+        geometrys: Query<GameObject, (&EInstanceCode, &VertexBufferLayouts)>, 
         passes: Query<
             GameObject,
             (ObjectID, &PassSource, &PassReady, &PassBindGroups, &PassShader, &T),
@@ -198,7 +200,14 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByPass<T,
 
         passes.iter().for_each(|(id_pass, id_model, ready, bindgroups, old_shader, _)| {
             if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
-                if let Some((vb, instance, passid)) = models.get(id_model.0) {
+                if let Some((id_geometry, passid)) = models.get(id_model.0) {
+                    let (instance, vb) = if let Some(val) = geometrys.get(id_geometry.0) {
+                        val
+                    } else {
+                        log::warn!("bbbbbbbbb");
+                        shader_cmd.insert(id_pass, PassShader(None));
+                        return;
+                    };
                     let key_attributes = vb.as_key_shader_from_attributes();
                     let key_shader_defines = 0;
     
@@ -289,11 +298,12 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByModel
         models: Query<
             GameObject,
             (
-                &VertexBufferLayouts, &PrimitiveState, &RenderDepthAndStencil, &RenderBlend,
-                &RenderGeometry, &I
+                &PrimitiveState, &RenderDepthAndStencil, &RenderBlend,
+                &GeometryID, &I
             ),
-            Or<(Changed<PrimitiveState>, Changed<RenderDepthAndStencil>, Changed<RenderBlend>, Changed<RenderGeometry>)>
+            Or<(Changed<PrimitiveState>, Changed<RenderDepthAndStencil>, Changed<RenderBlend>, Changed<GeometryID>)>
         >,
+        geometrys: Query<GameObject, &VertexBufferLayouts>, 
         passes: Query<
             GameObject,
             (&PassShader, &PassBindGroups, &PassPipeline),
@@ -306,8 +316,14 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByModel
     ) {
         let time1 = Instant::now();
 
-        models.iter().for_each(| (vb, primitive, depth_stencil, blend, rendergeo, passid) |{
+        models.iter().for_each(| (primitive, depth_stencil, blend, id_geo, passid) |{
             let id_pass = passid.id();
+            let vb = if let Some(vb) = geometrys.get(id_geo.0.clone()) {
+                vb
+            } else {
+                pipeline_cmd.insert(id_pass, PassPipeline::new(None));
+                return;
+            };
             if let Some((shader, bindgroups, old_draw)) = passes.get(id_pass) {
                 if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
                     let key_shader = shader.key().clone();
@@ -316,7 +332,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByModel
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.clone());
     
-                    let targets = RenderTargetState::color_target(blend);
+                    let targets = RenderTargetState::color_target(wgpu::TextureFormat::Bgra8Unorm, blend);
                     let key_state = KeyRenderPipelineState {
                         primitive: primitive.state,
                         target_state: vec![targets[0].clone()],
@@ -371,10 +387,10 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByPass<
         models: Query<
             GameObject,
             (
-                &VertexBufferLayouts, &PrimitiveState, &RenderDepthAndStencil, &RenderBlend,
-                &RenderGeometry,
+                &GeometryID, &PrimitiveState, &RenderDepthAndStencil, &RenderBlend,
             ),
         >,
+        geometrys: Query<GameObject, &VertexBufferLayouts>, 
         passes: Query<
             GameObject,
             (ObjectID, &PassSource, &PassBindGroups, &PassShader),
@@ -389,14 +405,20 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByPass<
 
         passes.iter().for_each(|(id_pass, id_model, bindgroups, shader)| {
             if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
-                if let Some((vb, primitive, depth_stencil, blend, rendergeo)) = models.get(id_model.0) {
+                if let Some((id_geo, primitive, depth_stencil, blend)) = models.get(id_model.0) {
+                    let vb = if let Some(vb) = geometrys.get(id_geo.0.clone()) {
+                        vb
+                    } else {
+                        pipeline_cmd.insert(id_pass, PassPipeline::new(None));
+                        return;
+                    };
                     let key_shader = shader.key().clone();
                     let mut bind_group_layouts = bindgroups.bind_group_layouts();
                     let mut key_bindgroup_layouts = bindgroups.key_bindgroup_layouts();
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.clone());
     
-                    let targets = RenderTargetState::color_target(blend);
+                    let targets = RenderTargetState::color_target(wgpu::TextureFormat::Bgra8Unorm, blend);
                     let key_state = KeyRenderPipelineState {
                         primitive: primitive.state,
                         target_state: vec![targets[0].clone()],
@@ -478,7 +500,8 @@ impl<T: TPass + Component, I: TPassID + Component> TSystemStageInfo for SysPassD
 impl<T: TPass + Component, I: TPassID + Component> SysPassDraw<T, I> {
     #[system]
     fn sys(
-        models: Query<GameObject, &RenderGeometry>,
+        models: Query<GameObject, &GeometryID>,
+        geometrys: Query<GameObject, &RenderGeometry>,
         passes: Query<GameObject, (ObjectID, &PassSource, &PassBindGroups, &PassPipeline, &PassDraw, &T), Changed<PassPipeline>>,
         mut draw_cmd: Commands<GameObject, PassDraw>,
     ) {
@@ -486,20 +509,65 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassDraw<T, I> {
 
         passes.iter().for_each(|(id_pass, id_model, bindgroups, pipeline, old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                if let Some(rendergeo) = models.get(id_model.0) {
-                    let draw = DrawObj3D {
-                        pipeline: Some(pipeline.clone()),
-                        bindgroups: bindgroups.groups(),
-                        vertices: rendergeo.vertices(),
-                        instances: rendergeo.instances(),
-                        indices: rendergeo.indices.clone(),
-                    };
-
-                    draw_cmd.insert(id_pass, PassDraw(Some(Arc::new(draw))));
+                if let Some(id_geo) = models.get(id_model.0) {
+                    if let Some(rendergeo) = geometrys.get(id_geo.0.clone()) {
+                        let draw = DrawObj3D {
+                            pipeline: Some(pipeline.clone()),
+                            bindgroups: bindgroups.groups(),
+                            vertices: rendergeo.vertices(),
+                            instances: rendergeo.instances(),
+                            vertex: rendergeo.vertex_range(),
+                            indices: rendergeo.indices.clone(),
+                        };
+                        draw_cmd.insert(id_pass, PassDraw(Some(Arc::new(draw))));
+                    } else {
+                        if old_draw.0.is_some() { draw_cmd.insert(id_pass, PassDraw(None)); }
+                    }
                 }
             } else {
-                if old_draw.0.is_some() {
-                    draw_cmd.insert(id_pass, PassDraw(None));
+                if old_draw.0.is_some() { draw_cmd.insert(id_pass, PassDraw(None)); }
+            }
+        });
+
+        log::trace!("SysPassDrawLoad: {:?}", Instant::now() - time1);
+    }
+}
+
+pub struct SysPassDrawByModel<T: TPass + Component, I: TPassID + Component>(PhantomData<(T, I)>);
+impl<T: TPass + Component, I: TPassID + Component> TSystemStageInfo for SysPassDrawByModel<T, I> {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysPassPipeline3DLoad::key()
+        ]
+    }
+}
+#[setup]
+impl<T: TPass + Component, I: TPassID + Component> SysPassDrawByModel<T, I> {
+    #[system]
+    fn sys(
+        models: Query<GameObject, (&GeometryID, &I), Changed<RenderGeometryEable>>,
+        geometrys: Query<GameObject, &RenderGeometry>,
+        passes: Query<GameObject, (&PassSource, &PassBindGroups, &PassPipeline, &PassDraw, &T)>,
+        mut draw_cmd: Commands<GameObject, PassDraw>,
+    ) {
+        let time1 = Instant::now();
+
+        models.iter().for_each(|(id_geo, id_pass)| {
+            if let Some((id_model, bindgroups, pipeline, old_draw, _)) = passes.get(id_pass.id()) {
+                if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
+                    if let Some(rendergeo) = geometrys.get(id_geo.0.clone()) {
+                            let draw = DrawObj3D {
+                                pipeline: Some(pipeline.clone()),
+                                bindgroups: bindgroups.groups(),
+                                vertices: rendergeo.vertices(),
+                                instances: rendergeo.instances(),
+                                vertex: rendergeo.vertex_range(),
+                                indices: rendergeo.indices.clone(),
+                            };
+                            draw_cmd.insert(id_pass.id(), PassDraw(Some(Arc::new(draw))));
+                    } else {
+                        if old_draw.0.is_some() { draw_cmd.insert(id_pass.id(), PassDraw(None)); }
+                    }
                 }
             }
         });
@@ -542,8 +610,6 @@ impl SysRendererDraws {
         >
     ) {
         let time1 = Instant::now();
-
-        let pass01_query = 
 
         renderers.iter_mut().for_each(|(id_viewer, mut renderer, passtag_orders)| {
             renderer.clear();

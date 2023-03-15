@@ -7,7 +7,7 @@ use pi_scene_context::{
     cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
     cameras::PluginCamera,
     transforms::PluginTransformNode,
-    scene::PluginScene, geometry::{PluginGeometry, indices::PluginBufferIndices}, bindgroup::PluginRenderBindGroup
+    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup
 };
 
 pub struct Limit(pub wgpu::Limits);
@@ -37,7 +37,6 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         PluginCamera.init(engine, stages);
 
         PluginCulling.init(engine, stages);
-        PluginBufferIndices.init(engine, stages);
         PluginGeometry.init(engine, stages);
 
         PluginMaterial.init(engine, stages);

@@ -6,13 +6,14 @@ pub struct RenderTargetState {
 }
 impl RenderTargetState {
     pub fn color_target(
+        format: wgpu::TextureFormat,
         blend: &RenderBlend,
     ) -> [Option<wgpu::ColorTargetState>;1] {
         match blend.enable {
             true => {
                 [
                     Some(wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Bgra8Unorm,
+                        format,
                         blend: Some(
                             wgpu::BlendState {
                                 color: wgpu::BlendComponent {
@@ -34,7 +35,7 @@ impl RenderTargetState {
             false => {
                 [
                     Some(wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Bgra8Unorm,
+                        format,
                         blend: None,
                         write_mask: wgpu::ColorWrites::ALL,
                     })

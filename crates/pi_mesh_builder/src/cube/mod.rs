@@ -11,7 +11,7 @@ use pi_scene_context::{
     object::{ObjectID},
     engine::Engine, 
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, meshes::interface::InterfaceMesh
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery}, meshes::interface::InterfaceMesh
 };
 
 pub struct CubeBuilder;
@@ -164,9 +164,9 @@ impl InterfaceCube for Engine {
 
         self.use_geometry(
             entity,
-            CubeBuilder::attrs_meta()
+            CubeBuilder::attrs_meta(),
+            Some(CubeBuilder::indices_meta())
         );
-        self.use_indices(entity, CubeBuilder::indices_meta());
 
         entity
     }

@@ -1,12 +1,14 @@
 
+use std::mem::size_of;
+
 use futures::FutureExt;
-use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
+use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr};
 use pi_atom::Atom;
 use pi_ecs::prelude::Setup;
 use pi_engine_shell::{run_stage::ERunStageChap};
 use pi_futures::BoxFuture;
 use pi_hash::XHashMap;
-use pi_render::{components::view::{target_alloc::{ShareTargetView}}, graph::{node::Node}, rhi::{asset::RenderRes} };
+use pi_render::{components::view::{target_alloc::{ShareTargetView, SafeAtlasAllocator, UnuseTexture}}, graph::{node::Node}, rhi::{asset::RenderRes, device::RenderDevice} };
 use render_derive::NodeParam;
 
 use crate::{renderers::sys_renderer::SysRendererDraws, pass::*};
@@ -98,6 +100,25 @@ impl crate::Plugin for PluginRenderer {
             60 * 1024 * 1024, 
             3 * 60 * 1000
         ));
+
+        let device = world.get_resource::<RenderDevice>().unwrap().clone();
+        
+        if world.get_resource::<SafeAtlasAllocator>().is_none() {
+            let texture_assets_mgr = AssetMgr::<RenderRes<wgpu::TextureView>>::new(
+                GarbageEmpty(), 
+                false,
+                60 * 1024 * 1024, 
+                3 * 60 * 1000
+            );
+            let unusetexture_assets_mgr = HomogeneousMgr::<RenderRes<UnuseTexture>>::new(
+                pi_assets::homogeneous::GarbageEmpty(), 
+                10 * size_of::<UnuseTexture>(),
+                size_of::<UnuseTexture>(),
+                3 * 60 * 1000,
+            );
+            let atlas = SafeAtlasAllocator::new(device, texture_assets_mgr, unusetexture_assets_mgr);
+            world.insert_resource(atlas);
+        }
 
         if world.get_resource::<AssetDataCenterShader3D>().is_none() {
             world.insert_resource(AssetDataCenterShader3D::new(false, 10 * 1024 * 1024, 60 * 1000));
@@ -236,6 +257,15 @@ impl crate::Plugin for PluginRenderer {
         SysPassDraw::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassDraw::<Pass06, PassID06>>(ERunStageChap::Uniform));
         SysPassDraw::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassDraw::<Pass07, PassID07>>(ERunStageChap::Uniform));
         SysPassDraw::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassDraw::<Pass08, PassID08>>(ERunStageChap::Uniform));
+        
+        SysPassDrawByModel::<Pass01, PassID01>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass01, PassID01>>(ERunStageChap::Uniform));
+        SysPassDrawByModel::<Pass02, PassID02>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass02, PassID02>>(ERunStageChap::Uniform));
+        SysPassDrawByModel::<Pass03, PassID03>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass03, PassID03>>(ERunStageChap::Uniform));
+        SysPassDrawByModel::<Pass04, PassID04>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass04, PassID04>>(ERunStageChap::Uniform));
+        SysPassDrawByModel::<Pass05, PassID05>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass05, PassID05>>(ERunStageChap::Uniform));
+        SysPassDrawByModel::<Pass06, PassID06>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass06, PassID06>>(ERunStageChap::Uniform));
+        SysPassDrawByModel::<Pass07, PassID07>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass07, PassID07>>(ERunStageChap::Uniform));
+        SysPassDrawByModel::<Pass08, PassID08>::setup(world, stages.query_stage::<SysPassDrawByModel::<Pass08, PassID08>>(ERunStageChap::Uniform));
 
         SysRendererDraws::setup(world, stages.query_stage::<SysRendererDraws>(ERunStageChap::Uniform));
 

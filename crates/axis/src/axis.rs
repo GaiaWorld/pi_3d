@@ -6,7 +6,7 @@ use pi_engine_shell::{
 };
 use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer::KeyVertexBuffer, vertex_buffer_desc::VertexBufferDesc, attributes::{VertexAttribute, EVertexDataKind}, indices::IndicesBufferDesc}};
 use pi_scene_context::{
-    geometry::{indices::InterfaceBufferIndices, TInterfaceGeomtery},
+    geometry::{TInterfaceGeomtery},
     meshes::interface::InterfaceMesh,
     scene::interface::InterfaceScene,
     transforms::interface::InterfaceTransformNode,
@@ -148,14 +148,13 @@ impl InterfaceAxis for EnginShell {
                     }]
                 ),
             ],
-        );
-        self.use_indices(
-            entity,
-            IndicesBufferDesc {
-                format: wgpu::IndexFormat::Uint16,
-                buffer_range: None,
-                buffer: key,
-            },
+            Some(
+                IndicesBufferDesc {
+                    format: wgpu::IndexFormat::Uint16,
+                    buffer_range: None,
+                    buffer: key,
+                }
+            )
         );
 
         entity

@@ -1,5 +1,6 @@
 use std::{sync::Arc, any::TypeId, mem::replace};
 
+use bevy::prelude::Resource;
 use pi_async::{prelude::WorkerRuntime, rt::{AsyncRuntimeBuilder, AsyncRuntime}};
 use pi_ecs::{prelude::{SingleDispatcher, ExecNode, StageBuilder, Res, IntoSystem, Dispatcher}, world::World, storage::Local};
 use pi_graph::NGraph;
@@ -9,6 +10,9 @@ use pi_share::{Share, ShareRwLock};
 use winit::event_loop::EventLoop;
 
 use crate::{frame_time::PluginFrameTime, shell_node::ScreenClearNode, object::{GameObject, ObjectID, PluginObject}, DispatchEnd, run_stage::RunStage, plugin::Plugin, setup::{TSetup, SetupFn}};
+
+// pub use bevy::app::App;
+
 
 pub struct AppShell {
     event_loop: Option<EventLoop<()>>,

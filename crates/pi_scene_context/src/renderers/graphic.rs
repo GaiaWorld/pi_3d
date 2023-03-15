@@ -1,11 +1,12 @@
-use std::{time::Instant, sync::Arc};
+use std::{time::Instant, sync::Arc, num::NonZeroU32};
 
 use futures::FutureExt;
 use pi_atom::Atom;
 use pi_ecs::query::QueryState;
 use pi_engine_shell::object::{ObjectID, GameObject};
 use pi_futures::BoxFuture;
-use pi_render::{components::view::target_alloc::ShareTargetView, graph::{param::OutParam, node::Node, RenderContext}, rhi::{device::RenderDevice, texture::ScreenTexture}, renderer::draw_obj_list::DrawList};
+use pi_render::{components::view::target_alloc::{ShareTargetView, SafeAtlasAllocator, TargetDescriptor, TextureDescriptor}, graph::{param::OutParam, node::Node, RenderContext}, rhi::{device::RenderDevice, texture::ScreenTexture, RenderQueue}, renderer::draw_obj_list::DrawList};
+use smallvec::SmallVec;
 
 use crate::{renderers::{renderer::Renderer}, pass::PassTagOrders};
 
@@ -92,8 +93,14 @@ impl Node for RenderNode {
             Some(mut renderer) => {
                 let currlist: Vec<ShareTargetView> = vec![];
 
-                // let atlas_allocator = world.get_resource::<Share<AssetMgr::<RenderRes<wgpu::TextureView>>>>().unwrap();
-                // let atlas_allocator = SafeAtlasAllocator::new(device.clone(), atlas_allocator.clone(), Arc::new(HomogeneousMgr::<RenderRes<UnuseTexture>, GarbageEmpty>));
+                let window = context.world.get_resource::<Arc<winit::window::Window>>().unwrap();
+                let device = context.world.get_resource::<RenderDevice>().unwrap();
+                let queue = context.world.get_resource::<RenderQueue>().unwrap();
+                let width = window.inner_size().width;
+                let height = window.inner_size().height;
+
+                // // let atlas_allocator = world.get_resource::<Share<AssetMgr::<RenderRes<wgpu::TextureView>>>>().unwrap();
+                // let atlas_allocator = context.world.get_resource::<SafeAtlasAllocator>().unwrap(); // SafeAtlasAllocator::new(device.clone(), atlas_allocator.clone(), Arc::new(HomogeneousMgr::<RenderRes<UnuseTexture>, GarbageEmpty>));
                 // let srt = atlas_allocator.allocate(
                 //     width,
                 //     height,
@@ -105,7 +112,7 @@ impl Node for RenderNode {
                 //                     sample_count: 1,
                 //                     dimension: wgpu::TextureDimension::D2,
                 //                     format: wgpu::TextureFormat::Rgba8UnormSrgb,
-                //                     usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::RENDER_ATTACHMENT,
+                //                     usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
                 //                     base_mip_level: 0,
                 //                     base_array_layer: 0,
                 //                     array_layer_count: None,
@@ -120,100 +127,169 @@ impl Node for RenderNode {
                 //     currlist.iter()
                 // );
 
-                // let target = srt.target().colors[0].0.as_ref();
-                
-                // Clear
-                // {
-                //     let ops = wgpu::Operations {
-                //         load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
-                //         store: true,
-                //     };
-                //     let mut color_attachments = vec![];
-                //     color_attachments.push(
-                //         Some(
-                //             wgpu::RenderPassColorAttachment {
-                //                 resolve_target: None,
-                //                 ops,
-                //                 view: target,
-                //             }
-                //         )
-                //     );
-                //     let depth_stencil_attachment = Some(wgpu::RenderPassDepthStencilAttachment {
-                //         view: srt.target().depth.as_ref().unwrap().0.as_ref(),
-                //         depth_ops: Some(wgpu::Operations::<f32> {
-                //             load: wgpu::LoadOp::Clear(-1.),
-                //             store: true
-                //         }),
-                //         stencil_ops: None,
+                // commands.clear_texture(&srt.target().colors[0].1, &wgpu::ImageSubresourceRange {
+                //     aspect: wgpu::TextureAspect::All,
+                //     base_mip_level: 0,
+                //     mip_level_count: NonZeroU32::new(1),
+                //     base_array_layer: 0,
+                //     array_layer_count: None,
+                // });
+
+                // let depth_stencil_attachment = if let Some(depth) = &srt.target().depth {
+                //     commands.clear_texture(&depth.1, &wgpu::ImageSubresourceRange {
+                //         aspect: wgpu::TextureAspect::All,
+                //         base_mip_level: 0,
+                //         mip_level_count: NonZeroU32::new(1),
+                //         base_array_layer: 0,
+                //         array_layer_count: None,
                 //     });
-                //     let renderpass = commands.begin_render_pass(
+                    
+                //     let depth_stencil_attachment = Some(
+                //         wgpu::RenderPassDepthStencilAttachment {
+                //             view: depth.0.as_ref(),
+                //             depth_ops: Some(
+                //                 wgpu::Operations {
+                //                     load: wgpu::LoadOp::Load,
+                //                     store: true,
+                //                 }
+                //             ),
+                //             stencil_ops: None,
+                //         }
+                //     );
+                //     depth_stencil_attachment
+                // } else {
+                //     None
+                // };
+                
+                // // Clear
+                // // {
+                // //     let ops = wgpu::Operations {
+                // //         load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                // //         store: true,
+                // //     };
+                // //     let mut color_attachments = vec![];
+                // //     color_attachments.push(
+                // //         Some(
+                // //             wgpu::RenderPassColorAttachment {
+                // //                 resolve_target: None,
+                // //                 ops,
+                // //                 view: target,
+                // //             }
+                // //         )
+                // //     );
+                // //     let depth_stencil_attachment = Some(wgpu::RenderPassDepthStencilAttachment {
+                // //         view: srt.target().depth.as_ref().unwrap().0.as_ref(),
+                // //         depth_ops: Some(wgpu::Operations::<f32> {
+                // //             load: wgpu::LoadOp::Clear(-1.),
+                // //             store: true
+                // //         }),
+                // //         stencil_ops: None,
+                // //     });
+                // //     let renderpass = commands.begin_render_pass(
+                // //         &wgpu::RenderPassDescriptor {
+                // //             label: Some("MainCameraClear"),
+                // //             color_attachments: color_attachments.as_slice(),
+                // //             depth_stencil_attachment: depth_stencil_attachment,
+                // //         }
+                // //     );
+                // // }
+
+                // // Draw Scene
+                
+                // // let depth_stencil_attachment = Some(wgpu::RenderPassDepthStencilAttachment {
+                // //     view: srt.target().depth.as_ref().unwrap().0.as_ref(),
+                // //     depth_ops: Some(wgpu::Operations::<f32> {
+                // //         load: wgpu::LoadOp::Load,
+                // //         store: true
+                // //     }),
+                // //     stencil_ops: None,
+                // // });
+
+                // let mut vx = 0.;
+                // let mut vy = 0.;
+                // let mut vw = 0.;
+                // let mut vh = 0.;
+
+                // let mut output = RendererGraphicParam::default();
+                // let surface = context.world.get_resource::<ScreenTexture>().unwrap();
+                // let ops = wgpu::Operations {
+                //     load: wgpu::LoadOp::Load,
+                //     store: true,
+                // };
+                // let mut color_attachments = vec![];
+                // color_attachments.push(
+                //     Some(
+                //         wgpu::RenderPassColorAttachment {
+                //             resolve_target: None,
+                //             ops,
+                //             view: srt.target().colors[0].0.as_ref(),
+                //         }
+                //     )
+                // );
+
+                // vw = width as f32;
+                // vh = height as f32;
+
+                // {
+                //     let mut renderpass = commands.begin_render_pass(
                 //         &wgpu::RenderPassDescriptor {
-                //             label: Some("MainCameraClear"),
+                //             label: Some("RenderNode"),
                 //             color_attachments: color_attachments.as_slice(),
                 //             depth_stencil_attachment: depth_stencil_attachment,
                 //         }
                 //     );
+
+                //     let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
+
+                //     x = vw * x + vx;
+                //     y = vh * y + vy;
+                //     w = vw * w;
+                //     h = vh * h;
+
+                //     renderpass.set_viewport(x, y, w, h, min_depth, max_depth);
+                //     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
                 // }
 
-                // Draw Scene
+                // if let Some(dst) = surface.texture() {
+                //     commands.copy_texture_to_texture(srt.target().colors[0].1.as_image_copy(), dst.texture.as_image_copy(), wgpu::Extent3d { width, height, depth_or_array_layers: 1 });
+                // }
                 
-                // let depth_stencil_attachment = Some(wgpu::RenderPassDepthStencilAttachment {
-                //     view: srt.target().depth.as_ref().unwrap().0.as_ref(),
-                //     depth_ops: Some(wgpu::Operations::<f32> {
-                //         load: wgpu::LoadOp::Load,
-                //         store: true
-                //     }),
-                //     stencil_ops: None,
-                // });
+                {
+                    let mut output = RendererGraphicParam::default();
+                    let surface = context.world.get_resource::<ScreenTexture>().unwrap();
+                    let ops = wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: true,
+                    };
+                    let mut color_attachments = vec![];
+                    color_attachments.push(
+                        Some(
+                            wgpu::RenderPassColorAttachment {
+                                resolve_target: None,
+                                ops,
+                                view: surface.view.as_ref().unwrap(),
+                            }
+                        )
+                    );
 
-                let mut vx = 0.;
-                let mut vy = 0.;
-                let mut vw = 0.;
-                let mut vh = 0.;
-
-                let mut output = RendererGraphicParam::default();
-                let window = context.world.get_resource::<Arc<winit::window::Window>>().unwrap();
-                let device = context.world.get_resource::<RenderDevice>().unwrap();
-                let width = window.inner_size().width;
-                let height = window.inner_size().height;
-                let surface = context.world.get_resource::<ScreenTexture>().unwrap();
-                let target = surface.view.as_ref().unwrap();
-                let depth_stencil_attachment = None;
-                let ops = wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
-                    store: true,
-                };
-                let mut color_attachments = vec![];
-                color_attachments.push(
-                    Some(
-                        wgpu::RenderPassColorAttachment {
-                            resolve_target: None,
-                            ops,
-                            view: target.as_ref(),
+                    let mut renderpass = commands.begin_render_pass(
+                        &wgpu::RenderPassDescriptor {
+                            label: Some("RenderNode"),
+                            color_attachments: color_attachments.as_slice(),
+                            depth_stencil_attachment: None,
                         }
-                    )
-                );
+                    );
 
-                vw = width as f32;
-                vh = height as f32;
+                    let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
 
-                let mut renderpass = commands.begin_render_pass(
-                    &wgpu::RenderPassDescriptor {
-                        label: Some("RenderNode"),
-                        color_attachments: color_attachments.as_slice(),
-                        depth_stencil_attachment: depth_stencil_attachment,
-                    }
-                );
+                    // x = vw * x + vx;
+                    // y = vh * y + vy;
+                    // w = vw * w;
+                    // h = vh * h;
 
-                let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
-
-                x = vw * x + vx;
-                y = vh * y + vy;
-                w = vw * w;
-                h = vh * h;
-
-                renderpass.set_viewport(x, y, w, h, min_depth, max_depth);
-                DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
+                    renderpass.set_viewport(0., 0., width as f32, height as f32, min_depth, max_depth);
+                    DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
+                }
 
                 // // To Screen
                 // {
@@ -221,8 +297,8 @@ impl Node for RenderNode {
                 // }
 
                 // output.srt = Some(srt);
-                output.w = width;
-                output.h = height;
+                // output.w = width;
+                // output.h = height;
             },
             None => {
                 

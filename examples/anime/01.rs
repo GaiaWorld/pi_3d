@@ -7,12 +7,12 @@ use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_fram
 use pi_atom::Atom;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}, assets::local_load::PluginLocalLoad, setup::TSetup, object::InterfaceObject};
-use pi_render::{rhi::options::RenderOptions, renderer::vertex_buffer_desc::VertexBufferDesc};
+use pi_render::{rhi::options::RenderOptions, renderer::{vertex_buffer_desc::VertexBufferDesc, pipeline::{DepthStencilState, DepthBiasState}}};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode, transform_node::{LocalPosition, LocalEulerAngles, LocalScaling}},
     scene::{interface::InterfaceScene},
     cameras::{interface::InterfaceCamera, camera::EFreeCameraMode},
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::graphic::RendererGraphicDesc, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, state::PluginStateToFile
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::{graphic::RendererGraphicDesc, render_depth_and_stencil::{InterfaceRenderDepthAndStencil, RenderDepthAndStencil}}, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery}, state::PluginStateToFile
 };
 use pi_ecs::{prelude::{ResMut, Setup}, storage::Local};
 use pi_ecs_macros::setup;
@@ -66,10 +66,25 @@ impl PluginTest {
         let source = engine.create_mesh(scene01);
         let mut attrs = CubeBuilder::attrs_meta();
         attrs.push(VertexBufferDesc::instance_world_matrix());
-        engine.use_geometry(source, attrs);
-        engine.use_indices(source, CubeBuilder::indices_meta());
+        engine.use_geometry(source, attrs, Some(CubeBuilder::indices_meta()));
         engine.use_default_material(source);
         engine.layer_mask(source, LayerMask::default());
+        // engine.depth_stencil(source, RenderDepthAndStencil(Some(DepthStencilState {
+        //     format: wgpu::TextureFormat::Depth32Float,
+        //     depth_write_enabled: true,
+        //     depth_compare: wgpu::CompareFunction::LessEqual,
+        //     stencil: wgpu::StencilState {
+        //         front: wgpu::StencilFaceState::IGNORE,
+        //         back: wgpu::StencilFaceState::IGNORE,
+        //         read_mask: 0,
+        //         write_mask: 0,
+        //     },
+        //     bias: DepthBiasState {
+        //         constant: 10,
+        //         slope_scale: 10,
+        //         clamp: 10,
+        //     },
+        // })));
 
         let key_group = pi_atom::Atom::from("key_group");
         engine.create_animation_group(source, &key_group);
@@ -106,7 +121,7 @@ impl PluginTest {
 
 
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut shell = AppShell::new(
         RenderOptions {
@@ -118,5 +133,5 @@ pub fn main() {
     shell.add_plugin(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
-    shell.run();
+    shell.run();   
 }

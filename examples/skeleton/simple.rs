@@ -13,7 +13,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     meshes::{interface::InterfaceMesh},
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
     materials::{interface::{InterfaceMaterial}},
-    geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices},
+    geometry::{TInterfaceGeomtery},
     skeleton::{PluginSkeleton, interface::TInterfaceSkeleton}, 
     renderers::render_primitive::{InterfaceRenderPrimitive, ECullMode},
     pass::EPassTag
@@ -149,8 +149,7 @@ impl PluginTest {
         let jointdesc = VertexBufferDesc::vertices(jointkey.clone(), None, vec![VertexAttribute { kind: EVertexDataKind::MatricesIndices1, format }]);
         attrs.push(jointdesc);
 
-        engine.use_geometry(source, attrs);
-        engine.use_indices(source, CubeBuilder::indices_meta());
+        engine.use_geometry(source, attrs, Some(CubeBuilder::indices_meta()));
         engine.use_material(source, unlitmaterial);
         engine.layer_mask(source, LayerMask::default());
         engine.transform_rotation_euler(source, Vector3::new(1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2));

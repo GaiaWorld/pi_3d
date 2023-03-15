@@ -10,7 +10,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
     meshes::{interface::InterfaceMesh},
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{interface::{InterfaceMaterial}}, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, pass::{EPassTag, PassTagOrders}, renderers::graphic::RendererGraphicDesc
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{interface::{InterfaceMaterial}}, geometry::{TInterfaceGeomtery}, pass::{EPassTag, PassTagOrders}, renderers::graphic::RendererGraphicDesc
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
@@ -117,8 +117,7 @@ impl PluginTest {
         attrs.push(VertexBufferDesc::instance_world_matrix());
         attrs.push(VertexBufferDesc::instance_color());
         attrs.push(VertexBufferDesc::instance_tilloff());
-        engine.use_geometry(source, attrs);
-        engine.use_indices(source, CubeBuilder::indices_meta());
+        engine.use_geometry(source, attrs, Some(CubeBuilder::indices_meta()));
         engine.use_material(source, unlitmaterial);
         engine.layer_mask(source, LayerMask::default());
 

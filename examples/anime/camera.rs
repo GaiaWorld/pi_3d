@@ -12,7 +12,7 @@ use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode, transform_node::{LocalPosition, LocalRotation, LocalEulerAngles}},
     scene::{interface::InterfaceScene},
     cameras::{interface::InterfaceCamera, camera::EFreeCameraMode},
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery}
 };
 use pi_ecs::{prelude::{ResMut, Setup}, storage::Local};
 use pi_ecs_macros::setup;

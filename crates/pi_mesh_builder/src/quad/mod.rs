@@ -8,7 +8,7 @@ use pi_scene_context::{
     object::{ObjectID},
     engine::Engine,
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, indices::InterfaceBufferIndices}, meshes::interface::InterfaceMesh
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery}, meshes::interface::InterfaceMesh
 };
 
 pub struct QuadBuilder;
@@ -108,9 +108,9 @@ impl InterfaceQuad for Engine {
         
         self.use_geometry(
             entity,
-            QuadBuilder::attrs_meta()
+            QuadBuilder::attrs_meta(),
+            Some(QuadBuilder::indices_meta())
         );
-        self.use_indices(entity, QuadBuilder::indices_meta());
 
         entity
     }

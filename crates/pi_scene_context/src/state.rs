@@ -6,7 +6,7 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::{run_stage::{TSystemStageInfo, ERunStageChap}, object::{GameObject, ObjectID}, plugin::Plugin};
 use pi_hash::XHashMap;
 
-use crate::{renderers::{sys_renderer::{SysRendererDraws, SysPassDraw}, base::{Pipeline3D, Pipeline3DUsage}, pass::{PassPipeline, PassBindGroups, PassShader, PassDraw}}, pass::{PassSource, TPassData, PassBindGroupScene, PassBindGroupModel, PassBindGroupTextureSamplers, Pass01, PassID01}, meshes::abstract_mesh::AbstructMesh, geometry::geometry::RenderGeometry};
+use crate::{renderers::{sys_renderer::{SysRendererDraws, SysPassDraw}, base::{Pipeline3D, Pipeline3DUsage}, pass::{PassPipeline, PassBindGroups, PassShader, PassDraw}}, pass::{PassSource, TPassData, PassBindGroupScene, PassBindGroupModel, PassBindGroupTextureSamplers, Pass01, PassID01}, meshes::abstract_mesh::AbstructMesh, geometry::geometry::{RenderGeometry, RenderGeometryEable}};
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -72,7 +72,7 @@ impl TMeshStatePass for PassPipeline                    { const MESH_STATE: u8 =
 impl TMeshStatePass for PassDraw                        { const MESH_STATE: u8 = 009; fn is_some(&self) -> bool { self.val().is_some() } }
 
 #[derive(Debug, Clone, Default)]
-pub struct MeshStates(pub XHashMap<EMeshState, EMeshState>);
+pub struct MeshStates(pub Vec<EMeshState>);
 
 pub struct DirtyMeshStates;
 
@@ -96,7 +96,9 @@ impl<T: TMeshStatePass + Component> SysMeshStatePass<T> {
             if val.is_some() {
                 if let Some(mut states) = models.get_mut(id_model.0) {
                     let state = EMeshState::val(T::MESH_STATE);
-                    states.0.insert(state, state);
+                    if !states.0.contains(&state) {
+                        states.0.push(state);
+                    }
                     meshstateflag_cmd.insert(id_model.0, DirtyMeshStates);
                     log::info!("MeshState: {:?}", state);
                 }
@@ -122,7 +124,35 @@ impl<T: TMeshState + Component> SysMeshState<T> {
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
             let state = EMeshState::val(T::MESH_STATE);
-            states.0.insert(state, state);
+            if !states.0.contains(&state) {
+                states.0.push(state);
+            }
+            meshstateflag_cmd.insert(id_model, DirtyMeshStates);
+            log::info!("MeshState: {:?}", state);
+        });
+    }
+}
+
+pub struct SysGeometryState;
+impl TSystemStageInfo for SysGeometryState {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysPassDraw::<Pass01, PassID01>::key()
+        ]
+    }
+}
+#[setup]
+impl SysGeometryState {
+    #[system]
+    fn sys(
+        mut models: Query<GameObject, (ObjectID, &mut MeshStates), Changed<RenderGeometryEable>>,
+        mut meshstateflag_cmd: Commands<GameObject, DirtyMeshStates>,
+    ) {
+        models.iter_mut().for_each(|(id_model, mut states)| {
+            let state = EMeshState::val(RenderGeometry::MESH_STATE);
+            if !states.0.contains(&state) {
+                states.0.push(state);
+            }
             meshstateflag_cmd.insert(id_model, DirtyMeshStates);
             log::info!("MeshState: {:?}", state);
         });
@@ -151,7 +181,9 @@ impl SysMeshStateToFile {
             flag = true;
             if !ids.contains_key(&id) {
                 ids.insert(id, id);
-                result += format!("\r\n{:?}", item.0.values()).as_str();
+                let mut item = item.0.clone();
+                item.sort();
+                result += format!("\r\n{:?}", item ).as_str();
             }
         });
 
@@ -182,7 +214,7 @@ impl Plugin for PluginStateToFile {
         let world = engine.world_mut();
 
         SysMeshState::<AbstructMesh>::setup(world, stages.query_stage::<SysMeshState::<AbstructMesh>>(ERunStageChap::Uniform));
-        SysMeshState::<RenderGeometry>::setup(world, stages.query_stage::<SysMeshState::<RenderGeometry>>(ERunStageChap::Uniform));
+        SysGeometryState::setup(world, stages.query_stage::<SysGeometryState>(ERunStageChap::Uniform));
         SysMeshStatePass::<PassBindGroupScene>::setup(world, stages.query_stage::<SysMeshStatePass::<PassBindGroupScene>>(ERunStageChap::Uniform));
         SysMeshStatePass::<PassBindGroupModel>::setup(world, stages.query_stage::<SysMeshStatePass::<PassBindGroupModel>>(ERunStageChap::Uniform));
         SysMeshStatePass::<PassBindGroupTextureSamplers>::setup(world, stages.query_stage::<SysMeshStatePass::<PassBindGroupTextureSamplers>>(ERunStageChap::Uniform));

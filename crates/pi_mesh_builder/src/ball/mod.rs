@@ -11,7 +11,7 @@ use pi_scene_context::{
     object::{ObjectID},
     engine::Engine, 
     scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc, indices::InterfaceBufferIndices}, meshes::interface::InterfaceMesh
+    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc, }, meshes::interface::InterfaceMesh
 };
 
 
@@ -64,9 +64,11 @@ impl InterfaceBall for Engine {
                 VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
                 VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
                 VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
-            ]
+            ],
+            Some(
+                IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
+            )
         );
-        self.use_indices(entity, IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key });
 
         entity
     }

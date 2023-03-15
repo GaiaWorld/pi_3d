@@ -2,6 +2,7 @@ use std::ops::Range;
 
 use derive_deref::{Deref, DerefMut};
 use pi_assets::asset::Handle;
+use pi_engine_shell::object::ObjectID;
 use pi_render::renderer::{vertex_buffer::{EVertexBufferRange, KeyVertexBuffer}, vertex_buffer_desc::VertexBufferDesc, vertices::EVerticesBufferUsage};
 
 pub trait AsKeyVertexBuffer {
@@ -22,6 +23,9 @@ pub trait TVertexBufferUseInfo: From<VertexBufferDesc> {
 pub trait TAssetResVertexBuffer {
     fn buffer(&self) -> EVerticesBufferUsage;
 }
+
+pub struct GeometryID(pub ObjectID);
+pub struct MeshID(pub ObjectID);
 
 // ============== 1
 #[derive(Debug, Deref, DerefMut, Clone, Hash)]

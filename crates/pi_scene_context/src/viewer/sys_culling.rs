@@ -4,7 +4,7 @@ use pi_ecs::{prelude::{Query, Commands}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{run_stage::TSystemStageInfo, object::{ObjectID, GameObject}};
 
-use crate::{flags::SceneID, layer_mask::LayerMask, geometry::geometry::{RenderGeometry, RenderGeometryEable}, transforms::transform_node::WorldMatrix, meshes::model::SysRenderMatrixUpdate};
+use crate::{flags::SceneID, layer_mask::LayerMask, geometry::geometry::{RenderGeometry, RenderGeometryEable}, transforms::transform_node::WorldMatrix, meshes::{model::SysRenderMatrixUpdate, abstract_mesh::AbstructMesh}};
 
 use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCulling, ViewerActive, FlagModelList};
 
@@ -29,7 +29,7 @@ impl SysModelListUpdateByViewer {
         >,
         items: Query<
             GameObject,
-            (ObjectID, &SceneID, &LayerMask, &RenderGeometry),
+            (ObjectID, &SceneID, &LayerMask, &AbstructMesh),
         >,
         mut flag_model_cmd: Commands<GameObject, FlagModelList>,
     ) {
@@ -76,8 +76,8 @@ impl SysModelListUpdateByModel {
         >,
         items: Query<
             GameObject,
-            (ObjectID, &SceneID, &LayerMask, &RenderGeometry),
-            Or<(Changed<LayerMask>, Changed<RenderGeometry>)>,
+            (ObjectID, &SceneID, &LayerMask, &AbstructMesh),
+            Changed<LayerMask>,
         >,
         mut flag_model_cmd: Commands<GameObject, FlagModelList>,
     ) {
@@ -121,7 +121,7 @@ impl SysModelListAfterCullingTick {
         >,
         items: Query<
             GameObject,
-            (ObjectID, &WorldMatrix, &RenderGeometry, &RenderGeometryEable)
+            (ObjectID, &WorldMatrix, &RenderGeometryEable)
         >,
     ) {
         let time1 = Instant::now();
@@ -132,7 +132,7 @@ impl SysModelListAfterCullingTick {
             if vieweractive.0 {
                 liet_model.0.iter().for_each(|(objid, _)| {
                     // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
-                    if let Some((_, worldmat, _, geo_enable)) = items.get(objid.clone()) {
+                    if let Some((_, worldmat, geo_enable)) = items.get(objid.clone()) {
                         // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
                         if geo_enable.0 {
                             cullings.0.push(objid.clone());
@@ -140,6 +140,7 @@ impl SysModelListAfterCullingTick {
                     }
                 });
             }
+            log::warn!("Moldellist: {:?}, {:?}", liet_model.0.len(), cullings.0.len());
         });
         
         log::info!("SysModelListAfterCullingTick: {:?}", Instant::now() - time1);
