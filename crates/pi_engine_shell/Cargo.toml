@@ -54,9 +54,9 @@ pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
 pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 
-pi_render = { git = "https://github.com/GaiaWorld/pi_render" }
-render_utils = { git = "https://github.com/GaiaWorld/pi_render" }
-render_derive = { git = "https://github.com/GaiaWorld/pi_render" }
+pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
+render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
+render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 
