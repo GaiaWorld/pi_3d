@@ -100,8 +100,9 @@ impl PluginTest {
         let (sender, receiver) = channel();
         let _ = MULTI_MEDIA_RUNTIME.spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
             println!("============2");
+            println!("curr dir : {:?}", std::env::current_dir());
             let gltf_loader =
-                GltfLoader::from_gltf_async("E:/rust_render/pi_3d/examples/gltf/SimpleSkin.gltf")
+                GltfLoader::from_gltf_async("examples/gltf/SimpleAnim.gltf")
                     .await
                     .unwrap();
                 println!("============3");

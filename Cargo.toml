@@ -166,5 +166,9 @@ name = "anime_performance"
 path = "examples/anime/performance.rs"
 
 [[example]]
-name = "gltf01"
-path = "examples/gltf/01.rs"
+name = "simple_skin"
+path = "examples/gltf/simple_skin.rs"
+
+[[example]]
+name = "simple_anim"
+path = "examples/gltf/simple_anim.rs"
