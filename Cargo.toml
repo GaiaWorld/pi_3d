@@ -44,6 +44,9 @@ pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 
 winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
 
+pi_3d_loader = {path = "../pi_3d_loader"}
+pi_async = "0.5"
+
 wgpu = "0.13"
 env_logger = "0.9"
 log = "0.4"
@@ -161,3 +164,7 @@ path = "examples/anime/camera.rs"
 [[example]]
 name = "anime_performance"
 path = "examples/anime/performance.rs"
+
+[[example]]
+name = "gltf01"
+path = "examples/gltf/01.rs"

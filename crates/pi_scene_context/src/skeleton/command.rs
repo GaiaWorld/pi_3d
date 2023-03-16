@@ -4,11 +4,11 @@ use pi_assets::mgr::AssetMgr;
 use pi_ecs::prelude::{ResMut, Commands, Query, Res, Event};
 use pi_ecs_macros::{setup, listen};
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
-use pi_render::{rhi::device::RenderDevice, renderer::{bind_buffer::{BindBufferAllocator}, sampler::SamplerRes}, render_3d::shader::skin_code::{ESkinBonesPerVertex, EBoneCount, ESkinCode}};
+use pi_render::{rhi::device::RenderDevice, renderer::{bind_buffer::{BindBufferAllocator}, sampler::SamplerRes}, render_3d::{shader::skin_code::{ESkinBonesPerVertex, EBoneCount, ESkinCode}, binds::model::skin::BindUseSkinValue}};
 use pi_share::Share;
 
 use super::{
-    skeleton::Skeleton,
+    skeleton::{Skeleton, BindSkinValue},
     SkeletonID,
     SkeletonBonesDirty
 };
@@ -119,6 +119,7 @@ impl SysSkinModifyCommand {
         mut cmds: ResMut<SingleSkinModifyCommands>,
         mut skeletons: Query<GameObject, &mut Skeleton>,
         mut useskin_cmd: Commands<GameObject, SkeletonID>,
+        mut model_cmd: Commands<GameObject, BindSkinValue>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 
@@ -135,6 +136,7 @@ impl SysSkinModifyCommand {
                             },
                         }
                         useskin_cmd.insert(id_obj, SkeletonID(id_skin));
+                        model_cmd.insert(id_obj, BindSkinValue(skeleton.bind.clone()));
                     }
                 },
             }

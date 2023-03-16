@@ -343,6 +343,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByRendererID<T, 
                             if let Some(val1) = passes.get(passid.id()) {
                                 let key = KeyBindGroupModel::new(bind_model.0.clone(), bind_skin.clone(), val1.0.clone());
                                 model_wait.add(&key, passid.id());
+                                log::warn!("Skin: {:?}", bind_skin);
                             }
                         }
                     }
@@ -425,6 +426,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByModel<T, I> {
                                 let key = KeyBindGroupModel::new(bind_model.0.clone(), bind_skin.clone(), val1.0.clone());
                                 model_wait.add(&key, passid.id());
                             }
+                            log::warn!("Skin: {:?}", bind_skin);
                         }
                     }
                 });

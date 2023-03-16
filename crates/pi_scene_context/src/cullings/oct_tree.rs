@@ -184,7 +184,7 @@ impl Plugin for PluginBoundingOctTree {
     }
 }
 
-trait InterfaceOctTree {
+pub trait InterfaceOctTree {
     fn add_of_oct_tree(& self, key: BoundingKey, info: BoundingInfo);
     fn remove_of_oct_tree(& self, key: BoundingKey);
 }
