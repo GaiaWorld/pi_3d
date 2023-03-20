@@ -162,7 +162,7 @@ path = "examples/anime/camera.rs"
 
 [[example]]
 name = "anime_performance"
-path = "examples/anime/performance.rs"
+
 
 [[example]]
 name = "lighting_01"
