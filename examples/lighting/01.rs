@@ -60,6 +60,7 @@ impl PluginTest {
         engine.shadow_enable(light, true);
         engine.transform_position(light, Vector3::new(0., 10., 0.));
         engine.light_direction(light, Vector3::new(1., -1., 1.));
+        engine.shadow_frustumsize(light, 20.0);
 
         let camera01 = engine.create_free_camera(scene01);
         engine.free_camera_mode(camera01, EFreeCameraMode::Perspective);
