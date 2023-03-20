@@ -8,7 +8,7 @@ use pi_render::renderer::shader::KeyShaderMeta;
 use crate::pass::EPassTag;
 
 use super::{
-    material::{MaterialID, MaterialUsedList},
+    material::{MaterialID, MaterialUsedList, DirtyMaterialUsedList},
     shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta, ShaderEffectMeta},
     uniforms::{
         texture::{UniformTextureWithSamplerParams},
@@ -35,6 +35,7 @@ impl SysMaterailCreateCommands {
         mut cmds: ResMut<SingleMatCreateCommands>,
         mut items: Commands<GameObject, AssetKeyShaderEffect>,
         mut usedlist_cmd: Commands<GameObject, MaterialUsedList>,
+        mut dirty_cmd: Commands<GameObject, DirtyMaterialUsedList>,
         mut passtag_cmd: Commands<GameObject, EPassTag>,
         mut texparams_cmd: Commands<GameObject, UniformTextureWithSamplerParams>,
     ) {
@@ -47,6 +48,7 @@ impl SysMaterailCreateCommands {
                     usedlist_cmd.insert(entity, MaterialUsedList::default());
                     passtag_cmd.insert(entity, passtag);
                     texparams_cmd.insert(entity, UniformTextureWithSamplerParams::default());
+                    dirty_cmd.insert(entity, DirtyMaterialUsedList);
                 },
             }
         });
@@ -90,12 +92,14 @@ impl SysMaterialIDCommand {
     pub fn cmds(
         mut cmds: ResMut<SingleMaterialIDCommandList>,
         mut material: Query<GameObject, &mut MaterialUsedList>,
+        mut dirty_cmd: Commands<GameObject, DirtyMaterialUsedList>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
                 EMaterialIDCommand::Use(obj, id_mat) => {
                     if let Some(mut list) = material.get_mut(id_mat.0) {
                         list.0.insert(obj.clone(), obj.clone());
+                        dirty_cmd.insert(id_mat.0.clone(), DirtyMaterialUsedList);
                     }
                 },
                 EMaterialIDCommand::UnUse(obj, id_mat) => {

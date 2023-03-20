@@ -4,7 +4,7 @@ use pi_ecs::{prelude::{Query, Commands}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{run_stage::TSystemStageInfo, object::{ObjectID, GameObject}};
 
-use crate::{flags::SceneID, layer_mask::LayerMask, geometry::geometry::{RenderGeometry, RenderGeometryEable}, transforms::transform_node::WorldMatrix, meshes::{model::SysRenderMatrixUpdate, abstract_mesh::AbstructMesh}};
+use crate::{flags::SceneID, layer_mask::LayerMask, geometry::geometry::{RenderGeometry, RenderGeometryEable}, transforms::transform_node::WorldMatrix, meshes::{model::SysRenderMatrixUpdate, abstract_mesh::AbstructMesh, Mesh}};
 
 use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCulling, ViewerActive, FlagModelList};
 
@@ -29,7 +29,7 @@ impl SysModelListUpdateByViewer {
         >,
         items: Query<
             GameObject,
-            (ObjectID, &SceneID, &LayerMask, &AbstructMesh),
+            (ObjectID, &SceneID, &LayerMask, &Mesh),
         >,
         mut flag_model_cmd: Commands<GameObject, FlagModelList>,
     ) {
@@ -76,7 +76,7 @@ impl SysModelListUpdateByModel {
         >,
         items: Query<
             GameObject,
-            (ObjectID, &SceneID, &LayerMask, &AbstructMesh),
+            (ObjectID, &SceneID, &LayerMask, &Mesh),
             Changed<LayerMask>,
         >,
         mut flag_model_cmd: Commands<GameObject, FlagModelList>,

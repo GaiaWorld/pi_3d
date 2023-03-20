@@ -7,7 +7,7 @@ use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 use crate::object::{ObjectID, GameObject};
 
 #[derive(Debug, Clone, Copy)]
-pub struct RenderBlend {
+pub struct ModelBlend {
     pub enable: bool,
     pub src_color: wgpu::BlendFactor,
     pub dst_color: wgpu::BlendFactor,
@@ -16,7 +16,7 @@ pub struct RenderBlend {
     pub opt_color: wgpu::BlendOperation,
     pub opt_alpha: wgpu::BlendOperation,
 }
-impl Default for RenderBlend {
+impl Default for ModelBlend {
     fn default() -> Self {
         Self {
             enable: false,
@@ -29,7 +29,7 @@ impl Default for RenderBlend {
         }
     }
 }
-impl RenderBlend {
+impl ModelBlend {
     pub fn combine(&mut self) {
         self.enable = true;
     }
@@ -49,7 +49,7 @@ impl RenderBlend {
 #[derive(Debug, Clone, Copy)]
 pub enum ERenderBlendCommand {
     Disable(ObjectID),
-    Blend(ObjectID, RenderBlend),
+    Blend(ObjectID, ModelBlend),
 }
 
 #[derive(Debug, Default)]
@@ -66,8 +66,8 @@ impl SysRenderBlendCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderBlendCommandList>,
-        mut items: Query<GameObject, &mut RenderBlend>,
-        mut blends: Commands<GameObject, RenderBlend>,
+        mut items: Query<GameObject, &mut ModelBlend>,
+        mut blends: Commands<GameObject, ModelBlend>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
         list.drain(..).for_each(|cmd| {
@@ -76,7 +76,7 @@ impl SysRenderBlendCommand {
                     if let Some(mut item) = items.get_mut(entity) {
                         item.enable = false;
                     } else {
-                        blends.insert(entity, RenderBlend::default());
+                        blends.insert(entity, ModelBlend::default());
                     }
                 },
                 ERenderBlendCommand::Blend(entity, value) => {
@@ -91,7 +91,7 @@ pub trait InterfaceRenderBlend {
     fn blend(
         &self,
         entity: ObjectID,
-        blend: RenderBlend,
+        blend: ModelBlend,
     ) -> &Self;
 
     fn disable_blend(
@@ -103,7 +103,7 @@ impl InterfaceRenderBlend for crate::engine::Engine {
     fn blend(
         &self,
         entity: ObjectID,
-        value: RenderBlend,
+        value: ModelBlend,
     ) -> &Self {
         let world = self.world();
 

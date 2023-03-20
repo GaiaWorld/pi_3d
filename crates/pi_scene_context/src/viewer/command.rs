@@ -9,7 +9,10 @@ use pi_render::{
 use pi_scene_math::Number;
 
 use crate::{
-    renderers::{render_object::RendererID, graphic::RendererGraphicDesc, ViewerRenderersInfo, renderer::Renderer},
+    renderers::{
+        render_object::RendererID, graphic::RendererGraphicDesc, ViewerRenderersInfo,
+        renderer::{Renderer, RenderSize, RenderColorFormat, RenderColorClear, RenderDepthClear, RenderDepthFormat}
+    },
     flags::SceneID,
     postprocess::Postprocess,
     pass::PassTagOrders
@@ -35,12 +38,16 @@ impl Default for Viewport {
 }
 
 
-#[derive(Debug)]
 pub enum ERendererCommand {
-    Active(ObjectID, RendererID, RendererGraphicDesc, Option<Viewport>),
+    Active(ObjectID, RendererID, RendererGraphicDesc),
+    RenderSize(ObjectID, RenderSize),
+    RenderColorFormat(ObjectID, RenderColorFormat),
+    RenderColorClear(ObjectID, RenderColorClear),
+    RenderDepthFormat(ObjectID, RenderDepthFormat),
+    RenderDepthClear(ObjectID, RenderDepthClear),
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct SingleRendererCommandList {
     pub list: Vec<ERendererCommand>,
 }
@@ -72,6 +79,13 @@ impl SysViewerRendererCommandTick {
         mut renderer_cmd: Commands<GameObject, Renderer>,
         mut renderer_viewport_cmd: Commands<GameObject, Viewport>,
         mut renderer_viewer_cmd: Commands<GameObject, ViewerID>,
+        
+        mut renderersize_cmd: Commands<GameObject, RenderSize>,
+        mut renderercolor_cmd: Commands<GameObject, RenderColorFormat>,
+        mut renderercolor_clear_cmd: Commands<GameObject, RenderColorClear>,
+        mut rendererdepth_cmd: Commands<GameObject, RenderDepthFormat>,
+        mut rendererdepth_clear_cmd: Commands<GameObject, RenderDepthClear>,
+
         mut render_graphic: ResMut<RenderGraph>,
         mut delete: EntityDelete<GameObject>,
     ) {
@@ -82,7 +96,7 @@ impl SysViewerRendererCommandTick {
         list.drain(..).for_each(|cmd| {
             log::info!("SysRendererCommandTick:");
             match cmd {
-                ERendererCommand::Active(id_viewer, id_renderer, graphic_desc, viewport) => {
+                ERendererCommand::Active(id_viewer, id_renderer, graphic_desc) => {
                     if let Some((id_scene, viewer_renderers)) = viewers.get(id_viewer.clone()) {
                         let mut viewer_renderers = viewer_renderers.clone();
                         if let Some((render, id_render)) = viewer_renderers.map.get(&graphic_desc.curr) {
@@ -102,15 +116,6 @@ impl SysViewerRendererCommandTick {
                         } else {
                             render_graphic.set_finish(graphic_desc.curr.to_string(), true);
                         }
-                        
-                        match viewport {
-                            Some(viewport) => {
-                                renderer_viewport_cmd.insert(id_renderer.0.clone(), viewport);
-                            },
-                            None => {
-                                renderer_viewport_cmd.insert(id_renderer.0.clone(), Viewport::default());
-                            },
-                        };
 
                         // Renderer Modify
                         renderer_orders_cmd.insert(id_renderer.0.clone(), graphic_desc.passorders.clone());
@@ -118,6 +123,26 @@ impl SysViewerRendererCommandTick {
                         renderer_viewer_cmd.insert(id_renderer.0.clone(), ViewerID(id_viewer));
                         postprocess_cmd.insert(id_renderer.0.clone(), Postprocess::default());
                     }
+                },
+                ERendererCommand::RenderSize(id_renderer, val) => {
+                    log::warn!(">>> RenderSize");
+                    renderersize_cmd.insert(id_renderer, val)
+                },
+                ERendererCommand::RenderColorFormat(id_renderer, val) => {
+                    log::warn!(">>> RenderColorFormat");
+                    renderercolor_cmd.insert(id_renderer, val)
+                },
+                ERendererCommand::RenderColorClear(id_renderer, val) => {
+                    log::warn!(">>> RenderColorClear");
+                    renderercolor_clear_cmd.insert(id_renderer, val)
+                },
+                ERendererCommand::RenderDepthFormat(id_renderer, val) => {
+                    log::warn!(">>> RenderDepthFormat");
+                    rendererdepth_cmd.insert(id_renderer, val)
+                },
+                ERendererCommand::RenderDepthClear(id_renderer, val) => {
+                    log::warn!(">>> RenderDepthClear");
+                    rendererdepth_clear_cmd.insert(id_renderer, val)
                 },
             }
         });

@@ -12,7 +12,7 @@ use crate::{
     materials::{
         value::FromValueUniformStatistics,
         shader_effect::{AssetKeyShaderEffect},
-        material::{MaterialUsedList},
+        material::{MaterialUsedList, MaterialID, DirtyMaterialUsedList},
         command::{SysMaterialIDCommand, SysMaterailCreateCommands, SysAssetShaderEffectLoad}
     },
     pass::*
@@ -149,7 +149,7 @@ impl<T: TPassID + Component> SysMaterialMetaChange<T> {
             (
                 ObjectID, &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &MaterialUsedList, &EPassTag
             ),
-            Changed<AssetResShaderEffectMeta>
+            Or<(Changed<AssetResShaderEffectMeta>, Changed<DirtyMaterialUsedList>)>
         >,
         models: Query<GameObject, &T>,
         mut effect_values_cmd: Commands<GameObject, BindEffectValues>,
@@ -173,16 +173,16 @@ impl<T: TPassID + Component> SysMaterialMetaChange<T> {
                     effect_values_flag_cmd.insert(matid, BindEffectValueDirty(false));
                 }
                 
-                let data = if effect.textures.len() == 0 {
-                    Some((effect_key.0.clone(), effect.0.clone()))
-                } else {
-                    None
-                };
-                list_model.0.iter().for_each(|(id_obj, _)| {
-                    if let Some(passid) = models.get(id_obj.clone()) {
-                            ready01_cmd.insert(passid.id(), PassReady(data.clone()));
-                    }
-                });
+                // let data = if effect.textures.len() == 0 {
+                //     Some((effect_key.0.clone(), effect.0.clone()))
+                // } else {
+                //     None
+                // };
+                // list_model.0.iter().for_each(|(id_obj, _)| {
+                //     if let Some(passid) = models.get(id_obj.clone()) {
+                //         ready01_cmd.insert(passid.id(), PassReady(data.clone()));
+                //     }
+                // });
             }
         });
     }
@@ -193,7 +193,7 @@ impl TSystemStageInfo for SysMaterialTexturesChange {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
             // SysAssetShaderEffectLoad::key(),
-            SysUniformComand::key()
+            // SysUniformComand::key()
         ]
     }
 }
@@ -260,7 +260,7 @@ pub struct SysBindValueUpdate;
 impl TSystemStageInfo for SysBindValueUpdate {
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
-            SysUniformComand::key(),
+            // SysUniformComand::key(),
         ]
     }
 }

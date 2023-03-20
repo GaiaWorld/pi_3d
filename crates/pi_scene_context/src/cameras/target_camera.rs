@@ -38,6 +38,9 @@ impl TViewerViewMatrix for TargetCameraParam {
                     // log::warn!("eye: {:?}", eye);
 
                     let mut target = local_pos.0 +  self.target;
+                    if self.target.normalize().dot(&self.up).abs() == 1. {
+                        target += Vector3::new(0., 0., 0.001);
+                    }
                     CoordinateSytem3::transform_coordinates(&target.clone(), transformation, &mut target);
                     // log::warn!("target: {:?}", target);
 
@@ -55,7 +58,10 @@ impl TViewerViewMatrix for TargetCameraParam {
                 None => {
                     let mut iso = Isometry3::identity();
                     let eye = local_pos.0.clone();
-                    let target = local_pos.0 +  self.target;
+                    let mut target = local_pos.0 +  self.target;
+                    if self.target.normalize().dot(&self.up).abs() == 1. {
+                        target += Vector3::new(0., 0., 0.001);
+                    }
                     coordsys.lookat(&eye, &target, &self.up, &mut iso);
 
                     // iso.translation.clone_from(&Translation3::new(local_pos.0.x, local_pos.0.y, local_pos.0.z));

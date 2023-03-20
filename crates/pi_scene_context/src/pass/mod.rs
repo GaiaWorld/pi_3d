@@ -28,7 +28,7 @@ impl PassTagOrders {
 ///   * 每个 Pass 对应一个渲染流程
 ///   * 每个材质 只对应 一个Pass
 ///   * example: ShadowCast, DepthPrePass, Opaque, Skybox, Transparent,
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EPassTag {
     ShadowCast,
     Opaque,
@@ -48,6 +48,39 @@ impl EPassTag {
     pub const PASS_TAG_06: PassTag = 0b0000_0000_0010_0000;
     pub const PASS_TAG_07: PassTag = 0b0000_0000_0100_0000;
     pub const PASS_TAG_08: PassTag = 0b0000_0000_1000_0000;
+    
+    pub fn color_format(val: PassTag) -> wgpu::TextureFormat {
+        match val {
+            Self::PASS_TAG_01 => wgpu::TextureFormat::Rgba16Float,
+            _ => wgpu::TextureFormat::Rgba8UnormSrgb,
+        }
+    }
+    pub fn depth_format(val: PassTag) -> Option<wgpu::TextureFormat> {
+        match val {
+            Self::PASS_TAG_01 => Some(wgpu::TextureFormat::Depth32Float),
+            _ => Some(wgpu::TextureFormat::Depth32Float),
+        }
+    }
+    pub fn depth_write(val: PassTag) -> bool {
+        match val {
+            Self::PASS_TAG_01 => true,
+            _ => false,
+        }
+    }
+    pub fn depth_compare(val: PassTag) -> Option<wgpu::CompareFunction> {
+        match val {
+            Self::PASS_TAG_01 => Some(wgpu::CompareFunction::GreaterEqual),
+            _ => None,
+        }
+    }
+    pub fn blend(val: PassTag) -> bool {
+        match val {
+            Self::PASS_TAG_01 => false,
+            Self::PASS_TAG_02 => false,
+            Self::PASS_TAG_03 => false,
+            _ => true,
+        }
+    }
     pub fn index(&self) -> usize {
         match self {
             EPassTag::ShadowCast => 1,
@@ -192,6 +225,28 @@ impl TPassID for PassID08 {
     const TAG: PassTag = EPassTag::PASS_TAG_08;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
+}
+
+#[derive(Default, Clone)]
+pub struct PassBlend(pub Option<bool>);
+impl TPassData<Option<bool>> for PassBlend {
+    fn new(val: Option<bool>) -> Self { Self(val) }
+    fn val(&self) -> &Option<bool> { &self.0 }
+}
+
+#[derive(Default, Clone)]
+pub struct PassColorFormat(pub Option<wgpu::TextureFormat>);
+impl TPassData<Option<wgpu::TextureFormat>> for PassColorFormat {
+    fn new(val: Option<wgpu::TextureFormat>) -> Self { Self(val) }
+    fn val(&self) -> &Option<wgpu::TextureFormat> { &self.0 }
+}
+
+
+#[derive(Default, Clone)]
+pub struct PassDepthFormat(pub Option<wgpu::TextureFormat>);
+impl TPassData<Option<wgpu::TextureFormat>> for PassDepthFormat {
+    fn new(val: Option<wgpu::TextureFormat>) -> Self { Self(val) }
+    fn val(&self) -> &Option<wgpu::TextureFormat> { &self.0 }
 }
 
 /// * 标识物体 已准备好的 Passs

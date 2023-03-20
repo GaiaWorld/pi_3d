@@ -46,6 +46,7 @@ render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "mast
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_animation = { git = "https://github.com/GaiaWorld/pi_animation.git" }
 pi_curves = { git = "https://github.com/GaiaWorld/pi_curves.git" }
+pi_postprocess = { git = "https://github.com/GaiaWorld/pi_post_process.git" }
 
 pi_atom = { version="0.2", features = ["serde"] }
 pi_assets = "0.10"

@@ -347,7 +347,7 @@ impl Plugin for PluginGeometry {
         world.insert_resource(VertexBufferLoader::<ObjectID, AssetResBufferIndices>::default());
 
         SysGeometryVBCommand::setup(world, stages.query_stage::<SysGeometryVBCommand>(ERunStageChap::Initial));
-        SysVertexBufferLoad::setup(world, stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Uniform));
+        SysVertexBufferLoad::setup(world, stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Draw));
         PluginVertexBuffers.init(engine, stages);
 
         Ok(())

@@ -120,6 +120,7 @@ pub enum ERunStageChap {
     Logic01,
     Logic02,
     Uniform,
+    Draw,
 }
 
 pub struct RunStage {
@@ -129,11 +130,12 @@ pub struct RunStage {
     logic01: RunStageSub,
     logic02: RunStageSub,
     uniform_update: RunStageSub,
+    draw: RunStageSub,
     list: Vec<StageBuilder>,
 }
 impl RunStage {
     pub fn new() -> Self {
-        Self { initial: RunStageSub::new(), anime: RunStageSub::new(), command: RunStageSub::new(), uniform_update: RunStageSub::new(), logic01: RunStageSub::new(), logic02: RunStageSub::new(), list: vec![]}
+        Self { initial: RunStageSub::new(), anime: RunStageSub::new(), command: RunStageSub::new(), draw: RunStageSub::new(), uniform_update: RunStageSub::new(), logic01: RunStageSub::new(), logic02: RunStageSub::new(), list: vec![]}
     }
     /// * 获取System在指定章节内的 阶段
     /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
@@ -156,6 +158,9 @@ impl RunStage {
             },
             ERunStageChap::Uniform => {
                 self.uniform_update.query_stage::<T>()
+            },
+            ERunStageChap::Draw => {
+                self.draw.query_stage::<T>()
             },
         }
     }
@@ -184,6 +189,10 @@ impl RunStage {
             self.list.push(item);
         });
 
+        self.draw.drain().for_each(|item| {
+            self.list.push(item);
+        });
+
         self.list.drain(..)
     }
     pub fn log(&self) {
@@ -203,8 +212,11 @@ impl RunStage {
 
         text += self.command.log().as_str();
         text += "\r\n--------------------------------------------------\r\n";
-
+        
         text += self.uniform_update.log().as_str();
+        text += "\r\n--------------------------------------------------\r\n";
+
+        text += self.draw.log().as_str();
 
         std::fs::write(root_dir.join(file_name), text);
     }
@@ -220,7 +232,7 @@ impl RunStage {
         text += self.command.log().as_str();
         text += "\r\n--------------------------------------------------\r\n";
 
-        text += self.uniform_update.log().as_str();
+        text += self.draw.log().as_str();
 
         std::fs::write(root_dir.join(file_name), text);
     }

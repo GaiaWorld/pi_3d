@@ -1,9 +1,10 @@
-use pi_ecs::{prelude::{Query, Commands}, query::{Or, Changed}};
+use pi_ecs::{prelude::{Query, Commands, Res}, query::{Or, Changed, With}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::TSystemStageInfo;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, Rotation3};
+use pi_share::Share;
 
-use crate::{transforms::{transform_node::{LocalPosition, LocalRotation}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}};
+use crate::{transforms::{transform_node::{LocalPosition, LocalRotation}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}, renderers::{renderer::RenderSize, render_object::RendererID}};
 
 use super::{camera::{EFreeCameraMode, CameraFov, CameraNearFar, CameraOrthSize, EFixedMode, CameraParam, CameraViewport}, command::SysCameraParamCommand};
 
@@ -53,6 +54,24 @@ impl SysCameraParamUpdate {
         cameras.iter().for_each(|(id_camera, mode, fov, nearfar, size, fixmode, viewport)| {
             let param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
             param_cmd.insert(id_camera, param);
+        });
+    }
+}
+
+pub struct SyeCameraRenderSizeUpdate;
+impl TSystemStageInfo for SyeCameraRenderSizeUpdate {
+}
+#[setup]
+impl SyeCameraRenderSizeUpdate {
+    #[system]
+    fn sys(
+        window: Res<Share<winit::window::Window>>,
+        cameras: Query<GameObject, &RendererID, With<CameraParam>>,
+        mut rendersize_cmd: Commands<GameObject, RenderSize>,
+    ) {
+        let size = window.inner_size();
+        cameras.iter().for_each(|id_renderer| {
+            rendersize_cmd.insert(id_renderer.0, RenderSize::new(size.width, size.height));
         });
     }
 }

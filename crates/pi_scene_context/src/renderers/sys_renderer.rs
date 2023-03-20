@@ -10,7 +10,7 @@ use pi_render::{
     },
     renderer::{
         vertex_buffer::{VertexBufferLayouts, KeyPipelineFromAttributes},
-        pipeline::KeyRenderPipelineState
+        pipeline::{KeyRenderPipelineState, DepthStencilState}
     }
 };
 use pi_share::Share;
@@ -25,8 +25,8 @@ use super::{
     render_primitive::PrimitiveState,
     base::*,
     pass::*,
-    render_depth_and_stencil::RenderDepthAndStencil,
-    render_blend::RenderBlend,
+    render_depth_and_stencil::{ModelDepthStencil},
+    render_blend::ModelBlend,
     render_target_state::RenderTargetState,
     renderer::Renderer,
     sys_renderer_pre::{SysSet0ModifyByRendererID, SysSet0ModifyFromScene, SysSet1ModifyByModel, SysSet2ModifyByRendererID, SysSet2ModifyByModel, SysSet1ModifyByRendererID, SysBufferAllocatorUpdate, SysBindGroupLoad}
@@ -66,15 +66,12 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassBindGroups<T, I> {
                             BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
                         )));
                     }
-                } else {
-                    if old.val().is_some() {
-                        cmd.insert(id_pass, PassBindGroups::new(None));
-                    }
+                    return;
                 }
-            } else {
-                if old.val().is_some() {
-                    cmd.insert(id_pass, PassBindGroups::new(None));
-                }
+            }
+            
+            if old.val().is_some() {
+                cmd.insert(id_pass, PassBindGroups::new(None));
             }
         });
     }
@@ -298,10 +295,10 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByModel
         models: Query<
             GameObject,
             (
-                &PrimitiveState, &RenderDepthAndStencil, &RenderBlend,
+                &PrimitiveState, &ModelDepthStencil, &ModelBlend,
                 &GeometryID, &I
             ),
-            Or<(Changed<PrimitiveState>, Changed<RenderDepthAndStencil>, Changed<RenderBlend>, Changed<GeometryID>)>
+            Or<(Changed<PrimitiveState>, Changed<ModelDepthStencil>, Changed<ModelBlend>, Changed<GeometryID>)>
         >,
         geometrys: Query<GameObject, &VertexBufferLayouts>, 
         passes: Query<
@@ -332,11 +329,32 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByModel
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.clone());
     
-                    let targets = RenderTargetState::color_target(wgpu::TextureFormat::Bgra8Unorm, blend);
+                    let pass_color_format = EPassTag::color_format(T::TAG);
+                    let pass_blend = EPassTag::blend(T::TAG);
+                    let pass_depth_write = EPassTag::depth_write(T::TAG);
+                    let pass_depth_compare = if let Some(pass_depth_compare) = EPassTag::depth_compare(T::TAG) {
+                        pass_depth_compare
+                    } else { depth_stencil.compare };
+                    let pass_depth_format = EPassTag::depth_format(T::TAG);
+                    let blend = if pass_blend { blend.clone() } else { ModelBlend::default() };
+
+                    let depth_stencil = if let Some(pass_depth_format) = pass_depth_format {
+                        Some(
+                            DepthStencilState {
+                                format: pass_depth_format,
+                                depth_write_enabled: depth_stencil.write || pass_depth_write,
+                                depth_compare: pass_depth_compare,
+                                stencil: depth_stencil.stencil.clone(),
+                                bias: depth_stencil.bias.clone(),
+                            }
+                        )
+                    } else { None };
+
+                    let targets = RenderTargetState::color_target(pass_color_format, &blend);
                     let key_state = KeyRenderPipelineState {
                         primitive: primitive.state,
                         target_state: vec![targets[0].clone()],
-                        depth_stencil: depth_stencil.0.clone(),
+                        depth_stencil: depth_stencil,
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
                     };
 
@@ -387,7 +405,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByPass<
         models: Query<
             GameObject,
             (
-                &GeometryID, &PrimitiveState, &RenderDepthAndStencil, &RenderBlend,
+                &GeometryID, &PrimitiveState, &ModelDepthStencil, &ModelBlend,
             ),
         >,
         geometrys: Query<GameObject, &VertexBufferLayouts>, 
@@ -418,11 +436,27 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassPipelineRequestByPass<
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.clone());
     
-                    let targets = RenderTargetState::color_target(wgpu::TextureFormat::Bgra8Unorm, blend);
+                    let pass_color_format = EPassTag::color_format(T::TAG);
+                    let pass_blend = EPassTag::blend(T::TAG);
+                    let pass_depth_format = EPassTag::depth_format(T::TAG);
+                    let blend = if pass_blend { blend.clone() } else { ModelBlend::default() };
+                    let depth_stencil = if let Some(pass_depth_format) = pass_depth_format {
+                        Some(
+                            DepthStencilState {
+                                format: pass_depth_format,
+                                depth_write_enabled: depth_stencil.write,
+                                depth_compare: depth_stencil.compare,
+                                stencil: depth_stencil.stencil.clone(),
+                                bias: depth_stencil.bias.clone(),
+                            }
+                        )
+                    } else { None };
+    
+                    let targets = RenderTargetState::color_target(pass_color_format, &blend);
                     let key_state = KeyRenderPipelineState {
                         primitive: primitive.state,
                         target_state: vec![targets[0].clone()],
-                        depth_stencil: depth_stencil.0.clone(),
+                        depth_stencil: depth_stencil,
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
                     };
 
@@ -617,7 +651,7 @@ impl SysRendererDraws {
                 if let Some(viewport) = viewport {
                     renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);
                 } else {
-                    renderer.draws.viewport = (0., 0., 1., 1., 0., 1.);
+                    renderer.draws.viewport = (0., 0., 1., 1., -1., 1.);
                 }
                 list_model.0.iter().for_each(|id_obj| {
                     if let Some(passrecord) = models.get(id_obj.clone()) {

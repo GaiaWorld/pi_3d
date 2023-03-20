@@ -20,6 +20,8 @@ pub struct MaterialID (pub ObjectID);
 #[derive(Debug, Default)]
 pub struct MaterialUsedList(pub XHashMap<ObjectID, ObjectID>);
 
+pub struct DirtyMaterialUsedList;
+
 #[derive(Debug, Clone, Copy)]
 pub enum UniformModifier {
     Mat4(usize, Matrix),

@@ -14,7 +14,7 @@ use crate::{
         command::{SingleRendererCommandList, ERendererCommand, Viewport}, FlagModelList
     },
     renderers::{
-        ViewerRenderersInfo, graphic::RendererGraphicDesc, render_object::RendererID
+        ViewerRenderersInfo, graphic::RendererGraphicDesc, render_object::RendererID, renderer::{RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}
     },
 };
 
@@ -164,7 +164,19 @@ impl SysCameraParamCommand {
                 ECameraCommand::Renderer(entity, id_render, value) => {
                     if let Some(viewport) = cameras.get_mut(entity) {
                         render_cmds.list.push(
-                            ERendererCommand::Active(entity, RendererID(id_render), value, Some(Viewport { x: viewport.x, y: viewport.y, w: viewport.w, h: viewport.h }))
+                            ERendererCommand::Active(entity, RendererID(id_render), value)
+                        );
+                        render_cmds.list.push(
+                            ERendererCommand::RenderColorFormat(id_render, RenderColorFormat(wgpu::TextureFormat::Rgba8UnormSrgb))
+                        );
+                        render_cmds.list.push(
+                            ERendererCommand::RenderColorClear(id_render, RenderColorClear(wgpu::Color { r: 0., g: 0., b: 0., a: 0. }))
+                        );
+                        render_cmds.list.push(
+                            ERendererCommand::RenderDepthFormat(id_render, RenderDepthFormat(Some(wgpu::TextureFormat::Depth32Float)))
+                        );
+                        render_cmds.list.push(
+                            ERendererCommand::RenderDepthClear(id_render, RenderDepthClear(0.))
                         );
                     }
                 },

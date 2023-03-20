@@ -7,12 +7,12 @@ use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_fram
 use pi_atom::Atom;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}, assets::local_load::PluginLocalLoad, setup::TSetup, object::InterfaceObject};
-use pi_render::{rhi::options::RenderOptions, renderer::{vertex_buffer_desc::VertexBufferDesc, pipeline::{DepthStencilState, DepthBiasState}}};
+use pi_render::{rhi::{options::RenderOptions, glsl::Glsl}, renderer::{vertex_buffer_desc::VertexBufferDesc, pipeline::{DepthStencilState, DepthBiasState}}};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode, transform_node::{LocalPosition, LocalEulerAngles, LocalScaling}},
     scene::{interface::InterfaceScene},
     cameras::{interface::InterfaceCamera, camera::EFreeCameraMode},
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::{graphic::RendererGraphicDesc, render_depth_and_stencil::{InterfaceRenderDepthAndStencil, ModelDepthStencil}}, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery}, state::PluginStateToFile
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::{graphic::RendererGraphicDesc, render_depth_and_stencil::{InterfaceRenderDepthAndStencil, ModelDepthStencil}}, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery}, state::PluginStateToFile, light::{PluginLighting, interface::TLight}
 };
 use pi_ecs::{prelude::{ResMut, Setup}, storage::Local};
 use pi_ecs_macros::setup;
@@ -33,6 +33,7 @@ impl Plugin for PluginTest {
         PluginLocalLoad.init(engine, stages);
         PluginBundleDefault.init(engine, stages);
         PluginUnlitMaterial.init(engine, stages);
+        PluginLighting.init(engine, stages);
 
         PluginCubeBuilder.init(engine, stages);
         PluginStateToFile.init(engine, stages);
@@ -54,12 +55,18 @@ impl PluginTest {
 
         let root = engine.create_transform_node(scene01);
 
+        let light = engine.create_light(scene01, Atom::from("TestLight"));
+        engine.layer_mask(light, LayerMask::default());
+        engine.shadow_enable(light, true);
+        engine.transform_position(light, Vector3::new(0., 10., 0.));
+        engine.light_direction(light, Vector3::new(1., -1., 1.));
+
         let camera01 = engine.create_free_camera(scene01);
         engine.free_camera_mode(camera01, EFreeCameraMode::Perspective);
         engine.active_camera(camera01, true);
         engine.layer_mask(camera01, LayerMask::default());
         engine.transform_position(camera01, Vector3::new(0., 10., -40.));
-        engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque]) });
+        // engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("TestLight")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque]) });
         // engine.transform_parent(camera01, root);
         engine.camera_target(camera01, Vector3::new(0., -1., 4.));
 
@@ -67,23 +74,8 @@ impl PluginTest {
         let mut attrs = CubeBuilder::attrs_meta();
         attrs.push(VertexBufferDesc::instance_world_matrix());
         engine.use_geometry(source, attrs, Some(CubeBuilder::indices_meta()));
-        engine.use_default_material(source);
+        // engine.use_default_material(source);
         engine.layer_mask(source, LayerMask::default());
-        engine.depth_stencil(source, ModelDepthStencil::new(
-            true,
-            wgpu::CompareFunction::GreaterEqual,
-            DepthBiasState {
-                constant: 1,
-                slope_scale: 1,
-                clamp: 1,
-            },
-            wgpu::StencilState {
-                front: wgpu::StencilFaceState::IGNORE,
-                back: wgpu::StencilFaceState::IGNORE,
-                read_mask: 0,
-                write_mask: 0,
-            },
-        ));
 
         let key_group = pi_atom::Atom::from("key_group");
         engine.create_animation_group(source, &key_group);

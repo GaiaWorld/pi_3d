@@ -3,22 +3,52 @@ use std::mem::replace;
 use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
 use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
-use pi_render::renderer::pipeline::DepthStencilState;
+use pi_render::renderer::pipeline::{DepthStencilState, DepthBiasState};
 
 use crate::object::{ObjectID, GameObject};
 
 #[derive(Debug, Clone)]
-pub struct RenderDepthAndStencil(pub Option<DepthStencilState>);
-impl Default for RenderDepthAndStencil {
-    fn default() -> Self {
-        Self(None)
+pub struct ModelDepthStencil {
+    pub(crate) write: bool,
+    pub(crate) compare: wgpu::CompareFunction,
+    pub(crate) bias: DepthBiasState,
+    pub(crate) stencil: wgpu::StencilState,
+}
+impl ModelDepthStencil {
+    pub fn new(
+        write: bool,
+        compare: wgpu::CompareFunction,
+        bias: DepthBiasState,
+        stencil: wgpu::StencilState,
+    ) -> Self {
+        Self { write, compare, bias, stencil }
     }
 }
+impl Default for ModelDepthStencil {
+    fn default() -> Self {
+        Self {
+            write: false,
+            compare: wgpu::CompareFunction::GreaterEqual,
+            bias: DepthBiasState {
+                constant: 0,
+                slope_scale: 0,
+                clamp: 0,
+            },
+            stencil: wgpu::StencilState {
+                front: wgpu::StencilFaceState::IGNORE,
+                back: wgpu::StencilFaceState::IGNORE,
+                read_mask: 0,
+                write_mask: 0,
+            },
+        }
+    }
+}
+
 
 #[derive(Debug, Clone)]
 pub enum ERenderDepthAndStencilCommand {
     Disable(ObjectID),
-    DepthStencil(ObjectID, RenderDepthAndStencil),
+    DepthStencil(ObjectID, ModelDepthStencil),
 }
 
 #[derive(Debug, Default)]
@@ -35,13 +65,13 @@ impl SysRenderDepthAndStencilCommand {
     #[system]
     pub fn cmd(
         mut cmds: ResMut<SingleRenderDepthAndStencilCommandList>,
-        mut item_cmd: Commands<GameObject, RenderDepthAndStencil>,
+        mut item_cmd: Commands<GameObject, ModelDepthStencil>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ERenderDepthAndStencilCommand::Disable(entity) => {
-                    item_cmd.insert(entity, RenderDepthAndStencil::default());
+                    item_cmd.insert(entity, ModelDepthStencil::default());
                 },
                 ERenderDepthAndStencilCommand::DepthStencil(entity, value) => {
                     item_cmd.insert(entity, value);
@@ -55,7 +85,7 @@ pub trait InterfaceRenderDepthAndStencil {
     fn depth_stencil(
         &self,
         entity: ObjectID,
-        value: RenderDepthAndStencil,
+        value: ModelDepthStencil,
     ) -> &Self;
 
     fn disable_depth_stencil(
@@ -67,7 +97,7 @@ impl InterfaceRenderDepthAndStencil for crate::engine::Engine {
     fn depth_stencil(
         &self,
         entity: ObjectID,
-        value: RenderDepthAndStencil,
+        value: ModelDepthStencil,
     ) -> &Self {
         let world = self.world();
 

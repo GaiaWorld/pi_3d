@@ -1,3 +1,5 @@
+use pi_atom::Atom;
+
 use crate::object::ObjectID;
 
 
@@ -19,3 +21,5 @@ pub struct CullingFlag(pub bool);
 pub struct SceneID(pub ObjectID);
 #[derive(Debug)]
 pub struct CameraID(pub usize);
+
+pub struct UniqueName(pub Atom);

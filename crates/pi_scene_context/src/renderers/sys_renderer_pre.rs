@@ -23,7 +23,7 @@ use crate::{
     viewer::{BindViewer, ModelList, ViewerActive},
     skeleton::{skeleton::{BindSkinValue}, SkeletonID},
     meshes::model::BindModel,
-    pass::*, bindgroup::{AssetBindGroupSceneWaits, AssetBindGroupModelWaits, AssetBindGroupTextureSamplersWaits},
+    pass::*, bindgroup::{AssetBindGroupSceneWaits, AssetBindGroupModelWaits, AssetBindGroupTextureSamplersWaits}, materials::material::{MaterialUsedList, DirtyMaterialUsedList},
 };
 
 use super::ViewerRenderersInfo;
@@ -308,7 +308,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByRendererID<T, 
                 &I,
             ),
         >,
-        passes: Query<GameObject, &PassBindEffectValue, With<T>>,
+        passes: Query<GameObject, (&PassBindEffectValue, &PassReady), With<T>>,
         mut pass01_cmd: Commands<GameObject, PassBindGroupModel>,
         device: Res<RenderDevice>,
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
@@ -340,9 +340,11 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByRendererID<T, 
                             _ => { return; }
                         };
                         if pass_tags.1 & I::TAG == I::TAG {
-                            if let Some(val1) = passes.get(passid.id()) {
-                                let key = KeyBindGroupModel::new(bind_model.0.clone(), bind_skin.clone(), val1.0.clone());
-                                model_wait.add(&key, passid.id());
+                            if let Some((val1, ready)) = passes.get(passid.id()) {
+                                if ready.val().is_some() {
+                                    let key = KeyBindGroupModel::new(bind_model.0.clone(), bind_skin.clone(), val1.0.clone());
+                                    model_wait.add(&key, passid.id());
+                                }
                             }
                         }
                     }
@@ -388,7 +390,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByModel<T, I> {
                 Changed<BindSkinValue>, Changed<SkeletonID>, Changed<PassDirtyBindEffectValue>
             )>,
         >,
-        passes: Query<GameObject, &PassBindEffectValue, With<T>>,
+        passes: Query<GameObject, (&PassBindEffectValue, &PassReady), With<T>>,
         mut pass01_cmd: Commands<GameObject, PassBindGroupModel>,
         device: Res<RenderDevice>,
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
@@ -421,11 +423,92 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByModel<T, I> {
                             _ => { return; }
                         };
                         if pass_tags.1 & I::TAG == I::TAG {
-                            if let Some(val1) = passes.get(passid.id()) {
-                                let key = KeyBindGroupModel::new(bind_model.0.clone(), bind_skin.clone(), val1.0.clone());
-                                model_wait.add(&key, passid.id());
+                            if let Some((val1, ready)) = passes.get(passid.id()) {
+                                if ready.val().is_some() {
+                                    let key = KeyBindGroupModel::new(bind_model.0.clone(), bind_skin.clone(), val1.0.clone());
+                                    model_wait.add(&key, passid.id());
+                                }
                             }
                         }
+                    }
+                });
+            });
+        });
+
+        log::trace!("SysSet1ModifyByModel: {:?}", Instant::now() - time1);
+    }
+}
+
+/// * 物体的数据变化时, 重新创建列表内物体相关Pass 的 Set1 数据
+///   * 骨骼数据变化 - 
+///   * 渲染效果数据 变化
+pub struct SysSet1ModifyByPass<T: TPass + Component, I: TPassID + Component>(PhantomData<(T, I)>);
+impl<T: TPass + Component, I: TPassID + Component> TSystemStageInfo for SysSet1ModifyByPass<T, I> {
+    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+        vec![
+            SysSet1ModifyByRendererID::<T, I>::key()
+        ]
+    }
+}
+#[setup]
+impl<T: TPass + Component, I: TPassID + Component> SysSet1ModifyByPass<T, I> {
+    #[system]
+    pub fn sys(
+        renderers: Query<
+            GameObject,
+            &PassTagOrders,
+        >,
+        viewers: Query<
+            GameObject,
+            (ObjectID, &ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo),
+        >,
+        models: Query<
+            GameObject,
+            (
+                &BindModel, Option<&BindSkinValue>, Option<&SkeletonID>,
+                &I,
+            ),
+        >,
+        passes: Query<GameObject, (&PassBindEffectValue, &PassReady, &T, &PassSource), Changed<PassReady>>,
+        mut pass01_cmd: Commands<GameObject, PassBindGroupModel>,
+        device: Res<RenderDevice>,
+        mut model_wait: ResMut<AssetBindGroupModelWaits>,
+    ) {
+        let time1 = Instant::now();
+
+        passes.iter().for_each(|(val1, ready, _, id_model)| {
+            viewers.iter().for_each(|(
+                id_camera, active, id_scene, bind_viewer, list_model, list_renderer
+            )| {
+                if active.0 == false {
+                    return;
+                }
+                // log::trace!("SysSet1ModifyByModel: {:?}", list_model.0.len());
+                list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
+                    let pass_tags = &desc.passorders;
+                    if list_model.0.contains_key(&id_model.0) {
+                        if let Some(
+                            (
+                                bind_model, bind_skl, id_skl,
+                                passid,
+                            )
+                        ) = models.get(id_model.0.clone()) {
+                            // let bind_skl: Option<&BindSkinValue> = None;
+                            // let id_skl: Option<&SkeletonID> = None;
+                            // log::trace!("SysSet1ModifyByModel: 22222222222222222222222222");
+                            let bind_skin = match (bind_skl, id_skl) {
+                                (None, None) => { None },
+                                (Some(bind_skin), Some(_)) => { Some(bind_skin.0.clone()) },
+                                _ => { return; }
+                            };
+                            if pass_tags.1 & I::TAG == I::TAG {
+                                if ready.val().is_some() {
+                                    let key = KeyBindGroupModel::new(bind_model.0.clone(), bind_skin.clone(), val1.0.clone());
+                                    model_wait.add(&key, passid.id());
+                                }
+                            }
+                        }
+
                     }
                 });
             });

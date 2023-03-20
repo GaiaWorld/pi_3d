@@ -1,4 +1,4 @@
-use super::render_blend::RenderBlend;
+use super::render_blend::ModelBlend;
 
 
 pub struct RenderTargetState {
@@ -7,7 +7,7 @@ pub struct RenderTargetState {
 impl RenderTargetState {
     pub fn color_target(
         format: wgpu::TextureFormat,
-        blend: &RenderBlend,
+        blend: &ModelBlend,
     ) -> [Option<wgpu::ColorTargetState>;1] {
         match blend.enable {
             true => {

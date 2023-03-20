@@ -25,7 +25,7 @@ impl<T: TPassID + Component> TSystemStageInfo for SysEffectValueToModelByMateria
     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
         vec![
             // SysMaterailCreateCommands::key(), SysMaterialIDCommand::key(),
-            SysMaterialMetaChange::<T>::key(), 
+            // SysMaterialMetaChange::<T>::key(), 
         ]
     }
 }
@@ -35,14 +35,15 @@ impl<T: TPassID + Component> SysEffectValueToModelByMaterialModify<T> {
     fn sys(
         materials: Query<
             GameObject,
-            (&BindEffectValues, &MaterialUsedList, &EPassTag),
+            (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffectValues, &MaterialUsedList, &EPassTag),
             Or<(Changed<EPassTag>, Changed<MaterialUsedList>, Changed<BindEffectValues>)>
         >,
         mut models: Query<GameObject, (&T, &mut PassDirtyBindEffectValue)>,
         mut dirty_cmd: Commands<GameObject, FlagPassDirtyBindEffectValue>,
         mut pass01_cmd: Commands<GameObject, PassBindEffectValue>,
+        mut passready_cmd: Commands<GameObject, PassReady>,
     ) {
-        materials.iter().for_each(|(bind, list, pass)| {
+        materials.iter().for_each(|(effect_key, effect, bind, list, pass)| {
             list.0.iter().for_each(|(id_obj, _)| {
                 if let Some((passid, mut dirty)) = models.get_mut(id_obj.clone()) {
                     let pass = pass.as_pass();
@@ -51,7 +52,19 @@ impl<T: TPassID + Component> SysEffectValueToModelByMaterialModify<T> {
                     }
                     dirty_cmd.insert(id_obj.clone(), FlagPassDirtyBindEffectValue);
 
+                    let data = if effect.textures.len() == 0 {
+                        Some((effect_key.0.clone(), effect.0.clone()))
+                    } else {
+                        None
+                    };
+                    // list_model.0.iter().for_each(|(id_obj, _)| {
+                    //     if let Some(passid) = models.get(id_obj.clone()) {
+                    //         ready01_cmd.insert(passid.id(), PassReady(data.clone()));
+                    //     }
+                    // });
+
                     if pass & T::TAG == T::TAG {
+                        passready_cmd.insert(passid.id(), PassReady(data));
                         pass01_cmd.insert(passid.id(), PassBindEffectValue(Some(bind.bind.clone())));
                     }
                 }

@@ -29,7 +29,7 @@ impl Default for CameraViewport {
             y: 0.,
             w: 1.,
             h: 1.,
-            mindepth: 0.,
+            mindepth: -1.,
             maxdepth: 1.,
         }
     }

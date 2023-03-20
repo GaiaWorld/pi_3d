@@ -484,7 +484,7 @@ impl pi_engine_shell::plugin::Plugin for PluginVertexBuffers {
         let world = engine.world_mut();
 
 
-        let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Uniform);
+        let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Draw);
         SysGeometryVBUpdateSlot01::setup(world, stage_builder);
         SysGeometryVBUpdateSlot02::setup(world, stage_builder);
         SysGeometryVBUpdateSlot03::setup(world, stage_builder);

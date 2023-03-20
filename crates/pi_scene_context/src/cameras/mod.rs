@@ -5,7 +5,7 @@ use pi_engine_shell::run_stage::ERunStageChap;
 
 use crate::{viewer::{PluginViewer, sys::SysViewerTransformUpdated, command::{SingleRendererCommandList, SysViewerRendererCommandTick}, sys_culling::{SysModelListUpdateByViewer, SysModelListUpdateByModel, SysModelListAfterCullingTick}}, transforms::transform_node_sys::SysWorldMatrixCalc};
 
-use self::{command::{SysCameraParamCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList, SysCameraCreate}, target_camera::TargetCameraParam, camera::CameraParam, camera_sys::SysCameraParamUpdate};
+use self::{command::{SysCameraParamCommand, SingleCameraCommandList, SysTargetCameraCommand, SingleTargetCameraCommandList, SysFreeCameraCommand, SingleFreeCameraCommandList, SysCameraCreate}, target_camera::TargetCameraParam, camera::CameraParam, camera_sys::{SysCameraParamUpdate, SyeCameraRenderSizeUpdate}};
 
 pub mod camera;
 pub mod free_camera;
@@ -41,6 +41,8 @@ impl crate::Plugin for PluginCamera {
         SysCameraParamUpdate::setup(world, stages.query_stage::<SysCameraParamUpdate>(ERunStageChap::Command));
         SysTargetCameraCommand::setup(world, stages.query_stage::<SysTargetCameraCommand>(ERunStageChap::Command));
         SysFreeCameraCommand::setup(world, stages.query_stage::<SysFreeCameraCommand>(ERunStageChap::Command));
+
+        SyeCameraRenderSizeUpdate::setup(world, stages.query_stage::<SysFreeCameraCommand>(ERunStageChap::Draw));
 
         world.insert_resource(SingleCameraCommandList::default());
         world.insert_resource(SingleTargetCameraCommandList::default());
