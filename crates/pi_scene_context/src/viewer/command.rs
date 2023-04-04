@@ -94,18 +94,10 @@ impl SysViewerRendererCommandTick {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
-            log::info!("SysRendererCommandTick:");
+            log::debug!("SysRendererCommandTick:");
             match cmd {
                 ERendererCommand::Active(id_viewer, id_renderer, graphic_desc) => {
                     if let Some((id_scene, viewer_renderers)) = viewers.get(id_viewer.clone()) {
-                        let mut viewer_renderers = viewer_renderers.clone();
-                        if let Some((render, id_render)) = viewer_renderers.map.get(&graphic_desc.curr) {
-                            delete.despawn(id_render.0);
-                            render_graphic.remove_node(render.curr.to_string());
-                        }
-                        viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), id_renderer.clone()));
-                        viewer_info_cmd.insert(id_viewer, viewer_renderers);
-
                         
                         let renderer = Renderer::new(&graphic_desc.curr, id_renderer.0.clone(), render_graphic);
                         if let Some(key_pre) = &graphic_desc.pre {
@@ -125,23 +117,18 @@ impl SysViewerRendererCommandTick {
                     }
                 },
                 ERendererCommand::RenderSize(id_renderer, val) => {
-                    log::warn!(">>> RenderSize");
                     renderersize_cmd.insert(id_renderer, val)
                 },
                 ERendererCommand::RenderColorFormat(id_renderer, val) => {
-                    log::warn!(">>> RenderColorFormat");
                     renderercolor_cmd.insert(id_renderer, val)
                 },
                 ERendererCommand::RenderColorClear(id_renderer, val) => {
-                    log::warn!(">>> RenderColorClear");
                     renderercolor_clear_cmd.insert(id_renderer, val)
                 },
                 ERendererCommand::RenderDepthFormat(id_renderer, val) => {
-                    log::warn!(">>> RenderDepthFormat");
                     rendererdepth_cmd.insert(id_renderer, val)
                 },
                 ERendererCommand::RenderDepthClear(id_renderer, val) => {
-                    log::warn!(">>> RenderDepthClear");
                     rendererdepth_clear_cmd.insert(id_renderer, val)
                 },
             }

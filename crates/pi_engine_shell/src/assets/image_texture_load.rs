@@ -8,12 +8,8 @@ use pi_assets::{
 };
 use pi_async::prelude::AsyncRuntime;
 use pi_atom::Atom;
-use pi_ecs::{
-    entity::Id,
-    monitor::Event,
-    prelude::{Query, Res, Write, Commands, StageBuilder, Setup}, query::Changed, sys::system, world::World,
-};
-use pi_ecs_macros::{listen, setup};
+use pi_bevy_asset::ShareAssetMgr;
+use pi_bevy_render_plugin::{PiRenderDevice, PiRenderQueue};
 use pi_hal::{loader::AsyncLoader, runtime::MULTI_MEDIA_RUNTIME};
 use pi_render::rhi::{
     asset::{ImageTextureDesc, TextureRes},
@@ -21,9 +17,10 @@ use pi_render::rhi::{
     RenderQueue,
 };
 use pi_share::{Share, ThreadSync};
-use crate::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo}};
+use crate::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo, ERunStageChap}, engine_shell::EnginShell};
+use crate::prelude::*;
 
-#[derive(Clone, DerefMut, Deref)]
+#[derive(Clone, DerefMut, Deref, Resource)]
 pub struct ImageAwait<T>(Share<SegQueue<(ObjectID, Atom, Handle<TextureRes>)>>, PhantomData<T>);
 
 impl<T> Default for ImageAwait<T> {
@@ -33,13 +30,65 @@ impl<T> Default for ImageAwait<T> {
 pub struct CalcImageLoad<K: std::ops::Deref<Target = Atom>, D: From<Handle<TextureRes>>>(PhantomData<(K, D)>);
 impl<K, D> CalcImageLoad<K, D> 
 where
-    K: std::ops::Deref<Target = Atom> + 'static + ThreadSync,
-    D: From<Handle<TextureRes>> + 'static + ThreadSync,
+    K: std::ops::Deref<Target = Atom> + Component,
+    D: From<Handle<TextureRes>> + Component,
 {
-    pub fn setup(world: &mut World, stage_builder: &mut StageBuilder) {
-        SysKeyImageChange::<K, D>::setup(world, stage_builder);
-        SysKeyImageCheck::<K, D>::setup(world, stage_builder);
+    pub fn setup(app: &mut EnginShell) {
+        app.add_system(image_change::<K, D>.in_set(ERunStageChap::Command));
+        // SysKeyImageChange::<K, D>::setup(world, stage_builder);
+        // SysKeyImageCheck::<K, D>::setup(world, stage_builder);
     }
+}
+
+fn image_change<
+    K: std::ops::Deref<Target = Atom> + Component,
+    D: From<Handle<TextureRes>>
+>(
+    query: Query<(ObjectID, &K), Changed<K>>,
+    mut image_cmd: Commands,
+    // texture_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
+    image_await: Res<ImageAwait<K>>,
+    // queue: Res<PiRenderDevice>,
+    // device: Res<PiRenderQueue>,
+) {
+    // log::debug!("image_change: ");
+    // query.iter().for_each(|(obj, key)| {
+    //     let result = AssetMgr::load(&texture_assets_mgr, &(key.get_hash() as u64));
+    //     match result {
+    //         LoadResult::Ok(r) => {
+    //             log::debug!("image_loaded: {:?}", key.as_str());
+    //             image_cmd.insert(
+    //                 obj, 
+    //                 D::from(r)
+    //             )
+    //         }
+    //         ,
+    //         _ => {
+    //             let (awaits, device, queue) = ((*image_await).clone(), (*device).clone(), (*queue).clone());
+    //             let (id, key) = (obj, (*key).clone());
+
+    //             MULTI_MEDIA_RUNTIME
+    //                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+    //                     let desc = ImageTextureDesc {
+    //                         url: &key,
+    //                         device: &device,
+    //                         queue: &queue,
+    //                     };
+
+    //                     let r = TextureRes::async_load(desc, result).await;
+    //                     match r {
+    //                         Ok(r) => {
+    //                             awaits.push((id, key.clone(), r));
+    //                         }
+    //                         Err(e) => {
+    //                             log::error!("load image fail, {:?}", e);
+    //                         }
+    //                     };
+    //                 })
+    //                 .unwrap();
+    //         }
+    //     }
+    // });
 }
 
 // #[setup]
@@ -133,95 +182,89 @@ where
 //     }
 // }
 
-pub struct SysKeyImageChange<K: std::ops::Deref<Target = Atom>, D: From<Handle<TextureRes>>>(PhantomData<(K, D)>);
-#[setup]
+pub struct SysKeyImageChange<K: std::ops::Deref<Target = Atom> + Component, D: From<Handle<TextureRes>>>(PhantomData<(K, D)>);
+
 impl<K, D> SysKeyImageChange<K, D> 
 where
-    K: std::ops::Deref<Target = Atom> + 'static + ThreadSync,
+    K: std::ops::Deref<Target = Atom> + 'static + ThreadSync + Component,
     D: From<Handle<TextureRes>> + 'static + ThreadSync,
 {
-    #[system]
     pub fn image_change(
-        query: Query<GameObject, (ObjectID, &K), Changed<K>>,
-        mut image_cmd: Commands<GameObject, D>,
-        texture_assets_mgr: Res<Share<AssetMgr<TextureRes>>>,
+        query: Query<(ObjectID, &K), Changed<K>>,
+        mut image_cmd: Commands,
+        // texture_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
         image_await: Res<ImageAwait<K>>,
-        queue: Res<RenderQueue>,
-        device: Res<RenderDevice>,
+        // queue: Res<PiRenderDevice>,
+        // device: Res<PiRenderQueue>,
     ) {
-        log::debug!("image_change: ");
-        query.iter().for_each(|(obj, key)| {
-            let result = AssetMgr::load(&texture_assets_mgr, &(key.get_hash() as u64));
-            match result {
-                LoadResult::Ok(r) => {
-                    log::info!("image_loaded: {:?}", key.as_str());
-                    image_cmd.insert(
-                        obj, 
-                        D::from(r)
-                    )
-                }
-                ,
-                _ => {
-                    let (awaits, device, queue) = ((*image_await).clone(), (*device).clone(), (*queue).clone());
-                    let (id, key) = (obj, (*key).clone());
+        // log::debug!("image_change: ");
+        // query.iter().for_each(|(obj, key)| {
+        //     let result = AssetMgr::load(&texture_assets_mgr, &(key.get_hash() as u64));
+        //     match result {
+        //         LoadResult::Ok(r) => {
+        //             log::debug!("image_loaded: {:?}", key.as_str());
+        //             image_cmd.insert(
+        //                 obj, 
+        //                 D::from(r)
+        //             )
+        //         }
+        //         ,
+        //         _ => {
+        //             let (awaits, device, queue) = ((*image_await).clone(), (*device).clone(), (*queue).clone());
+        //             let (id, key) = (obj, (*key).clone());
     
-                    MULTI_MEDIA_RUNTIME
-                        .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                            let desc = ImageTextureDesc {
-                                url: &key,
-                                device: &device,
-                                queue: &queue,
-                            };
+        //             MULTI_MEDIA_RUNTIME
+        //                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+        //                     let desc = ImageTextureDesc {
+        //                         url: &key,
+        //                         device: &device,
+        //                         queue: &queue,
+        //                     };
     
-                            let r = TextureRes::async_load(desc, result).await;
-                            match r {
-                                Ok(r) => {
-                                    awaits.push((id, key.clone(), r));
-                                }
-                                Err(e) => {
-                                    log::error!("load image fail, {:?}", e);
-                                }
-                            };
-                        })
-                        .unwrap();
-                }
-            }
-        });
+        //                     let r = TextureRes::async_load(desc, result).await;
+        //                     match r {
+        //                         Ok(r) => {
+        //                             awaits.push((id, key.clone(), r));
+        //                         }
+        //                         Err(e) => {
+        //                             log::error!("load image fail, {:?}", e);
+        //                         }
+        //                     };
+        //                 })
+        //                 .unwrap();
+        //         }
+        //     }
+        // });
     }
 }
 
-pub struct SysKeyImageCheck<S: std::ops::Deref<Target = Atom>, D: From<Handle<TextureRes>>>(PhantomData<(S, D)>);
-#[setup]
-impl<S, D> SysKeyImageCheck<S, D> 
-where
-    S: std::ops::Deref<Target = Atom> + 'static + ThreadSync,
-    D: From<Handle<TextureRes>> + 'static + ThreadSync,
-{
-    #[system]
-    pub fn check_await_texture(
-        image_await: Res<ImageAwait<S>>,
-        mut query: Query<GameObject, &S>,
-        mut image_cmd: Commands<GameObject, D>,
-    ) {
-        // log::debug!("check_await_texture: ");
-        // let awaits = std::mem::replace(&mut border_image_await.0, Share::new(SegQueue::new()));
-        let mut r = image_await.0.pop();
-        while let Some((id, key, texture)) = r {
-            r = image_await.0.pop();
 
-            let mut nowkey = match query.get_mut(id.clone()) {
-                Some(img) => {
-                    // image已经修改，不需要设置texture
-                    if **img != key {
-                        continue;
-                    }
-                    log::info!("image_loaded: {:?}", key);
-                    image_cmd.insert(id, D::from(texture));
+pub fn check_await_texture<
+    S: std::ops::Deref<Target = Atom> + Component,
+    D: From<Handle<TextureRes>> + Component,
+>(
+    image_await: Res<ImageAwait<S>>,
+    mut query: Query<&S>,
+    mut image_cmd: Commands,
+) {
+    // log::debug!("check_await_texture: ");
+    // let awaits = std::mem::replace(&mut border_image_await.0, Share::new(SegQueue::new()));
+    let mut r = image_await.0.pop();
+    while let Some((id, key, texture)) = r {
+        r = image_await.0.pop();
+
+        let mut nowkey = match query.get_mut(id.clone()) {
+            Ok(img) => {
+                // image已经修改，不需要设置texture
+                if **img != key {
+                    continue;
                 }
-                // 节点已经销毁，或image已经被删除，不需要设置texture
-                None => continue,
-            };
-            log::debug!("Write texture_item $$$");
-        }
+                log::debug!("image_loaded: {:?}", key);
+                image_cmd.entity(id).insert(D::from(texture));
+            }
+            // 节点已经销毁，或image已经被删除，不需要设置texture
+            _ => continue,
+        };
+        log::debug!("Write texture_item $$$");
     }
 }

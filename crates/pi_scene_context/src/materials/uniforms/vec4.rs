@@ -113,11 +113,9 @@ impl Vec4Uniform {
             Self::Slot0(_) => {},
             Self::Slot1(offset, data) => {
                 range.write_data(*offset as usize, bytemuck::cast_slice(data)); 
-                log::info!("Vec4Uniform update: {:?}, {:?}", offset, data);
             },
             Self::Slot2(offset, data) => {
                 range.write_data(*offset as usize, bytemuck::cast_slice(data));
-                log::info!("Vec4Uniform update: {:?}, {:?}", offset, data);
             },
             Self::Slot3(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
             Self::Slot4(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),

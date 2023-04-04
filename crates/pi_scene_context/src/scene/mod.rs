@@ -1,9 +1,8 @@
-use pi_ecs::{prelude::{Setup}};
-use pi_engine_shell::run_stage::ERunStageChap;
 
-use crate::{plugin::Plugin, };
+use pi_engine_shell::prelude::*;
 
-use self::{command::{SysSceneCreateCommand, SingleSceneCommandList}, environment::{fog::SysSceneFogUpdate, ambient_light::SysSceneAmbientUpdate, scene_time::SysSceneTimeUpdate, }};
+
+use self::{environment::{fog::SysSceneFogUpdate, ambient_light::SysSceneAmbientUpdate, scene_time::SysSceneTimeUpdate, }};
 
 pub mod coordinate_system;
 pub mod command;
@@ -29,4 +28,9 @@ impl Plugin for PluginScene {
 
         Ok(())
     }
+
+    fn build(&self, app: &mut App) {
+        todo!()
+    }
+    
 }

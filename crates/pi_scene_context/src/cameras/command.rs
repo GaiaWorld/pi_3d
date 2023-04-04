@@ -1,8 +1,6 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, EntityDelete, Commands, Res}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::TSystemStageInfo;
+use pi_engine_shell::prelude::*;
 use pi_render::{rhi::{device::RenderDevice}, renderer::bind_buffer::{BindBufferAllocator}};
 use pi_scene_math::{Number, Vector3};
 
@@ -14,11 +12,11 @@ use crate::{
         command::{SingleRendererCommandList, ERendererCommand, Viewport}, FlagModelList
     },
     renderers::{
-        ViewerRenderersInfo, graphic::RendererGraphicDesc, render_object::RendererID, renderer::{RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}
-    },
+        ViewerRenderersInfo, graphic::RendererGraphicDesc, render_object::RendererID, renderer::{RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}, DirtyViewerRenderersInfo
+    }, flags::{Enable, enable::SingleEnableCommands}, commands::TCommandList,
 };
 
-use super::{free_camera::FreeCameraParam, target_camera::TargetCameraParam, camera::{CameraParam, EFreeCameraMode, EFixedMode, CameraViewport, CameraFov, CameraNearFar, CameraOrthSize, CameraOrthograhicParam}, arc_rotate_camera::ArcRotateCamera};
+use super::{free_camera::FreeCameraParam, target_camera::TargetCameraParam, camera::{CameraParam, EFreeCameraMode, EFixedMode, CameraViewport, CameraFov, CameraNearFar, CameraOrthSize, CameraOrthograhicParam, Camera}, arc_rotate_camera::ArcRotateCamera};
 
 #[derive(Debug, Clone)]
 pub enum ECameraCreateCommand {
@@ -27,39 +25,21 @@ pub enum ECameraCreateCommand {
     ArcRotateCamera(ObjectID),
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct SingleCameraCreateList {
     pub list: Vec<ECameraCreateCommand>,
 }
-pub struct SysCameraCreate;
-impl TSystemStageInfo for SysCameraCreate {
+// pub struct SysCameraCreate;
+// impl TSystemStageInfo for SysCameraCreate {
 
-}
-#[setup]
-impl SysCameraCreate {
-    #[system]
-    pub fn cmds(
+// }
+// #[setup]
+// impl SysCameraCreate {
+//     #[system]
+    pub fn sys_cmds_camera_create(
         mut cmds: ResMut<SingleCameraCreateList>,
-        mut mode_cmd: Commands<GameObject, EFreeCameraMode>,
-        mut fixmode_cmd: Commands<GameObject, EFixedMode>,
-        mut fov_cmd: Commands<GameObject, CameraFov>,
-        mut near_far_cmd: Commands<GameObject, CameraNearFar>,
-        mut orth_size_cmd: Commands<GameObject, CameraOrthSize>,
-        mut viewport_cmd: Commands<GameObject, CameraViewport>,
-        mut view_cmd: Commands<GameObject, ViewerViewMatrix>,
-        mut proj_cmd: Commands<GameObject, ViewerProjectionMatrix>,
-        mut tran_cmd: Commands<GameObject, ViewerTransformMatrix>,
-        mut gpos_cmd: Commands<GameObject, ViewerGlobalPosition>,
-        mut vdir_cmd: Commands<GameObject, ViewerDirection>,
-        mut list_model_cmd: Commands<GameObject, ModelList>,
-        mut flag_list_model_cmd: Commands<GameObject, FlagModelList>,
-        mut list_culling_cmd: Commands<GameObject, ModelListAfterCulling>,
-        mut viewer_active_cmd: Commands<GameObject, ViewerActive>,
-        mut viewer_bind_cmd: Commands<GameObject, BindViewer>,
-        mut viewer_render_cmd: Commands<GameObject, ViewerRenderersInfo>,
-        mut freecamera_cmd: Commands<GameObject, TargetCameraParam>,
-        mut arccamera_cmd: Commands<GameObject, ArcRotateCamera>,
-        device: Res<RenderDevice>,
+        mut commands: Commands,
+        device: Res<PiRenderDevice>,
         mut dynallocator: ResMut<BindBufferAllocator>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
@@ -67,40 +47,42 @@ impl SysCameraCreate {
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ECameraCreateCommand::FreeCamera(obj) => {
-                    
-                    mode_cmd.insert(obj.clone(), EFreeCameraMode::Orthograhic);
-                    fixmode_cmd.insert(obj.clone(), EFixedMode::HorizontalFixed);
-                    fov_cmd.insert(obj.clone(), CameraFov(0.75));
-                    near_far_cmd.insert(obj.clone(), CameraNearFar(0.1, 1000.0));
-                    orth_size_cmd.insert(obj.clone(), CameraOrthSize(4.));
-                    viewport_cmd.insert(obj.clone(), CameraViewport::default());
-
-                    view_cmd.insert(obj.clone(), ViewerViewMatrix::default());
-                    proj_cmd.insert(obj.clone(), ViewerProjectionMatrix::default());
-                    tran_cmd.insert(obj.clone(), ViewerTransformMatrix::default());
-                    gpos_cmd.insert(obj.clone(), ViewerGlobalPosition::default());
-                    vdir_cmd.insert(obj.clone(), ViewerDirection::default());
-                    list_model_cmd.insert(obj.clone(), ModelList::default());
-                    flag_list_model_cmd.insert(obj.clone(), FlagModelList::default());
-                    list_culling_cmd.insert(obj.clone(), ModelListAfterCulling::default());
-                    freecamera_cmd.insert(obj.clone(), TargetCameraParam::default());
-                    viewer_active_cmd.insert(obj.clone(), ViewerActive(false));
-                    viewer_render_cmd.insert(obj.clone(), ViewerRenderersInfo::default());
+                    let bundle = commands.entity(obj)
+                        .insert(Camera)
+                        .insert(EFreeCameraMode::Orthograhic)
+                        .insert(EFixedMode::HorizontalFixed)
+                        .insert(CameraFov(0.75))
+                        .insert(CameraNearFar(0.1, 1000.0))
+                        .insert(CameraOrthSize(4.))
+                        .insert(CameraViewport::default())
+                        .insert(ViewerViewMatrix::default())
+                        .insert(ViewerProjectionMatrix::default())
+                        .insert(ViewerTransformMatrix::default())
+                        .insert(ViewerGlobalPosition::default())
+                        .insert(ViewerDirection::default())
+                        .insert(ModelList::default())
+                        .insert(FlagModelList::default())
+                        .insert(ModelListAfterCulling::default())
+                        .insert(TargetCameraParam::default())
+                        .insert(ViewerActive(false))
+                        .insert(ViewerRenderersInfo::default())
+                        .insert(DirtyViewerRenderersInfo)
+                        .insert(Enable(true));
 
                     if let Some(data) = BindViewer::new(&mut dynallocator) {
-                        viewer_bind_cmd.insert(obj.clone(), data);
+                        bundle.insert(data);
                     };
                 },
                 ECameraCreateCommand::ArcRotateCamera(obj) => {
 
                 },
                 ECameraCreateCommand::Active(entity, value) => {
-                    viewer_active_cmd.insert(entity, ViewerActive(value));
+                    commands.entity(entity).insert(ViewerActive(value));
                 },
             }
         });
     }
-}
+// }
 
 #[derive(Debug)]
 pub enum ECameraCommand {
@@ -113,40 +95,45 @@ pub enum ECameraCommand {
 }
 
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct SingleCameraCommandList {
     pub list: Vec<ECameraCommand>,
 }
 
-pub struct SysCameraParamCommand;
-impl TSystemStageInfo for SysCameraParamCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
+// pub struct SysCameraParamCommand;
+// impl TSystemStageInfo for SysCameraParamCommand {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
 
-        ]
-    }
-}
-#[setup]
-impl SysCameraParamCommand {
-    #[system]
-    pub fn cmds(
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysCameraParamCommand {
+//     #[system]
+    pub fn sys_cmds_camera_modify(
         mut cmds: ResMut<SingleCameraCommandList>,
-        mut cameras: Query<GameObject, &CameraViewport>,
+        mut cameras: Query<(&CameraViewport, &mut ViewerRenderersInfo)>,
         mut render_cmds: ResMut<SingleRendererCommandList>,
 
-        mut viewer_active_cmd: Commands<GameObject, ViewerActive>,
-        mut mode_cmd: Commands<GameObject, EFreeCameraMode>,
-        mut fixmode_cmd: Commands<GameObject, EFixedMode>,
-        mut fov_cmd: Commands<GameObject, CameraFov>,
-        mut near_far_cmd: Commands<GameObject, CameraNearFar>,
-        mut orth_size_cmd: Commands<GameObject, CameraOrthSize>,
-        mut viewport_cmd: Commands<GameObject, CameraViewport>,
+        mut commands: Commands,
+
+        // mut mode_cmd: Commands<EFreeCameraMode>,
+        // mut fixmode_cmd: Commands<EFixedMode>,
+        // mut fov_cmd: Commands<CameraFov>,
+        // mut near_far_cmd: Commands<CameraNearFar>,
+        // mut orth_size_cmd: Commands<CameraOrthSize>,
+        // mut viewport_cmd: Commands<CameraViewport>,
+        // mut dirty_viewer_render_cmd: Commands<DirtyViewerRenderersInfo>,
+
+        mut render_graphic: ResMut<PiRenderGraph>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
         list.drain(..).for_each(|cmd| {
             match cmd {
                 ECameraCommand::ModifyMode(entity, value) => {
+                    commands.entity(entity).in
                     mode_cmd.insert(entity, value);
                 },
                 ECameraCommand::ModifyNearFar(entity, near, far) => {
@@ -162,29 +149,26 @@ impl SysCameraParamCommand {
                     orth_size_cmd.insert(entity, CameraOrthSize(value));
                 },
                 ECameraCommand::Renderer(entity, id_render, value) => {
-                    if let Some(viewport) = cameras.get_mut(entity) {
+                    if let Some((viewport, mut viewer_renderers)) = cameras.get_mut(entity) {
+
+                        if let Some((render, id_render)) = viewer_renderers.map.get(&value.curr) {
+                            entity_cmd.despawn(id_render.0);
+                            render_graphic.remove_node(render.curr.to_string());
+                        }
+                        viewer_renderers.map.insert(value.curr.clone(), (value.clone(), RendererID(id_render)));
+                        
                         render_cmds.list.push(
                             ERendererCommand::Active(entity, RendererID(id_render), value)
                         );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderColorFormat(id_render, RenderColorFormat(wgpu::TextureFormat::Rgba8UnormSrgb))
-                        );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderColorClear(id_render, RenderColorClear(wgpu::Color { r: 0., g: 0., b: 0., a: 0. }))
-                        );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderDepthFormat(id_render, RenderDepthFormat(Some(wgpu::TextureFormat::Depth32Float)))
-                        );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderDepthClear(id_render, RenderDepthClear(0.))
-                        );
+                        
+                        dirty_viewer_render_cmd.insert(entity, DirtyViewerRenderersInfo);
                     }
                 },
             }
         });
 
     }
-}
+// }
 
 // TaqrgetCamera
 #[derive(Debug)]
@@ -193,26 +177,26 @@ pub enum TargetCameraCommand {
 }
 
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct SingleTargetCameraCommandList {
     pub list: Vec<TargetCameraCommand>,
 }
 
-pub struct SysTargetCameraCommand;
-impl TSystemStageInfo for SysTargetCameraCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-        ]
-    }
-}
-#[setup]
-impl SysTargetCameraCommand {
-    #[system]
-    pub fn cmds(
+// pub struct SysTargetCameraCommand;
+// impl TSystemStageInfo for SysTargetCameraCommand {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysTargetCameraCommand {
+//     #[system]
+    pub fn sys_cmds_target_camera_modify(
         mut cmds: ResMut<SingleTargetCameraCommandList>,
         mut entity_delete: EntityDelete<GameObject>,
-        mut cameras: Query<GameObject, &TargetCameraParam>,
-        mut targetcamera_cmd: Commands<GameObject, TargetCameraParam>,
+        mut cameras: Query<&TargetCameraParam>,
+        mut targetcamera_cmd: Commands<TargetCameraParam>,
     ) {
         cmds.list.drain(..).for_each(|cmd| {
             match cmd {
@@ -227,40 +211,48 @@ impl SysTargetCameraCommand {
         });
 
     }
-}
+// }
 
-// FreeCamera
-#[derive(Debug)]
-pub enum FreeCameraCommand {
-    Create(ObjectID),
-}
+// pub struct SysCameraRenderer;
+// impl TSystemStageInfo for SysCameraRenderer {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysCameraParamCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysCameraRenderer {
 
-#[derive(Debug, Default)]
-pub struct SingleFreeCameraCommandList {
-    pub list: Vec<FreeCameraCommand>,
-}
-
-pub struct SysFreeCameraCommand;
-impl TSystemStageInfo for SysFreeCameraCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-        ]
-    }
-}
-#[setup]
-impl SysFreeCameraCommand {
-    #[system]
-    pub fn cmds(
-        mut cmds: ResMut<SingleFreeCameraCommandList>,
-        mut cameras: Query<GameObject, &mut FreeCameraParam>,
+    pub fn sys_cmds_camera_renderer_modify(
+        mut cameras: Query<
+            (&Camera, &ViewerRenderersInfo, &Enable, &ViewerActive),
+            Or<(Changed<DirtyViewerRenderersInfo>, Changed<Enable>, Changed<ViewerActive>)>
+        >,
+        mut enable_cmds: Commands<Enable>,
+        mut render_cmds: ResMut<SingleRendererCommandList>,
     ) {
-        cmds.list.drain(..).for_each(|cmd| {
-            match cmd {
-                FreeCameraCommand::Create(entity) => {
-                    // cameras.insert(entity, FreeCameraParam::default());
-                },
-            }
+        cameras.iter().for_each(|(param, renderers, enable, view_active)| {
+            let enable = enable.0 && view_active.0;
+            renderers.map.iter().for_each(|(k, v)| {
+                let id_render = v.1.0;
+                enable_cmds.insert(id_render, Enable(enable));
+                if enable {
+                    render_cmds.list.push(
+                        ERendererCommand::RenderColorFormat(id_render, RenderColorFormat(wgpu::TextureFormat::Rgba8UnormSrgb))
+                    );
+                    render_cmds.list.push(
+                        ERendererCommand::RenderColorClear(id_render, RenderColorClear(wgpu::Color { r: 0., g: 0., b: 0., a: 0. }))
+                    );
+                    render_cmds.list.push(
+                        ERendererCommand::RenderDepthFormat(id_render, RenderDepthFormat(Some(wgpu::TextureFormat::Depth32Float)))
+                    );
+                    render_cmds.list.push(
+                        ERendererCommand::RenderDepthClear(id_render, RenderDepthClear(0.))
+                    );
+                }
+            });
         });
 
     }
-}
+// }

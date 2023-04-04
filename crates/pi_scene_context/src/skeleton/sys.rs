@@ -80,7 +80,7 @@ impl SysSkinTextureUpdate {
     
                     //     let mut buff_data = tex.tex.create_data();
     
-                    //     log::info!("Skeleton Tex: {:?}, {:?}", tex.tex.size(), buff_data.len());
+                    //     log::debug!("Skeleton Tex: {:?}, {:?}", tex.tex.size(), buff_data.len());
             
                     //     tex.tex.update_row(0, bytemuck::cast_slice(data.as_slice()), &mut buff_data);
     

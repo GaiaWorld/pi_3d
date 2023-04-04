@@ -6,7 +6,7 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::{run_stage::{TSystemStageInfo, ERunStageChap}, object::{GameObject, ObjectID}, plugin::Plugin};
 use pi_hash::XHashMap;
 
-use crate::{renderers::{sys_renderer::{SysRendererDraws, SysPassDraw}, base::{Pipeline3D, Pipeline3DUsage}, pass::{PassPipeline, PassBindGroups, PassShader, PassDraw}, renderer::{RenderSize, Renderer, RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}, render_object::RendererID}, pass::{PassSource, TPassData, PassBindGroupScene, PassBindGroupModel, PassBindGroupTextureSamplers, Pass01, PassID01, EPassTag, TPass, PassTag, Pass02, Pass03, Pass04, Pass06, Pass07, Pass08, Pass05}, meshes::abstract_mesh::AbstructMesh, geometry::geometry::{RenderGeometry, RenderGeometryEable}};
+use crate::{renderers::{sys_renderer::{SysRendererDraws, SysPassDraw}, base::{Pipeline3D, Pipeline3DUsage}, pass::{PassPipeline, PassBindGroups, PassShader, PassDraw}, renderer::{RenderSize, Renderer, RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}, render_object::RendererID, ViewerRenderersInfo}, pass::{PassSource, TPassData, PassBindGroupScene, PassBindGroupModel, PassBindGroupTextureSamplers, Pass01, PassID01, EPassTag, TPass, PassTag, Pass02, Pass03, Pass04, Pass06, Pass07, Pass08, Pass05}, meshes::abstract_mesh::AbstructMesh, geometry::geometry::{RenderGeometry, RenderGeometryEable}, viewer::{ViewerActive, BindViewer, ModelList}, flags::SceneID};
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -100,7 +100,6 @@ impl<T: TMeshStatePass + Component, P: TPass + Component> SysMeshStatePass<T, P>
                         states.0.push(state);
                     }
                     meshstateflag_cmd.insert(id_model.0, DirtyMeshStates);
-                    log::info!("MeshState: {:?}", state);
                 }
             }
         });
@@ -128,7 +127,6 @@ impl<T: TMeshState + Component> SysMeshState<T> {
                 states.0.push(state);
             }
             meshstateflag_cmd.insert(id_model, DirtyMeshStates);
-            log::info!("MeshState: {:?}", state);
         });
     }
 }
@@ -154,7 +152,6 @@ impl SysGeometryState {
                 states.0.push(state);
             }
             meshstateflag_cmd.insert(id_model, DirtyMeshStates);
-            log::info!("MeshState: {:?}", state);
         });
     }
 }
@@ -207,10 +204,14 @@ impl SysCheck {
     #[system]
     fn sys(
         items: Query<GameObject, (&Renderer, &RenderSize, &RenderColorFormat, &RenderColorClear, &RenderDepthFormat, &RenderDepthClear), Changed<RenderSize>>,
+        items2: Query<GameObject, (&ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo), Changed<ViewerActive>>,
     ) {
         items.iter().for_each(|v| {
             log::warn!("####################");
-        })
+        });
+        items2.iter().for_each(|v| {
+            log::warn!("#################### 2");
+        });
     }
 }
 

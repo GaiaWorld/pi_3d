@@ -13,9 +13,9 @@ pi_scene_context = { path = "../pi_scene_context" }
 pi_engine_shell = { path = "../pi_engine_shell" }
 pi_mesh_builder = { path = "../pi_mesh_builder" }
 
-pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
-render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
-render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
+pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
+render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
+render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 

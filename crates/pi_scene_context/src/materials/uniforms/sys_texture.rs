@@ -144,7 +144,7 @@ impl SysTextureResReady1 {
                     )
                 };
 
-                log::info!("SysTextureResReady1 >>");
+                log::debug!("SysTextureResReady1 >>");
                 // let mut list = vec![];
                 // list.push(slot01.param());
 

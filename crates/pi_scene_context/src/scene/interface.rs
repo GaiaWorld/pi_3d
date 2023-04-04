@@ -1,46 +1,56 @@
-use pi_engine_shell::object::InterfaceObject;
+use pi_engine_shell::prelude::*;
 
 use crate::{object::ObjectID, flags::SceneID};
 
-use super::command::{SingleSceneCommandList, SceneCommand};
+use super::command::{init_scene, add_to_scene};
 
 
 pub trait InterfaceScene {
     fn create_scene(
-        & self,
+        &mut self,
     ) -> ObjectID;
 
     fn add_to_scene(
-        & self,
+        &mut self,
         object: ObjectID,
         scene: ObjectID,
-    ) -> & Self;
+    ) -> &mut Self;
 }
 
-impl InterfaceScene for crate::engine::Engine {
+impl InterfaceScene for EnginShell {
     fn create_scene(
-        & self,
+        &mut self,
     ) -> ObjectID {
-        let entity = self.new_object();
-        let left = self.new_object();
-        let right = self.new_object();
-        let world = self.world();
+        let entity = self.world.spawn_empty().id();
+        let left = self.world.spawn_empty().id();
+        let right = self.world.spawn_empty().id();
 
-        let commands = world.get_resource_mut::<SingleSceneCommandList>().unwrap();
-        commands.list.push(SceneCommand::Create(entity, left, right));
+        let device = self.world.get_resource::<PiRenderDevice>().unwrap();
+
+        let mut dynbuffer = self.world.get_resource_mut::<ResBindBufferAllocator>().unwrap();
+
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &self.world);
+
+        init_scene(entity, left, right, &mut commands, device, &mut dynbuffer);
+    
+        queue.apply(&mut self.world);
 
         entity
     }
 
     fn add_to_scene(
-        & self,
+        &mut self,
         object: ObjectID,
         scene: ObjectID,
-    ) -> & Self {
-        let world = self.world();
+    ) -> &mut Self {
         
-        let commands = world.get_resource_mut::<SingleSceneCommandList>().unwrap();
-        commands.list.push(SceneCommand::AddObject(object, SceneID(scene)));
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &self.world);
+
+        add_to_scene(object, scene, &mut commands);
+
+        queue.apply(&mut self.world);
 
         self
     }

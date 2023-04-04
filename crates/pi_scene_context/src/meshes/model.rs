@@ -128,7 +128,7 @@ impl SysRenderMatrixUpdate {
         });
         
         let time1 = Instant::now();
-        log::info!("SysRenderMatrixUpdate: {:?}", time1 - time);
+        log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
     }
 }
 
@@ -147,7 +147,7 @@ impl SysRenderMatrixUniformUpdate {
         mut meshes: Query<GameObject, (&RenderWorldMatrix, &RenderWorldMatrixInv, &mut RenderMatrixDirty, &BindModel), Changed<RenderMatrixDirty>>,
     ) {
         meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, mut flag, bind_model)| {
-            // log::info!("SysModelUniformUpdate:");
+            // log::debug!("SysModelUniformUpdate:");
 
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));

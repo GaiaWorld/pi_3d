@@ -1,26 +1,18 @@
-use std::marker::PhantomData;
 
-use pi_assets::{asset::Handle, mgr::AssetMgr};
-use pi_ecs::{prelude::{Component, Query, Setup, Commands, ResMut, Res}, query::{Changed, Or}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::{TSystemStageInfo, ERunStageChap}};
-use pi_render::{render_3d::shader::instance_code::EInstanceCode, renderer::{instance::EInstanceKind, indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::{RenderVertices, EVerticesBufferUsage}, vertex_buffer::EVertexBufferRange, vertex_buffer_loader::{SingleVertexBufferDataMap, VertexBufferLoader}}};
-use pi_share::Share;
+use pi_engine_shell::prelude::*;
+use pi_render::{renderer::{indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::{RenderVertices}, vertex_buffer::EVertexBufferRange, vertex_buffer_loader::{SingleVertexBufferDataMap, VertexBufferLoader}}};
+
 
 use crate::{
     geometry::{
         geometry::RenderVerticesFrom,
-        instance::{InstanceList}
     },
-    meshes::command::SysMeshModifyCommand,
 };
 
 use super::{
     vertex_buffer_useinfo::*,
     GeometryDesc,
     geometry::{RenderGeometry, RenderGeometryEable},
-    instance::{instance_world_matrix::InstancedBufferWorldMatrix, instance_color::InstancedBufferColor, instance_tilloff::InstancedBufferTillOff, InstanceSourceRecord},
-    SysGeometryVBCommand,
     SysVertexBufferLoad
 };
 
@@ -128,21 +120,21 @@ use super::{
 // pub type SysGeometryChangeSlot15 = SysGeometryChangeInitSlot<AssetDescVBSlot15, AssetResVBSlot15>;
 // pub type SysGeometryChangeSlot16 = SysGeometryChangeInitSlot<AssetDescVBSlot16, AssetResVBSlot16>;
 
-pub struct SysRenderGeometryInit;
-impl TSystemStageInfo for SysRenderGeometryInit {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysVertexBufferLoad::key()
-        ]
-    }
-}
+// pub struct SysRenderGeometryInit;
+// impl TSystemStageInfo for SysRenderGeometryInit {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysVertexBufferLoad::key()
+//         ]
+//     }
+// }
 
-pub struct SysGeometryVBUpdateSlot01;
-#[setup]
-impl SysGeometryVBUpdateSlot01
-{
-    #[system]
-    pub fn slot_change(
+// pub struct SysGeometryVBUpdateSlot01;
+// #[setup]
+// impl SysGeometryVBUpdateSlot01
+// {
+//     #[system]
+    pub fn sys_vertex_buffer_change_01(
         items: Query<
             GameObject,
             (   
@@ -169,7 +161,6 @@ impl SysGeometryVBUpdateSlot01
             , key1, res1
             , indicesdesc , indices
         )| {
-            log::info!(" vvvvvvvv {}", desc.slot_count());
             if desc.slot_count() == 1 {
                 let id_mesh = id_mesh.0.clone();
                 // log::debug!("SysGeometryVBUpdateSlot1: 0");
@@ -181,14 +172,14 @@ impl SysGeometryVBUpdateSlot01
             }
         });
     }
-}
+// }
 
-pub struct SysGeometryVBUpdateSlot02;
-#[setup]
-impl SysGeometryVBUpdateSlot02
-{
-    #[system]
-    pub fn slot_change(
+// pub struct SysGeometryVBUpdateSlot02;
+// #[setup]
+// impl SysGeometryVBUpdateSlot02
+// {
+//     #[system]
+    pub fn sys_vertex_buffer_change_02(
         items: Query<
             GameObject,
             (   
@@ -217,7 +208,6 @@ impl SysGeometryVBUpdateSlot02
             , key2, res2
             , indicesdesc , indices
         )| {
-            log::info!(" vvvvvvvv {}", desc.slot_count());
             if desc.slot_count() == 2 {
                 let id_mesh = id_mesh.0.clone();
                 // log::debug!("SysGeometryVBUpdateSlot2: 0");
@@ -230,14 +220,14 @@ impl SysGeometryVBUpdateSlot02
             }
         });
     }
-}
+// }
 
-pub struct SysGeometryVBUpdateSlot03;
-#[setup]
-impl SysGeometryVBUpdateSlot03
-{
-    #[system]
-    pub fn slot_change(
+// pub struct SysGeometryVBUpdateSlot03;
+// #[setup]
+// impl SysGeometryVBUpdateSlot03
+// {
+//     #[system]
+    pub fn sys_vertex_buffer_change_03(
         items: Query<
             GameObject,
             (   
@@ -270,10 +260,8 @@ impl SysGeometryVBUpdateSlot03
             , key3, res3
             , indicesdesc , indices
         )| {
-            log::info!(" vvvvvvvv {}", desc.slot_count());
             if desc.slot_count() == 3 {
                 let id_mesh = id_mesh.0.clone();
-                log::info!(">>>>>> SysGeometryVBUpdateSlot3: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -284,14 +272,14 @@ impl SysGeometryVBUpdateSlot03
             }
         });
     }
-}
+// }
 
-pub struct SysGeometryVBUpdateSlot04;
-#[setup]
-impl SysGeometryVBUpdateSlot04
-{
-    #[system]
-    pub fn slot_change(
+// pub struct SysGeometryVBUpdateSlot04;
+// #[setup]
+// impl SysGeometryVBUpdateSlot04
+// {
+//     #[system]
+    pub fn sys_vertex_buffer_change_04(
         items: Query<
             GameObject,
             (   
@@ -330,7 +318,6 @@ impl SysGeometryVBUpdateSlot04
             // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 4 {
                 let id_mesh = id_mesh.0.clone();
-                log::info!(">>>>>>>>>> SysGeometryVBUpdateSlot4: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -342,14 +329,14 @@ impl SysGeometryVBUpdateSlot04
             }
         });
     }
-}
+// }
 
-pub struct SysGeometryVBUpdateSlot05;
-#[setup]
-impl SysGeometryVBUpdateSlot05
-{
-    #[system]
-    pub fn slot_change(
+// pub struct SysGeometryVBUpdateSlot05;
+// #[setup]
+// impl SysGeometryVBUpdateSlot05
+// {
+//     #[system]
+    pub fn sys_vertex_buffer_change_05(
         items: Query<
             GameObject,
             (   
@@ -391,7 +378,7 @@ impl SysGeometryVBUpdateSlot05
             // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 5 {
                 let id_mesh = id_mesh.0.clone();
-                // log::info!("SysGeometryVBUpdateSlot5: 0");
+                // log::debug!("SysGeometryVBUpdateSlot5: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -404,14 +391,14 @@ impl SysGeometryVBUpdateSlot05
             }
         });
     }
-}
+// }
 
-pub struct SysGeometryVBUpdateSlot06;
-#[setup]
-impl SysGeometryVBUpdateSlot06
-{
-    #[system]
-    pub fn slot_change(
+// pub struct SysGeometryVBUpdateSlot06;
+// #[setup]
+// impl SysGeometryVBUpdateSlot06
+// {
+//     #[system]
+    pub fn sys_vertex_buffer_change_06(
         items: Query<
             GameObject,
             (   
@@ -457,7 +444,7 @@ impl SysGeometryVBUpdateSlot06
             // log::debug!(" > {}", desc.slot_count());
             if desc.slot_count() == 6 {
                 let id_mesh = id_mesh.0.clone();
-                // log::info!("SysGeometryVBUpdateSlot6: 0");
+                // log::debug!("SysGeometryVBUpdateSlot6: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
@@ -471,27 +458,40 @@ impl SysGeometryVBUpdateSlot06
             }
         });
     }
-}
+// }
 
 pub struct  PluginVertexBuffers;
-impl pi_engine_shell::plugin::Plugin for PluginVertexBuffers {
-    fn init(
-        &mut self,
-        engine: &mut pi_engine_shell::engine_shell::EnginShell,
-        stages: &mut pi_engine_shell::run_stage::RunStage,
-    ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
+impl Plugin for PluginVertexBuffers {
+    // fn init(
+    //     &mut self,
+    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
+    //     stages: &mut pi_engine_shell::run_stage::RunStage,
+    // ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
 
-        let world = engine.world_mut();
+    //     let world = engine.world_mut();
 
 
-        let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Draw);
-        SysGeometryVBUpdateSlot01::setup(world, stage_builder);
-        SysGeometryVBUpdateSlot02::setup(world, stage_builder);
-        SysGeometryVBUpdateSlot03::setup(world, stage_builder);
-        SysGeometryVBUpdateSlot04::setup(world, stage_builder);
-        SysGeometryVBUpdateSlot05::setup(world, stage_builder);
-        SysGeometryVBUpdateSlot06::setup(world, stage_builder);
+    //     let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Draw);
+    //     SysGeometryVBUpdateSlot01::setup(world, stage_builder);
+    //     SysGeometryVBUpdateSlot02::setup(world, stage_builder);
+    //     SysGeometryVBUpdateSlot03::setup(world, stage_builder);
+    //     SysGeometryVBUpdateSlot04::setup(world, stage_builder);
+    //     SysGeometryVBUpdateSlot05::setup(world, stage_builder);
+    //     SysGeometryVBUpdateSlot06::setup(world, stage_builder);
 
-        Ok(())
+    //     Ok(())
+    // }
+
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            (
+                sys_vertex_buffer_change_01,
+                sys_vertex_buffer_change_02,
+                sys_vertex_buffer_change_03,
+                sys_vertex_buffer_change_04,
+                sys_vertex_buffer_change_05,
+                sys_vertex_buffer_change_06,
+            ).in_set(ERunStageChap::Draw)
+        )
     }
 }

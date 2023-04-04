@@ -88,7 +88,7 @@ impl SysLocalMatrixCalc {
             lm_cmd.insert(obj, LocalMatrix(matrix, true));
         });
         let time1 = Instant::now();
-        log::info!("Local Matrix Calc: {:?}", time1 - time);
+        log::debug!("Local Matrix Calc: {:?}", time1 - time);
     }
 }
 
@@ -163,7 +163,7 @@ impl SysWorldMatrixCalc {
         }
 
         let time1 = Instant::now();
-        log::info!("World Matrix Calc: {:?}", time1 - time);
+        log::debug!("World Matrix Calc: {:?}", time1 - time);
     }
 }
 
@@ -237,7 +237,7 @@ impl SysWorldMatrixCalc2 {
         }
 
         let time1 = Instant::now();
-        log::info!("World Matrix Calc2: {:?}", time1 - time);
+        log::debug!("World Matrix Calc2: {:?}", time1 - time);
     }
 }
 

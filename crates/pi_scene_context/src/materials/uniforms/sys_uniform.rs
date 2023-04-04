@@ -166,7 +166,7 @@ impl<T: TPassID + Component> SysMaterialMetaChange<T> {
             let pass = passtag.as_pass();
             if pass & T::TAG == T::TAG {
                 if let Some(effect_val_bind) = BindEffectValues::new(&device, effect_key.0.clone(), effect.0.clone(), &mut allocator) {
-                    log::info!("SysMaterialMetaChange: 1");
+                    log::debug!("SysMaterialMetaChange: 1");
                     effect_values_cmd.insert(matid, effect_val_bind);
                     effect_values_flag_cmd.insert(matid, BindEffectValueDirty(true));
                 } else {

@@ -25,6 +25,7 @@ pub mod abstract_mesh;
 pub mod skeleton;
 pub mod shader_about;
 pub mod bind_group;
+pub mod lighting;
 
 pub struct Mesh;
 

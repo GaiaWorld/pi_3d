@@ -7,10 +7,4 @@ pub enum ErrorPlugin {
     ResourceError(&'static str),
 }
 
-pub trait Plugin {
-    fn init(
-        &mut self,
-        engine: &mut EnginShell,
-        stages: &mut RunStage,
-    ) -> Result<(), ErrorPlugin>;
-}
+pub use bevy::prelude::Plugin;

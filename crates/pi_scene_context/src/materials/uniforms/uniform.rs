@@ -39,7 +39,6 @@ impl BindEffectValues {
         allocator: &mut BindBufferAllocator,
     ) -> Option<Self> {
         if let Some(effect_val_bind) = ShaderBindEffectValue::new(device, key_meta, meta.clone(), allocator) {
-            log::info!("ShaderBindEffectValue: {:?},  {:?}", effect_val_bind.data().offset(), effect_val_bind.data().size());
 
             let uniforms = &meta.uniforms;
             let mut mat4 = Mat4Uniform::new(&effect_val_bind);     mat4.init(&uniforms.mat4_list);

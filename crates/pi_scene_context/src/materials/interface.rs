@@ -1,5 +1,5 @@
 use pi_assets::mgr::AssetMgr;
-use pi_engine_shell::{object::ObjectID, engine_shell::EnginShell, assets::sync_load::{AssetSyncWait, InterfaceAssetSyncCreate}};
+use pi_engine_shell::prelude::*;
 use pi_render::{render_3d::shader::uniform_texture::UniformTextureWithSamplerParam, renderer::shader::KeyShaderMeta};
 use pi_share::Share;
 

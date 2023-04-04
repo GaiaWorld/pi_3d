@@ -18,7 +18,7 @@ use crate::{
     viewer::{ViewerID, ModelListAfterCulling},
     pass::*,
     geometry::{geometry::{RenderGeometry, RenderGeometryEable}, sys_vertex_buffer_use::SysRenderGeometryInit, vertex_buffer_useinfo::GeometryID},
-    cameras::camera::CameraViewport,
+    cameras::camera::CameraViewport, flags::Enable,
 };
 
 use super::{
@@ -28,8 +28,8 @@ use super::{
     render_depth_and_stencil::{ModelDepthStencil},
     render_blend::ModelBlend,
     render_target_state::RenderTargetState,
-    renderer::Renderer,
-    sys_renderer_pre::{SysSet0ModifyByRendererID, SysSet0ModifyFromScene, SysSet1ModifyByModel, SysSet2ModifyByRendererID, SysSet2ModifyByModel, SysSet1ModifyByRendererID, SysBufferAllocatorUpdate, SysBindGroupLoad}
+    renderer::{Renderer},
+    sys_renderer_pre::{SysBufferAllocatorUpdate, SysBindGroupLoad}
 };
 
 
@@ -201,7 +201,6 @@ impl<T: TPass + Component, I: TPassID + Component> SysPassShaderRequestByPass<T,
                     let (instance, vb) = if let Some(val) = geometrys.get(id_geometry.0) {
                         val
                     } else {
-                        log::warn!("bbbbbbbbb");
                         shader_cmd.insert(id_pass, PassShader(None));
                         return;
                     };
@@ -627,7 +626,7 @@ impl SysRendererDraws {
         mut renderers: Query<
             GameObject,
             (
-                &ViewerID, &mut Renderer, &PassTagOrders, 
+                ObjectID, &ViewerID, &mut Renderer, &PassTagOrders, &Enable
             )
         >,
         viewers: Query<
@@ -645,8 +644,12 @@ impl SysRendererDraws {
     ) {
         let time1 = Instant::now();
 
-        renderers.iter_mut().for_each(|(id_viewer, mut renderer, passtag_orders)| {
+        renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable)| {
             renderer.clear();
+            log::warn!("Render: {:?} {:?}", id, enable.0);
+            if enable.0 == false {
+                return;
+            }
             if let Some((list_model, viewport)) = viewers.get(id_viewer.0) {
                 if let Some(viewport) = viewport {
                     renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);

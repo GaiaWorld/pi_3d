@@ -26,6 +26,7 @@ pub mod skeleton;
 pub mod animation;
 pub mod pass;
 pub mod state;
+pub mod commands;
 
 
 pub fn bytes_write_to_memory(

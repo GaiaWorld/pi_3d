@@ -1,7 +1,6 @@
 use std::{marker::PhantomData, sync::Arc};
 
-use pi_ecs::prelude::{Component, Setup};
-use pi_engine_shell::{run_stage::{TSystemStageInfo, ERunStageChap}, object::ObjectID};
+use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
 use pi_render::{
     renderer::bind_buffer::{
@@ -163,7 +162,7 @@ impl<
     S: TSystemStageInfo + 'static,
     T2: TViewerProjectMatrix + Component,
     S2: TSystemStageInfo + 'static,
-> pi_engine_shell::plugin::Plugin for PluginViewer<T, S, T2, S2> {
+> Plugin for PluginViewer<T, S, T2, S2> {
     fn init(
         &mut self,
         engine: &mut pi_engine_shell::engine_shell::EnginShell,
@@ -191,6 +190,30 @@ impl<
         SysViewerUpdated::<T, S, T2, S2>::setup(world, stages.query_stage::<SysViewerUpdated::<T, S, T2, S2>>(ERunStageChap::Command));
 
         Ok(())
+    }
+
+    fn build(&self, app: &mut App) {
+        let world = &mut app.world;
+
+        // if world.get_resource::<SingleRendererCommandList>().is_none() {
+        //     world.insert_resource(SingleRendererCommandList::default());
+        //     // 依赖的 ViewerRenderersInfo 初始化的 System 应该在 Initial 阶段
+        //     log::warn!(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        //     SysViewerRendererCommandTick::setup(world, stages.query_stage::<SysViewerRendererCommandTick>(ERunStageChap::Command));
+        //     SysModelListUpdateByViewer::setup(world, stages.query_stage::<SysModelListUpdateByViewer>(ERunStageChap::Command));
+        //     SysModelListUpdateByModel::setup(world, stages.query_stage::<SysModelListUpdateByModel>(ERunStageChap::Command));
+        //     SysModelListAfterCullingTick::setup(world, stages.query_stage::<SysModelListAfterCullingTick>(ERunStageChap::Command));
+        // } else {
+        //     log::warn!(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 2");
+        // }
+
+        SysViewerViewMatrixByViewCalc::<T, S>::setup(world, stages.query_stage::<SysViewerViewMatrixByViewCalc::<T, S>>(ERunStageChap::Command));
+        // SysViewerViewMatrixUpdateByLocalPos::<T>::setup(world, stages.query_stage::<SysViewerViewMatrixUpdateByLocalPos::<T>>(ERunStageChap::Command));
+        SysViewerViewMatrixUpdateByParentModify::<T>::setup(world, stages.query_stage::<SysViewerViewMatrixUpdateByParentModify::<T>>(ERunStageChap::Command));
+        SysViewerProjectionCalc::<T2, S2>::setup(world, stages.query_stage::<SysViewerProjectionCalc::<T2, S2>>(ERunStageChap::Command));
+        SysViewerTransformUpdated::<T, S, T2, S2>::setup(world, stages.query_stage::<SysViewerTransformUpdated::<T, S, T2, S2>>(ERunStageChap::Command));
+        SysViewerUpdated::<T, S, T2, S2>::setup(world, stages.query_stage::<SysViewerUpdated::<T, S, T2, S2>>(ERunStageChap::Command));
+
     }
 }
 impl<

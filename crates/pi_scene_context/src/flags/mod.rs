@@ -1,6 +1,11 @@
 use pi_atom::Atom;
+use pi_engine_shell::prelude::*;
 
 use crate::object::ObjectID;
+
+use self::enable::SingleEnableCommands;
+
+pub mod enable;
 
 
 pub struct SceneID01;
@@ -23,3 +28,12 @@ pub struct SceneID(pub ObjectID);
 pub struct CameraID(pub usize);
 
 pub struct UniqueName(pub Atom);
+
+pub struct Enable(pub bool);
+
+pub struct PluginFlags;
+impl Plugin for PluginFlags {
+    fn build(&self, app: &mut App) {
+        app.world.insert_resource(SingleEnableCommands::default());
+    }
+}

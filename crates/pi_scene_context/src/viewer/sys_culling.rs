@@ -10,25 +10,23 @@ use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCul
 
 /// * ModelList 在视口参数变化时重新搜集
 ///   * LayerMask
-pub struct SysModelListUpdateByViewer;
-impl TSystemStageInfo for SysModelListUpdateByViewer { 
-    // fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-    //     vec![
+// pub struct SysModelListUpdateByViewer;
+// impl TSystemStageInfo for SysModelListUpdateByViewer { 
+//     // fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//     //     vec![
 
-    //     ]
-    // }
-}
-#[setup]
-impl SysModelListUpdateByViewer {
-    #[system]
-    fn sys(
+//     //     ]
+//     // }
+// }
+// #[setup]
+// impl SysModelListUpdateByViewer {
+//     #[system]
+    fn sys_update_viewer_model_list_by_viewer(
         mut viewers: Query<
-            GameObject,
             (ObjectID, &ViewerActive, &SceneID, &LayerMask, &mut ModelList),
             Or<(Changed<LayerMask>, Changed<ViewerActive>)>
         >,
         items: Query<
-            GameObject,
             (ObjectID, &SceneID, &LayerMask, &Mesh),
         >,
         mut flag_model_cmd: Commands<GameObject, FlagModelList>,
@@ -43,7 +41,7 @@ impl SysModelListUpdateByViewer {
                 items.iter().for_each(|(obj, iscene, ilayer, _)| {
                     // log::debug!("SysModelListUpdateByCamera: 1");
                     if iscene == scene && layer.include(ilayer) {
-                        log::info!("SysModelListUpdateByCamera: 2");
+                        log::debug!("SysModelListUpdateByCamera: 2");
                         list_model.0.insert(obj.clone(), obj.clone());
                     }
                 });
@@ -52,30 +50,28 @@ impl SysModelListUpdateByViewer {
             flag_model_cmd.insert(camera, FlagModelList(true));
         });
 
-        log::info!("SysModelListUpdateByViewer: {:?}", Instant::now() - time1);
+        log::debug!("SysModelListUpdateByViewer: {:?}", Instant::now() - time1);
     }
-}
+// }
 
 /// * ModelList 在Model参数变化时 移除 或 插入 Model
 ///   * LayerMask, RenderGeometry
-pub struct SysModelListUpdateByModel;
-impl TSystemStageInfo for SysModelListUpdateByModel { 
-    // fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-    //     vec![
+// pub struct SysModelListUpdateByModel;
+// impl TSystemStageInfo for SysModelListUpdateByModel { 
+//     // fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//     //     vec![
 
-    //     ]
-    // }
-}
-#[setup]
-impl SysModelListUpdateByModel {
-    #[system]
-    pub fn sys(
+//     //     ]
+//     // }
+// }
+// #[setup]
+// impl SysModelListUpdateByModel {
+//     #[system]
+    pub fn sys_update_viewer_model_list_by_model(
         mut viewers: Query<
-            GameObject,
             (ObjectID, &ViewerActive, &SceneID, &LayerMask, &mut ModelList)
         >,
         items: Query<
-            GameObject,
             (ObjectID, &SceneID, &LayerMask, &Mesh),
             Changed<LayerMask>,
         >,
@@ -97,30 +93,28 @@ impl SysModelListUpdateByModel {
             });
         });
 
-        log::info!("SysModelListUpdateByModel: {:?}", Instant::now() - time1);
+        log::debug!("SysModelListUpdateByModel: {:?}", Instant::now() - time1);
     }
-}
+// }
 
 
-/// * ModelListAfterCulling 每帧重新搜集
-pub struct SysModelListAfterCullingTick;
-impl TSystemStageInfo for SysModelListAfterCullingTick {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysModelListUpdateByViewer::key(), SysModelListUpdateByModel::key(), SysRenderMatrixUpdate::key()
-        ]
-    }
-}
-#[setup]
-impl SysModelListAfterCullingTick {
-    #[system]
-    pub fn sys(
+// /// * ModelListAfterCulling 每帧重新搜集
+// pub struct SysModelListAfterCullingTick;
+// impl TSystemStageInfo for SysModelListAfterCullingTick {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysModelListUpdateByViewer::key(), SysModelListUpdateByModel::key(), SysRenderMatrixUpdate::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysModelListAfterCullingTick {
+//     #[system]
+    pub fn sys_tick_viewer_culling(
         mut viewers: Query<
-            GameObject,
             (ObjectID, &ViewerActive, &ModelList, &ViewerGlobalPosition, &ViewerViewMatrix, &mut ModelListAfterCulling),
         >,
         items: Query<
-            GameObject,
             (ObjectID, &WorldMatrix, &RenderGeometryEable)
         >,
     ) {
@@ -140,9 +134,9 @@ impl SysModelListAfterCullingTick {
                     }
                 });
             }
-            log::warn!("Moldellist: {:?}, {:?}", liet_model.0.len(), cullings.0.len());
+            log::warn!("Moldellist: {:?}, {:?}, {:?}", vieweractive.0, liet_model.0.len(), cullings.0.len());
         });
         
-        log::info!("SysModelListAfterCullingTick: {:?}", Instant::now() - time1);
+        log::debug!("SysModelListAfterCullingTick: {:?}", Instant::now() - time1);
     }
-}
+// }

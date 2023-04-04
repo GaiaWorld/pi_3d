@@ -53,6 +53,8 @@ pub struct ViewerRenderersInfo {
     pub map: XHashMap<Atom, (RendererGraphicDesc, RendererID)>,
 }
 
+pub struct DirtyViewerRenderersInfo;
+
 
 #[derive(NodeParam, Clone, Default)]
 pub struct RenderTarget {

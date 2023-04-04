@@ -1,23 +1,22 @@
-use pi_ecs::{prelude::{Query, Commands, Res}, query::{Or, Changed, With}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::TSystemStageInfo;
+
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, Rotation3};
 use pi_share::Share;
 
-use crate::{transforms::{transform_node::{LocalPosition, LocalRotation}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}, renderers::{renderer::RenderSize, render_object::RendererID}};
+use crate::{transforms::{transform_node::{LocalPosition, LocalRotation}}, object::{GameObject, ObjectID}, cameras::{target_camera::TargetCameraParam}, renderers::{renderer::RenderSize, render_object::RendererID, ViewerRenderersInfo}};
 
-use super::{camera::{EFreeCameraMode, CameraFov, CameraNearFar, CameraOrthSize, EFixedMode, CameraParam, CameraViewport}, command::SysCameraParamCommand};
+use super::{camera::{EFreeCameraMode, CameraFov, CameraNearFar, CameraOrthSize, EFixedMode, CameraParam, CameraViewport, Camera}};
 
 
-pub struct TargetCameraEffectLocalRotation;
-impl TSystemStageInfo for TargetCameraEffectLocalRotation {
-}
-#[setup]
-impl TargetCameraEffectLocalRotation {
-    #[system]
-    pub fn calc(
-        query_cameras: Query<GameObject, (ObjectID, &TargetCameraParam, &LocalPosition)>,
-        mut rot_cmd: Commands<GameObject, LocalRotation>,
+// pub struct TargetCameraEffectLocalRotation;
+// impl TSystemStageInfo for TargetCameraEffectLocalRotation {
+// }
+// #[setup]
+// impl TargetCameraEffectLocalRotation {
+//     #[system]
+    pub fn sys_calc_target_camera_local_rot(
+        query_cameras: Query<(ObjectID, &TargetCameraParam, &LocalPosition)>,
+        mut rot_cmd: Commands,
     ) {
         //  log::debug!("Target Camera Control Calc:");
         let coordsys = CoordinateSytem3::left();
@@ -27,51 +26,52 @@ impl TargetCameraEffectLocalRotation {
             rot_cmd.insert(obj, LocalRotation(rotation));
         });
     }
-}
+// }
 
-pub struct SysCameraParamUpdate;
-impl TSystemStageInfo for SysCameraParamUpdate {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysCameraParamCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysCameraParamUpdate {
-    #[system]
-    fn sys(
+// pub struct SysCameraParamUpdate;
+// impl TSystemStageInfo for SysCameraParamUpdate {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysCameraParamCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysCameraParamUpdate {
+//     #[system]
+    pub(crate) fn sys_update_camera_param(
         cameras: Query<
-            GameObject,
             (
                 ObjectID,
                 &EFreeCameraMode, &CameraFov, &CameraNearFar, &CameraOrthSize, &EFixedMode, &CameraViewport
             ),
             Or<(Changed<EFreeCameraMode>, Changed<CameraFov>, Changed<CameraNearFar>, Changed<CameraOrthSize>, Changed<EFixedMode>, Changed<CameraViewport>)>
         >,
-        mut param_cmd: Commands<GameObject, CameraParam>,
+        mut param_cmd: Commands,
     ) {
         cameras.iter().for_each(|(id_camera, mode, fov, nearfar, size, fixmode, viewport)| {
             let param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
             param_cmd.insert(id_camera, param);
         });
     }
-}
+// }
 
-pub struct SyeCameraRenderSizeUpdate;
-impl TSystemStageInfo for SyeCameraRenderSizeUpdate {
-}
-#[setup]
-impl SyeCameraRenderSizeUpdate {
-    #[system]
-    fn sys(
-        window: Res<Share<winit::window::Window>>,
-        cameras: Query<GameObject, &RendererID, With<CameraParam>>,
-        mut rendersize_cmd: Commands<GameObject, RenderSize>,
+// pub struct SyeCameraRenderSizeUpdate;
+// impl TSystemStageInfo for SyeCameraRenderSizeUpdate {
+// }
+// #[setup]
+// impl SyeCameraRenderSizeUpdate {
+//     #[system]
+    fn sys_change_camera_render_size(
+        window: Res<PiRenderWindow>,
+        cameras: Query<&ViewerRenderersInfo, With<Camera>>,
+        mut rendersize_cmd: Commands,
     ) {
         let size = window.inner_size();
-        cameras.iter().for_each(|id_renderer| {
-            rendersize_cmd.insert(id_renderer.0, RenderSize::new(size.width, size.height));
+        cameras.iter().for_each(|renderers| {
+            renderers.map.iter().for_each(|(k, v)| {
+                rendersize_cmd.insert(v.1.0, RenderSize::new(size.width, size.height));
+            });
         });
     }
-}
+// }

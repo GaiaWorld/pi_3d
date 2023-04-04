@@ -20,13 +20,13 @@ use crate::{
     scene::{
         environment::{BindSceneEffect,},
     },
-    viewer::{BindViewer, ModelList, ViewerActive},
+    viewer::{BindViewer, ModelList, ViewerActive, FlagModelList},
     skeleton::{skeleton::{BindSkinValue}, SkeletonID},
     meshes::model::BindModel,
     pass::*, bindgroup::{AssetBindGroupSceneWaits, AssetBindGroupModelWaits, AssetBindGroupTextureSamplersWaits}, materials::material::{MaterialUsedList, DirtyMaterialUsedList},
 };
 
-use super::ViewerRenderersInfo;
+use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 
 pub struct SysBufferAllocatorUpdate;
 impl TSystemStageInfo for SysBufferAllocatorUpdate {
@@ -49,7 +49,7 @@ impl SysBufferAllocatorUpdate {
         allocator.write_buffer(&device, &queue);
         vb_allocator.update_buffer(&device, &queue);
 
-        log::info!("SysDynBufferAllocatorUpdate: {:?}", Instant::now() - time1);
+        log::debug!("SysDynBufferAllocatorUpdate: {:?}", Instant::now() - time1);
     }
 }
 
@@ -79,6 +79,7 @@ impl SysBindGroupLoad {
     ) {
         scene_wait.0.drain().for_each(|(key, v)| {
             let key_bind_group = key.key_bind_group();
+            log::warn!("!!!!!!!!!!");
             if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
                 let data = BindGroupScene::new(BindGroupUsage::new(0, key_bind_group, bind_group), key);
                 let data = Arc::new(data);
@@ -173,7 +174,7 @@ impl<T: TPass + Component, I: TPassID + Component> SysSet0ModifyByRendererID<T, 
         viewers: Query<
             GameObject,
             (ObjectID, &ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo),
-            Or<(Changed<BindViewer>, Changed<ViewerActive>, Changed<ModelList>, Changed<ViewerRenderersInfo>)>,
+            Or<(Changed<BindViewer>, Changed<ViewerActive>, Changed<FlagModelList>, Changed<DirtyViewerRenderersInfo>)>,
         >,
         renderers: Query<
             GameObject,

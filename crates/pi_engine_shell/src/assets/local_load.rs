@@ -6,16 +6,13 @@ use pi_hal::{
     runtime::MULTI_MEDIA_RUNTIME, image::load_from_path
 };
 
-use crate::plugin::Plugin;
+use crate::prelude::*;
 
 
 pub struct PluginLocalLoad;
 impl Plugin for PluginLocalLoad {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine_shell::EnginShell,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
+    fn build(&self, app: &mut App) {
+        
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
@@ -25,7 +22,5 @@ impl Plugin for PluginLocalLoad {
                 })
                 .unwrap();
         }));
-
-        Ok(())
     }
 }

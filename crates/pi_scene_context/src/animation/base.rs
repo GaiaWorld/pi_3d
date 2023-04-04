@@ -3,7 +3,7 @@ use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationConte
 use pi_assets::{asset::{Handle}};
 use pi_atom::Atom;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}, frame_curve::FrameCurve};
-use pi_engine_shell::{object::{ObjectID}};
+use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
 
 use crate::{ flags::SceneID};
@@ -29,6 +29,7 @@ impl<F: FrameDataValue+ 'static> AsRef<FrameCurve<F>> for AssetTypeFrameCurve<F>
     }
 }
 
+#[derive(Resource)]
 pub struct TypeAnimeContext<D: FrameDataValue + 'static> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
 }
@@ -38,6 +39,7 @@ pub struct AnimationGroups {
     pub map: XHashMap<Atom, AnimationGroupID>,
 }
 
+#[derive(Resource)]
 pub struct GlobalAnimeAbout {
     pub ty_alloc: KeyFrameDataTypeAllocator,
     pub runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap<ObjectID>,

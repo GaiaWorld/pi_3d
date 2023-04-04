@@ -1,5 +1,6 @@
 use std::vec::Drain;
 
+use bevy::prelude::SystemSet;
 use pi_ecs::prelude::StageBuilder;
 use pi_hash::XHashMap;
 
@@ -106,7 +107,7 @@ pub trait TSystemStageInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
 ///
 /// * 在运行阶段之上封装了 章节管理
 /// * 每章节可以有多个阶段,章节内部的阶段间有顺序
@@ -115,6 +116,7 @@ pub trait TSystemStageInfo {
 /// * 当 一个System需要等待多个System的结束, 且编码时无法确定依赖的System时, 应该将该System放入下一章节
 pub enum ERunStageChap {
     Initial,
+    AnimeAmount,
     Anime,
     Command,
     Logic01,
@@ -162,6 +164,7 @@ impl RunStage {
             ERunStageChap::Draw => {
                 self.draw.query_stage::<T>()
             },
+            ERunStageChap::AnimeAmount => todo!(),
         }
     }
     pub fn drain(&mut self) -> Drain<StageBuilder> {

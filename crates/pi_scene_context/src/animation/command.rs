@@ -1,5 +1,6 @@
 use std::{mem::replace};
 
+use bevy::prelude::Resource;
 use pi_animation::{animation::AnimationInfo, loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_listener::{OnStart, OnFrameEvent, OnLoop, OnEnd}};
 
 use pi_atom::Atom;
@@ -8,7 +9,7 @@ use pi_ecs::prelude::{Query, ResMut};
 use pi_ecs_macros::setup;
 use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo}};
 
-use crate::{scene::{command::SysSceneCreateCommand}, flags::SceneID};
+use crate::{flags::SceneID};
 
 use super::base::{AnimationGroups, SceneAnimationContext, GlobalAnimeAbout};
 
@@ -17,7 +18,7 @@ use super::base::{AnimationGroups, SceneAnimationContext, GlobalAnimeAbout};
 pub(crate) enum EControlCommand {
     CreateAnimationGroup(ObjectID, Atom),
 }
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub(crate) struct SingleControlCommands(pub(crate) Vec<EControlCommand>);
 
 pub(crate) enum EModifyCommand {
@@ -25,22 +26,22 @@ pub(crate) enum EModifyCommand {
     StartAnimationGroupPercent(ObjectID, Atom, KeyFrameCurveValue, ELoopMode, KeyFrameCurveValue, KeyFrameCurveValue, FramePerSecond, AnimationAmountCalc),
     AddTargetAnimation(ObjectID, ObjectID, Atom, AnimationInfo),
 }
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub(crate) struct SingleModifyCommands(pub(crate) Vec<EModifyCommand>);
 
 
-pub struct SysAnimeControlCommand;
-impl TSystemStageInfo for SysAnimeControlCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysSceneCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysAnimeControlCommand {
-    #[system]
-    fn cmds(
+// pub struct SysAnimeControlCommand;
+// impl TSystemStageInfo for SysAnimeControlCommand {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysSceneCreateCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysAnimeControlCommand {
+//     #[system]
+    pub(crate) fn sys_anime_control_cmds(
         mut cmds: ResMut<SingleControlCommands>,
         mut sce: Query<GameObject, &mut SceneAnimationContext>,
         mut obj: Query<GameObject, (&SceneID, &mut AnimationGroups)>,
@@ -62,23 +63,23 @@ impl SysAnimeControlCommand {
             }
         })
     }
-}
+// }
 
-pub struct SysAnimeModifyCommand;
-impl TSystemStageInfo for SysAnimeModifyCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysAnimeControlCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysAnimeModifyCommand {
-    #[system]
-    fn cmds(
+// pub struct SysAnimeModifyCommand;
+// impl TSystemStageInfo for SysAnimeModifyCommand {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysAnimeControlCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysAnimeModifyCommand {
+//     #[system]
+    pub(crate) fn sys_anime_modify_cmds(
         mut cmds: ResMut<SingleModifyCommands>,
-        mut sce: Query<GameObject, &mut SceneAnimationContext>,
-        mut obj: Query<GameObject, (&SceneID, &mut AnimationGroups)>,
+        mut sce: Query<&mut SceneAnimationContext>,
+        mut obj: Query<(&SceneID, &mut AnimationGroups)>,
         mut globalinfo: ResMut<GlobalAnimeAbout>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
@@ -115,7 +116,7 @@ impl SysAnimeModifyCommand {
             }
         })
     }
-}
+// }
 
 enum EEventCommand {
     AddAnimationGroupFrameEvent(ObjectID, Atom, FrameIndex, Atom),

@@ -1,6 +1,5 @@
 use pi_atom::Atom;
-use pi_ecs::prelude::Setup;
-use pi_engine_shell::{plugin::Plugin, object::InterfaceObject, run_stage::ERunStageChap};
+use pi_engine_shell::prelude::*;
 use pi_render::{render_3d::shader::{shader_effect_meta::ShaderEffectMeta, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, uniform_value::{UniformPropertyInt, UniformPropertyVec4, UniformPropertyVec2}, shader_defines::ShaderDefinesSet}, renderer::shader::KeyShaderMeta};
 use crate::{materials::{shader_effect::ShaderEffectValueUniformDesc, interface::InterfaceMaterialMeta, material::MaterialID}, pass::EPassTag};
 
@@ -27,6 +26,10 @@ impl Plugin for PluginShadowGenerator {
         SysShadowGeneratorAppyWhileShadowModify::setup(world, stages.query_stage::<SysShadowGeneratorAppyWhileShadowModify>(ERunStageChap::Command));
 
         Ok(())
+    }
+
+    fn build(&self, app: &mut App) {
+        todo!()
     }
 }
 

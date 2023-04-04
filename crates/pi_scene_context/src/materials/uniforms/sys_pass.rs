@@ -99,7 +99,6 @@ impl<T: TPassID + Component> SysEffectTexturesToModelByMaterialModify<T> {
     ) {
         materials.iter().for_each(|(bind, list, pass, effect_key, meta)| {
             list.0.iter().for_each(|(id_obj, _)| {
-                log::info!("set_model_effect_texture_samplers >>");
                 if let Some((passid, mut dirty)) = models.get_mut(id_obj.clone()) {
                     let pass = pass.as_pass();
                     if dirty.0 & pass == 0 {

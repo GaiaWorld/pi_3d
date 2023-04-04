@@ -1,9 +1,6 @@
 
-use pi_ecs::{prelude::{ResMut, Commands}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::{TSystemStageInfo};
 
-use crate::{object::{ObjectID, GameObject}};
+use pi_engine_shell::prelude::*;
 
 use super::LayerMask;
 
@@ -11,19 +8,19 @@ use super::LayerMask;
 pub enum LayerMaskCommand {
     Set(ObjectID, LayerMask),
 }
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct SingleLayerMaskCommandList {
     pub list: Vec<LayerMaskCommand>,
 }
 
-pub struct SysLayerMaskCommand;
-impl TSystemStageInfo for SysLayerMaskCommand {
+// pub struct SysLayerMaskCommand;
+// impl TSystemStageInfo for SysLayerMaskCommand {
     
-}
-#[setup]
-impl SysLayerMaskCommand {
-    #[system]
-    pub fn cmd(
+// }
+// #[setup]
+// impl SysLayerMaskCommand {
+//     #[system]
+    pub fn sys_cmd_layer_mask(
         mut cmds: ResMut<SingleLayerMaskCommandList>,
         mut layer_cmd: Commands<GameObject, LayerMask>,
     ) {
@@ -35,4 +32,4 @@ impl SysLayerMaskCommand {
             }
         });
     }
-}
+// }

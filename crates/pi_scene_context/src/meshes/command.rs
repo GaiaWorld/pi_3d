@@ -17,7 +17,7 @@ use crate::{
     renderers::pass::*, state::{MeshStates, DirtyMeshStates}
 };
 
-use super::{model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel}, abstract_mesh::AbstructMesh, Mesh};
+use super::{model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel}, abstract_mesh::AbstructMesh, Mesh, lighting::{MeshCastShadow, MeshReceiveShadow}};
 
 #[derive(Debug)]
 pub enum EMeshCreateCommand {
@@ -50,11 +50,15 @@ impl SysMeshCreateCommand {
         mut render_wminv_cmd: Commands<GameObject, RenderWorldMatrixInv>,
         mut ins_list_cmd: Commands<GameObject, InstanceList>,
         mut bind_model_cmd: Commands<GameObject, BindModel>,
+        mut castshadow_cmd: Commands<GameObject, MeshCastShadow>,
+        mut receiveshadow_cmd: Commands<GameObject, MeshReceiveShadow>,
+
         mut effect_value_cmd: Commands<GameObject, PassDirtyBindEffectValue>,
         mut effect_value_flag_cmd: Commands<GameObject, FlagPassDirtyBindEffectValue>,
         mut effect_textures_cmd: Commands<GameObject, PassDirtyBindEffectTextures>,
         mut effect_textures_flag_cmd: Commands<GameObject, FlagPassDirtyBindEffectTextures>,
         mut entity_cmd: EntityCommands<GameObject>,
+
         mut source_cmd: Commands<GameObject, PassSource>,
         mut bev_cmd: Commands<GameObject, PassBindEffectValue>,
         mut bet_cmd: Commands<GameObject, PassBindEffectTextures>,
@@ -99,6 +103,9 @@ impl SysMeshCreateCommand {
                         render_wm_cmd.insert(entity.clone(), RenderWorldMatrix(Matrix::identity()));
                         render_wminv_cmd.insert(entity.clone(), RenderWorldMatrixInv(Matrix::identity()));
                         wmdirty_cmd.insert(entity.clone(), RenderMatrixDirty(true));
+
+                        castshadow_cmd.insert(entity, MeshCastShadow(false));
+                        receiveshadow_cmd.insert(entity, MeshReceiveShadow(false));
 
                         ins_wm_cmd.insert(entity.clone(), InstancedWorldMatrixDirty(true));
                         ins_colordirty_cmd.insert(entity.clone(), InstancedColorDirty(true));
@@ -171,6 +178,8 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
 #[derive(Debug)]
 pub enum EMeshModifyCommand {
     Destroy(ObjectID),
+    CastShadow(ObjectID, bool),
+    ReceiveShadow(ObjectID, bool),
 }
 
 #[derive(Debug, Default)]
@@ -192,6 +201,8 @@ impl SysMeshModifyCommand {
     pub fn cmd(
         mut cmds: ResMut<SingleMeshModifyCommandList>,
         meshes: Query<GameObject, &mut InstanceList>,
+        mut castshadow_cmd: Commands<GameObject, MeshCastShadow>,
+        mut receiveshadow_cmd: Commands<GameObject, MeshReceiveShadow>,
     ) {
         let mut list = replace(&mut cmds.list, vec![]);
 
@@ -204,6 +215,12 @@ impl SysMeshModifyCommand {
                     //     });
                     // }
                     // delete.despawn(id_mesh);
+                },
+                EMeshModifyCommand::CastShadow(entity, val) => {
+                    castshadow_cmd.insert(entity, MeshCastShadow(val));
+                },
+                EMeshModifyCommand::ReceiveShadow(entity, val) => {
+                    receiveshadow_cmd.insert(entity, MeshReceiveShadow(val));
                 },
             }
         });

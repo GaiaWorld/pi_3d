@@ -7,7 +7,7 @@ use pi_ecs::query::QueryState;
 use pi_engine_shell::object::{ObjectID, GameObject};
 use pi_futures::BoxFuture;
 use pi_postprocess::{image_effect::{EffectCopy, SingleImageEffectResource}, effect::CopyIntensity, temprory_render_target::PostprocessTexture, IDENTITY_MATRIX};
-use pi_render::{components::view::target_alloc::{ShareTargetView, SafeAtlasAllocator, TargetDescriptor, TextureDescriptor}, graph::{param::OutParam, node::Node, RenderContext}, rhi::{device::RenderDevice, texture::ScreenTexture, RenderQueue, asset::RenderRes, pipeline::RenderPipeline}, renderer::{draw_obj_list::DrawList, texture::texture_view::ETextureViewUsage}};
+use pi_render::{components::view::target_alloc::{ShareTargetView, SafeAtlasAllocator, TargetDescriptor, TextureDescriptor}, graph::{param::{OutParam, InParam}, node::Node, RenderContext}, rhi::{device::RenderDevice, texture::ScreenTexture, RenderQueue, asset::RenderRes, pipeline::RenderPipeline}, renderer::{draw_obj_list::DrawList, texture::texture_view::ETextureViewUsage}};
 use pi_share::Share;
 use smallvec::SmallVec;
 
@@ -17,20 +17,12 @@ use crate::{renderers::{renderer::{Renderer, RenderSize, RenderColorFormat, Rend
 #[derive(Clone)]
 pub struct RendererGraphicParam {
     pub srt: Option<ShareTargetView>,
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
     pub depth: bool,
 }
 impl Default for RendererGraphicParam {
     fn default() -> Self {
         Self {
             srt: None,
-            x: 0,
-            y: 0,
-            w: 0,
-            h: 0,
             depth: false,
         }
     }
@@ -50,6 +42,20 @@ impl OutParam for RendererGraphicParam {
         } else {
             false
         }
+    }
+}
+impl InParam for RendererGraphicParam {
+    fn can_fill<O: OutParam + ?Sized>(
+        &self,
+        map: &mut pi_hash::XHashMap<std::any::TypeId, Vec<pi_render::graph::NodeId>>,
+        pre_id: pi_render::graph::NodeId,
+        out_param: &O,
+    ) -> bool {
+        true
+    }
+
+    fn fill_from<O: OutParam + ?Sized>(&mut self, pre_id: pi_render::graph::NodeId, out_param: &O) -> bool {
+        true
     }
 }
 
@@ -86,6 +92,7 @@ impl Node for RenderNode {
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let time = Instant::now();
 
+        let mut output = RendererGraphicParam::default();
         
 
         // let window = world.get_resource::<RenderWindow>().unwrap();
@@ -207,7 +214,6 @@ impl Node for RenderNode {
             let mut vw = 0.;
             let mut vh = 0.;
 
-            let mut output = RendererGraphicParam::default();
             let surface = context.world.get_resource::<ScreenTexture>().unwrap();
             let ops = wgpu::Operations {
                 load: wgpu::LoadOp::Load,
@@ -331,8 +337,6 @@ impl Node for RenderNode {
             // }
 
             output.srt = None;
-            output.w = width;
-            output.h = height;
         } else {
             
         };

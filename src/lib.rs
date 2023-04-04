@@ -7,7 +7,7 @@ use pi_scene_context::{
     cullings::{PluginCulling, oct_tree::PluginBoundingOctTree},
     cameras::PluginCamera,
     transforms::PluginTransformNode,
-    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup
+    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup, flags::PluginFlags
 };
 
 pub struct Limit(pub wgpu::Limits);
@@ -30,6 +30,7 @@ impl pi_engine_shell::plugin::Plugin for PluginBundleDefault {
         let limit = Limit(device.limits());
         // world.insert_resource(DynMergyBufferAllocator::new(&limit, 4 * 1024 * 1024));
 
+        PluginFlags.init(engine, stages);
         PluginRenderBindGroup.init(engine, stages);
         PluginScene.init(engine, stages);
         PluginTransformNode.init(engine, stages);

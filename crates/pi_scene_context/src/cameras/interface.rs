@@ -1,4 +1,5 @@
-use pi_engine_shell::object::InterfaceObject;
+
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{Number, Vector3};
 
 use crate::{object::{ObjectID}, transforms::{interface::InterfaceTransformNode}, scene::interface::InterfaceScene, renderers::graphic::RendererGraphicDesc};
@@ -7,7 +8,7 @@ use super::{command::{SingleCameraCommandList, SingleTargetCameraCommandList, EC
 
 pub trait InterfaceCamera {
     fn create_free_camera(
-        &self,
+        &mut self,
         scene: ObjectID,
     ) -> ObjectID;
     
@@ -54,13 +55,18 @@ pub trait InterfaceCamera {
     ) -> &Self;
 }
 
-impl InterfaceCamera for crate::engine::Engine {
+impl InterfaceCamera for EnginShell {
     fn create_free_camera(
-        & self,
+        &mut self,
         scene: ObjectID,
     ) -> ObjectID {
 
-        let entity = self.new_object();
+        let entity = self.world.spawn_empty().id();
+
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &self.world);
+
+        commands.
 
         self.add_to_scene(entity, scene);
         self.as_transform_node(entity);

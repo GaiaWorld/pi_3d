@@ -44,6 +44,18 @@ pub trait InterfaceMesh {
         instance: ObjectID,
         value: Vector4,
     ) -> &Self;
+
+    fn cast_shadow(
+        &self,
+        instance: ObjectID,
+        value: bool,
+    ) -> &Self;
+    
+    fn receive_shadow(
+        &self,
+        instance: ObjectID,
+        value: bool,
+    ) -> &Self;
 }
 impl InterfaceMesh for crate::engine::Engine {
     fn create_mesh(
@@ -122,5 +134,21 @@ impl InterfaceMesh for crate::engine::Engine {
         self.front_face(object, EFrontFace::Ccw);
 
         self
+    }
+
+    fn cast_shadow(
+        &self,
+        instance: ObjectID,
+        value: bool,
+    ) -> &Self {
+        todo!()
+    }
+
+    fn receive_shadow(
+        &self,
+        instance: ObjectID,
+        value: bool,
+    ) -> &Self {
+        todo!()
     }
 }

@@ -40,9 +40,9 @@ pi_graph = "0.1"
 
 pi_animation = { git = "https://github.com/GaiaWorld/pi_animation" }
 
-pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
-render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
-render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "master-shader" }
+pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
+render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
+render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 

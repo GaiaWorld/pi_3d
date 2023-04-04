@@ -1,113 +1,95 @@
 use std::mem::replace;
-
-use pi_ecs::{prelude::{Id, ResMut, EntityDelete, StageBuilder, Setup}, world::World};
-use pi_ecs_macros::setup;
-use pi_ecs_utils::prelude::EntityTreeMut;
-use pi_slotmap_tree::Storage;
+use pi_bevy_ecs_extend::prelude::EntityTreeMut;
+use crate::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GameObject;
 
-pub type ObjectID = Id<GameObject>;
+pub type ObjectID = Entity;
 
 pub trait InterfaceObject {
     fn new_object(
-        &self
+        &mut self
     ) -> ObjectID;
     fn remove_object(
-        &self,
+        &mut self,
         id: ObjectID,
     ) -> &Self;
 }
 
 impl InterfaceObject for crate::engine_shell::EnginShell {
     fn new_object(
-        &self
+        &mut self
     ) -> ObjectID {
-        unsafe { 
-            let const_ptr = self.world() as *const World;
-            let world: &mut World = &mut *(const_ptr as *mut World);
-            ObjectID::new(world.archetypes_mut()[self.node_archetype_id()].reserve_entity()) 
-        }
+        self.world.spawn_empty().id()
     }
 
     fn remove_object(
-        &self,
+        &mut self,
         id: ObjectID,
     ) -> &Self {
-        let world = self.world();
-
-        world.get_resource_mut::<SingleObjectCommand>().unwrap().0.push(id);
+        self.world.despawn(id);
 
         self
     }
 }
 
-#[derive(Debug, Default)]
-pub(crate) struct SingleObjectCommand(Vec<ObjectID>);
+#[derive(Debug, Default, Resource)]
+pub struct SingleObjectCommand(Vec<ObjectID>);
 
-struct SysObject;
-#[setup]
-impl SysObject {
-    #[system]
-    pub fn sys(
-        mut cmds: ResMut<SingleObjectCommand>,
-        mut tree: EntityTreeMut<GameObject>,
-        mut delete: EntityDelete<GameObject>,
-    ) {
-        let mut list = replace(&mut cmds.0, vec![]);
+pub fn sys_object(
+    mut cmds: ResMut<SingleObjectCommand>,
+    mut tree: EntityTreeMut,
+    mut delete: Commands,
+) {
+    let mut list = replace(&mut cmds.0, vec![]);
 
-        list.drain(..).for_each(|id| {
-            let mut begin = 0;
-            let mut end = 1;
-            let mut count = 1;
-            let mut loopcount = 0;
-            let mut temp = vec![];
-            temp.push(id);
+    list.drain(..).for_each(|id| {
+        let mut begin = 0;
+        let mut end = 1;
+        let mut count = 1;
+        let mut loopcount = 0;
+        let mut temp = vec![];
+        temp.push(id);
 
-            loop {
-                if count == 0 || loopcount >= 65535 {
-                    break;
-                }
-                count = 0;
-                loopcount += 1;
-
-                for i in begin..end {
-                    if let Some(item) = tree.get_down(temp.get(i).unwrap().clone()) {
-                        tree.iter(item.head).for_each(|item| {
-                            count += 1;
-                            temp.push(item);
-                        });
-                    }
-                }
-                begin = end;
-                end = begin + count;
+        loop {
+            if count == 0 || loopcount >= 65535 {
+                break;
             }
+            count = 0;
+            loopcount += 1;
 
-
-
-            loop {
-                if let Some(id) = temp.pop() {
-                    delete.despawn(id);
-                } else {
-                    break;
+            for i in begin..end {
+                if let Some(item) = tree.get_down(temp.get(i).unwrap().clone()) {
+                    tree.iter(item.head.0).for_each(|item| {
+                        count += 1;
+                        temp.push(item);
+                    });
                 }
             }
+            begin = end;
+            end = begin + count;
+        }
 
-            tree.remove(id);
-        });
-    }
+
+
+        loop {
+            if let Some(id) = temp.pop() {
+                delete.entity(id).despawn();
+            } else {
+                break;
+            }
+        }
+
+        tree.remove(id);
+    });
 }
 
 pub struct PluginObject;
-impl PluginObject {
-    pub fn init(
-        &mut self,
-        world: &mut World,
-        stage: &mut StageBuilder,
-    ) {
-        world.insert_resource(SingleObjectCommand::default());
+impl Plugin for PluginObject {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.world.insert_resource(SingleObjectCommand::default());
         
-        SysObject::setup(world, stage);
+        app.add_system(sys_object);
     }
 }

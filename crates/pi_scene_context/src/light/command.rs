@@ -1,26 +1,25 @@
 use std::mem::replace;
 
 use pi_atom::Atom;
-use pi_ecs::prelude::{ResMut, Commands, Query, Res, EntityCommands};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
-use pi_render::{rhi::device::RenderDevice, renderer::bind_buffer::BindBufferAllocator};
+
+use pi_engine_shell::prelude::*;
+use pi_render::{rhi::device::RenderDevice, renderer::bind_buffer::BindBufferAllocator, graph::graph::RenderGraph};
 use pi_scene_math::Vector3;
 
-use crate::{viewer::{ViewerViewMatrix, ViewerProjectionMatrix, ViewerTransformMatrix, ViewerGlobalPosition, ViewerDirection, ModelList, FlagModelList, ModelListAfterCulling, ViewerActive, BindViewer, command::{SingleRendererCommandList, ERendererCommand}}, renderers::{ViewerRenderersInfo, render_object::RendererID, graphic::RendererGraphicDesc, renderer::{RenderSize, RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}}, materials::{material::MaterialID, command::{SingleMatCreateCommands, EMatCreateCommand}}, pass::{EPassTag, PassTagOrders}, flags::UniqueName};
+use crate::{viewer::{ViewerViewMatrix, ViewerProjectionMatrix, ViewerTransformMatrix, ViewerGlobalPosition, ViewerDirection, ModelList, FlagModelList, ModelListAfterCulling, ViewerActive, BindViewer, command::{SingleRendererCommandList, ERendererCommand}}, renderers::{ViewerRenderersInfo, render_object::RendererID, graphic::RendererGraphicDesc, renderer::{RenderSize, RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}, DirtyViewerRenderersInfo}, materials::{material::MaterialID, command::{SingleMatCreateCommands, EMatCreateCommand}}, pass::{EPassTag, PassTagOrders}, flags::{UniqueName, enable::SingleEnableCommands, Enable}, commands::TCommandList};
 
 use super::{base::{LightDirection, Light, LightingMode}, point::ShadowAngle, shadow_generator::{base::{ShadowMinZ, ShadowMaxZ, ShadowFrustumSize, ShadowEnable, ShadowBias, ShadowNormalBias, ShadowDepthScale, ShadowAtlasSize, }, ShaderShadowGenerator}};
 
 #[derive(Default)]
 pub struct SingleLightCreateCommands(pub Vec<(ObjectID, Atom)>);
 
-pub struct SysLightCreateCommand;
-impl TSystemStageInfo for SysLightCreateCommand {
-} 
-#[setup]
-impl SysLightCreateCommand {
-    #[system]
-    fn sys(
+// pub struct SysLightCreateCommand;
+// impl TSystemStageInfo for SysLightCreateCommand {
+// } 
+// #[setup]
+// impl SysLightCreateCommand {
+//     #[system]
+    fn sys_cmd_light_create(
         mut cmds: ResMut<SingleLightCreateCommands>,
         mut light_cmd: Commands<GameObject, Light>,
         mut unique_name_cmd: Commands<GameObject, UniqueName>,
@@ -44,10 +43,12 @@ impl SysLightCreateCommand {
         mut viewer_active_cmd: Commands<GameObject, ViewerActive>,
         mut viewer_bind_cmd: Commands<GameObject, BindViewer>,
         mut viewer_render_cmd: Commands<GameObject, ViewerRenderersInfo>,
+        mut dirty_renders_cmd: Commands<GameObject, DirtyViewerRenderersInfo>,
         mut renderid_cmd: Commands<GameObject, RendererID>,
 
         mut material_cmd: Commands<GameObject, MaterialID>,
         mut rendersize_cmd: Commands<GameObject, RenderSize>,
+        mut enable_cmd: Commands<GameObject, Enable>,
 
         device: Res<RenderDevice>,
         mut dynallocator: ResMut<BindBufferAllocator>,
@@ -78,12 +79,13 @@ impl SysLightCreateCommand {
             list_culling_cmd.insert(entity, ModelListAfterCulling::default());
             viewer_active_cmd.insert(entity, ViewerActive(false));
             viewer_render_cmd.insert(entity, ViewerRenderersInfo::default());
+            dirty_renders_cmd.insert(entity, DirtyViewerRenderersInfo);
+
+            enable_cmd.insert(entity, Enable(true));
 
             if let Some(data) = BindViewer::new(&mut dynallocator) {
                 viewer_bind_cmd.insert(entity, data);
             };
-            
-            
 
             let mat = entity_cmd.spawn();
             material_cmd.insert(entity, MaterialID(mat));
@@ -97,8 +99,7 @@ impl SysLightCreateCommand {
             // );
         });
     }
-}
-
+// }
 
 pub enum ELightModifyCommand {
     LightType(ObjectID, Light),
@@ -114,23 +115,19 @@ pub enum ELightModifyCommand {
     AtlasSize(ObjectID, u32),
 }
 
-#[derive(Default)]
-pub struct SingleLightModifyCommands(pub Vec<ELightModifyCommand>);
+// #[derive(Default)]
+// pub struct SingleLightModifyCommands(pub Vec<ELightModifyCommand>);
 
-pub struct SysLightModifyCommand;
-impl TSystemStageInfo for SysLightModifyCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysLightCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysLightModifyCommand {
-    #[system]
-    fn sys(
+// pub struct SysLightModifyCommand;
+// impl TSystemStageInfo for SysLightModifyCommand {
+// }
+// #[setup]
+// impl SysLightModifyCommand {
+//     #[system]
+    fn sys_cmd_light_modify(
         mut cmds: ResMut<SingleLightModifyCommands>,
-        lights: Query<GameObject, (&Light, &LightingMode, &MaterialID, &RendererID, &UniqueName, &ShadowAtlasSize)>,
+        mut lights: Query<GameObject, (&Light, &LightingMode, &MaterialID, &mut ViewerRenderersInfo, &UniqueName, &ShadowAtlasSize)>,
+        light_enable: Query<GameObject, &Enable>,
         shadowangles: Query<GameObject, &ShadowAngle>,
         mut light_cmd: Commands<GameObject, Light>,
         mut lighting_cmd: Commands<GameObject, LightingMode>,
@@ -150,6 +147,9 @@ impl SysLightModifyCommand {
         mut material_create_cmd: ResMut<SingleMatCreateCommands>,
         
         mut render_cmds: ResMut<SingleRendererCommandList>,
+
+        mut render_graphic: ResMut<RenderGraph>,
+        mut entity_cmd: EntityCommands<GameObject>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
         list.drain(..).for_each(|cmd| {
@@ -184,38 +184,27 @@ impl SysLightModifyCommand {
                 },
                 ELightModifyCommand::ShadowEnable(entity, val) => {
                     shadowenable_cmd.insert(entity, ShadowEnable(val));
-                    viewer_active_cmd.insert(entity, ViewerActive(val));
 
-                    if let Some((_, _, id_mat, id_render, name, size)) = lights.get(entity) {
+                    if let Some((_, _, id_mat, mut viewer_renderers, name, _)) = lights.get_mut(entity) {
                         material_create_cmd.0.push(
                             EMatCreateCommand::Use(id_mat.0.clone(), Atom::from(ShaderShadowGenerator::KEY), EPassTag::ShadowCast)
                         );
-                
-                        let desc = RendererGraphicDesc {
+
+                        let graphic_desc = RendererGraphicDesc {
                             pre: Some(Atom::from("Clear")),
                             curr: name.0.clone(),
                             next: None,
                             passorders: PassTagOrders::new(vec![EPassTag::ShadowCast]),
                         };
+                        if let Some((render, id_render)) = viewer_renderers.map.get(&graphic_desc.curr) {
+                            entity_cmd.despawn(id_render.0);
+                            render_graphic.remove_node(render.curr.to_string());
+                        }
+                        let id_renderer = entity_cmd.spawn();
+                        viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), RendererID(id_renderer)));
+                        
                         render_cmds.list.push(
-                            ERendererCommand::Active(entity, id_render.clone(), desc)
-                        );
-
-                        let id_render = id_render.0;
-                        render_cmds.list.push(
-                            ERendererCommand::RenderColorFormat(id_render, RenderColorFormat(wgpu::TextureFormat::Rgba16Float))
-                        );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderColorClear(id_render, RenderColorClear(wgpu::Color { r: 0., g: 0., b: 0., a: 0. }))
-                        );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderDepthFormat(id_render, RenderDepthFormat(Some(wgpu::TextureFormat::Depth32Float)))
-                        );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderDepthClear(id_render, RenderDepthClear(0.))
-                        );
-                        render_cmds.list.push(
-                            ERendererCommand::RenderSize(id_render, RenderSize::new(size.0, size.0))
+                            ERendererCommand::Active(entity, RendererID(id_renderer), graphic_desc)
                         );
                     }
                 },
@@ -230,16 +219,63 @@ impl SysLightModifyCommand {
                 },
                 ELightModifyCommand::AtlasSize(entity, val) => {
                     shadowsize_cmd.insert(entity, ShadowAtlasSize(val));
-                    
-                    if let Some((_, _, id_mat, id_render, name, size)) = lights.get(entity) {
-                        let id_render = id_render.0;
-                        
-                        render_cmds.list.push(
-                            ERendererCommand::RenderSize(id_render, RenderSize::new(val, val))
-                        );
-                    }
                 },
             }
         });
     }
-}
+// }
+
+// pub struct SysLightModifyEffectRender;
+// impl TSystemStageInfo for SysLightModifyEffectRender {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             SysLightModifyCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysLightModifyEffectRender {
+//     #[system]
+    fn sys_light_render_modify(
+        lights: Query<
+            GameObject,
+            (
+                ObjectID, &Light, &ShadowEnable, &Enable, &ViewerRenderersInfo, &ShadowAtlasSize,
+            ),
+            Or<(Changed<Light>, Changed<ShadowEnable>, Changed<Enable>, Changed<DirtyViewerRenderersInfo>, Changed<ShadowAtlasSize>, )>
+        >,
+        mut render_cmds: ResMut<SingleRendererCommandList>,
+        mut enable_cmds: Commands<GameObject, Enable>,
+        mut viewer_active_cmd: Commands<GameObject, ViewerActive>,
+    ) {
+        lights.iter().for_each(|(entity, light, shadowenable, enable, renderers, size)| {
+            renderers.map.iter().for_each(|(k, v)| {
+                let id_render = v.1.0;
+
+                let enable = shadowenable.0 && enable.0;
+
+                log::warn!(">>>>>>>> {:?}", enable);
+
+                viewer_active_cmd.insert(entity, ViewerActive(enable));
+                enable_cmds.insert(id_render, Enable(enable));
+                if enable {
+                    render_cmds.list.push(
+                        ERendererCommand::RenderColorFormat(id_render, RenderColorFormat(wgpu::TextureFormat::Rgba16Float))
+                    );
+                    render_cmds.list.push(
+                        ERendererCommand::RenderColorClear(id_render, RenderColorClear(wgpu::Color { r: 0., g: 0., b: 0., a: 0. }))
+                    );
+                    render_cmds.list.push(
+                        ERendererCommand::RenderDepthFormat(id_render, RenderDepthFormat(Some(wgpu::TextureFormat::Depth32Float)))
+                    );
+                    render_cmds.list.push(
+                        ERendererCommand::RenderDepthClear(id_render, RenderDepthClear(0.))
+                    );
+                    render_cmds.list.push(
+                        ERendererCommand::RenderSize(id_render, RenderSize::new(size.0, size.0))
+                    );
+                }
+            });
+        });
+    }
+// }

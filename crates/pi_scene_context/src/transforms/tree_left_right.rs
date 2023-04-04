@@ -1,4 +1,4 @@
-use pi_engine_shell::object::ObjectID;
+use pi_engine_shell::prelude::*;
 
 
 #[derive(Debug, Clone, Copy)]

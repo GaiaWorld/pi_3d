@@ -1,16 +1,14 @@
 use std::{time::Instant, marker::PhantomData};
 
 use pi_assets::mgr::AssetMgr;
-use pi_ecs::{prelude::{Query, ResMut, Res, Component, Commands}, query::{Changed}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::TSystemStageInfo};
-use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer::{VertexBufferAllocator, EVertexBufferRange}, instance::{types::{TInstancedData, TInstanceFlag}, instanced_buffer::TInstancedBuffer}, vertex_buffer_desc::EVertexBufferSlot, vertex_buffer_loader::{SingleVertexBufferDataMap, VertexBufferLoader}}};
+use pi_engine_shell::prelude::*;
+use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer::{VertexBufferAllocator, EVertexBufferRange}, instance::{types::{TInstancedData, TInstanceFlag}, instanced_buffer::TInstancedBuffer}, vertex_buffer_desc::EVertexBufferSlot, vertex_buffer_loader::{SingleVertexBufferDataMap}}};
 use pi_share::Share;
 
 use crate::{
     geometry::{
         vertex_buffer_useinfo::*, 
-        geometry::RenderGeometryEable, 
+        geometry::RenderGeometryEable, base::VBLoaderSlot, 
     },
 };
 
@@ -21,18 +19,22 @@ use super::{InstanceList};
 /// D: 实例数据
 /// F: 实例数据在Mesh上的脏标识
 /// S: 脏标识更新的System
-pub struct SysInstanceBufferUpdateFunc<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanceFlag + Component, S: TSystemStageInfo>(PhantomData<(D, T, F, S)>);
-impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanceFlag + Component, S: TSystemStageInfo> TSystemStageInfo for SysInstanceBufferUpdateFunc<D, T, F, S> {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            S::key(),
-        ]
-    }
-}
-#[setup]
-impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanceFlag + Component, S: TSystemStageInfo + 'static> SysInstanceBufferUpdateFunc<D, T, F, S> {
-    #[system]
-    pub fn tick(
+// pub struct SysInstanceBufferUpdateFunc<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanceFlag + Component, S: TSystemStageInfo>(PhantomData<(D, T, F, S)>);
+// impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanceFlag + Component, S: TSystemStageInfo> TSystemStageInfo for SysInstanceBufferUpdateFunc<D, T, F, S> {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             S::key(),
+//         ]
+//     }
+// }
+// #[setup]
+// impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanceFlag + Component, S: TSystemStageInfo + 'static> SysInstanceBufferUpdateFunc<D, T, F, S> {
+//     #[system]
+    pub fn sys_tick_instance_buffer_update<
+        D: TInstancedData + Component,
+        T: TInstancedBuffer + Component,
+        F: TInstanceFlag + Component
+    >(
         instances: Query<GameObject, &D>,
         mut sources: Query<
             GameObject,
@@ -44,22 +46,22 @@ impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanc
         >,
         mut geometrys: Query<GameObject, &mut T>,
         mut geo_flag_cmd: Commands<GameObject, RenderGeometryEable>,
-        mut loader_01: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot01>>,
-        mut loader_02: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot02>>,
-        mut loader_03: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot03>>,
-        mut loader_04: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot04>>,
-        mut loader_05: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot05>>,
-        mut loader_06: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot06>>,
-        mut loader_07: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot07>>,
-        mut loader_08: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot08>>,
-        mut loader_09: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot09>>,
-        mut loader_10: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot10>>,
-        mut loader_11: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot11>>,
-        mut loader_12: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot12>>,
-        mut loader_13: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot13>>,
-        mut loader_14: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot14>>,
-        mut loader_15: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot15>>,
-        mut loader_16: ResMut<VertexBufferLoader<ObjectID, AssetResVBSlot16>>,
+        mut loader_01: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot01>>,
+        mut loader_02: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot02>>,
+        mut loader_03: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot03>>,
+        mut loader_04: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot04>>,
+        mut loader_05: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot05>>,
+        mut loader_06: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot06>>,
+        mut loader_07: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot07>>,
+        mut loader_08: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot08>>,
+        mut loader_09: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot09>>,
+        mut loader_10: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot10>>,
+        mut loader_11: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot11>>,
+        mut loader_12: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot12>>,
+        mut loader_13: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot13>>,
+        mut loader_14: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot14>>,
+        mut loader_15: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot15>>,
+        mut loader_16: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot16>>,
         mut vb_data_map: ResMut<SingleVertexBufferDataMap>,
     ) {
         let time = Instant::now();
@@ -73,7 +75,7 @@ impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanc
             }
             let id_geo = id_geo.0.clone();
             if let Some(mut buffer) = geometrys.get_mut(id_geo.clone()) {
-                log::info!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.list.len());
+                log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.list.len());
                 let mut list = vec![];
                 inslist.list.iter().for_each(|insid| {
                     if let Some(instance) = instances.get(insid.clone()) {
@@ -89,14 +91,14 @@ impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanc
                     let key = buffer.id();
     
                     let data = D::collect(&list);
-                    log::info!("InstanceDataLen: {:?}", data.len());
+                    log::debug!("InstanceDataLen: {:?}", data.len());
                     let data = if data.len() > 0 {
                         Some(data)
                     } else {
                         return;
                     };
     
-                    log::info!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
+                    log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
                     match buffer.slot() {
                         EVertexBufferSlot::Slot01 => {
                             loader_01.request_instance(id_geo, &key, data, &mut vb_data_map);
@@ -152,6 +154,6 @@ impl<D: TInstancedData + Component, T: TInstancedBuffer + Component, F: TInstanc
         });
         
         let time1 = Instant::now();
-        log::info!("SysInstancedBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
+        log::debug!("SysInstancedBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
     }
-}
+// }
