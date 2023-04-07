@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use bevy::prelude::With;
 use pi_ecs::{prelude::{Query, Component, Commands}, query::{Changed, Or}};
 use pi_ecs_macros::setup;
 use pi_ecs_utils::prelude::EntityTree;
@@ -7,9 +8,9 @@ use pi_engine_shell::{run_stage::TSystemStageInfo, object::{ObjectID}};
 use pi_scene_math::coordiante_system::CoordinateSytem3;
 use pi_slotmap_tree::Storage;
 
-use crate::{transforms::{transform_node::{LocalPosition, GlobalTransform}, transform_node_sys::SysWorldMatrixCalc}};
+use crate::{transforms::{transform_node::{LocalPosition, GlobalTransform}}};
 
-use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, ViewerTransformMatrix, TViewerViewMatrix, TViewerProjectMatrix, command::SysViewerRendererCommandTick, BindViewer, ViewerDirection};
+use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, ViewerTransformMatrix, TViewerViewMatrix, TViewerProjectMatrix, BindViewer, ViewerDirection};
 
 
 // pub(crate) struct SysViewerViewMatrixByViewCalc<T: TViewerViewMatrix + Component, S: TSystemStageInfo + 'static>(PhantomData<(T, S)>);
@@ -28,7 +29,7 @@ use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, View
         mut transforms: Query<&mut GlobalTransform>,
         mut view_cmd: Commands<ViewerViewMatrix>,
         mut pos_cmd: Commands<ViewerGlobalPosition>,
-        idtree: EntityTree<GameObject>,
+        idtree: EntityTree,
     ) {
         //  log::debug!("View Matrix Calc:");
         let coordsys = CoordinateSytem3::left();
@@ -72,7 +73,7 @@ use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, View
         mut dirty_globals: Query<&mut GlobalTransform, Changed<GlobalTransform>>,
         mut view_cmd: Commands<ViewerViewMatrix>,
         mut pos_cmd: Commands<ViewerGlobalPosition>,
-        idtree: EntityTree<GameObject>,
+        idtree: EntityTree,
     ) {
         //  log::debug!("View Matrix Calc:");
         let coordsys = CoordinateSytem3::left();
@@ -254,12 +255,15 @@ use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, View
 //     S2: TSystemStageInfo + 'static
 // > SysViewerUpdated<T, S, T2, S2> {
 //     #[system]
-    fn sys_update_viewer_uniform(
+    pub fn sys_update_viewer_uniform<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
         viewers: Query<
             (&BindViewer, &ViewerViewMatrix, &ViewerProjectionMatrix, &ViewerTransformMatrix, &ViewerGlobalPosition, &ViewerDirection),
-            Or<(
-                Changed<BindViewer>, Changed<ViewerTransformMatrix>, 
-            )>
+            (
+                Or<(
+                    Changed<BindViewer>, Changed<ViewerTransformMatrix>, 
+                )>,
+                With<(T, T2)>
+            )
         >
     ) {
         viewers.iter().for_each(

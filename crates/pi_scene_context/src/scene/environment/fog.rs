@@ -1,8 +1,6 @@
 
-use pi_ecs::query::Changed;
-use pi_ecs::prelude::Query;
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::GameObject, run_stage::TSystemStageInfo};
+
+use pi_engine_shell::prelude::*;
 use pi_render::render_3d::binds::scene::effect::ShaderBindSceneAboutEffect;
 
 
@@ -131,22 +129,22 @@ impl SceneFog {
 //     }
 // }
 
-pub struct SysSceneFogUpdate;
-impl TSystemStageInfo for SysSceneFogUpdate {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysSceneCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysSceneFogUpdate {
-    #[system]
-    fn sys(
-        mut scenes: Query<GameObject, (&SceneFog, &mut BindSceneEffect), Changed<SceneFog>>,
+// pub struct SysSceneFogUpdate;
+// impl TSystemStageInfo for SysSceneFogUpdate {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysSceneCreateCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysSceneFogUpdate {
+//     #[system]
+    pub fn sys_bind_update_scene_fog(
+        mut scenes: Query<(&SceneFog, &mut BindSceneEffect), Changed<SceneFog>>,
     ) {
         scenes.iter_mut().for_each(|(item, mut bind)| {
             item.update(&mut bind);
         });
     }
-}
+// }

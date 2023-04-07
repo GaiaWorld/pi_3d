@@ -1,12 +1,10 @@
 use std::time::Instant;
 
-use pi_ecs::{prelude::{Query, Commands}, query::{Changed, Or}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{run_stage::TSystemStageInfo, object::{ObjectID, GameObject}};
+use pi_engine_shell::prelude::*;
 
-use crate::{flags::SceneID, layer_mask::LayerMask, geometry::geometry::{RenderGeometry, RenderGeometryEable}, transforms::transform_node::WorldMatrix, meshes::{model::SysRenderMatrixUpdate, abstract_mesh::AbstructMesh, Mesh}};
+use crate::{flags::SceneID, layer_mask::LayerMask, geometry::geometry::{RenderGeometry, RenderGeometryEable}, transforms::transform_node::WorldMatrix, meshes::{abstract_mesh::AbstructMesh, Mesh}};
 
-use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCulling, ViewerActive, FlagModelList};
+use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCulling, ViewerActive, FlagModelList, TViewerViewMatrix, TViewerProjectMatrix};
 
 /// * ModelList 在视口参数变化时重新搜集
 ///   * LayerMask
@@ -21,15 +19,18 @@ use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCul
 // #[setup]
 // impl SysModelListUpdateByViewer {
 //     #[system]
-    fn sys_update_viewer_model_list_by_viewer(
+    pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
         mut viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &LayerMask, &mut ModelList),
-            Or<(Changed<LayerMask>, Changed<ViewerActive>)>
+            (
+                Or<(Changed<LayerMask>, Changed<ViewerActive>)>,
+                With<(T, T2)>
+            )
         >,
         items: Query<
             (ObjectID, &SceneID, &LayerMask, &Mesh),
         >,
-        mut flag_model_cmd: Commands<GameObject, FlagModelList>,
+        mut commands: Commands,
     ) {
         let time1 = Instant::now();
 
@@ -47,7 +48,7 @@ use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCul
                 });
             }
     
-            flag_model_cmd.insert(camera, FlagModelList(true));
+            commands.entity(camera).insert(FlagModelList(true));
         });
 
         log::debug!("SysModelListUpdateByViewer: {:?}", Instant::now() - time1);
@@ -67,15 +68,16 @@ use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCul
 // #[setup]
 // impl SysModelListUpdateByModel {
 //     #[system]
-    pub fn sys_update_viewer_model_list_by_model(
+    pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
         mut viewers: Query<
-            (ObjectID, &ViewerActive, &SceneID, &LayerMask, &mut ModelList)
+            (ObjectID, &ViewerActive, &SceneID, &LayerMask, &mut ModelList),
+            With<(T, T2)>
         >,
         items: Query<
             (ObjectID, &SceneID, &LayerMask, &Mesh),
             Changed<LayerMask>,
         >,
-        mut flag_model_cmd: Commands<GameObject, FlagModelList>,
+        mut commands: Commands,
     ) {
         let time1 = Instant::now();
 
@@ -88,7 +90,7 @@ use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCul
                         list_model.0.remove(&id_obj);
                     }
 
-                    flag_model_cmd.insert(id_viewer, FlagModelList(true));
+                    commands.entity(id_viewer).insert(FlagModelList(true));
                 }
             });
         });
@@ -110,9 +112,10 @@ use super::{ModelList, ViewerGlobalPosition, ViewerViewMatrix, ModelListAfterCul
 // #[setup]
 // impl SysModelListAfterCullingTick {
 //     #[system]
-    pub fn sys_tick_viewer_culling(
+    pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
         mut viewers: Query<
             (ObjectID, &ViewerActive, &ModelList, &ViewerGlobalPosition, &ViewerViewMatrix, &mut ModelListAfterCulling),
+            With<(T, T2)>
         >,
         items: Query<
             (ObjectID, &WorldMatrix, &RenderGeometryEable)

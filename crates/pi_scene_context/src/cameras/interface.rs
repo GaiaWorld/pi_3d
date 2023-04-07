@@ -4,7 +4,8 @@ use pi_scene_math::{Number, Vector3};
 
 use crate::{object::{ObjectID}, transforms::{interface::InterfaceTransformNode}, scene::interface::InterfaceScene, renderers::graphic::RendererGraphicDesc};
 
-use super::{command::{SingleCameraCommandList, SingleTargetCameraCommandList, ECameraCommand, TargetCameraCommand, SingleCameraCreateList, ECameraCreateCommand}, camera::{EFreeCameraMode, EFixedMode}};
+use super::camera::{EFreeCameraMode, EFixedMode};
+
 
 pub trait InterfaceCamera {
     fn create_free_camera(
@@ -55,118 +56,118 @@ pub trait InterfaceCamera {
     ) -> &Self;
 }
 
-impl InterfaceCamera for EnginShell {
-    fn create_free_camera(
-        &mut self,
-        scene: ObjectID,
-    ) -> ObjectID {
+// impl InterfaceCamera for EnginShell {
+//     fn create_free_camera(
+//         &mut self,
+//         scene: ObjectID,
+//     ) -> ObjectID {
 
-        let entity = self.world.spawn_empty().id();
+//         let entity = self.world.spawn_empty().id();
 
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &self.world);
+//         let mut queue = CommandQueue::default();
+//         let mut commands = Commands::new(&mut queue, &self.world);
 
-        commands.
+//         commands.
 
-        self.add_to_scene(entity, scene);
-        self.as_transform_node(entity);
-        self.transform_parent(entity, scene);
+//         self.add_to_scene(entity, scene);
+//         self.as_transform_node(entity);
+//         self.transform_parent(entity, scene);
 
-        self.as_free_camera(entity);
+//         self.as_free_camera(entity);
 
-        entity
-    }
+//         entity
+//     }
 
-    fn as_free_camera(
-        & self,
-        object: ObjectID,
-    ) -> & Self {
-        let world = self.world();
+//     fn as_free_camera(
+//         & self,
+//         object: ObjectID,
+//     ) -> & Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleCameraCreateList>().unwrap();
-        commands.list.push(ECameraCreateCommand::FreeCamera(object));
+//         let commands = world.get_resource_mut::<SingleCameraCreateList>().unwrap();
+//         commands.list.push(ECameraCreateCommand::FreeCamera(object));
 
-        self
-    }
+//         self
+//     }
     
-    fn free_camera_mode(
-        &self,
-        object: ObjectID,
-        mode: EFreeCameraMode,
-    ) -> & Self {
-        let world = self.world();
+//     fn free_camera_mode(
+//         &self,
+//         object: ObjectID,
+//         mode: EFreeCameraMode,
+//     ) -> & Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
-        commands.list.push(ECameraCommand::ModifyMode(object, mode));
+//         let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
+//         commands.list.push(ECameraModifyCommand::ModifyMode(object, mode));
 
-        self
-    }
+//         self
+//     }
     
     
-    fn camera_fixed_mode(
-        &self,
-        object: ObjectID,
-        mode: EFixedMode,
-    ) -> & Self {
-        let world = self.world();
+//     fn camera_fixed_mode(
+//         &self,
+//         object: ObjectID,
+//         mode: EFixedMode,
+//     ) -> & Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
-        commands.list.push(ECameraCommand::ModifyFixedMode(object, mode));
+//         let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
+//         commands.list.push(ECameraModifyCommand::ModifyFixedMode(object, mode));
 
-        self
-    }
+//         self
+//     }
     
-    fn free_camera_orth_size(
-        & self,
-        object: ObjectID,
-        size: Number,
-    ) -> & Self {
-        let world = self.world();
+//     fn free_camera_orth_size(
+//         & self,
+//         object: ObjectID,
+//         size: Number,
+//     ) -> & Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
-        commands.list.push(ECameraCommand::ModifyOrthSize(object, size));
+//         let commands = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
+//         commands.list.push(ECameraModifyCommand::ModifyOrthSize(object, size));
 
-        self
-    }
+//         self
+//     }
 
-    fn camera_target(
-        & self,
-        object: ObjectID,
-        value: Vector3,
-    ) -> &Self {
-        let world = self.world();
+//     fn camera_target(
+//         & self,
+//         object: ObjectID,
+//         value: Vector3,
+//     ) -> &Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleTargetCameraCommandList>().unwrap();
-        commands.list.push(TargetCameraCommand::Target(object, value));
+//         let commands = world.get_resource_mut::<SingleTargetCameraCommandList>().unwrap();
+//         commands.list.push(TargetCameraCommand::Target(object, value));
 
-        self
-    }
+//         self
+//     }
 
-    fn active_camera(
-        & self,
-        object: ObjectID,
-        flag: bool,
-    ) -> &Self {
-        let world = self.world();
+//     fn active_camera(
+//         & self,
+//         object: ObjectID,
+//         flag: bool,
+//     ) -> &Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleCameraCreateList>().unwrap();
-        commands.list.push(ECameraCreateCommand::Active(object, flag));
+//         let commands = world.get_resource_mut::<SingleCameraCreateList>().unwrap();
+//         commands.list.push(ECameraCreateCommand::Active(object, flag));
 
-        self
-    }
+//         self
+//     }
     
-    fn camera_renderer(
-        &self,
-        id_viewer: ObjectID,
-        param: RendererGraphicDesc,
-    ) -> &Self {
-        let world = self.world();
+//     fn camera_renderer(
+//         &self,
+//         id_viewer: ObjectID,
+//         param: RendererGraphicDesc,
+//     ) -> &Self {
+//         let world = self.world();
 
-        let id_render = self.new_object();
+//         let id_render = self.new_object();
 
-        let cmds = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
-        cmds.list.push(ECameraCommand::Renderer(id_viewer, id_render, param));
+//         let cmds = world.get_resource_mut::<SingleCameraCommandList>().unwrap();
+//         cmds.list.push(ECameraModifyCommand::Renderer(id_viewer, id_render, param));
 
-        self
-    }
-}
+//         self
+//     }
+// }

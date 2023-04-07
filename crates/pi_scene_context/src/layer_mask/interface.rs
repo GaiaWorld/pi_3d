@@ -10,17 +10,17 @@ pub trait InterfaceLayerMask {
     ) -> & Self;
 }
 
-impl InterfaceLayerMask for crate::engine::Engine {
-    fn layer_mask(
-        & self,
-        object: ObjectID,
-        layer: LayerMask,
-    ) -> & Self {
-        let world = self.world();
+// impl InterfaceLayerMask for crate::engine::Engine {
+//     fn layer_mask(
+//         & self,
+//         object: ObjectID,
+//         layer: LayerMask,
+//     ) -> & Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleLayerMaskCommandList>().unwrap();
-        commands.list.push(LayerMaskCommand::Set(object, layer));
+//         let commands = world.get_resource_mut::<SingleLayerMaskCommandList>().unwrap();
+//         commands.list.push(LayerMaskCommand::Set(object, layer));
 
-        self
-    }
-}
+//         self
+//     }
+// }

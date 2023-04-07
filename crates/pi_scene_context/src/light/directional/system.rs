@@ -13,14 +13,14 @@ use super::DirectionalShadowProjection;
 // #[setup]
 // impl SysDirectionalShadowModify {
 //     #[system]
-    fn sys_directional_light_shadow_modify(
+    pub fn sys_directional_light_shadow_modify(
         lights: Query<(ObjectID, &Light, &ShadowMinZ, &ShadowMaxZ, &ShadowFrustumSize), Or<(Changed<Light>, Changed<ShadowMinZ>, Changed<ShadowMaxZ>, Changed<ShadowFrustumSize>)>>,
-        mut param_cmd: Commands<GameObject, DirectionalShadowProjection>,
+        mut commands: Commands,
     ) {
         lights.iter().for_each(|(id_light, light, minz, maxz, size)| {
             match light {
                 Light::Directional => {
-                    param_cmd.insert(id_light, DirectionalShadowProjection { minz: minz.0, maxz: maxz.0, frustum_size: size.0 });
+                    commands.entity(id_light).insert(DirectionalShadowProjection { minz: minz.0, maxz: maxz.0, frustum_size: size.0 });
                 },
                 Light::Point => {},
                 Light::Spot => {},

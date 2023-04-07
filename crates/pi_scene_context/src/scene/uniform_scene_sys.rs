@@ -1,15 +1,14 @@
-use pi_ecs::prelude::{Query, ResMut};
-use pi_ecs_macros::setup;
+use pi_engine_shell::prelude::*;
 
 use crate::{object::GameObject, environment::{fog::SceneFog, ambient_light::AmbientLight}, scene::scene_time::SceneTime};
 
-pub struct SceneUniformTickUpdate;
-#[setup]
-impl SceneUniformTickUpdate {
-    #[system]
-    pub fn tick(
-        query_scenes: Query<GameObject, (&SceneTime, &SceneFog, &AmbientLight)>,
-        mut dynbuffer: ResMut<render_resource::uniform_buffer::RenderDynUniformBuffer>,
+// pub struct SceneUniformTickUpdate;
+// #[setup]
+// impl SceneUniformTickUpdate {
+//     #[system]
+    pub fn sys_uniform_scene(
+        query_scenes: Query<(&SceneTime, &SceneFog, &AmbientLight)>,
+        mut dynbuffer: ResMut<RenderDynUniformBuffer>,
     ) {
         //  log::debug!("Scene Uniform Tick Update");
         query_scenes.iter().for_each(|(time, fog, ambl)| {
@@ -18,4 +17,4 @@ impl SceneUniformTickUpdate {
             dynbuffer.set_uniform::<AmbientLight>(&ambl.bind_offset, ambl);
         });
     }
-}
+// }

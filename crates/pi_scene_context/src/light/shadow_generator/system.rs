@@ -1,7 +1,18 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{materials::{material::MaterialID, uniforms::{uniform::{BindEffectValues, BindEffectValueDirty}, sys_uniform::SysMaterialMetaChange}, command::{SingleMaterialIDCommandList, EMaterialIDCommand}}, pass::{Pass01, PassID01}, viewer::{ModelList, FlagModelList, sys_culling::{SysModelListUpdateByModel, SysModelListUpdateByViewer}}};
+use crate::{
+    materials::{
+        material::{MaterialID, MaterialUsedList},
+        uniforms::{uniform::{BindEffectValues, BindEffectValueDirty}},
+        command::{EMaterialIDCommand, ActionMaterial}
+    },
+    pass::{Pass01, PassID01},
+    viewer::{
+        ModelList,
+        FlagModelList,
+    }
+};
 
 use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormalBias, ShadowDepthScale};
 
@@ -17,17 +28,15 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
 // #[setup]
 // impl SysShadowParamUpdateWhileMatCreate {
 //     #[system]
-    fn sys_shadow_param_update_while_mat_create(
+    pub fn sys_shadow_param_update_while_mat_create(
         shadows: Query<
-            GameObject,
             (&MaterialID, &ShadowEnable, &ShadowMinZ, &ShadowMaxZ, &ShadowBias, &ShadowNormalBias, &ShadowDepthScale),
         >,
         mut materails: Query<
-            GameObject,
             &mut BindEffectValues,
             Changed<BindEffectValues>,
         >,
-        mut bind_dirty: Commands<GameObject, BindEffectValueDirty>,
+        mut bind_dirty: Commands<BindEffectValueDirty>,
     ) {
         shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if let Some(mut bind) = materails.get_mut(id_mat.0.clone()) {
@@ -50,26 +59,24 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
 // #[setup]
 // impl SysShadowParamUpdate {
 //     #[system]
-    fn sys_shadow_param_update(
+    pub fn sys_shadow_param_update(
         shadows: Query<
-            GameObject,
             (&MaterialID, &ShadowEnable, &ShadowMinZ, &ShadowMaxZ, &ShadowBias, &ShadowNormalBias, &ShadowDepthScale),
             Or<(
                 Changed<MaterialID>, Changed<ShadowEnable>, Changed<ShadowMinZ>, Changed<ShadowMaxZ>, Changed<ShadowBias>, Changed<ShadowNormalBias>, Changed<ShadowDepthScale>, 
             )>
         >,
         mut materails: Query<
-            GameObject,
             &mut BindEffectValues
         >,
-        mut bind_dirty: Commands<GameObject, BindEffectValueDirty>,
+        mut commands: Commands,
     ) {
         shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if enable.0 {
                 if let Some(mut bind) = materails.get_mut(id_mat.0.clone()) {
                     bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
                     bind.vec2(0, &[**minz, **minz + **maxz]);
-                    bind_dirty.insert(id_mat.0.clone(), BindEffectValueDirty(true));
+                    commands.entity(id_mat.0).insert(BindEffectValueDirty(true));
                 }
             }
         });
@@ -88,20 +95,23 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
 // #[setup]
 // impl SysShadowGeneratorAppyWhileShadowModify {
 //     #[system]
-    fn sys_shadow_generator_apply_while_shadow_modify(
+    pub fn sys_shadow_generator_apply_while_shadow_modify(
         shadows: Query<
-            GameObject,
             (&MaterialID, &ShadowEnable, &ModelList),
             Or<(
                 Changed<MaterialID>, Changed<ShadowEnable>, Changed<FlagModelList>, 
             )>
         >,
-        mut commands: ResMut<SingleMaterialIDCommandList>,
+        mut materail: Query<&mut MaterialUsedList>,
+        mut commands: Commands,
     ) {
         shadows.iter().for_each(|(id_mat, enable, modelist)| {
             if enable.0 {
                 modelist.0.iter().for_each(|(id_model, _)| {
-                    commands.list.push(EMaterialIDCommand::Use(id_model.clone(), id_mat.clone()));
+                    if let Some(mut uselist) = materail.get_mut(id_mat.0) {
+                        let mut entitycmd = commands.entity(id_mat.0);
+                        ActionMaterial::use_material(&mut entitycmd, id_model.0, &mut uselist);
+                    }
                 });
             } else {
                 

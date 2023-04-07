@@ -3,8 +3,6 @@ use pi_engine_shell::prelude::*;
 
 use crate::object::ObjectID;
 
-use self::enable::SingleEnableCommands;
-
 pub mod enable;
 
 
@@ -34,6 +32,6 @@ pub struct Enable(pub bool);
 pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
-        app.world.insert_resource(SingleEnableCommands::default());
+        // app.world.insert_resource(SingleEnableCommands::default());
     }
 }

@@ -1,13 +1,11 @@
 
-use pi_ecs::{prelude::{ResMut, Commands, Setup}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
+
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{
     Vector3,
 };
-use crate::{object::{ObjectID, GameObject}};
 
-use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, bounding::BoundingInfo, sys::SysCameraCulling};
+use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, bounding::BoundingInfo};
 
 pub mod bounding_box;
 pub mod bounding_sphere;
@@ -38,49 +36,43 @@ pub trait TIntersect {
 
 #[derive(Debug)]
 pub enum CullingCommand {
-    Bounding(ObjectID, Vector3, Vector3),
-}
-#[derive(Debug, Default)]
-pub struct SingleCullingCommandList {
-    pub list: Vec<CullingCommand>,
+    Bounding(Vector3, Vector3),
 }
 
-pub struct SysCullingCommand;
-impl TSystemStageInfo for SysCullingCommand {
-
-}
-#[setup]
-impl SysCullingCommand {
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleCullingCommandList>,
-        mut objects: Commands<GameObject, BoundingInfo>,
+pub struct ActionCulling;
+impl ActionCulling {
+    pub fn modify(
+        entitycmd: &mut EntityCommands,
+        action: CullingCommand,
     ) {
-        cmds.list.drain(..).for_each(|cmd| {
-            match cmd {
-                CullingCommand::Bounding(entity, min, max) => {
-                    objects.insert(entity, BoundingInfo::new(min, max));
-                },
+        match action {
+            CullingCommand::Bounding(min, max) => {
+                entitycmd.insert(BoundingInfo::new(min, max));
             }
-        })
+        }
     }
 }
 
+
 pub struct PluginCulling;
-impl crate::Plugin for PluginCulling {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
+impl Plugin for PluginCulling {
+    // fn init(
+    //     &mut self,
+    //     engine: &mut crate::engine::Engine,
+    //     stages: &mut crate::run_stage::RunStage,
+    // ) -> Result<(), crate::plugin::ErrorPlugin> {
+    //     let world = engine.world_mut();
 
-        SysCullingCommand::setup(world, stages.query_stage::<SysCullingCommand>(ERunStageChap::Initial));
-        SysCameraCulling::setup(world, stages.query_stage::<SysCameraCulling>(ERunStageChap::Command));
+    //     SysCullingCommand::setup(world, stages.query_stage::<SysCullingCommand>(ERunStageChap::Initial));
+    //     SysCameraCulling::setup(world, stages.query_stage::<SysCameraCulling>(ERunStageChap::Command));
 
-        world.insert_resource(SingleCullingCommandList::default());
+    //     world.insert_resource(SingleCullingCommandList::default());
 
-        Ok(())
+    //     Ok(())
+    // }
+
+    fn build(&self, app: &mut App) {
+        // todo!()
     }
 }
 
@@ -93,19 +85,19 @@ pub trait InterfaceBoundingInfo {
     );
 }
 
-impl InterfaceBoundingInfo for crate::engine::Engine {
-    fn set_bounding(
-        &mut self,
-        object: ObjectID,
-        min: Vector3,
-        max: Vector3,
-    ) {
-        let world = self.world();
+// impl InterfaceBoundingInfo for crate::engine::Engine {
+//     fn set_bounding(
+//         &mut self,
+//         object: ObjectID,
+//         min: Vector3,
+//         max: Vector3,
+//     ) {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleCullingCommandList>().unwrap();
-        commands.list.push(CullingCommand::Bounding(object, min, max));
-    }
-}
+//         let commands = world.get_resource_mut::<SingleCullingCommandList>().unwrap();
+//         commands.list.push(CullingCommand::Bounding(object, min, max));
+//     }
+// }
 
 // pub trait InterfaceBoundingInfo<T>
 //     where T: TEngine

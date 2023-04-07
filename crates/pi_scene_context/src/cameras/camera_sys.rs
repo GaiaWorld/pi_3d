@@ -15,16 +15,15 @@ use super::{camera::{EFreeCameraMode, CameraFov, CameraNearFar, CameraOrthSize, 
 // impl TargetCameraEffectLocalRotation {
 //     #[system]
     pub fn sys_calc_target_camera_local_rot(
-        query_cameras: Query<(ObjectID, &TargetCameraParam, &LocalPosition)>,
+        query_cameras: Query<(ObjectID, &TargetCameraParam, &LocalPosition), Changed<TargetCameraParam>>,
         mut rot_cmd: Commands,
     ) {
-        //  log::debug!("Target Camera Control Calc:");
-        let coordsys = CoordinateSytem3::left();
-        query_cameras.iter().for_each(|(obj, target_camera, lposition)| {
-            let mut rotation = Rotation3::identity();
-            target_camera.calc_rotation(&coordsys, &lposition.0, &mut rotation);
-            rot_cmd.insert(obj, LocalRotation(rotation));
-        });
+        // let coordsys = CoordinateSytem3::left();
+        // query_cameras.iter().for_each(|(obj, target_camera, lposition)| {
+        //     let mut rotation = Rotation3::identity();
+        //     target_camera.calc_rotation(&coordsys, &lposition.0, &mut rotation);
+        //     rot_cmd.insert(obj, LocalRotation(rotation));
+        // });
     }
 // }
 
@@ -47,11 +46,11 @@ use super::{camera::{EFreeCameraMode, CameraFov, CameraNearFar, CameraOrthSize, 
             ),
             Or<(Changed<EFreeCameraMode>, Changed<CameraFov>, Changed<CameraNearFar>, Changed<CameraOrthSize>, Changed<EFixedMode>, Changed<CameraViewport>)>
         >,
-        mut param_cmd: Commands,
+        mut commands: Commands,
     ) {
         cameras.iter().for_each(|(id_camera, mode, fov, nearfar, size, fixmode, viewport)| {
             let param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
-            param_cmd.insert(id_camera, param);
+            commands.entity(id_camera).insert(param);
         });
     }
 // }
@@ -62,15 +61,15 @@ use super::{camera::{EFreeCameraMode, CameraFov, CameraNearFar, CameraOrthSize, 
 // #[setup]
 // impl SyeCameraRenderSizeUpdate {
 //     #[system]
-    fn sys_change_camera_render_size(
+    pub fn sys_change_camera_render_size(
         window: Res<PiRenderWindow>,
         cameras: Query<&ViewerRenderersInfo, With<Camera>>,
-        mut rendersize_cmd: Commands,
+        mut commands: Commands,
     ) {
         let size = window.inner_size();
         cameras.iter().for_each(|renderers| {
             renderers.map.iter().for_each(|(k, v)| {
-                rendersize_cmd.insert(v.1.0, RenderSize::new(size.width, size.height));
+                commands.entity(v.1.0).insert(RenderSize::new(size.width, size.height));
             });
         });
     }

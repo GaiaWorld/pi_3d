@@ -1,7 +1,6 @@
 
-use pi_ecs::{prelude::Query, query::Changed};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::GameObject, run_stage::TSystemStageInfo};
+
+use pi_engine_shell::prelude::*;
 use pi_render::render_3d::binds::scene::effect::ShaderBindSceneAboutEffect;
 
 use super::BindSceneEffect;
@@ -41,22 +40,22 @@ impl AmbientLight {
     }
 }
 
-pub struct SysSceneAmbientUpdate;
-impl TSystemStageInfo for SysSceneAmbientUpdate {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysSceneCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysSceneAmbientUpdate {
-    #[system]
-    fn sys(
-        mut scenes: Query<GameObject, (&AmbientLight, &mut BindSceneEffect), Changed<AmbientLight>>,
+// pub struct SysSceneAmbientUpdate;
+// impl TSystemStageInfo for SysSceneAmbientUpdate {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysSceneCreateCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysSceneAmbientUpdate {
+//     #[system]
+    pub fn sys_bind_update_scene_ambient(
+        mut scenes: Query<(&AmbientLight, &mut BindSceneEffect), Changed<AmbientLight>>,
     ) {
         scenes.iter_mut().for_each(|(item, mut bind)| {
             item.update(&mut bind);
         });
     }
-}
+// }

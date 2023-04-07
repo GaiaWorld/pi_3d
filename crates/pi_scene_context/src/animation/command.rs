@@ -5,9 +5,7 @@ use pi_animation::{animation::AnimationInfo, loop_mode::ELoopMode, amount::Anima
 
 use pi_atom::Atom;
 use pi_curves::curve::{frame::{KeyFrameCurveValue}, FramePerSecond, FrameIndex};
-use pi_ecs::prelude::{Query, ResMut};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{ObjectID, GameObject}, run_stage::{TSystemStageInfo}};
+use pi_engine_shell::prelude::*;
 
 use crate::{flags::SceneID};
 
@@ -43,8 +41,8 @@ pub(crate) struct SingleModifyCommands(pub(crate) Vec<EModifyCommand>);
 //     #[system]
     pub(crate) fn sys_anime_control_cmds(
         mut cmds: ResMut<SingleControlCommands>,
-        mut sce: Query<GameObject, &mut SceneAnimationContext>,
-        mut obj: Query<GameObject, (&SceneID, &mut AnimationGroups)>,
+        mut sce: Query<&mut SceneAnimationContext>,
+        mut obj: Query<(&SceneID, &mut AnimationGroups)>,
     ) {
         let mut list = replace(&mut cmds.0, vec![]);
 

@@ -13,7 +13,7 @@ use super::{
     vertex_buffer_useinfo::*,
     GeometryDesc,
     geometry::{RenderGeometry, RenderGeometryEable},
-    SysVertexBufferLoad
+    sys_vertex_buffer_loaded
 };
 
 // pub struct SysGeometryStatesInit;
@@ -39,17 +39,17 @@ use super::{
 //             (ObjectID, &MeshID, &GeometryDesc, &EInstanceCode),
 //             Changed<GeometryDesc>,
 //         >,
-//         mut slot_cmd: Commands<GameObject, D>,
-//         mut res_cmd: Commands<GameObject, D1>,
+//         mut slot_cmd: Commands<D>,
+//         mut res_cmd: Commands<D1>,
 //         mut vb_data_map: ResMut<SingleVertexBufferDataMap>,
 //         mut loader_01: ResMut<VertexBufferLoader<ObjectID, D1>>,
 //         asset_mgr: Res<Share<AssetMgr<EVertexBufferRange>>>,
 //         mut instance_source_record: ResMut<InstanceSourceRecord>,
-//         mut geo_enable_cmd: Commands<GameObject, RenderGeometryEable>,
-//         mut ins_wm_cmd: Commands<GameObject, InstancedBufferWorldMatrix>,
-//         mut ins_color_cmd: Commands<GameObject, InstancedBufferColor>,
-//         mut ins_tilloff_cmd: Commands<GameObject, InstancedBufferTillOff>,
-//         mut instance_cmd: Commands<GameObject, EInstanceCode>,
+//         mut geo_enable_cmd: Commands<RenderGeometryEable>,
+//         mut ins_wm_cmd: Commands<InstancedBufferWorldMatrix>,
+//         mut ins_color_cmd: Commands<InstancedBufferColor>,
+//         mut ins_tilloff_cmd: Commands<InstancedBufferTillOff>,
+//         mut instance_cmd: Commands<EInstanceCode>,
 //     ) {
 //         items.iter_mut().for_each(|(
 //             id_geo, id_mesh,
@@ -136,7 +136,6 @@ use super::{
 //     #[system]
     pub fn sys_vertex_buffer_change_01(
         items: Query<
-            GameObject,
             (   
                 ObjectID
                 , &MeshID
@@ -150,8 +149,8 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<GameObject, RenderGeometry>,
-        mut geoenable_cmd: Commands<GameObject, RenderGeometryEable>,
+        mut geo_cmd: Commands<RenderGeometry>,
+        mut geoenable_cmd: Commands<RenderGeometryEable>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot1: ");
         items.iter().for_each(|(
@@ -181,7 +180,6 @@ use super::{
 //     #[system]
     pub fn sys_vertex_buffer_change_02(
         items: Query<
-            GameObject,
             (   
                 ObjectID
                 , &MeshID
@@ -196,8 +194,8 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<GameObject, RenderGeometry>,
-        mut geoenable_cmd: Commands<GameObject, RenderGeometryEable>,
+        mut geo_cmd: Commands<RenderGeometry>,
+        mut geoenable_cmd: Commands<RenderGeometryEable>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot2: ");
         items.iter().for_each(|(
@@ -229,7 +227,6 @@ use super::{
 //     #[system]
     pub fn sys_vertex_buffer_change_03(
         items: Query<
-            GameObject,
             (   
                 ObjectID
                 , &MeshID
@@ -247,8 +244,8 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<GameObject, RenderGeometry>,
-        mut geoenable_cmd: Commands<GameObject, RenderGeometryEable>,
+        mut geo_cmd: Commands<RenderGeometry>,
+        mut geoenable_cmd: Commands<RenderGeometryEable>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot3: ");
         items.iter().for_each(|(
@@ -281,7 +278,6 @@ use super::{
 //     #[system]
     pub fn sys_vertex_buffer_change_04(
         items: Query<
-            GameObject,
             (   
                 ObjectID
                 , &MeshID
@@ -301,8 +297,8 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<GameObject, RenderGeometry>,
-        mut geoenable_cmd: Commands<GameObject, RenderGeometryEable>,
+        mut geo_cmd: Commands<RenderGeometry>,
+        mut geoenable_cmd: Commands<RenderGeometryEable>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot4: ");
         items.iter().for_each(|(
@@ -338,7 +334,6 @@ use super::{
 //     #[system]
     pub fn sys_vertex_buffer_change_05(
         items: Query<
-            GameObject,
             (   
                 ObjectID
                 , &MeshID
@@ -360,8 +355,8 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<GameObject, RenderGeometry>,
-        mut geoenable_cmd: Commands<GameObject, RenderGeometryEable>,
+        mut geo_cmd: Commands<RenderGeometry>,
+        mut geoenable_cmd: Commands<RenderGeometryEable>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot5: ");
         items.iter().for_each(|(
@@ -400,7 +395,6 @@ use super::{
 //     #[system]
     pub fn sys_vertex_buffer_change_06(
         items: Query<
-            GameObject,
             (   
                 ObjectID
                 , &MeshID
@@ -424,8 +418,8 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<GameObject, RenderGeometry>,
-        mut geoenable_cmd: Commands<GameObject, RenderGeometryEable>,
+        mut geo_cmd: Commands<RenderGeometry>,
+        mut geoenable_cmd: Commands<RenderGeometryEable>,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot6: ");
         items.iter().for_each(|(
@@ -485,13 +479,16 @@ impl Plugin for PluginVertexBuffers {
     fn build(&self, app: &mut App) {
         app.add_systems(
             (
-                sys_vertex_buffer_change_01,
-                sys_vertex_buffer_change_02,
-                sys_vertex_buffer_change_03,
-                sys_vertex_buffer_change_04,
-                sys_vertex_buffer_change_05,
-                sys_vertex_buffer_change_06,
-            ).in_set(ERunStageChap::Draw)
+                sys_vertex_buffer_loaded.in_set(ERunStageChap::Command),
+                (
+                    sys_vertex_buffer_change_01,
+                    sys_vertex_buffer_change_02,
+                    sys_vertex_buffer_change_03,
+                    sys_vertex_buffer_change_04,
+                    sys_vertex_buffer_change_05,
+                    sys_vertex_buffer_change_06,
+                ).in_set(ERunStageChap::Draw)
+            )
         )
     }
 }

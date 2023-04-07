@@ -13,6 +13,16 @@ pub struct SingleLayerMaskCommandList {
     pub list: Vec<LayerMaskCommand>,
 }
 
+pub struct ActionLayerMask;
+impl ActionLayerMask {
+    pub fn modify(
+        commands: &mut EntityCommands,
+        value: LayerMask,
+    ) {
+        commands.insert(value);
+    }
+}
+
 // pub struct SysLayerMaskCommand;
 // impl TSystemStageInfo for SysLayerMaskCommand {
     
@@ -20,16 +30,16 @@ pub struct SingleLayerMaskCommandList {
 // #[setup]
 // impl SysLayerMaskCommand {
 //     #[system]
-    pub fn sys_cmd_layer_mask(
-        mut cmds: ResMut<SingleLayerMaskCommandList>,
-        mut layer_cmd: Commands<GameObject, LayerMask>,
-    ) {
-        cmds.list.drain(..).for_each(|cmd| {
-            match cmd {
-                LayerMaskCommand::Set(entity, layer) => {
-                    layer_cmd.insert(entity, layer);
-                },
-            }
-        });
-    }
+    // pub fn sys_cmd_layer_mask(
+    //     mut cmds: ResMut<SingleLayerMaskCommandList>,
+    //     mut layer_cmd: Commands<GameObject, LayerMask>,
+    // ) {
+    //     cmds.list.drain(..).for_each(|cmd| {
+    //         match cmd {
+    //             LayerMaskCommand::Set(entity, layer) => {
+    //                 layer_cmd.insert(entity, layer);
+    //             },
+    //         }
+    //     });
+    // }
 // }

@@ -35,17 +35,15 @@ use super::{InstanceList};
         T: TInstancedBuffer + Component,
         F: TInstanceFlag + Component
     >(
-        instances: Query<GameObject, &D>,
+        instances: Query<&D>,
         mut sources: Query<
-            GameObject,
             (
                 ObjectID,
                 &InstanceList, &GeometryID, &mut F,
             ),
             Changed<F>
         >,
-        mut geometrys: Query<GameObject, &mut T>,
-        mut geo_flag_cmd: Commands<GameObject, RenderGeometryEable>,
+        mut geometrys: Query<&mut T>,
         mut loader_01: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot01>>,
         mut loader_02: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot02>>,
         mut loader_03: ResMut<VBLoaderSlot<ObjectID, AssetResVBSlot03>>,

@@ -1,8 +1,13 @@
-
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRotation}, coordiante_system::CoordinateSytem3, Isometry3, Number, Rotation3, Translation3};
 
 use crate::viewer::{TViewerViewMatrix, ViewerGlobalPosition, ViewerViewMatrix};
 
+#[derive(Debug, Deref, DerefMut)]
+pub struct CameraUp(pub Vector3);
+
+#[derive(Debug, Deref, DerefMut)]
+pub struct CameraTarget(pub Vector3);
 
 /// 通过 设置 target 目标点 调整相机
 /// * 计算 节点 `rotation`, `local position`
@@ -20,6 +25,19 @@ impl Default for TargetCameraParam {
         Self {
             target: Vector3::new(0., 0., 1.),
             up: CoordinateSytem3::up(),
+            ignore_parent_scale: true,
+            dirty: true,
+        }
+    }
+}
+impl TargetCameraParam {
+    pub fn create(
+        up: Vector3,
+        target: Vector3,
+    ) -> Self {
+        Self {
+            target,
+            up,
             ignore_parent_scale: true,
             dirty: true,
         }

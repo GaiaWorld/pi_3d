@@ -5,7 +5,7 @@
 
 use pi_engine_shell::plugin::*;
 
-use self::command::{SysLayerMaskCommand, SingleLayerMaskCommandList, sys_cmd_layer_mask};
+use self::command::*;
 
 pub mod command;
 pub mod interface;
@@ -41,8 +41,8 @@ impl Plugin for PluginLayerMask {
 
     fn build(&self, app: &mut pi_engine_shell::prelude::App) {
         
-        app.add_system(sys_cmd_layer_mask.in_set(ERunStageChap::Initial));
+        // app.add_system(sys_cmd_layer_mask.in_set(ERunStageChap::Initial));
 
-        app.world.insert_resource(SingleLayerMaskCommandList::default());
+        // app.world.insert_resource(SingleLayerMaskCommandList::default());
     }
 }

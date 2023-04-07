@@ -24,7 +24,7 @@ use crate::{object::ObjectID, plugin::Plugin, meshes::command::SysMeshCreateComm
 use self::{
     vertex_buffer_useinfo::*,
     sys_vertex_buffer_use::{PluginVertexBuffers},
-    geometry::RenderGeometryEable, load::SysVertexBufferLoad, instance::{InstanceSourceRecord, instance_world_matrix::InstancedBufferWorldMatrix, instance_color::InstancedBufferColor, instance_tilloff::InstancedBufferTillOff}, base::{VBLoaderSlot, VBAllocator}
+    geometry::RenderGeometryEable, load::sys_vertex_buffer_loaded, instance::{InstanceSourceRecord, instance_world_matrix::InstancedBufferWorldMatrix, instance_color::InstancedBufferColor, instance_tilloff::InstancedBufferTillOff}, base::{VBLoaderSlot, VBAllocator}
 };
 
 pub mod base;
@@ -65,68 +65,98 @@ pub trait TInterfaceGeomtery {
     ) -> &Self;
 }
 
-impl TInterfaceGeomtery for EnginShell {
-    fn create_vertex_buffer(
-        &self,
-        key: KeyVertexBuffer,
-        buffer: Vec<u8>,
-    ) -> &Self {
-        let world = self.world();
-        let assert_mgr = world.get_resource::<Share<AssetMgr<EVertexBufferRange>>>().unwrap();
-        if !assert_mgr.check_asset(&key) {
-            let data_map = world.get_resource_mut::<SingleVertexBufferDataMap>().unwrap();
-            data_map.add(&key, buffer);
-        }
+// impl TInterfaceGeomtery for EnginShell {
+//     fn create_vertex_buffer(
+//         &self,
+//         key: KeyVertexBuffer,
+//         buffer: Vec<u8>,
+//     ) -> &Self {
+//         let world = self.world();
+//         let assert_mgr = world.get_resource::<Share<AssetMgr<EVertexBufferRange>>>().unwrap();
+//         if !assert_mgr.check_asset(&key) {
+//             let data_map = world.get_resource_mut::<SingleVertexBufferDataMap>().unwrap();
+//             data_map.add(&key, buffer);
+//         }
 
-        self
-    }
-    fn use_geometry(
-        &self,
-        entity: ObjectID,
-        descs: Vec<VertexBufferDesc>,
-        indices: Option<IndicesBufferDesc>,
-    ) -> &Self {
-        let commands = self.world().get_resource_mut::<SingleGeometryVBCommands>().unwrap();
-        commands.0.push(ECommand::Desc(entity, descs, indices));
+//         self
+//     }
+//     fn use_geometry(
+//         &self,
+//         entity: ObjectID,
+//         descs: Vec<VertexBufferDesc>,
+//         indices: Option<IndicesBufferDesc>,
+//     ) -> &Self {
+//         let commands = self.world().get_resource_mut::<SingleGeometryVBCommands>().unwrap();
+//         commands.0.push(ECommand::Desc(entity, descs, indices));
 
-        self
-    }
-}
+//         self
+//     }
+// }
 
 pub struct PluginGeometry;
 impl Plugin for PluginGeometry {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
-        world.insert_resource(SingleGeometryVBCommands::default());
-        world.insert_resource(VBAllocator::new());
-        world.insert_resource(AssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+    // fn init(
+    //     &mut self,
+    //     engine: &mut crate::engine::Engine,
+    //     stages: &mut crate::run_stage::RunStage,
+    // ) -> Result<(), crate::plugin::ErrorPlugin> {
+    //     let world = engine.world_mut();
+    //     world.insert_resource(SingleGeometryVBCommands::default());
+    //     world.insert_resource(VBAllocator::new());
+    //     world.insert_resource(AssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
 
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot01>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot02>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot03>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot04>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot05>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot06>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot07>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot08>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot09>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot10>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot11>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot12>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot13>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot14>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot15>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot16>::default());
-        world.insert_resource(VBLoaderSlot::<ObjectID, AssetResBufferIndices>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot01>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot02>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot03>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot04>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot05>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot06>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot07>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot08>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot09>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot10>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot11>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot12>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot13>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot14>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot15>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot16>::default());
+    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResBufferIndices>::default());
 
-        SysGeometryVBCommand::setup(world, stages.query_stage::<SysGeometryVBCommand>(ERunStageChap::Initial));
-        SysVertexBufferLoad::setup(world, stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Draw));
-        PluginVertexBuffers.init(engine, stages);
+    //     SysGeometryVBCommand::setup(world, stages.query_stage::<SysGeometryVBCommand>(ERunStageChap::Initial));
+    //     SysVertexBufferLoad::setup(world, stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Draw));
+    //     PluginVertexBuffers.init(engine, stages);
 
-        Ok(())
+    //     Ok(())
+    // }
+
+    fn build(&self, app: &mut bevy::prelude::App) {
+        // app.world.insert_resource(SingleGeometryVBCommands::default());
+        app.world.insert_resource(VBAllocator::new());
+        app.world.insert_resource(AssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+        
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot01>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot02>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot03>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot04>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot05>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot06>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot07>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot08>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot09>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot10>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot11>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot12>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot13>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot14>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot15>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot16>::default());
+        app.world.insert_resource(VBLoaderSlot::<ObjectID, AssetResBufferIndices>::default());
+
+        app.add_system(
+            sys_vertex_buffer_loaded
+        );
+
+        app.add_plugin(PluginVertexBuffers);
     }
 }

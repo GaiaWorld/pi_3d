@@ -1,9 +1,9 @@
 use std::{fmt::Debug};
 
 use pi_atom::Atom;
-use pi_engine_shell::object::ObjectID;
+use pi_bevy_render_plugin::NodeId;
+use pi_engine_shell::prelude::*;
 use pi_hash::DefaultHasher;
-use pi_render::graph::{graph::RenderGraph, NodeId};
 
 use crate::{viewer::command::Viewport};
 
@@ -28,6 +28,7 @@ pub struct RenderColorClear(pub wgpu::Color);
 pub struct RenderDepthFormat(pub Option<wgpu::TextureFormat>);
 pub struct RenderDepthClear(pub f32);
 
+#[derive(Component)]
 pub struct Renderer {
     pub ready: bool,
     pub viewport: Viewport,
@@ -38,7 +39,7 @@ impl Renderer {
     pub fn new(
         name: &Atom,
         object_id: ObjectID,
-        rg: &mut RenderGraph,
+        rg: &mut PiRenderGraph,
     ) -> Self {
         let opaque_graphic = rg.add_node(String::from(name.as_str()), RenderNode::new(object_id)).unwrap();
         Self {

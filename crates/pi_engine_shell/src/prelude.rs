@@ -1,10 +1,10 @@
-use bevy::prelude::{DerefMut, Deref};
 pub use bevy::{
     app::prelude::*, core::prelude::*, ecs::prelude::*, hierarchy::prelude::*, input::prelude::*,
     log::prelude::*, math::prelude::*, reflect::prelude::*, time::prelude::*,
-    transform::prelude::*, utils::prelude::*, window::prelude::*, DefaultPlugins, MinimalPlugins, 
-    ecs::system::CommandQueue,
+    utils::prelude::*, window::prelude::*, DefaultPlugins, MinimalPlugins, 
+    ecs::system::{CommandQueue, EntityCommands}, prelude::{Deref, DerefMut}
 };
+pub use pi_bevy_ecs_extend::prelude::EntityTreeMut;
 pub use crate::run_stage::ERunStageChap;
 pub use crate::object::ObjectID;
 pub use crate::engine_shell::EnginShell;

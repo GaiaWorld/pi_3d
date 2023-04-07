@@ -7,17 +7,13 @@ use parry3d::{
     na::{Isometry3, Point3},
     shape::{ConvexPolyhedron, Cuboid},
 };
-use pi_ecs::{prelude::{Res, Query, Commands}, query::{Changed}};use pi_ecs::prelude::Setup;
-use pi_ecs_macros::setup;
-use pi_engine_shell::{run_stage::{TSystemStageInfo, ERunStageChap}, object::ObjectID};
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
 use pi_spatialtree::OctTree;
 
 use crate::{
     cameras::camera::{CameraParam},
-    engine::Engine,
-    plugin::{ErrorPlugin, Plugin},
-    run_stage::RunStage, object::GameObject, viewer::{ViewerProjectionMatrix, command::Viewport}, flags::{SceneID}, layer_mask::LayerMask,
+    viewer::{ViewerProjectionMatrix, command::Viewport}, flags::{SceneID}, layer_mask::LayerMask,
 };
 
 use super::{
@@ -152,112 +148,112 @@ pub fn compute_frustum(
     ConvexPolyhedron::from_convex_mesh(points, &indices)
 }
 
-pub struct PluginBoundingOctTree;
-impl Plugin for PluginBoundingOctTree {
-    fn init(
-        &mut self,
-        engine: &mut Engine,
-        stages: &mut RunStage
-    ) -> Result<(), ErrorPlugin> {
-        let world = engine.world_mut();
+// pub struct PluginBoundingOctTree;
+// impl Plugin for PluginBoundingOctTree {
+//     fn init(
+//         &mut self,
+//         engine: &mut Engine,
+//         stages: &mut RunStage
+//     ) -> Result<(), ErrorPlugin> {
+//         let world = engine.world_mut();
 
-        SysCameraCullingOctTree::setup(world, stages.query_stage::<SysCameraCullingOctTree>(ERunStageChap::Command));
+//         SysCameraCullingOctTree::setup(world, stages.query_stage::<SysCameraCullingOctTree>(ERunStageChap::Command));
 
-        let max = Vector3::new(100f32, 100f32, 100f32);
-        let min = max / 100f32;
+//         let max = Vector3::new(100f32, 100f32, 100f32);
+//         let min = max / 100f32;
 
-        let mut tree = OctTree::new(
-            AABB::new(
-                TreePoint3::new(-1024f32, -1024f32, -4194304f32),
-                TreePoint3::new(3072f32, 3072f32, 4194304f32),
-            ),
-            max,
-            min,
-            0,
-            0,
-            0,
-        );
+//         let mut tree = OctTree::new(
+//             AABB::new(
+//                 TreePoint3::new(-1024f32, -1024f32, -4194304f32),
+//                 TreePoint3::new(3072f32, 3072f32, 4194304f32),
+//             ),
+//             max,
+//             min,
+//             0,
+//             0,
+//             0,
+//         );
 
-        world.insert_resource::<BoundingOctTree>(BoundingOctTree(tree));
+//         world.insert_resource::<BoundingOctTree>(BoundingOctTree(tree));
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }
 
-pub trait InterfaceOctTree {
-    fn add_of_oct_tree(& self, key: BoundingKey, info: BoundingInfo);
-    fn remove_of_oct_tree(& self, key: BoundingKey);
-}
+// pub trait InterfaceOctTree {
+//     fn add_of_oct_tree(& self, key: BoundingKey, info: BoundingInfo);
+//     fn remove_of_oct_tree(& self, key: BoundingKey);
+// }
 
-impl InterfaceOctTree for Engine {
-    fn add_of_oct_tree(& self, key: BoundingKey, info: BoundingInfo) {
-        let box_point = info.bounding_box.vectors_world;
-        let points = vec![
-            Point3::new(box_point[0][0], box_point[0][1], box_point[0][2]),
-            Point3::new(box_point[1][0], box_point[1][1], box_point[1][2]),
-            Point3::new(box_point[2][0], box_point[2][1], box_point[2][2]),
-            Point3::new(box_point[3][0], box_point[3][1], box_point[3][2]),
-            Point3::new(box_point[4][0], box_point[4][1], box_point[4][2]),
-            Point3::new(box_point[5][0], box_point[5][1], box_point[5][2]),
-            Point3::new(box_point[6][0], box_point[6][1], box_point[6][2]),
-            Point3::new(box_point[7][0], box_point[7][1], box_point[7][2]),
-        ];
+// impl InterfaceOctTree for Engine {
+//     fn add_of_oct_tree(& self, key: BoundingKey, info: BoundingInfo) {
+//         let box_point = info.bounding_box.vectors_world;
+//         let points = vec![
+//             Point3::new(box_point[0][0], box_point[0][1], box_point[0][2]),
+//             Point3::new(box_point[1][0], box_point[1][1], box_point[1][2]),
+//             Point3::new(box_point[2][0], box_point[2][1], box_point[2][2]),
+//             Point3::new(box_point[3][0], box_point[3][1], box_point[3][2]),
+//             Point3::new(box_point[4][0], box_point[4][1], box_point[4][2]),
+//             Point3::new(box_point[5][0], box_point[5][1], box_point[5][2]),
+//             Point3::new(box_point[6][0], box_point[6][1], box_point[6][2]),
+//             Point3::new(box_point[7][0], box_point[7][1], box_point[7][2]),
+//         ];
 
-        let obb = parry3d::utils::obb(&points);
-        let aadd_maxs = obb.0 * obb.1.local_aabb().maxs;
-        let aadd_mins = obb.0 * obb.1.local_aabb().mins;
+//         let obb = parry3d::utils::obb(&points);
+//         let aadd_maxs = obb.0 * obb.1.local_aabb().maxs;
+//         let aadd_mins = obb.0 * obb.1.local_aabb().mins;
 
-        let world = self.world();
-        let tree = world.get_resource_mut::<BoundingOctTree>().unwrap();
-        tree.0.add(
-            key,
-            AABB::new(
-                TreePoint3::new(aadd_mins.x, aadd_mins.y, aadd_mins.z),
-                TreePoint3::new(aadd_maxs.x, aadd_maxs.y, aadd_maxs.z),
-            ),
-            obb,
-        );
-    }
+//         let world = self.world();
+//         let tree = world.get_resource_mut::<BoundingOctTree>().unwrap();
+//         tree.0.add(
+//             key,
+//             AABB::new(
+//                 TreePoint3::new(aadd_mins.x, aadd_mins.y, aadd_mins.z),
+//                 TreePoint3::new(aadd_maxs.x, aadd_maxs.y, aadd_maxs.z),
+//             ),
+//             obb,
+//         );
+//     }
 
-    fn remove_of_oct_tree(&self, key: BoundingKey) {
-        let world = self.world();
-        let tree = world.get_resource_mut::<BoundingOctTree>().unwrap();
-        let _ = tree.0.remove(key);
-    }
+//     fn remove_of_oct_tree(&self, key: BoundingKey) {
+//         let world = self.world();
+//         let tree = world.get_resource_mut::<BoundingOctTree>().unwrap();
+//         let _ = tree.0.remove(key);
+//     }
 
-}
+// }
 
-pub struct SysCameraCullingOctTree;
-impl TSystemStageInfo for SysCameraCullingOctTree {
+// pub struct SysCameraCullingOctTree;
+// impl TSystemStageInfo for SysCameraCullingOctTree {
 
-}
-#[setup]
-impl SysCameraCullingOctTree {
-    #[system]
-    pub fn tick(
-        tree: Res<BoundingOctTree>,
-        cameras: Query<GameObject, (&CameraParam, &Viewport, &ViewerProjectionMatrix, &SceneID, &LayerMask), Changed<(CameraParam, Viewport, ViewerProjectionMatrix)>>,
-        objects: Query<GameObject, (ObjectID, &SceneID, &LayerMask, Option<&IsCulled>)>,
-        mut object_cmd: Commands<GameObject, IsCulled>,
-    ) {
-        //  log::debug!("Scene Camera Culling:");
-        cameras.iter().for_each(|camera| {
-            if let Some(frustum) = compute_frustum(&camera.0, &camera.1, &camera.2){
-                let mut result = vec![];
-                tree.check_boundings_of_tree(&frustum, &mut result);
+// }
+// #[setup]
+// impl SysCameraCullingOctTree {
+//     #[system]
+//     pub fn tick(
+//         tree: Res<BoundingOctTree>,
+//         cameras: Query<GameObject, (&CameraParam, &Viewport, &ViewerProjectionMatrix, &SceneID, &LayerMask), Changed<(CameraParam, Viewport, ViewerProjectionMatrix)>>,
+//         objects: Query<GameObject, (ObjectID, &SceneID, &LayerMask, Option<&IsCulled>)>,
+//         mut object_cmd: Commands<GameObject, IsCulled>,
+//     ) {
+//         //  log::debug!("Scene Camera Culling:");
+//         cameras.iter().for_each(|camera| {
+//             if let Some(frustum) = compute_frustum(&camera.0, &camera.1, &camera.2){
+//                 let mut result = vec![];
+//                 tree.check_boundings_of_tree(&frustum, &mut result);
 
-                objects.iter().for_each(|(obj, id_scene, obj_layer, isculled)| {
-                    if id_scene == camera.3 && camera.4.include(obj_layer) {
-                        if result.contains(&obj) {
-                            if isculled.is_none() {
-                                object_cmd.insert(obj, IsCulled);
-                            }
-                        } else {
-                            object_cmd.delete(obj);
-                        }
-                    }
-                });
-            }
-        });
-    }
-}
+//                 objects.iter().for_each(|(obj, id_scene, obj_layer, isculled)| {
+//                     if id_scene == camera.3 && camera.4.include(obj_layer) {
+//                         if result.contains(&obj) {
+//                             if isculled.is_none() {
+//                                 object_cmd.insert(obj, IsCulled);
+//                             }
+//                         } else {
+//                             object_cmd.delete(obj);
+//                         }
+//                     }
+//                 });
+//             }
+//         });
+//     }
+// }

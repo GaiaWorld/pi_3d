@@ -1,7 +1,5 @@
 
-use pi_ecs::prelude::{Query, Res};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::GameObject, frame_time::SingleFrameTimeCommand, run_stage::TSystemStageInfo};
+use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 use pi_render::{rhi::{shader::WriteBuffer}, render_3d::binds::scene::{effect::ShaderBindSceneAboutEffect}};
 
 use crate::{bytes_write_to_memory,};
@@ -69,19 +67,19 @@ impl WriteBuffer for SceneTime {
 
 }
 
-pub struct SysSceneTimeUpdate;
-impl TSystemStageInfo for SysSceneTimeUpdate {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysSceneCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysSceneTimeUpdate {
-    #[system]
-    fn sys(
-        mut scenes: Query<GameObject, (&mut SceneTime, &mut BindSceneEffect)>,
+// pub struct SysSceneTimeUpdate;
+// impl TSystemStageInfo for SysSceneTimeUpdate {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysSceneCreateCommand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysSceneTimeUpdate {
+//     #[system]
+    pub fn sys_bind_update_scene_time(
+        mut scenes: Query<(&mut SceneTime, &mut BindSceneEffect)>,
         frame: Res<SingleFrameTimeCommand>,
     ) {
         scenes.iter_mut().for_each(|(mut scene_time, mut bind)| {
@@ -89,4 +87,4 @@ impl SysSceneTimeUpdate {
             scene_time.update(&mut bind);
         });
     }
-}
+// }

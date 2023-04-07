@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 use pi_render::{render_3d::shader::{shader_effect_meta::ShaderEffectMeta, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, uniform_value::{UniformPropertyInt, UniformPropertyVec4, UniformPropertyVec2}, shader_defines::ShaderDefinesSet}, renderer::shader::KeyShaderMeta};
 use crate::{materials::{shader_effect::ShaderEffectValueUniformDesc, interface::InterfaceMaterialMeta, material::MaterialID}, pass::EPassTag};
 
-use self::system::{SysShadowParamUpdate, SysShadowParamUpdateWhileMatCreate, SysShadowGeneratorAppyWhileShadowModify};
+use self::system::*;
 
 pub mod base;
 pub mod system;
@@ -11,25 +11,31 @@ pub mod system;
 
 pub struct PluginShadowGenerator;
 impl Plugin for PluginShadowGenerator {
-    fn init(
-        &mut self,
-        engine: &mut pi_engine_shell::engine_shell::EnginShell,
-        stages: &mut pi_engine_shell::run_stage::RunStage,
-    ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-        let entity = engine.new_object();
-        engine.regist_material_meta(KeyShaderMeta::from(ShaderShadowGenerator::KEY), ShaderShadowGenerator::res());
+    // fn init(
+    //     &mut self,
+    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
+    //     stages: &mut pi_engine_shell::run_stage::RunStage,
+    // ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
+    //     let entity = engine.new_object();
+    //     engine.regist_material_meta(KeyShaderMeta::from(ShaderShadowGenerator::KEY), ShaderShadowGenerator::res());
 
-        let world = engine.world_mut();
+    //     let world = engine.world_mut();
 
-        SysShadowParamUpdate::setup(world, stages.query_stage::<SysShadowParamUpdate>(ERunStageChap::Command));
-        SysShadowParamUpdateWhileMatCreate::setup(world, stages.query_stage::<SysShadowParamUpdateWhileMatCreate>(ERunStageChap::Command));
-        SysShadowGeneratorAppyWhileShadowModify::setup(world, stages.query_stage::<SysShadowGeneratorAppyWhileShadowModify>(ERunStageChap::Command));
+    //     SysShadowParamUpdate::setup(world, stages.query_stage::<SysShadowParamUpdate>(ERunStageChap::Command));
+    //     SysShadowParamUpdateWhileMatCreate::setup(world, stages.query_stage::<SysShadowParamUpdateWhileMatCreate>(ERunStageChap::Command));
+    //     SysShadowGeneratorAppyWhileShadowModify::setup(world, stages.query_stage::<SysShadowGeneratorAppyWhileShadowModify>(ERunStageChap::Command));
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     fn build(&self, app: &mut App) {
-        todo!()
+        app.add_system(
+            (
+                sys_shadow_param_update,
+                sys_shadow_param_update_while_mat_create,
+                sys_shadow_generator_apply_while_shadow_modify
+            ).chain()
+        )
     }
 }
 

@@ -58,18 +58,18 @@ impl InterfaceRenderGroup for crate::engine::Engine {
     }
 }
 
-pub struct PluginRenderGroup;
-impl crate::Plugin for PluginRenderGroup {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
+// pub struct PluginRenderGroup;
+// impl crate::Plugin for PluginRenderGroup {
+//     fn init(
+//         &mut self,
+//         engine: &mut crate::engine::Engine,
+//         stages: &mut crate::run_stage::RunStage,
+//     ) -> Result<(), crate::plugin::ErrorPlugin> {
+//         let world = engine.world_mut();
 
-        world.insert_resource(SingleRenderGroupCommandList::default());
-        SysRenderGroupCommand::setup(world, stages.query_stage::<SysRenderGroupCommand>(ERunStageChap::Command));
+//         world.insert_resource(SingleRenderGroupCommandList::default());
+//         SysRenderGroupCommand::setup(world, stages.query_stage::<SysRenderGroupCommand>(ERunStageChap::Command));
         
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }
