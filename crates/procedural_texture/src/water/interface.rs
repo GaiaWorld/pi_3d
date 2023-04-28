@@ -1,29 +1,26 @@
 use pi_atom::Atom;
-use pi_scene_context::{
-    materials::{
-        interface::InterfaceMaterialMeta,
-    },
-    object::ObjectID,
-    pass::EPassTag,
-};
-use pi_engine_shell::object::InterfaceObject;
+use pi_engine_shell::prelude::*;
+use pi_scene_context::{pass::EPassTag, materials::command::ActionMaterial};
 
 use crate::water::shader::WaterShader;
 
 
 
 
-pub trait InterfaceWaterMaterial {
-    fn create_water_material(&self) -> ObjectID;
-}
+pub struct InterfaceWaterMaterial;
+impl InterfaceWaterMaterial {
+    pub fn create_water_material(
+        app: &mut App,
+    ) -> Entity {
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
 
-impl InterfaceWaterMaterial for pi_engine_shell::engine_shell::EnginShell {
-    fn create_water_material(&self) -> ObjectID {
-        log::debug!("create_default_material");
-        let entity = self.new_object();
-        self.as_material(entity, Atom::from(WaterShader::KEY), EPassTag::Opaque);
+        let entity = commands.spawn_empty().id();
+        queue.apply(&mut app.world);
+
+        ActionMaterial::init(app, entity, KeyShaderMeta::from(WaterShader::KEY), EPassTag::Opaque);
 
         entity
     }
-    
 }
+

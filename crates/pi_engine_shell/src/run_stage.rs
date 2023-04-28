@@ -1,6 +1,7 @@
 use std::vec::Drain;
 
-use bevy::prelude::SystemSet;
+use bevy::prelude::{SystemSet, Plugin, IntoSystemSetConfig, apply_system_buffers, IntoSystemConfig, IntoSystemConfigs};
+use pi_bevy_render_plugin::PiRenderSystemSet;
 use pi_ecs::prelude::StageBuilder;
 use pi_hash::XHashMap;
 
@@ -107,7 +108,7 @@ pub trait TSystemStageInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 ///
 /// * 在运行阶段之上封装了 章节管理
 /// * 每章节可以有多个阶段,章节内部的阶段间有顺序
@@ -115,358 +116,453 @@ pub trait TSystemStageInfo {
 /// * 一个章节内阶段结束才能进入下个章节
 /// * 当 一个System需要等待多个System的结束, 且编码时无法确定依赖的System时, 应该将该System放入下一章节
 pub enum ERunStageChap {
+    // 场景中的 节点, Mesh, Light, Camera [一级实体]
     Initial,
+    // 场景中的 Material, Geometry, Renderer [二级实体, 他们被一级实体使用]
+    SecondInitial,
+    // 场景中的 GraphiNode [三级实体, 他们被一级或二级实体使用]
+    ThirdInitial,
+    Command,
     AnimeAmount,
     Anime,
-    Command,
     Logic01,
     Logic02,
+    CalcWorldMatrix,
+    CalcRenderMatrix,
     Uniform,
+    DrawUniformToGPU,
+    DrawBinds,
+    DrawBindGroups,
+    DrawBindGroupsLoaded,
+    DrawShader,
+    DrawShaderLoaded,
+    DrawPipeline,
+    DrawPipelineLoaded,
+    DrawCall,
     Draw,
+    StateCheck,
 }
 
-pub struct RunStage {
-    initial: RunStageSub,
-    anime: RunStageSub,
-    command: RunStageSub,
-    logic01: RunStageSub,
-    logic02: RunStageSub,
-    uniform_update: RunStageSub,
-    draw: RunStageSub,
-    list: Vec<StageBuilder>,
-}
-impl RunStage {
-    pub fn new() -> Self {
-        Self { initial: RunStageSub::new(), anime: RunStageSub::new(), command: RunStageSub::new(), draw: RunStageSub::new(), uniform_update: RunStageSub::new(), logic01: RunStageSub::new(), logic02: RunStageSub::new(), list: vec![]}
-    }
-    /// * 获取System在指定章节内的 阶段
-    /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
-    pub fn query_stage<T: TSystemStageInfo>(&mut self, chap: ERunStageChap) -> &mut StageBuilder {
-        match chap {
-            ERunStageChap::Initial => {
-                self.initial.query_stage::<T>()
-            },
-            ERunStageChap::Anime => {
-                self.anime.query_stage::<T>()
-            },
-            ERunStageChap::Command => {
-                self.command.query_stage::<T>()
-            },
-            ERunStageChap::Logic01 => {
-                self.logic01.query_stage::<T>()
-            },
-            ERunStageChap::Logic02 => {
-                self.logic02.query_stage::<T>()
-            },
-            ERunStageChap::Uniform => {
-                self.uniform_update.query_stage::<T>()
-            },
-            ERunStageChap::Draw => {
-                self.draw.query_stage::<T>()
-            },
-            ERunStageChap::AnimeAmount => todo!(),
-        }
-    }
-    pub fn drain(&mut self) -> Drain<StageBuilder> {
-        self.initial.drain().for_each(|item| {
-            self.list.push(item);
-        });
-
-        self.anime.drain().for_each(|item| {
-            self.list.push(item);
-        });
-
-        self.command.drain().for_each(|item| {
-            self.list.push(item);
-        });
-
-        self.logic01.drain().for_each(|item| {
-            self.list.push(item);
-        });
-
-        self.logic02.drain().for_each(|item| {
-            self.list.push(item);
-        });
-
-        self.uniform_update.drain().for_each(|item| {
-            self.list.push(item);
-        });
-
-        self.draw.drain().for_each(|item| {
-            self.list.push(item);
-        });
-
-        self.list.drain(..)
-    }
-    pub fn log(&self) {
+pub struct PluginRunstage;
+impl Plugin for PluginRunstage {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.configure_set(ERunStageChap::Initial);
+        app.configure_set(ERunStageChap::SecondInitial.after(ERunStageChap::Initial));
+        app.configure_set(ERunStageChap::ThirdInitial.after(ERunStageChap::SecondInitial));
+        app.configure_set(ERunStageChap::Command.after(ERunStageChap::ThirdInitial));
+        app.configure_set(ERunStageChap::AnimeAmount.after(ERunStageChap::Command));
+        app.configure_set(ERunStageChap::Anime.after(ERunStageChap::AnimeAmount));
+        app.configure_set(ERunStageChap::Logic01.after(ERunStageChap::Anime));
+        app.configure_set(ERunStageChap::Logic02.after(ERunStageChap::Logic01));
+        app.configure_set(ERunStageChap::CalcWorldMatrix.after(ERunStageChap::Logic02));
+        app.configure_set(ERunStageChap::CalcRenderMatrix.after(ERunStageChap::CalcWorldMatrix));
+        app.configure_set(ERunStageChap::Uniform.after(ERunStageChap::CalcRenderMatrix));
+        app.configure_set(ERunStageChap::DrawUniformToGPU.after(ERunStageChap::Uniform));
+        app.configure_set(ERunStageChap::DrawBinds.after(ERunStageChap::DrawUniformToGPU));
+        app.configure_set(ERunStageChap::DrawBindGroups.after(ERunStageChap::DrawBinds));
+        app.configure_set(ERunStageChap::DrawBindGroupsLoaded.after(ERunStageChap::DrawBindGroups));
+        app.configure_set(ERunStageChap::DrawShader.after(ERunStageChap::DrawBindGroupsLoaded));
+        app.configure_set(ERunStageChap::DrawShaderLoaded.after(ERunStageChap::DrawShader));
+        app.configure_set(ERunStageChap::DrawPipeline.after(ERunStageChap::DrawShaderLoaded));
+        app.configure_set(ERunStageChap::DrawPipelineLoaded.after(ERunStageChap::DrawPipeline));
+        app.configure_set(ERunStageChap::DrawCall.after(ERunStageChap::DrawPipelineLoaded));
+        app.configure_set(ERunStageChap::Draw.after(ERunStageChap::DrawCall));
+        app.configure_set(ERunStageChap::StateCheck.after(ERunStageChap::Draw).before(PiRenderSystemSet));
         
-        
-        let root_dir = std::env::current_dir().unwrap();
-        
-        let file_name = "Stages.txt";
+        // app.configure_set(
+        //     (
+        //         ERunStageChap::Initial,
+        //         ERunStageChap::SecondInitial,
+        //         ERunStageChap::ThirdInitial,
+        //         ERunStageChap::Command,
+        //         ERunStageChap::AnimeAmount,
+        //         ERunStageChap::Anime,
+        //         ERunStageChap::Logic01,
+        //         ERunStageChap::Logic02,
+        //         ERunStageChap::CalcWorldMatrix,
+        //         ERunStageChap::CalcRenderMatrix,
+        //         ERunStageChap::Uniform,
+        //         ERunStageChap::DrawUniformToGPU,
+        //         ERunStageChap::DrawBinds,
+        //         ERunStageChap::DrawBindGroups,
+        //         ERunStageChap::DrawBindGroupsLoaded,
+        //         ERunStageChap::DrawShader,
+        //         ERunStageChap::DrawShaderLoaded,
+        //         ERunStageChap::DrawPipeline,
+        //         ERunStageChap::DrawPipelineLoaded,
+        //         ERunStageChap::DrawCall,
+        //         ERunStageChap::Draw,
+        //         ERunStageChap::StateCheck,
+        //     ).chain()
+        // );
 
-        let mut text = String::from("");
-
-        text += self.initial.log().as_str();
-        text += "\r\n--------------------------------------------------\r\n";
-        
-        text += self.anime.log().as_str();
-        text += "\r\n--------------------------------------------------\r\n";
-
-        text += self.command.log().as_str();
-        text += "\r\n--------------------------------------------------\r\n";
-        
-        text += self.uniform_update.log().as_str();
-        text += "\r\n--------------------------------------------------\r\n";
-
-        text += self.draw.log().as_str();
-
-        std::fs::write(root_dir.join(file_name), text);
-    }
-    pub fn levels(&self) {
-        
-        
-        let root_dir = std::env::current_dir().unwrap();
-        
-        let file_name = "Levels.txt";
-
-        let mut text = String::from("");
-
-        text += self.command.log().as_str();
-        text += "\r\n--------------------------------------------------\r\n";
-
-        text += self.draw.log().as_str();
-
-        std::fs::write(root_dir.join(file_name), text);
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::Initial));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::SecondInitial));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::ThirdInitial));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::Command));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::AnimeAmount));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::Anime));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::Logic01));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::Logic02));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::CalcWorldMatrix));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::CalcRenderMatrix));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::Uniform));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawUniformToGPU));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawBinds));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawBindGroups));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawBindGroupsLoaded));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawShader));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawShaderLoaded));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawPipeline));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawPipelineLoaded));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawCall));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::Draw));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::StateCheck));
     }
 }
 
-struct RunStageSub {
-    stages: Vec<StageBuilder>,
-    flags: Vec<LevelFlag>,
-    flag_counter: LevelFlag,
-    sys_flags: XHashMap<KeySystem, LevelFlag>,
-    sys_childs: XHashMap<KeySystem, Vec<LevelFlag>>,
-}
+// pub struct RunStage {
+//     initial: RunStageSub,
+//     anime: RunStageSub,
+//     command: RunStageSub,
+//     logic01: RunStageSub,
+//     logic02: RunStageSub,
+//     uniform_update: RunStageSub,
+//     draw: RunStageSub,
+//     list: Vec<StageBuilder>,
+// }
+// impl RunStage {
+//     pub fn new() -> Self {
+//         Self { initial: RunStageSub::new(), anime: RunStageSub::new(), command: RunStageSub::new(), draw: RunStageSub::new(), uniform_update: RunStageSub::new(), logic01: RunStageSub::new(), logic02: RunStageSub::new(), list: vec![]}
+//     }
+//     /// * 获取System在指定章节内的 阶段
+//     /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
+//     pub fn query_stage<T: TSystemStageInfo>(&mut self, chap: ERunStageChap) -> &mut StageBuilder {
+//         match chap {
+//             ERunStageChap::Initial => {
+//                 self.initial.query_stage::<T>()
+//             },
+//             ERunStageChap::Anime => {
+//                 self.anime.query_stage::<T>()
+//             },
+//             ERunStageChap::Command => {
+//                 self.command.query_stage::<T>()
+//             },
+//             ERunStageChap::Logic01 => {
+//                 self.logic01.query_stage::<T>()
+//             },
+//             ERunStageChap::Logic02 => {
+//                 self.logic02.query_stage::<T>()
+//             },
+//             ERunStageChap::Uniform => {
+//                 self.uniform_update.query_stage::<T>()
+//             },
+//             ERunStageChap::Draw => {
+//                 self.draw.query_stage::<T>()
+//             },
+//             ERunStageChap::AnimeAmount => todo!(),
+//         }
+//     }
+//     pub fn drain(&mut self) -> Drain<StageBuilder> {
+//         self.initial.drain().for_each(|item| {
+//             self.list.push(item);
+//         });
 
-impl RunStageSub {
-    pub fn new() -> Self {
-        let mut result = Self {
-            stages: vec![],
-            flags: vec![],
-            flag_counter: 0,
-            sys_flags: XHashMap::default(),
-            sys_childs: XHashMap::default(),
-        };
+//         self.anime.drain().for_each(|item| {
+//             self.list.push(item);
+//         });
 
-        result.query_stage::<SysPre>();
+//         self.command.drain().for_each(|item| {
+//             self.list.push(item);
+//         });
 
-        result
-    }
-    ///
-    /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
-    pub fn query_stage<T: TSystemStageInfo>(&mut self) -> &mut StageBuilder {
-        let sys_key = T::key();
-        let parent_keys = T::depends();
+//         self.logic01.drain().for_each(|item| {
+//             self.list.push(item);
+//         });
 
-        // parent_keys.iter().for_each(|key| {
-        //     self._query_stage(key.clone(), vec![]);
-        // });
+//         self.logic02.drain().for_each(|item| {
+//             self.list.push(item);
+//         });
 
-        self._query_stage(sys_key, parent_keys)
-    }
-    fn _query_stage(&mut self, sys_key: KeySystem, parent_keys: Vec<KeySystem>) -> &mut StageBuilder {
-        // 是否已经注册
-        if let Some(flag) = self.sys_flags.get(&sys_key) {
-            let len = self.flags.len();
-            let mut level = usize::MAX;
-            // 父节点的level - 寻找有效的最大值
-            for index in 0..len {
-                if &self.flags[index] == flag {
-                    level = index;
-                }
-            }
-            self.stages.get_mut(level).unwrap()
-        } else {
-            // 寻找父节点的level
-            let mut parent_level = usize::MAX;
-            parent_keys.iter().for_each(|parent_key| {
-                if let Some(flag) = self.sys_flags.get(parent_key) {
-                    let len = self.flags.len();
+//         self.uniform_update.drain().for_each(|item| {
+//             self.list.push(item);
+//         });
 
-                    // 父节点的level - 寻找有效的最大值
-                    for level in 0..len {
-                        if &self.flags[level] == flag {
-                            if parent_level == usize::MAX {
-                                parent_level = level;
-                            } else {
-                                parent_level = parent_level.max(level);
-                            }
-                        }
-                    }
-                } else {
-                    panic!("Parent Not Regist: {:?}, {:?}", sys_key, parent_key);
-                }
-            });
+//         self.draw.drain().for_each(|item| {
+//             self.list.push(item);
+//         });
 
-            // 寻找子节点的level
-            let mut child_level = usize::MAX;
-            if let Some(childs) = self.sys_childs.get(&sys_key) {
-                childs.iter().for_each(|flag| {
-                    let len = self.flags.len();
+//         self.list.drain(..)
+//     }
+//     pub fn log(&self) {
+        
+        
+//         let root_dir = std::env::current_dir().unwrap();
+        
+//         let file_name = "Stages.txt";
 
-                    // 子节点的Level - 寻找最小值
-                    for level in 0..len {
-                        if &self.flags[level] == flag {
-                            if child_level == usize::MAX {
-                                child_level = level;
-                            } else {
-                                child_level = child_level.min(level);
-                            }
-                        }
-                    }
-                });
-            }
+//         let mut text = String::from("");
 
-            if parent_level == usize::MAX {
-                // 未找到父节点, 也未找到子节点 - 使用最后一个
-                if child_level == usize::MAX {
-                    let len = self.flags.len();
-                    let level = if len == 0 {
-                        let flag = self.flag_counter;
-                        let stage = StageBuilder::new();
-                        self.stages.push(stage);
-                        self.flags.push(flag);
-                        self.flag_counter += 1;
-                        0
-                    } else {
-                        len - 1
-                    };
+//         text += self.initial.log().as_str();
+//         text += "\r\n--------------------------------------------------\r\n";
+        
+//         text += self.anime.log().as_str();
+//         text += "\r\n--------------------------------------------------\r\n";
+
+//         text += self.command.log().as_str();
+//         text += "\r\n--------------------------------------------------\r\n";
+        
+//         text += self.uniform_update.log().as_str();
+//         text += "\r\n--------------------------------------------------\r\n";
+
+//         text += self.draw.log().as_str();
+
+//         std::fs::write(root_dir.join(file_name), text);
+//     }
+//     pub fn levels(&self) {
+        
+        
+//         let root_dir = std::env::current_dir().unwrap();
+        
+//         let file_name = "Levels.txt";
+
+//         let mut text = String::from("");
+
+//         text += self.command.log().as_str();
+//         text += "\r\n--------------------------------------------------\r\n";
+
+//         text += self.draw.log().as_str();
+
+//         std::fs::write(root_dir.join(file_name), text);
+//     }
+// }
+
+// struct RunStageSub {
+//     stages: Vec<StageBuilder>,
+//     flags: Vec<LevelFlag>,
+//     flag_counter: LevelFlag,
+//     sys_flags: XHashMap<KeySystem, LevelFlag>,
+//     sys_childs: XHashMap<KeySystem, Vec<LevelFlag>>,
+// }
+
+// impl RunStageSub {
+//     pub fn new() -> Self {
+//         let mut result = Self {
+//             stages: vec![],
+//             flags: vec![],
+//             flag_counter: 0,
+//             sys_flags: XHashMap::default(),
+//             sys_childs: XHashMap::default(),
+//         };
+
+//         result.query_stage::<SysPre>();
+
+//         result
+//     }
+//     ///
+//     /// * 当未能查找到 自身依赖的 System 的注册信息时会在编译时报错, 给出了出错的 System 及 依赖的 System 注册名称
+//     pub fn query_stage<T: TSystemStageInfo>(&mut self) -> &mut StageBuilder {
+//         let sys_key = T::key();
+//         let parent_keys = T::depends();
+
+//         // parent_keys.iter().for_each(|key| {
+//         //     self._query_stage(key.clone(), vec![]);
+//         // });
+
+//         self._query_stage(sys_key, parent_keys)
+//     }
+//     fn _query_stage(&mut self, sys_key: KeySystem, parent_keys: Vec<KeySystem>) -> &mut StageBuilder {
+//         // 是否已经注册
+//         if let Some(flag) = self.sys_flags.get(&sys_key) {
+//             let len = self.flags.len();
+//             let mut level = usize::MAX;
+//             // 父节点的level - 寻找有效的最大值
+//             for index in 0..len {
+//                 if &self.flags[index] == flag {
+//                     level = index;
+//                 }
+//             }
+//             self.stages.get_mut(level).unwrap()
+//         } else {
+//             // 寻找父节点的level
+//             let mut parent_level = usize::MAX;
+//             parent_keys.iter().for_each(|parent_key| {
+//                 if let Some(flag) = self.sys_flags.get(parent_key) {
+//                     let len = self.flags.len();
+
+//                     // 父节点的level - 寻找有效的最大值
+//                     for level in 0..len {
+//                         if &self.flags[level] == flag {
+//                             if parent_level == usize::MAX {
+//                                 parent_level = level;
+//                             } else {
+//                                 parent_level = parent_level.max(level);
+//                             }
+//                         }
+//                     }
+//                 } else {
+//                     panic!("Parent Not Regist: {:?}, {:?}", sys_key, parent_key);
+//                 }
+//             });
+
+//             // 寻找子节点的level
+//             let mut child_level = usize::MAX;
+//             if let Some(childs) = self.sys_childs.get(&sys_key) {
+//                 childs.iter().for_each(|flag| {
+//                     let len = self.flags.len();
+
+//                     // 子节点的Level - 寻找最小值
+//                     for level in 0..len {
+//                         if &self.flags[level] == flag {
+//                             if child_level == usize::MAX {
+//                                 child_level = level;
+//                             } else {
+//                                 child_level = child_level.min(level);
+//                             }
+//                         }
+//                     }
+//                 });
+//             }
+
+//             if parent_level == usize::MAX {
+//                 // 未找到父节点, 也未找到子节点 - 使用最后一个
+//                 if child_level == usize::MAX {
+//                     let len = self.flags.len();
+//                     let level = if len == 0 {
+//                         let flag = self.flag_counter;
+//                         let stage = StageBuilder::new();
+//                         self.stages.push(stage);
+//                         self.flags.push(flag);
+//                         self.flag_counter += 1;
+//                         0
+//                     } else {
+//                         len - 1
+//                     };
                     
-                    // let flag = self.flag_counter;
-                    // let stage = StageBuilder::new();
-                    // self.stages.push(stage);
-                    // self.flags.push(flag);
-                    // self.flag_counter += 1;
-                    // let level = self.flags.len() - 1;
+//                     // let flag = self.flag_counter;
+//                     // let stage = StageBuilder::new();
+//                     // self.stages.push(stage);
+//                     // self.flags.push(flag);
+//                     // self.flag_counter += 1;
+//                     // let level = self.flags.len() - 1;
 
-                    let flag = self.flags.get(level).unwrap();
-                    self.sys_flags.insert(sys_key.clone(), *flag);
-                    self.sys_childs.insert(sys_key, vec![]);
-                    self.stages.get_mut(level).unwrap()
-                // 未找到父节点, 找到子节点 - 使用子节点前一个
-                } else {
-                    let level = if child_level == 0 {
-                        let flag = self.flag_counter;
-                        let stage = StageBuilder::new();
-                        self.stages.insert(0, stage);
-                        self.flags.insert(0, flag);
-                        self.flag_counter += 1;
-                        0
-                    } else {
-                        child_level - 1
-                    };
+//                     let flag = self.flags.get(level).unwrap();
+//                     self.sys_flags.insert(sys_key.clone(), *flag);
+//                     self.sys_childs.insert(sys_key, vec![]);
+//                     self.stages.get_mut(level).unwrap()
+//                 // 未找到父节点, 找到子节点 - 使用子节点前一个
+//                 } else {
+//                     let level = if child_level == 0 {
+//                         let flag = self.flag_counter;
+//                         let stage = StageBuilder::new();
+//                         self.stages.insert(0, stage);
+//                         self.flags.insert(0, flag);
+//                         self.flag_counter += 1;
+//                         0
+//                     } else {
+//                         child_level - 1
+//                     };
                     
-                    // let flag = self.flag_counter;
-                    // let stage = StageBuilder::new();
-                    // self.stages.insert(child_level, stage);
-                    // self.flags.insert(child_level, flag);
-                    // self.flag_counter += 1;
-                    // let level = child_level;
+//                     // let flag = self.flag_counter;
+//                     // let stage = StageBuilder::new();
+//                     // self.stages.insert(child_level, stage);
+//                     // self.flags.insert(child_level, flag);
+//                     // self.flag_counter += 1;
+//                     // let level = child_level;
                     
 
-                    let flag = self.flags.get(level).unwrap();
-                    self.sys_flags.insert(sys_key.clone(), *flag);
-                    self.sys_childs.insert(sys_key, vec![]);
-                    self.stages.get_mut(level).unwrap()
-                }
-            // 找到父节点 - 使用父节点后一个
-            } else {
-                let level = parent_level + 1;
-                if self.flags.len() <= level {
-                    let flag = self.flag_counter;
-                    let stage = StageBuilder::new();
-                    self.stages.push(stage);
-                    self.flags.push(flag);
-                    self.flag_counter += 1;
-                }
-                // let flag = self.flag_counter;
-                // let stage = StageBuilder::new();
-                // self.stages.insert(parent_level + 1, stage);
-                // self.flags.insert(parent_level + 1, flag);
-                // self.flag_counter += 1;
+//                     let flag = self.flags.get(level).unwrap();
+//                     self.sys_flags.insert(sys_key.clone(), *flag);
+//                     self.sys_childs.insert(sys_key, vec![]);
+//                     self.stages.get_mut(level).unwrap()
+//                 }
+//             // 找到父节点 - 使用父节点后一个
+//             } else {
+//                 let level = parent_level + 1;
+//                 if self.flags.len() <= level {
+//                     let flag = self.flag_counter;
+//                     let stage = StageBuilder::new();
+//                     self.stages.push(stage);
+//                     self.flags.push(flag);
+//                     self.flag_counter += 1;
+//                 }
+//                 // let flag = self.flag_counter;
+//                 // let stage = StageBuilder::new();
+//                 // self.stages.insert(parent_level + 1, stage);
+//                 // self.flags.insert(parent_level + 1, flag);
+//                 // self.flag_counter += 1;
                 
 
-                // if sys_key == "pi_scene_context::transforms::command::SysTransformNodeCommand" {
-                //     log::debug!("{:?}", sys_key);
-                //     log::debug!("{:?},{:?}, {:?}", self.flags, self.flags.get(level).unwrap(), flag);
-                //     log::debug!("{:?}", parent_keys);
-                //     log::debug!("{:?}, {:?}, {:?}", parent_level, child_level, level);
-                // }
+//                 // if sys_key == "pi_scene_context::transforms::command::SysTransformNodeCommand" {
+//                 //     log::debug!("{:?}", sys_key);
+//                 //     log::debug!("{:?},{:?}, {:?}", self.flags, self.flags.get(level).unwrap(), flag);
+//                 //     log::debug!("{:?}", parent_keys);
+//                 //     log::debug!("{:?}, {:?}, {:?}", parent_level, child_level, level);
+//                 // }
 
-                let flag = self.flags.get(level).unwrap();
-                self.sys_flags.insert(sys_key.clone(), *flag);
-                self.sys_childs.insert(sys_key, vec![]);
-                self.stages.get_mut(level).unwrap()
-            }
-        }
+//                 let flag = self.flags.get(level).unwrap();
+//                 self.sys_flags.insert(sys_key.clone(), *flag);
+//                 self.sys_childs.insert(sys_key, vec![]);
+//                 self.stages.get_mut(level).unwrap()
+//             }
+//         }
 
-    }
-    pub fn drain(&mut self) -> Drain<StageBuilder> {
-        self.stages.drain(..)
-    }
+//     }
+//     pub fn drain(&mut self) -> Drain<StageBuilder> {
+//         self.stages.drain(..)
+//     }
 
-    pub fn log(&self) -> String {
+//     pub fn log(&self) -> String {
 
-        let mut text = String::from("");
+//         let mut text = String::from("");
 
-        text += "Stages: Flags: ";
-        text += self.flags.len().to_string().as_str();
-        text += ", Levels: ";
-        text += self.stages.len().to_string().as_str();
-        text += "\r\n";
+//         text += "Stages: Flags: ";
+//         text += self.flags.len().to_string().as_str();
+//         text += ", Levels: ";
+//         text += self.stages.len().to_string().as_str();
+//         text += "\r\n";
 
-        let mut tempspace = String::from("  ");
-        for flag in self.flags.iter() {
-            tempspace += "  ";
+//         let mut tempspace = String::from("  ");
+//         for flag in self.flags.iter() {
+//             tempspace += "  ";
 
-            self.sys_flags.iter().for_each(|(k, v)| {
-                if v == flag {
-                    text += tempspace.as_str();
-                    text += k;
-                    text += "\r\n";
-                }
-            });
-        }
+//             self.sys_flags.iter().for_each(|(k, v)| {
+//                 if v == flag {
+//                     text += tempspace.as_str();
+//                     text += k;
+//                     text += "\r\n";
+//                 }
+//             });
+//         }
 
-        text
-    }
-    pub fn levels(&self) -> String {
+//         text
+//     }
+//     pub fn levels(&self) -> String {
 
-        let mut text = String::from("");
+//         let mut text = String::from("");
 
-        // text += "Stages: Flags: ";
-        // text += self.flags.len().to_string().as_str();
-        // text += ", Levels: ";
-        // text += self.stages.len().to_string().as_str();
-        // text += "\r\n";
+//         // text += "Stages: Flags: ";
+//         // text += self.flags.len().to_string().as_str();
+//         // text += ", Levels: ";
+//         // text += self.stages.len().to_string().as_str();
+//         // text += "\r\n";
 
-        // let mut temp_syss = vec![];
-        // let childs = self.sys_childs.get(&SysPre::key()).unwrap();
+//         // let mut temp_syss = vec![];
+//         // let childs = self.sys_childs.get(&SysPre::key()).unwrap();
 
-        // let mut tempspace = String::from("  ");
-        // for flag in self.flags.iter() {
-        //     tempspace += "  ";
+//         // let mut tempspace = String::from("  ");
+//         // for flag in self.flags.iter() {
+//         //     tempspace += "  ";
 
-        //     self.sys_flags.iter().for_each(|(k, v)| {
-        //         if v == flag {
-        //             text += tempspace.as_str();
-        //             text += k;
-        //             text += "\r\n";
-        //         }
-        //     });
-        // }
+//         //     self.sys_flags.iter().for_each(|(k, v)| {
+//         //         if v == flag {
+//         //             text += tempspace.as_str();
+//         //             text += k;
+//         //             text += "\r\n";
+//         //         }
+//         //     });
+//         // }
 
-        text
-    }
-}
+//         text
+//     }
+// }

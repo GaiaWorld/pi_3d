@@ -1,7 +1,8 @@
 use std::ops::Range;
 
-use pi_map::vecmap::VecMap;
-use pi_render::renderer::{indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::{RenderVertices, RenderIndices, EVerticesBufferUsage}};
+use pi_engine_shell::prelude::*;
+use pi_map::{smallvecmap::SmallVecMap};
+use pi_render::renderer::{vertices::{RenderVertices, RenderIndices}};
 
 use super::vertex_buffer_useinfo::{
     AssetResVBSlot01, AssetDescVBSlot01,
@@ -12,6 +13,7 @@ use super::vertex_buffer_useinfo::{
     AssetResVBSlot05, AssetDescVBSlot05
 };
 
+#[derive(Component)]
 pub struct RenderGeometryEable(pub bool);
 
 pub trait RenderVerticesFrom {
@@ -41,15 +43,15 @@ impl RenderIndicesFrom for RenderIndices {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct RenderGeometry {
     pub vertices: Vec<RenderVertices>,
     pub instances: Vec<RenderVertices>,
     pub indices: Option<RenderIndices>,
 }
 impl RenderGeometry {
-    pub fn vertices(&self) -> VecMap<RenderVertices> {
-        let mut result = VecMap::default();
+    pub fn vertices(&self) -> SmallVecMap<RenderVertices, 3> {
+        let mut result = SmallVecMap::default();
         let mut index = 0;
         self.vertices.iter().for_each(|item| {
             result.insert(index, item.clone());
@@ -85,8 +87,6 @@ impl From<
     ) -> Self {
         let mut vertices = vec![];
         let mut instances = vec![];
-
-        let mut vertex_count = 0;
 
         let render_vertices = RenderVertices::create(value.0, value.1);
         if value.0.desc().step_mode() == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };

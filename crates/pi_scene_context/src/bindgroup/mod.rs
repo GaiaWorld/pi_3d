@@ -1,9 +1,7 @@
 
-use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty};
-use pi_ecs::{prelude::{ResMut, Commands}, world};
+
 use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
-use pi_render::{rhi::{device::RenderDevice}, renderer::{bind_buffer::{BindBufferAllocator}, bind_group::{BindGroupLayout, KeyBindGroup, KeyBindGroupLayout, BindGroup}}, asset::{AssetDataCenter, AssetLoader}, render_3d::bind_groups::{scene::KeyBindGroupScene, model::KeyBindGroupModel, texture_sampler::KeyBindGroupTextureSamplers}};
 
 use crate::object::{ObjectID};
 
@@ -44,6 +42,11 @@ impl AssetBindGroupTextureSamplersWaits {
     }
 }
 
+fn sys_recycle_binds_recorder(
+    mut recorder: ResMut<ResBindsRecorder>,
+) {
+    recorder.recycle();
+}
 
 pub struct PluginRenderBindGroup;
 impl Plugin for PluginRenderBindGroup {
@@ -72,7 +75,12 @@ impl Plugin for PluginRenderBindGroup {
 
     fn build(&self, app: &mut App) {
         let world = &mut app.world;
-        let mut cfgs = world.get_resource_mut::<AssetMgrConfigs>().unwrap();
+        let mut cfgs = if let Some(cfgs) = world.get_resource_mut::<AssetMgrConfigs>() {
+            cfgs
+        } else {
+            world.insert_resource(AssetMgrConfigs::default());
+            world.get_resource_mut::<AssetMgrConfigs>().unwrap()
+        };
 
         let cfg_bind_group = if let Some(cfg) = cfgs.0.get("ASSET_BIND_GROUP") {
             cfg.clone()
@@ -90,12 +98,13 @@ impl Plugin for PluginRenderBindGroup {
             cfg
         };
 
-        let device = world.get_resource::<RenderDevice>().unwrap();
+        let device = world.get_resource::<PiRenderDevice>().unwrap();
 
         if world.get_resource::<ResBindBufferAllocator>().is_none() {
             let allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
             world.insert_resource(allocator);
         }
+        
         
         world.insert_resource(AssetBindGroupSceneWaits::default());
         world.insert_resource(AssetBindGroupModelWaits::default());
@@ -104,5 +113,11 @@ impl Plugin for PluginRenderBindGroup {
         // log::debug!("{:?}", device.limits());
         world.insert_resource(ShareAssetMgr::<BindGroup>::create(GarbageEmpty(), false, &cfg_bind_group));
         world.insert_resource(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg_bind_group_layout));
+        
+        if world.get_resource::<ResBindsRecorder>().is_none() {
+            let allocator = ResBindsRecorder(BindsRecorder::new());
+            world.insert_resource(allocator);
+            app.add_system(sys_recycle_binds_recorder.in_set(ERunStageChap::Initial));
+        }
     }
 }

@@ -1,8 +1,5 @@
 use pi_atom::Atom;
-use pi_render::render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyMat4}, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet};
-use pi_scene_context::materials::shader_effect::{
-    ShaderEffectMeta
-};
+use pi_engine_shell::prelude::*;
 
 pub struct AxisShader {
     pub vs_module: wgpu::ShaderModule,

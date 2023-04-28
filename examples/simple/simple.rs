@@ -12,7 +12,7 @@ use pi_scene_context::{
     transforms::{interface::InterfaceTransformNode},
     scene::{interface::InterfaceScene},
     cameras::interface::InterfaceCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{interface::{InterfaceMaterial}}, renderers::{render_primitive::{InterfaceRenderPrimitive, EFrontFace}, graphic::RendererGraphicDesc}, pass::{EPassTag, PassTagOrders}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{interface::{InterfaceMaterial}}, renderers::{render_primitive::{InterfaceRenderPrimitive, FrontFace}, graphic::RendererGraphicDesc}, pass::{EPassTag, PassTagOrders}
 };
 use pi_scene_math::Vector3;
 use pi_mesh_builder::{quad::{InterfaceQuad}, cube::{PluginCubeBuilder, InterfaceCube}, ball::{PluginBallBuilder, InterfaceBall}};
@@ -53,7 +53,7 @@ fn test(
     engine.use_material(ball, unlitmaterial);
     // 修改球体的偏移
     engine.transform_position(ball, Vector3::new(2., 2., 0.));
-    engine.front_face(ball, EFrontFace::Cw);
+    engine.front_face(ball, FrontFace::Cw);
     
     // let axis_box = engine.new_axis(scene01);
     // // 使用材质

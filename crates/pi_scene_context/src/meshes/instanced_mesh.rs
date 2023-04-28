@@ -12,7 +12,7 @@ impl SingleInstanceBufferMgr {
     }
 }
 
-pub struct InstancedList(pub Vec<ObjectID>);
+pub struct InstanceList(pub Vec<ObjectID>);
 
 pub struct FlagInstanceModify;
 

@@ -7,26 +7,40 @@ use pi_hash::XHashMap;
 use pi_render::rhi::{RenderQueue, device::RenderDevice};
 use pi_share::{ThreadSync, Share};
 
-use crate::{run_stage::{RunStage, KeySystem, TSystemStageInfo, ERunStageChap}, plugin::{ErrorPlugin, Plugin}, object::{GameObject, ObjectID}, engine_shell::EnginShell};
+use crate::{run_stage::{TSystemStageInfo, ERunStageChap}, plugin::{ErrorPlugin, Plugin}, object::{GameObject, ObjectID}, engine_shell::EnginShell};
 
 use crate::prelude::*;
 
-#[derive(Debug, Default, Resource)]
+#[derive(Debug, Resource)]
 pub struct AssetSyncWait<
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+    K0: Debug + Clone + Hash + PartialEq + Eq + std::marker::Send + std::marker::Sync + 'static,
     K: Deref<Target = K0> + Component,
-    D: Asset<Key = K0> + Component,
+    D: Asset<Key = K0> + std::marker::Send + std::marker::Sync,
     R: From<Handle<D>> + Component
 >(
     pub XHashMap<K0, Vec<ObjectID>>,
     pub Vec<(K0, Handle<D>)>,
     PhantomData<(K, D, R)>,
 );
+impl<
+    K0: Debug + Clone + Hash + PartialEq + Eq + std::marker::Send + std::marker::Sync + 'static,
+    K: Deref<Target = K0> + Component,
+    D: Asset<Key = K0> + std::marker::Send + std::marker::Sync,
+    R: From<Handle<D>> + Component
+> Default for AssetSyncWait<K0, K, D, R>  {
+    fn default() -> Self {
+        Self(
+            XHashMap::default(),
+            vec![],
+            PhantomData::default()
+        )
+    }
+}
 
 impl<
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+    K0: Debug + Clone + Hash + PartialEq + Eq + std::marker::Send + std::marker::Sync + 'static,
     K: Deref<Target = K0> + Component,
-    D: Asset<Key = K0> + Component,
+    D: Asset<Key = K0> + std::marker::Send + std::marker::Sync,
     R: From<Handle<D>> + Component
 > AssetSyncWait<K0, K, D, R> 
 {
@@ -72,9 +86,9 @@ impl<
 //     S: TSystemStageInfo + 'static
 // {
     pub fn sys_sync_load_create<
-        K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+        K0: Debug + Clone + Hash + PartialEq + Eq + std::marker::Send + std::marker::Sync + 'static,
         K: Deref<Target = K0> + Component,
-        D: Asset<Key = K0> + Component,
+        D: Asset<Key = K0> + std::marker::Send + std::marker::Sync,
         R: From<Handle<D>> + Component,
     >(
         query: Query<(ObjectID, &K), Changed<K>>,
@@ -129,9 +143,9 @@ impl<
 //     R: From<Handle<D>> + Component
 // {
     pub fn sys_sync_load_check_await<
-        K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+        K0: Debug + Clone + Hash + PartialEq + Eq + Send + Sync + 'static,
         K: Deref<Target = K0> + Component,
-        D: Asset<Key = K0> + Component,
+        D: Asset<Key = K0> + Send + Sync,
         R: From<Handle<D>> + Component,
     >(
         mut list_await: ResMut<AssetSyncWait<K0, K, D, R>>,
@@ -165,42 +179,42 @@ impl<
 // }
 
 
-pub trait InterfaceAssetSyncCreate<K0, D>
-where
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-    D: Asset<Key = K0> + Component,
- {
-    fn create_asset(
-        &self,
-        key: K0,
-        data: D,
-    ) -> Handle<D>;
-    fn check_asset(
-        &self,
-        key: &K0,
-    ) -> bool;
-}
+// pub trait InterfaceAssetSyncCreate<K0, D>
+// where
+//     K0: Debug + Clone + Hash + PartialEq + Send + Sync + 'static,
+//     D: Asset<Key = K0>  + Send + Sync,
+//  {
+//     fn create_asset(
+//         &self,
+//         key: K0,
+//         data: D,
+//     ) -> Handle<D>;
+//     fn check_asset(
+//         &self,
+//         key: &K0,
+//     ) -> bool;
+// }
 
-impl<K0, D> InterfaceAssetSyncCreate<K0, D> for Share<AssetMgr<D>>
-where
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-    D: Asset<Key = K0> + Component,
-{
-    fn create_asset(
-        &self,
-        key: K0,
-        data: D,
-    ) -> Handle<D> {
-        self.insert(key.clone(), data).unwrap()
-    }
+// impl<K0, D> InterfaceAssetSyncCreate<K0, D> for ShareAssetMgr<D>
+// where
+//     K0: Debug + Clone + Hash + PartialEq + Eq + Send + Sync + 'static,
+//     D: Asset<Key = K0>  + Send + Sync,
+// {
+//     fn create_asset(
+//         &self,
+//         key: K0,
+//         data: D,
+//     ) -> Handle<D> {
+//         self.insert(key.clone(), data).unwrap()
+//     }
 
-    fn check_asset(
-        &self,
-        key: &K0,
-    ) -> bool {
-        self.contains_key(key)
-    }
-}
+//     fn check_asset(
+//         &self,
+//         key: &K0,
+//     ) -> bool {
+//         self.contains_key(key)
+//     }
+// }
 
 ///
 /// K0: 资产在资源缓存表的 资产Key

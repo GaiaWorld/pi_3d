@@ -1,47 +1,71 @@
-use pi_atom::Atom;
-use pi_engine_shell::object::InterfaceObject;
+use pi_engine_shell::prelude::*;
 
-use pi_render::{render_3d::shader::uniform_texture::UniformTextureWithSamplerParam, renderer::shader::KeyShaderMeta};
-use pi_scene_context::{object::ObjectID, materials::{ interface::InterfaceMaterialMeta}, pass::EPassTag};
+use pi_scene_context::{object::ObjectID, pass::EPassTag, materials::command::ActionMaterial};
 
 use crate::shader::UnlitShader;
 
-use super::{command::{SingleUnlitMaterialCommandList, EUnlitMaterialCommand}};
+use super::{command::{ActionListUnlitMaterial, EUnlitMaterialCommand}};
 
-
-pub trait InterfaceUnlitMaterial {
-    fn create_unlit_material(
-        & self,
+pub struct ActionUnlitMaterial;
+impl ActionUnlitMaterial {
+    pub fn create(
+        app: &mut App,
+        name: String,
         pass: EPassTag,
-    ) -> ObjectID;
-    fn emissive_texture(
-        & self,
-        entity: ObjectID,
-        image: UniformTextureWithSamplerParam,
-    ) -> &Self;
-}
+    ) -> Entity {
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
 
-impl InterfaceUnlitMaterial for pi_engine_shell::engine_shell::EnginShell {
-    fn create_unlit_material(
-        & self,
-        pass: EPassTag,
-    ) -> ObjectID {
-        //  log::debug!("create_unlit_material");
-        let entity = self.new_object();
+        let entity = commands.spawn_empty().id();
+        queue.apply(&mut app.world);
 
-        self.as_material(entity, KeyShaderMeta::from(UnlitShader::KEY), pass);
+        ActionMaterial::init(app, entity, KeyShaderMeta::from(UnlitShader::KEY), EPassTag::Opaque);
 
         entity
     }
-    fn emissive_texture(
-        & self,
+    pub fn emissive_texture(
+        app: &mut App,
         entity: ObjectID,
         image: UniformTextureWithSamplerParam,
-    ) -> &Self {
-        let world = self.world();
-        let commands = world.get_resource_mut::<SingleUnlitMaterialCommandList>().unwrap();
-        commands.list.push(EUnlitMaterialCommand::EmissiveTexture(entity, image));
-
-        self
+    ) {
+        let mut cmds = app.world.get_resource_mut::<ActionListUnlitMaterial>().unwrap();
+        cmds.push(EUnlitMaterialCommand::EmissiveTexture(entity, image));
     }
 }
+
+// pub trait InterfaceUnlitMaterial {
+//     fn create_unlit_material(
+//         & self,
+//         pass: EPassTag,
+//     ) -> ObjectID;
+//     fn emissive_texture(
+//         & self,
+//         entity: ObjectID,
+//         image: UniformTextureWithSamplerParam,
+//     ) -> &Self;
+// }
+
+// impl InterfaceUnlitMaterial for pi_engine_shell::engine_shell::EnginShell {
+//     fn create_unlit_material(
+//         & self,
+//         pass: EPassTag,
+//     ) -> ObjectID {
+//         //  log::debug!("create_unlit_material");
+//         let entity = self.new_object();
+
+//         self.as_material(entity, KeyShaderMeta::from(UnlitShader::KEY), pass);
+
+//         entity
+//     }
+//     fn emissive_texture(
+//         & self,
+//         entity: ObjectID,
+//         image: UniformTextureWithSamplerParam,
+//     ) -> &Self {
+//         let world = self.world();
+//         let commands = world.get_resource_mut::<SingleUnlitMaterialCommandList>().unwrap();
+//         commands.list.push(EUnlitMaterialCommand::EmissiveTexture(entity, image));
+
+//         self
+//     }
+// }

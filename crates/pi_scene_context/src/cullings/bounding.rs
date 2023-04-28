@@ -1,3 +1,6 @@
+
+
+use pi_engine_shell::prelude::*;
 use parry3d::shape::ConvexPolyhedron;
 use pi_scene_math::{Vector3, Matrix, frustum::FrustumPlanes};
 
@@ -5,7 +8,7 @@ use crate::object::ObjectID;
 
 use super::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, ECullingStrategy};
 
-
+#[derive(Component)]
 pub struct BoundingInfo {
     minimum: Vector3,
     maximum: Vector3,
@@ -79,8 +82,24 @@ pub fn check_boundings(
     res_vec
 }
 
-
-pub type BoundingKey = ObjectID;
+#[derive(Debug, Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct BoundingKey(pub ObjectID);
+impl Default for BoundingKey {
+    fn default() -> Self {
+        Self(Entity::from_bits(0))
+    }
+}
+impl From<pi_slotmap::KeyData> for BoundingKey {
+    fn from(value: pi_slotmap::KeyData) -> Self {
+        let bits = value.as_ffi();
+        Self(Entity::from_bits(bits))
+    }
+}
+unsafe impl pi_slotmap::Key for BoundingKey {
+    fn data(&self) -> pi_slotmap::KeyData {
+        pi_slotmap::KeyData::from_ffi(self.0.to_bits())
+    }
+}
 
 pub trait TBoundingInfoCalc {
     fn add(&mut self, key: BoundingKey, info: BoundingInfo);

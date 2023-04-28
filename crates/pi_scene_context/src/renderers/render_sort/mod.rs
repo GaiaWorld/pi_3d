@@ -1,18 +1,14 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Setup, Commands}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
+use pi_engine_shell::prelude::*;
 
-use crate::object::{GameObject, ObjectID};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Component)]
 pub enum ERenderSortParam {
     Opaque(OpaqueSortParam),
     Tansparent(TransparentSortParam),
 }
 
-#[derive(Debug, Clone, Copy, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialOrd, Component)]
 pub struct OpaqueSortParam {
     pub disance: f32,
 }
@@ -25,7 +21,7 @@ impl Eq for OpaqueSortParam {
     fn assert_receiver_is_total_eq(&self) {}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct TransparentSortParam {
     /// 同 渲染类型 中的 渲染分组
     pub group: u8,
@@ -83,63 +79,73 @@ impl Ord for TransparentSortParam {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct SingleRenderSortCommandList {
-    pub list: Vec<(ObjectID, TransparentSortParam)>
-}
-
-pub struct SysRenderSortCommand;
-impl TSystemStageInfo for SysRenderSortCommand {
-
-}
-#[setup]
-impl SysRenderSortCommand {
-    #[system]
-    pub fn cmds(
-        mut cmds: ResMut<SingleRenderSortCommandList>,
-        mut items: Commands<GameObject, TransparentSortParam>,
+pub struct ActionRenderSort;
+impl ActionRenderSort {
+    pub fn modify(
+        commands: &mut EntityCommands,
+        val: TransparentSortParam,
     ) {
-        let mut  list = replace(&mut cmds.list, vec![]);
-
-        list.drain(..).for_each(|(obj, value)| {
-            items.insert(obj, value);
-        });
+        commands.insert(val);
     }
 }
 
-pub trait InterfaceRenderSort {
-    fn render_sort(
-        &self,
-        entity: ObjectID,
-        value: TransparentSortParam,
-    ) -> &Self;
-}
+// #[derive(Debug, Default)]
+// pub struct SingleRenderSortCommandList {
+//     pub list: Vec<(ObjectID, TransparentSortParam)>
+// }
 
-impl InterfaceRenderSort for crate::engine::Engine {
-    fn render_sort(
-        &self,
-        entity: ObjectID,
-        value: TransparentSortParam,
-    ) -> &Self {
-        let commands = self.world().get_resource_mut::<SingleRenderSortCommandList>().unwrap();
-        commands.list.push((entity, value));
+// pub struct SysRenderSortCommand;
+// impl TSystemStageInfo for SysRenderSortCommand {
 
-        self
-    }
-}
+// }
+// #[setup]
+// impl SysRenderSortCommand {
+//     #[system]
+//     pub fn cmds(
+//         mut cmds: ResMut<SingleRenderSortCommandList>,
+//         mut items: Commands<GameObject, TransparentSortParam>,
+//     ) {
+//         let mut  list = replace(&mut cmds.list, vec![]);
 
-pub struct PluginRenderSort;
-impl crate::Plugin for PluginRenderSort {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
+//         list.drain(..).for_each(|(obj, value)| {
+//             items.insert(obj, value);
+//         });
+//     }
+// }
 
-        world.insert_resource(SingleRenderSortCommandList::default());
-        SysRenderSortCommand::setup(world, stages.query_stage::<SysRenderSortCommand>(ERunStageChap::Initial));
+// pub trait InterfaceRenderSort {
+//     fn render_sort(
+//         &self,
+//         entity: ObjectID,
+//         value: TransparentSortParam,
+//     ) -> &Self;
+// }
 
-        Ok(())
-    }
-}
+// impl InterfaceRenderSort for crate::engine::Engine {
+//     fn render_sort(
+//         &self,
+//         entity: ObjectID,
+//         value: TransparentSortParam,
+//     ) -> &Self {
+//         let commands = self.world().get_resource_mut::<SingleRenderSortCommandList>().unwrap();
+//         commands.list.push((entity, value));
+
+//         self
+//     }
+// }
+
+// pub struct PluginRenderSort;
+// impl crate::Plugin for PluginRenderSort {
+//     fn init(
+//         &mut self,
+//         engine: &mut crate::engine::Engine,
+//         stages: &mut crate::run_stage::RunStage,
+//     ) -> Result<(), crate::plugin::ErrorPlugin> {
+//         let world = engine.world_mut();
+
+//         world.insert_resource(SingleRenderSortCommandList::default());
+//         SysRenderSortCommand::setup(world, stages.query_stage::<SysRenderSortCommand>(ERunStageChap::Initial));
+
+//         Ok(())
+//     }
+// }

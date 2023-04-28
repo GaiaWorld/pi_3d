@@ -1,119 +1,117 @@
 
 
-use std::marker::PhantomData;
-
-use pi_ecs::{prelude::{Query, Commands, Component}, query::{Changed, Or}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject}, run_stage::TSystemStageInfo};
-use pi_render::render_3d::bind_groups::texture_sampler::EffectTextureSamplers;
+use pi_engine_shell::prelude::*;
 use crate::{
     materials::{
-        material::{MaterialUsedList}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta},
+        material::{MaterialRefs, DirtyMaterialRefs}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta},
     },
     pass::*
 };
 
 
 use super::{
-    uniform::{BindEffectValues}, 
-    sys_uniform::SysMaterialMetaChange,
-    sys_texture::{SysTextureResReady1, SysTextureResReady2},
+    uniform::*, 
+    // sys_uniform::SysMaterialMetaChange,
+    // sys_texture::{SysTextureResReady1, SysTextureResReady2},
 };
 
-pub struct SysEffectValueToModelByMaterialModify<T: TPassID + Component>(PhantomData<T>);
-impl<T: TPassID + Component> TSystemStageInfo for SysEffectValueToModelByMaterialModify<T> {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysMaterailCreateCommands::key(), SysMaterialIDCommand::key(),
-            // SysMaterialMetaChange::<T>::key(), 
-        ]
-    }
-}
-#[setup]
-impl<T: TPassID + Component> SysEffectValueToModelByMaterialModify<T> {
-    #[system]
-    fn sys(
+// pub struct SysEffectValueToModelByMaterialModify<T: TPassID + Component>(PhantomData<T>);
+// impl<T: TPassID + Component> TSystemStageInfo for SysEffectValueToModelByMaterialModify<T> {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysMaterailCreateCommands::key(), SysMaterialIDCommand::key(),
+//             // SysMaterialMetaChange::<T>::key(), 
+//         ]
+//     }
+// }
+// #[setup]
+// impl<T: TPassID + Component> SysEffectValueToModelByMaterialModify<T> {
+//     #[system]
+    pub fn sys_effect_bind_to_model_while_mat_modify(
         materials: Query<
-            GameObject,
-            (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffectValues, &MaterialUsedList, &EPassTag),
-            Or<(Changed<EPassTag>, Changed<MaterialUsedList>, Changed<BindEffectValues>)>
+            (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EPassTag),
+            Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<BindEffect>)>
         >,
-        mut models: Query<GameObject, (&T, &mut PassDirtyBindEffectValue)>,
-        mut dirty_cmd: Commands<GameObject, FlagPassDirtyBindEffectValue>,
-        mut pass01_cmd: Commands<GameObject, PassBindEffectValue>,
-        mut passready_cmd: Commands<GameObject, PassReady>,
+        mut passes: Query<(&mut PassReady, &mut PassBindEffectValue)>,
     ) {
+        // log::info!("MaterialBind : ");
         materials.iter().for_each(|(effect_key, effect, bind, list, pass)| {
-            list.0.iter().for_each(|(id_obj, _)| {
-                if let Some((passid, mut dirty)) = models.get_mut(id_obj.clone()) {
-                    let pass = pass.as_pass();
-                    if dirty.0 & pass == 0 {
-                        dirty.0 += pass;
+            if let Some(bind) = &bind.0 {
+                // log::info!("MaterialBind : 1");
+                list.iter().for_each(|target| {
+                    // log::info!("MaterialBind : 2");
+                    if let Ok((mut passready, mut passbind)) = passes.get_mut(target.clone()) {
+                        // log::info!("MaterialBind : 3");
+                        // let pass = pass.as_pass();
+                        // if dirty.0 & pass == 0 {
+                        //     dirty.0 += pass;
+                        // }
+                        // commands.entity(id_obj.clone()).insert(FlagPassDirtyBindEffectValue);
+    
+                        let data = if effect.textures.len() == 0 {
+                            Some((effect_key.0.clone(), effect.0.clone()))
+                        } else {
+                            None
+                        };
+                        
+                        // log::info!("MaterialBind PassReady : {:?}", data);
+                        // list_model.0.iter().for_each(|(id_obj, _)| {
+                        //     if let Some(passid) = models.get(id_obj.clone()) {
+                        //         ready01_cmd.insert(passid.id(), PassReady(data.clone()));
+                        //     }
+                        // });
+    
+                        // if pass & T::TAG == T::TAG {
+                        //     commands.entity(passid.id()).insert(PassReady(data)).insert(PassBindEffectValue(Some(bind.bind.clone())));
+                        // }
+                        *passready = PassReady(data);
+                        *passbind = PassBindEffectValue(Some(bind.bind.clone()));
                     }
-                    dirty_cmd.insert(id_obj.clone(), FlagPassDirtyBindEffectValue);
-
-                    let data = if effect.textures.len() == 0 {
-                        Some((effect_key.0.clone(), effect.0.clone()))
-                    } else {
-                        None
-                    };
-                    // list_model.0.iter().for_each(|(id_obj, _)| {
-                    //     if let Some(passid) = models.get(id_obj.clone()) {
-                    //         ready01_cmd.insert(passid.id(), PassReady(data.clone()));
-                    //     }
-                    // });
-
-                    if pass & T::TAG == T::TAG {
-                        passready_cmd.insert(passid.id(), PassReady(data));
-                        pass01_cmd.insert(passid.id(), PassBindEffectValue(Some(bind.bind.clone())));
-                    }
-                }
-            });
+                });
+            }
         });
     }
-}
+// }
 
-pub struct SysEffectTexturesToModelByMaterialModify<T: TPassID + Component>(PhantomData<T>);
-impl<T: TPassID + Component> TSystemStageInfo for SysEffectTexturesToModelByMaterialModify<T> {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysMaterailCreateCommands::key(), SysMaterialIDCommand::key(),
-            SysTextureResReady1::key(), SysTextureResReady2::key(), 
-            // SysTextureResReady3::key(), SysTextureResReady1::key(), 
-        ]
-    }
-}
-#[setup]
-impl<T: TPassID + Component> SysEffectTexturesToModelByMaterialModify<T> {
-    #[system]
-    pub fn sys(
+// pub struct SysEffectTexturesToModelByMaterialModify<T: TPassID + Component>(PhantomData<T>);
+// impl<T: TPassID + Component> TSystemStageInfo for SysEffectTexturesToModelByMaterialModify<T> {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysMaterailCreateCommands::key(), SysMaterialIDCommand::key(),
+//             SysTextureResReady1::key(), SysTextureResReady2::key(), 
+//             // SysTextureResReady3::key(), SysTextureResReady1::key(), 
+//         ]
+//     }
+// }
+// #[setup]
+// impl<T: TPassID + Component> SysEffectTexturesToModelByMaterialModify<T> {
+//     #[system]
+    pub fn sys_effect_tex_to_model_while_mat_modify(
         materials: Query<
-            GameObject,
-            (&EffectTextureSamplers, &MaterialUsedList, &EPassTag, &AssetKeyShaderEffect, &AssetResShaderEffectMeta),
-            Or<(Changed<EPassTag>, Changed<MaterialUsedList>, Changed<EffectTextureSamplers>, )>
+            (&EffectTextureSamplersComp, &MaterialRefs, &EPassTag, &AssetKeyShaderEffect, &AssetResShaderEffectMeta),
+            Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<EffectTextureSamplersComp>, )>
         >,
-        mut models: Query<GameObject, (&T, &mut PassDirtyBindEffectTextures)>,
-        mut dirty_cmd: Commands<GameObject, FlagPassDirtyBindEffectTextures>,
-        mut pass01_cmd: Commands<GameObject, PassBindEffectTextures>,
-        mut ready01_cmd: Commands<GameObject, PassReady>,
+        mut passes: Query<(&mut PassReady, &mut PassBindEffectTextures)>,
     ) {
         materials.iter().for_each(|(bind, list, pass, effect_key, meta)| {
-            list.0.iter().for_each(|(id_obj, _)| {
-                if let Some((passid, mut dirty)) = models.get_mut(id_obj.clone()) {
-                    let pass = pass.as_pass();
-                    if dirty.0 & pass == 0 {
-                        dirty.0 += pass;
-                    }
-                    dirty_cmd.insert(id_obj.clone(), FlagPassDirtyBindEffectTextures);
-                    
-                    
-                    if pass & T::TAG == T::TAG {
-                        let data = Some((effect_key.0.clone(), meta.0.clone()));
-                        pass01_cmd.insert(passid.id(), PassBindEffectTextures(Some(bind.clone()))); 
-                        ready01_cmd.insert(passid.id(), PassReady(data));
-                    }
+            list.iter().for_each(|target| {
+
+                if let Ok((mut passready, mut passbind)) = passes.get_mut(target.clone()) {
+                    // let pass = pass.as_pass();
+                    // if dirty.0 & pass == 0 {
+                    //     dirty.0 += pass;
+                    // }
+                    // commands.entity(id_obj.clone()).insert(FlagPassDirtyBindEffectTextures);
+
+                    // if pass & T::TAG == T::TAG {
+                    //     let data = Some((effect_key.0.clone(), meta.0.clone()));
+                    //     commands.entity(passid.id()).insert(PassBindEffectTextures(Some(bind.0.clone()))).insert(PassReady(data));
+                    // }
+                    let data = Some((effect_key.0.clone(), meta.0.clone()));
+                    *passready = PassReady(data);
+                    *passbind = PassBindEffectTextures(Some(bind.0.clone()));
                 }
             });
         });
     }
-}
+// }

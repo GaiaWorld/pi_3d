@@ -1,7 +1,6 @@
 
 
 use pi_engine_shell::prelude::*;
-use pi_render::render_3d::binds::scene::effect::ShaderBindSceneAboutEffect;
 
 
 use super::BindSceneEffect;
@@ -15,6 +14,7 @@ pub enum EFogMode {
     Exp2,
 }
 
+#[derive(Component)]
 pub struct SceneFog {
     mode: EFogMode,
     color: (f32, f32, f32),

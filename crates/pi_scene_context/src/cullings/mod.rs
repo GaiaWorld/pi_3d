@@ -11,8 +11,8 @@ pub mod bounding_box;
 pub mod bounding_sphere;
 pub mod sys;
 pub mod bounding;
-pub mod oct_tree;
-pub mod quad_tree;
+// pub mod oct_tree;
+// pub mod quad_tree;
 
 
 #[derive(Debug, Clone)]

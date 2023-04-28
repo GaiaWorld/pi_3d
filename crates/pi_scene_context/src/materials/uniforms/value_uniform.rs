@@ -1,7 +1,7 @@
-
+use pi_engine_shell::prelude::*;
 use pi_atom::Atom;
 
-#[derive(Debug)]
+#[derive(Debug, Component)]
 pub struct ValueBindDesc {
     pub binding: u32,
     pub mat4_name_list: Vec<Atom>,

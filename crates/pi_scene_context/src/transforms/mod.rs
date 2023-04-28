@@ -1,7 +1,5 @@
-use pi_ecs::prelude::{Setup};
-use pi_engine_shell::run_stage::ERunStageChap;
 
-use crate::{plugin::Plugin};
+use pi_engine_shell::prelude::*;
 
 use self::{
     command::*,
@@ -19,49 +17,51 @@ pub mod object;
 
 pub struct PluginTransformNode;
 impl Plugin for PluginTransformNode {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut crate::engine::Engine,
-    //     stages: &mut crate::run_stage::RunStage,
-    // ) -> Result<(), crate::plugin::ErrorPlugin> {
-
-    //     PluginAnimeLocalPosition::new(false, 2 * 1024 * 1024, 1000).init(engine, stages);
-    //     PluginAnimeLocalEuler::new(false, 2 * 1024 * 1024, 1000).init(engine, stages);
-    //     PluginAnimeLocalQuaternion::new(false, 2 * 1024 * 1024, 1000).init(engine, stages);
-    //     PluginAnimeLocalScaling::new(false, 2 * 1024 * 1024, 1000).init(engine, stages);
-
-    //     let world = engine.world_mut();
-
-    //     SysTransformNodeCreateCommand::setup(world, stages.query_stage::<SysTransformNodeCreateCommand>(ERunStageChap::Initial));
-    //     SysTreeCommand::setup(world, stages.query_stage::<SysTreeCommand>(ERunStageChap::Initial));
-    //     SysTransformNodeModifyCommand::setup(world, stages.query_stage::<SysTransformNodeModifyCommand>(ERunStageChap::Initial));
-
-    //     SysLocalEulerModifyCalc::setup(world, stages.query_stage::<SysLocalEulerModifyCalc>(ERunStageChap::Command));
-    //     SysLocalQuaternionModifyCalc::setup(world, stages.query_stage::<SysLocalQuaternionModifyCalc>(ERunStageChap::Command));
-    //     SysLocalMatrixCalc::setup(world, stages.query_stage::<SysLocalMatrixCalc>(ERunStageChap::Command));
-    //     SysWorldMatrixCalc::setup(world, stages.query_stage::<SysWorldMatrixCalc>(ERunStageChap::Command));
-    //     SysWorldMatrixCalc2::setup(world, stages.query_stage::<SysWorldMatrixCalc2>(ERunStageChap::Command));
-
-    //     world.insert_resource(SingleTreeCommandList{ list: vec![] });
-    //     world.insert_resource(SingleTransformNodeCreateCommandList{ list: vec![] });
-    //     world.insert_resource(SingleTransformNodeModifyCommandList{ list: vec![] });
-
-    //     Ok(())
-    // }
-
     fn build(&self, app: &mut bevy::prelude::App) {
+        let id = app.world.spawn_empty().id();
+        app.insert_resource(SingleEmptyEntity::new(id));
+    
+        app.insert_resource(ActionListTransformNodeCreate::default())
+            .insert_resource(ActionListTransformNodeLocalEuler::default())
+            .insert_resource(ActionListTransformNodeLocalPosition::default())
+            .insert_resource(ActionListTransformNodeLocalScaling::default())
+            .insert_resource(ActionListTransformNodeParent::default())
+            ;
+
+        app.add_system(
+            sys_act_transform_node_create.in_set(ERunStageChap::Initial),
+        );
+        app.add_system(
+            sys_act_transform_parent.in_set(ERunStageChap::SecondInitial),
+        );
         app.add_systems(
             (
-                sys_local_euler_calc_rotation.in_set(ERunStageChap::Command),
-                sys_local_quaternion_calc_rotation.after(sys_local_euler_calc_rotation),
-                sys_local_matrix_calc.after(sys_local_quaternion_calc_rotation),
-                sys_world_matrix_calc.after(sys_local_matrix_calc),
-                sys_world_matrix_calc2.after(sys_local_matrix_calc),
+                sys_act_local_euler.in_set(ERunStageChap::Command),
+                sys_act_local_position.in_set(ERunStageChap::Command),
+                sys_act_local_scaling.in_set(ERunStageChap::Command),
             )
         );
-        app.add_plugin(PluginAnimeLocalPosition::new(false, 2 * 1024 * 1024, 1000))
-            .add_plugin(PluginAnimeLocalEuler::new(false, 2 * 1024 * 1024, 1000))
-            .add_plugin(PluginAnimeLocalQuaternion::new(false, 2 * 1024 * 1024, 1000))
-            .add_plugin(PluginAnimeLocalScaling::new(false, 2 * 1024 * 1024, 1000));
+        app.add_systems(
+            (
+                sys_local_euler_calc_rotation,
+                sys_local_quaternion_calc_rotation,
+                sys_local_matrix_calc,
+                sys_world_matrix_calc,
+                sys_world_matrix_calc2,
+            ).chain().in_set(ERunStageChap::CalcWorldMatrix)
+        );
+
+    }
+}
+
+pub struct PluginGroupTransformNode;
+impl PluginGroupTransformNode {
+    pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {
+        group
+            .add(PluginTransformNode)
+            .add(PluginAnimeLocalPosition::new(false, 2 * 1024 * 1024, 1000))
+            .add(PluginAnimeLocalEuler::new(false, 2 * 1024 * 1024, 1000))
+            .add(PluginAnimeLocalQuaternion::new(false, 2 * 1024 * 1024, 1000))
+            .add(PluginAnimeLocalScaling::new(false, 2 * 1024 * 1024, 1000))
     }
 }

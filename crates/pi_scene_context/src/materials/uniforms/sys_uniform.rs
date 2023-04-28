@@ -1,19 +1,12 @@
 
 
-use std::{mem::replace, sync::Arc, marker::PhantomData};
+use std::{sync::Arc};
 
-use pi_assets::mgr::AssetMgr;
-use pi_ecs::{prelude::{ResMut, Query, Res, Commands, Component}, query::{Changed, Or, With}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{object::{GameObject, ObjectID}, run_stage::TSystemStageInfo};
-use pi_render::{rhi::{device::RenderDevice}, renderer::{bind_buffer::{BindBufferAllocator}, sampler::{SamplerRes, BindDataSampler}}, render_3d::{shader::uniform_texture::UniformTextureWithSamplerParam, binds::effect_sampler2d::{EffectBindSampler2D01, EffectBindSampler2D02, EffectBindSampler2D03, EffectBindSampler2D04}}};
-use pi_share::Share;
+use pi_engine_shell::prelude::*;
+
 use crate::{
     materials::{
-        value::FromValueUniformStatistics,
         shader_effect::{AssetKeyShaderEffect},
-        material::{MaterialUsedList, MaterialID, DirtyMaterialUsedList},
-        command::{SysMaterialIDCommand, SysMaterailCreateCommands, SysAssetShaderEffectLoad}
     },
     pass::*
 };
@@ -22,12 +15,12 @@ use crate::{
 use crate::materials::shader_effect::AssetResShaderEffectMeta;
 
 use super::{
-    uniform::{BindEffectValues, BindEffectValueDirty},
+    uniform::*,
     texture::{UniformTextureWithSamplerParams, TextureSlot01, TextureSlot02, TextureSlot03, TextureSlot04},
 };
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum EUniformCommand {
     Mat4(ObjectID, usize, pi_scene_math::Matrix, bool),
     Mat2(ObjectID, usize, pi_scene_math::Matrix2, bool),
@@ -39,138 +32,165 @@ pub enum EUniformCommand {
     Texture(ObjectID, UniformTextureWithSamplerParam, bool),
 }
 
-#[derive(Debug, Default)]
-pub struct SingleUniformCommands(pub Vec<EUniformCommand>);
-
-pub struct SysUniformComand;
-impl TSystemStageInfo for SysUniformComand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysMaterialMetaChange::<PassID01>::key()
-        ]
-    }
-}
-#[setup]
-impl SysUniformComand {
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleUniformCommands>,
-        mut bindvalues:   Query<GameObject, &mut BindEffectValues,     With<BindEffectValues>>,
-        mut textureparams:    Query<GameObject, &mut UniformTextureWithSamplerParams,         With<UniformTextureWithSamplerParams>>,
-        mut flag_cmd: Commands<GameObject, BindEffectValueDirty>,
-    ) {
-        let mut list = replace(&mut cmds.0, vec![]);
-
-        list.drain(..).for_each(|cmd| {
-            match cmd {
-                EUniformCommand::Mat4  (entity, slot, value, ismust) => {
-                    if let Some(mut bindvalues) = bindvalues.get_mut(entity) {
+pub type ActionListUniform = ActionList<EUniformCommand>;
+pub fn sys_act_uniform(
+    mut cmds: ResMut<ActionList<EUniformCommand>>,
+    mut commands:  Commands,
+    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut textureparams: Query<&mut UniformTextureWithSamplerParams>,
+) {
+    cmds.drain().drain(..).for_each(|cmd| {
+        match cmd {
+            EUniformCommand::Mat4  (entity, slot, value, _MainTex) => {
+                if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+                    if let Some(bindvalues) = &mut bindvalues.0 {
                         bindvalues.mat4(slot, value.as_slice());
-                        flag_cmd.insert(entity, BindEffectValueDirty(true));
+                        *flag = BindEffectValueDirty(true);
                     } else {
-                        cmds.0.push(cmd);
-                    }
-                },
-                EUniformCommand::Mat2  (entity, slot, value, ismust) => {
-                    if let Some(mut bindvalues) = bindvalues.get_mut(entity) {
+                        cmds.push(cmd);
+                    } 
+                    // bindvalues.mat4(slot, value.as_slice());
+                    // commands.entity(entity).insert(BindEffectValueDirty(true));
+                } else {
+                    cmds.push(cmd);
+                }
+            },
+            EUniformCommand::Mat2  (entity, slot, value, _) => {
+                if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+                    if let Some(bindvalues) = &mut bindvalues.0 {
                         bindvalues.mat2(slot, value.as_slice());
-                        flag_cmd.insert(entity, BindEffectValueDirty(true));
+                        *flag = BindEffectValueDirty(true);
                     } else {
-                        cmds.0.push(cmd);
-                    }
-                },
-                EUniformCommand::Vec4  (entity, slot, value, ismust) => {
-                    if let Some(mut bindvalues) = bindvalues.get_mut(entity) {
+                        cmds.push(cmd);
+                    } 
+                    // bindvalues.mat2(slot, value.as_slice());
+                    // commands.entity(entity).insert(BindEffectValueDirty(true));
+                } else {
+                    cmds.push(cmd);
+                }
+            },
+            EUniformCommand::Vec4  (entity, slot, value, _MainTex) => {
+                if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+                    if let Some(bindvalues) = &mut bindvalues.0 {
                         bindvalues.vec4(slot, value.as_slice());
-                        flag_cmd.insert(entity, BindEffectValueDirty(true));
+                        *flag = BindEffectValueDirty(true);
                     } else {
-                        cmds.0.push(cmd);
-                    }
-                },
-                EUniformCommand::Vec2  (entity, slot, value, ismust) => {
-                    if let Some(mut bindvalues) = bindvalues.get_mut(entity) {
+                        cmds.push(cmd);
+                    } 
+                } else {
+                    cmds.push(cmd);
+                }
+            },
+            EUniformCommand::Vec2  (entity, slot, value, _) => {
+                if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+                    if let Some(bindvalues) = &mut bindvalues.0 {
                         bindvalues.vec2(slot, value.as_slice());
-                        flag_cmd.insert(entity, BindEffectValueDirty(true));
+                        *flag = BindEffectValueDirty(true);
                     } else {
-                        cmds.0.push(cmd);
-                    }
-                },
-                EUniformCommand::Float (entity, slot, value, ismust) => {
-                    if let Some(mut bindvalues) = bindvalues.get_mut(entity) {
+                        cmds.push(cmd);
+                    } 
+                } else {
+                    cmds.push(cmd);
+                }
+            },
+            EUniformCommand::Float (entity, slot, value, _) => {
+                if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+                    if let Some(bindvalues) = &mut bindvalues.0 {
                         bindvalues.float(slot, value);
-                        flag_cmd.insert(entity, BindEffectValueDirty(true));
+                        *flag = BindEffectValueDirty(true);
                     } else {
-                        cmds.0.push(cmd);
-                    }
-                },
-                EUniformCommand::Int   (entity, slot, value, ismust) => {
-                    if let Some(mut bindvalues) = bindvalues.get_mut(entity) {
+                        cmds.push(cmd);
+                    } 
+                } else {
+                    cmds.push(cmd);
+                }
+            },
+            EUniformCommand::Int   (entity, slot, value, _) => {
+                if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+                    if let Some(bindvalues) = &mut bindvalues.0 {
                         bindvalues.int(slot, value);
-                        flag_cmd.insert(entity, BindEffectValueDirty(true));
+                        *flag = BindEffectValueDirty(true);
                     } else {
-                        cmds.0.push(cmd);
-                    }
-                },
-                EUniformCommand::Uint  (entity, slot, value, ismust) => {
-                    if let Some(mut bindvalues) = bindvalues.get_mut(entity) {
+                        cmds.push(cmd);
+                    } 
+                } else {
+                    cmds.push(cmd);
+                }
+            },
+            EUniformCommand::Uint  (entity, slot, value, _) => {
+                if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+                    if let Some(bindvalues) = &mut bindvalues.0 {
                         bindvalues.uint(slot, value);
-                        flag_cmd.insert(entity, BindEffectValueDirty(true));
+                        *flag = BindEffectValueDirty(true);
                     } else {
-                        cmds.0.push(cmd);
-                    }
-                },
-                EUniformCommand::Texture(entity, param, ismust) => {
-                    if let Some(mut textureparams) = textureparams.get_mut(entity) {
-                        textureparams.0.insert(param.slotname.clone(), Arc::new(param));
-                    }
-                },
-            }
-        });
+                        cmds.push(cmd);
+                    } 
+                } else {
+                    cmds.push(cmd);
+                }
+            },
+            EUniformCommand::Texture(entity, param, ismust) => {
+                if let Ok(mut textureparams) = textureparams.get_mut(entity) {
+                    log::warn!("EUniformCommand::Texture");
+                    textureparams.0.insert(param.slotname.clone(), Arc::new(param));
+                } else {
+                    cmds.push(EUniformCommand::Texture(entity, param, ismust));
+                }
+            },
+        }
+    });
+}
+
+pub struct ActionMaterialUniform;
+impl ActionMaterialUniform {
+    pub fn modify(
+        app: &mut App,
+        cmd: EUniformCommand,
+    ) {
+        app.world.get_resource_mut::<ActionListUniform>().unwrap().push(cmd);
     }
 }
 
 /// * Material 参数变化 影响 Model
 ///   * 没有纹理时 Model 的 Pass 即准备好
 ///   * 有纹理时 Model 的 Pass 需等待纹理加载好
-pub struct SysMaterialMetaChange<T: TPassID + Component>(PhantomData<T>);
-impl<T: TPassID + Component> TSystemStageInfo for SysMaterialMetaChange<T> {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysAssetShaderEffectLoad::key(), 
-        ]
-    }
-}
-#[setup]
-impl<T: TPassID + Component> SysMaterialMetaChange<T> {
-    #[system]
-    pub fn cmd(
+// pub struct SysMaterialMetaChange<T: TPassID + Component>(PhantomData<T>);
+// impl<T: TPassID + Component> TSystemStageInfo for SysMaterialMetaChange<T> {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysAssetShaderEffectLoad::key(), 
+//         ]
+//     }
+// }
+// #[setup]
+// impl<T: TPassID + Component> SysMaterialMetaChange<T> {
+//     #[system]
+    pub fn sys_material_init<T: TPassID + Component>(
         mut materials: Query<
-            GameObject,
             (
-                ObjectID, &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &MaterialUsedList, &EPassTag
+                ObjectID, &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &EPassTag, &mut BindEffect, &mut BindEffectValueDirty
             ),
-            Or<(Changed<AssetResShaderEffectMeta>, Changed<DirtyMaterialUsedList>)>
+            Changed<AssetResShaderEffectMeta>
         >,
-        models: Query<GameObject, &T>,
-        mut effect_values_cmd: Commands<GameObject, BindEffectValues>,
-        mut effect_values_flag_cmd: Commands<GameObject, BindEffectValueDirty>,
-        mut ready01_cmd: Commands<GameObject, PassReady>,
-        mut allocator: ResMut<BindBufferAllocator>,
-        device: Res<RenderDevice>,
+        mut commands: Commands,
+        mut allocator: ResMut<ResBindBufferAllocator>,
+        device: Res<PiRenderDevice>,
     ) {
-        // log::debug!("SysMaterialMetaChange: ");
+        log::debug!("SysMaterialMetaInit: ");
         materials.iter_mut().for_each(|(
             matid,
-            effect_key, effect, list_model, passtag
+            effect_key, effect, passtag, mut bindeffect, mut flag
         )| {
             let pass = passtag.as_pass();
             if pass & T::TAG == T::TAG {
                 if let Some(effect_val_bind) = BindEffectValues::new(&device, effect_key.0.clone(), effect.0.clone(), &mut allocator) {
-                    log::debug!("SysMaterialMetaChange: 1");
-                    effect_values_cmd.insert(matid, effect_val_bind);
-                    effect_values_flag_cmd.insert(matid, BindEffectValueDirty(true));
+                    log::warn!("SysMaterialMetaInit: 1");
+                    // commands.entity(matid).insert(effect_val_bind).insert(BindEffectValueDirty(true));
+                    *bindeffect = BindEffect(Some(effect_val_bind));
+                    *flag = BindEffectValueDirty(true);
                 } else {
-                    effect_values_flag_cmd.insert(matid, BindEffectValueDirty(false));
+                    // commands.entity(matid).insert(BindEffectValueDirty(false));
+                    *flag = BindEffectValueDirty(false);
                 }
                 
                 // let data = if effect.textures.len() == 0 {
@@ -186,66 +206,61 @@ impl<T: TPassID + Component> SysMaterialMetaChange<T> {
             }
         });
     }
-}
+// }
 
-pub struct SysMaterialTexturesChange;
-impl TSystemStageInfo for SysMaterialTexturesChange {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysAssetShaderEffectLoad::key(),
-            // SysUniformComand::key()
-        ]
-    }
-}
-#[setup]
-impl SysMaterialTexturesChange {
-    #[system]
-    pub fn cmd(
+// pub struct SysMaterialTexturesChange;
+// impl TSystemStageInfo for SysMaterialTexturesChange {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysAssetShaderEffectLoad::key(),
+//             // SysUniformComand::key()
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysMaterialTexturesChange {
+//     #[system]
+    pub fn sys_material_textures_modify(
         mut materials: Query<
-            GameObject,
             (
                 ObjectID, &AssetResShaderEffectMeta, &UniformTextureWithSamplerParams
             ),
             Or<(Changed<AssetResShaderEffectMeta>, Changed<UniformTextureWithSamplerParams>)>
         >,
-        mut tex01_cmd:  Commands<GameObject, TextureSlot01>,
-        mut tex02_cmd:  Commands<GameObject, TextureSlot02>,
-        mut tex03_cmd:  Commands<GameObject, TextureSlot03>,
-        mut tex04_cmd:  Commands<GameObject, TextureSlot04>,
-        mut samp01_cmd:  Commands<GameObject, EffectBindSampler2D01>,
-        mut samp02_cmd:  Commands<GameObject, EffectBindSampler2D02>,
-        mut samp03_cmd:  Commands<GameObject, EffectBindSampler2D03>,
-        mut samp04_cmd:  Commands<GameObject, EffectBindSampler2D04>,
-        device: Res<RenderDevice>,
-        asset_samp: Res<Share<AssetMgr<SamplerRes>>>,
+        mut commands:  Commands,
+        device: Res<PiRenderDevice>,
+        asset_samp: Res<ShareAssetMgr<SamplerRes>>,
     ) {
         // log::debug!("SysMaterialMetaChange: ");
         materials.iter_mut().for_each(|(
             matid,
             effect, texparams
         )| {
+            let mut entitycmd = commands.entity(matid);
             texparams.0.iter().for_each(|(slotname, value)| {
+                // log::warn!("TextureSlot01 {:?}", slotname);
                 match effect.textures.binary_search_by(|a| { a.slotname.cmp(slotname) }) {
                     Ok(index) => {
                         if index == 0 {
-                            tex01_cmd.insert(matid, TextureSlot01(value.clone()));
+                            // log::warn!("TextureSlot01");
+                            entitycmd.insert(TextureSlot01(value.clone()));
                             if let Some(samp) = BindDataSampler::create(value.sample.clone(), &device, &asset_samp) {
-                                samp01_cmd.insert(matid, EffectBindSampler2D01(samp))
+                                entitycmd.insert(EffectBindSampler2D01Comp(EffectBindSampler2D01(samp)));
                             }
                         } else if index == 1 {
-                            tex02_cmd.insert(matid, TextureSlot02(value.clone()));
+                            entitycmd.insert(TextureSlot02(value.clone()));
                             if let Some(samp) = BindDataSampler::create(value.sample.clone(), &device, &asset_samp) {
-                                samp02_cmd.insert(matid, EffectBindSampler2D02(samp))
+                                entitycmd.insert(EffectBindSampler2D02Comp(EffectBindSampler2D02(samp)));
                             }
                         } else if index == 2 {
-                            tex03_cmd.insert(matid, TextureSlot03(value.clone()));
+                            entitycmd.insert(TextureSlot03(value.clone()));
                             if let Some(samp) = BindDataSampler::create(value.sample.clone(), &device, &asset_samp) {
-                                samp03_cmd.insert(matid, EffectBindSampler2D03(samp))
+                                entitycmd.insert(EffectBindSampler2D03Comp(EffectBindSampler2D03(samp)));
                             }
                         } else if index == 3 {
-                            tex04_cmd.insert(matid, TextureSlot04(value.clone()));
+                            entitycmd.insert(TextureSlot04(value.clone()));
                             if let Some(samp) = BindDataSampler::create(value.sample.clone(), &device, &asset_samp) {
-                                samp04_cmd.insert(matid, EffectBindSampler2D04(samp))
+                                entitycmd.insert(EffectBindSampler2D04Comp(EffectBindSampler2D04(samp)));
                             }
                         }
                     },
@@ -254,30 +269,31 @@ impl SysMaterialTexturesChange {
             });
         });
     }
-}
+// }
 
-pub struct SysBindValueUpdate;
-impl TSystemStageInfo for SysBindValueUpdate {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            // SysUniformComand::key(),
-        ]
-    }
-}
-#[setup]
-impl SysBindValueUpdate
-{
-    #[system]
-    pub fn update(
+// pub struct SysBindValueUpdate;
+// impl TSystemStageInfo for SysBindValueUpdate {
+//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
+//         vec![
+//             // SysUniformComand::key(),
+//         ]
+//     }
+// }
+// #[setup]
+// impl SysBindValueUpdate
+// {
+//     #[system]
+    pub fn sys_material_uniform_apply(
         mut items: Query<
-            GameObject, 
-            (&mut BindEffectValues, &mut BindEffectValueDirty,),
+            (&mut BindEffect, &mut BindEffectValueDirty,),
             Changed<BindEffectValueDirty>,
         >,
     ) {
         items.iter_mut().for_each(|(mut bind, mut flag)| {
-            bind.update();
-            flag.0 = false;
+            if let Some(bind) = &mut bind.0 {
+                bind.update();
+                flag.0 = false;
+            }
         });
     }
-}
+// }

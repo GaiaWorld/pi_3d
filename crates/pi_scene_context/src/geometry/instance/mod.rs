@@ -7,30 +7,21 @@ pub mod instance_color;
 pub mod instance_tilloff;
 pub mod sys_instance;
 
-pub struct InstanceSourceRecord {
-    pub counter: usize,
-}
-impl InstanceSourceRecord {
-    pub fn id(&mut self) -> usize {
-        self.counter += 1;
-        self.counter
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct InstanceList {
-    pub list: Vec<ObjectID>,
-    id: usize,
-}
-impl InstanceList {
-    pub fn new(record: &mut InstanceSourceRecord) -> Self {
-        Self { list: vec![], id: record.id() }
-    }
-
+#[derive(Debug, Clone, Component)]
+pub struct InstanceSourceID(pub Entity);
+impl InstanceSourceID {
     pub fn id(&self) -> String {
-        self.id.to_string()
+        self.0.to_bits().to_string()
+    }
+}
+impl TEntityRef for InstanceSourceID {
+    fn id(&self) -> Entity {
+        self.0
     }
 }
 
 
-pub struct InstanceSource(pub ObjectID);
+#[derive(Debug, Clone, Default, Component)]
+pub struct DirtyInstanceSourceRefs;
+
+pub type InstanceSourceRefs = EntityRefInfo<DirtyInstanceSourceRefs, InstanceSourceID>;

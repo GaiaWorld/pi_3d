@@ -21,13 +21,13 @@
 * Component
   * EInstanceCode
     * 实例化模式
-  * InstancedList
+  * InstanceList
     * 记录关联的实例的ID列表
-  * InstancedBufferWorldMatrix
+  * InstanceBufferWorldMatrix
     * 存储实例化的变换矩阵数据
-  * InstancedBufferColor
+  * InstanceBufferColor
     * 存储实例化的Color数据
-  * InstancedBufferTilloff
+  * InstanceBufferTilloff
     * 存储实例化的Tilloff数据
 
 ## 骨骼相关

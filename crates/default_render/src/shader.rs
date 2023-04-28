@@ -1,14 +1,12 @@
 use pi_atom::Atom;
-use pi_hash::XHashMap;
-use pi_render::render_3d::shader::{uniform_value::UniformPropertyInt, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet};
-use pi_scene_context::materials::shader_effect::{ShaderEffectMeta, ShaderEffectValueUniformDesc};
+use pi_engine_shell::prelude::*;
 
 pub struct DefaultShader;
 impl DefaultShader {
     pub const KEY: &'static str = "Default";
     pub fn res() -> ShaderEffectMeta {
         ShaderEffectMeta::new(
-            ShaderEffectValueUniformDesc {
+            MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
                 mat4_list: vec![],
                 mat2_list: vec![],

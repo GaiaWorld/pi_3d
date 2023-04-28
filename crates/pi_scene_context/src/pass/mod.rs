@@ -2,14 +2,11 @@
 use std::sync::Arc;
 
 use pi_assets::asset::Handle;
-use pi_engine_shell::object::ObjectID;
-use pi_render::{render_3d::{binds::effect_value::ShaderBindEffectValue, bind_groups::{texture_sampler::{EffectTextureSamplers, BindGroupTextureSamplers}, scene::BindGroupScene, model::BindGroupModel}, shader::shader_effect_meta::ShaderEffectMeta}, renderer::shader::KeyShaderMeta};
-
-use crate::geometry::geometry::RenderGeometry;
+use pi_engine_shell::prelude::*;
 
 pub type PassTag = u16;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct PassTagOrders(pub Vec<EPassTag>, pub PassTag);
 impl PassTagOrders {
     pub fn new(orders: Vec<EPassTag>) -> Self {
@@ -28,7 +25,7 @@ impl PassTagOrders {
 ///   * 每个 Pass 对应一个渲染流程
 ///   * 每个材质 只对应 一个Pass
 ///   * example: ShadowCast, DepthPrePass, Opaque, Skybox, Transparent,
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum EPassTag {
     ShadowCast,
     Opaque,
@@ -52,13 +49,13 @@ impl EPassTag {
     pub fn color_format(val: PassTag) -> wgpu::TextureFormat {
         match val {
             Self::PASS_TAG_01 => wgpu::TextureFormat::Rgba16Float,
-            _ => wgpu::TextureFormat::Rgba8UnormSrgb,
+            _ => wgpu::TextureFormat::Rgba8Unorm,
         }
     }
     pub fn depth_format(val: PassTag) -> Option<wgpu::TextureFormat> {
         match val {
-            Self::PASS_TAG_01 => Some(wgpu::TextureFormat::Depth32Float),
-            _ => Some(wgpu::TextureFormat::Depth32Float),
+            Self::PASS_TAG_01 => Some(wgpu::TextureFormat::Depth24PlusStencil8),
+            _ => Some(wgpu::TextureFormat::Depth24PlusStencil8),
         }
     }
     pub fn depth_write(val: PassTag) -> bool {
@@ -121,52 +118,76 @@ pub trait TPassData<T: Clone> {
     fn val(&self) -> &T;
 }
 
+#[derive(Component)]
 pub struct PassDirtyBindEffectValue(pub PassTag);
+
+#[derive(Component)]
 pub struct PassDirtyBindEffectTextures(pub PassTag);
+
+#[derive(Component)]
 pub struct FlagPassDirtyBindEffectValue;
+
+#[derive(Component)]
 pub struct FlagPassDirtyBindEffectTextures;
 
+#[derive(Component)]
 pub struct PassSource(pub ObjectID);
 
 pub trait TPass {
     fn new() -> Self;
     const TAG: PassTag;
 }
+
+#[derive(Component)]
 pub struct Pass01;
 impl TPass for Pass01 {
     const TAG: PassTag = EPassTag::PASS_TAG_01;
     fn new() -> Self { Self }
 }
+
+#[derive(Component)]
 pub struct Pass02;
 impl TPass for Pass02 {
     const TAG: PassTag = EPassTag::PASS_TAG_02;
     fn new() -> Self { Self }
 }
+
+#[derive(Component)]
 pub struct Pass03;
 impl TPass for Pass03 {
     const TAG: PassTag = EPassTag::PASS_TAG_03;
     fn new() -> Self { Self }
 }
+
+#[derive(Component)]
 pub struct Pass04;
 impl TPass for Pass04 {
     const TAG: PassTag = EPassTag::PASS_TAG_04;
     fn new() -> Self { Self }
 }
+
+#[derive(Component)]
 pub struct Pass05;
 impl TPass for Pass05 {
     const TAG: PassTag = EPassTag::PASS_TAG_05;
     fn new() -> Self { Self }
 }
+
+#[derive(Component)]
 pub struct Pass06;
 impl TPass for Pass06 {
     const TAG: PassTag = EPassTag::PASS_TAG_06;
     fn new() -> Self { Self }
 }
+
+#[derive(Component)]
 pub struct Pass07;
 impl TPass for Pass07 {
     const TAG: PassTag = EPassTag::PASS_TAG_07;
     fn new() -> Self { Self }
 }
+
+#[derive(Component)]
 pub struct Pass08;
 impl TPass for Pass08 {
     const TAG: PassTag = EPassTag::PASS_TAG_08;
@@ -178,48 +199,64 @@ pub trait TPassID {
     fn new(id: ObjectID) -> Self;
     fn id(&self) -> ObjectID;
 }
+
+#[derive(Component)]
 pub struct PassID01(pub ObjectID);
 impl TPassID for PassID01 {
     const TAG: PassTag = EPassTag::PASS_TAG_01;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
 }
+
+#[derive(Component)]
 pub struct PassID02(pub ObjectID);
 impl TPassID for PassID02 {
     const TAG: PassTag = EPassTag::PASS_TAG_02;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
 }
+
+#[derive(Component)]
 pub struct PassID03(pub ObjectID);
 impl TPassID for PassID03 {
     const TAG: PassTag = EPassTag::PASS_TAG_03;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
 }
+
+#[derive(Component)]
 pub struct PassID04(pub ObjectID);
 impl TPassID for PassID04 {
     const TAG: PassTag = EPassTag::PASS_TAG_04;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
 }
+
+#[derive(Component)]
 pub struct PassID05(pub ObjectID);
 impl TPassID for PassID05 {
     const TAG: PassTag = EPassTag::PASS_TAG_05;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
 }
+
+#[derive(Component)]
 pub struct PassID06(pub ObjectID);
 impl TPassID for PassID06 {
     const TAG: PassTag = EPassTag::PASS_TAG_06;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
 }
+
+#[derive(Component)]
 pub struct PassID07(pub ObjectID);
 impl TPassID for PassID07 {
     const TAG: PassTag = EPassTag::PASS_TAG_07;
     fn new(id: ObjectID) -> Self { Self(id) }
     fn id(&self) -> ObjectID { self.0.clone() }
 }
+
+#[derive(Component)]
 pub struct PassID08(pub ObjectID);
 impl TPassID for PassID08 {
     const TAG: PassTag = EPassTag::PASS_TAG_08;
@@ -227,14 +264,14 @@ impl TPassID for PassID08 {
     fn id(&self) -> ObjectID { self.0.clone() }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassBlend(pub Option<bool>);
 impl TPassData<Option<bool>> for PassBlend {
     fn new(val: Option<bool>) -> Self { Self(val) }
     fn val(&self) -> &Option<bool> { &self.0 }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassColorFormat(pub Option<wgpu::TextureFormat>);
 impl TPassData<Option<wgpu::TextureFormat>> for PassColorFormat {
     fn new(val: Option<wgpu::TextureFormat>) -> Self { Self(val) }
@@ -242,7 +279,7 @@ impl TPassData<Option<wgpu::TextureFormat>> for PassColorFormat {
 }
 
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassDepthFormat(pub Option<wgpu::TextureFormat>);
 impl TPassData<Option<wgpu::TextureFormat>> for PassDepthFormat {
     fn new(val: Option<wgpu::TextureFormat>) -> Self { Self(val) }
@@ -252,18 +289,21 @@ impl TPassData<Option<wgpu::TextureFormat>> for PassDepthFormat {
 /// * 标识物体 已准备好的 Passs
 /// * 材质没有纹理时 在使用材质时即准备好
 /// * 材质有纹理时 在纹理准备好时才准备好
+#[derive(Component)]
 pub struct PassReady(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
 impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for PassReady {
     fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
     fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
 }
 
+#[derive(Component)]
 pub struct PassBindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
 impl TPassData<Option<Arc<ShaderBindEffectValue>>> for PassBindEffectValue {
     fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
     fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
 }
 
+#[derive(Component)]
 pub struct PassBindEffectTextures(pub Option<EffectTextureSamplers>);
 impl TPassData<Option<EffectTextureSamplers>> for PassBindEffectTextures {
     fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
@@ -273,7 +313,7 @@ impl TPassData<Option<EffectTextureSamplers>> for PassBindEffectTextures {
 
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassBindGroupScene(pub Option<Arc<BindGroupScene>>);
 impl TPassData<Option<Arc<BindGroupScene>>> for PassBindGroupScene {
     fn new(val: Option<Arc<BindGroupScene>>) -> Self { Self(val) }
@@ -282,7 +322,7 @@ impl TPassData<Option<Arc<BindGroupScene>>> for PassBindGroupScene {
 
 /// * Set1
 /// * 更新依赖: BindModel, BindEffectValues
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassBindGroupModel(pub Option<Arc<BindGroupModel>>);
 impl TPassData<Option<Arc<BindGroupModel>>> for PassBindGroupModel {
     fn new(val: Option<Arc<BindGroupModel>>) -> Self { Self(val) }
@@ -291,12 +331,12 @@ impl TPassData<Option<Arc<BindGroupModel>>> for PassBindGroupModel {
 
 /// * Set2
 /// * 更新依赖: BindTextureSamplers
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassBindGroupTextureSamplers(pub Option<Arc<BindGroupTextureSamplers>>);
 impl TPassData<Option<Arc<BindGroupTextureSamplers>>> for PassBindGroupTextureSamplers {
     fn new(val: Option<Arc<BindGroupTextureSamplers>>) -> Self { Self(val) }
     fn val(&self) -> &Option<Arc<BindGroupTextureSamplers>> { &self.0 }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct RecordPassDraw(pub [Option<ObjectID>; 8]);

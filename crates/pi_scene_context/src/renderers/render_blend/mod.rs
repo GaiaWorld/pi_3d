@@ -1,12 +1,10 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup, Commands}, };
-use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
+use pi_engine_shell::prelude::*;
 
 use crate::object::{ObjectID, GameObject};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct ModelBlend {
     pub enable: bool,
     pub src_color: wgpu::BlendFactor,
@@ -48,97 +46,114 @@ impl ModelBlend {
 
 #[derive(Debug, Clone, Copy)]
 pub enum ERenderBlendCommand {
-    Disable(ObjectID),
-    Blend(ObjectID, ModelBlend),
+    Disable(),
+    Blend(ModelBlend),
 }
 
-#[derive(Debug, Default)]
-pub struct SingleRenderBlendCommandList {
-    pub list: Vec<ERenderBlendCommand>,
-}
-
-pub struct SysRenderBlendCommand;
-impl TSystemStageInfo for SysRenderBlendCommand {
-
-}
-#[setup]
-impl SysRenderBlendCommand {
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleRenderBlendCommandList>,
-        mut items: Query<GameObject, &mut ModelBlend>,
-        mut blends: Commands<GameObject, ModelBlend>,
+pub struct ActionRenderBlend;
+impl ActionRenderBlend {
+    pub fn modify(
+        commands: &mut EntityCommands,
+        val: ERenderBlendCommand,
     ) {
-        let mut list = replace(&mut cmds.list, vec![]);
-        list.drain(..).for_each(|cmd| {
-            match cmd {
-                ERenderBlendCommand::Disable(entity) => {
-                    if let Some(mut item) = items.get_mut(entity) {
-                        item.enable = false;
-                    } else {
-                        blends.insert(entity, ModelBlend::default());
-                    }
-                },
-                ERenderBlendCommand::Blend(entity, value) => {
-                    blends.insert(entity, value);
-                },
-            }
-        });
+        match val {
+            ERenderBlendCommand::Disable() => {
+                commands.insert(ModelBlend::default());
+            },
+            ERenderBlendCommand::Blend(value) => {
+                commands.insert(value);
+            },
+        }
     }
 }
 
-pub trait InterfaceRenderBlend {
-    fn blend(
-        &self,
-        entity: ObjectID,
-        blend: ModelBlend,
-    ) -> &Self;
+// #[derive(Debug, Default)]
+// pub struct SingleRenderBlendCommandList {
+//     pub list: Vec<ERenderBlendCommand>,
+// }
 
-    fn disable_blend(
-        &self,
-        entity: ObjectID
-    ) -> &Self;
-}
-impl InterfaceRenderBlend for crate::engine::Engine {
-    fn blend(
-        &self,
-        entity: ObjectID,
-        value: ModelBlend,
-    ) -> &Self {
-        let world = self.world();
+// pub struct SysRenderBlendCommand;
+// impl TSystemStageInfo for SysRenderBlendCommand {
 
-        let commands = world.get_resource_mut::<SingleRenderBlendCommandList>().unwrap();
-        commands.list.push(ERenderBlendCommand::Blend(entity, value));
+// }
+// #[setup]
+// impl SysRenderBlendCommand {
+//     #[system]
+//     pub fn cmd(
+//         mut cmds: ResMut<SingleRenderBlendCommandList>,
+//         mut items: Query<GameObject, &mut ModelBlend>,
+//         mut blends: Commands<GameObject, ModelBlend>,
+//     ) {
+//         let mut list = replace(&mut cmds.list, vec![]);
+//         list.drain(..).for_each(|cmd| {
+//             match cmd {
+//                 ERenderBlendCommand::Disable(entity) => {
+//                     if let Some(mut item) = items.get_mut(entity) {
+//                         item.enable = false;
+//                     } else {
+//                         blends.insert(entity, ModelBlend::default());
+//                     }
+//                 },
+//                 ERenderBlendCommand::Blend(entity, value) => {
+//                     blends.insert(entity, value);
+//                 },
+//             }
+//         });
+//     }
+// }
 
-        self
-    }
+// pub trait InterfaceRenderBlend {
+//     fn blend(
+//         &self,
+//         entity: ObjectID,
+//         blend: ModelBlend,
+//     ) -> &Self;
 
-    fn disable_blend(
-        &self,
-        entity: ObjectID
-    ) -> &Self {
-        let world = self.world();
+//     fn disable_blend(
+//         &self,
+//         entity: ObjectID
+//     ) -> &Self;
+// }
+// impl InterfaceRenderBlend for crate::engine::Engine {
+//     fn blend(
+//         &self,
+//         entity: ObjectID,
+//         value: ModelBlend,
+//     ) -> &Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleRenderBlendCommandList>().unwrap();
-        commands.list.push(ERenderBlendCommand::Disable(entity));
+//         let commands = world.get_resource_mut::<SingleRenderBlendCommandList>().unwrap();
+//         commands.list.push(ERenderBlendCommand::Blend(entity, value));
 
-        self
-    }
-}
+//         self
+//     }
 
-pub struct PluginRenderBlend;
-impl crate::Plugin for PluginRenderBlend {
-    fn init(
-        &mut self,
-        engine: &mut crate::engine::Engine,
-        stages: &mut crate::run_stage::RunStage,
-    ) -> Result<(), crate::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
+//     fn disable_blend(
+//         &self,
+//         entity: ObjectID
+//     ) -> &Self {
+//         let world = self.world();
 
-        world.insert_resource(SingleRenderBlendCommandList::default());
+//         let commands = world.get_resource_mut::<SingleRenderBlendCommandList>().unwrap();
+//         commands.list.push(ERenderBlendCommand::Disable(entity));
 
-        SysRenderBlendCommand::setup(world, stages.query_stage::<SysRenderBlendCommand>(ERunStageChap::Initial));
+//         self
+//     }
+// }
 
-        Ok(())
-    }
-}
+// pub struct PluginRenderBlend;
+// impl crate::Plugin for PluginRenderBlend {
+//     fn init(
+//         &mut self,
+//         engine: &mut crate::engine::Engine,
+//         stages: &mut crate::run_stage::RunStage,
+//     ) -> Result<(), crate::plugin::ErrorPlugin> {
+//         let world = engine.world_mut();
+
+//         world.insert_resource(SingleRenderBlendCommandList::default());
+
+//         SysRenderBlendCommand::setup(world, stages.query_stage::<SysRenderBlendCommand>(ERunStageChap::Initial));
+
+//         Ok(())
+//     }
+// }

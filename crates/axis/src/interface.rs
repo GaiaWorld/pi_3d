@@ -1,19 +1,31 @@
-use pi_engine_shell::{engine_shell, object::{ObjectID, InterfaceObject}};
-use pi_render::renderer::shader::KeyShaderMeta;
-use pi_scene_context::{materials::{interface::InterfaceMaterialMeta}, pass::EPassTag};
+use pi_engine_shell::prelude::*;
+use pi_scene_context::{pass::EPassTag, materials::command::ActionMaterial};
 use crate::shader::AxisShader;
 
-pub trait InterfaceAxisMaterial {
-    fn create_axis_material(&self) -> ObjectID;
-}
+pub struct InterfaceAxisMaterial;
+impl InterfaceAxisMaterial {
+    pub fn create(
+        app: &mut App
+    ) -> ObjectID {
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
 
-impl InterfaceAxisMaterial for engine_shell::EnginShell {
-    fn create_axis_material(&self) -> ObjectID {
-        log::debug!("create_default_material");
-        let entity = self.new_object();
-        self.as_material(entity, KeyShaderMeta::from(AxisShader::KEY), EPassTag::Opaque);
+        let entity = commands.spawn_empty().id();
+        queue.apply(&mut app.world);
+
+        ActionMaterial::init(app, entity, KeyShaderMeta::from(AxisShader::KEY), EPassTag::Opaque);
 
         entity
     }
-    
 }
+
+// impl InterfaceAxisMaterial for engine_shell::EnginShell {
+//     fn create_axis_material(&self) -> ObjectID {
+//         log::debug!("create_default_material");
+//         let entity = self.new_object();
+//         self.as_material(entity, KeyShaderMeta::from(AxisShader::KEY), EPassTag::Opaque);
+
+//         entity
+//     }
+    
+// }

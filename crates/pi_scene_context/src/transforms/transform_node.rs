@@ -1,12 +1,11 @@
-
-use ncollide3d::utils::IsometryOps;
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Number};
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct TransformNode;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct LocalPosition(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalPosition {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -37,7 +36,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalPosition {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct LocalEulerAngles(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -68,7 +67,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct LocalRotationQuaternion(pub Quaternion);
 impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -101,13 +100,13 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct LocalRoationWithQuaternion(pub bool);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct LocalRotation(pub Rotation3);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct LocalScaling(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -139,7 +138,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct LocalMatrix(pub Matrix, pub bool);
 impl LocalMatrix {
     pub fn new(m: Matrix) -> Self {
@@ -176,7 +175,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct WorldMatrix(pub Matrix, pub bool);
 impl WorldMatrix {
     pub fn new(m: Matrix) -> Self {
@@ -184,7 +183,7 @@ impl WorldMatrix {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct WorldMatrixInv(pub Matrix, pub bool);
 impl WorldMatrixInv {
     pub fn new(m: Matrix) -> Self {
@@ -192,7 +191,7 @@ impl WorldMatrixInv {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct GlobalTransform {
     pub position: Option<Vector3>,
     pub scaling: Option<Vector3>,

@@ -26,11 +26,11 @@ axis = { path = "crates/axis" }
 unlit_material = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }
 
-pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
-render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
-render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
-render_compile = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
-render_macro_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
+pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_compile = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_macro_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 
 pi_bevy_render_plugin = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
 pi_bevy_winit_window = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
@@ -49,13 +49,17 @@ pi_atom = { version="0.2", features = ["serde"] }
 pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 pi_postprocess = { git = "https://github.com/GaiaWorld/pi_post_process.git" }
 
-wgpu = "0.13"
+pi_assets = "0.11"
+
+wgpu = "0.15"
 env_logger = "0.9"
 log = "0.4"
 smallvec = "1.9"
 crossbeam="0.8"
 futures = "0.3"
 bytemuck = { version = "1.4", features = ["derive"] }
+bevy = { version="0.10", default-features = false, features=["bevy_winit"] }
+bevy_mod_debugdump = { version="0.7" }
 
 [patch."https://github.com/GaiaWorld/pi_ecs"]
 pi_ecs = { path = "../pi_ecs" }
@@ -76,6 +80,7 @@ pi_bevy_winit_window = { path="../pi_render_bevy/crates/winit_window" }
 pi_bevy_post_process = { path="../pi_render_bevy/crates/post_process" }
 pi_bevy_ecs_extend = { path="../pi_render_bevy/crates/ecs_extend" }
 pi_bevy_asset = { path="../pi_render_bevy/crates/asset" }
+pi_window_renderer = { path="../pi_render_bevy/crates/window_renderer" }
 
 [patch."https://github.com/GaiaWorld/pi_scene"]
 pi_scene = { path = "../pi_scene" }
@@ -97,69 +102,69 @@ winit = { path = "../winit" }
 name = "cube"
 path = "examples/cube/cube.rs"
 
-[[example]]
-name = "unlit_cube"
-path = "examples/cube/unlit_cube.rs"
-
-[[example]]
-name = "simple"
-path = "examples/simple/simple.rs"
-
-[[example]]
-name = "quad"
-path = "examples/quad/quad.rs"
-
-[[example]]
-name = "skybox"
-path = "examples/skybox/skybox.rs"
-
-[[example]]
-name = "performance_static_render"
-path = "examples/performance/static_10000.rs"
-
-[[example]]
-name = "performance_transform_render"
-path = "examples/performance/transform_10000.rs"
-
-[[example]]
-name = "performance_static_instance"
-path = "examples/performance/static_instance_10000.rs"
-
-[[example]]
-name = "performance_transform_instance"
-path = "examples/performance/transform_instance_10000.rs"
-
-[[example]]
-name = "instance_color_tilloff"
-path = "examples/instance/instance_color_tilloff.rs"
-
-[[example]]
-name = "oct_tree"
-path = "examples/oct_tree/oct_tree.rs"
-
-[[example]]
-name = "noise"
-path = "examples/ball/ball.rs"
-
-[[example]]
-name = "cloud"
-path = "examples/procedural_texture/cloud.rs"
-
-[[example]]
-name = "water"
-path = "examples/procedural_texture/water.rs"
-
-[[example]]
-name = "brdf"
-path = "examples/procedural_texture/brdf.rs"
-
 # [[example]]
-# name = "skin"
-# path = "examples/skin/skin.rs"
-
-[[example]]
-name = "axis"
-path = "examples/axis/axis.rs"
+# name = "unlit_cube"
+# path = "examples/cube/unlit_cube.rs"
+# 
+# [[example]]
+# name = "simple"
+# path = "examples/simple/simple.rs"
+# 
+# [[example]]
+# name = "quad"
+# path = "examples/quad/quad.rs"
+# 
+# [[example]]
+# name = "skybox"
+# path = "examples/skybox/skybox.rs"
+# 
+# [[example]]
+# name = "performance_static_render"
+# path = "examples/performance/static_10000.rs"
+# 
+# [[example]]
+# name = "performance_transform_render"
+# path = "examples/performance/transform_10000.rs"
+# 
+# [[example]]
+# name = "performance_static_instance"
+# path = "examples/performance/static_instance_10000.rs"
+# 
+# [[example]]
+# name = "performance_transform_instance"
+# path = "examples/performance/transform_instance_10000.rs"
+# 
+# [[example]]
+# name = "instance_color_tilloff"
+# path = "examples/instance/instance_color_tilloff.rs"
+# 
+# [[example]]
+# name = "oct_tree"
+# path = "examples/oct_tree/oct_tree.rs"
+# 
+# [[example]]
+# name = "noise"
+# path = "examples/ball/ball.rs"
+# 
+# [[example]]
+# name = "cloud"
+# path = "examples/procedural_texture/cloud.rs"
+# 
+# [[example]]
+# name = "water"
+# path = "examples/procedural_texture/water.rs"
+# 
+# [[example]]
+# name = "brdf"
+# path = "examples/procedural_texture/brdf.rs"
+# 
+# # [[example]]
+# # name = "skin"
+# # path = "examples/skin/skin.rs"
+# 
+# [[example]]
+# name = "axis"
+# path = "examples/axis/axis.rs"
 
 [[example]]
 name = "skin_simple"
@@ -168,16 +173,17 @@ path = "examples/skeleton/simple.rs"
 [[example]]
 name = "anime_01"
 path = "examples/anime/01.rs"
-
-[[example]]
-name = "anime_camera"
-path = "examples/anime/camera.rs"
-
+# 
+# [[example]]
+# name = "anime_camera"
+# path = "examples/anime/camera.rs"
+# 
 [[example]]
 name = "anime_performance"
 path = "examples/anime/performance.rs"
-
-
-[[example]]
-name = "lighting_01"
-path = "examples/lighting/01.rs"
+# 
+# 
+# [[example]]
+# name = "lighting_01"
+# path = "examples/lighting/01.rs"
+# 

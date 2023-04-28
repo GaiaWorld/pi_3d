@@ -1,11 +1,11 @@
 
 
 use pi_engine_shell::prelude::*;
-use pi_render::render_3d::binds::scene::effect::ShaderBindSceneAboutEffect;
 
 use super::BindSceneEffect;
 
 
+#[derive(Component)]
 pub struct AmbientLight {
     color: (f32, f32, f32),
     intensity: f32,

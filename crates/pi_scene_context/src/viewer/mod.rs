@@ -2,16 +2,9 @@ use std::{marker::PhantomData, sync::Arc};
 
 use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
-use pi_render::{
-    renderer::bind_buffer::{
-        BindBufferRange,
-        BindBufferAllocator,
-    },
-    render_3d::binds::scene::base::ShaderBindSceneAboutBase
-};
 use pi_scene_math::{Vector3, Matrix, coordiante_system::CoordinateSytem3};
 
-use crate::{transforms::{transform_node::{GlobalTransform, LocalPosition}, transform_node_sys::sys_world_matrix_calc}, meshes::model::sys_calc_render_matrix};
+use crate::{transforms::{transform_node::{GlobalTransform, LocalPosition}, transform_node_sys::*}, meshes::model::*};
 
 use self::{
     sys::*, sys_culling::*,
@@ -22,26 +15,42 @@ pub mod sys_culling;
 pub mod sys;
 pub mod interface;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Component)]
 pub struct ModelList(pub XHashMap<ObjectID, ObjectID>);
-#[derive(Debug, Default, Clone)]
+
+#[derive(Debug, Default, Clone, Component)]
 pub struct FlagModelList(pub bool);
-#[derive(Debug, Default)]
+
+#[derive(Debug, Default, Component)]
 pub struct ModelListAdd(pub XHashMap<ObjectID, ObjectID>);
+
+#[derive(Component)]
 pub struct FlagModelListAdd(pub bool);
-#[derive(Debug, Default)]
+
+#[derive(Debug, Default, Component)]
 pub struct ModelListDel(pub XHashMap<ObjectID, ObjectID>);
+
+#[derive(Component)]
 pub struct FlagModelListDel(pub bool);
-#[derive(Debug, Default)]
+
+#[derive(Debug, Default, Component)]
 pub struct ModelListAfterCulling(pub Vec<ObjectID>);
 
 /// 视口ID - 可能是 相机、灯光
+#[derive(Component)]
 pub struct ViewerID(pub ObjectID);
 
 /// 视口状态
+#[derive(Debug, Component)]
 pub struct ViewerActive(pub bool);
 
-#[derive(Debug, Clone)]
+#[derive(Component)]
+pub struct ViewerRenderTargetFormatOption {
+    pub color: wgpu::TextureFormat,
+    pub depth_stencil: wgpu::TextureFormat,
+}
+
+#[derive(Debug, Clone, Component)]
 pub struct ViewerViewMatrix(pub Matrix);
 impl Default for ViewerViewMatrix {
     fn default() -> Self {
@@ -54,7 +63,7 @@ impl ViewerViewMatrix {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct ViewerProjectionMatrix(pub Matrix);
 impl Default for ViewerProjectionMatrix {
     fn default() -> Self {
@@ -71,7 +80,7 @@ impl ViewerProjectionMatrix {
 //         bytes_write_to_memory(bytemuck::cast_slice(self.0.transpose().as_slice()), index as usize + ShaderBindSceneAboutBase::OFFSET_PROJECT_MATRIX as usize, buffer);
 //     }
 // }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct ViewerTransformMatrix(pub Matrix);
 impl Default for ViewerTransformMatrix {
     fn default() -> Self {
@@ -89,7 +98,7 @@ impl ViewerTransformMatrix {
 //         bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + ShaderBindSceneAboutBase::OFFSET_VIEW_PROJECT_MATRIX as usize, buffer);
 //     }
 // }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct ViewerGlobalPosition(pub Vector3);
 impl Default for ViewerGlobalPosition {
     fn default() -> Self {
@@ -106,7 +115,7 @@ impl ViewerGlobalPosition {
 //         bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + ShaderBindSceneAboutBase::OFFSET_CAMERA_POSITION as usize, buffer);
 //     }
 // }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct ViewerDirection(pub Vector3);
 impl Default for ViewerDirection {
     fn default() -> Self {
@@ -124,7 +133,7 @@ impl ViewerDirection {
 //     }
 // }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct BindViewer(pub Arc<ShaderBindSceneAboutBase>);
 impl BindViewer {
     pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {
@@ -228,30 +237,30 @@ impl<
 //     }
 // }
 
-pub fn init_plugin_for_viewer<
-    T: TViewerViewMatrix + Component,
-    M,
-    T2: TViewerProjectMatrix + Component,
-    M2
->(
-    app: &mut App,
-    sys_before_view_matrix_calc: impl IntoSystemAppConfig<M>, 
-    sys_before_project_matrix_calc: impl IntoSystemAppConfig<M2>, 
-) {
-    app.add_systems(
-        (
-            sys_calc_view_matrix_by_viewer::<T>.after(sys_before_view_matrix_calc),
-            sys_calc_view_matrix_by_tree::<T>.after(sys_world_matrix_calc),
-            sys_calc_proj_matrix::<T2>.after(sys_before_project_matrix_calc),
-            sys_calc_transform_matrix::<T, T2>,
-            sys_update_viewer_uniform::<T, T2>,
-        ).chain()
-    );
-    app.add_systems(
-        (
-            sys_update_viewer_model_list_by_viewer,
-            sys_update_viewer_model_list_by_model,
-            sys_tick_viewer_culling.after(sys_calc_render_matrix)
-        ).chain()
-    );
-}
+// pub fn init_plugin_for_viewer<
+//     T: TViewerViewMatrix + Component,
+//     M,
+//     T2: TViewerProjectMatrix + Component,
+//     M2
+// >(
+//     app: &mut App,
+//     sys_before_view_matrix_calc: impl IntoSystemAppConfig<M>, 
+//     sys_before_project_matrix_calc: impl IntoSystemAppConfig<M2>, 
+// ) {
+//     app.add_systems(
+//         (
+//             sys_calc_view_matrix_by_viewer::<T>.after(sys_before_view_matrix_calc),
+//             sys_calc_view_matrix_by_tree::<T>.after(sys_world_matrix_calc),
+//             sys_calc_proj_matrix::<T2>.after(sys_before_project_matrix_calc),
+//             sys_calc_transform_matrix::<T, T2>,
+//             sys_update_viewer_uniform::<T, T2>,
+//         ).chain()
+//     );
+//     app.add_systems(
+//         (
+//             sys_update_viewer_model_list_by_viewer,
+//             sys_update_viewer_model_list_by_model,
+//             sys_tick_viewer_culling.after(sys_calc_render_matrix)
+//         ).chain()
+//     );
+// }

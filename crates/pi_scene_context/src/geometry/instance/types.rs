@@ -11,7 +11,7 @@ pub trait TInstanceFlag {
     fn reset(&mut self);
 }
 
-pub trait TInstancedData {
+pub trait TInstanceData {
     fn vertex_kind(&self) -> EVertexDataKind;
     fn collect(list: &Vec<&Self>, key: KeyVertexBuffer, device: &RenderDevice, queue: &RenderQueue, allocator: &mut VertexBufferAllocator, asset_mgr: &Share<AssetMgr<EVertexBufferRange>>) -> Option<Handle<EVertexBufferRange>> ;
     // fn size() -> usize;
@@ -19,13 +19,13 @@ pub trait TInstancedData {
     // fn local_offset(&self) -> usize;
 }
 
-pub fn instance_datas<T: TInstancedData>(
+pub fn instance_datas<T: TInstanceData>(
     list: &[T],
 ) {
     
 }
 
-impl TInstancedData for WorldMatrix {
+impl TInstanceData for WorldMatrix {
     fn vertex_kind(&self) -> EVertexDataKind {
         EVertexDataKind::InsWorldRow1
     }
@@ -59,7 +59,7 @@ impl TInstancedData for WorldMatrix {
     }
 }
 
-pub enum InstancedValue {
+pub enum InstanceValue {
     Mat4(Matrix),
     Mat2(Matrix2),
     Vec4(Vector4),
@@ -69,28 +69,28 @@ pub enum InstancedValue {
     Uint(u32),
 }
 
-impl InstancedValue {
+impl InstanceValue {
     pub fn size(&self) -> usize {
         match self {
-            InstancedValue::Mat4(value) => {
+            InstanceValue::Mat4(value) => {
                 16
             },
-            InstancedValue::Mat2(value) =>  {
+            InstanceValue::Mat2(value) =>  {
                 4
             },
-            InstancedValue::Vec4(value) =>  {
+            InstanceValue::Vec4(value) =>  {
                 4
             },
-            InstancedValue::Vec2(value) =>  {
+            InstanceValue::Vec2(value) =>  {
                 2
             },
-            InstancedValue::Float(value) =>  {
+            InstanceValue::Float(value) =>  {
                 1
             },
-            InstancedValue::Int(value) =>  {
+            InstanceValue::Int(value) =>  {
                 1
             },
-            InstancedValue::Uint(value) =>  {
+            InstanceValue::Uint(value) =>  {
                 1
             },
         }
@@ -99,25 +99,25 @@ impl InstancedValue {
         match buffer {
             EVertexBufferRange::Updatable(buffer, _) => {
                 match self {
-                    InstancedValue::Mat4(value) => {
+                    InstanceValue::Mat4(value) => {
                         buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
                     },
-                    InstancedValue::Mat2(value) =>  {
+                    InstanceValue::Mat2(value) =>  {
                         buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
                     },
-                    InstancedValue::Vec4(value) =>  {
+                    InstanceValue::Vec4(value) =>  {
                         buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
                     },
-                    InstancedValue::Vec2(value) =>  {
+                    InstanceValue::Vec2(value) =>  {
                         buffer.write_data(offset, bytemuck::cast_slice(value.as_slice()))
                     },
-                    InstancedValue::Float(value) =>  {
+                    InstanceValue::Float(value) =>  {
                         buffer.write_data(offset, bytemuck::cast_slice(&[*value]))
                     },
-                    InstancedValue::Int(value) =>  {
+                    InstanceValue::Int(value) =>  {
                         buffer.write_data(offset, bytemuck::cast_slice(&[*value]))
                     },
-                    InstancedValue::Uint(value) =>  {
+                    InstanceValue::Uint(value) =>  {
                         buffer.write_data(offset, bytemuck::cast_slice(&[*value]))
                     },
                 }

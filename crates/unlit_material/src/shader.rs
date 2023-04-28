@@ -1,6 +1,5 @@
 use pi_atom::Atom;
-use pi_render::{render_3d::shader::{uniform_value::{MaterialValueBindDesc, UniformPropertyVec4}, uniform_texture::UniformTexture2DDesc, UniformPropertyName, varying_code::{Varyings, Varying}, block_code::BlockCodeAtom, shader_defines::ShaderDefinesSet}, renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage}};
-use pi_scene_context::materials::shader_effect::{ShaderEffectMeta};
+use pi_engine_shell::prelude::*;
 
 pub struct UnlitShader {
     pub vs_module: wgpu::ShaderModule,

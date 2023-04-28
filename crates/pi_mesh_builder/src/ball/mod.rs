@@ -2,16 +2,10 @@
 use std::{collections::VecDeque, f32::consts::PI};
 
 use pi_assets::{mgr::AssetMgr, asset::Handle};
-use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAssetSyncCreate, AssetSyncWait}};
-use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer::{KeyVertexBuffer, VertexBufferAllocator, EVertexBufferRange}, vertex_buffer_desc::VertexBufferDesc, attributes::{VertexAttribute, EVertexDataKind}, indices::IndicesBufferDesc}};
+use pi_engine_shell::prelude::*;
 use pi_scene_math::Vector3;
 
 use pi_scene_context::{
-    plugin::{Plugin, ErrorPlugin},
-    object::{ObjectID},
-    engine::Engine, 
-    scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery, GeometryDesc, }, meshes::interface::InterfaceMesh
 };
 
 
@@ -24,65 +18,69 @@ impl BallBuilder {
     const KEY_BUFFER_INDICES:   &'static str = "BallIndices";
 }
 
-pub trait InterfaceBall {
-    fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID;
-}
+// pub trait InterfaceBall {
+//     fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID;
+// }
 
-impl InterfaceBall for Engine {
-    fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID {
-        let entity = self.new_object();
-        let world = self
-            .add_to_scene(entity, scene)
-            .as_transform_node(entity)
-            .transform_parent(entity, scene)
-            .as_mesh(entity)
-            .world();
+// impl InterfaceBall for Engine {
+//     fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID {
+//         let entity = self.new_object();
+//         let world = self
+//             .add_to_scene(entity, scene)
+//             .as_transform_node(entity)
+//             .transform_parent(entity, scene)
+//             .as_mesh(entity)
+//             .world();
 
-        let device = world.get_resource::<RenderDevice>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-        println!(">>>>>>>>>>>>>>>>>>>> 0");
+//         let device = world.get_resource::<RenderDevice>().unwrap();
+//         let queue = world.get_resource::<RenderQueue>().unwrap();
+//         println!(">>>>>>>>>>>>>>>>>>>> 0");
 
-        let (positions, normals, indices, uvs) = generate_sphere(sectors, stacks);
+//         let (positions, normals, indices, uvs) = generate_sphere(sectors, stacks);
 
-        println!(">>>>>>>>>>>>>>>>>>>> 1");
-        let flag = String::from("#") + sectors.to_string().as_str() + "#" + stacks.to_string().as_str();
-        let keypos = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_POSITION) + flag.as_str());
-        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(positions.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
+//         println!(">>>>>>>>>>>>>>>>>>>> 1");
+//         let flag = String::from("#") + sectors.to_string().as_str() + "#" + stacks.to_string().as_str();
+//         let keypos = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_POSITION) + flag.as_str());
+//         self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(positions.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
 
-        let keynormal = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_NORMAL) + flag.as_str());
-        self.create_vertex_buffer(keynormal.clone(), bytemuck::cast_slice(normals.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
+//         let keynormal = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_NORMAL) + flag.as_str());
+//         self.create_vertex_buffer(keynormal.clone(), bytemuck::cast_slice(normals.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
         
-        let keyuv = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_UV) + flag.as_str());
-        self.create_vertex_buffer(keyuv.clone(), bytemuck::cast_slice(uvs.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
+//         let keyuv = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_UV) + flag.as_str());
+//         self.create_vertex_buffer(keyuv.clone(), bytemuck::cast_slice(uvs.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
 
-        let key = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_INDICES) + flag.as_str());
-        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(indices.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
+//         let key = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_INDICES) + flag.as_str());
+//         self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(indices.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
 
-        self.use_geometry(
-            entity,
-            vec![
-                VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
-                VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
-                VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
-            ],
-            Some(
-                IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
-            )
-        );
+//         self.use_geometry(
+//             entity,
+//             vec![
+//                 VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
+//                 VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
+//                 VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
+//             ],
+//             Some(
+//                 IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
+//             )
+//         );
 
-        entity
-    }
-}
+//         entity
+//     }
+// }
 
 pub struct PluginBallBuilder;
 impl Plugin for PluginBallBuilder {
-    fn init(
-        &mut self,
-        engine: &mut Engine,
-        stages: &mut pi_engine_shell::run_stage::RunStage,
-    ) -> Result<(), ErrorPlugin> {
+    // fn init(
+    //     &mut self,
+    //     engine: &mut Engine,
+    //     stages: &mut pi_engine_shell::run_stage::RunStage,
+    // ) -> Result<(), ErrorPlugin> {
 
-        Ok(())
+    //     Ok(())
+    // }
+
+    fn build(&self, app: &mut App) {
+        // app.add
     }
 }
 

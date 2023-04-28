@@ -3,14 +3,14 @@
 /// * 通过 layer mask 数据标识目标的层级信息
 /// * 提供用户操作接口, 对应实现操作命令, 实现操作命令队列, 命令队列的执行System
 
-use pi_engine_shell::plugin::*;
+use pi_engine_shell::prelude::*;
 
-use self::command::*;
+// use self::command::*;
 
-pub mod command;
+// pub mod command;
 pub mod interface;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LayerMask(pub u32);
 impl Default for LayerMask {
     fn default() -> Self {
@@ -20,6 +20,40 @@ impl Default for LayerMask {
 impl LayerMask {
     pub fn include(&self, other: &Self) -> bool {
         return self.0 & other.0 > 0;
+    }
+}
+
+pub struct OpsLayerMask(Entity, LayerMask);
+impl OpsLayerMask {
+    pub fn ops(transformnode: Entity, mask: u32) -> Self {
+        Self(transformnode, LayerMask(mask))
+    }
+}
+pub type ActionListLayerMask = ActionList<OpsLayerMask>;
+pub fn sys_act_layer_mask(
+    mut cmds: ResMut<ActionListLayerMask>,
+    mut nodes: Query<&mut LayerMask>,
+) {
+    cmds.drain().drain(..).for_each(|OpsLayerMask(entity, layermask)| {
+        if let Ok(mut node) = nodes.get_mut(entity) {
+            if *node != layermask {
+                *node = layermask;
+            }
+        } else {
+            cmds.push(OpsLayerMask(entity, layermask));
+        }
+    });
+}
+
+pub struct ActionLayerMask;
+impl ActionLayerMask {
+    pub fn modify(
+        app: &mut App,
+        entity: Entity,
+        val: LayerMask,
+    ) {
+        let mut cmds = app.world.get_resource_mut::<ActionListLayerMask>().unwrap();
+        cmds.push(OpsLayerMask(entity, val));
     }
 }
 
@@ -40,8 +74,8 @@ impl Plugin for PluginLayerMask {
     // }
 
     fn build(&self, app: &mut pi_engine_shell::prelude::App) {
-        
-        // app.add_system(sys_cmd_layer_mask.in_set(ERunStageChap::Initial));
+        app.insert_resource(ActionListLayerMask::default());
+        app.add_system(sys_act_layer_mask.in_set(ERunStageChap::Command));
 
         // app.world.insert_resource(SingleLayerMaskCommandList::default());
     }

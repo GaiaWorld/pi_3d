@@ -1,11 +1,10 @@
 use std::{marker::PhantomData, sync::Arc};
 
+use pi_engine_shell::prelude::*;
 use pi_assets::{asset::Handle, mgr::AssetMgr};
-use pi_render::{rhi::{device::RenderDevice}, renderer::{bind_buffer::{BindBufferAllocator}, shader::KeyShaderMeta}, render_3d::binds::effect_value::ShaderBindEffectValue};
 use pi_scene_math::Number;
-use pi_share::Share;
 use crate::{
-    materials::{value::FromValueUniformStatistics, shader_effect::{ShaderEffectMeta}},
+    materials::{value::FromValueUniformStatistics},
 };
 
 use super::{
@@ -18,7 +17,13 @@ use super::{
     vec2::Vec2Uniform,
 };
 
+#[derive(Component)]
 pub struct BindEffectValueDirty(pub bool);
+
+
+#[derive(Component, Deref, DerefMut)]
+pub struct BindEffect(pub Option<BindEffectValues>);
+
 
 pub struct BindEffectValues {
     pub mat4_: Mat4Uniform,
@@ -33,7 +38,7 @@ pub struct BindEffectValues {
 }
 impl BindEffectValues {
     pub fn new(
-        device: &RenderDevice,
+        device: &PiRenderDevice,
         key_meta: KeyShaderMeta,
         meta: Handle<ShaderEffectMeta>,
         allocator: &mut BindBufferAllocator,

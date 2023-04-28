@@ -1,110 +1,91 @@
-use std::mem::replace;
 
 use pi_engine_shell::prelude::*;
-use pi_render::{rhi::device::RenderDevice, renderer::bind_buffer::{BindBufferAllocator}};
-use pi_share::Share;
+
 
 use crate::{
-    object::{ObjectID, GameObject},
     flags::SceneID,
     scene::environment::fog::SceneFog,
     animation::base::{SceneAnimationContext, AnimationGroups},
-    transforms::tree_left_right::{TreeLeftRoot, TreeRightRoot},
+    transforms::{tree_left_right::{TreeLeftRoot, TreeRightRoot}, command::ActionTransformNode}, prelude::{ActionListTransformNodeParent, OpsTransformNodeParent},
 };
 
 use super::{
-    coordinate_system::SceneCoordinateSytem,
+    coordinate_system::SceneCoordinateSytem3D,
     environment::{ambient_light::AmbientLight, BindSceneEffect, scene_time::SceneTime, }
 };
 
-// #[derive(Debug)]
-// pub enum SceneCommand {
-//     Create(ObjectID, ObjectID, ObjectID),
-//     AddObject(ObjectID, SceneID),
-// }
-
-// #[derive(Debug, Default)]
-// pub struct SingleSceneCommandList {
-//     pub list: Vec<SceneCommand>,
-// }
-// pub struct SysSceneCreateCommand;
-// impl TSystemStageInfo for SysSceneCreateCommand {
-    
-// }
-// #[setup]
-// impl SysSceneCreateCommand {
-//     #[system]
-//     pub fn cmd(
-//         mut cmds: ResMut<SingleSceneCommandList>,
-//         mut coordsys_cmd: Commands<GameObject, SceneCoordinateSytem>,
-//         mut scenetime_cmd: Commands<GameObject, SceneTime>,
-//         mut scenefog_cmd: Commands<GameObject, SceneFog>,
-//         mut sceneambient_cmd: Commands<GameObject, AmbientLight>,
-//         mut bindeffect_cmd: Commands<GameObject, BindSceneEffect>,
-//         mut leftroot_cmd: Commands<GameObject, TreeLeftRoot>,
-//         mut rightroot_cmd: Commands<GameObject, TreeRightRoot>,
-//         mut obj_cmd: Commands<GameObject, SceneID>,
-//         mut sceanime_cmd: Commands<GameObject, SceneAnimationContext>,
-//         mut objanime_cmd: Commands<GameObject, AnimationGroups>,
-//         mut dynbuffer: ResMut<BindBufferAllocator>,
-//         device: Res<RenderDevice>,
-//     ) {
-//         let mut list = replace(&mut cmds.list, vec![]);
-
-//         list.drain(..).for_each(|cmd| {
-//             match cmd {
-//                 SceneCommand::Create(entity, left, right) => {
-//                     coordsys_cmd.insert(entity, SceneCoordinateSytem::default());
-//                     scenetime_cmd.insert(entity, SceneTime::new());
-//                     scenefog_cmd.insert(entity, SceneFog::new());
-//                     sceneambient_cmd.insert(entity, AmbientLight::new());
-//                     sceanime_cmd.insert(entity, SceneAnimationContext::new());
-//                     leftroot_cmd.insert(entity, TreeLeftRoot::new(left));
-//                     rightroot_cmd.insert(entity, TreeRightRoot::new(right));
-
-//                     if let Some(bindeffect) = BindSceneEffect::new(&device, &mut dynbuffer) {
-//                         bindeffect_cmd.insert(entity, bindeffect);
-//                     }
-//                 },
-//                 SceneCommand::AddObject(entity, scene) => {
-//                     obj_cmd.insert(entity, scene);
-//                     objanime_cmd.insert(entity, AnimationGroups::default());
-//                 },
-//             }
-//         });
-
-//     }
-// }
-
-pub fn init_scene(
-    entity: Entity,
-    id_left: Entity,
-    id_right: Entity,
-    commands: &mut Commands,
-    device: &PiRenderDevice,
-    dynbuffer: &mut BindBufferAllocator,
+pub type ActionListSceneCreate = ActionList<Entity>;
+pub fn sys_act_scene_create(
+    mut cmds: ResMut<ActionListSceneCreate>,
+    mut commands: Commands,
+    mut dynbuffer: ResMut<ResBindBufferAllocator>,
+    device: Res<PiRenderDevice>,
 ) {
-    let cmds = commands.entity(entity)
-        .insert(SceneCoordinateSytem::default())
-        .insert(SceneTime::new())
-        .insert(SceneFog::new())
-        .insert(AmbientLight::new())
-        .insert(SceneAnimationContext::new())
-        .insert(TreeLeftRoot::new(id_left))
-        .insert(TreeRightRoot::new(id_right));
-    
-    if let Some(bindeffect) = BindSceneEffect::new(&device, dynbuffer) {
-        cmds.insert(bindeffect);
-    }
+    cmds.drain().drain(..).for_each(|entity| {
+        ActionScene::init(&mut commands, entity);
+        ActionTransformNode::init_for_tree(&mut commands.entity(entity));
+        if let Some(bindeffect) = BindSceneEffect::new(&device, &mut dynbuffer) {
+            commands.entity(entity).insert(bindeffect);
+        }
+    });
 }
 
+pub struct ActionScene;
+impl ActionScene {
+    pub fn create(
+        app: &mut App,
+    ) -> Entity {
+        
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
 
-pub fn add_to_scene(
-    entity: Entity,
-    scene: Entity,
-    commands: &mut Commands,
-) {
-    commands.entity(entity)
-        .insert(SceneID(scene))
-        .insert(AnimationGroups::default());
+        let id_left = commands.spawn_empty().id();
+        let id_right = commands.spawn_empty().id();
+
+        let mut entitycmds = commands.spawn_empty();
+
+        entitycmds
+            .insert(SceneCoordinateSytem3D::default())
+            .insert(SceneTime::new())
+            .insert(SceneFog::new())
+            .insert(AmbientLight::new())
+            .insert(SceneAnimationContext::new())
+            .insert(TreeLeftRoot::new(id_left))
+            .insert(TreeRightRoot::new(id_right))
+            .insert(AnimationGroups::default());
+
+        let entity = entitycmds.id();
+
+        entity
+    }
+    
+    pub fn init(
+        commands: &mut Commands,
+        scene: Entity,
+    ) {
+        let id_left = commands.spawn_empty().id();
+        let id_right = commands.spawn_empty().id();
+
+        let mut entitycmds = commands.entity(scene);
+
+        entitycmds
+            .insert(SceneCoordinateSytem3D::default())
+            .insert(SceneTime::new())
+            .insert(SceneFog::new())
+            .insert(AmbientLight::new())
+            .insert(SceneAnimationContext::new())
+            .insert(TreeLeftRoot::new(id_left))
+            .insert(TreeRightRoot::new(id_right))
+            .insert(AnimationGroups::default());
+    }
+    
+    pub(crate) fn add_to_scene(
+        commands: &mut EntityCommands,
+        tree: &mut ActionListTransformNodeParent,
+        scene: Entity,
+    ) {
+        tree.push(OpsTransformNodeParent::ops(commands.id(), scene));
+        commands
+            .insert(SceneID(scene));
+    }
 }

@@ -1,22 +1,11 @@
-use pi_engine_shell::{
-    engine_shell::EnginShell,
-    object::{InterfaceObject, ObjectID},
-    plugin::{ErrorPlugin, Plugin},
-    run_stage::RunStage,
-};
-use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer::KeyVertexBuffer, vertex_buffer_desc::VertexBufferDesc, attributes::{VertexAttribute, EVertexDataKind}, indices::IndicesBufferDesc}};
-use pi_scene_context::{
-    geometry::{TInterfaceGeomtery},
-    meshes::interface::InterfaceMesh,
-    scene::interface::InterfaceScene,
-    transforms::interface::InterfaceTransformNode,
-};
+use pi_engine_shell::prelude::*;
+use pi_scene_context::meshes::command::ActionMesh;
 
 pub struct AxisBuilder;
 impl AxisBuilder {
-    const KEY_BUFFER_POSITION: &'static str = "AxisPosition";
-    const KEY_BUFFER_COLOR4: &'static str = "AxisColor";
-    const KEY_BUFFER_INDICES: &'static str = "AxisIndices";
+    pub(crate) const KEY_BUFFER_POSITION: &'static str = "AxisPosition";
+    pub(crate) const KEY_BUFFER_COLOR4: &'static str = "AxisColor";
+    pub(crate) const KEY_BUFFER_INDICES: &'static str = "AxisIndices";
 
     pub fn position() -> Vec<f32> {
         let mut x_axis: Vec<f32> = vec![
@@ -92,80 +81,46 @@ impl AxisBuilder {
         ];
         data
     }
-}
 
-pub trait InterfaceAxis {
-    fn regist_axis(&self) -> &Self;
-    fn new_axis(&self, scene: ObjectID) -> ObjectID;
-}
-
-impl InterfaceAxis for EnginShell {
-    fn regist_axis(&self) -> &Self {
-        let world = self.world();
-        let device = world.get_resource::<RenderDevice>().unwrap();
-        let queue = world.get_resource::<RenderQueue>().unwrap();
-
-        let keypos = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION);
-        self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(&AxisBuilder::position()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-        let keycolor = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4);
-        self.create_vertex_buffer(keycolor.clone(), bytemuck::cast_slice(&AxisBuilder::colors()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-        let key = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_INDICES);
-        self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(&AxisBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-        self
+    pub fn attrs_meta() -> Vec<VertexBufferDesc> {
+        vec![
+            VertexBufferDesc::vertices(
+                KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION),
+                None,
+                vec![VertexAttribute {
+                    kind: EVertexDataKind::Position,
+                    format: wgpu::VertexFormat::Float32x3,
+                }]
+            ),
+            VertexBufferDesc::vertices(
+                KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4),
+                None,
+                vec![VertexAttribute {
+                    kind: EVertexDataKind::Color4,
+                    format: wgpu::VertexFormat::Float32x4,
+                }]
+            ),
+        ]
     }
-
-    fn new_axis(&self, scene: ObjectID) -> ObjectID {
-        let entity = self.new_object();
-        self.add_to_scene(entity, scene)
-            .as_transform_node(entity)
-            .transform_parent(entity, scene)
-            .as_mesh(entity);
-
-        let keypos = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION);
-        let keycolor = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4);
-        let key = KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_INDICES);
-
-        self.use_geometry(
-            entity,
-            vec![
-                VertexBufferDesc::vertices(
-                    keypos,
-                    None,
-                    vec![VertexAttribute {
-                        kind: EVertexDataKind::Position,
-                        format: wgpu::VertexFormat::Float32x3,
-                    }]
-                ),
-                VertexBufferDesc::vertices(
-                    keycolor,
-                    None,
-                    vec![VertexAttribute {
-                        kind: EVertexDataKind::Color4,
-                        format: wgpu::VertexFormat::Float32x4,
-                    }]
-                ),
-            ],
-            Some(
-                IndicesBufferDesc {
-                    format: wgpu::IndexFormat::Uint16,
-                    buffer_range: None,
-                    buffer: key,
-                }
-            )
-        );
-
-        entity
+    pub fn indices_meta() -> Option<IndicesBufferDesc> {
+        Some(IndicesBufferDesc {
+            format: wgpu::IndexFormat::Uint16,
+            buffer_range: None,
+            buffer: KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_INDICES),
+        })
     }
 }
 
-pub struct PluginAxisBuilder;
-impl Plugin for PluginAxisBuilder {
-    fn init(&mut self, engine: &mut EnginShell, stages: &mut RunStage) -> Result<(), ErrorPlugin> {
-        engine.regist_axis();
+pub struct InterfaceAxis;
+impl InterfaceAxis {
+    pub fn new_axis(
+        app: &mut App,
+        scene: ObjectID
+    ) -> ObjectID {
+    
+        let id_mesh = ActionMesh::create(app, scene, String::from("Axis"));
+        ActionMesh::use_geometry(app, id_mesh, AxisBuilder::attrs_meta(), AxisBuilder::indices_meta());
 
-        Ok(())
+        id_mesh
     }
 }

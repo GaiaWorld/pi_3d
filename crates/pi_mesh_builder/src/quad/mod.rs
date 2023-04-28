@@ -1,15 +1,8 @@
 
 
-use pi_assets::{mgr::AssetMgr, asset::Handle};
-use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAssetSyncCreate, AssetSyncWait}};
-use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer_desc::VertexBufferDesc, vertex_buffer::{KeyVertexBuffer, EVertexBufferRange, VertexBufferAllocator}, attributes::{EVertexDataKind, VertexAttribute}, indices::IndicesBufferDesc}};
-use pi_scene_context::{
-    plugin::{Plugin, ErrorPlugin},
-    object::{ObjectID},
-    engine::Engine,
-    scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery}, meshes::interface::InterfaceMesh
-};
+
+use pi_engine_shell::prelude::*;
+use pi_scene_context::{geometry::ActionVertexBuffer, meshes::command::ActionMesh};
 
 pub struct QuadBuilder;
 impl QuadBuilder {
@@ -76,55 +69,89 @@ impl QuadBuilder {
     }
 }
 
-pub trait InterfaceQuad {
-    fn regist_quad(
-        &self
-    ) -> &Self;
-    fn new_quad(
-        & self,
-        scene: ObjectID,
-    ) -> ObjectID;
+pub struct ActionQuad;
+impl ActionQuad {
+    pub fn create(
+        app: &mut App,
+        scene: Entity,
+        name: String,
+    ) -> Entity {
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
+        let id_geo = commands.spawn_empty().id();
+
+        let id_mesh = ActionMesh::create(app, scene, name);
+        ActionMesh::use_geometry(app, id_mesh, QuadBuilder::attrs_meta(), Some(QuadBuilder::indices_meta()));
+
+        id_mesh
+    }
 }
 
-impl InterfaceQuad for Engine {
-    fn regist_quad(
-        &self
-    ) -> &Self {
-        self.create_vertex_buffer(KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER), bytemuck::cast_slice(&QuadBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
-        self.create_vertex_buffer(KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-        self
+fn regist(
+    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+    mut data_map: ResMut<VertexBufferDataMap3D>,
+) {
+    if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER)) {
+        ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER), bytemuck::cast_slice(&QuadBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
     }
-    fn new_quad(
-        & self,
-        scene: ObjectID,
-    ) -> ObjectID {
+    if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES)) {
+        ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+    }
+}
 
-        let entity = self.new_object();
-        self.add_to_scene(entity, scene)
-                                    .as_transform_node(entity)
-                                    .transform_parent(entity, scene)
-                                    .as_mesh(entity);
+// pub trait InterfaceQuad {
+//     fn regist_quad(
+//         &self
+//     ) -> &Self;
+//     fn new_quad(
+//         & self,
+//         scene: ObjectID,
+//     ) -> ObjectID;
+// }
+
+// impl InterfaceQuad for Engine {
+//     fn regist_quad(
+//         &self
+//     ) -> &Self {
+//         self.create_vertex_buffer(KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER), bytemuck::cast_slice(&QuadBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+//         self.create_vertex_buffer(KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+
+//         self
+//     }
+//     fn new_quad(
+//         & self,
+//         scene: ObjectID,
+//     ) -> ObjectID {
+
+//         let entity = self.new_object();
+//         self.add_to_scene(entity, scene)
+//                                     .as_transform_node(entity)
+//                                     .transform_parent(entity, scene)
+//                                     .as_mesh(entity);
         
-        self.use_geometry(
-            entity,
-            QuadBuilder::attrs_meta(),
-            Some(QuadBuilder::indices_meta())
-        );
+//         self.use_geometry(
+//             entity,
+//             QuadBuilder::attrs_meta(),
+//             Some(QuadBuilder::indices_meta())
+//         );
 
-        entity
-    }
-}
+//         entity
+//     }
+// }
 
 pub struct PluginQuadBuilder;
 impl Plugin for PluginQuadBuilder {
-    fn init(
-        &mut self,
-        engine: &mut Engine,
-        stages: &mut pi_engine_shell::run_stage::RunStage,
-    ) -> Result<(), ErrorPlugin> {
-        engine.regist_quad();
+    // fn init(
+    //     &mut self,
+    //     engine: &mut Engine,
+    //     stages: &mut pi_engine_shell::run_stage::RunStage,
+    // ) -> Result<(), ErrorPlugin> {
+    //     engine.regist_quad();
 
-        Ok(())
+    //     Ok(())
+    // }
+
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(regist);
     }
 }

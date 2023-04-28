@@ -12,9 +12,9 @@ keywords = ["3d scene"]
 pi_scene_context = { path = "../pi_scene_context" }
 pi_engine_shell = { path = "../pi_engine_shell" }
 
-pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
-render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
-render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy-shader" }
+pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 
@@ -23,7 +23,7 @@ pi_share = "0.4"
 pi_slotmap = "0.1"
 pi_hash = "0.1"
 pi_atom = { version="0.2", features = ["serde"] }
-pi_assets = "0.10"
+pi_assets = "0.11"
 pi_async = "0.5"
 
 pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }

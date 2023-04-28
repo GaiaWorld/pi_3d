@@ -34,7 +34,7 @@ pub struct TypeAnimeContext<D: FrameDataValue + 'static> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Component)]
 pub struct AnimationGroups {
     pub map: XHashMap<Atom, AnimationGroupID>,
 }
@@ -47,6 +47,7 @@ pub struct GlobalAnimeAbout {
     pub dispose_animationgroups: Vec<(SceneID, AnimationGroupID)>,
 }
 
+#[derive(Component)]
 pub struct SceneAnimationContext(pub(crate) AnimationContextAmount<ObjectID, AnimationGroupManagerDefault<ObjectID>>, pub(crate) Vec<AnimationGroupID>);
 impl SceneAnimationContext {
     pub fn new() -> Self {

@@ -6,7 +6,7 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix}, Matrix, Rotation3, Quaternion, Vector3};
 use pi_slotmap_tree::Storage;
 
-use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem};
+use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem3D};
 
 use super::{
     transform_node::*,
@@ -74,15 +74,18 @@ use super::{
 // impl SysLocalMatrixCalc {
 //     #[system]
     pub fn sys_local_matrix_calc(
-        mut localmatrixs: Query<(ObjectID, &LocalPosition, &LocalScaling, &LocalRotation), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
+        mut localmatrixs: Query<(ObjectID, &LocalPosition, &LocalScaling, &LocalRotation, &mut LocalMatrix), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
         mut commands: Commands,
     ) {
         let time = Instant::now();
-        localmatrixs.iter_mut().for_each(|(obj, position, scaling, rotation)| {
-            log::debug!("LocalMatrixCalc:");
+        localmatrixs.iter_mut().for_each(|(obj, position, scaling, rotation, mut localmatrix)| {
+            // log::warn!("LocalMatrixCalc:");
             let mut matrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
-            commands.entity(obj).insert(LocalMatrix(matrix, true));
+            // commands.entity(obj).insert(LocalMatrix(matrix, true));
+            // localmatrix.0 = matrix;
+            // localmatrix.1 = true;
+            *localmatrix = LocalMatrix(matrix, true);
         });
         let time1 = Instant::now();
         log::debug!("Local Matrix Calc: {:?}", time1 - time);
@@ -102,8 +105,8 @@ use super::{
 // impl SysWorldMatrixCalc {
 //     #[system]
     pub fn sys_world_matrix_calc(
-        query_scenes: Query<GameObject, (ObjectID, &SceneCoordinateSytem)>,
-        mut globaltransforms: Query<GameObject, (&mut LocalMatrix, &GlobalTransform)>,
+        query_scenes: Query<(ObjectID, &SceneCoordinateSytem3D)>,
+        mut globaltransforms: Query<(&mut LocalMatrix, &GlobalTransform)>,
         mut commands: Commands,
         tree: EntityTree,
     ) {
@@ -113,16 +116,18 @@ use super::{
         for (root, _) in query_scenes.iter() {
             let mut temp_ids: Vec<(ObjectID, bool, Matrix)> = vec![];
             let mut idflag: usize = 0;
+            // log::warn!("World Matrix Calc: 0");
             tree.iter(root).for_each(|entity| {
                 let (p_id, p_dirty, p_m) = calc_world_root(
                     &mut globaltransforms,
                     &mut commands,
                     entity,
                 );
-                
+                // log::warn!("World Matrix Calc: 1");
                 match tree.get_down(p_id) {
                     Some(node_children_head) => {
-                        let node_children_head = node_children_head.head;
+                        // log::warn!("World Matrix Calc: 2");
+                        let node_children_head = node_children_head.head.0;
                         tree.iter(node_children_head).for_each(|entity| {
                             idflag += 1;
                             if idflag % 2 == 0 {
@@ -168,7 +173,7 @@ use super::{
 // impl SysWorldMatrixCalc2 {
 //     #[system]
     pub fn sys_world_matrix_calc2(
-        query_scenes: Query<(ObjectID, &SceneCoordinateSytem)>,
+        query_scenes: Query<(ObjectID, &SceneCoordinateSytem3D)>,
         mut globaltransforms: Query<(&mut LocalMatrix, &GlobalTransform)>,
         mut commands: Commands,
         tree: EntityTree,
@@ -188,7 +193,7 @@ use super::{
                 
                 match tree.get_down(p_id) {
                     Some(node_children_head) => {
-                        let node_children_head = node_children_head.head;
+                        let node_children_head = node_children_head.head.0;
                         tree.iter(node_children_head).for_each(|entity| {
                             idflag += 1;
                             if idflag % 2 == 1 {
@@ -223,7 +228,7 @@ use super::{
 // }
 
 fn calc_world(
-    globaltransforms: &mut Query<GameObject, (&mut LocalMatrix, &GlobalTransform)>,
+    globaltransforms: &mut Query<(&mut LocalMatrix, &GlobalTransform)>,
     commands: &mut Commands,
     tree: &EntityTree,
     mut temp_ids: Vec<(ObjectID, bool, Matrix)>
@@ -238,7 +243,7 @@ fn calc_world(
                 temp_ids.into_iter().for_each(|(p_id, p_dirty, p_m)| {
                     match tree.get_down(p_id) {
                         Some(node_children_head) => {
-                            let node_children_head = node_children_head.head;
+                            let node_children_head = node_children_head.head.0;
                             tree.iter(node_children_head).for_each(|entity| {
                                 calc_world_one(
                                     globaltransforms,
@@ -270,11 +275,11 @@ fn calc_world_one(
     p_m: &Matrix,
 ) {
     match globaltransforms.get_mut(entity) {
-        Some((mut lmatrix, transform)) => {
+        Ok((mut lmatrix, transform)) => {
             let real_dirty = p_dirty || lmatrix.1 ;
             lmatrix.1 = false;
+            // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if real_dirty {
-                // log::debug!(">>>>> GlobalTransform 2");
                 let transform = GlobalTransform::calc(&p_m, &lmatrix);
                 let matrix = transform.matrix.clone();
                 // let matrix = lmatrix.0.clone();
@@ -288,7 +293,7 @@ fn calc_world_one(
                 temp_list.push((entity, false, transform.matrix.clone()));
             }
         },
-        None => {
+        Err(e) => {
             
         },
     }
@@ -300,7 +305,7 @@ fn calc_world_root(
     entity: ObjectID,
 ) -> (ObjectID, bool, Matrix) {
     match globaltransforms.get_mut(entity) {
-        Some((mut lmatrix, transform)) => {
+        Ok((mut lmatrix, transform)) => {
             if lmatrix.1 {
                 lmatrix.1 = false;
                 // log::debug!(">>>>> GlobalTransform 0");
@@ -317,7 +322,7 @@ fn calc_world_root(
                 (entity, false, transform.matrix.clone())
             }
         },
-        None => {
+        Err(e) => {
             // log::debug!(">>>>> WorldMatrixCalc Root");
             (entity, false, Matrix::identity())
         },

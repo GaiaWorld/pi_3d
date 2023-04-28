@@ -10,10 +10,13 @@ use crate::{viewer::command::Viewport};
 use super::{graphic::RenderNode, base::DrawList3D};
 
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct RendererHasher(pub DefaultHasher);
 
-#[derive(Debug)]
+#[derive(Component)]
+pub struct RendererEnable(pub bool);
+
+#[derive(Debug, Component)]
 pub struct RenderSize(pub(crate) u32, pub(crate) u32);
 impl RenderSize {
     pub fn new(width: u32, height: u32) -> Self {
@@ -23,28 +26,88 @@ impl RenderSize {
     pub fn height(&self) -> u32 { self.1 }
 }
 
+#[derive(Component)]
 pub struct RenderColorFormat(pub wgpu::TextureFormat);
+impl Default for RenderColorFormat {
+    fn default() -> Self {
+        Self(wgpu::TextureFormat::Rgba8Unorm)
+    }
+}
+
+#[derive(Component)]
 pub struct RenderColorClear(pub wgpu::Color);
+impl Default for RenderColorClear {
+    fn default() -> Self {
+        Self(wgpu::Color { r: 0., g: 0., b: 0., a: 0. })
+    }
+}
+
+#[derive(Component)]
 pub struct RenderDepthFormat(pub Option<wgpu::TextureFormat>);
+impl Default for RenderDepthFormat {
+    fn default() -> Self {
+        Self(Some(wgpu::TextureFormat::Depth24PlusStencil8))
+    }
+}
+
+#[derive(Component)]
 pub struct RenderDepthClear(pub f32);
+impl Default for RenderDepthClear {
+    fn default() -> Self {
+        Self(1.)
+    }
+}
+
+#[derive(Component)]
+pub struct RenderStencilClear(pub u32);
+impl Default for RenderStencilClear {
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
+#[derive(Component)]
+pub struct RenderAutoClearColor(pub bool);
+impl Default for RenderAutoClearColor {
+    fn default() -> Self {
+        Self(false)
+    }
+}
+
+#[derive(Component)]
+pub struct RenderAutoClearDepth(pub bool);
+impl Default for RenderAutoClearDepth {
+    fn default() -> Self {
+        Self(false)
+    }
+}
+
+#[derive(Component)]
+pub struct RenderAutoClearStencil(pub bool);
+impl Default for RenderAutoClearStencil {
+    fn default() -> Self {
+        Self(false)
+    }
+}
+
+#[derive(Component)]
+pub struct RenderToFinalTarget(pub bool);
+impl Default for RenderToFinalTarget {
+    fn default() -> Self {
+        Self(true)
+    }
+}
 
 #[derive(Component)]
 pub struct Renderer {
     pub ready: bool,
     pub viewport: Viewport,
-    pub opaque_graphic: Option<NodeId>,
     pub draws: DrawList3D,
 }
 impl Renderer {
-    pub fn new(
-        name: &Atom,
-        object_id: ObjectID,
-        rg: &mut PiRenderGraph,
-    ) -> Self {
-        let opaque_graphic = rg.add_node(String::from(name.as_str()), RenderNode::new(object_id)).unwrap();
+    pub fn new() -> Self {
         Self {
             viewport: Viewport::default(),
-            opaque_graphic: Some(opaque_graphic),
             draws: DrawList3D { list: vec![], viewport: (0., 0., 1., 1., 0., 1.) },
             ready: false,
         }

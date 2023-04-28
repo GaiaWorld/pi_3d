@@ -9,6 +9,8 @@ use pi_async::{
 
 use pi_share::{ShareMutex};
 
+mod effect_sampler2d;
+mod effect_texture2d;
 
 pub mod shell_node;
 pub mod frame_time;
@@ -19,6 +21,7 @@ pub mod run_stage;
 pub mod setup;
 pub mod assets;
 pub mod prelude;
+mod entity_ref;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 

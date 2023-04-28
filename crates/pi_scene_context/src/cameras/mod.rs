@@ -1,9 +1,18 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{viewer::{PluginViewer, command::*, sys_culling::*, init_plugin_for_viewer}, transforms::transform_node_sys::*};
+use crate::{
+    viewer::{
+        sys_culling::*,
+        sys::*
+    },
+};
 
-use self::{command::*, camera_sys::{sys_calc_target_camera_local_rot, sys_update_camera_param, sys_change_camera_render_size}, target_camera::TargetCameraParam, camera::CameraParam};
+use self::{
+    command::*,
+    camera_sys::*,
+    target_camera::TargetCameraParam, camera::CameraParam
+};
 
 pub mod camera;
 pub mod free_camera;
@@ -60,12 +69,59 @@ impl Plugin for PluginCamera {
         //     SysModelListAfterCullingTick::setup(world, stages.query_stage::<SysModelListAfterCullingTick>(ERunStageChap::Command));
         //     app.add_system(system)
         // }
+        app.insert_resource(ActionListCameraCreate::default());
+        app.insert_resource(ActionListCameraMode::default());
+        app.insert_resource(ActionListCameraTarget::default());
+        app.insert_resource(ActionListCameraActive::default());
+        app.insert_resource(ActionListCameraFixedMode::default());
+        app.insert_resource(ActionListCameraFov::default());
+        app.insert_resource(ActionListCameraOrthSize::default());
+        app.insert_resource(ActionListCameraNearFar::default());
+        app.insert_resource(ActionListCameraRenderer::default());
 
-        app.add_system(sys_cmds_camera_renderer_modify.in_set(ERunStageChap::Command));
-        app.add_system(sys_update_camera_param.in_set(ERunStageChap::Command));
-        app.add_system(sys_cmds_target_camera_modify.in_set(ERunStageChap::Command));
-        app.add_system(sys_change_camera_render_size.in_set(ERunStageChap::Command));
+        app.add_systems(
+            (
+                sys_camera_create,
+                sys_camera_renderer_action,
+            ).chain().in_set(ERunStageChap::Initial)
+        );
 
-        init_plugin_for_viewer::<TargetCameraParam, Fn, CameraParam, Fn>(app, sys_cmds_target_camera_modify, sys_world_matrix_calc)
+        app.add_systems(
+            (
+                sys_camera_mode,
+                sys_camera_fixed_mode,
+                sys_camera_nearfar,
+                sys_camera_fov,
+                sys_camera_orth_size,
+                sys_camera_active,
+                sys_camera_target,
+            ).in_set(ERunStageChap::SecondInitial)
+        );
+
+        app.add_systems(
+            (
+                sys_update_camera_param,
+                sys_cmds_target_camera_modify,
+                sys_change_camera_render_size,
+                sys_camera_renderer_modify,
+            ).chain().in_set(ERunStageChap::Command)
+        );
+
+        // init_plugin_for_viewer::<TargetCameraParam, Fn, CameraParam, Fn>(app, sys_cmds_target_camera_modify, sys_world_matrix_calc)
+        app.add_systems(
+            (
+                sys_calc_view_matrix_by_viewer::<TargetCameraParam>,
+                sys_calc_proj_matrix::<CameraParam>,
+                sys_calc_transform_matrix::<TargetCameraParam, CameraParam>,
+                sys_update_viewer_uniform::<TargetCameraParam, CameraParam>,
+            ).chain().in_set(ERunStageChap::DrawUniformToGPU)
+        );
+        app.add_systems(
+            (
+                sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>,
+                sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>,
+                sys_tick_viewer_culling::<TargetCameraParam, CameraParam>
+            ).chain().in_set(ERunStageChap::DrawBinds)
+        );
     }
 }

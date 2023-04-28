@@ -7,7 +7,7 @@ use pi_hash::XHashMap;
 use pi_render::rhi::{RenderQueue, device::RenderDevice};
 use pi_share::{ThreadSync, Share};
 
-use crate::{run_stage::{RunStage, KeySystem, TSystemStageInfo, ERunStageChap}, plugin::{ErrorPlugin, Plugin}, engine_shell::EnginShell, object::ObjectID};
+use crate::{run_stage::{KeySystem, TSystemStageInfo, ERunStageChap}, plugin::{ErrorPlugin, Plugin}, engine_shell::EnginShell, object::ObjectID};
 
 
 use crate::prelude::*;
@@ -170,42 +170,42 @@ impl<
 // }
 
 
-pub trait InterfaceAssetSyncCreate<K0, D>
-where
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-    D: Asset<Key = K0> + Component,
- {
-    fn create_asset(
-        &self,
-        key: K0,
-        data: D,
-    ) -> Handle<D>;
-    fn check_asset(
-        &self,
-        key: &K0,
-    ) -> bool;
-}
+// pub trait InterfaceAssetSyncCreate<K0, D>
+// where
+//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+//     D: Asset<Key = K0> + Component,
+//  {
+//     fn create_asset(
+//         &self,
+//         key: K0,
+//         data: D,
+//     ) -> Handle<D>;
+//     fn check_asset(
+//         &self,
+//         key: &K0,
+//     ) -> bool;
+// }
 
-impl<K0, D> InterfaceAssetSyncCreate<K0, D> for Share<AssetMgr<D>>
-where
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-    D: Asset<Key = K0> + Component,
-{
-    fn create_asset(
-        &self,
-        key: K0,
-        data: D,
-    ) -> Handle<D> {
-        self.insert(key.clone(), data).unwrap()
-    }
+// impl<K0, D> InterfaceAssetSyncCreate<K0, D> for Share<AssetMgr<D>>
+// where
+//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+//     D: Asset<Key = K0> + Component,
+// {
+//     fn create_asset(
+//         &self,
+//         key: K0,
+//         data: D,
+//     ) -> Handle<D> {
+//         self.insert(key.clone(), data).expect("Fail")
+//     }
 
-    fn check_asset(
-        &self,
-        key: &K0,
-    ) -> bool {
-        self.contains_key(key)
-    }
-}
+//     fn check_asset(
+//         &self,
+//         key: &K0,
+//     ) -> bool {
+//         self.contains_key(key)
+//     }
+// }
 
 ///
 /// K0: 资产在资源缓存表的 资产Key

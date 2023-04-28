@@ -2,16 +2,10 @@
 
 use std::ops::Range;
 
-use pi_assets::{mgr::AssetMgr, asset::Handle};
-use pi_engine_shell::{object::InterfaceObject, assets::sync_load::{InterfaceAssetSyncCreate, AssetSyncWait}};
-use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{vertex_buffer_desc::VertexBufferDesc, vertex_buffer::{KeyVertexBuffer, VertexBufferAllocator, EVertexBufferRange}, attributes::{VertexAttribute, EVertexDataKind}, indices::IndicesBufferDesc}};
+use pi_engine_shell::prelude::*;
 
 use pi_scene_context::{
-    plugin::{Plugin, ErrorPlugin},
-    object::{ObjectID},
-    engine::Engine, 
-    scene::{ interface::InterfaceScene},
-    transforms::interface::InterfaceTransformNode, geometry::{TInterfaceGeomtery}, meshes::interface::InterfaceMesh
+    meshes::command::ActionMesh, geometry::ActionVertexBuffer
 };
 
 pub struct CubeBuilder;
@@ -132,55 +126,67 @@ impl CubeBuilder {
     }
 }
 
-pub trait InterfaceCube {
-    fn regist_cube(
-        &self
-    ) -> &Self;
-    fn new_cube(
-        & self,
+pub struct ActionCube;
+impl ActionCube {
+    pub fn new_cube(
+        app: &mut App,
         scene: ObjectID,
-    ) -> ObjectID;
-}
-
-impl InterfaceCube for Engine {
-    fn regist_cube(
-        &self
-    ) -> &Self {
-        self.create_vertex_buffer(KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
-        self.create_vertex_buffer(KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-        self
-    }
-    fn new_cube(
-        & self,
-        scene: ObjectID,
+        name: String,
     ) -> ObjectID {
+        let id_mesh = ActionMesh::create(app, scene, name);
+        ActionMesh::use_geometry(app, id_mesh, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
 
-        let entity = self.new_object();
-        self.add_to_scene(entity, scene)
-                                    .as_transform_node(entity)
-                                    .transform_parent(entity, scene)
-                                    .as_mesh(entity);
-
-        self.use_geometry(
-            entity,
-            CubeBuilder::attrs_meta(),
-            Some(CubeBuilder::indices_meta())
-        );
-
-        entity
+        id_mesh
     }
 }
+
+// impl InterfaceCube for Engine {
+    fn setup(
+        asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+        mut data_map: ResMut<VertexBufferDataMap3D>,
+    ) {
+        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER)) {
+            ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        }
+        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES)) {
+            // log::warn!("CubeBuilder::KEY_BUFFER_INDICES");
+            ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        }
+    }
+    // fn new_cube(
+    //     & self,
+    //     scene: ObjectID,
+    // ) -> ObjectID {
+
+    //     let entity = self.new_object();
+    //     self.add_to_scene(entity, scene)
+    //                                 .as_transform_node(entity)
+    //                                 .transform_parent(entity, scene)
+    //                                 .as_mesh(entity);
+
+    //     self.use_geometry(
+    //         entity,
+    //         CubeBuilder::attrs_meta(),
+    //         Some(CubeBuilder::indices_meta())
+    //     );
+
+    //     entity
+    // }
+// }
 
 pub struct PluginCubeBuilder;
 impl Plugin for PluginCubeBuilder {
-    fn init(
-        &mut self,
-        engine: &mut Engine,
-        stages: &mut pi_engine_shell::run_stage::RunStage,
-    ) -> Result<(), ErrorPlugin> {
-        engine.regist_cube();
+    // fn init(
+    //     &mut self,
+    //     engine: &mut Engine,
+    //     stages: &mut pi_engine_shell::run_stage::RunStage,
+    // ) -> Result<(), ErrorPlugin> {
+    //     engine.regist_cube();
 
-        Ok(())
+    //     Ok(())
+    // }
+
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(setup);
     }
 }

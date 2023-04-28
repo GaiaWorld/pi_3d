@@ -1,18 +1,32 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Query, Setup}, query::Write};
-use pi_ecs_macros::setup;
-
-use crate::object::{ObjectID, GameObject};
+use pi_engine_shell::prelude::*;
 
 
 #[derive(Debug, Clone, Copy)]
 pub enum TransparentCommand {
-    Apply(ObjectID),
-    Undo(ObjectID),
+    Apply(),
+    Undo(),
 }
 
-#[derive(Debug, Default)]
+pub struct ActionRenderTransparent;
+impl ActionRenderTransparent {
+    pub fn modify(
+        commands: &mut EntityCommands,
+        val: TransparentCommand,
+    ) {
+        match val {
+            TransparentCommand::Apply() => {
+                meshes.insert(Transparent);
+            },
+            TransparentCommand::Undo() => {
+                meshes.remove::<Transparent>();
+            },
+        }
+    }
+}
+
+#[derive(Debug, Default, Resource)]
 pub struct SingleTransparentCommandList {
     list: Vec<TransparentCommand>
 }

@@ -1,9 +1,12 @@
 use pi_scene_math::{coordiante_system::CoordinateSytem3, camera::TOrthographicCameraTool};
+use pi_engine_shell::prelude::*;
 
 use crate::viewer::{TViewerProjectMatrix, ViewerProjectionMatrix};
 
 pub mod system;
 
+
+#[derive(Component)]
 pub struct DirectionalShadowProjection {
     minz: f32,
     maxz: f32,

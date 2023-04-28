@@ -1,22 +1,21 @@
 use std::{time::Instant, sync::Arc};
 
-use pi_assets::{asset::Handle, mgr::AssetMgr};
 use pi_engine_shell::prelude::*;
-use pi_render::{rhi::{device::RenderDevice, RenderQueue}, renderer::{bind_buffer::{BindBufferAllocator}, attributes::EVertexDataKind, vertex_buffer::{KeyVertexBuffer, VertexBufferAllocator, EVertexBufferRange}, instance::types::{TInstanceFlag, TInstancedData}}, render_3d::binds::model::base::ShaderBindModelAboutMatrix};
 use pi_scene_math::Matrix;
 use pi_share::Share;
 
 use crate::{
     transforms::{transform_node::{WorldMatrix, WorldMatrixInv}},
-    geometry::instance::{InstanceSource, instance_world_matrix::InstancedWorldMatrixDirty},
+    geometry::instance::{InstanceSourceID, instance_world_matrix::InstanceWorldMatrixDirty, InstanceSourceRefs},
 };
 
 use super::{abstract_mesh::AbstructMesh};
 
+#[derive(Component)]
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
 impl BindModel {
     pub fn new(
-        device: &RenderDevice,
+        device: &PiRenderDevice,
         allocator: &mut BindBufferAllocator,
     ) -> Option<Self> {
 
@@ -28,6 +27,7 @@ impl BindModel {
     }
 }
 
+#[derive(Component)]
 pub struct RenderMatrixDirty(pub bool);
 impl TInstanceFlag for RenderMatrixDirty {
     fn dirty(&self) -> bool {
@@ -39,14 +39,14 @@ impl TInstanceFlag for RenderMatrixDirty {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct RenderWorldMatrix(pub Matrix);
 impl RenderWorldMatrix {
     pub fn new(m: Matrix) -> Self {
         Self(m)
     }
 }
-impl TInstancedData for RenderWorldMatrix {
+impl TInstanceData for RenderWorldMatrix {
     fn vertex_kind(&self) -> EVertexDataKind {
         EVertexDataKind::InsWorldRow1
     }
@@ -76,7 +76,7 @@ impl TInstancedData for RenderWorldMatrix {
     // }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct RenderWorldMatrixInv(pub Matrix);
 impl RenderWorldMatrixInv {
     pub fn new(m: Matrix) -> Self {
@@ -84,21 +84,9 @@ impl RenderWorldMatrixInv {
     }
 }
 
-// pub struct SysRenderMatrixUpdate;
-// impl TSystemStageInfo for SysRenderMatrixUpdate {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             SysWorldMatrixCalc::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysRenderMatrixUpdate {
-//     #[system]
     pub fn sys_calc_render_matrix(
-        mut source_mesh: Query<&mut InstancedWorldMatrixDirty>,
         mut meshes: Query<
-            (ObjectID, &AbstructMesh, &WorldMatrix, &WorldMatrixInv, &mut RenderWorldMatrix, &mut RenderWorldMatrixInv, &RenderMatrixDirty, Option<&InstanceSource>),
+            (ObjectID, &AbstructMesh, &WorldMatrix, &WorldMatrixInv, Option<&InstanceSourceID>),
             Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>)>
         >,
         mut commands: Commands,
@@ -107,16 +95,18 @@ impl RenderWorldMatrixInv {
 
         meshes.iter_mut().for_each(|(
             obj, _,
-            worldmatrix, worldmatrix_inv, mut render_wm, mut render_wminv,
-            mut dirty, id_source
+            worldmatrix, worldmatrix_inv, id_source
         )| {
-            // log::debug!("SysModelUniformUpdate:");
-            render_wm.0.clone_from(&worldmatrix.0);
-            render_wminv.0.clone_from(&worldmatrix_inv.0);
-            commands.entity(obj).insert(RenderMatrixDirty(true));
+            // log::warn!("calc_render_matrix:");
+            // render_wm.0.clone_from(&worldmatrix.0);
+            // render_wminv.0.clone_from(&worldmatrix_inv.0);
+            commands.entity(obj)
+                .insert(RenderWorldMatrix(worldmatrix.0.clone()))
+                .insert(RenderWorldMatrixInv(worldmatrix_inv.0.clone()))
+                .insert(RenderMatrixDirty(true));
 
             if let Some(id_source) = id_source {
-                commands.entity(id_source.0).insert(InstancedWorldMatrixDirty(true));
+                commands.entity(id_source.0).insert(InstanceWorldMatrixDirty(true));
                 // if let Some(mut flag) = source_mesh.get_mut(id_source.0) {
                 //     flag.0 = true;
                 // }
@@ -126,19 +116,7 @@ impl RenderWorldMatrixInv {
         let time1 = Instant::now();
         log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
     }
-// }
 
-// pub struct SysRenderMatrixUniformUpdate;
-// impl TSystemStageInfo for SysRenderMatrixUniformUpdate {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             SysRenderMatrixUpdate::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysRenderMatrixUniformUpdate {
-//     #[system]
     pub fn sys_render_matrix_for_uniform(
         mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &mut RenderMatrixDirty, &BindModel), Changed<RenderMatrixDirty>>,
     ) {
@@ -150,4 +128,3 @@ impl RenderWorldMatrixInv {
             flag.0 = false;
         });
     }
-// }

@@ -6,7 +6,10 @@ use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}};
 
 use pi_engine_shell::prelude::*;
 
-use self::{base::{GlobalAnimeAbout, TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve}, system::{ sys_scene_anime_ctx, sys_listen_type_anime_ctx, sys_calc_type_anime}, command::{SingleControlCommands, SingleModifyCommands, sys_anime_control_cmds, sys_anime_modify_cmds}};
+use self::{
+    base::{GlobalAnimeAbout, TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve},
+    system::{ sys_scene_anime_ctx, sys_listen_type_anime_ctx, sys_calc_type_anime}, command::{sys_anime_group_create, sys_anime_add_target_anime, sys_anime_start, sys_anime_pause, ActionListAnimeGroupCreate, ActionListAnimePause, ActionListAnimeGroupStart, ActionListAddTargetAnime}
+};
 
 pub mod base;
 pub mod command;
@@ -14,6 +17,24 @@ pub mod system;
 pub mod interface;
 pub mod listen;
 
+pub struct PluginAnimation;
+impl Plugin for PluginAnimation {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(ActionListAnimeGroupCreate::default());
+        app.insert_resource(ActionListAnimePause::default());
+        app.insert_resource(ActionListAnimeGroupStart::default());
+        app.insert_resource(ActionListAddTargetAnime::default());
+
+        app.add_systems(
+            (
+                sys_anime_group_create,
+                sys_anime_add_target_anime,
+                sys_anime_start,
+                sys_anime_pause,
+            ).chain().in_set(ERunStageChap::Command)
+        );
+    }
+}
 
 pub struct PluginTypeAnime<D: FrameDataValue + Component + Debug>(bool, usize, usize, PhantomData<D>);
 impl<D: FrameDataValue + Component + Debug> PluginTypeAnime<D> {
@@ -83,11 +104,11 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
             let ty = globalaboput.ty_alloc.alloc().expect("");
             app.world.insert_resource(globalaboput);
 
-            app.world.insert_resource(SingleControlCommands::default());
-            app.world.insert_resource(SingleModifyCommands::default());
+            // app.world.insert_resource(SingleControlCommands::default());
+            // app.world.insert_resource(SingleModifyCommands::default());
 
-            app.add_system(sys_anime_control_cmds.in_set(ERunStageChap::Initial));
-            app.add_system(sys_anime_modify_cmds.in_set(ERunStageChap::Initial));
+            // app.add_system(sys_anime_control_cmds.in_set(ERunStageChap::Initial));
+            // app.add_system(sys_anime_modify_cmds.in_set(ERunStageChap::Initial));
             // SysAnimeControlCommand::setup(world, stages.query_stage::<SysAnimeControlCommand>(ERunStageChap::Initial));
             // SysAnimeModifyCommand::setup(world, stages.query_stage::<SysAnimeModifyCommand>(ERunStageChap::Initial));
 
@@ -108,8 +129,10 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
 
         app.world.insert_resource(type_ctx);
 
-        app.add_system(sys_listen_type_anime_ctx.in_set(ERunStageChap::Initial));
-        app.add_system(sys_calc_type_anime.in_set(ERunStageChap::Anime));
+        app.add_system(
+            sys_listen_type_anime_ctx::<D>.in_set(ERunStageChap::Command)
+        );
+        app.add_system(sys_calc_type_anime::<D>.in_set(ERunStageChap::Anime));
 
         // SysTypeAnimeDispose::<D>::setup(world, stages.query_stage::<SysTypeAnimeDispose::<D>>(ERunStageChap::Initial));
         // SysTypeAnime::<D>::setup(world, stages.query_stage::<SysTypeAnime::<D>>(ERunStageChap::Anime));

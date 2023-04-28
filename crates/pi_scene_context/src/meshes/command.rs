@@ -1,425 +1,432 @@
-use std::mem::replace;
 
-use pi_assets::mgr::AssetMgr;
-use pi_ecs::{prelude::{ResMut, Query, Commands, EntityDelete, Event, Res, EntityCommands, Component}};
-use pi_ecs_macros::{setup, listen};
-use pi_engine_shell::run_stage::TSystemStageInfo;
-use pi_render::{rhi::device::RenderDevice, renderer::bind_buffer::{BindBufferAllocator}};
-use pi_scene_math::{Vector4, Matrix};
-use pi_share::Share;
+use pi_engine_shell::prelude::*;
+use pi_scene_math::{Vector4, Matrix, Number};
 
 use crate::{
-    object::{ObjectID, GameObject},
     geometry::{
-        instance::{instance_color::{InstanceColor, InstancedColorDirty}, instance_tilloff::{InstanceTillOff, InstanceTillOffDirty}, InstanceList, InstanceSource, InstanceSourceRecord, instance_world_matrix::InstancedWorldMatrixDirty}, vertex_buffer_useinfo::GeometryID
+        instance::{
+            instance_color::{InstanceColor, InstanceColorDirty},
+            instance_tilloff::{InstanceTillOff, InstanceTillOffDirty},
+            instance_world_matrix::InstanceWorldMatrixDirty,
+            *, self
+        },
+        command::*
     },
     pass::*,
-    renderers::pass::*, state::{MeshStates, DirtyMeshStates}
+    renderers::{
+        pass::*,
+        opaque::*,
+        render_blend::*,
+        render_sort::*,
+        render_primitive::*,
+        render_depth_and_stencil::*
+    },
+    state::{MeshStates, DirtyMeshStates},
+    layer_mask::*, scene::command::ActionScene, flags::{SceneID}, transforms::command::ActionTransformNode, animation::command::ActionAnime, skeleton::skeleton::BindSkinValue, materials::material::MaterialID, prelude::ActionListTransformNodeParent
 };
 
-use super::{model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel}, abstract_mesh::AbstructMesh, Mesh, lighting::{MeshCastShadow, MeshReceiveShadow}};
+use super::{
+    model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel},
+    abstract_mesh::AbstructMesh,
+    Mesh,
+    lighting::{MeshCastShadow, MeshReceiveShadow}
+};
+
+
+pub struct OpsMeshCreation(pub Entity, pub Entity, pub String);
+impl OpsMeshCreation {
+    pub fn ops(scene: Entity, entity: Entity, name: String) -> Self {
+        Self(scene, entity, name)
+    }
+}
+pub type ActionListMeshCreate = ActionList<OpsMeshCreation>;
+pub fn sys_act_mesh_create(
+    mut cmds: ResMut<ActionListMeshCreate>,
+    mut tree: ResMut<ActionListTransformNodeParent>,
+    mut commands: Commands,
+    mut allocator: ResMut<ResBindBufferAllocator>,
+    device: Res<PiRenderDevice>,
+    empty: Res<SingleEmptyEntity>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, name)| {
+        let mut entitycmd = commands.entity(entity);
+        
+        ActionScene::add_to_scene(&mut entitycmd, &mut tree, scene);
+        ActionTransformNode::init_for_tree(&mut entitycmd);
+        ActionTransformNode::as_transform_node(&mut entitycmd, name);
+        ActionAnime::as_anime_group_target(&mut entitycmd);
+        ActionMesh::as_mesh(&mut entitycmd);
+
+        entitycmd.insert(InstanceSourceRefs::default());
+        entitycmd.insert(DirtyInstanceSourceRefs::default());
+        entitycmd.insert(InstanceWorldMatrixDirty(true));
+        entitycmd.insert(InstanceColorDirty(true));
+        entitycmd.insert(InstanceTillOffDirty(true));
+
+        if let Some(bind) = BindModel::new(&device, &mut allocator) {
+            log::info!("BindModel New");
+            entitycmd.insert(bind);
+        }
+
+        entitycmd.insert(MeshStates::default());
+        entitycmd.insert(DirtyMeshStates);
+        
+        create_passobj::<Pass01,PassID01>(entity, &mut commands, &empty);
+        create_passobj::<Pass02,PassID02>(entity, &mut commands, &empty);
+        create_passobj::<Pass03,PassID03>(entity, &mut commands, &empty);
+        create_passobj::<Pass04,PassID04>(entity, &mut commands, &empty);
+        create_passobj::<Pass05,PassID05>(entity, &mut commands, &empty);
+        create_passobj::<Pass06,PassID06>(entity, &mut commands, &empty);
+        create_passobj::<Pass07,PassID07>(entity, &mut commands, &empty);
+        create_passobj::<Pass08,PassID08>(entity, &mut commands, &empty);
+    });
+}
+
+pub struct OpsInstanceMeshCreation(Entity, Entity, String);
+impl OpsInstanceMeshCreation {
+    pub fn ops(source: Entity, instance: Entity, name: String) -> Self {
+        Self(source, instance, name)
+    }
+}
+pub type ActionListInstanceMeshCreate = ActionList<OpsInstanceMeshCreation>;
+pub fn sys_act_instanced_mesh_create(
+    mut cmds: ResMut<ActionListInstanceMeshCreate>,
+    mut tree: ResMut<ActionListTransformNodeParent>,
+    mut commands: Commands,
+    mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, name)| {
+        if let Ok((id_scene, mut instancelist, mut flag)) = meshes.get_mut(source) {
+            commands.entity(source)
+                .insert(InstanceColorDirty(true))
+                .insert(InstanceTillOffDirty(true))
+                .insert(InstanceWorldMatrixDirty(true))
+                ;
+
+            let mut ins_cmds = commands.entity(instance);
+            // 
+            ActionScene::add_to_scene(&mut ins_cmds, &mut tree, id_scene.0);
+            ActionTransformNode::init_for_tree(&mut ins_cmds);
+            ActionTransformNode::as_transform_node(&mut ins_cmds, name);
+            ActionAnime::as_anime_group_target(&mut ins_cmds);
+            ActionInstanceMesh::as_instance(&mut ins_cmds, source);
+
+            instancelist.insert(instance);
+            *flag = DirtyInstanceSourceRefs;
+        } else {
+            cmds.push(OpsInstanceMeshCreation::ops(source, instance, name))
+        }
+    });
+}
 
 #[derive(Debug)]
-pub enum EMeshCreateCommand {
-    Create(ObjectID),
+pub enum OpsMeshShadow {
+    CastShadow(Entity, bool),
+    ReceiveShadow(Entity, bool),
 }
-
-#[derive(Debug, Default)]
-pub struct SingleMeshCreateCommandList {
-    pub list: Vec<EMeshCreateCommand>,
-}
-
-pub struct SysMeshCreateCommand;
-impl TSystemStageInfo for SysMeshCreateCommand {
-}
-#[setup]
-impl SysMeshCreateCommand {
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleMeshCreateCommandList>,
-        mut mesh_cmd: Commands<GameObject, Mesh>,
-        mut id_geo_cmd: Commands<GameObject, GeometryID>,
-        mut meshstate_cmd: Commands<GameObject, MeshStates>,
-        mut meshstateflag_cmd: Commands<GameObject, DirtyMeshStates>,
-        mut absmesh_cmd: Commands<GameObject, AbstructMesh>,
-        mut wmdirty_cmd: Commands<GameObject, RenderMatrixDirty>,
-        mut ins_wm_cmd: Commands<GameObject, InstancedWorldMatrixDirty>,
-        mut ins_colordirty_cmd: Commands<GameObject, InstancedColorDirty>,
-        mut ins_tilloffdirty_cmd: Commands<GameObject, InstanceTillOffDirty>,
-        mut render_wm_cmd: Commands<GameObject, RenderWorldMatrix>,
-        mut render_wminv_cmd: Commands<GameObject, RenderWorldMatrixInv>,
-        mut ins_list_cmd: Commands<GameObject, InstanceList>,
-        mut bind_model_cmd: Commands<GameObject, BindModel>,
-        mut castshadow_cmd: Commands<GameObject, MeshCastShadow>,
-        mut receiveshadow_cmd: Commands<GameObject, MeshReceiveShadow>,
-
-        mut effect_value_cmd: Commands<GameObject, PassDirtyBindEffectValue>,
-        mut effect_value_flag_cmd: Commands<GameObject, FlagPassDirtyBindEffectValue>,
-        mut effect_textures_cmd: Commands<GameObject, PassDirtyBindEffectTextures>,
-        mut effect_textures_flag_cmd: Commands<GameObject, FlagPassDirtyBindEffectTextures>,
-        mut entity_cmd: EntityCommands<GameObject>,
-
-        mut source_cmd: Commands<GameObject, PassSource>,
-        mut bev_cmd: Commands<GameObject, PassBindEffectValue>,
-        mut bet_cmd: Commands<GameObject, PassBindEffectTextures>,
-        mut bgscene_cmd: Commands<GameObject, PassBindGroupScene>,
-        mut bgmodel_cmd: Commands<GameObject, PassBindGroupModel>,
-        mut bgtex_cmd: Commands<GameObject, PassBindGroupTextureSamplers>,
-        mut bindgroups_cmd: Commands<GameObject, PassBindGroups>,
-        mut ready_cmd: Commands<GameObject, PassReady>,
-        mut shader_cmd: Commands<GameObject, PassShader>,
-        mut pipeline_cmd: Commands<GameObject, PassPipeline>,
-        mut draw_cmd: Commands<GameObject, PassDraw>,
-        mut ins_record: ResMut<InstanceSourceRecord>,
-        mut allocator: ResMut<BindBufferAllocator>,
-        mut pass01_cmd: Commands<GameObject, Pass01>,
-        mut pass02_cmd: Commands<GameObject, Pass02>,
-        mut pass03_cmd: Commands<GameObject, Pass03>,
-        mut pass04_cmd: Commands<GameObject, Pass04>,
-        mut pass05_cmd: Commands<GameObject, Pass05>,
-        mut pass06_cmd: Commands<GameObject, Pass06>,
-        mut pass07_cmd: Commands<GameObject, Pass07>,
-        mut pass08_cmd: Commands<GameObject, Pass08>,
-        mut passid01_cmd: Commands<GameObject, PassID01>,
-        mut passid02_cmd: Commands<GameObject, PassID02>,
-        mut passid03_cmd: Commands<GameObject, PassID03>,
-        mut passid04_cmd: Commands<GameObject, PassID04>,
-        mut passid05_cmd: Commands<GameObject, PassID05>,
-        mut passid06_cmd: Commands<GameObject, PassID06>,
-        mut passid07_cmd: Commands<GameObject, PassID07>,
-        mut passid08_cmd: Commands<GameObject, PassID08>,
-        device: ResMut<RenderDevice>,
-    ) {
-        let mut list = replace(&mut cmds.list, vec![]);
-
-        list.drain(..).for_each(|cmd| {
-            match cmd {
-                EMeshCreateCommand::Create(entity) => {
-                    if let Some(bind) = BindModel::new(&device, &mut allocator) {
-                        mesh_cmd.insert(entity.clone(), Mesh);
-                        id_geo_cmd.insert(entity, GeometryID(entity_cmd.spawn()));
-                        ins_list_cmd.insert(entity.clone(), InstanceList::new(&mut ins_record));
-                        absmesh_cmd.insert(entity.clone(), AbstructMesh);
-                        render_wm_cmd.insert(entity.clone(), RenderWorldMatrix(Matrix::identity()));
-                        render_wminv_cmd.insert(entity.clone(), RenderWorldMatrixInv(Matrix::identity()));
-                        wmdirty_cmd.insert(entity.clone(), RenderMatrixDirty(true));
-
-                        castshadow_cmd.insert(entity, MeshCastShadow(false));
-                        receiveshadow_cmd.insert(entity, MeshReceiveShadow(false));
-
-                        ins_wm_cmd.insert(entity.clone(), InstancedWorldMatrixDirty(true));
-                        ins_colordirty_cmd.insert(entity.clone(), InstancedColorDirty(true));
-                        ins_tilloffdirty_cmd.insert(entity.clone(), InstanceTillOffDirty(true));
-
-                        meshstate_cmd.insert(entity, MeshStates::default());
-                        meshstateflag_cmd.insert(entity, DirtyMeshStates);
-    
-                        bind_model_cmd.insert(entity.clone(), bind);
-                        
-                        create_passobj::<Pass01,PassID01>(entity, &mut entity_cmd, &mut pass01_cmd, &mut passid01_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-                        create_passobj::<Pass02,PassID02>(entity, &mut entity_cmd, &mut pass02_cmd, &mut passid02_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-                        create_passobj::<Pass03,PassID03>(entity, &mut entity_cmd, &mut pass03_cmd, &mut passid03_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-                        create_passobj::<Pass04,PassID04>(entity, &mut entity_cmd, &mut pass04_cmd, &mut passid04_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-                        create_passobj::<Pass05,PassID05>(entity, &mut entity_cmd, &mut pass05_cmd, &mut passid05_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-                        create_passobj::<Pass06,PassID06>(entity, &mut entity_cmd, &mut pass06_cmd, &mut passid06_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-                        create_passobj::<Pass07,PassID07>(entity, &mut entity_cmd, &mut pass07_cmd, &mut passid07_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-                        create_passobj::<Pass08,PassID08>(entity, &mut entity_cmd, &mut pass08_cmd, &mut passid08_cmd, &mut source_cmd, &mut bev_cmd, &mut bet_cmd, &mut bgscene_cmd, &mut bgmodel_cmd, &mut bgtex_cmd, &mut bindgroups_cmd, &mut ready_cmd, &mut shader_cmd, &mut pipeline_cmd, &mut draw_cmd);
-
-                        effect_value_cmd.insert(entity, PassDirtyBindEffectValue(0));
-                        effect_value_flag_cmd.insert(entity, FlagPassDirtyBindEffectValue);
-                        effect_textures_cmd.insert(entity, PassDirtyBindEffectTextures(0));
-                        effect_textures_flag_cmd.insert(entity, FlagPassDirtyBindEffectTextures);
-                    } else {
-                        log::warn!("BindModel New() Fail !");
+pub type ActionListMeshModify = ActionList<OpsMeshShadow>;
+pub fn sys_act_mesh_modify(
+    mut cmds: ResMut<ActionListMeshModify>,
+    mut castshadows: Query<&mut MeshCastShadow>,
+    mut receiveshadows: Query<&mut MeshReceiveShadow>,
+    // mut meshes: Query<>,
+) {
+    cmds.drain().drain(..).for_each(|cmd| {
+        match cmd {
+            OpsMeshShadow::CastShadow(entity, val) => {
+                if let Ok(mut castshadow) = castshadows.get_mut(entity) {
+                    if val != castshadow.0 {
+                        *castshadow = MeshCastShadow(val);
                     }
+                }
+            },
+            OpsMeshShadow::ReceiveShadow(entity, val) => {
+                if let Ok(mut receiveshadow) = receiveshadows.get_mut(entity) {
+                    if val != receiveshadow.0 {
+                        *receiveshadow = MeshReceiveShadow(val);
+                    }
+                }
+            },
+        }
+    });
+}
 
-                },
+pub struct OpsInstanceColor(Entity, Vector4);
+impl OpsInstanceColor {
+    pub fn ops(instance: Entity, r: Number, g: Number, b: Number, a: Number) -> Self {
+        Self(instance, Vector4::new(r, g, b, a))
+    }
+}
+pub type ActionListInstanceColor = ActionList<OpsInstanceColor>;
+pub fn sys_act_instance_color(
+    mut cmds: ResMut<ActionListInstanceColor>,
+    entities: Query<Entity>,
+    mut instances: Query<(&InstanceSourceID, &mut InstanceColor)>,
+    mut source_colors: Query<&mut InstanceColorDirty>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceColor(instance, val)| {
+        if entities.contains(instance) {
+            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
+                *instance_data = InstanceColor(val);
+                if let Ok(mut flag) = source_colors.get_mut(source.0) {
+                    *flag = InstanceColorDirty(true);
+                }
+            } else {
+                cmds.push(OpsInstanceColor(instance, val));
             }
-        });
+        }
+    });
+}
+
+
+pub struct OpsInstanceTillOff(Entity, Vector4);
+impl OpsInstanceTillOff {
+    pub fn ops(instance: Entity, uscale: Number, vscale: Number, uoffset: Number, voffset: Number) -> Self {
+        Self(instance, Vector4::new(uscale, vscale, uoffset, voffset))
+    }
+}
+pub type ActionListInstanceTillOff = ActionList<OpsInstanceTillOff>;
+pub fn sys_act_instance_tilloff(
+    mut cmds: ResMut<ActionListInstanceTillOff>,
+    entities: Query<Entity>,
+    mut instances: Query<(&InstanceSourceID, &mut InstanceTillOff)>,
+    mut source_colors: Query<&mut InstanceTillOffDirty>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceTillOff(instance, val)| {
+        if entities.contains(instance) {
+            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
+                *instance_data = InstanceTillOff(val);
+                if let Ok(mut flag) = source_colors.get_mut(source.0) {
+                    *flag = InstanceTillOffDirty(true);
+                }
+            } else {
+                cmds.push(OpsInstanceTillOff(instance, val));
+            }
+        }
+    });
+}
+
+pub struct BundleMesh(
+    AbstructMesh,
+    Mesh,
+    RenderWorldMatrix,
+    RenderWorldMatrixInv,
+    RenderMatrixDirty,
+    MeshCastShadow,
+    MeshReceiveShadow,
+    PassDirtyBindEffectValue,
+    FlagPassDirtyBindEffectValue,
+    PassDirtyBindEffectTextures,
+    FlagPassDirtyBindEffectTextures,
+    LayerMask,
+    Opaque,
+    TransparentSortParam,
+    ECullMode,
+    FrontFace,
+    PolygonMode,
+    ModelDepthStencil,
+    ModelBlend,
+    BindSkinValue,
+);
+
+pub struct ActionMesh;
+impl ActionMesh {
+    pub(crate) fn as_mesh(
+        commands: &mut EntityCommands,
+    ) {
+        commands
+            .insert(AbstructMesh(true))
+            .insert(Mesh)
+            .insert(RenderWorldMatrix(Matrix::identity()))
+            .insert(RenderWorldMatrixInv(Matrix::identity()))
+            .insert(RenderMatrixDirty(true))
+            .insert(MeshCastShadow(false))
+            .insert(MeshReceiveShadow(false))
+            .insert(PassDirtyBindEffectValue(0))
+            .insert(FlagPassDirtyBindEffectValue)
+            .insert(PassDirtyBindEffectTextures(0))
+            .insert(FlagPassDirtyBindEffectTextures)
+            .insert(LayerMask::default())
+            .insert(Opaque)
+            .insert(TransparentSortParam::opaque())
+            .insert(ECullMode::Back)
+            .insert(FrontFace::Ccw)
+            .insert(PolygonMode::Fill)
+            .insert(ModelDepthStencil::default())
+            .insert(ModelBlend::default())
+            .insert(BindSkinValue(None))
+            ;
+    }
+    pub fn create(
+        app: &mut App,
+        scene: Entity,
+        name: String,
+    ) -> Entity {
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
+
+        let entity = commands.spawn_empty().id();
+        queue.apply(&mut app.world);
+
+        let mut cmds = app.world.get_resource_mut::<ActionListMeshCreate>().unwrap();
+        cmds.push(OpsMeshCreation(scene, entity, name));
+
+        entity
+    }
+
+    pub fn use_geometry(
+        app: &mut App,
+        id_mesh: Entity,
+        vertex_desc: Vec<VertexBufferDesc>,
+        indices_desc: Option<IndicesBufferDesc>,
+    ) {
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
+
+        let id_geo = commands.spawn_empty().id();
+
+        let mut cmds = app.world.get_resource_mut::<ActionListGeometryCreate>().unwrap();
+        ActionGeometry::create(&mut cmds, id_geo, id_mesh, vertex_desc, indices_desc);
+    }
+
+    pub fn modify(
+        app: &mut App,
+        cmd: OpsMeshShadow,
+    ) {
+        let mut cmds = app.world.get_resource_mut::<ActionListMeshModify>().unwrap();
+        cmds.push(cmd);
     }
 }
 
-fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
-    model: ObjectID,
-    entity_cmd: &mut EntityCommands<GameObject>,
-    pass_cmd: &mut Commands<GameObject, T>,
-    passid_cmd: &mut Commands<GameObject, T2>,
-    source_cmd: &mut Commands<GameObject, PassSource>,
-    bev_cmd: &mut Commands<GameObject, PassBindEffectValue>,
-    bet_cmd: &mut Commands<GameObject, PassBindEffectTextures>,
-    bgscene_cmd: &mut Commands<GameObject, PassBindGroupScene>,
-    bgmodel_cmd: &mut Commands<GameObject, PassBindGroupModel>,
-    bgtex_cmd: &mut Commands<GameObject, PassBindGroupTextureSamplers>,
-    bindgroups_cmd: &mut Commands<GameObject, PassBindGroups>,
-    ready_cmd: &mut Commands<GameObject, PassReady>,
-    shader_cmd: &mut Commands<GameObject, PassShader>,
-    pipeline_cmd: &mut Commands<GameObject, PassPipeline>,
-    draw_cmd: &mut Commands<GameObject, PassDraw>,
-) -> ObjectID {
-    let id = entity_cmd.spawn();
+pub struct BundleInstanceMesh(
+    AbstructMesh,
+    InstanceSourceID,
+    InstanceColor,
+    InstanceTillOff,
+    RenderMatrixDirty,
+    RenderWorldMatrix,
+    RenderWorldMatrixInv,
+);
 
-    passid_cmd.insert(model, T2::new(id));
-    pass_cmd.insert(id, T::new());
-    source_cmd.insert(id, PassSource(model));
-    bev_cmd.insert(id, PassBindEffectValue(None));
-    bet_cmd.insert(id, PassBindEffectTextures(None));
-    bgscene_cmd.insert(id, PassBindGroupScene(None));
-    bgmodel_cmd.insert(id, PassBindGroupModel(None));
-    bgtex_cmd.insert(id, PassBindGroupTextureSamplers(None));
-    bindgroups_cmd.insert(id, PassBindGroups(None));
-    ready_cmd.insert(id, PassReady(None));
-    shader_cmd.insert(id, PassShader(None));
-    pipeline_cmd.insert(id, PassPipeline(None));
-    draw_cmd.insert(id, PassDraw(None));
+pub struct ActionInstanceMesh;
+impl ActionInstanceMesh {
+    pub fn create(
+        app: &mut App,
+        source: Entity,
+        name: String,
+    ) -> Entity {
+        let mut queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &app.world);
+
+        let entity = commands.spawn_empty().id();
+
+        let mut cmds = app.world.get_resource_mut::<ActionListInstanceMeshCreate>().unwrap();
+        cmds.push(OpsInstanceMeshCreation(source, entity, name));
+
+        entity
+    }
+    pub fn color(
+        app: &mut App,
+        instance: Entity,
+        color: Vector4,
+    ) {
+        let mut cmds = app.world.get_resource_mut::<ActionListInstanceColor>().unwrap();
+        cmds.push(OpsInstanceColor(instance, color));
+    }
+    pub(crate) fn as_instance(
+        commands: &mut EntityCommands,
+        source: Entity,
+    ) {
+        commands.insert(AbstructMesh(true));
+        commands.insert(InstanceSourceID(source));
+        commands.insert(InstanceColor(Vector4::new(1., 1., 1., 1.)));
+        commands.insert(InstanceTillOff(Vector4::new(1., 1., 0., 0.)));
+
+        commands.insert(RenderMatrixDirty(true));
+        commands.insert(RenderWorldMatrix(Matrix::identity()));
+        commands.insert(RenderWorldMatrixInv(Matrix::identity()));
+    }
+}
+
+pub struct BundlePass(
+    PassSource,
+    PassBindEffectValue,
+    PassBindEffectTextures,
+    PassBindGroupScene,
+    PassBindGroupTextureSamplers,
+    PassBindGroups,
+    PassReady,
+    PassShader,
+    PassPipeline,
+    PassDraw,
+    MaterialID,
+);
+
+fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
+    model: Entity,
+    commands: &mut Commands,
+    empty: &SingleEmptyEntity,
+) -> ObjectID {
+    let id = commands.spawn_empty().id();
+
+    commands.entity(model).insert(T2::new(id));
+
+    commands.entity(id).insert(T::new())
+        .insert(PassSource(model))
+        .insert(PassBindEffectValue(None))
+        .insert(PassBindEffectTextures(None))
+        .insert(PassBindGroupScene(None))
+        .insert(PassBindGroupModel(None))
+        .insert(PassBindGroupTextureSamplers(None))
+        .insert(PassBindGroups(None))
+        .insert(PassReady(None))
+        .insert(PassShader(None))
+        .insert(PassPipeline(None))
+        .insert(PassDraw(None))
+        .insert(MaterialID(empty.id()))
+        ;
 
     id
 }
 
-#[derive(Debug)]
-pub enum EMeshModifyCommand {
-    Destroy(ObjectID),
-    CastShadow(ObjectID, bool),
-    ReceiveShadow(ObjectID, bool),
-}
 
-#[derive(Debug, Default)]
-pub struct SingleMeshModifyCommandList {
-    pub list: Vec<EMeshModifyCommand>,
-}
 
-pub struct SysMeshModifyCommand;
-impl TSystemStageInfo for SysMeshModifyCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysMeshCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysMeshModifyCommand {
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleMeshModifyCommandList>,
-        meshes: Query<GameObject, &mut InstanceList>,
-        mut castshadow_cmd: Commands<GameObject, MeshCastShadow>,
-        mut receiveshadow_cmd: Commands<GameObject, MeshReceiveShadow>,
+    // fn listen(
+    //     e: Event,
+    //     meshes: Query<GameObject, (&InstanceList, &PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08, &GeometryID)>,
+    //     mut delete: EntityDelete<GameObject>,
+    // ) {
+    //     if let Some((instances, pass01, pass02, pass03, pass04, pass05, pass06, pass07, pass08, id_geo)) = meshes.get_by_entity(e.id) {
+    //         instances.list.iter().for_each(|id| {
+    //             delete.despawn(id.clone());
+    //         });
+    //         delete.despawn(pass01.id());
+    //         delete.despawn(pass02.id());
+    //         delete.despawn(pass03.id());
+    //         delete.despawn(pass04.id());
+    //         delete.despawn(pass05.id());
+    //         delete.despawn(pass06.id());
+    //         delete.despawn(pass07.id());
+    //         delete.despawn(pass08.id());
+    //         delete.despawn(id_geo.0.clone());
+    //     }
+    // }
+
+    // #[system]
+    pub fn sys_instance_color_modify(
+        instances: Query<&InstanceSourceID, Changed<InstanceColor>>,
+        mut commands: Commands,
     ) {
-        let mut list = replace(&mut cmds.list, vec![]);
-
-        list.drain(..).for_each(|cmd| {
-            match cmd {
-                EMeshModifyCommand::Destroy(id_mesh) => {
-                    // if let Some(instances) = meshes.get(id_mesh) {
-                    //     instances.list.iter().for_each(|id_instance| {
-                    //         delete.despawn(id_instance.clone());
-                    //     });
-                    // }
-                    // delete.despawn(id_mesh);
-                },
-                EMeshModifyCommand::CastShadow(entity, val) => {
-                    castshadow_cmd.insert(entity, MeshCastShadow(val));
-                },
-                EMeshModifyCommand::ReceiveShadow(entity, val) => {
-                    receiveshadow_cmd.insert(entity, MeshReceiveShadow(val));
-                },
-            }
+        instances.iter().for_each(|source| {
+            commands.entity(source.0).insert(InstanceColorDirty(true));
         });
     }
-}
-
-
-#[derive(Debug)]
-pub enum EInstanceMeshCreateCommand {
-    CreateInstance(ObjectID, ObjectID),
-}
-
-#[derive(Debug, Default)]
-pub struct SingleInstanceMeshCreateCommandList {
-    pub list: Vec<EInstanceMeshCreateCommand>,
-}
-
-pub struct SysInstanceMeshCreateCommand;
-impl TSystemStageInfo for SysInstanceMeshCreateCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysMeshCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysInstanceMeshCreateCommand {
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleInstanceMeshCreateCommandList>,
-        mut meshes: Query<GameObject, &mut InstanceList>,
-        mut absmesh_cmd: Commands<GameObject, AbstructMesh>,
-        mut source_cmd: Commands<GameObject, InstanceSource>,
-        mut wmdirty_cmd: Commands<GameObject, RenderMatrixDirty>,
-        mut ins_wm_cmd: Commands<GameObject, InstancedWorldMatrixDirty>,
-        mut ins_colordirty_cmd: Commands<GameObject, InstancedColorDirty>,
-        mut ins_tilloffdirty_cmd: Commands<GameObject, InstanceTillOffDirty>,
-        mut ins_color_cmd: Commands<GameObject, InstanceColor>,
-        mut ins_tilloff_cmd: Commands<GameObject, InstanceTillOff>,
-        mut render_wm_cmd: Commands<GameObject, RenderWorldMatrix>,
-        mut render_wminv_cmd: Commands<GameObject, RenderWorldMatrixInv>,
+    pub fn sys_instance_tilloff_modify(
+        instances: Query<&InstanceSourceID, Changed<InstanceTillOff>>,
+        mut commands: Commands,
     ) {
-        let mut list = replace(&mut cmds.list, vec![]);
-
-        list.drain(..).for_each(|cmd| {
-            match cmd {
-                EInstanceMeshCreateCommand::CreateInstance(source, id_instance) => {
-                    match meshes.get_mut(source.clone()) {
-                        Some((mut list)) => {
-                            if list.list.contains(&id_instance) == false {
-                                list.list.push(id_instance);
-                            }
-                            
-                            ins_colordirty_cmd.insert(source.clone(), InstancedColorDirty(true));
-                            ins_tilloffdirty_cmd.insert(source.clone(), InstanceTillOffDirty(true));
-                            ins_wm_cmd.insert(source.clone(), InstancedWorldMatrixDirty(true));
-
-                            source_cmd.insert(id_instance, InstanceSource(source));
-                            ins_color_cmd.insert(id_instance, InstanceColor(Vector4::new(1., 1., 1., 1.)));
-                            ins_tilloff_cmd.insert(id_instance, InstanceTillOff(Vector4::new(1., 1., 0., 0.)));
-
-                            absmesh_cmd.insert(id_instance, AbstructMesh);
-                            wmdirty_cmd.insert(id_instance, RenderMatrixDirty(true));
-                            render_wm_cmd.insert(id_instance, RenderWorldMatrix(Matrix::identity()));
-                            render_wminv_cmd.insert(id_instance, RenderWorldMatrixInv(Matrix::identity()));
-                        },
-                        None => {
-                            cmds.list.push(cmd);
-                        },
-                    }
-                },
-            }
+        instances.iter().for_each(|source| {
+            commands.entity(source.0).insert(InstanceTillOffDirty(true));
         });
     }
-}
-
-
-#[derive(Debug)]
-pub enum EInstanceMeshModifyCommand {
-    InstanceColor(ObjectID, Vector4),
-    InstanceTillOff(ObjectID, Vector4),
-    DestroyInstance(ObjectID),
-}
-
-#[derive(Debug, Default)]
-pub struct SingleInstanceMeshModifyCommandList {
-    pub list: Vec<EInstanceMeshModifyCommand>,
-}
-
-pub struct SysInstanceMeshModifyCommand;
-impl TSystemStageInfo for SysInstanceMeshModifyCommand {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysInstanceMeshCreateCommand::key()
-        ]
-    }
-}
-#[setup]
-impl SysInstanceMeshModifyCommand {
-    /// Mesh 销毁时 附带销毁InstancedMesh
-    #[listen(entity=(GameObject, Delete))]
-    fn listen(
-        e: Event,
-        meshes: Query<GameObject, (&InstanceList, &PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08, &GeometryID)>,
-        mut delete: EntityDelete<GameObject>,
-    ) {
-        if let Some((instances, pass01, pass02, pass03, pass04, pass05, pass06, pass07, pass08, id_geo)) = meshes.get_by_entity(e.id) {
-            instances.list.iter().for_each(|id| {
-                delete.despawn(id.clone());
-            });
-            delete.despawn(pass01.id());
-            delete.despawn(pass02.id());
-            delete.despawn(pass03.id());
-            delete.despawn(pass04.id());
-            delete.despawn(pass05.id());
-            delete.despawn(pass06.id());
-            delete.despawn(pass07.id());
-            delete.despawn(pass08.id());
-            delete.despawn(id_geo.0.clone());
-        }
-    }
-    #[system]
-    pub fn cmd(
-        mut cmds: ResMut<SingleInstanceMeshModifyCommandList>,
-        mut meshes: Query<GameObject, &mut InstanceList>,
-        instances: Query<GameObject, &InstanceSource>,
-        mut ins_wm_cmd: Commands<GameObject, InstancedWorldMatrixDirty>,
-        mut ins_colordirty_cmd: Commands<GameObject, InstancedColorDirty>,
-        mut ins_tilloffdirty_cmd: Commands<GameObject, InstanceTillOffDirty>,
-        mut ins_color_cmd: Commands<GameObject, InstanceColor>,
-        mut ins_tilloff_cmd: Commands<GameObject, InstanceTillOff>,
-        mut delete: EntityDelete<GameObject>,
-    ) {
-        let mut list = replace(&mut cmds.list, vec![]);
-
-        list.drain(..).for_each(|cmd| {
-            match cmd {
-                EInstanceMeshModifyCommand::InstanceColor(instance, color) => {
-                    match instances.get(instance) {
-                        Some(source) => {
-                            if let Some(mut inslist) = meshes.get_mut(source.0) {
-                                ins_colordirty_cmd.insert(source.0, InstancedColorDirty(true));
-                                ins_color_cmd.insert(instance, InstanceColor(color));
-                                if inslist.list.contains(&instance) == false {
-                                    inslist.list.push(instance);
-                                }
-                            }
-                        },
-                        None =>  {
-                            cmds.list.push(cmd);
-                        },
-                    }
-                },
-                EInstanceMeshModifyCommand::InstanceTillOff(instance, value) => {
-                    match instances.get(instance) {
-                        Some(source) => {
-                            if let Some(mut inslist) = meshes.get_mut(source.0) {
-                                ins_tilloffdirty_cmd.insert(source.0, InstanceTillOffDirty(true));
-                                ins_tilloff_cmd.insert(instance, InstanceTillOff(value));
-                                if inslist.list.contains(&instance) == false {
-                                    inslist.list.push(instance);
-                                }
-                            }
-                        },
-                        None =>  {
-                            cmds.list.push(cmd);
-                        },
-                    }
-                },
-                EInstanceMeshModifyCommand::DestroyInstance(id_instance) => {
-                    if let Some(source) = instances.get(id_instance) {
-                        match meshes.get_mut(source.0) {
-                            Some((mut list)) => {
-                                let mut index = 0;
-                                let mut flag = false;
-                                for v in list.list.iter() {
-                                    if v == &id_instance {
-                                        flag = true;
-                                        break;
-                                    }
-                                    index += 1;
-                                }
-                                if flag {
-                                    list.list.swap_remove(index);
-                                }
-                                
-                                ins_colordirty_cmd.insert(source.0.clone(), InstancedColorDirty(true));
-                                ins_tilloffdirty_cmd.insert(source.0.clone(), InstanceTillOffDirty(true));
-                                ins_wm_cmd.insert(source.0.clone(), InstancedWorldMatrixDirty(true));
-                            },
-                            None => {
-                                cmds.list.push(cmd);
-                            },
-                        }
-                    }
-
-                    delete.despawn(id_instance);
-                },
-            }
-        });
-    }
-}
+// }

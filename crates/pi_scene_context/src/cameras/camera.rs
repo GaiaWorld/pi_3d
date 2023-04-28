@@ -1,13 +1,13 @@
-
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
 
 use crate::{viewer::{TViewerProjectMatrix, ViewerProjectionMatrix}};
 
 
-#[derive(Debug, Clone, Copy)]
-pub struct Camera;
+#[derive(Debug, Clone, Copy, Component)]
+pub struct Camera(pub bool);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct CameraViewport {
     /// 0. ~ 1.
     pub x: f32,
@@ -35,22 +35,22 @@ impl Default for CameraViewport {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component, PartialEq, Eq)]
 pub enum EFixedMode {
     VerticalFixed,
     HorizontalFixed,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component, PartialEq, Eq)]
 pub enum EFreeCameraMode {
     Perspective,
     Orthograhic,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct CameraNearFar(pub Number, pub Number);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct CameraOrthograhicParam {
     pub left: Number,
     pub right: Number,
@@ -58,13 +58,13 @@ pub struct CameraOrthograhicParam {
     pub bottom: Number,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct CameraFov(pub Number);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct CameraOrthSize(pub Number);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct CameraParam {
     pub up: Vector3,
     pub nearfar: CameraNearFar,

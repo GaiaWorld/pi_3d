@@ -1,31 +1,16 @@
 
 use std::sync::Arc;
 
-use pi_assets::{asset::{Handle, GarbageEmpty}, mgr::AssetMgr};
-use pi_ecs::prelude::Commands;
-use pi_engine_shell::object::{ObjectID, GameObject};
-use pi_hash::XHashMap;
-use pi_render::{
-    asset::{AssetDataCenter, AssetLoader},
-    render_3d::{
-        shader::{
-            shader::{KeyShader3D, Shader3D, EKeyShader3DSetBlock},
-            shader_effect_meta::ShaderEffectMeta,
-            instance_code::EInstanceCode
-        },
-        bind_groups::{scene::BindGroupScene, model::BindGroupModel, texture_sampler::BindGroupTextureSamplers}
-    },
-    rhi::{asset::RenderRes, device::RenderDevice}
-};
-use pi_share::Share;
+use pi_assets::{asset::{Handle, GarbageEmpty}};
+use pi_engine_shell::prelude::*;
 
-use crate::{pass::{TPassData, EPassTag, PassTag}, geometry::geometry::RenderGeometry};
+use crate::{pass::{TPassData}};
 
 use super::base::*;
 
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassBindGroups(pub Option<BindGroups3D>);
 impl TPassData<Option<BindGroups3D>> for PassBindGroups {
     fn new(val: Option<BindGroups3D>) -> Self { Self(val) }
@@ -34,7 +19,7 @@ impl TPassData<Option<BindGroups3D>> for PassBindGroups {
 
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassShader(pub Option<Handle<Shader3D>>);
 impl TPassData<Option<Handle<Shader3D>>> for PassShader {
     fn new(val: Option<Handle<Shader3D>>) -> Self { Self(val) }
@@ -46,7 +31,7 @@ impl From<(Handle<Shader3D>, Option<()>)> for PassShader {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassPipelineKey(pub Option<KeyPipeline3D>);
 impl TPassData<Option<KeyPipeline3D>> for PassPipelineKey {
     fn new(val: Option<KeyPipeline3D>) -> Self { Self(val) }
@@ -54,7 +39,7 @@ impl TPassData<Option<KeyPipeline3D>> for PassPipelineKey {
 }
 
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Component)]
 pub struct PassPipeline(pub Option<Pipeline3DUsage>);
 impl TPassData<Option<Pipeline3DUsage>> for PassPipeline {
     fn new(val: Option<Pipeline3DUsage>) -> Self { Self(val) }
@@ -65,18 +50,32 @@ impl From<(Pipeline3DUsage, Option<()>)> for PassPipeline {
         Self(Some(value.0))
     }
 }
-
+#[derive(Component)]
 pub struct PassDraw(pub Option<Arc<DrawObj3D>>);
 impl TPassData<Option<Arc<DrawObj3D>>> for PassDraw {
     fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
     fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
 }
 
-pub type AssetDataCenterShader3D = AssetDataCenter<KeyShader3D, Shader3D, ()>;
-pub type AssetLoaderShader3D = AssetLoader<KeyShader3D, ObjectID, Shader3D, ()>;
+#[derive(Deref, DerefMut, Resource)]
+pub struct AssetDataCenterShader3D(pub AssetDataCenter<KeyShader3D, Shader3D, ()>);
+impl AssetDataCenterShader3D {
+    pub fn new(ref_garbage: bool, capacity: usize, timeout: usize) -> Self {
+        Self(AssetDataCenter::new(ref_garbage, capacity, timeout))
+    }
+}
+#[derive(Default, Deref, DerefMut, Resource)]
+pub struct AssetLoaderShader3D(pub AssetLoader<KeyShader3D, ObjectID, Shader3D, ()>);
 
-pub type AssetDataCenterPipeline3D = AssetDataCenter<u64, Pipeline3D, ()>;
-pub type AssetLoaderPipeline3D = AssetLoader<u64, ObjectID, Pipeline3D, ()>;
+#[derive(Deref, DerefMut, Resource)]
+pub struct AssetDataCenterPipeline3D(pub AssetDataCenter<u64, Pipeline3D, ()>);
+impl AssetDataCenterPipeline3D {
+    pub fn new(ref_garbage: bool, capacity: usize, timeout: usize) -> Self {
+        Self(AssetDataCenter::new(ref_garbage, capacity, timeout))
+    }
+}
+#[derive(Default, Deref, DerefMut, Resource)]
+pub struct AssetLoaderPipeline3D(pub AssetLoader<u64, ObjectID, Pipeline3D, ()>);
 
 // #[derive(Debug, Default)]
 // pub struct Shader3DLoader {

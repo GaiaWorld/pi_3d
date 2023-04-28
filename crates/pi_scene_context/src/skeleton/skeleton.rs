@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
-use pi_engine_shell::object::ObjectID;
-use pi_render::{rhi::device::RenderDevice, renderer::bind_buffer::{BindBufferAllocator}, render_3d::{binds::model::skin::ShaderBindModelAboutSkinValue, shader::skin_code::ESkinCode}};
+use pi_engine_shell::prelude::*;
 
+#[derive(Component)]
+pub struct SkeletonInitBaseMatrix;
 
+#[derive(Component)]
 pub struct Skeleton {
     pub root: ObjectID,
     pub bones: Vec<ObjectID>,
@@ -33,5 +35,5 @@ impl Skeleton {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct BindSkinValue(pub Arc<ShaderBindModelAboutSkinValue>);
+#[derive(Debug, Clone, Component)]
+pub struct BindSkinValue(pub Option<Arc<ShaderBindModelAboutSkinValue>>);

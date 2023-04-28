@@ -1,8 +1,6 @@
 
-
-use derive_deref::{Deref, DerefMut};
+use pi_engine_shell::prelude::*;
 use pi_assets::{asset::{Handle}};
-use pi_render::{render_3d::{shader::{shader_effect_meta::{ShaderEffectMeta as ShaderMeta }, uniform_value::MaterialValueBindDesc, UniformPropertyName}}, renderer::shader::KeyShaderMeta};
 
 
 // #[derive(Clone, Debug)]
@@ -55,14 +53,18 @@ use pi_render::{render_3d::{shader::{shader_effect_meta::{ShaderEffectMeta as Sh
 //     }
 // }
 
-pub type ShaderEffectMeta = ShaderMeta;
+// #[derive(Deref, DerefMut, Component)]
+// pub struct ShaderEffectMeta(pub ShaderMeta);
+
+// #[derive(Deref, DerefMut, Component)]
+// pub struct ShaderEffectValueUniformDesc(pub MaterialValueBindDesc);
 pub type ShaderEffectValueUniformDesc = MaterialValueBindDesc;
 
 
-#[derive(Debug, Deref, DerefMut, Clone, Hash)]
+#[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
 pub struct AssetKeyShaderEffect(pub KeyShaderMeta);
 
-#[derive(Debug, Deref, DerefMut)]
+#[derive(Debug, Deref, DerefMut, Component)]
 pub struct AssetResShaderEffectMeta(pub Handle<ShaderEffectMeta>);
 impl From<Handle<ShaderEffectMeta>> for AssetResShaderEffectMeta {
     fn from(value: Handle<ShaderEffectMeta>) -> Self {

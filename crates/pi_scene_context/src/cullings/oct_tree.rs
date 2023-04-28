@@ -9,7 +9,7 @@ use parry3d::{
 };
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
-use pi_spatialtree::OctTree;
+use pi_spatial::OctTree;
 
 use crate::{
     cameras::camera::{CameraParam},
@@ -21,7 +21,7 @@ use super::{
     BoundingInfo, IsCulled,
 };
 
-pub struct BoundingOctTree(OctTree<BoundingKey, f32, (Isometry3<f32>, Cuboid)>);
+pub struct BoundingOctTree(OctTree<BoundingKey, (Isometry3<f32>, Cuboid)>);
 
 impl TBoundingInfoCalc for BoundingOctTree {
     fn add(&mut self, key: BoundingKey, info: BoundingInfo) {

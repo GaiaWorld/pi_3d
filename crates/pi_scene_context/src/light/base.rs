@@ -1,9 +1,10 @@
-use pi_engine_shell::object::ObjectID;
+
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Isometry3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
 
 use crate::viewer::{TViewerViewMatrix, ViewerViewMatrix, ViewerGlobalPosition, TViewerProjectMatrix};
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum Light {
     Directional,
     Point,
@@ -11,12 +12,13 @@ pub enum Light {
 }
 
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum LightingMode {
     Lambert,
     PBR,
 }
 
+#[derive(Component)]
 pub struct LightDirection(pub Vector3);
 impl Default for LightDirection {
     fn default() -> Self {

@@ -20,13 +20,14 @@ pub struct SceneCameraID06;
 
 pub struct CullingFlag(pub bool);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
 pub struct SceneID(pub ObjectID);
-#[derive(Debug)]
+#[derive(Debug, Component)]
 pub struct CameraID(pub usize);
-
+#[derive(Component)]
 pub struct UniqueName(pub Atom);
 
+#[derive(Component)]
 pub struct Enable(pub bool);
 
 pub struct PluginFlags;

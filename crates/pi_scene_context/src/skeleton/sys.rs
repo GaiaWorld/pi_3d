@@ -1,56 +1,53 @@
-use pi_ecs::{prelude::{Query, Commands, Res}, query::{Changed}};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{run_stage::TSystemStageInfo, object::GameObject};
-use pi_render::{rhi::RenderQueue, render_3d::shader::skin_code::ESkinCode};
 
-use crate::transforms::{transform_node_sys::SysWorldMatrixCalc, transform_node::WorldMatrix};
+use pi_engine_shell::prelude::*;
+use pi_scene_math::Matrix;
 
-use super::{skeleton::Skeleton, SkeletonBonesDirty, SkeletonID};
+use crate::transforms::{transform_node_sys::*, transform_node::*};
 
-pub struct SysSkinDirtyByBonesMatrix;
-impl TSystemStageInfo for SysSkinDirtyByBonesMatrix {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysWorldMatrixCalc::key()
-        ]
-    }
-}
-#[setup]
-impl SysSkinDirtyByBonesMatrix {
-    #[system]
-    fn sys(
-        mut skeletons: Commands<GameObject, SkeletonBonesDirty>,
-        bones: Query<GameObject, &SkeletonID, Changed<WorldMatrix>>,
+use super::{skeleton::{Skeleton, SkeletonInitBaseMatrix}, SkeletonBonesDirty, SkeletonID, bone::{BoneParent, BoneBaseMatrix, BoneAbsoluteInv, BoneAbsolute}};
+
+    pub fn sys_skin_dirty_by_bone(
+        mut commands: Commands,
+        bones: Query<&SkeletonID, Changed<WorldMatrix>>,
     ) {
         bones.iter().for_each(|bone| {
-            skeletons.insert(bone.0.clone(), SkeletonBonesDirty(true));
+            commands.entity(bone.0.clone()).insert(SkeletonBonesDirty(true));
         });
     }
-}
 
-pub struct SysSkinTextureUpdate;
-impl TSystemStageInfo for SysSkinTextureUpdate {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SysSkinDirtyByBonesMatrix::key()
-        ]
+    pub fn sys_bones_initial(
+        items: Query<
+            &Skeleton,
+            Changed<SkeletonInitBaseMatrix>
+        >,
+        mut bones: Query<(&BoneBaseMatrix, &mut BoneAbsolute, &mut BoneAbsoluteInv)>,
+        tree: EntityTree,
+    ) {
+        items.iter().for_each(|skeleton| {
+            let root = skeleton.root;
+            let temp = if let Ok((base, mut abs, mut absinv)) = bones.get_mut(root) {
+                abs.0.copy_from(&base.0);
+                absinv.update(&abs);
+                Some((root, abs.0.clone()))
+            } else {
+                None
+            };
+            if let Some((node, abs)) = temp {
+                let temp_ids: Vec<(ObjectID, Matrix)> = vec![(node, abs)];
+                calc_bone(&mut bones, &tree, temp_ids);
+            }
+        });
     }
-}
-#[setup]
-impl SysSkinTextureUpdate {
-    #[system]
-    pub fn sys(
+
+    pub fn sys_skin_buffer_update(
         mut items: Query<
-            GameObject, 
             (
                 &Skeleton,
-                // Option<&SkinTexture>,
                 &mut SkeletonBonesDirty
             ),
             Changed<SkeletonBonesDirty>
         >,
-        bones: Query<GameObject, &WorldMatrix>,
-        queue: Res<RenderQueue>,
+        bones: Query<(&WorldMatrix, &BoneAbsoluteInv)>,
     ) {
         items.iter_mut().for_each(|(skel, mut skindirty)| {
             match skel.mode {
@@ -58,13 +55,14 @@ impl SysSkinTextureUpdate {
                 ESkinCode::UBO(_, _) => {
                     let mut data = vec![];
                     skel.bones.iter().for_each(|bone| {
-                        if let Some(matrix) = bones.get(bone.clone()) {
-                            matrix.0.as_slice().iter().for_each(|v| {
+                        if let Ok((matrix, absinv)) = bones.get(bone.clone()) {
+                            let matrix = matrix.0 * absinv.0;
+                            matrix.as_slice().iter().for_each(|v| {
                                 data.push(*v);
                             });
                         }
                     });
-
+                    // log::warn!("skin_buffer_update");
                     skel.bind.data().write_data(0, bytemuck::cast_slice(&data));
                 },
                 ESkinCode::RowTexture(_) => {
@@ -94,4 +92,58 @@ impl SysSkinTextureUpdate {
             skindirty.0 = false;
         });
     }
-}
+
+
+    fn calc_bone(
+        bones: &mut Query<(&BoneBaseMatrix, &mut BoneAbsolute, &mut BoneAbsoluteInv)>,
+        tree: &EntityTree,
+        mut temp_ids: Vec<(ObjectID, Matrix)>
+    ) {
+            // 广度优先遍历 - 最大遍历到深度 65535
+            let max = 128;
+            let mut deep = 0;
+            loop {
+                let mut temp_list = vec![];
+                if temp_ids.len() > 0 && deep < max {
+                    temp_ids.into_iter().for_each(|(p_id, p_abs)| {
+                        match tree.get_down(p_id) {
+                            Some(node_children_head) => {
+                                let node_children_head = node_children_head.head.0;
+                                tree.iter(node_children_head).for_each(|entity| {
+                                    calc_bone_one(
+                                        bones,
+                                        &mut temp_list,
+                                        entity,
+                                        &p_abs
+                                    );
+                                }); 
+                            },
+                            None => {},
+                        }
+                    });
+                    deep += 1;
+                } else {
+                    break;
+                }
+                temp_ids = temp_list;
+            }
+    }
+    
+    fn calc_bone_one(
+        bones: &mut Query<(&BoneBaseMatrix, &mut BoneAbsolute, &mut BoneAbsoluteInv)>,
+        temp_list: &mut Vec<(ObjectID, Matrix)>,
+        entity: ObjectID,
+        p_abs: &Matrix,
+    ) {
+        match bones.get_mut(entity) {
+            Ok((base, mut abs, mut absinv)) => {
+                abs.update(p_abs);
+                absinv.update(&abs);
+
+                temp_list.push((entity, abs.0.clone()));
+            },
+            Err(e) => {
+                
+            },
+        }
+    }

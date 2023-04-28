@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 
 
-use self::{environment::*};
+use self::{environment::{*, ambient_light::sys_bind_update_scene_ambient, fog::sys_bind_update_scene_fog, scene_time::sys_bind_update_scene_time}, command::{ActionListSceneCreate, sys_act_scene_create}};
 
 pub mod coordinate_system;
 pub mod command;
@@ -11,26 +11,20 @@ pub mod environment;
 
 pub struct PluginScene;
 impl Plugin for PluginScene {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut crate::engine::Engine,
-    //     stages: &mut crate::run_stage::RunStage,
-    // ) -> Result<(), crate::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-
-    //     world.insert_resource(SingleSceneCommandList::default());
-
-    //     SysSceneCreateCommand::setup(world, stages.query_stage::<SysSceneCreateCommand>(ERunStageChap::Initial));
-
-    //     SysSceneTimeUpdate::setup(world, stages.query_stage::<SysSceneTimeUpdate>(ERunStageChap::Command));
-    //     SysSceneFogUpdate::setup(world, stages.query_stage::<SysSceneFogUpdate>(ERunStageChap::Command));
-    //     SysSceneAmbientUpdate::setup(world, stages.query_stage::<SysSceneAmbientUpdate>(ERunStageChap::Command));
-
-    //     Ok(())
-    // }
-
     fn build(&self, app: &mut App) {
-        todo!()
+        app.insert_resource(ActionListSceneCreate::default());
+
+        app.add_system(
+            sys_act_scene_create.in_set(ERunStageChap::Initial)
+        );
+
+        app.add_systems(
+            (
+                sys_bind_update_scene_ambient,
+                sys_bind_update_scene_fog,
+                sys_bind_update_scene_time
+            ).in_set(ERunStageChap::Uniform)
+        );
     }
     
 }

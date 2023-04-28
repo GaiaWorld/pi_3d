@@ -1,10 +1,16 @@
 
-use pi_engine_shell::{prelude::*, assets::sync_load::{sys_sync_load_create, sys_sync_load_check_await}};
-use pi_render::{renderer::shader::{KeyShaderMeta, KeyShader}, render_3d::shader::shader::{Shader3D, KeyShader3D}};
+use pi_assets::asset::GarbageEmpty;
+use pi_engine_shell::{prelude::*, assets::sync_load::{sys_sync_load_create, sys_sync_load_check_await, AssetSyncWait}};
+
+use crate::pass::*;
 
 use self::{
     command::*,
-    uniforms::PluginMaterialUniforms, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta, ShaderEffectMeta}
+    uniforms::{
+        sys_texture::*,
+        sys_uniform::*, sys_pass::*, set_up_uniforms
+    },
+    shader_effect::*
 };
 
 pub mod material;
@@ -21,22 +27,97 @@ pub type MBKK = usize;
 
 // type PluginAssetShaderEffectLoad = PluginAssetSyncLoad::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta, SysMaterailCreateCommands>;
 
-pub struct PluginMaterial;
-impl crate::Plugin for PluginMaterial {
+struct PluginMaterial;
+impl Plugin for PluginMaterial {
     fn build(&self, app: &mut bevy::prelude::App) {
+        let world = &mut app.world;
+        if world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
+            world.insert_resource(
+                ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), false, 60 * 1024, 60 * 1000)
+            );
+        };
+        if world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
+            world.insert_resource(
+                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, 60 * 1024 * 1024, 60 * 1000)
+            );
+        };
+
+        app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+        app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
+        app.insert_resource(ShareAssetMgr::<Shader3D>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+        app.insert_resource(ActionListMaterialCreate::default());
+        app.insert_resource(ActionListMaterialUse::default());
+        app.insert_resource(ActionListUniform::default());
+
         app.add_systems(
             (
+                sys_act_material_create,
                 sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
-                sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>
-            ).chain()
+                sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
+            ).chain().in_set(ERunStageChap::Initial)
+        );
+        
+        app.add_system(
+            sys_act_material_use.in_set(ERunStageChap::SecondInitial)
+        );
+
+        app.add_systems(
+            (
+                sys_act_uniform,
+            ).in_set(ERunStageChap::SecondInitial).after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
         
         app.add_systems(
             (
-                sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
-                sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>
-            ).chain()
+                sys_material_init::<PassID01>,
+                sys_material_init::<PassID02>,
+                sys_material_init::<PassID03>,
+                sys_material_init::<PassID04>,
+                sys_material_init::<PassID05>,
+                sys_material_init::<PassID06>,
+                sys_material_init::<PassID07>,
+                sys_material_init::<PassID08>,
+                sys_material_textures_modify,
+            ).in_set(ERunStageChap::Command)
         );
+        app.add_systems(
+            (
+                sys_texture_ready01,
+                sys_texture_ready02,
+            ).in_set(ERunStageChap::Uniform)
+        );
+        app.add_systems(
+            (
+                sys_effect_bind_to_model_while_mat_modify, // ::<PassID01>,
+                // sys_effect_bind_to_model_while_mat_modify::<PassID02>,
+                // sys_effect_bind_to_model_while_mat_modify::<PassID03>,
+                // sys_effect_bind_to_model_while_mat_modify::<PassID04>,
+                // sys_effect_bind_to_model_while_mat_modify::<PassID05>,
+                // sys_effect_bind_to_model_while_mat_modify::<PassID06>,
+                // sys_effect_bind_to_model_while_mat_modify::<PassID07>,
+                // sys_effect_bind_to_model_while_mat_modify::<PassID08>,
+            ).in_set(ERunStageChap::DrawBinds)
+        );
+        app.add_systems(
+            (
+                sys_effect_tex_to_model_while_mat_modify, //::<PassID01>,
+                // sys_effect_tex_to_model_while_mat_modify::<PassID02>,
+                // sys_effect_tex_to_model_while_mat_modify::<PassID03>,
+                // sys_effect_tex_to_model_while_mat_modify::<PassID04>,
+                // sys_effect_tex_to_model_while_mat_modify::<PassID05>,
+                // sys_effect_tex_to_model_while_mat_modify::<PassID06>,
+                // sys_effect_tex_to_model_while_mat_modify::<PassID07>,
+                // sys_effect_tex_to_model_while_mat_modify::<PassID08>,
+            ).in_set(ERunStageChap::DrawBinds)
+        );
+        app.add_system(
+            sys_material_uniform_apply.in_set(ERunStageChap::Uniform)
+        );
+
+        app.add_startup_system(set_up_uniforms);
+
+        // PluginMaterialUniforms.build(app);
+        // app.add_plugin(PluginMaterialUniforms);
     }
     // fn init(
     //     &mut self,
@@ -59,4 +140,16 @@ impl crate::Plugin for PluginMaterial {
 
     //     Ok(())
     // }
+}
+
+pub struct PluginGroupMaterial;
+impl PluginGroupMaterial {
+    pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {
+        group
+            .add(PluginMaterial)
+            .add(PluginTextureSlot01Load::default())
+            .add(PluginTextureSlot02Load::default())
+            .add(PluginTextureSlot03Load::default())
+            .add(PluginTextureSlot04Load::default())
+    }
 }

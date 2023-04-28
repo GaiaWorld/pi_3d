@@ -27,7 +27,7 @@ pub mod animation;
 pub mod pass;
 pub mod state;
 pub mod commands;
-
+pub mod prelude;
 
 pub fn bytes_write_to_memory(
     bytes: &[u8],

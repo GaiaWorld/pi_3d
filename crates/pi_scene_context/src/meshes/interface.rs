@@ -1,19 +1,5 @@
-use pi_engine_shell::object::InterfaceObject;
+use pi_engine_shell::prelude::*;
 use pi_scene_math::Vector4;
-
-use crate::{
-    object::ObjectID, transforms::interface::InterfaceTransformNode,
-    scene::interface::InterfaceScene,
-    renderers::{
-        render_mode::{InterfaceRenderMode, ERenderMode},
-        render_sort::{InterfaceRenderSort, TransparentSortParam},
-        render_blend::InterfaceRenderBlend,
-        render_primitive::{InterfaceRenderPrimitive, PrimitiveState, ECullMode, EPolygonMode, EFrontFace}, render_depth_and_stencil::InterfaceRenderDepthAndStencil
-    },
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}
-};
-
-use super::{command::{SingleMeshCreateCommandList, EMeshCreateCommand, EInstanceMeshCreateCommand, SingleInstanceMeshCreateCommandList, SingleInstanceMeshModifyCommandList, EInstanceMeshModifyCommand}, };
 
 
 pub trait InterfaceMesh {
@@ -57,98 +43,98 @@ pub trait InterfaceMesh {
         value: bool,
     ) -> &Self;
 }
-impl InterfaceMesh for crate::engine::Engine {
-    fn create_mesh(
-        & self,
-        scene: ObjectID,
-    ) -> ObjectID {
+// impl InterfaceMesh for crate::engine::Engine {
+//     fn create_mesh(
+//         & self,
+//         scene: ObjectID,
+//     ) -> ObjectID {
 
-        let entity = self.new_object();
+//         let entity = self.new_object();
 
-        self.add_to_scene(entity, scene);
-        self.as_transform_node(entity);
-        self.transform_parent(entity, scene);
+//         self.add_to_scene(entity, scene);
+//         self.as_transform_node(entity);
+//         self.transform_parent(entity, scene);
 
-        self.as_mesh(entity);
+//         self.as_mesh(entity);
 
-        entity
-    }
+//         entity
+//     }
     
-    fn create_instanced_mesh(
-        & self,
-        scene: ObjectID,
-        source: ObjectID,
-    ) -> ObjectID {
-        let world = self.world();
+//     fn create_instanced_mesh(
+//         & self,
+//         scene: ObjectID,
+//         source: ObjectID,
+//     ) -> ObjectID {
+//         let world = self.world();
 
-        let entity = self.new_object();
+//         let entity = self.new_object();
 
-        self.add_to_scene(entity, scene);
-        self.as_transform_node(entity);
-        self.transform_parent(entity, scene);
+//         self.add_to_scene(entity, scene);
+//         self.as_transform_node(entity);
+//         self.transform_parent(entity, scene);
 
-        let commands = world.get_resource_mut::<SingleInstanceMeshCreateCommandList>().unwrap();
-        commands.list.push(EInstanceMeshCreateCommand::CreateInstance(source, entity));
+//         let commands = world.get_resource_mut::<SingleInstanceMeshCreateCommandList>().unwrap();
+//         commands.list.push(EInstanceMeshCreateCommand::CreateInstance(source, entity));
 
-        entity
-    }
+//         entity
+//     }
     
-    fn set_instance_color(
-        & self,
-        instance: ObjectID,
-        color: Vector4,
-    ) -> &Self {
-        let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
-        commands.list.push(EInstanceMeshModifyCommand::InstanceColor(instance, color));
+//     fn set_instance_color(
+//         & self,
+//         instance: ObjectID,
+//         color: Vector4,
+//     ) -> &Self {
+//         let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
+//         commands.list.push(EInstanceMeshModifyCommand::InstanceColor(instance, color));
 
-        self
-    }
+//         self
+//     }
     
-    fn set_instance_tilloff(
-        & self,
-        instance: ObjectID,
-        value: Vector4,
-    ) -> &Self {
-        let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
-        commands.list.push(EInstanceMeshModifyCommand::InstanceTillOff(instance, value));
+//     fn set_instance_tilloff(
+//         & self,
+//         instance: ObjectID,
+//         value: Vector4,
+//     ) -> &Self {
+//         let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
+//         commands.list.push(EInstanceMeshModifyCommand::InstanceTillOff(instance, value));
 
-        self
-    }
+//         self
+//     }
 
-    fn as_mesh(
-        & self,
-        object: ObjectID,
-    ) -> & Self {
-        let world = self.world();
+//     fn as_mesh(
+//         & self,
+//         object: ObjectID,
+//     ) -> & Self {
+//         let world = self.world();
 
-        let commands = world.get_resource_mut::<SingleMeshCreateCommandList>().unwrap();
-        commands.list.push(EMeshCreateCommand::Create(object));
+//         let commands = world.get_resource_mut::<SingleMeshCreateCommandList>().unwrap();
+//         commands.list.push(EMeshCreateCommand::Create(object));
 
-        self.render_sort(object, TransparentSortParam::opaque());
-        self.render_mode(object, ERenderMode::Opaque);
-        self.disable_blend(object);
-        self.disable_depth_stencil(object);
-        self.layer_mask(object, LayerMask::default());
-        self.cull_mode(object, ECullMode::Back);
-        self.polygon_mode(object, EPolygonMode::Fill);
-        self.front_face(object, EFrontFace::Ccw);
+//         self.render_sort(object, TransparentSortParam::opaque());
+//         self.render_mode(object, ERenderMode::Opaque);
+//         self.disable_blend(object);
+//         self.disable_depth_stencil(object);
+//         self.layer_mask(object, LayerMask::default());
+//         self.cull_mode(object, ECullMode::Back);
+//         self.polygon_mode(object, EPolygonMode::Fill);
+//         self.front_face(object, EFrontFace::Ccw);
 
-        self
-    }
+//         self
+//     }
 
-    fn cast_shadow(
-        &self,
-        instance: ObjectID,
-        value: bool,
-    ) -> &Self {
-        todo!()
-    }
+//     fn cast_shadow(
+//         &self,
+//         instance: ObjectID,
+//         value: bool,
+//     ) -> &Self {
+//         todo!()
+//     }
 
-    fn receive_shadow(
-        &self,
-        instance: ObjectID,
-        value: bool,
-    ) -> &Self {
-        todo!()
-    }
-}
+//     fn receive_shadow(
+//         &self,
+//         instance: ObjectID,
+//         value: bool,
+//     ) -> &Self {
+//         todo!()
+//     }
+// }

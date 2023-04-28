@@ -1,9 +1,11 @@
 
-use pi_render::{renderer::{attributes::EVertexDataKind, vertex_buffer::{KeyVertexBuffer}, instance::{types::{TInstancedData, TInstanceFlag}, instanced_buffer::TInstancedBuffer}, vertex_buffer_desc::EVertexBufferSlot}, rhi::{device::RenderDevice, RenderQueue}};
 use pi_scene_math::Vector4;
+use pi_engine_shell::prelude::*;
 
+
+#[derive(Component)]
 pub struct InstanceTillOff(pub Vector4);
-impl TInstancedData for InstanceTillOff {
+impl TInstanceData for InstanceTillOff {
     fn vertex_kind(&self) -> EVertexDataKind {
         todo!()
     }
@@ -32,15 +34,16 @@ impl TInstancedData for InstanceTillOff {
     // }
 }
 
-pub struct InstancedBufferTillOff {
+#[derive(Component)]
+pub struct InstanceBufferTillOff {
     pub slot: usize,
     pub id: String,
     pub index: usize,
     // buffer: Handle<EVertexBufferRange>,
 }
-impl TInstancedBuffer for InstancedBufferTillOff {
+impl TInstanceBuffer for InstanceBufferTillOff {
     fn display_name() -> String {
-        String::from("InstancedBufferTillOff")
+        String::from("InstanceBufferTillOff")
     }
 
     fn slot(&self) -> EVertexBufferSlot {
@@ -53,6 +56,7 @@ impl TInstancedBuffer for InstancedBufferTillOff {
     }
 }
 
+#[derive(Component)]
 pub struct InstanceTillOffDirty(pub bool);
 impl TInstanceFlag for InstanceTillOffDirty {
     fn dirty(&self) -> bool {

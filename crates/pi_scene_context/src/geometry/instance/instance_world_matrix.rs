@@ -1,15 +1,15 @@
 
-use pi_render::renderer::{vertex_buffer::{KeyVertexBuffer}, vertex_buffer_desc::EVertexBufferSlot, instance::{types::TInstanceFlag, instanced_buffer::TInstancedBuffer}};
+use pi_engine_shell::prelude::*;
 
 use crate::{geometry::vertex_buffer_useinfo};
 
-
-pub struct InstancedBufferWorldMatrix {
+#[derive(Component)]
+pub struct InstanceBufferWorldMatrix {
     pub slot: usize,
     pub id: String,
     pub index: usize,
 }
-impl TInstancedBuffer for InstancedBufferWorldMatrix {
+impl TInstanceBuffer for InstanceBufferWorldMatrix {
     fn display_name() -> String {
         String::from("InstanceWorldMatrix")
     }
@@ -24,8 +24,9 @@ impl TInstancedBuffer for InstancedBufferWorldMatrix {
     }
 }
 
-pub struct InstancedWorldMatrixDirty(pub bool);
-impl TInstanceFlag for InstancedWorldMatrixDirty {
+#[derive(Component)]
+pub struct InstanceWorldMatrixDirty(pub bool);
+impl TInstanceFlag for InstanceWorldMatrixDirty {
     fn dirty(&self) -> bool {
         self.0
     }

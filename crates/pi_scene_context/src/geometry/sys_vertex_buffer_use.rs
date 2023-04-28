@@ -1,6 +1,6 @@
 
 use pi_engine_shell::prelude::*;
-use pi_render::{renderer::{indices::{IndicesBufferDesc, AssetResBufferIndices}, vertices::{RenderVertices}, vertex_buffer::EVertexBufferRange, vertex_buffer_loader::{SingleVertexBufferDataMap, VertexBufferLoader}}};
+use pi_render::{renderer::{vertices::{RenderVertices}}};
 
 
 use crate::{
@@ -46,9 +46,9 @@ use super::{
 //         asset_mgr: Res<Share<AssetMgr<EVertexBufferRange>>>,
 //         mut instance_source_record: ResMut<InstanceSourceRecord>,
 //         mut geo_enable_cmd: Commands<RenderGeometryEable>,
-//         mut ins_wm_cmd: Commands<InstancedBufferWorldMatrix>,
-//         mut ins_color_cmd: Commands<InstancedBufferColor>,
-//         mut ins_tilloff_cmd: Commands<InstancedBufferTillOff>,
+//         mut ins_wm_cmd: Commands<InstanceBufferWorldMatrix>,
+//         mut ins_color_cmd: Commands<InstanceBufferColor>,
+//         mut ins_tilloff_cmd: Commands<InstanceBufferTillOff>,
 //         mut instance_cmd: Commands<EInstanceCode>,
 //     ) {
 //         items.iter_mut().for_each(|(
@@ -77,18 +77,18 @@ use super::{
 
 //                         match instance_kind {
 //                             EInstanceKind::WorldMatrix => {
-//                                 let buff = InstancedBufferWorldMatrix { slot: slot_index, id: String::from(buff_id + "WorldMatrix"), index: 0 };
+//                                 let buff = InstanceBufferWorldMatrix { slot: slot_index, id: String::from(buff_id + "WorldMatrix"), index: 0 };
 //                                 ins_wm_cmd.insert(id_geo.clone(), buff);
 //                                 instance_code.0 = instance_code.0 | EInstanceCode::BASE;
 //                             },
 //                             EInstanceKind::Color => {
-//                                 let buff = InstancedBufferColor { slot: slot_index, id: String::from(buff_id + "Color"), index: 0 };
+//                                 let buff = InstanceBufferColor { slot: slot_index, id: String::from(buff_id + "Color"), index: 0 };
 //                                 ins_color_cmd.insert(id_geo.clone(), buff);
 //                                 // log::debug!("Instance Color");
 //                                 instance_code.0 = instance_code.0 | EInstanceCode::COLOR;
 //                             },
 //                             EInstanceKind::TillOffset => {
-//                                 let buff = InstancedBufferTillOff { slot: slot_index, id: String::from(buff_id + "TillOff"), index: 0 };
+//                                 let buff = InstanceBufferTillOff { slot: slot_index, id: String::from(buff_id + "TillOff"), index: 0 };
 //                                 ins_tilloff_cmd.insert(id_geo.clone(), buff);
 //                                 // log::debug!("Instance TillOffset");
 //                                 instance_code.0 = instance_code.0 | EInstanceCode::TILL_OFF_1;
@@ -134,7 +134,7 @@ use super::{
 // impl SysGeometryVBUpdateSlot01
 // {
 //     #[system]
-    pub fn sys_vertex_buffer_change_01(
+    pub fn sys_vertex_buffer_loaded_01(
         items: Query<
             (   
                 ObjectID
@@ -149,10 +149,9 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<RenderGeometry>,
-        mut geoenable_cmd: Commands<RenderGeometryEable>,
+        mut commands: Commands,
     ) {
-        // log::debug!("SysGeometryVBUpdateSlot1: ");
+        log::debug!("SysGeometryVBLoaded 1: ");
         items.iter().for_each(|(
             id_geo
             , id_mesh
@@ -162,12 +161,12 @@ use super::{
         )| {
             if desc.slot_count() == 1 {
                 let id_mesh = id_mesh.0.clone();
-                // log::debug!("SysGeometryVBUpdateSlot1: 0");
+                log::debug!("SysGeometryVBLoaded 1: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                 ];
-                geo_cmd.insert(id_geo, RenderGeometry::create(values, (indicesdesc , indices)));
-                geoenable_cmd.insert(id_mesh, RenderGeometryEable(true));
+                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                commands.entity(id_mesh).insert(RenderGeometryEable(true));
             }
         });
     }
@@ -178,7 +177,7 @@ use super::{
 // impl SysGeometryVBUpdateSlot02
 // {
 //     #[system]
-    pub fn sys_vertex_buffer_change_02(
+    pub fn sys_vertex_buffer_loaded_02(
         items: Query<
             (   
                 ObjectID
@@ -194,8 +193,7 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<RenderGeometry>,
-        mut geoenable_cmd: Commands<RenderGeometryEable>,
+        mut commands: Commands,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot2: ");
         items.iter().for_each(|(
@@ -213,8 +211,8 @@ use super::{
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
                 ];
-                geo_cmd.insert(id_geo, RenderGeometry::create(values, (indicesdesc , indices)));
-                geoenable_cmd.insert(id_mesh, RenderGeometryEable(true));
+                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                commands.entity(id_mesh).insert(RenderGeometryEable(true));
             }
         });
     }
@@ -225,7 +223,7 @@ use super::{
 // impl SysGeometryVBUpdateSlot03
 // {
 //     #[system]
-    pub fn sys_vertex_buffer_change_03(
+    pub fn sys_vertex_buffer_loaded_03(
         items: Query<
             (   
                 ObjectID
@@ -244,8 +242,7 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<RenderGeometry>,
-        mut geoenable_cmd: Commands<RenderGeometryEable>,
+        mut commands: Commands,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot3: ");
         items.iter().for_each(|(
@@ -264,8 +261,8 @@ use super::{
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
                     (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
                 ];
-                geo_cmd.insert(id_geo, RenderGeometry::create(values, (indicesdesc , indices)));
-                geoenable_cmd.insert(id_mesh, RenderGeometryEable(true));
+                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                commands.entity(id_mesh).insert(RenderGeometryEable(true));
             }
         });
     }
@@ -276,7 +273,7 @@ use super::{
 // impl SysGeometryVBUpdateSlot04
 // {
 //     #[system]
-    pub fn sys_vertex_buffer_change_04(
+    pub fn sys_vertex_buffer_loaded_04(
         items: Query<
             (   
                 ObjectID
@@ -297,8 +294,7 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<RenderGeometry>,
-        mut geoenable_cmd: Commands<RenderGeometryEable>,
+        mut commands: Commands,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot4: ");
         items.iter().for_each(|(
@@ -320,8 +316,8 @@ use super::{
                     (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
                     (key4.desc().step_mode(), RenderVertices::create(key4, res4)),
                 ];
-                geo_cmd.insert(id_geo, RenderGeometry::create(values, (indicesdesc , indices)));
-                geoenable_cmd.insert(id_mesh, RenderGeometryEable(true));
+                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                commands.entity(id_mesh).insert(RenderGeometryEable(true));
             }
         });
     }
@@ -332,7 +328,7 @@ use super::{
 // impl SysGeometryVBUpdateSlot05
 // {
 //     #[system]
-    pub fn sys_vertex_buffer_change_05(
+    pub fn sys_vertex_buffer_loaded_05(
         items: Query<
             (   
                 ObjectID
@@ -355,8 +351,7 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<RenderGeometry>,
-        mut geoenable_cmd: Commands<RenderGeometryEable>,
+        mut commands: Commands,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot5: ");
         items.iter().for_each(|(
@@ -381,8 +376,8 @@ use super::{
                     (key4.desc().step_mode(), RenderVertices::create(key4, res4)),
                     (key5.desc().step_mode(), RenderVertices::create(key5, res5)),
                 ];
-                geo_cmd.insert(id_geo, RenderGeometry::create(values, (indicesdesc , indices)));
-                geoenable_cmd.insert(id_mesh, RenderGeometryEable(true));
+                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                commands.entity(id_mesh).insert(RenderGeometryEable(true));
             }
         });
     }
@@ -393,7 +388,7 @@ use super::{
 // impl SysGeometryVBUpdateSlot06
 // {
 //     #[system]
-    pub fn sys_vertex_buffer_change_06(
+    pub fn sys_vertex_buffer_loaded_06(
         items: Query<
             (   
                 ObjectID
@@ -418,8 +413,7 @@ use super::{
                 Changed<AssetResBufferIndices>
             )>
         >,
-        mut geo_cmd: Commands<RenderGeometry>,
-        mut geoenable_cmd: Commands<RenderGeometryEable>,
+        mut commands: Commands,
     ) {
         // log::debug!("SysGeometryVBUpdateSlot6: ");
         items.iter().for_each(|(
@@ -447,48 +441,9 @@ use super::{
                     (key5.desc().step_mode(), RenderVertices::create(key5, res5)),
                     (key6.desc().step_mode(), RenderVertices::create(key6, res6)),
                 ];
-                geo_cmd.insert(id_geo, RenderGeometry::create(values, (indicesdesc , indices)));
-                geoenable_cmd.insert(id_mesh, RenderGeometryEable(true));
+                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                commands.entity(id_mesh).insert(RenderGeometryEable(true));
             }
         });
     }
 // }
-
-pub struct  PluginVertexBuffers;
-impl Plugin for PluginVertexBuffers {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
-    //     stages: &mut pi_engine_shell::run_stage::RunStage,
-    // ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-
-    //     let world = engine.world_mut();
-
-
-    //     let stage_builder = stages.query_stage::<SysRenderGeometryInit>(ERunStageChap::Draw);
-    //     SysGeometryVBUpdateSlot01::setup(world, stage_builder);
-    //     SysGeometryVBUpdateSlot02::setup(world, stage_builder);
-    //     SysGeometryVBUpdateSlot03::setup(world, stage_builder);
-    //     SysGeometryVBUpdateSlot04::setup(world, stage_builder);
-    //     SysGeometryVBUpdateSlot05::setup(world, stage_builder);
-    //     SysGeometryVBUpdateSlot06::setup(world, stage_builder);
-
-    //     Ok(())
-    // }
-
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            (
-                sys_vertex_buffer_loaded.in_set(ERunStageChap::Command),
-                (
-                    sys_vertex_buffer_change_01,
-                    sys_vertex_buffer_change_02,
-                    sys_vertex_buffer_change_03,
-                    sys_vertex_buffer_change_04,
-                    sys_vertex_buffer_change_05,
-                    sys_vertex_buffer_change_06,
-                ).in_set(ERunStageChap::Draw)
-            )
-        )
-    }
-}

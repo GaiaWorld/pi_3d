@@ -1,11 +1,11 @@
 
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
-use pi_render::{rhi::{shader::WriteBuffer}, render_3d::binds::scene::{effect::ShaderBindSceneAboutEffect}};
 
 use crate::{bytes_write_to_memory,};
 
 use super::BindSceneEffect;
 
+#[derive(Component)]
 pub struct SceneTime {
     pub time_ms: u64,
     pub delta_ms: u64,

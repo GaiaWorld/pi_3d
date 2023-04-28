@@ -1,14 +1,14 @@
 use crate::object::ObjectID;
 
-use super::{command::{SingleLayerMaskCommandList, LayerMaskCommand}, LayerMask};
+// use super::{command::{SingleLayerMaskCommandList, LayerMaskCommand}, LayerMask};
 
-pub trait InterfaceLayerMask {
-    fn layer_mask(
-        & self,
-        object: ObjectID,
-        layer: LayerMask,
-    ) -> & Self;
-}
+// pub trait InterfaceLayerMask {
+//     fn layer_mask(
+//         & self,
+//         object: ObjectID,
+//         layer: LayerMask,
+//     ) -> & Self;
+// }
 
 // impl InterfaceLayerMask for crate::engine::Engine {
 //     fn layer_mask(
