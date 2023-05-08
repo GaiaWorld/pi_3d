@@ -11,6 +11,7 @@ keywords = ["3d scene"]
 [dependencies]
 pi_scene_context = { path = "../pi_scene_context" }
 pi_engine_shell = { path = "../pi_engine_shell" }
+pi_node_materials = { path = "../node_materials" }
 
 pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
@@ -44,15 +45,3 @@ smallvec = "1.9"
 crossbeam="0.8"
 futures = "0.3"
 bevy = {version="0.10", default-features = false}
-
-
-[patch."https://github.com/GaiaWorld/pi_render"]
-pi_render = { path = "../../../pi_render" }
-render_utils = { path = "../../../pi_render/crates/render_utils" }
-render_derive = { path = "../../../pi_render/crates/render_derive" }
-render_compile = { path = "../../../pi_render/crates/render_compile" }
-render_macro_utils = { path = "../../../pi_render/crates/render_macro_utils" }
-
-[patch."https://github.com/GaiaWorld/pi_scene"]
-pi_scene = { path = "../../../pi_scene" }
-pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }

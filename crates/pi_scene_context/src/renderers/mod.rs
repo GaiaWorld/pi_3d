@@ -18,7 +18,7 @@ use self::{
     sys_renderer_pre::*,
     sys_renderer::*,
     pass::*,
-    render_primitive::*,
+    render_primitive::*, render_blend::{ActionListBlend, sys_act_model_blend},
 };
 
 pub mod render_object;
@@ -90,6 +90,7 @@ impl Plugin for PluginRenderer {
             app.insert_resource(AssetLoaderPipeline3D::default());
         }
 
+        app.insert_resource(ActionListBlend::default());
         app.insert_resource(ActionListCullMode::default());
         app.insert_resource(ActionListPolyginMode::default());
         app.insert_resource(ActionListFrontFace::default());
@@ -98,6 +99,7 @@ impl Plugin for PluginRenderer {
                 sys_act_mesh_cull_mode,
                 sys_act_mesh_polygon_mode,
                 sys_act_mesh_frontface,
+                sys_act_model_blend,
             ).in_set(ERunStageChap::SecondInitial)
         );
         app.add_system(

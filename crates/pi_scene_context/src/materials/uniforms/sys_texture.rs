@@ -7,21 +7,22 @@ use crate::{
 };
 
 use super::{
-    texture::{TextureSlot01, TextureSlot02, TextureSlot03, TextureSlot04},
+    texture::*,
 };
 
 pub type PluginTextureSlot01Load = PluginImageLoad<TextureSlot01, EffectBindTexture2D01Comp>;
 pub type PluginTextureSlot02Load = PluginImageLoad<TextureSlot02, EffectBindTexture2D02Comp>;
 pub type PluginTextureSlot03Load = PluginImageLoad<TextureSlot03, EffectBindTexture2D03Comp>;
 pub type PluginTextureSlot04Load = PluginImageLoad<TextureSlot04, EffectBindTexture2D04Comp>;
+pub type PluginTextureSlot05Load = PluginImageLoad<TextureSlot05, EffectBindTexture2D05Comp>;
+pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindTexture2D06Comp>;
 
     pub fn sys_texture_ready01(
         items: Query<
             (
-                ObjectID,
-                &AssetResShaderEffectMeta,
-                &EffectBindTexture2D01Comp, &TextureSlot01,
-                &EffectBindSampler2D01Comp,
+                ObjectID
+                , &AssetResShaderEffectMeta
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>, Changed<EffectBindSampler2D01Comp>,
@@ -30,10 +31,9 @@ pub type PluginTextureSlot04Load = PluginImageLoad<TextureSlot04, EffectBindText
         mut commands: Commands,
     ) {
         items.iter().for_each(|(
-            id_obj,
-            binddesc,
-            tex01, slot01,
-            sampl01
+            id_obj
+            , binddesc
+            , (tex01, slot01, sampl01)
         )| {
             // log::debug!("SysTextureResReady1 >");
             if binddesc.textures.len() == 1 {
@@ -68,10 +68,8 @@ pub type PluginTextureSlot04Load = PluginImageLoad<TextureSlot04, EffectBindText
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , &EffectBindTexture2D01Comp, &TextureSlot01
-                , &EffectBindTexture2D02Comp, &TextureSlot02
-                , &EffectBindSampler2D01Comp
-                , &EffectBindSampler2D02Comp
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -82,21 +80,10 @@ pub type PluginTextureSlot04Load = PluginImageLoad<TextureSlot04, EffectBindText
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , tex01, slot01
-            , tex02, slot02
-            , sampl01
-            , sampl02
+            , (tex01, slot01, sampl01)
+            , (tex02, slot02, sampl02)
         )| {
             if binddesc.textures.len() == 2 {
-                // // log::debug!("SysTextureResReady1 >>");
-                // let mut list = vec![];
-                // list.push(slot1.param());
-                // list.push(slot2.param());
-               
-                // let useinfo = binddesc.textures.use_info(list);
-                // let bind = EffectTextureAndSamplerBinds::new(&useinfo);
-                // params.insert(id_obj, BindEffectTextureAndSamplers(Arc::new(bind)));
-                
                 let value = EffectTextureSamplersComp(
                     EffectTextureSamplers {
                         textures: (
@@ -115,3 +102,189 @@ pub type PluginTextureSlot04Load = PluginImageLoad<TextureSlot04, EffectBindText
         });
     }
 
+
+    pub fn sys_texture_ready03(
+        items: Query<
+            (
+                ObjectID,
+                &AssetResShaderEffectMeta
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
+            ),
+            Or<(
+                Changed<EffectBindTexture2D01Comp>
+                , Changed<EffectBindTexture2D02Comp>
+                , Changed<EffectBindTexture2D03Comp>
+            )>
+        >,
+        mut commands: Commands,
+    ) {
+        items.iter().for_each(|(
+            id_obj, binddesc
+            , (tex01, slot01, sampl01)
+            , (tex02, slot02, sampl02)
+            , (tex03, slot03, sampl03)
+        )| {
+            if binddesc.textures.len() == 3 {
+                let value = EffectTextureSamplersComp(
+                    EffectTextureSamplers {
+                        textures: (
+                            Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
+                            None, None, None
+                        ),
+                        samplers: (
+                            Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
+                            None, None, None
+                        ),
+                        binding_count: 6
+                    }
+                );
+                commands.entity(id_obj).insert(value);
+            }
+        });
+    }
+    
+    pub fn sys_texture_ready04(
+        items: Query<
+            (
+                ObjectID,
+                &AssetResShaderEffectMeta
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
+            ),
+            Or<(
+                Changed<EffectBindTexture2D01Comp>
+                , Changed<EffectBindTexture2D02Comp>
+                , Changed<EffectBindTexture2D03Comp>
+                , Changed<EffectBindTexture2D04Comp>
+            )>
+        >,
+        mut commands: Commands,
+    ) {
+        items.iter().for_each(|(
+            id_obj, binddesc
+            , (tex01, slot01, sampl01)
+            , (tex02, slot02, sampl02)
+            , (tex03, slot03, sampl03)
+            , (tex04, slot04, sampl04)
+        )| {
+            if binddesc.textures.len() == 4 {
+                let value = EffectTextureSamplersComp(
+                    EffectTextureSamplers {
+                        textures: (
+                            Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
+                            Some(tex04.0.clone()), None, None
+                        ),
+                        samplers: (
+                            Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
+                            Some(sampl04.0.clone()), None, None
+                        ),
+                        binding_count: 8
+                    }
+                );
+                commands.entity(id_obj).insert(value);
+            }
+        });
+    }
+    
+    pub fn sys_texture_ready05(
+        items: Query<
+            (
+                ObjectID,
+                &AssetResShaderEffectMeta
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
+            ),
+            Or<(
+                Changed<EffectBindTexture2D01Comp>
+                , Changed<EffectBindTexture2D02Comp>
+                , Changed<EffectBindTexture2D03Comp>
+                , Changed<EffectBindTexture2D04Comp>
+                , Changed<EffectBindTexture2D05Comp>
+            )>
+        >,
+        mut commands: Commands,
+    ) {
+        items.iter().for_each(|(
+            id_obj, binddesc
+            , (tex01, slot01, sampl01)
+            , (tex02, slot02, sampl02)
+            , (tex03, slot03, sampl03)
+            , (tex04, slot04, sampl04)
+            , (tex05, slot05, sampl05)
+        )| {
+            if binddesc.textures.len() == 4 {
+                let value = EffectTextureSamplersComp(
+                    EffectTextureSamplers {
+                        textures: (
+                            Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
+                            Some(tex04.0.clone()), Some(tex05.0.clone()), None
+                        ),
+                        samplers: (
+                            Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
+                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), None
+                        ),
+                        binding_count: 10
+                    }
+                );
+                commands.entity(id_obj).insert(value);
+            }
+        });
+    }
+    
+    pub fn sys_texture_ready06(
+        items: Query<
+            (
+                ObjectID,
+                &AssetResShaderEffectMeta
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
+                , (&EffectBindTexture2D06Comp, &TextureSlot06, &EffectBindSampler2D06Comp)
+            ),
+            Or<(
+                Changed<EffectBindTexture2D01Comp>
+                , Changed<EffectBindTexture2D02Comp>
+                , Changed<EffectBindTexture2D03Comp>
+                , Changed<EffectBindTexture2D04Comp>
+                , Changed<EffectBindTexture2D05Comp>
+                , Changed<EffectBindTexture2D06Comp>
+            )>
+        >,
+        mut commands: Commands,
+    ) {
+        items.iter().for_each(|(
+            id_obj, binddesc
+            , (tex01, slot01, sampl01)
+            , (tex02, slot02, sampl02)
+            , (tex03, slot03, sampl03)
+            , (tex04, slot04, sampl04)
+            , (tex05, slot05, sampl05)
+            , (tex06, slot06, sampl06)
+        )| {
+            if binddesc.textures.len() == 4 {
+                let value = EffectTextureSamplersComp(
+                    EffectTextureSamplers {
+                        textures: (
+                            Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
+                            Some(tex04.0.clone()), Some(tex05.0.clone()), Some(tex06.0.clone())
+                        ),
+                        samplers: (
+                            Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
+                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), Some(sampl06.0.clone())
+                        ),
+                        binding_count: 12
+                    }
+                );
+                commands.entity(id_obj).insert(value);
+            }
+        });
+    }

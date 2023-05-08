@@ -48,6 +48,7 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
         app.insert_resource(ActionListUniform::default());
+        app.insert_resource(ActionListUniformByName::default());
 
         app.add_systems(
             (
@@ -64,19 +65,13 @@ impl Plugin for PluginMaterial {
         app.add_systems(
             (
                 sys_act_uniform,
+                sys_act_uniform_by_name,
             ).in_set(ERunStageChap::SecondInitial).after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
         
         app.add_systems(
             (
-                sys_material_init::<PassID01>,
-                sys_material_init::<PassID02>,
-                sys_material_init::<PassID03>,
-                sys_material_init::<PassID04>,
-                sys_material_init::<PassID05>,
-                sys_material_init::<PassID06>,
-                sys_material_init::<PassID07>,
-                sys_material_init::<PassID08>,
+                sys_material_init,
                 sys_material_textures_modify,
             ).in_set(ERunStageChap::Command)
         );
@@ -84,6 +79,10 @@ impl Plugin for PluginMaterial {
             (
                 sys_texture_ready01,
                 sys_texture_ready02,
+                sys_texture_ready03,
+                sys_texture_ready04,
+                sys_texture_ready05,
+                sys_texture_ready06,
             ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
@@ -151,5 +150,7 @@ impl PluginGroupMaterial {
             .add(PluginTextureSlot02Load::default())
             .add(PluginTextureSlot03Load::default())
             .add(PluginTextureSlot04Load::default())
+            .add(PluginTextureSlot05Load::default())
+            .add(PluginTextureSlot06Load::default())
     }
 }

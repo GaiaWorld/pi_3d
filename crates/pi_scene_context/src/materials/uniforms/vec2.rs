@@ -17,6 +17,10 @@ pub enum Vec2Uniform {
     Slot6(u32, [Number; 6 * 2]),
     Slot7(u32, [Number; 7 * 2]),
     Slot8(u32, [Number; 8 * 2]),
+    Slot9(u32, [Number; 9 * 2]),
+    Slot10(u32, [Number; 10 * 2]),
+    Slot11(u32, [Number; 11 * 2]),
+    Slot12(u32, [Number; 12 * 2]),
 }
 impl FromValueUniformStatistics for Vec2Uniform {
     fn new(value: &ShaderBindEffectValue) -> Self {
@@ -43,6 +47,18 @@ impl FromValueUniformStatistics for Vec2Uniform {
         }
         else if value.vec2_count == 8 {
             Self::Slot8(value.vec2_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.vec2_count == 9 {
+            Self::Slot9(value.vec2_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.vec2_count == 10 {
+            Self::Slot10(value.vec2_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.vec2_count == 11 {
+            Self::Slot11(value.vec2_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.vec2_count == 12 {
+            Self::Slot12(value.vec2_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
         }
         else {
             Self::Slot0(value.vec2_begin)
@@ -71,6 +87,10 @@ impl Vec2Uniform {
             Self::Slot6(_, data) => &data[range],
             Self::Slot7(_, data) => &data[range],
             Self::Slot8(_, data) => &data[range],
+            Self::Slot9(_, data) => &data[range],
+            Self::Slot10(_, data) => &data[range],
+            Self::Slot11(_, data) => &data[range],
+            Self::Slot12(_, data) => &data[range],
         }
     }
     pub fn set(
@@ -104,6 +124,18 @@ impl Vec2Uniform {
             Vec2Uniform::Slot8(_, data) =>  {
                 if slot <= 7 { update_data(data, slot, value, 2); }
             },
+            Vec2Uniform::Slot9(_, data) =>  {
+                if slot <= 8 { update_data(data, slot, value, 2); }
+            },
+            Vec2Uniform::Slot10(_, data) =>  {
+                if slot <= 9 { update_data(data, slot, value, 2); }
+            },
+            Vec2Uniform::Slot11(_, data) =>  {
+                if slot <= 10 { update_data(data, slot, value, 2); }
+            },
+            Vec2Uniform::Slot12(_, data) =>  {
+                if slot <= 11 { update_data(data, slot, value, 2); }
+            },
         }
     }
     pub fn update(&self, range: &BindBufferRange) {
@@ -117,6 +149,10 @@ impl Vec2Uniform {
             Self::Slot6(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
             Self::Slot7(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
             Self::Slot8(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot9(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot10(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot11(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot12(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
         }
     }
 }

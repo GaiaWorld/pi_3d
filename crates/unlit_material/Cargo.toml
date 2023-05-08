@@ -11,6 +11,7 @@ keywords = ["3d scene"]
 [dependencies]
 pi_scene_context = { path = "../pi_scene_context" }
 pi_engine_shell = { path = "../pi_engine_shell" }
+pi_node_materials = { path = "../node_materials" }
 material_textures = { path = "../material_textures" }
 
 pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }

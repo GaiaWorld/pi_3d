@@ -1,0 +1,13 @@
+use crate::base::TNodeMaterialBlock;
+use pi_engine_shell::prelude::*;
+
+pub struct BlockFresnel;
+impl BlockFresnel {
+}
+impl TNodeMaterialBlock for BlockFresnel {
+    const KEY: &'static str = "FRESNEL";
+
+    const FS_DEFINED: &'static str = include_str!("./fresnel.glsl");
+
+    const VS_DEFINED: &'static str = "";
+}

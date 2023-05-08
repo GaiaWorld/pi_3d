@@ -14,6 +14,14 @@ pub enum FloatUniform {
     Slot6(u32, [Number; 6]),
     Slot7(u32, [Number; 7]),
     Slot8(u32, [Number; 8]),
+    Slot9(u32, [Number; 9]),
+    Slot10(u32, [Number; 10]),
+    Slot11(u32, [Number; 11]),
+    Slot12(u32, [Number; 12]),
+    Slot13(u32, [Number; 13]),
+    Slot14(u32, [Number; 14]),
+    Slot15(u32, [Number; 15]),
+    Slot16(u32, [Number; 16]),
 }
 impl FromValueUniformStatistics for FloatUniform {
     fn new(value: &ShaderBindEffectValue) -> Self {
@@ -41,6 +49,30 @@ impl FromValueUniformStatistics for FloatUniform {
         else if value.float_count == 8 {
             Self::Slot8(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0.])
         }
+        else if value.float_count == 9 {
+            Self::Slot9(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.float_count == 10 {
+            Self::Slot10(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.float_count == 11 {
+            Self::Slot11(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.float_count == 12 {
+            Self::Slot12(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.float_count == 13 {
+            Self::Slot13(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.float_count == 14 {
+            Self::Slot14(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.float_count == 15 {
+            Self::Slot15(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
+        else if value.float_count == 16 {
+            Self::Slot16(value.float_begin, [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        }
         else {
             Self::Slot0(value.float_begin)
         }
@@ -50,6 +82,7 @@ impl FloatUniform {
     pub fn init(&mut self, desc: &Vec<UniformPropertyFloat>) {
         let mut index = 0;
         desc.iter().for_each(|item| {
+            log::warn!("Float {:?} {:?}", item.tag(), item.1);
             self.set(index, item.1);
             index += 1;
         });
@@ -65,6 +98,14 @@ impl FloatUniform {
             Self::Slot6(_, data) => data[slot],
             Self::Slot7(_, data) => data[slot],
             Self::Slot8(_, data) => data[slot],
+            Self::Slot9(_, data) => data[slot],
+            Self::Slot10(_, data) => data[slot],
+            Self::Slot11(_, data) => data[slot],
+            Self::Slot12(_, data) => data[slot],
+            Self::Slot13(_, data) => data[slot],
+            Self::Slot14(_, data) => data[slot],
+            Self::Slot15(_, data) => data[slot],
+            Self::Slot16(_, data) => data[slot],
         }
     }
     pub fn set(
@@ -98,6 +139,30 @@ impl FloatUniform {
             FloatUniform::Slot8(_, data) =>  {
                 if slot <= 7 { data[slot] = value; }
             },
+            FloatUniform::Slot9(_, data) => {
+                if slot <= 8 { data[slot] = value; }
+            },
+            FloatUniform::Slot10(_, data) =>  {
+                if slot <= 9 { data[slot] = value; }
+            },
+            FloatUniform::Slot11(_, data) =>  {
+                if slot <= 10 { data[slot] = value; }
+            },
+            FloatUniform::Slot12(_, data) =>  {
+                if slot <= 11 { data[slot] = value; }
+            },
+            FloatUniform::Slot13(_, data) =>  {
+                if slot <= 12 { data[slot] = value; }
+            },
+            FloatUniform::Slot14(_, data) =>  {
+                if slot <= 13 { data[slot] = value; }
+            },
+            FloatUniform::Slot15(_, data) =>  {
+                if slot <= 14 { data[slot] = value; }
+            },
+            FloatUniform::Slot16(_, data) =>  {
+                if slot <= 15 { data[slot] = value; }
+            },
         }
     }
     pub fn update(&self, range: &BindBufferRange) {
@@ -111,6 +176,14 @@ impl FloatUniform {
             Self::Slot6(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
             Self::Slot7(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
             Self::Slot8(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot9(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot10(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot11(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot12(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot13(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot14(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot15(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
+            Self::Slot16(offset, data) => range.write_data(*offset as usize, bytemuck::cast_slice(data)),
         }
     }
 }

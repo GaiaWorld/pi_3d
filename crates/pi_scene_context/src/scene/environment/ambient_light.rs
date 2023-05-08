@@ -52,7 +52,7 @@ impl AmbientLight {
 // impl SysSceneAmbientUpdate {
 //     #[system]
     pub fn sys_bind_update_scene_ambient(
-        mut scenes: Query<(&AmbientLight, &mut BindSceneEffect), Changed<AmbientLight>>,
+        mut scenes: Query<(&AmbientLight, &mut BindSceneEffect), Or<(Changed<AmbientLight>, Changed<BindSceneEffect>)>>,
     ) {
         scenes.iter_mut().for_each(|(item, mut bind)| {
             item.update(&mut bind);

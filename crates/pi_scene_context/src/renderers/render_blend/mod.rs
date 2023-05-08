@@ -2,8 +2,6 @@ use std::mem::replace;
 
 use pi_engine_shell::prelude::*;
 
-use crate::object::{ObjectID, GameObject};
-
 #[derive(Debug, Clone, Copy, Component)]
 pub struct ModelBlend {
     pub enable: bool,
@@ -45,26 +43,33 @@ impl ModelBlend {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum ERenderBlendCommand {
-    Disable(),
-    Blend(ModelBlend),
+pub enum OpsRenderBlend {
+    Disable(Entity),
+    Blend(Entity, ModelBlend),
+}
+impl OpsRenderBlend {
+    pub fn ops(mesh: Entity, mode: ModelBlend) -> Self {
+        Self::Blend(mesh, mode)
+    }
 }
 
-pub struct ActionRenderBlend;
-impl ActionRenderBlend {
-    pub fn modify(
-        commands: &mut EntityCommands,
-        val: ERenderBlendCommand,
-    ) {
-        match val {
-            ERenderBlendCommand::Disable() => {
-                commands.insert(ModelBlend::default());
-            },
-            ERenderBlendCommand::Blend(value) => {
-                commands.insert(value);
+pub type ActionListBlend = ActionList<OpsRenderBlend>;
+pub fn sys_act_model_blend(
+    mut cmds: ResMut<ActionListBlend>,
+    mut meshes: Query<&mut ModelBlend>,
+) {
+    cmds.drain().drain(..).for_each(|cmd| {
+        match cmd {
+            OpsRenderBlend::Disable(_) => todo!(),
+            OpsRenderBlend::Blend(entity, value) => {
+                if let Ok(mut mode) = meshes.get_mut(entity) {
+                    *mode = value;
+                } else {
+                    cmds.push(OpsRenderBlend::Blend(entity, value));
+                }
             },
         }
-    }
+    });
 }
 
 // #[derive(Debug, Default)]

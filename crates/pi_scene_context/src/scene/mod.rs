@@ -8,6 +8,7 @@ pub mod coordinate_system;
 pub mod command;
 pub mod interface;
 pub mod environment;
+pub mod light;
 
 pub struct PluginScene;
 impl Plugin for PluginScene {

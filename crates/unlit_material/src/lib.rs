@@ -10,6 +10,7 @@ use shader::UnlitShader;
 pub mod shader;
 pub mod command;
 pub mod interface;
+pub mod effects;
 
 fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,

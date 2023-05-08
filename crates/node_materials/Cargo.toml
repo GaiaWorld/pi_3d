@@ -1,5 +1,5 @@
 [package]
-name = "node_materials"
+name = "pi_node_materials"
 version = "0.0.1"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
@@ -11,7 +11,7 @@ keywords = ["3d scene"]
 [dependencies]
 pi_scene_context = { path = "../pi_scene_context" }
 pi_engine_shell = { path = "../pi_engine_shell" }
-material_textures = { path = "../material_textures" }
+# material_textures = { path = "../material_textures" }
 
 pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
@@ -24,10 +24,6 @@ pi_slotmap = "0.1"
 pi_hash = "0.1"
 pi_assets = "0.11"
 pi_atom = { version="0.2", features = ["serde"] }
-
-pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
-pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
-pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 
 naga = { version = "0.10", features = [
     "glsl-in",
@@ -43,13 +39,4 @@ smallvec = "1.9"
 crossbeam="0.8"
 futures = "0.3"
 derive_deref = "1.1"
-
-
-[patch."https://github.com/GaiaWorld/pi_render"]
-pi_render = { path = "../../../pi_render" }
-render_utils = { path = "../../../pi_render/crates/render_utils" }
-render_derive = { path = "../../../pi_render/crates/render_derive" }
-
-[patch."https://github.com/GaiaWorld/pi_scene"]
-pi_scene = { path = "../../../pi_scene" }
-pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
+bevy = {version="0.10", default-features = false}

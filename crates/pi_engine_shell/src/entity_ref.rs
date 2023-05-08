@@ -11,6 +11,7 @@ pub trait TEntityRef {
 pub struct EntityRefInfo<F: Default + Clone + Component, R: Component + TEntityRef> {
     refs: XHashSet<Entity>,
     pub dirty: bool,
+    pub request_dispose: bool,
     p: PhantomData<(F, R)>,
 }
 impl<F: Default + Clone + Component, R: Component + TEntityRef> Default for EntityRefInfo<F, R> {
@@ -18,6 +19,7 @@ impl<F: Default + Clone + Component, R: Component + TEntityRef> Default for Enti
         Self {
             refs: XHashSet::default(),
             dirty: false,
+            request_dispose: false,
             p: PhantomData::default(),
         }
     }

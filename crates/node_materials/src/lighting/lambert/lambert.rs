@@ -1,0 +1,1 @@
+pub const DEFINED_FS: &'static str = include_str!("./lambert.glsl");

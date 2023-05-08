@@ -2,6 +2,7 @@ use std::{marker::PhantomData, sync::Arc};
 
 use pi_engine_shell::prelude::*;
 use pi_assets::{asset::Handle, mgr::AssetMgr};
+use pi_hash::XHashMap;
 use pi_scene_math::Number;
 use crate::{
     materials::{value::FromValueUniformStatistics},
@@ -35,6 +36,7 @@ pub struct BindEffectValues {
     pub uint_: UintUniform,
     pub bind: Arc<ShaderBindEffectValue>,
     pub dirty: bool,
+    pub keys: XHashMap<String, usize>,
 }
 impl BindEffectValues {
     pub fn new(
@@ -45,6 +47,8 @@ impl BindEffectValues {
     ) -> Option<Self> {
         if let Some(effect_val_bind) = ShaderBindEffectValue::new(device, key_meta, meta.clone(), allocator) {
 
+            let mut keys = XHashMap::default();
+
             let uniforms = &meta.uniforms;
             let mut mat4 = Mat4Uniform::new(&effect_val_bind);     mat4.init(&uniforms.mat4_list);
             let mut mat2 = Mat2Uniform::new(&effect_val_bind);     mat2.init(&uniforms.mat2_list);
@@ -53,6 +57,35 @@ impl BindEffectValues {
             let mut float = FloatUniform::new(&effect_val_bind);    float.init(&uniforms.float_list);
             let mut int = IntUniform::new(&effect_val_bind);      int.init(&uniforms.int_list);
             let mut uint = UintUniform::new(&effect_val_bind);     uint.init(&uniforms.uint_list);
+            
+            let mut index = 0;
+            uniforms.mat4_list.iter().for_each(|v| {
+                keys.insert(v.0.to_string(), index); index += 1;
+            });
+            let mut index = 0;
+            uniforms.mat2_list.iter().for_each(|v| {
+                keys.insert(v.0.to_string(), index); index += 1;
+            });
+            let mut index = 0;
+            uniforms.vec4_list.iter().for_each(|v| {
+                keys.insert(v.0.to_string(), index); index += 1;
+            });
+            let mut index = 0;
+            uniforms.vec2_list.iter().for_each(|v| {
+                keys.insert(v.0.to_string(), index); index += 1;
+            });
+            let mut index = 0;
+            uniforms.float_list.iter().for_each(|v| {
+                keys.insert(v.0.to_string(), index); index += 1;
+            });
+            let mut index = 0;
+            uniforms.int_list.iter().for_each(|v| {
+                keys.insert(v.0.to_string(), index); index += 1;
+            });
+            let mut index = 0;
+            uniforms.uint_list.iter().for_each(|v| {
+                keys.insert(v.0.to_string(), index); index += 1;
+            });
 
             Some(Self {
                 mat4_: mat4,
@@ -64,6 +97,7 @@ impl BindEffectValues {
                 uint_: uint,
                 bind: Arc::new(effect_val_bind),
                 dirty: true,
+                keys
             })
         } else {
             None

@@ -6,7 +6,7 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix}, Matrix, Rotation3, Quaternion, Vector3};
 use pi_slotmap_tree::Storage;
 
-use crate::{object::{GameObject, ObjectID}, scene::coordinate_system::SceneCoordinateSytem3D};
+use crate::{scene::coordinate_system::SceneCoordinateSytem3D};
 
 use super::{
     transform_node::*,

@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{frustum::FrustumPlanes};
 
-use crate::{cullings::{BoundingInfo}, object::GameObject, flags::SceneID, viewer::ViewerTransformMatrix};
+use crate::{cullings::{BoundingInfo}, flags::SceneID, viewer::ViewerTransformMatrix};
 
 
 // pub struct SysCameraCulling;

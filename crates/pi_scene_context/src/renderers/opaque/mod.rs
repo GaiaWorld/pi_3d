@@ -2,8 +2,6 @@ use std::mem::replace;
 
 use pi_engine_shell::prelude::*;
 
-use crate::object::{ObjectID, GameObject};
-
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct Opaque;

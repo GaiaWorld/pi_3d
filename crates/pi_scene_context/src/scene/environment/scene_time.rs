@@ -32,28 +32,35 @@ impl SceneTime {
         self.dirty = true;
     }
     pub fn data(&self, data: &mut Vec<f32>) {
+        let time_ms = self.time_ms as f32 * 0.001;
+        let delta_ms = self.delta_ms as f32 * 0.001;
         let temp = [
-            self.time_ms as f32, 1. / (self.time_ms as f32), (self.time_ms as f32).sin(), (self.time_ms as f32).cos(),
-            self.delta_ms as f32, 1. / (self.delta_ms as f32), (self.delta_ms as f32).sin(), (self.delta_ms as f32).cos()
+            time_ms, time_ms, time_ms.sin(), time_ms.cos(),
+            delta_ms, 1. / delta_ms, delta_ms.sin(), delta_ms.cos()
         ];
         temp.iter().for_each(|v| {
             data.push(*v);
         });
     }
     pub fn update(&self, bind: &BindSceneEffect) {
+        let time_ms = self.time_ms as f32 * 0.001;
+        let delta_ms = self.delta_ms as f32 * 0.001;
         let values = [
-            self.time_ms as f32, 1. / (self.time_ms as f32), (self.time_ms as f32).sin(), (self.time_ms as f32).cos(),
-            self.delta_ms as f32, 1. / (self.delta_ms as f32), (self.delta_ms as f32).sin(), (self.delta_ms as f32).cos()
+            time_ms, time_ms, time_ms.sin(), time_ms.cos(),
+            delta_ms, 1. / delta_ms, delta_ms.sin(), delta_ms.cos()
         ];
         bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_TIME as usize, bytemuck::cast_slice(&values));
     }
 }
 impl WriteBuffer for SceneTime {
     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-        let time = vec![self.time_ms as f32, 1. / (self.time_ms as f32), (self.time_ms as f32).sin(), (self.time_ms as f32).cos()];
+        let time_ms = self.time_ms as f32 * 0.001;
+        let delta_ms = self.delta_ms as f32 * 0.001;
+
+        let time = vec![time_ms, time_ms, time_ms.sin(), time_ms.cos()];
         bytes_write_to_memory(bytemuck::cast_slice(&time), index as usize + Self::TIME_OFFSIZE, buffer);
 
-        let time = vec![self.delta_ms as f32, 1. / (self.delta_ms as f32), (self.delta_ms as f32).sin(), (self.delta_ms as f32).cos()];
+        let time = vec![delta_ms, 1. / delta_ms, delta_ms.sin(), delta_ms.cos()];
         bytes_write_to_memory(bytemuck::cast_slice(&time), index as usize + Self::DELTA_TIME_OFFSIZE, buffer);
     }
 

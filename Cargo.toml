@@ -23,6 +23,7 @@ skeletons = { path = "crates/skeletons" }
 axis = { path = "crates/axis" }
 
 
+pi_node_materials = { path = "crates/node_materials" }
 unlit_material = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }
 
@@ -187,3 +188,34 @@ path = "examples/anime/performance.rs"
 # name = "lighting_01"
 # path = "examples/lighting/01.rs"
 # 
+[[example]]
+name = "particle01"
+path = "examples/particles/01.rs"
+
+# [[example]]
+# name = "gltfskin"
+# path = "examples/gltf/simple_skin.rs"
+
+[[example]]
+name = "main_opacity"
+path = "examples/effects/main_opacity.rs"
+
+[[example]]
+name = "emissive_fresnel"
+path = "examples/effects/emissive_fresnel.rs"
+
+[[example]]
+name = "main_opacity_fresnel"
+path = "examples/effects/main_opacity_fresnel.rs"
+
+[[example]]
+name = "two_opacity_mix"
+path = "examples/effects/two_opacity_mix.rs"
+
+[[example]]
+name = "stripes_virtual"
+path = "examples/effects/stripes_virtual.rs"
+
+[[example]]
+name = "distortion_uv"
+path = "examples/effects/distortion_uv.rs"

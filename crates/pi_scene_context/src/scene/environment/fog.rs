@@ -12,6 +12,7 @@ pub enum EFogMode {
     Linear,
     Exp,
     Exp2,
+    AltitudeBase,
 }
 
 #[derive(Component)]
@@ -33,7 +34,7 @@ impl SceneFog {
     pub fn new(
     ) -> Self {
         Self {
-            mode: EFogMode::None,
+            mode: EFogMode::Linear,
             color: (0.1, 0.5, 0.1),
             start: 10.,
             end: 100.,
@@ -80,6 +81,7 @@ impl SceneFog {
             EFogMode::Linear => 1.,
             EFogMode::Exp => 2.,
             EFogMode::Exp2 => 3.,
+            EFogMode::AltitudeBase => 4.,
         };
 
         let temp = [
@@ -97,6 +99,7 @@ impl SceneFog {
             EFogMode::Linear => 1.,
             EFogMode::Exp => 2.,
             EFogMode::Exp2 => 3.,
+            EFogMode::AltitudeBase => 4.,
         };
         let values = vec![
             self.color.0, self.color.1, self.color.2, 1.
@@ -141,7 +144,7 @@ impl SceneFog {
 // impl SysSceneFogUpdate {
 //     #[system]
     pub fn sys_bind_update_scene_fog(
-        mut scenes: Query<(&SceneFog, &mut BindSceneEffect), Changed<SceneFog>>,
+        mut scenes: Query<(&SceneFog, &mut BindSceneEffect), Or<(Changed<SceneFog>, Changed<BindSceneEffect>)>>,
     ) {
         scenes.iter_mut().for_each(|(item, mut bind)| {
             item.update(&mut bind);

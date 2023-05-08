@@ -24,6 +24,9 @@ use super::DirectionalShadowProjection;
                 },
                 Light::Point => {},
                 Light::Spot => {},
+                Light::Hemispheric => {
+                    
+                },
             }
         });
     }

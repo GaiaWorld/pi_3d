@@ -11,11 +11,17 @@ use pi_scene_context::{
 
 pub struct BallBuilder;
 impl BallBuilder {
-    const KEY_BUFFER_COLOR4:    &'static str = "BallColor4";
-    const KEY_BUFFER_POSITION:  &'static str = "BallPosition";
-    const KEY_BUFFER_NORMAL:    &'static str = "BallNormal";
-    const KEY_BUFFER_UV:        &'static str = "BallUV";
-    const KEY_BUFFER_INDICES:   &'static str = "BallIndices";
+    pub const KEY_BUFFER_COLOR4:    &'static str = "BallColor4";
+    pub const KEY_BUFFER_POSITION:  &'static str = "BallPosition";
+    pub const KEY_BUFFER_NORMAL:    &'static str = "BallNormal";
+    pub const KEY_BUFFER_UV:        &'static str = "BallUV";
+    pub const KEY_BUFFER_INDICES:   &'static str = "BallIndices";
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct BallParam {
+    pub sectors: usize,
+    pub stacks: usize,
 }
 
 // pub trait InterfaceBall {
@@ -292,9 +298,11 @@ fn compute_uv(normalize: &[f32]) -> Vec<f32> {
  * @brief 面细分法 经纬细分
  * @param sectors 分辨率
  */
-fn generate_sphere(sectors: usize, stacks: usize) -> (Vec<f32>, Vec<f32>, Vec<u16>, Vec<f32>) {
+pub fn generate_sphere(param: &BallParam) -> (Vec<f32>, Vec<f32>, Vec<u16>, Vec<f32>) {
     // Largely inspired from http://www.songho.ca/opengl/gl_sphere.html
     let radius = 1.0;
+    let sectors: usize = param.sectors;
+    let stacks: usize = param.stacks;
 
     let sectorsf32 = sectors as f32;
     let stacksf32 = stacks as f32;

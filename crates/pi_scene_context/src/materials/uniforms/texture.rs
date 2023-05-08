@@ -288,3 +288,90 @@ impl UniformTexture for TextureResSlot04 {
 //         &self.sampler
 //     }
 // }
+
+// ==== ==== ==== ==== 5
+
+#[derive(Debug, Clone, Hash, Component)]
+pub struct TextureSlot05(pub Arc<UniformTextureWithSamplerParam>);
+impl UniformBind for TextureSlot05 {
+    fn bind(&self) -> u32 {
+        4
+    }
+}
+impl ValueTextureKey for TextureSlot05 {
+    fn new(param: UniformTextureWithSamplerParam) -> Self {
+        Self(Arc::new(param))
+    }
+    fn key(&self) -> &KeyTexture {
+        &self.0.url
+    }
+    fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
+        self.0.clone()
+    }
+}
+impl std::ops::Deref for TextureSlot05 {
+    type Target = KeyTexture;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0.url
+    }
+}
+impl SlotActiveRequire for TextureSlot05 {
+    const ASK_SLOT_COUNT: u8 = 5;
+}
+
+
+#[derive(Deref, DerefMut, Component)]
+pub struct TextureResSlot05(pub Handle<TextureRes>);
+impl From<Handle<TextureRes>> for TextureResSlot05 {
+    fn from(h: Handle<TextureRes>) -> Self { Self(h) }
+}
+impl UniformTexture for TextureResSlot05 {
+    fn texture(&self) -> &TextureRes {
+        &self.0
+    }
+}
+
+
+// ==== ==== ==== ==== 6
+
+#[derive(Debug, Clone, Hash, Component)]
+pub struct TextureSlot06(pub Arc<UniformTextureWithSamplerParam>);
+impl UniformBind for TextureSlot06 {
+    fn bind(&self) -> u32 {
+        5
+    }
+}
+impl ValueTextureKey for TextureSlot06 {
+    fn new(param: UniformTextureWithSamplerParam) -> Self {
+        Self(Arc::new(param))
+    }
+    fn key(&self) -> &KeyTexture {
+        &self.0.url
+    }
+    fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
+        self.0.clone()
+    }
+}
+impl std::ops::Deref for TextureSlot06 {
+    type Target = KeyTexture;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0.url
+    }
+}
+impl SlotActiveRequire for TextureSlot06 {
+    const ASK_SLOT_COUNT: u8 = 6;
+}
+
+
+#[derive(Deref, DerefMut, Component)]
+pub struct TextureResSlot06(pub Handle<TextureRes>);
+impl From<Handle<TextureRes>> for TextureResSlot06 {
+    fn from(h: Handle<TextureRes>) -> Self { Self(h) }
+}
+impl UniformTexture for TextureResSlot06 {
+    fn texture(&self) -> &TextureRes {
+        &self.0
+    }
+}

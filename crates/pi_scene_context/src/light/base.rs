@@ -9,7 +9,17 @@ pub enum Light {
     Directional,
     Point,
     Spot,
+    Hemispheric,
 }
+
+#[derive(Component)]
+pub struct DirectLight;
+
+#[derive(Component)]
+pub struct SpotLight;
+
+#[derive(Component)]
+pub struct HemisphericLight;
 
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
