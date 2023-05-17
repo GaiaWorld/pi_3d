@@ -170,13 +170,14 @@ fn setup(
         next: Some(Atom::from(WindowRenderer::KEY)),
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, desc, wgpu::TextureFormat::Rgba8Unorm, None));
+    let id_renderer = commands.spawn_empty().id();
+    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, wgpu::TextureFormat::Rgba8Unorm, None));
 
     let cube = commands.spawn_empty().id();
     meshcreate.push(OpsMeshCreation(scene, cube, String::from("TestCube")));
     
     let id_geo = commands.spawn_empty().id();
-    geometrycreate.push((cube, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
+    geometrycreate.push(OpsGeomeryCreate::ops(cube, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
 
     matuse.push(OpsMaterialUse::ops(cube, defaultmat.0.unwrap()));
 

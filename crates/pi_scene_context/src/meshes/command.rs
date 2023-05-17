@@ -32,7 +32,6 @@ use super::{
     lighting::{MeshCastShadow, MeshReceiveShadow}
 };
 
-
 pub struct OpsMeshCreation(pub Entity, pub Entity, pub String);
 impl OpsMeshCreation {
     pub fn ops(scene: Entity, entity: Entity, name: String) -> Self {
@@ -124,9 +123,9 @@ pub enum OpsMeshShadow {
     CastShadow(Entity, bool),
     ReceiveShadow(Entity, bool),
 }
-pub type ActionListMeshModify = ActionList<OpsMeshShadow>;
+pub type ActionListMeshShadow = ActionList<OpsMeshShadow>;
 pub fn sys_act_mesh_modify(
-    mut cmds: ResMut<ActionListMeshModify>,
+    mut cmds: ResMut<ActionListMeshShadow>,
     mut castshadows: Query<&mut MeshCastShadow>,
     mut receiveshadows: Query<&mut MeshReceiveShadow>,
     // mut meshes: Query<>,
@@ -293,7 +292,7 @@ impl ActionMesh {
         app: &mut App,
         cmd: OpsMeshShadow,
     ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListMeshModify>().unwrap();
+        let mut cmds = app.world.get_resource_mut::<ActionListMeshShadow>().unwrap();
         cmds.push(cmd);
     }
 }

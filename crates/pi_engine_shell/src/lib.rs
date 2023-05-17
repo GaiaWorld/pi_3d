@@ -3,10 +3,7 @@
 use std::{sync::Arc, time::Instant, };
 
 
-use pi_async::{
-    prelude::{Mutex},
-};
-
+use pi_async::prelude::Mutex;
 use pi_share::{ShareMutex};
 
 mod effect_sampler2d;

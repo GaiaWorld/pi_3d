@@ -8,7 +8,13 @@ use super::{
     instance::{instance_world_matrix::InstanceBufferWorldMatrix, instance_color::InstanceBufferColor, instance_tilloff::InstanceBufferTillOff, InstanceSourceID}, GeometryVBLoader,
 };
 
-pub type ActionListGeometryCreate = ActionList<(Entity, Entity, Vec<VertexBufferDesc>, Option<IndicesBufferDesc>)>;
+pub type ActionListGeometryCreate = ActionList<OpsGeomeryCreate>;
+pub struct OpsGeomeryCreate(Entity, Entity, Vec<VertexBufferDesc>, Option<IndicesBufferDesc>);
+impl OpsGeomeryCreate {
+    pub fn ops(mesh: Entity, geo: Entity, vertices: Vec<VertexBufferDesc>, indices: Option<IndicesBufferDesc>) -> Self {
+        Self(mesh, geo, vertices, indices)
+    }
+}
 pub fn sys_geometry_create(
     mut cmds: ResMut<ActionListGeometryCreate>,
     mut commands: Commands,
@@ -16,7 +22,7 @@ pub fn sys_geometry_create(
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
 ) {
-    cmds.drain().drain(..).for_each(|(id_mesh, entity, vertex_desc, indices_desc)| {
+    cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, vertex_desc, indices_desc)| {
         commands.entity(id_mesh).insert(GeometryID(entity));
 
         let mut geocommands = commands.entity(entity);
@@ -88,7 +94,7 @@ impl ActionGeometry {
         vertex_desc: Vec<VertexBufferDesc>,
         indices_desc: Option<IndicesBufferDesc>,
     ) {
-        cmds.push((id_mesh, id_geo, vertex_desc, indices_desc));
+        cmds.push(OpsGeomeryCreate::ops(id_mesh, id_geo, vertex_desc, indices_desc));
     }
 }
 

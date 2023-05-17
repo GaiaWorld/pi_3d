@@ -29,3 +29,8 @@ impl Plugin for PluginScene {
     }
     
 }
+
+#[derive(SystemParam)]
+pub struct ActionSetScene<'w> {
+    pub create: ResMut<'w, ActionListSceneCreate>,
+}

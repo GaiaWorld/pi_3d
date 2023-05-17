@@ -47,7 +47,7 @@ pi_graph = "0.1"
 pi_atom = { version="0.2", features = ["serde"] }
 pi_assets = "0.11"
 pi_futures = "0.1"
-pi_async = "0.5.11"
+pi_async = "0.5"
 pi_idtree = "0.1"
 pi_slotmap_tree = "0.3"
 pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }

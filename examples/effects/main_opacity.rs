@@ -7,13 +7,32 @@ use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime, assets::local_load::PluginLocalLoad};
-use pi_node_materials::prelude::*;
+use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
+use pi_node_materials::{prelude::*, PluginNodeMaterial};
 use pi_scene_context::{prelude::*, materials::{uniforms::sys_uniform::{ActionListUniform, EUniformCommand, ActionListUniformByName, OpsUniformByName}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta}}, renderers::render_blend::{ActionListBlend, OpsRenderBlend, ModelBlend}};
 use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
 use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::main_opacity::MainOpacityShader};
 
+use std::sync::Arc;
+use pi_async::rt::AsyncRuntime;
+use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+
+pub struct PluginLocalLoad;
+impl Plugin for PluginLocalLoad {
+    fn build(&self, app: &mut App) {
+        
+        init_load_cb(Arc::new(|path: String| {
+            MULTI_MEDIA_RUNTIME
+                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                    log::debug!("Load {}", path);
+                    let r = std::fs::read(path.clone()).unwrap();
+                    on_load(&path, r);
+                })
+                .unwrap();
+        }));
+    }
+}
 
 fn setup(
     mut commands: Commands,
@@ -79,7 +98,8 @@ fn setup(
         next: Some(Atom::from(WindowRenderer::KEY)),
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, desc, wgpu::TextureFormat::Rgba8Unorm, None));
+    let id_renderer = commands.spawn_empty().id();
+    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, wgpu::TextureFormat::Rgba8Unorm, None));
 
     let source = commands.spawn_empty().id();
     transformcmds.3.push(OpsMeshCreation(scene, source, String::from("TestCube")));
@@ -88,7 +108,7 @@ fn setup(
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
-    geometrycreate.push((source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    geometrycreate.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
     matcmds.0.push(OpsMaterialUse::ops(source, idmat));
@@ -165,6 +185,7 @@ pub fn main() {
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugins(PluginBundleDefault);
+    app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     
     app.add_startup_system(setup);

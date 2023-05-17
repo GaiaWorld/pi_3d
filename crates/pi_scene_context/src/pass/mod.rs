@@ -25,6 +25,7 @@ impl PassTagOrders {
 ///   * 每个 Pass 对应一个渲染流程
 ///   * 每个材质 只对应 一个Pass
 ///   * example: ShadowCast, DepthPrePass, Opaque, Skybox, Transparent,
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum EPassTag {
     ShadowCast,

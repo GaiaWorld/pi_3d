@@ -9,7 +9,7 @@ use crate::{
         instance_tilloff::*,
         instance_world_matrix::{InstanceBufferWorldMatrix, InstanceWorldMatrixDirty},
         InstanceSourceID, DirtyInstanceSourceRefs
-    }
+    }, renderers::render_blend::ActionListBlend
 };
 
 use self::{
@@ -85,7 +85,7 @@ impl crate::Plugin for PluginMesh {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ActionListMeshCreate::default());
         app.insert_resource(ActionListInstanceMeshCreate::default());
-        app.insert_resource(ActionListMeshModify::default());
+        app.insert_resource(ActionListMeshShadow::default());
         app.insert_resource(ActionListInstanceColor::default());
         app.insert_resource(ActionListInstanceTillOff::default());
 
@@ -116,4 +116,18 @@ impl crate::Plugin for PluginMesh {
             ).in_set(ERunStageChap::Uniform)
         );
     }
+}
+
+#[derive(SystemParam)]
+pub struct ActionSetMesh<'w> {
+    pub create: ResMut<'w, ActionListMeshCreate>,
+    pub shadow: ResMut<'w, ActionListMeshShadow>,
+    pub blend: ResMut<'w, ActionListBlend>,
+}
+
+#[derive(SystemParam)]
+pub struct ActionSetInstanceMesh<'w> {
+    pub create: ResMut<'w, ActionListInstanceMeshCreate>,
+    pub color: ResMut<'w, ActionListInstanceColor>,
+    pub tilloff: ResMut<'w, ActionListInstanceTillOff>,
 }

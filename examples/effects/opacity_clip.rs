@@ -7,12 +7,12 @@ use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
+use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
 use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
-use pi_scene_context::{prelude::*, materials::{uniforms::sys_uniform::{ActionListUniform, EUniformCommand, ActionListUniformByName, OpsUniformByName}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta}}, renderers::render_blend::{ActionListBlend, OpsRenderBlend, ModelBlend}, geometry::ActionVertexBuffer};
-use pi_scene_math::{Vector3, Vector4, Vector2};
-use pi_mesh_builder::{cube::*, ball::*, quad::{PluginQuadBuilder, QuadBuilder}};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, main_opacity_fresnel::MainOpacityFresnelShader, two_opacity_mix::TwoOpacityMixShader, stripes_virtual::StripesVirtualShader, distortion_uv::DistortionUVShader}};
+use pi_scene_context::{prelude::*, materials::{uniforms::sys_uniform::{ActionListUniform, EUniformCommand, ActionListUniformByName, OpsUniformByName}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta}}, renderers::render_blend::{ActionListBlend, OpsRenderBlend, ModelBlend}};
+use pi_scene_math::{Vector3, Vector4};
+use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
+use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, opacity_clip::OpacityClipShader}};
 
 use std::sync::Arc;
 use pi_async::rt::AsyncRuntime;
@@ -76,7 +76,7 @@ fn setup(
     mut scaling_ctx: ResMut<TypeAnimeContext<LocalEulerAngles>>,
     scaling_curves: Res<ShareAssetMgr<TypeFrameCurve<LocalEulerAngles>>>,
 ) {
-    ActionMaterial::regist_material_meta(&matcmds.3, &mut matcmds.4, KeyShaderMeta::from(DistortionUVShader::KEY), DistortionUVShader::create(&matcmds.6));
+    ActionMaterial::regist_material_meta(&matcmds.3, &mut matcmds.4, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&matcmds.6));
 
     let tes_size = 5;
     fps.frame_ms = 4;
@@ -108,14 +108,12 @@ fn setup(
     matcmds.5.push(OpsRenderBlend::ops(source, blend));
     
     let id_geo = commands.spawn_empty().id();
-    geometrycreate.push(OpsGeomeryCreate::ops(source, id_geo, 
-        CubeBuilder::attrs_meta(),
-        Some(CubeBuilder::indices_meta())
-    ));
+    let mut attrs = CubeBuilder::attrs_meta();
+    geometrycreate.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
     matcmds.0.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.1.push(OpsMaterialCreate::ops(idmat, DistortionUVShader::KEY, EPassTag::Transparent));
+    matcmds.1.push(OpsMaterialCreate::ops(idmat, OpacityClipShader::KEY, EPassTag::Transparent));
     matcmds.2.push(OpsUniformByName::Texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
@@ -128,27 +126,14 @@ fn setup(
         sample: KeySampler::linear_repeat(),
         url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
     }, true));
-    matcmds.2.push(OpsUniformByName::Texture(idmat, UniformTextureWithSamplerParam {
-        slotname: Atom::from(BlockMaskTexture::KEY_TEX),
-        filter: true,
-        sample: KeySampler::linear_repeat(),
-        url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_uv_lf_002.png"),
-    }, true));
-    matcmds.2.push(OpsUniformByName::Vec2(idmat, String::from(BlockMaskTextureUVOffsetSpeed::KEY_PARAM), Vector2::new(1., 1.), true));
-
-}
-
-fn sys_setup_ball(
-    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
-    mut data_map: ResMut<VertexBufferDataMap3D>,
-) {
-    let param = BallParam { sectors: 20, stacks: 20 };
-
-    let (positions, normals, indices, uvs) = generate_sphere(&param);
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallPos#20#20"), bytemuck::cast_slice(&positions).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallNor#20#20"), bytemuck::cast_slice(&normals).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallUV#20#20"), bytemuck::cast_slice(&uvs).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from("BallInd#20#20"), bytemuck::cast_slice(&indices).iter().map(|v| *v).collect::<Vec<u8>>());
+    matcmds.2.push(
+        OpsUniformByName::Vec4(
+            idmat, 
+            String::from(BlockEmissiveBase::KEY_INFO), 
+            Vector4::new(1., 1., 1., 1.), 
+            true
+        )
+    );
 }
 
 pub trait AddEvent {
@@ -204,7 +189,6 @@ pub fn main() {
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     
-    app.add_startup_system(sys_setup_ball);
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     

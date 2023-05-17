@@ -36,10 +36,10 @@ pub fn sys_anime_group_create(
     });
 }
 
-pub type ActionListAnimePause = ActionList<(ObjectID, Atom)>;
+pub type ActionListAnimeGroupPause = ActionList<(ObjectID, Atom)>;
 
 pub fn sys_anime_pause(
-    mut cmds: ResMut<ActionListAnimePause>,
+    mut cmds: ResMut<ActionListAnimeGroupPause>,
     mut sce: Query<&mut SceneAnimationContext>,
     obj: Query<(&SceneID, & AnimationGroups)>,
 ) {
@@ -150,7 +150,7 @@ impl ActionAnime {
         id_obj: Entity,
         key_group: &Atom,
     ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListAnimePause>().unwrap();
+        let mut cmds = app.world.get_resource_mut::<ActionListAnimeGroupPause>().unwrap();
         cmds.push((id_obj, key_group.clone()));
     }
     pub fn start_animation_group_percent(

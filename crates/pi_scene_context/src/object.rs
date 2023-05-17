@@ -67,20 +67,23 @@ pub fn sys_dispose(
         } else if let Ok(mut refs) = geometries.get_mut(entity) {
             //
             refs.request_dispose = true;
-            if refs.len() == 0 {
+            if refs.len() == 0 && refs.request_dispose {
                 commands.entity(entity).despawn();
             }
             return;
         } else if let Ok(mut refs) = materials.get_mut(entity) {
             // refs.
             refs.request_dispose = true;
-            if refs.len() == 0 {
+            if refs.len() == 0 && refs.request_dispose {
                 commands.entity(entity).despawn();
             }
             return;
         } else if let Ok(mut refs) = skeletons.get_mut(entity) {
             // refs.
             refs.request_dispose = true;
+            if refs.len() == 0 && refs.request_dispose {
+                commands.entity(entity).despawn();
+            }
             return;
         } else if let Ok(renderers) = viewers.get_mut(entity) {
             renderers.map.iter().for_each(|(vk, (v0, v1))| {

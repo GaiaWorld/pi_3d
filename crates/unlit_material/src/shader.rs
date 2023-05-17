@@ -1,6 +1,6 @@
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
-use pi_node_materials::{main_tex::BlockMainTexture, emissive::emissive_base::BlockEmissiveBase, base::NodeMaterialBuilder};
+use pi_node_materials::{main_tex::BlockMainTexture, emissive::emissive_base::BlockEmissiveBase, base::NodeMaterialBuilder, prelude::{BlockMainTextureUVOffsetSpeed, BlockUVOffsetSpeed}};
 
 pub struct UnlitShader {
     pub vs_module: wgpu::ShaderModule,
@@ -39,8 +39,10 @@ impl UnlitShader {
             ]
         );
 
+        nodemat.apply::<BlockUVOffsetSpeed>();
         nodemat.apply::<BlockEmissiveBase>();
         nodemat.apply::<BlockMainTexture>();
+        nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
 
         nodemat.meta()
 

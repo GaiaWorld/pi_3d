@@ -31,7 +31,6 @@ pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_sha
 render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_compile = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_macro_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 
 pi_bevy_render_plugin = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
 pi_bevy_winit_window = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
@@ -51,6 +50,7 @@ pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 pi_postprocess = { git = "https://github.com/GaiaWorld/pi_post_process.git" }
 
 pi_assets = "0.11"
+pi_async = "0.5"
 
 wgpu = "0.15"
 env_logger = "0.9"
@@ -73,7 +73,6 @@ pi_render = { path = "../pi_render" }
 render_utils = { path = "../pi_render/crates/render_utils" }
 render_derive = { path = "../pi_render/crates/render_derive" }
 render_compile = { path = "../pi_render/crates/render_compile" }
-render_macro_utils = { path = "../pi_render/crates/render_macro_utils" }
 
 [patch."https://github.com/GaiaWorld/pi_render_bevy"]
 pi_bevy_render_plugin = { path="../pi_render_bevy/crates/render" }
@@ -199,6 +198,10 @@ path = "examples/particles/01.rs"
 [[example]]
 name = "main_opacity"
 path = "examples/effects/main_opacity.rs"
+
+[[example]]
+name = "opacity_clip"
+path = "examples/effects/opacity_clip.rs"
 
 [[example]]
 name = "emissive_fresnel"

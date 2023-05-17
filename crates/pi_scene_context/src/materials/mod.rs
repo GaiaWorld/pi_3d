@@ -154,3 +154,12 @@ impl PluginGroupMaterial {
             .add(PluginTextureSlot06Load::default())
     }
 }
+
+#[derive(SystemParam)]
+pub struct ActionSetMaterial<'w> {
+    pub usemat: ResMut<'w, ActionListMaterialUse>,
+    pub create: ResMut<'w, ActionListMaterialCreate>,
+    pub uniform: ResMut<'w, ActionListUniformByName>,
+    pub metas: Res<'w, ShareAssetMgr<ShaderEffectMeta>>,
+    pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
+}

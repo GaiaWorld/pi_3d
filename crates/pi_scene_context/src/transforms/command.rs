@@ -7,6 +7,11 @@ use crate::{flags::UniqueName, scene::command::ActionScene};
 use super::{transform_node::*, tree_left_right::*};
 
 pub struct OpsTransformNode(pub Entity, pub Entity, pub String);
+impl OpsTransformNode {
+    pub fn ops(scene: Entity, node: Entity, name: String) -> Self {
+        Self(scene, node, name)
+    }
+}
 pub type ActionListTransformNodeCreate = ActionList<OpsTransformNode>;
 pub fn sys_act_transform_node_create(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
@@ -84,6 +89,11 @@ pub fn sys_act_local_euler(
 }
 
 pub struct OpsTransformNodeLocalScaling(pub Entity, pub Vector3);
+impl OpsTransformNodeLocalScaling {
+    pub fn ops(node: Entity, x: f32, y: f32, z: f32) -> Self {
+        Self(node, Vector3::new(x, y, z))
+    }
+}
 pub type ActionListTransformNodeLocalScaling = ActionList<OpsTransformNodeLocalScaling>;
 pub fn sys_act_local_scaling(
     mut cmds: ResMut<ActionListTransformNodeLocalScaling>,

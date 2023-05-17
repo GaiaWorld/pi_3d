@@ -17,7 +17,6 @@ pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_sha
 render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_compile = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_macro_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 

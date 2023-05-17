@@ -8,7 +8,7 @@ use pi_engine_shell::prelude::*;
 
 use self::{
     base::{GlobalAnimeAbout, TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve},
-    system::{ sys_scene_anime_ctx, sys_listen_type_anime_ctx, sys_calc_type_anime}, command::{sys_anime_group_create, sys_anime_add_target_anime, sys_anime_start, sys_anime_pause, ActionListAnimeGroupCreate, ActionListAnimePause, ActionListAnimeGroupStart, ActionListAddTargetAnime}
+    system::{ sys_scene_anime_ctx, sys_listen_type_anime_ctx, sys_calc_type_anime}, command::{sys_anime_group_create, sys_anime_add_target_anime, sys_anime_start, sys_anime_pause, ActionListAnimeGroupCreate, ActionListAnimeGroupPause, ActionListAnimeGroupStart, ActionListAddTargetAnime}
 };
 
 pub mod base;
@@ -21,7 +21,7 @@ pub struct PluginAnimation;
 impl Plugin for PluginAnimation {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListAnimeGroupCreate::default());
-        app.insert_resource(ActionListAnimePause::default());
+        app.insert_resource(ActionListAnimeGroupPause::default());
         app.insert_resource(ActionListAnimeGroupStart::default());
         app.insert_resource(ActionListAddTargetAnime::default());
 
@@ -137,4 +137,12 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
         // SysTypeAnimeDispose::<D>::setup(world, stages.query_stage::<SysTypeAnimeDispose::<D>>(ERunStageChap::Initial));
         // SysTypeAnime::<D>::setup(world, stages.query_stage::<SysTypeAnime::<D>>(ERunStageChap::Anime));
     }
+}
+
+#[derive(SystemParam)]
+pub struct ActionSetAnimationGroup<'w> {
+    pub create: ResMut<'w, ActionListAnimeGroupCreate>,
+    pub add_target_anime: ResMut<'w, ActionListAddTargetAnime>,
+    pub start: ResMut<'w, ActionListAnimeGroupStart>,
+    pub pause: ResMut<'w, ActionListAnimeGroupPause>,
 }

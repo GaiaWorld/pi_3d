@@ -29,7 +29,7 @@ impl<F: FrameDataValue+ 'static> AsRef<FrameCurve<F>> for AssetTypeFrameCurve<F>
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Deref, DerefMut)]
 pub struct TypeAnimeContext<D: FrameDataValue + 'static> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
 }

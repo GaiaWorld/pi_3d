@@ -1,29 +1,18 @@
-use std::sync::mpsc::channel;
-
-use pi_3d::PluginBundleDefault;
 use pi_3d_loader::factory::{gltf_decode, GltfLoader};
-use pi_async::rt::AsyncRuntime;
+use default_render::SingleIDBaseDefaultMaterial;
+use pi_3d::PluginBundleDefault;
+use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
-use pi_ecs::prelude::{ResMut, Setup};
-use pi_ecs_macros::setup;
-use pi_engine_shell::{
-    engine_shell::{AppShell, EnginShell},
-    frame_time::InterfaceFrameTime,
-    object::ObjectID,
-    plugin::Plugin,
-    run_stage::{ERunStageChap, TSystemStageInfo}, assets::local_load::PluginLocalLoad,
-};
-use pi_hal::runtime::MULTI_MEDIA_RUNTIME;
-use pi_render::rhi::options::RenderOptions;
-use pi_scene_context::{
-    cameras::interface::InterfaceCamera,
-    scene::interface::InterfaceScene,
-    transforms::{
-        command::{ETransformNodeModifyCommand, SingleTransformNodeModifyCommandList},
-        interface::InterfaceTransformNode,
-    }, skeleton::PluginSkeleton, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}, state::PluginStateToFile,
-};
-use pi_scene_math::{Matrix, Vector3};
+use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
+use pi_bevy_render_plugin::PiRenderPlugin;
+use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
+use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime, assets::local_load::PluginLocalLoad};
+use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
+use pi_scene_context::{prelude::*, materials::{uniforms::sys_uniform::{ActionListUniform, EUniformCommand, ActionListUniformByName, OpsUniformByName}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta}}, renderers::render_blend::{ActionListBlend, OpsRenderBlend, ModelBlend}, geometry::ActionVertexBuffer};
+use pi_scene_math::{Vector3, Vector4, Vector2};
+use pi_mesh_builder::{cube::*, ball::*, quad::{PluginQuadBuilder, QuadBuilder}};
+use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, main_opacity_fresnel::MainOpacityFresnelShader, two_opacity_mix::TwoOpacityMixShader, stripes_virtual::StripesVirtualShader, distortion_uv::DistortionUVShader}};
+
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -115,6 +104,50 @@ impl PluginTest {
         println!("============6");
         gltf_decode(&gltf_loader, engine, buffer, scene01);
     }
+}
+
+fn setup(
+    mut commands: Commands,
+    mut scenecmds: ResMut<ActionListSceneCreate>,
+    mut cameracmds: (
+        ResMut<ActionListCameraCreate>,
+        ResMut<ActionListCameraTarget>,
+        ResMut<ActionListCameraMode>,
+        ResMut<ActionListCameraRenderer>,
+        ResMut<ActionListCameraActive>,
+        ResMut<ActionListCameraFixedMode>,
+        ResMut<ActionListCameraFov>,
+        ResMut<ActionListCameraOrthSize>,
+        ResMut<ActionListCameraNearFar>,
+    ),
+    mut transformcmds: (
+        ResMut<ActionListTransformNodeParent>,
+        ResMut<ActionListTransformNodeLocalPosition>,
+        ResMut<ActionListTransformNodeLocalEuler>,
+        ResMut<ActionListMeshCreate>,
+        ResMut<ActionListInstanceMeshCreate>,
+        ResMut<ActionListInstanceTillOff>,
+    ),
+    mut geometrycreate: ResMut<ActionListGeometryCreate>,
+    mut matcmds: (
+        ResMut<ActionListMaterialUse>,
+        ResMut<ActionListMaterialCreate>,
+        ResMut<ActionListUniformByName>,
+        Res<ShareAssetMgr<ShaderEffectMeta>>,
+        ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
+        ResMut<ActionListBlend>,
+    ),
+    mut fps: ResMut<SingleFrameTimeCommand>,
+    mut anime: (
+        ResMut<ActionListAnimeGroupCreate>,
+        ResMut<ActionListAddTargetAnime>,
+        ResMut<ActionListAnimeGroupStart>,
+    ),
+    mut final_render: ResMut<WindowRenderer>,
+    mut scaling_ctx: ResMut<TypeAnimeContext<LocalEulerAngles>>,
+    scaling_curves: Res<ShareAssetMgr<TypeFrameCurve<LocalEulerAngles>>>,
+) {
+
 }
 
 pub fn main() {

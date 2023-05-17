@@ -189,8 +189,8 @@ pub fn sys_camera_orth_size(
 
 pub struct OpsCameraTarget(Entity, Vector3);
 impl OpsCameraTarget {
-    pub fn ops(camera: Entity, target: Vector3) -> Self {
-        Self(camera, target)
+    pub fn ops(camera: Entity, x: Number, y: Number, z: Number) -> Self {
+        Self(camera, Vector3::new(x, y, z))
     }
 }
 pub type ActionListCameraTarget = ActionList<OpsCameraTarget>;
@@ -207,15 +207,16 @@ pub fn sys_camera_target(
     });
 }
 
-pub struct OpsCameraRendererInit(Entity, RendererGraphicDesc, wgpu::TextureFormat, Option<wgpu::TextureFormat>);
+pub struct OpsCameraRendererInit(Entity, Entity, RendererGraphicDesc, wgpu::TextureFormat, Option<wgpu::TextureFormat>);
 impl OpsCameraRendererInit {
     pub fn ops(
         camera: Entity,
+        renderer: Entity,
         render_desc: RendererGraphicDesc,
         render_target_color_format: wgpu::TextureFormat,
         render_target_depth_stencil_format: Option<wgpu::TextureFormat>,
     ) -> Self {
-        Self(camera, render_desc, render_target_color_format, render_target_depth_stencil_format)
+        Self(camera, renderer, render_desc, render_target_color_format, render_target_depth_stencil_format)
     }
 }
 pub type ActionListCameraRenderer = ActionList<OpsCameraRendererInit>;
@@ -229,39 +230,37 @@ pub fn sys_camera_renderer_action(
     >,
     mut render_graphic: ResMut<PiRenderGraph> ,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, graphic_desc, color_format, depth_stencil_format)| {
+    cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, id_renderer, graphic_desc, color_format, depth_stencil_format)| {
         
         if let Ok((enable, mut viewer_renderers, name)) = viewers.get_mut(id_viewer) {
 
             if let Some((desc, id_render)) = viewer_renderers.map.get(&graphic_desc.curr) {
                 // viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), RendererID(id_render.0)));
                 let mut commands = commands.entity(id_render.0);
-                ActionRenderer::modify(&mut commands, ERendererCommand::Active(enable.0));
-                ActionRenderer::modify(&mut commands, ERendererCommand::ColorFormat(RenderColorFormat(color_format)));
-                ActionRenderer::modify(&mut commands, ERendererCommand::DepthFormat(RenderDepthFormat(depth_stencil_format)));
-                
-            } else {
-                let mut entitycmd = commands.spawn_empty();
-                let id_renderer = entitycmd.id();
-                match ActionRenderer::create_graphic_node(&mut render_graphic, name.0.to_string(), id_viewer, RendererID(id_renderer), &graphic_desc) {
-                    Ok(node) => {
-                        commands.entity(id_viewer).insert(DirtyViewerRenderersInfo);
+                // ActionRenderer::modify(&mut commands, ERendererCommand::Active(enable.0));
+                // ActionRenderer::modify(&mut commands, ERendererCommand::ColorFormat(RenderColorFormat(color_format)));
+                // ActionRenderer::modify(&mut commands, ERendererCommand::DepthFormat(RenderDepthFormat(depth_stencil_format)));
+                commands.despawn();
+            }
 
-                        viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), RendererID(id_renderer)));
-                        
-                        let mut commands = commands.entity(id_renderer);
-                        ActionRenderer::as_renderer(
-                            &mut commands, node, id_viewer, graphic_desc
-                        );
-                        ActionRenderer::modify(&mut commands, ERendererCommand::Active(true));
-                        ActionRenderer::modify(&mut commands, ERendererCommand::ColorFormat(RenderColorFormat(color_format)));
-                        ActionRenderer::modify(&mut commands, ERendererCommand::DepthFormat(RenderDepthFormat(depth_stencil_format)));
-                    },
-                    Err(_) => {},
-                }
+            match ActionRenderer::create_graphic_node(&mut render_graphic, name.0.to_string(), id_viewer, RendererID(id_renderer), &graphic_desc) {
+                Ok(node) => {
+                    commands.entity(id_viewer).insert(DirtyViewerRenderersInfo);
+
+                    viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), RendererID(id_renderer)));
+                    
+                    let mut commands = commands.entity(id_renderer);
+                    ActionRenderer::as_renderer(
+                        &mut commands, node, id_viewer, graphic_desc
+                    );
+                    ActionRenderer::modify(&mut commands, ERendererCommand::Active(true));
+                    ActionRenderer::modify(&mut commands, ERendererCommand::ColorFormat(RenderColorFormat(color_format)));
+                    ActionRenderer::modify(&mut commands, ERendererCommand::DepthFormat(RenderDepthFormat(depth_stencil_format)));
+                },
+                Err(_) => {},
             }
         } else {
-            cmds.push(OpsCameraRendererInit(id_viewer, graphic_desc, color_format, depth_stencil_format));
+            cmds.push(OpsCameraRendererInit(id_viewer, id_renderer, graphic_desc, color_format, depth_stencil_format));
         }
     });
 }

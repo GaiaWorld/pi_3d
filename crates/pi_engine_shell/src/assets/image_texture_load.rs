@@ -6,9 +6,9 @@ use pi_assets::{
     mgr::{AssetMgr, LoadResult},
 };
 use pi_async::prelude::AsyncRuntime;
+use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
 use pi_atom::Atom;
 use pi_bevy_asset::ShareAssetMgr;
-use pi_hal::{loader::AsyncLoader, runtime::MULTI_MEDIA_RUNTIME};
 use pi_render::rhi::{
     asset::{ImageTextureDesc, TextureRes},
     device::RenderDevice,

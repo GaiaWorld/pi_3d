@@ -10,55 +10,56 @@ use pi_bevy_render_plugin::{PiRenderPlugin, PiRenderSystemSet};
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
 
+use pi_node_materials::{prelude::BlockEmissiveBase, PluginNodeMaterial};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::*, transform_node::LocalScaling},
+    transforms::{command::*, transform_node::LocalScaling, ActionSetTransform, ActionSetTransformNodeAnime},
     scene::{command::{ActionListSceneCreate, ActionScene}},
-    cameras::{command::*, camera::EFreeCameraMode},
+    cameras::{command::*, camera::EFreeCameraMode, ActionSetCamera},
     layer_mask::{interface::*, LayerMask},
     renderers::graphic::RendererGraphicDesc,
     pass::{EPassTag, PassTagOrders},
-    materials::{command::*},
-    meshes::command::*,
-    geometry::command::*,
-    state::PluginStateToFile, animation::{command::{ActionAnime, ActionListAnimeGroupCreate, ActionListAddTargetAnime, OpsAddTargetAnimation, OpsAnimationGroupCreation, ActionListAnimeGroupStart, OpsAnimationGroupStart, AnimationGroupParam}, base::{TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve}}
+    materials::{command::*, ActionSetMaterial, uniforms::sys_uniform::OpsUniformByName},
+    meshes::{command::*, ActionSetMesh, ActionSetInstanceMesh},
+    geometry::{command::*, ActionSetGeometry},
+    state::PluginStateToFile, animation::{command::{ActionAnime, ActionListAnimeGroupCreate, ActionListAddTargetAnime, OpsAddTargetAnimation, OpsAnimationGroupCreation, ActionListAnimeGroupStart, OpsAnimationGroupStart, AnimationGroupParam}, base::{TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve}, ActionSetAnimationGroup}
 };
 use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::*};
 use unlit_material::PluginUnlitMaterial;
 
+use std::sync::Arc;
+use pi_async::rt::AsyncRuntime;
+use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+
+pub struct PluginLocalLoad;
+impl Plugin for PluginLocalLoad {
+    fn build(&self, app: &mut App) {
+        
+        init_load_cb(Arc::new(|path: String| {
+            MULTI_MEDIA_RUNTIME
+                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                    log::debug!("Load {}", path);
+                    let r = std::fs::read(path.clone()).unwrap();
+                    on_load(&path, r);
+                })
+                .unwrap();
+        }));
+    }
+}
 
 fn setup(
     mut commands: Commands,
     mut scenecmds: ResMut<ActionListSceneCreate>,
-    mut cameracmds: (
-        ResMut<ActionListCameraCreate>,
-        ResMut<ActionListCameraTarget>,
-        ResMut<ActionListCameraMode>,
-        ResMut<ActionListCameraRenderer>,
-        ResMut<ActionListCameraActive>,
-        ResMut<ActionListCameraFixedMode>,
-        ResMut<ActionListCameraFov>,
-        ResMut<ActionListCameraOrthSize>,
-        ResMut<ActionListCameraNearFar>,
-    ),
-    mut transformcmds: (
-        ResMut<ActionListTransformNodeParent>,
-        ResMut<ActionListTransformNodeLocalPosition>,
-        ResMut<ActionListTransformNodeLocalEuler>,
-        ResMut<ActionListMeshCreate>,
-        ResMut<ActionListInstanceMeshCreate>,
-    ),
-    mut geometrycreate: ResMut<ActionListGeometryCreate>,
-    mut matuse: ResMut<ActionListMaterialUse>,
+    mut cameracmds: ActionSetCamera,
+    mut transformcmds: ActionSetTransform,
+    mut transformanime: ActionSetTransformNodeAnime,
+    mut meshcmds: ActionSetMesh,
+    mut instancemeshcmds: ActionSetInstanceMesh,
+    mut geometrycmd: ActionSetGeometry,
+    mut matuse: ActionSetMaterial,
+    mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut scaling_ctx: ResMut<TypeAnimeContext<LocalScaling>>,
-    mut anime: (
-        ResMut<ActionListAnimeGroupCreate>,
-        ResMut<ActionListAddTargetAnime>,
-        ResMut<ActionListAnimeGroupStart>,
-    ),
     mut final_render: ResMut<WindowRenderer>,
-    scaling_curves: Res<ShareAssetMgr<TypeFrameCurve<LocalScaling>>>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
     let tes_size = 20;
@@ -70,12 +71,12 @@ fn setup(
     scenecmds.push(scene);
 
     let camera01 = commands.spawn_empty().id();
-    cameracmds.0.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera")));
-    transformcmds.1.push(OpsTransformNodeLocalPosition(camera01, Vector3::new(0., 10., -40.)));
-    cameracmds.1.push(OpsCameraTarget::ops(camera01, Vector3::new(0., -1., 4.)));
-    cameracmds.2.push(OpsCameraMode::ops(camera01, false));
-    cameracmds.4.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.7.push(OpsCameraOrthSize::ops(camera01, 4.));
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera")));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition(camera01, Vector3::new(0., 10., -40.)));
+    cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
+    cameracmds.mode.push(OpsCameraMode::ops(camera01, false));
+    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 4.));
     // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
     let desc = RendererGraphicDesc {
@@ -84,20 +85,22 @@ fn setup(
         next: Some(Atom::from(WindowRenderer::KEY)),
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, desc, wgpu::TextureFormat::Rgba8Unorm, None));
+    let id_renderer = commands.spawn_empty().id();
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, wgpu::TextureFormat::Rgba8Unorm, None));
 
     let source = commands.spawn_empty().id();
-    transformcmds.3.push(OpsMeshCreation(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation(scene, source, String::from("TestCube")));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(VertexBufferDesc::instance_world_matrix());
-    geometrycreate.push((source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
-    matuse.push(OpsMaterialUse::ops(source, defaultmat.0.unwrap()));
+    let idmat = defaultmat.0.unwrap();
+    matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
     
     let key_group = pi_atom::Atom::from("key_group");
-    anime.0.push(OpsAnimationGroupCreation::ops(source, key_group.clone()));
+    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone()));
 
     let cell_col = 4.;
     let cell_row = 4.;
@@ -106,19 +109,19 @@ fn setup(
             for k in 0..1 {
                 
                 let cube: Entity = commands.spawn_empty().id();
-                transformcmds.4.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
-                transformcmds.0.push(OpsTransformNodeParent::ops(cube, scene));
+                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
+                transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
 
                 let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32);
-                transformcmds.1.push(OpsTransformNodeLocalPosition(cube, pos));
+                transformcmds.localpos.push(OpsTransformNodeLocalPosition(cube, pos));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
                 let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(1., 1., 1.)), LocalScaling(Vector3::new(0., 2. * (1.1 + (i as f32).sin()), 0.)), (60. * (1.1 + ((i * j) as f32).cos())) as u16, 30, EEasingMode::None);
                 
-                let asset_curve = if let Some(curve) = scaling_curves.get(&key_curve0) {
+                let asset_curve = if let Some(curve) = transformanime.scaling.curves.get(&key_curve0) {
                     curve
                 } else {
-                    match scaling_curves.insert(key_curve0, TypeFrameCurve(curve)) {
+                    match transformanime.scaling.curves.insert(key_curve0, TypeFrameCurve(curve)) {
                         Ok(value) => {
                             value
                         },
@@ -128,14 +131,14 @@ fn setup(
                     }
                 };
 
-                let animation = scaling_ctx.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                anime.1.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
+                let animation = transformanime.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+                animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
     }
 
-    anime.2.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 
@@ -188,6 +191,7 @@ pub fn main() {
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugins(PluginBundleDefault);
+    app.add_plugin(PluginNodeMaterial);
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
