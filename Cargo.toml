@@ -12,55 +12,53 @@ keywords = ["3d scene"]
 members = ["crates/*"]
 
 [dependencies]
-pi_scene_context = { path = "crates/pi_scene_context" }
-pi_engine_shell = { path = "crates/pi_engine_shell" }
-pi_mesh_builder = { path = "crates/pi_mesh_builder" }
-default_render = { path = "crates/default_render" }
-material_textures = { path = "crates/material_textures" }
-skybox = { path = "crates/skybox" }
-procedural_texture = { path = "crates/procedural_texture" }
-skeletons = { path = "crates/skeletons" }
-axis = { path = "crates/axis" }
+pi_scene_context        = { path = "crates/pi_scene_context" }
+pi_engine_shell         = { path = "crates/pi_engine_shell" }
+pi_mesh_builder         = { path = "crates/pi_mesh_builder" }
+default_render          = { path = "crates/default_render" }
+material_textures       = { path = "crates/material_textures" }
+skybox                  = { path = "crates/skybox" }
+procedural_texture      = { path = "crates/procedural_texture" }
+skeletons               = { path = "crates/skeletons" }
+axis                    = { path = "crates/axis" }
 
 
-pi_node_materials = { path = "crates/node_materials" }
-unlit_material = { path = "crates/unlit_material" }
+pi_node_materials       = { path = "crates/node_materials" }
+unlit_material          = { path = "crates/unlit_material" }
 # standard_material = { path = "crates/standard_material" }
 
-pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_utils = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_derive = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_compile = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+pi_render               = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_utils            = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_derive           = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_compile          = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 
-pi_bevy_render_plugin = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
-pi_bevy_winit_window = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
-pi_bevy_post_process = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
-pi_bevy_ecs_extend = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
-pi_bevy_asset = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
+pi_bevy_render_plugin   = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
+pi_bevy_winit_window    = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
+pi_bevy_post_process    = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
+pi_bevy_ecs_extend      = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
+pi_bevy_asset           = { git = "https://github.com/GaiaWorld/pi_render_bevy"}
 
-pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
-pi_animation = { git = "https://github.com/GaiaWorld/pi_animation.git" }
-pi_curves = { git = "https://github.com/GaiaWorld/pi_curves.git" }
+pi_scene_math           = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_animation            = { git = "https://github.com/GaiaWorld/pi_animation.git" }
+pi_curves               = { git = "https://github.com/GaiaWorld/pi_curves.git" }
+pi_postprocess          = { git = "https://github.com/GaiaWorld/pi_post_process.git" }
 
-pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
-pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
-pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
-pi_atom = { version="0.2", features = ["serde"] }
-pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
-pi_postprocess = { git = "https://github.com/GaiaWorld/pi_post_process.git" }
+pi_atom                 = { version="0.2", features = ["serde"] }
+pi_hal                  = { git = "https://github.com/GaiaWorld/pi_hal.git" }
+pi_assets               = "0.11"
+pi_async                = "0.5"
 
-pi_assets = "0.11"
-pi_async = "0.5"
+wgpu                = "0.15"
+bevy                = { version="0.10", default-features = false, features=["bevy_winit"] }
+bevy_mod_debugdump  = { version="0.7" }
 
-wgpu = "0.15"
-env_logger = "0.9"
-log = "0.4"
-smallvec = "1.9"
-crossbeam="0.8"
-futures = "0.3"
-bytemuck = { version = "1.4", features = ["derive"] }
-bevy = { version="0.10", default-features = false, features=["bevy_winit"] }
-bevy_mod_debugdump = { version="0.7" }
+log                 = "0.4"
+env_logger          = "0.9"
+
+smallvec            = "1.9"
+crossbeam           = "0.8"
+futures             = "0.3"
+bytemuck            = { version = "1.4", features = ["derive"] }
 
 [patch."https://github.com/GaiaWorld/pi_ecs"]
 pi_ecs = { path = "../pi_ecs" }

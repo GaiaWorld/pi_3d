@@ -1,4 +1,4 @@
-use std::{time::Instant, fmt::Debug, mem::replace};
+use std::{fmt::Debug, mem::replace};
 
 use pi_curves::curve::{frame::{FrameDataValue}};
 use pi_engine_shell::prelude::*;
@@ -30,7 +30,7 @@ pub fn sys_scene_anime_ctx(
     mut scenes: Query<(&mut SceneAnimationContext, &SceneTime)>,
     mut runtimeinfos: ResMut<GlobalAnimeAbout>,
 ) {
-    let time0 = Instant::now();
+    let time0 = pi_time::Instant::now();
 
     runtimeinfos.dispose_animations.clear();
     runtimeinfos.runtimeinfos.reset();
@@ -45,7 +45,7 @@ pub fn sys_scene_anime_ctx(
         ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos)
     });
 
-    let time1 = Instant::now();
+    let time1 = pi_time::Instant::now();
     log::debug!("SysSceneAnime: {:?}", time1 - time0);
 }
 
@@ -55,7 +55,7 @@ pub fn sys_scene_anime_ctx(
         runinfos: Res<GlobalAnimeAbout>,
         mut commands: Commands,
     ) {
-        let time0 = Instant::now();
+        let time0 = pi_time::Instant::now();
 
         let ty = type_ctx.ctx.ty();
         let curves = type_ctx.ctx.curves();
@@ -79,7 +79,7 @@ pub fn sys_scene_anime_ctx(
             log::trace!("Not Found Anime Type: {}", ty);
         }
 
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
         log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
     }
 

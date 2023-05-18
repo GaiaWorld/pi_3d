@@ -1,4 +1,4 @@
-use std::{time::Instant};
+
 
 use pi_atom::Atom;
 use pi_bevy_render_plugin::SimpleInOut;
@@ -80,7 +80,7 @@ impl Node for RenderNode {
         input: &'a Self::Input,
         _: &'a ParamUsage,
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
-        let time = Instant::now();
+        let time = pi_time::Instant::now();
 
         let mut output = SimpleInOut::default();
 
@@ -215,7 +215,7 @@ impl Node for RenderNode {
                     // log::warn!("Draws: {:?}", renderer.draws.list.len());
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
     
-                    let time1 = Instant::now();
+                    let time1 = pi_time::Instant::now();
                     log::debug!("MainCameraRenderNode: {:?}", time1 - time);
             
                     Box::pin(
@@ -224,7 +224,7 @@ impl Node for RenderNode {
                         }
                     )
                 } else {
-                    let time1 = Instant::now();
+                    let time1 = pi_time::Instant::now();
                     log::debug!("MainCameraRenderNode: {:?}", time1 - time);
             
                     Box::pin(
@@ -362,7 +362,7 @@ impl Node for RenderNode {
                 // log::warn!("Draws: {:?}", renderer.draws.list.len());
                 DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
     
-                let time1 = Instant::now();
+                let time1 = pi_time::Instant::now();
                 log::debug!("MainCameraRenderNode: {:?}", time1 - time);
     
                 output.target = Some(srt.clone());

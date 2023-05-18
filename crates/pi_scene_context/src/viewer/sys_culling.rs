@@ -1,4 +1,4 @@
-use std::time::Instant;
+
 
 use pi_engine_shell::prelude::*;
 
@@ -17,7 +17,7 @@ use super::*;
         >,
         mut commands: Commands,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         log::debug!("CameraModelListByViewer :");
         // log::debug!("SysModelListUpdateByCamera: ");
@@ -38,7 +38,7 @@ use super::*;
             commands.entity(camera).insert(FlagModelList(true));
         });
 
-        log::debug!("SysModelListUpdateByViewer: {:?}", Instant::now() - time1);
+        log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
@@ -51,7 +51,7 @@ use super::*;
         >,
         mut commands: Commands,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
         log::debug!("CameraModelListByModel :");
 
         items.iter().for_each(|(id_obj, iscene, ilayer, _)| {
@@ -70,7 +70,7 @@ use super::*;
             });
         });
 
-        log::debug!("SysModelListUpdateByModel: {:?}", Instant::now() - time1);
+        log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
@@ -82,7 +82,7 @@ use super::*;
             (ObjectID, &RenderWorldMatrix, &RenderGeometryEable)
         >,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
         // log::debug!("SysModelListAfterCullinUpdateByCamera: ");
         viewers.iter_mut().for_each(|(id_viewer, vieweractive, liet_model, camerapos, cameraview, mut cullings)| {
             // log::debug!("SysViewerCulling: {:?}", vieweractive);
@@ -102,5 +102,5 @@ use super::*;
             // log::warn!("Moldellist: {:?}, {:?}, {:?}", vieweractive.0, liet_model.0.len(), cullings.0.len());
         });
         
-        log::debug!("SysModelListAfterCullingTick: {:?}", Instant::now() - time1);
+        log::debug!("SysModelListAfterCullingTick: {:?}", pi_time::Instant::now() - time1);
     }

@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Instant};
+use std::{sync::Arc, };
 
 use pi_assets::{mgr::AssetMgr, asset::Handle};
 use pi_engine_shell::prelude::*;
@@ -24,12 +24,12 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         allocator.write_buffer(&device, &queue);
         vb_allocator.update_buffer(&device, &queue);
 
-        log::debug!("SysDynBufferAllocatorUpdate: {:?}", Instant::now() - time1);
+        log::debug!("SysDynBufferAllocatorUpdate: {:?}", pi_time::Instant::now() - time1);
     }
 
 /// * 视口的数据变化时, 重新创建列表内物体相关Pass 的 Set0 数据
@@ -52,7 +52,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         mut scene_wait: ResMut<AssetBindGroupSceneWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
             id_viewer, active, id_scene, bind_viewer, list_model, list_renderer
@@ -87,7 +87,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             }
         });
 
-        log::trace!("SysSet0ModifyByRendererID: {:?}", Instant::now() - time1);
+        log::trace!("SysSet0ModifyByRendererID: {:?}", pi_time::Instant::now() - time1);
     }
 
 /// * 场景的数据变化时, 重新创建视口列表内物体相关Pass 的 Set0 数据
@@ -108,7 +108,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         mut scene_wait: ResMut<AssetBindGroupSceneWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         scenes.iter().for_each(|(id_scene_obj, bind_base_effect)| {
             viewers.iter().for_each(|(
@@ -138,7 +138,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             });
         });
 
-        log::trace!("SysSet0ModifyFromScene: {:?}", Instant::now() - time1);
+        log::trace!("SysSet0ModifyFromScene: {:?}", pi_time::Instant::now() - time1);
     }
 
 /// * 视口的数据变化时, 重新创建列表内物体相关Pass 的 Set1 数据
@@ -164,7 +164,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
             id_camera, active, id_scene, list_model, list_renderer
@@ -203,7 +203,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             });
         });
 
-        log::trace!("SysSet1ModifyByRendererID: {:?}", Instant::now() - time1);
+        log::trace!("SysSet1ModifyByRendererID: {:?}", pi_time::Instant::now() - time1);
     }
 // }
 
@@ -233,7 +233,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
             id_camera, active, id_scene, bind_viewer, list_model, list_renderer
@@ -274,7 +274,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             });
         });
 
-        log::trace!("SysSet1ModifyByModel: {:?}", Instant::now() - time1);
+        log::trace!("SysSet1ModifyByModel: {:?}", pi_time::Instant::now() - time1);
     }
 // }
 
@@ -299,7 +299,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         passes.iter().for_each(|(val1, ready, _, id_model)| {
             viewers.iter().for_each(|(
@@ -340,7 +340,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             });
         });
 
-        log::trace!("SysSet1ModifyByModel: {:?}", Instant::now() - time1);
+        log::trace!("SysSet1ModifyByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
 /// * 视口的数据变化时, 重新创建列表内物体相关Pass 的 Set2 数据
@@ -363,7 +363,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         mut texturesamplers_wait: ResMut<AssetBindGroupTextureSamplersWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
             id_camera, active, id_scene, list_model, list_renderer
@@ -390,7 +390,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             });
         });
 
-        log::trace!("SysSet2ModifyByRendererID: {:?}", Instant::now() - time1);
+        log::trace!("SysSet2ModifyByRendererID: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_set2_modify_by_model<T: TPass + Component, I: TPassID + Component>(
@@ -405,7 +405,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         mut texturesamplers_wait: ResMut<AssetBindGroupTextureSamplersWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         passes.iter().for_each(|(id_pass, id_model, meta1, effect_texture_samplers)| {
             if let Some(effect_texture_samplers) = effect_texture_samplers.val() {
@@ -416,7 +416,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             };
         });
 
-        log::trace!("SysSet2ModifyByModel: {:?}", Instant::now() - time1);
+        log::trace!("SysSet2ModifyByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_bind_group_loaded(

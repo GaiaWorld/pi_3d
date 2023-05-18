@@ -1,4 +1,4 @@
-use std::{time::Instant, sync::Arc};
+use std::{sync::Arc};
 
 use pi_engine_shell::prelude::*;
 use crate::{
@@ -66,7 +66,7 @@ use super::{
         mut shader_loader: ResMut<AssetLoaderShader3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         models.iter().for_each(
             |(id_model, id_geo, passid)| {
@@ -122,7 +122,7 @@ use super::{
             }
         );
 
-        log::debug!("SysPassShaderRequestByModel: {:?}", Instant::now() - time1);
+        log::debug!("SysPassShaderRequestByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
 /// 渲染器搜集渲染
@@ -142,7 +142,7 @@ use super::{
         mut shader_loader: ResMut<AssetLoaderShader3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         passes.iter().for_each(|(id_pass, id_model, ready, bindgroups, old_shader, _)| {
             log::debug!("SysPassShaderRequestByPass: 0");
@@ -199,7 +199,7 @@ use super::{
             }
         });
 
-        log::debug!("SysPassShaderRequestByPass: {:?}", Instant::now() - time1);
+        log::debug!("SysPassShaderRequestByPass: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_shader_loaded(
@@ -207,7 +207,7 @@ use super::{
         mut shader_center: ResMut<AssetDataCenterShader3D>,
         mut shader_loader: ResMut<AssetLoaderShader3D>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
         shader_center.single_create().iter().for_each(|(key, value)| {
             log::debug!("PassShaderLoaded: 0");
             shader_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
@@ -216,7 +216,7 @@ use super::{
             })
         });
 
-        log::trace!("SysPassShaderLoad: {:?}", Instant::now() - time1);
+        log::trace!("SysPassShaderLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_pipeline_request_by_model<T: TPass + Component, I: TPassID + Component>(
@@ -237,7 +237,7 @@ use super::{
         mut pipeline_loader: ResMut<AssetLoaderPipeline3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         models.iter().for_each(| (primitive, depth_stencil, blend, id_geo, passid) |{
             log::debug!("SysPipeline: 0 Model");
@@ -317,7 +317,7 @@ use super::{
             }
         });
 
-        log::trace!("SysPassPipelineRequest: {:?}", Instant::now() - time1);
+        log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_pipeline_request_by_pass<T: TPass + Component, I: TPassID + Component>(
@@ -336,7 +336,7 @@ use super::{
         mut pipeline_loader: ResMut<AssetLoaderPipeline3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         passes.iter().for_each(|(id_pass, id_model, bindgroups, shader, _)| {
             log::debug!("SysPipeline: 0 Pass");
@@ -411,7 +411,7 @@ use super::{
             }
         });
 
-        log::trace!("SysPassPipelineRequest: {:?}", Instant::now() - time1);
+        log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_pipeline_loaded(
@@ -420,7 +420,7 @@ use super::{
         mut pipeline_loader: ResMut<AssetLoaderPipeline3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         pipeline_center.single_create().iter().for_each(|(key, value)| {
             log::debug!("SysPassPipeline: 0");
@@ -430,7 +430,7 @@ use super::{
             })
         });
 
-        log::trace!("SysPassPipeline: {:?}", Instant::now() - time1);
+        log::trace!("SysPassPipeline: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
@@ -439,7 +439,7 @@ use super::{
         passes: Query<(ObjectID, &PassSource, &PassBindGroups, &PassPipeline, &PassDraw, &T), Changed<PassPipeline>>,
         mut commands: Commands,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         passes.iter().for_each(|(id_pass, id_model, bindgroups, pipeline, old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
@@ -464,7 +464,7 @@ use super::{
             }
         });
 
-        log::trace!("SysPassDrawLoad: {:?}", Instant::now() - time1);
+        log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
@@ -473,7 +473,7 @@ use super::{
         passes: Query<(&PassSource, &PassBindGroups, &PassPipeline, &PassDraw, &T)>,
         mut commands: Commands,
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         models.iter().for_each(|(id_geo, id_pass)| {
             if let Ok((id_model, bindgroups, pipeline, old_draw, _)) = passes.get(id_pass.id()) {
@@ -496,7 +496,7 @@ use super::{
             }
         });
 
-        log::trace!("SysPassDrawLoad: {:?}", Instant::now() - time1);
+        log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_renderer_draws_modify(
@@ -515,7 +515,7 @@ use super::{
             &PassDraw
         >
     ) {
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
 
         renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable)| {
             renderer.clear();
@@ -564,6 +564,6 @@ use super::{
             }
         });
 
-        log::trace!("SysRendererDraws: {:?}", Instant::now() - time1);
+        log::trace!("SysRendererDraws: {:?}", pi_time::Instant::now() - time1);
     }
 

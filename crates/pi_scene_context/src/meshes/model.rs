@@ -1,4 +1,4 @@
-use std::{time::Instant, sync::Arc};
+use std::{sync::Arc};
 
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
@@ -91,7 +91,7 @@ impl RenderWorldMatrixInv {
         >,
         mut commands: Commands,
     ) {
-        let time = Instant::now();
+        let time = pi_time::Instant::now();
 
         meshes.iter_mut().for_each(|(
             obj, _,
@@ -113,7 +113,7 @@ impl RenderWorldMatrixInv {
             }
         });
         
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
         log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
     }
 

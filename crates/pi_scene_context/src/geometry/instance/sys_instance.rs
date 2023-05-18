@@ -1,4 +1,3 @@
-use std::{time::Instant};
 
 use pi_engine_shell::prelude::*;
 
@@ -43,7 +42,7 @@ use super::*;
         mut geoloader: ResMut<GeometryVBLoader>,
         mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     ) {
-        let time = Instant::now();
+        let time = pi_time::Instant::now();
         sources.iter_mut().for_each(|(
             _,
             inslist, id_geo, mut flag,
@@ -87,7 +86,7 @@ use super::*;
             }
         });
         
-        let time1 = Instant::now();
+        let time1 = pi_time::Instant::now();
         log::debug!("SysInstanceBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
     }
 // }
