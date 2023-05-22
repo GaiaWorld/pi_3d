@@ -83,14 +83,14 @@ impl PassRenderInfo {
     pub fn shadow() -> Self {
         Self {
             color_format: ColorFormat::Rgba16Float,
-            depth_stencil_format: DepthStencilFormat::Depth32Float,
+            depth_stencil_format: DepthStencilFormat::Depth24PlusStencil8,
             blendable: true,
         }
     }
     pub fn normal() -> Self {
         Self {
             color_format: ColorFormat::Rgba8Unorm,
-            depth_stencil_format: DepthStencilFormat::Depth32Float,
+            depth_stencil_format: DepthStencilFormat::Depth24PlusStencil8,
             blendable: true,
         }
     }

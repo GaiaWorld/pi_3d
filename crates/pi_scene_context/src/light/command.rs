@@ -78,10 +78,10 @@ pub fn sys_act_light_create(
                 
                 let mut commands = commands.entity(id_renderer);
                 ActionRenderer::as_renderer(
-                    &mut commands, node, id_viewer, graphic_desc, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT
+                    &mut commands, node, id_viewer, graphic_desc, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT,
+                    ColorFormat::Rgba32Float, DepthStencilFormat::Depth24PlusStencil8
                 );
 
-                renderercmds.push(OpsRendererCommand::ColorFormat(id_renderer, RenderColorFormat(ColorFormat::Rgba32Float)));
                 renderercmds.push(OpsRendererCommand::AutoClearColor(id_renderer, true));
                 renderercmds.push(OpsRendererCommand::AutoClearDepth(id_renderer, true));
                 renderercmds.push(OpsRendererCommand::AutoClearStencil(id_renderer, true));

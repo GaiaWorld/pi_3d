@@ -160,7 +160,7 @@ fn setup(
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
     let id_renderer = commands.spawn_empty().id();
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, None));
+    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let cube = commands.spawn_empty().id();
     meshcreate.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));

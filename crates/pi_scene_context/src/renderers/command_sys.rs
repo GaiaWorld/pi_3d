@@ -95,6 +95,8 @@ impl ActionRenderer {
         graphic_desc: RendererGraphicDesc,
         width: u32,
         height: u32,
+        color_format: ColorFormat,
+        depth_format: DepthStencilFormat,
     ) {
         commands_renderer
             .insert(GraphId(node))
@@ -103,9 +105,9 @@ impl ActionRenderer {
             .insert(RenderSize::new(width, height))
             .insert(RendererEnable(true))
             .insert(RenderColorClear::default())
-            .insert(RenderColorFormat::default())
+            .insert(RenderColorFormat(color_format))
             .insert(RenderDepthClear::default())
-            .insert(RenderDepthFormat::default())
+            .insert(RenderDepthFormat(depth_format))
             .insert(RenderStencilClear::default())
             .insert(RenderAutoClearColor::default())
             .insert(RenderAutoClearDepth::default())

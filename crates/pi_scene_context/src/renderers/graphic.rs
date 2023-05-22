@@ -114,8 +114,7 @@ impl Node for RenderNode {
             }
     
             let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
-            let renderformat = format.0;
-            let need_depth = if depth.0.is_some() { true } else { false };
+            let need_depth = depth.need_depth();
             
             let clear_color_ops = if auto_clear_color.0 {
                 wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: true }
@@ -255,24 +254,11 @@ impl Node for RenderNode {
                     let height = rendersize.height();
                     let target_type = atlas_allocator.get_or_create_type(
                         TargetDescriptor {
-                            texture_descriptor: SmallVec::from_slice(
-                                &[
-                                    TextureDescriptor {
-                                        mip_level_count: 1,
-                                        sample_count: 1,
-                                        dimension: wgpu::TextureDimension::D2,
-                                        format: renderformat.val(),
-                                        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
-                                        base_mip_level: 0,
-                                        base_array_layer: 0,
-                                        array_layer_count: None,
-                                        view_dimension: None,
-                                    }
-                                ]
-                            ),
+                            colors_descriptor: format.desc(),
                             need_depth: need_depth,
                             default_width: 2048,
                             default_height: 2048,
+                            depth_descriptor: depth.desc()
                         }
                     );
                     atlas_allocator.allocate(

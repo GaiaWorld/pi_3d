@@ -4,6 +4,7 @@ use pi_atom::Atom;
 use pi_bevy_render_plugin::NodeId;
 use pi_engine_shell::prelude::*;
 use pi_hash::{DefaultHasher, XHashMap};
+use smallvec::SmallVec;
 
 use crate::{viewer::prelude::*};
 
@@ -33,6 +34,23 @@ impl Default for RenderColorFormat {
         Self(ColorFormat::Rgba8Unorm)
     }
 }
+impl RenderColorFormat {
+    pub fn desc(&self) -> SmallVec<[TextureDescriptor; 1]> {
+        SmallVec::from_slice(
+            &[TextureDescriptor {
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: self.0.val(),
+                usage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+                base_mip_level: 0,
+                base_array_layer: 0,
+                array_layer_count: None,
+                view_dimension: None,
+            }]
+        )
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct RenderColorClear(pub u8, pub u8, pub u8, pub u8);
@@ -48,10 +66,42 @@ impl RenderColorClear {
 }
 
 #[derive(Debug, Clone, Copy, Component)]
-pub struct RenderDepthFormat(pub Option<DepthStencilFormat>);
+pub struct RenderDepthFormat(pub DepthStencilFormat);
 impl Default for RenderDepthFormat {
     fn default() -> Self {
-        Self(Some(DepthStencilFormat::Depth32Float))
+        Self(DepthStencilFormat::Depth24PlusStencil8)
+    }
+}
+impl RenderDepthFormat {
+    pub fn need_depth(&self) -> bool {
+        match self.0 {
+            DepthStencilFormat::None => false,
+            DepthStencilFormat::Stencil8 => false,
+            DepthStencilFormat::Depth16Unorm => true,
+            DepthStencilFormat::Depth24Plus => true,
+            DepthStencilFormat::Depth24PlusStencil8 => true,
+            DepthStencilFormat::Depth32Float => true,
+            DepthStencilFormat::Depth32FloatStencil8 => true,
+        }
+    }
+    pub fn desc(&self) -> Option<TextureDescriptor> {
+        if let Some(val) = self.0.val() {
+            Some(
+                TextureDescriptor {
+                    mip_level_count: 1,
+                    sample_count: 1,
+                    dimension: wgpu::TextureDimension::D2,
+                    format: val,
+                    usage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    base_mip_level: 0,
+                    base_array_layer: 0,
+                    array_layer_count: None,
+                    view_dimension: None,
+                }
+            )
+        } else {
+            None
+        }
     }
 }
 

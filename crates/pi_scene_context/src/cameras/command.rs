@@ -112,14 +112,14 @@ impl OpsCameraTarget {
 }
 pub type ActionListCameraTarget = ActionList<OpsCameraTarget>;
 
-pub struct OpsCameraRendererInit(pub(crate) Entity, pub(crate) Entity, pub(crate) RendererGraphicDesc, pub(crate) ColorFormat, pub(crate) Option<DepthStencilFormat>);
+pub struct OpsCameraRendererInit(pub(crate) Entity, pub(crate) Entity, pub(crate) RendererGraphicDesc, pub(crate) ColorFormat, pub(crate) DepthStencilFormat);
 impl OpsCameraRendererInit {
     pub fn ops(
         camera: Entity,
         renderer: Entity,
         render_desc: RendererGraphicDesc,
         render_target_color_format: ColorFormat,
-        render_target_depth_stencil_format: Option<DepthStencilFormat>,
+        render_target_depth_stencil_format: DepthStencilFormat,
     ) -> Self {
         Self(camera, renderer, render_desc, render_target_color_format, render_target_depth_stencil_format)
     }
