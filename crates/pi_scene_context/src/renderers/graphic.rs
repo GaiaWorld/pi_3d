@@ -95,7 +95,7 @@ impl Node for RenderNode {
         //  log::debug!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
         // if let Some((renderer , rendersize , rendercolor , rendercolorclear , renderdepth , renderdepthclear)) = query.get(&context.world, self.renderer_id) {
 
-        log::warn!("Draws: Graphic");
+        // log::warn!("Draws: Graphic");
 
         let param: QueryParam = param.get(world);
         let (window, device, queue, final_render_target, atlas_allocator, query) = (param.0, param.1, param.2, param.3, param.4, param.5);
@@ -104,7 +104,7 @@ impl Node for RenderNode {
         )) = query.get(self.renderer_id) {
             // query.
     
-            log::warn!("Draws: Graphic {:?}", enable.0);
+            // log::warn!("Draws: Graphic {:?}", enable.0);
             if !enable.0 {
                 return Box::pin(
                     async move {
@@ -131,7 +131,7 @@ impl Node for RenderNode {
                 None
             };
     
-            log::warn!("Draws: to_final_target {:?}", to_final_target.0);
+            // log::warn!("Draws: to_final_target {:?}", to_final_target.0);
             if to_final_target.0 {
                 let width = rendersize.width();
                 let height = rendersize.height();
@@ -216,7 +216,7 @@ impl Node for RenderNode {
         
                     renderpass.set_viewport(x, y, w, h, 0., max_depth);
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                    log::warn!("Draws: {:?}", renderer.draws.list.len());
+                    // log::warn!("Draws: {:?}", renderer.draws.list.len());
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
     
                     let time1 = pi_time::Instant::now();
@@ -290,7 +290,7 @@ impl Node for RenderNode {
                 y = vh as f32 * y + vy as f32;
                 w = vw as f32 * w;
                 h = vh as f32 * h;
-                log::warn!("Render Size: {:?}", (x, y, w, h));
+                // log::warn!("Render Size: {:?}", (x, y, w, h));
     
                 let (depth_stencil_attachment, clear_depth) = if let Some(depth) = &srt.target().depth {
                     let depth_stencil_attachment = Some(

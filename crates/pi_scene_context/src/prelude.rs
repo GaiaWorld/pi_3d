@@ -19,4 +19,5 @@ pub use crate::{
         prelude::*
     },
     flags::*,
+    object::*,
 };

@@ -538,7 +538,7 @@ use super::{
 
         renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
-            log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
+            // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
             if enable.0 == false {
                 return;
             }
@@ -581,7 +581,7 @@ use super::{
                         });
                     }
                 });
-                log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
+                // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
             }
         });
 

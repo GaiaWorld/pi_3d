@@ -116,6 +116,7 @@ impl PrimitiveState {
             polygon_mode: polygon.val(),
             cull_mode: cull.mode(),
             // 不设置可能渲染出来黑的
+            #[cfg(not(target_arch = "wasm32"))]
             unclipped_depth: true,
             ..Default::default()
         }
@@ -128,6 +129,7 @@ impl PrimitiveState {
                 polygon_mode: polygon.val(),
                 cull_mode: cull.mode(),
                 // 不设置可能渲染出来黑的
+                #[cfg(not(target_arch = "wasm32"))]
                 unclipped_depth: true,
                 ..Default::default()
             }

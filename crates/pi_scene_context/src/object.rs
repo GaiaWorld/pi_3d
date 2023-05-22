@@ -19,7 +19,7 @@ pub fn ops_dispose(entity: Entity) -> OpsDispose {
     OpsDispose(entity)
 }
 pub type ActionListDispose = ActionList<OpsDispose>;
-pub fn sys_dispose(
+pub(crate) fn sys_dispose(
     mut cmds: ResMut<ActionListDispose>,
     mut commands: Commands,
     mut instancemeshes: Query<&InstanceSourceID>,
