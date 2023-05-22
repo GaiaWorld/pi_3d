@@ -4,9 +4,7 @@ use std::{mem::replace, sync::Arc};
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Number;
 
-use pi_scene_context::{
-    materials::{uniforms::{texture::TextureSlot01, uniform::*}, shader_effect::AssetResShaderEffectMeta},
-};
+use pi_scene_context::prelude::*;
 
 #[derive(Debug, Clone)]
 pub enum EUnlitMaterialCommand {

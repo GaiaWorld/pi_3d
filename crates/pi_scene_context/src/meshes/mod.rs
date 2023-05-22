@@ -3,49 +3,30 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     object::ObjectID,
-    geometry::instance::{
-        sys_instance::*,
-        instance_color::*,
-        instance_tilloff::*,
-        instance_world_matrix::{InstanceBufferWorldMatrix, InstanceWorldMatrixDirty},
-        InstanceSourceID, DirtyInstanceSourceRefs
-    }, renderers::render_blend::ActionListBlend
+    geometry::prelude::*,
+    renderers::prelude::*
 };
 
 use self::{
     command::*, 
+    command_sys::*, 
     model::*,
     instance::*,
 };
 
-pub mod model;
-pub mod command;
-pub mod interface;
+mod model;
+mod command;
+pub mod command_sys;
+mod interface;
 // pub mod alpha_index;
-pub mod render_group;
-pub mod instance;
-pub mod abstract_mesh;
-pub mod skeleton;
-pub mod shader_about;
-pub mod bind_group;
-pub mod lighting;
-
-#[derive(Component)]
-pub struct Mesh;
-
-#[derive(Component)]
-pub struct MeshID(pub ObjectID);
-impl TEntityRef for MeshID {
-    fn id(&self) -> Entity {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone, Default, Component)]
-pub struct DirtyMeshRef;
-
-pub type MeshRefs = EntityRefInfo<DirtyMeshRef, MeshID>;
-
+mod render_group;
+mod instance;
+mod abstract_mesh;
+mod skeleton;
+mod shader_about;
+mod bind_group;
+mod lighting;
+pub mod prelude;
 
 pub struct PluginMesh;
 impl crate::Plugin for PluginMesh {
@@ -116,18 +97,4 @@ impl crate::Plugin for PluginMesh {
             ).in_set(ERunStageChap::Uniform)
         );
     }
-}
-
-#[derive(SystemParam)]
-pub struct ActionSetMesh<'w> {
-    pub create: ResMut<'w, ActionListMeshCreate>,
-    pub shadow: ResMut<'w, ActionListMeshShadow>,
-    pub blend: ResMut<'w, ActionListBlend>,
-}
-
-#[derive(SystemParam)]
-pub struct ActionSetInstanceMesh<'w> {
-    pub create: ResMut<'w, ActionListInstanceMeshCreate>,
-    pub color: ResMut<'w, ActionListInstanceColor>,
-    pub tilloff: ResMut<'w, ActionListInstanceTillOff>,
 }

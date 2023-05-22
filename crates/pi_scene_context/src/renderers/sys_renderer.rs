@@ -2,20 +2,22 @@ use std::{sync::Arc};
 
 use pi_engine_shell::prelude::*;
 use crate::{
-    viewer::{ViewerID, ModelListAfterCulling},
+    viewer::prelude::*,
     pass::*,
-    geometry::{geometry::{RenderGeometry, RenderGeometryEable}, vertex_buffer_useinfo::GeometryID},
-    cameras::camera::CameraViewport,
+    geometry::prelude::*,
+    cameras::prelude::*,
+    scene::prelude::*,
+    flags::*,
 };
 
 use super::{
     render_primitive::PrimitiveState,
     base::*,
     pass::*,
-    render_depth_and_stencil::{ModelDepthStencil},
+    render_depth_and_stencil::*,
     render_blend::ModelBlend,
     render_target_state::RenderTargetState,
-    renderer::{Renderer, RendererEnable},
+    renderer::{Renderer, RendererEnable, RenderSize},
 };
 
 
@@ -220,12 +222,18 @@ use super::{
     }
 
     pub fn sys_pass_pipeline_request_by_model<T: TPass + Component, I: TPassID + Component>(
+        scenes: Query<&ScenePassRenderCfg>,
         models: Query<
             (
-                &PrimitiveState, &ModelDepthStencil, &ModelBlend,
-                &GeometryID, &I
+                &SceneID,
+                &PrimitiveState, &ModelBlend,
+                &GeometryID, &I,
+                (&DepthWrite, &DepthCompare, &DepthBias, &StencilFront, &StencilBack, &StencilRead, &StencilWrite)
             ),
-            Or<(Changed<PrimitiveState>, Changed<ModelDepthStencil>, Changed<ModelBlend>, Changed<GeometryID>)>
+            Or<(
+                Changed<PrimitiveState>, Changed<ModelBlend>, Changed<GeometryID>,
+                Changed<DepthWrite>, Changed<DepthCompare>, Changed<DepthBias>, Changed<StencilFront>, Changed<StencilBack>, Changed<StencilRead>, Changed<StencilWrite>
+            )>
         >,
         geometrys: Query<&VertexBufferLayoutsComp>, 
         passes: Query<
@@ -239,7 +247,17 @@ use super::{
     ) {
         let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(| (primitive, depth_stencil, blend, id_geo, passid) |{
+        models.iter().for_each(| (
+            idscene,
+            primitive, blend, id_geo, passid, 
+            (depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write)
+        ) |{
+            let passcfgs = if let Ok(cfg) = scenes.get(idscene.0) {
+                cfg.query(T::TAG)
+            } else {
+                return;
+            };
+
             log::debug!("SysPipeline: 0 Model");
             let id_pass = passid.id();
             let vb = if let Ok(vb) = geometrys.get(id_geo.0.clone()) {
@@ -249,6 +267,7 @@ use super::{
                 commands.entity(id_pass).insert(PassPipeline::new(None));
                 return;
             };
+
             if let Ok((shader, bindgroups, old_draw, _)) = passes.get(id_pass) {
                 log::debug!("SysPipeline: 1 Model");
                 if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
@@ -258,25 +277,17 @@ use super::{
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
     
-                    let pass_color_format = EPassTag::color_format(T::TAG);
-                    log::debug!("Color Format: {:?} {:?} {:?}", pass_color_format, T::TAG, id_pass);
-                    let pass_blend = EPassTag::blend(T::TAG);
-                    let pass_depth_write = EPassTag::depth_write(T::TAG);
-                    let pass_depth_compare = if let Some(pass_depth_compare) = EPassTag::depth_compare(T::TAG) {
-                        pass_depth_compare
-                    } else { depth_stencil.compare };
-                    let pass_depth_format = EPassTag::depth_format(T::TAG);
+                    let pass_blend = passcfgs.blend();
+                    let pass_color_format = passcfgs.color_format();
+                    let pass_depth_format = passcfgs.depth_format();
                     let blend = if pass_blend { blend.clone() } else { ModelBlend::default() };
 
                     let depth_stencil = if let Some(pass_depth_format) = pass_depth_format {
                         Some(
-                            DepthStencilState {
-                                format: pass_depth_format,
-                                depth_write_enabled: depth_stencil.write || pass_depth_write,
-                                depth_compare: pass_depth_compare,
-                                stencil: depth_stencil.stencil.clone(),
-                                bias: depth_stencil.bias.clone(),
-                            }
+                            depth_stencil_state(
+                                pass_depth_format,
+                                depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write
+                            )
                         )
                     } else { None };
 
@@ -321,9 +332,12 @@ use super::{
     }
 
     pub fn sys_pass_pipeline_request_by_pass<T: TPass + Component, I: TPassID + Component>(
+        scenes: Query<&ScenePassRenderCfg>,
         models: Query<
             (
-                &GeometryID, &PrimitiveState, &ModelDepthStencil, &ModelBlend,
+                &SceneID,
+                &GeometryID, &PrimitiveState, &ModelBlend,
+                (&DepthWrite, &DepthCompare, &DepthBias, &StencilFront, &StencilBack, &StencilRead, &StencilWrite)
             ),
         >,
         geometrys: Query<&VertexBufferLayoutsComp>, 
@@ -342,7 +356,16 @@ use super::{
             log::debug!("SysPipeline: 0 Pass");
             if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
                 log::debug!("SysPipeline: 1 Pass");
-                if let Ok((id_geo, primitive, depth_stencil, blend)) = models.get(id_model.0) {
+                if let Ok((
+                    idscene, id_geo, primitive, blend,
+                    (depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write)
+                )) = models.get(id_model.0) {
+                    let passcfgs = if let Ok(cfg) = scenes.get(idscene.0) {
+                        cfg.query(T::TAG)
+                    } else {
+                        return;
+                    };
+
                     let vb = if let Ok(vb) = geometrys.get(id_geo.0.clone()) {
                         vb
                     } else {
@@ -356,20 +379,16 @@ use super::{
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
     
-                    let pass_color_format = EPassTag::color_format(T::TAG);
-                    log::debug!("Color Format: {:?} {:?} {:?}", pass_color_format, T::TAG, id_pass);
-                    let pass_blend = EPassTag::blend(T::TAG);
-                    let pass_depth_format = EPassTag::depth_format(T::TAG);
+                    let pass_blend = passcfgs.blend();
+                    let pass_color_format = passcfgs.color_format();
+                    let pass_depth_format = passcfgs.depth_format();
                     let blend = if pass_blend { blend.clone() } else { ModelBlend::default() };
                     let depth_stencil = if let Some(pass_depth_format) = pass_depth_format {
                         Some(
-                            DepthStencilState {
-                                format: pass_depth_format,
-                                depth_write_enabled: depth_stencil.write,
-                                depth_compare: depth_stencil.compare,
-                                stencil: depth_stencil.stencil.clone(),
-                                bias: depth_stencil.bias.clone(),
-                            }
+                            depth_stencil_state(
+                                pass_depth_format,
+                                depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write
+                            )
                         )
                     } else { None };
     
@@ -502,11 +521,11 @@ use super::{
     pub fn sys_renderer_draws_modify(
         mut renderers: Query<
             (
-                ObjectID, &ViewerID, &mut Renderer, &PassTagOrders, &RendererEnable
+                ObjectID, &ViewerID, &mut Renderer, &PassTagOrders, &RendererEnable, &mut RenderSize
             )
         >,
         viewers: Query<
-            (&ModelListAfterCulling, Option<&CameraViewport>),
+            (&ModelListAfterCulling, &ViewerSize, Option<&CameraViewport>),
         >,
         models: Query<
             (&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08)
@@ -517,13 +536,15 @@ use super::{
     ) {
         let time1 = pi_time::Instant::now();
 
-        renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable)| {
+        renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
-            // log::debug!("Render: {:?} {:?}", id, enable.0);
+            log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
             if enable.0 == false {
                 return;
             }
-            if let Ok((list_model, viewport)) = viewers.get(id_viewer.0) {
+            if let Ok((list_model, viewersize, viewport)) = viewers.get(id_viewer.0) {
+                *rendersize = RenderSize(viewersize.0, viewersize.1);
+
                 if let Some(viewport) = viewport {
                     renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);
                 } else {

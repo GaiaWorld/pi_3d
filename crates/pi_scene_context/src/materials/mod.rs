@@ -6,21 +6,26 @@ use crate::pass::*;
 
 use self::{
     command::*,
+    command_sys::*,
     uniforms::{
         sys_texture::*,
-        sys_uniform::*, sys_pass::*, set_up_uniforms
+        sys_uniform::*,
+        sys_pass::*,
+        set_up_uniforms
     },
     shader_effect::*
 };
 
-pub mod material;
-pub mod material_meta;
-pub mod uniforms;
-pub mod value;
-pub mod shader_effect;
-pub mod command;
-pub mod interface;
-pub mod system;
+mod material;
+mod material_meta;
+mod uniforms;
+mod value;
+mod shader_effect;
+mod command;
+pub mod command_sys;
+mod interface;
+mod system;
+pub mod prelude;
 
 pub type MBKK = usize;
 
@@ -153,13 +158,4 @@ impl PluginGroupMaterial {
             .add(PluginTextureSlot05Load::default())
             .add(PluginTextureSlot06Load::default())
     }
-}
-
-#[derive(SystemParam)]
-pub struct ActionSetMaterial<'w> {
-    pub usemat: ResMut<'w, ActionListMaterialUse>,
-    pub create: ResMut<'w, ActionListMaterialCreate>,
-    pub uniform: ResMut<'w, ActionListUniformByName>,
-    pub metas: Res<'w, ShareAssetMgr<ShaderEffectMeta>>,
-    pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 }

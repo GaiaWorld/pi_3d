@@ -3,20 +3,20 @@ use std::{fmt::Debug};
 use pi_atom::Atom;
 use pi_bevy_render_plugin::NodeId;
 use pi_engine_shell::prelude::*;
-use pi_hash::DefaultHasher;
+use pi_hash::{DefaultHasher, XHashMap};
 
-use crate::{viewer::command::Viewport};
+use crate::{viewer::prelude::*};
 
-use super::{graphic::RenderNode, base::DrawList3D};
+use super::{graphic::{RenderNode, RendererGraphicDesc}, base::DrawList3D, render_object::RendererID};
 
 
-#[derive(Debug, Default, Resource)]
+#[derive(Debug, Clone, Default, Resource)]
 pub struct RendererHasher(pub DefaultHasher);
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RendererEnable(pub bool);
 
-#[derive(Debug, Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RenderSize(pub(crate) u32, pub(crate) u32);
 impl RenderSize {
     pub fn new(width: u32, height: u32) -> Self {
@@ -26,31 +26,36 @@ impl RenderSize {
     pub fn height(&self) -> u32 { self.1 }
 }
 
-#[derive(Component)]
-pub struct RenderColorFormat(pub wgpu::TextureFormat);
+#[derive(Debug, Clone, Copy, Component)]
+pub struct RenderColorFormat(pub ColorFormat);
 impl Default for RenderColorFormat {
     fn default() -> Self {
-        Self(wgpu::TextureFormat::Rgba8Unorm)
+        Self(ColorFormat::Rgba8Unorm)
     }
 }
 
-#[derive(Component)]
-pub struct RenderColorClear(pub wgpu::Color);
+#[derive(Debug, Clone, Copy, Component)]
+pub struct RenderColorClear(pub u8, pub u8, pub u8, pub u8);
 impl Default for RenderColorClear {
     fn default() -> Self {
-        Self(wgpu::Color { r: 0., g: 0., b: 0., a: 0. })
+        Self(0, 0, 0, 0)
+    }
+}
+impl RenderColorClear {
+    pub fn color(&self) -> wgpu::Color {
+        wgpu::Color { r: self.0 as f64 / 255.0, g: self.1 as f64 / 255.0, b: self.2 as f64 / 255.0, a: self.3 as f64 / 255.0 }
     }
 }
 
-#[derive(Component)]
-pub struct RenderDepthFormat(pub Option<wgpu::TextureFormat>);
+#[derive(Debug, Clone, Copy, Component)]
+pub struct RenderDepthFormat(pub Option<DepthStencilFormat>);
 impl Default for RenderDepthFormat {
     fn default() -> Self {
-        Self(Some(wgpu::TextureFormat::Depth24PlusStencil8))
+        Self(Some(DepthStencilFormat::Depth32Float))
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RenderDepthClear(pub f32);
 impl Default for RenderDepthClear {
     fn default() -> Self {
@@ -58,7 +63,7 @@ impl Default for RenderDepthClear {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RenderStencilClear(pub u32);
 impl Default for RenderStencilClear {
     fn default() -> Self {
@@ -66,7 +71,7 @@ impl Default for RenderStencilClear {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RenderAutoClearColor(pub bool);
 impl Default for RenderAutoClearColor {
     fn default() -> Self {
@@ -74,7 +79,7 @@ impl Default for RenderAutoClearColor {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RenderAutoClearDepth(pub bool);
 impl Default for RenderAutoClearDepth {
     fn default() -> Self {
@@ -82,7 +87,7 @@ impl Default for RenderAutoClearDepth {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RenderAutoClearStencil(pub bool);
 impl Default for RenderAutoClearStencil {
     fn default() -> Self {
@@ -90,7 +95,7 @@ impl Default for RenderAutoClearStencil {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct RenderToFinalTarget(pub bool);
 impl Default for RenderToFinalTarget {
     fn default() -> Self {
@@ -121,3 +126,11 @@ impl Renderer {
         self.ready = true;
     }
 }
+
+#[derive(Debug, Clone, Default, Component)]
+pub struct ViewerRenderersInfo {
+    pub map: XHashMap<Atom, (RendererGraphicDesc, RendererID)>,
+}
+
+#[derive(Component)]
+pub struct DirtyViewerRenderersInfo;

@@ -11,7 +11,7 @@ use crate::{
 
 use super::{
     vertex_buffer_useinfo::*,
-    GeometryDesc,
+    base::GeometryDesc,
     geometry::{RenderGeometry, RenderGeometryEable},
     sys_vertex_buffer_loaded
 };

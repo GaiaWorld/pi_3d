@@ -11,6 +11,24 @@ use crate::{
 
 use super::{abstract_mesh::AbstructMesh};
 
+
+#[derive(Component)]
+pub struct Mesh;
+
+#[derive(Component)]
+pub struct MeshID(pub ObjectID);
+impl TEntityRef for MeshID {
+    fn id(&self) -> Entity {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone, Default, Component)]
+pub struct DirtyMeshRef;
+
+pub type MeshRefs = EntityRefInfo<DirtyMeshRef, MeshID>;
+
+
 #[derive(Component)]
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
 impl BindModel {
@@ -84,47 +102,3 @@ impl RenderWorldMatrixInv {
     }
 }
 
-    pub fn sys_calc_render_matrix(
-        mut meshes: Query<
-            (ObjectID, &AbstructMesh, &WorldMatrix, &WorldMatrixInv, Option<&InstanceSourceID>),
-            Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>)>
-        >,
-        mut commands: Commands,
-    ) {
-        let time = pi_time::Instant::now();
-
-        meshes.iter_mut().for_each(|(
-            obj, _,
-            worldmatrix, worldmatrix_inv, id_source
-        )| {
-            // log::warn!("calc_render_matrix:");
-            // render_wm.0.clone_from(&worldmatrix.0);
-            // render_wminv.0.clone_from(&worldmatrix_inv.0);
-            commands.entity(obj)
-                .insert(RenderWorldMatrix(worldmatrix.0.clone()))
-                .insert(RenderWorldMatrixInv(worldmatrix_inv.0.clone()))
-                .insert(RenderMatrixDirty(true));
-
-            if let Some(id_source) = id_source {
-                commands.entity(id_source.0).insert(InstanceWorldMatrixDirty(true));
-                // if let Some(mut flag) = source_mesh.get_mut(id_source.0) {
-                //     flag.0 = true;
-                // }
-            }
-        });
-        
-        let time1 = pi_time::Instant::now();
-        log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
-    }
-
-    pub fn sys_render_matrix_for_uniform(
-        mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &mut RenderMatrixDirty, &BindModel), Changed<RenderMatrixDirty>>,
-    ) {
-        meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, mut flag, bind_model)| {
-            // log::debug!("SysModelUniformUpdate:");
-
-            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
-            flag.0 = false;
-        });
-    }

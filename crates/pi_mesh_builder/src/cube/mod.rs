@@ -4,9 +4,7 @@ use std::ops::Range;
 
 use pi_engine_shell::prelude::*;
 
-use pi_scene_context::{
-    meshes::command::ActionMesh, geometry::ActionVertexBuffer
-};
+use pi_scene_context::prelude::*;
 
 pub struct CubeBuilder;
 impl CubeBuilder {

@@ -2,7 +2,10 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Isometry3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
 
-use crate::viewer::{TViewerViewMatrix, ViewerViewMatrix, ViewerGlobalPosition, TViewerProjectMatrix};
+use crate::{
+    viewer::prelude::*,
+    transforms::prelude::*,
+};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum Light {
@@ -36,7 +39,7 @@ impl Default for LightDirection {
     }
 }
 impl TViewerViewMatrix for LightDirection {
-    fn view_matrix(&self, coordsys: &pi_scene_math::coordiante_system::CoordinateSytem3, local_pos: &crate::transforms::transform_node::LocalPosition, parent: Option<&mut crate::transforms::transform_node::GlobalTransform>) -> (crate::viewer::ViewerViewMatrix, crate::viewer::ViewerGlobalPosition) {
+    fn view_matrix(&self, coordsys: &pi_scene_math::coordiante_system::CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&mut GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
 
         match parent {
             Some(parent) => {

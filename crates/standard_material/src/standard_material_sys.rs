@@ -131,7 +131,7 @@ impl StandardMaterialFilter {
         indices: Query<GameObject, &AttributeIndices>,
     ) {
         
-        let time = Instant::now();
+        let time = pi_time::Instant::now();
 
         query_camera.iter().for_each(|(renderid, sceneid, layermask, camerapos)| {
             //  log::debug!("Camera >>>>>>>>>>>>>>>");

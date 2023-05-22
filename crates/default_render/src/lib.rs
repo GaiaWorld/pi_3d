@@ -1,6 +1,6 @@
 
 use pi_engine_shell::prelude::*;
-use pi_scene_context::{materials::{material::{MaterialID}, command::{ActionMaterial, ActionListMaterialCreate, OpsMaterialCreate}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta}}, pass::EPassTag};
+use pi_scene_context::prelude::*;
 use shader::DefaultShader;
 
 pub mod shader;
@@ -8,7 +8,7 @@ pub mod command;
 pub mod interface;
 
 #[derive(Debug, Clone, Copy, Resource)]
-pub struct SingleIDBaseDefaultMaterial(pub Option<Entity>);
+pub struct SingleIDBaseDefaultMaterial(pub Entity);
 
 fn setup(
     mut commands: Commands,
@@ -19,10 +19,8 @@ fn setup(
 ) {
     ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
 
-    let entity = commands.spawn_empty().id();
+    let entity = mat.0;
     matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY), EPassTag::Opaque));
-
-    mat.0 = Some(entity);
 }
 
 pub struct PluginDefaultMaterial;
@@ -50,8 +48,24 @@ impl Plugin for PluginDefaultMaterial {
     // }
 
     fn build(&self, app: &mut App) {
-        app.insert_resource(SingleIDBaseDefaultMaterial(None));
+        let entity = app.world.spawn_empty().id();
+        // log::warn!("Default Maerial {:?}", scene);
+        let single = SingleIDBaseDefaultMaterial(entity);
+        
+        app.insert_resource(single);
         app.add_startup_system(setup);
+
+        // let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap();
+        // let key = KeyShaderMeta::from(DefaultShader::KEY);
+        // if !asset_mgr.contains_key(&key) {
+        //     if let Ok(meta) = asset_mgr.insert(key.clone(), DefaultShader::res()) {
+        //         let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
+        //         wait_list.1.push((key.clone(), meta));
+        //     }
+        // }
+
+        // let mut matcmds = app.world.get_resource_mut::<ActionListMaterialCreate>().unwrap();
+        // matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY), EPassTag::Opaque));
     }
 }
 

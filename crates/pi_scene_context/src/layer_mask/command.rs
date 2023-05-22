@@ -1,45 +1,12 @@
-
-
 use pi_engine_shell::prelude::*;
 
-use super::LayerMask;
+use super::base::*;
 
-#[derive(Debug)]
-pub enum LayerMaskCommand {
-    Set(ObjectID, LayerMask),
-}
-#[derive(Debug, Default, Resource)]
-pub struct SingleLayerMaskCommandList {
-    pub list: Vec<LayerMaskCommand>,
-}
 
-pub struct ActionLayerMask;
-impl ActionLayerMask {
-    pub fn modify(
-        commands: &mut EntityCommands,
-        value: LayerMask,
-    ) {
-        commands.insert(value);
+pub struct OpsLayerMask(pub(crate) Entity, pub(crate) LayerMask);
+impl OpsLayerMask {
+    pub fn ops(transformnode: Entity, mask: u32) -> Self {
+        Self(transformnode, LayerMask(mask))
     }
 }
-
-// pub struct SysLayerMaskCommand;
-// impl TSystemStageInfo for SysLayerMaskCommand {
-    
-// }
-// #[setup]
-// impl SysLayerMaskCommand {
-//     #[system]
-    // pub fn sys_cmd_layer_mask(
-    //     mut cmds: ResMut<SingleLayerMaskCommandList>,
-    //     mut layer_cmd: Commands<GameObject, LayerMask>,
-    // ) {
-    //     cmds.list.drain(..).for_each(|cmd| {
-    //         match cmd {
-    //             LayerMaskCommand::Set(entity, layer) => {
-    //                 layer_cmd.insert(entity, layer);
-    //             },
-    //         }
-    //     });
-    // }
-// }
+pub type ActionListLayerMask = ActionList<OpsLayerMask>;

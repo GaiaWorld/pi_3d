@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 
 use pi_render::renderer::shader::KeyShaderMeta;
-use pi_scene_context::{object::ObjectID, materials::{interface::{InterfaceMaterial}, command::*}, pass::EPassTag};
+use pi_scene_context::prelude::*;
 
 use crate::shader::DefaultShader;
 
@@ -28,7 +28,7 @@ impl ActionDefaultMaterial {
         app: &mut App,
         id_mesh: Entity,
     ) {
-        let mat = app.world.get_resource::<SingleIDBaseDefaultMaterial>().unwrap().0.unwrap();
+        let mat = app.world.get_resource::<SingleIDBaseDefaultMaterial>().unwrap().0;
         ActionMaterial::use_material(app, OpsMaterialUse::ops(id_mesh, mat));
     }
 }

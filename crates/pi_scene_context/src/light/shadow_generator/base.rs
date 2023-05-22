@@ -28,9 +28,12 @@ impl Default for ShadowFrustumSize {
 
 #[derive(Deref, Component)]
 pub struct ShadowAtlasSize(pub u32);
+impl ShadowAtlasSize {
+    pub const DEFAULT: u32 = 1024;
+}
 impl Default for ShadowAtlasSize {
     fn default() -> Self {
-        Self(1024)
+        Self(Self::DEFAULT)
     }
 }
 

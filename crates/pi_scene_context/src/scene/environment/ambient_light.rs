@@ -39,23 +39,3 @@ impl AmbientLight {
         bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_AMBIENT as usize, bytemuck::cast_slice(&values));
     }
 }
-
-// pub struct SysSceneAmbientUpdate;
-// impl TSystemStageInfo for SysSceneAmbientUpdate {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             // SysSceneCreateCommand::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysSceneAmbientUpdate {
-//     #[system]
-    pub fn sys_bind_update_scene_ambient(
-        mut scenes: Query<(&AmbientLight, &mut BindSceneEffect), Or<(Changed<AmbientLight>, Changed<BindSceneEffect>)>>,
-    ) {
-        scenes.iter_mut().for_each(|(item, mut bind)| {
-            item.update(&mut bind);
-        });
-    }
-// }

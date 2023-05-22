@@ -3,15 +3,12 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     materials::{
-        material::{MaterialID, MaterialRefs, DirtyMaterialRefs},
-        uniforms::{uniform::*},
-        command::*
+        prelude::*,
+        command_sys::*
     },
     pass::*,
-    viewer::{
-        ModelList,
-        FlagModelList,
-    }, prelude::{PassTag, TPassID}
+    viewer::prelude::*,
+    pass::*
 };
 
 use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormalBias, ShadowDepthScale};

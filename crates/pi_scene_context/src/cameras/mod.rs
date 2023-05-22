@@ -2,25 +2,25 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    viewer::{
-        sys_culling::*,
-        sys::*
-    },
+    viewer::prelude::*,
 };
 
 use self::{
     command::*,
+    command_sys::*,
     camera_sys::*,
     target_camera::TargetCameraParam, camera::CameraParam
 };
 
-pub mod camera;
-pub mod free_camera;
-pub mod arc_rotate_camera;
-pub mod target_camera;
+mod camera;
+mod free_camera;
+mod arc_rotate_camera;
+mod target_camera;
 pub mod camera_sys;
-pub mod command;
-pub mod interface;
+mod command;
+pub mod command_sys;
+mod interface;
+pub mod prelude;
 
 // pub type SysViewerUpdatedForCamera = SysViewerTransformUpdated<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysWorldMatrixCalc>;
 
@@ -76,6 +76,8 @@ impl Plugin for PluginCamera {
         app.insert_resource(ActionListCameraFixedMode::default());
         app.insert_resource(ActionListCameraFov::default());
         app.insert_resource(ActionListCameraOrthSize::default());
+        app.insert_resource(ActionListCameraAspect::default());
+        app.insert_resource(ActionListCameraPixelSize::default());
         app.insert_resource(ActionListCameraNearFar::default());
         app.insert_resource(ActionListCameraRenderer::default());
 
@@ -94,6 +96,8 @@ impl Plugin for PluginCamera {
                 sys_camera_fov,
                 sys_camera_orth_size,
                 sys_camera_active,
+                sys_camera_aspect,
+                sys_camera_pixel_size,
                 sys_camera_target,
             ).in_set(ERunStageChap::SecondInitial)
         );
@@ -124,17 +128,4 @@ impl Plugin for PluginCamera {
             ).chain().in_set(ERunStageChap::DrawBinds)
         );
     }
-}
-
-#[derive(SystemParam)]
-pub struct ActionSetCamera<'w> {
-    pub create: ResMut<'w, ActionListCameraCreate>,
-    pub mode: ResMut<'w, ActionListCameraMode>,
-    pub target: ResMut<'w, ActionListCameraTarget>,
-    pub active: ResMut<'w, ActionListCameraActive>,
-    pub fixmode: ResMut<'w, ActionListCameraFixedMode>,
-    pub fov: ResMut<'w, ActionListCameraFov>,
-    pub size: ResMut<'w, ActionListCameraOrthSize>,
-    pub nearfar: ResMut<'w, ActionListCameraNearFar>,
-    pub render: ResMut<'w, ActionListCameraRenderer>,
 }

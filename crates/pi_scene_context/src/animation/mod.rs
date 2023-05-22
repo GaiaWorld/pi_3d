@@ -7,15 +7,19 @@ use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator}};
 use pi_engine_shell::prelude::*;
 
 use self::{
-    base::{GlobalAnimeAbout, TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve},
-    system::{ sys_scene_anime_ctx, sys_listen_type_anime_ctx, sys_calc_type_anime}, command::{sys_anime_group_create, sys_anime_add_target_anime, sys_anime_start, sys_anime_pause, ActionListAnimeGroupCreate, ActionListAnimeGroupPause, ActionListAnimeGroupStart, ActionListAddTargetAnime}
+    base::*,
+    system::*,
+    command_sys::*,
+    command::*,
 };
 
 pub mod base;
 pub mod command;
+pub mod command_sys;
 pub mod system;
 pub mod interface;
 pub mod listen;
+pub mod prelude;
 
 pub struct PluginAnimation;
 impl Plugin for PluginAnimation {
@@ -137,12 +141,4 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
         // SysTypeAnimeDispose::<D>::setup(world, stages.query_stage::<SysTypeAnimeDispose::<D>>(ERunStageChap::Initial));
         // SysTypeAnime::<D>::setup(world, stages.query_stage::<SysTypeAnime::<D>>(ERunStageChap::Anime));
     }
-}
-
-#[derive(SystemParam)]
-pub struct ActionSetAnimationGroup<'w> {
-    pub create: ResMut<'w, ActionListAnimeGroupCreate>,
-    pub add_target_anime: ResMut<'w, ActionListAddTargetAnime>,
-    pub start: ResMut<'w, ActionListAnimeGroupStart>,
-    pub pause: ResMut<'w, ActionListAnimeGroupPause>,
 }

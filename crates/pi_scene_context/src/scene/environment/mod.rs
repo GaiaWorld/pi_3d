@@ -4,6 +4,7 @@ use pi_engine_shell::prelude::*;
 pub mod fog;
 pub mod ambient_light;
 pub mod scene_time;
+pub mod sys;
 
 #[derive(Component)]
 pub struct BindSceneEffect(pub Arc<ShaderBindSceneAboutEffect>);

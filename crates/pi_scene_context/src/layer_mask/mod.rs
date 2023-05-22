@@ -5,57 +5,18 @@
 
 use pi_engine_shell::prelude::*;
 
-// use self::command::*;
+use self::{
+    command::*,
+    command_sys::*,
+    base::*,
+};
 
-// pub mod command;
-pub mod interface;
+mod base;
+pub mod command_sys;
+mod command;
+mod interface;
+pub mod prelude;
 
-#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, PartialOrd, Ord)]
-pub struct LayerMask(pub u32);
-impl Default for LayerMask {
-    fn default() -> Self {
-        Self(0xFFFFFFFF)
-    }
-}
-impl LayerMask {
-    pub fn include(&self, other: &Self) -> bool {
-        return self.0 & other.0 > 0;
-    }
-}
-
-pub struct OpsLayerMask(Entity, LayerMask);
-impl OpsLayerMask {
-    pub fn ops(transformnode: Entity, mask: u32) -> Self {
-        Self(transformnode, LayerMask(mask))
-    }
-}
-pub type ActionListLayerMask = ActionList<OpsLayerMask>;
-pub fn sys_act_layer_mask(
-    mut cmds: ResMut<ActionListLayerMask>,
-    mut nodes: Query<&mut LayerMask>,
-) {
-    cmds.drain().drain(..).for_each(|OpsLayerMask(entity, layermask)| {
-        if let Ok(mut node) = nodes.get_mut(entity) {
-            if *node != layermask {
-                *node = layermask;
-            }
-        } else {
-            cmds.push(OpsLayerMask(entity, layermask));
-        }
-    });
-}
-
-pub struct ActionLayerMask;
-impl ActionLayerMask {
-    pub fn modify(
-        app: &mut App,
-        entity: Entity,
-        val: LayerMask,
-    ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListLayerMask>().unwrap();
-        cmds.push(OpsLayerMask(entity, val));
-    }
-}
 
 pub struct PluginLayerMask;
 impl Plugin for PluginLayerMask {

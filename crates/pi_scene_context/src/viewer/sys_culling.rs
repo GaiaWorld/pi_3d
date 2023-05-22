@@ -2,9 +2,15 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{flags::SceneID, layer_mask::LayerMask, geometry::geometry::*, transforms::transform_node::WorldMatrix, meshes::{abstract_mesh::*, Mesh, model::*}};
+use crate::{
+    flags::SceneID,
+    layer_mask::prelude::*,
+    geometry::prelude::*,
+    transforms::prelude::*,
+    meshes::prelude::*
+};
 
-use super::*;
+use super::base::*;
 
 
     pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(

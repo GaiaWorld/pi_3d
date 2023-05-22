@@ -8,18 +8,7 @@ use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEve
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
 use pi_render::rhi::options::RenderOptions;
-use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::*},
-    scene::{command::ActionListSceneCreate},
-    cameras::{command::*},
-    layer_mask::{interface::*, LayerMask},
-    renderers::graphic::RendererGraphicDesc,
-    pass::{EPassTag, PassTagOrders},
-    materials::{command::*},
-    meshes::command::*,
-    geometry::command::*,
-    state::PluginStateToFile
-};
+use pi_scene_context::prelude::*;
 use pi_scene_math::Vector3;
 use pi_mesh_builder::{cube::*, ball::PluginBallBuilder, quad::PluginQuadBuilder};
 use unlit_material::PluginUnlitMaterial;
@@ -156,10 +145,10 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(scene);
+    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
-    cameracmds.0.push(OpsCameraCreation(scene, camera01, String::from("TestCamera")));
+    cameracmds.0.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
     cameracmds.4.push(OpsCameraActive::ops(camera01, true));
     cameracmds.7.push(OpsCameraOrthSize::ops(camera01, 4.));
     localpositioncmds.push(OpsTransformNodeLocalPosition(camera01, Vector3::new(0., 0., -10.)));
@@ -171,15 +160,15 @@ fn setup(
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
     let id_renderer = commands.spawn_empty().id();
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, wgpu::TextureFormat::Rgba8Unorm, None));
+    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, None));
 
     let cube = commands.spawn_empty().id();
-    meshcreate.push(OpsMeshCreation(scene, cube, String::from("TestCube")));
+    meshcreate.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));
     
     let id_geo = commands.spawn_empty().id();
     geometrycreate.push(OpsGeomeryCreate::ops(cube, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
 
-    matuse.push(OpsMaterialUse::ops(cube, defaultmat.0.unwrap()));
+    matuse.push(OpsMaterialUse::ops(cube, defaultmat.0));
 
     testdata.push((cube, 0., 0., 0.));
 

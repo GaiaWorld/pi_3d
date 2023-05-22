@@ -1,9 +1,7 @@
 
 use axis::AxisBuilder;
 use pi_engine_shell::prelude::*;
-use pi_scene_context::{
-    meshes::command::ActionMesh, geometry::ActionVertexBuffer
-};
+use pi_scene_context::prelude::*;
 
 pub mod shader;
 pub mod axis;

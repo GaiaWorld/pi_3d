@@ -4,7 +4,7 @@ use pi_scene_math::Matrix;
 
 use crate::transforms::{transform_node_sys::*, transform_node::*};
 
-use super::{skeleton::{Skeleton, SkeletonInitBaseMatrix}, SkeletonBonesDirty, SkeletonID, bone::{BoneParent, BoneBaseMatrix, BoneAbsoluteInv, BoneAbsolute}};
+use super::{skeleton::*, bone::*};
 
     pub fn sys_skin_dirty_by_bone(
         mut commands: Commands,

@@ -1,33 +1,17 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::transforms::transform_node_sys::sys_world_matrix_calc;
+use self::{sys::*, command::*, command_sys::*};
 
-use self::{sys::*, command::*};
-
-pub mod bone;
-pub mod skeleton;
+mod bone;
+mod skeleton;
 // pub mod skin_texture;
-pub mod skin_buffer;
-pub mod sys;
-pub mod command;
-pub mod interface;
-
-#[derive(Component)]
-pub struct SkeletonID(pub ObjectID);
-impl TEntityRef for SkeletonID {
-    fn id(&self) -> Entity {
-        self.0
-    }
-}
-
-#[derive(Default, Clone, Component)]
-pub struct DirtySkeletonRefs(pub bool);
-
-pub type SkeletonRefs = EntityRefInfo<DirtySkeletonRefs, SkeletonID>;
-
-#[derive(Component)]
-pub struct SkeletonBonesDirty(pub bool);
+mod skin_buffer;
+mod sys;
+mod command;
+pub mod command_sys;
+mod interface;
+pub mod prelude;
 
 pub struct PluginSkeleton;
 impl Plugin for PluginSkeleton {

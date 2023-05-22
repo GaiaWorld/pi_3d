@@ -3,7 +3,7 @@ use std::ops::Mul;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-use super::SkeletonID;
+use super::skeleton::*;
 
 #[derive(Component)]
 pub struct BoneParent(pub ObjectID);

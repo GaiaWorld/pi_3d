@@ -10,7 +10,7 @@ use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
 use pi_node_materials::{main_tex::BlockMainTexture, emissive::emissive_base::BlockEmissiveBase, PluginNodeMaterial};
-use pi_scene_context::{prelude::*, materials::{uniforms::sys_uniform::{ActionListUniform, EUniformCommand, ActionListUniformByName, OpsUniformByName}, ActionSetMaterial}, cameras::ActionSetCamera, transforms::{ActionSetTransform, ActionSetTransformNodeAnime}, meshes::{ActionSetMesh, ActionSetInstanceMesh}, geometry::ActionSetGeometry, animation::ActionSetAnimationGroup};
+use pi_scene_context::{prelude::*};
 use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
 use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
@@ -56,11 +56,11 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(scene);
+    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
-    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera")));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition(camera01, Vector3::new(0., 0., -10.)));
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
     cameracmds.active.push(OpsCameraActive::ops(camera01, true));
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
@@ -72,10 +72,10 @@ fn setup(
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
     let id_renderer = commands.spawn_empty().id();
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, wgpu::TextureFormat::Rgba8Unorm, None));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, None));
 
     let source = commands.spawn_empty().id();
-    meshcmds.create.push(OpsMeshCreation(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();

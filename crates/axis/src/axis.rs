@@ -1,5 +1,5 @@
 use pi_engine_shell::prelude::*;
-use pi_scene_context::meshes::command::ActionMesh;
+use pi_scene_context::prelude::*;
 
 pub struct AxisBuilder;
 impl AxisBuilder {

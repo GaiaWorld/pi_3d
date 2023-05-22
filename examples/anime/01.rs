@@ -11,18 +11,7 @@ use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
 
 use pi_node_materials::{prelude::BlockEmissiveBase, PluginNodeMaterial};
-use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::*, transform_node::LocalScaling, ActionSetTransform, ActionSetTransformNodeAnime},
-    scene::{command::{ActionListSceneCreate, ActionScene}},
-    cameras::{command::*, camera::EFreeCameraMode, ActionSetCamera},
-    layer_mask::{interface::*, LayerMask},
-    renderers::graphic::RendererGraphicDesc,
-    pass::{EPassTag, PassTagOrders},
-    materials::{command::*, ActionSetMaterial, uniforms::sys_uniform::OpsUniformByName},
-    meshes::{command::*, ActionSetMesh, ActionSetInstanceMesh},
-    geometry::{command::*, ActionSetGeometry},
-    state::PluginStateToFile, animation::{command::{ActionAnime, ActionListAnimeGroupCreate, ActionListAddTargetAnime, OpsAddTargetAnimation, OpsAnimationGroupCreation, ActionListAnimeGroupStart, OpsAnimationGroupStart, AnimationGroupParam}, base::{TypeFrameCurve, TypeAnimeContext, AssetTypeFrameCurve}, ActionSetAnimationGroup}
-};
+use pi_scene_context::prelude::*;
 use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::*};
 use unlit_material::PluginUnlitMaterial;
@@ -68,11 +57,11 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(scene);
+    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
-    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera")));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition(camera01, Vector3::new(0., 10., -40.)));
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 10., -40.));
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
     cameracmds.mode.push(OpsCameraMode::ops(camera01, false));
     cameracmds.active.push(OpsCameraActive::ops(camera01, true));
@@ -86,17 +75,17 @@ fn setup(
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
     let id_renderer = commands.spawn_empty().id();
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, wgpu::TextureFormat::Rgba8Unorm, None));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, None));
 
     let source = commands.spawn_empty().id();
-    meshcmds.create.push(OpsMeshCreation(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(VertexBufferDesc::instance_world_matrix());
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
-    let idmat = defaultmat.0.unwrap();
+    let idmat = defaultmat.0;
     matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
     
     let key_group = pi_atom::Atom::from("key_group");

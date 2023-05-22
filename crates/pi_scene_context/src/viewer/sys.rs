@@ -7,7 +7,7 @@ use pi_slotmap_tree::Storage;
 
 use crate::{transforms::{transform_node::{LocalPosition, GlobalTransform, WorldMatrix}}};
 
-use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, ViewerTransformMatrix, TViewerViewMatrix, TViewerProjectMatrix, BindViewer, ViewerDirection};
+use super::base::*;
 
 
     pub fn sys_calc_view_matrix_by_viewer<T: TViewerViewMatrix + Component>(
@@ -48,12 +48,16 @@ use super::{ViewerViewMatrix, ViewerGlobalPosition, ViewerProjectionMatrix, View
 
 
     pub fn sys_calc_proj_matrix<T: TViewerProjectMatrix + Component>(
-        mut viewers: Query<(ObjectID, &T), Changed<T>>,
+        mut viewers: Query<(ObjectID, &T, &ViewerSize, &ViewerAspect), Or<(Changed<T>, Changed<ViewerSize>, Changed<ViewerAspect>)>>,
         mut commands: Commands,
     ) {
         //  log::debug!("Projection Matrix Calc:");
-        viewers.iter_mut().for_each(|(entity, projectcalc)| {
-            let project = projectcalc.project_matrix(1.0);
+        viewers.iter_mut().for_each(|(entity, projectcalc, viewersize, vieweraspect)| {
+            let aspect = match vieweraspect {
+                ViewerAspect::Auto => (viewersize.0 as f32) / (viewersize.1 as f32),
+                ViewerAspect::Custom(val) => *val,
+            };
+            let project = projectcalc.project_matrix(aspect);
             commands.entity(entity).insert(project);
         });
     }

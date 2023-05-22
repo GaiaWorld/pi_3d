@@ -4,26 +4,20 @@ use pi_render::{renderer::bind_buffer::BindBufferAllocator};
 use pi_scene_math::Vector3;
 
 use crate::{
-    viewer::{
-        ViewerActive,
-        BindViewer,
-        command::ActionViewer,
-    },
+    viewer::{prelude::*, command_sys::ActionViewer},
     renderers::{
-        ViewerRenderersInfo,
-        render_object::RendererID,
-        graphic::RendererGraphicDesc,
-        renderer::{RenderSize, RenderColorFormat},
-        command::*
+        prelude::*,
+        command_sys::*,
     },
     materials::{
-        material::MaterialID,
-        command::*
+        prelude::*,
+        command_sys::*
     },
     pass::{EPassTag, PassTagOrders},
     flags::{Enable},
-    scene::command::ActionScene,
-    transforms::command::*, animation::command::*,
+    scene::command_sys::ActionScene,
+    transforms::{command_sys::*, prelude::*},
+    animation::command_sys::*,
 };
 
 use super::{
@@ -45,6 +39,7 @@ pub fn sys_act_light_create(
     mut matcreatecmds: ResMut<ActionListMaterialCreate>,
     mut matusecmds: ResMut<ActionListMaterialUse>,
     empty: Res<SingleEmptyEntity>,
+    mut renderercmds: ResMut<ActionListRendererModify>,
 ) {
     cmds.drain().drain(..).for_each(|(scene, entity, name)| {
         let mat = commands.spawn_empty().id();
@@ -83,12 +78,13 @@ pub fn sys_act_light_create(
                 
                 let mut commands = commands.entity(id_renderer);
                 ActionRenderer::as_renderer(
-                    &mut commands, node, id_viewer, graphic_desc
+                    &mut commands, node, id_viewer, graphic_desc, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT
                 );
-                ActionRenderer::modify(&mut commands, ERendererCommand::ColorFormat(RenderColorFormat(wgpu::TextureFormat::Rgba32Float)));
-                ActionRenderer::modify(&mut commands, ERendererCommand::AutoClearColor(true));
-                ActionRenderer::modify(&mut commands, ERendererCommand::AutoClearDepth(true));
-                ActionRenderer::modify(&mut commands, ERendererCommand::AutoClearStencil(true));
+
+                renderercmds.push(OpsRendererCommand::ColorFormat(id_renderer, RenderColorFormat(ColorFormat::Rgba32Float)));
+                renderercmds.push(OpsRendererCommand::AutoClearColor(id_renderer, true));
+                renderercmds.push(OpsRendererCommand::AutoClearDepth(id_renderer, true));
+                renderercmds.push(OpsRendererCommand::AutoClearStencil(id_renderer, true));
             },
             Err(_) => {},
         }
@@ -125,6 +121,7 @@ pub fn sys_act_light_param(
             },
             ELightModifyCommand::AtlasSize(entity, val) => {
                 commands.entity(entity).insert(ShadowAtlasSize(val));
+                commands.entity(entity).insert(ViewerSize(val, val));
             },
             ELightModifyCommand::LightType(entity, val) => {
                 commands.entity(entity).insert(val);
@@ -160,6 +157,7 @@ impl ActionLight {
 
         ActionTransformNode::as_transform_node(commands, name);
         ActionViewer::as_viewer(commands);
+        commands.insert(ViewerSize(ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
         ActionAnime::as_anime_group_target(commands);
     }
     pub fn create(
@@ -334,6 +332,7 @@ pub enum ELightModifyCommand {
         >,
         // mut render_cmds: ResMut<SingleRendererCommandList>,
         mut commands: Commands,
+        mut renderercmds: ResMut<ActionListRendererModify>,
     ) {
         lights.iter().for_each(|(id_light, light, shadowenable, enable, renderers, size)| {
             renderers.map.iter().for_each(|(_, v)| {
@@ -346,8 +345,7 @@ pub enum ELightModifyCommand {
                 let mut lightcmd = commands.entity(id_light);
                 lightcmd.insert(ViewerActive(enable));
 
-                ActionRenderer::modify(&mut commands.entity(id_render), ERendererCommand::Active(enable));
-                ActionRenderer::modify(&mut commands.entity(id_render), ERendererCommand::Size(RenderSize(size.0, size.0)));
+                renderercmds.push(OpsRendererCommand::Active(id_render, enable));
             });
         });
     }

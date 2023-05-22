@@ -46,39 +46,7 @@ impl EPassTag {
     pub const PASS_TAG_06: PassTag = 0b0000_0000_0010_0000;
     pub const PASS_TAG_07: PassTag = 0b0000_0000_0100_0000;
     pub const PASS_TAG_08: PassTag = 0b0000_0000_1000_0000;
-    
-    pub fn color_format(val: PassTag) -> wgpu::TextureFormat {
-        match val {
-            Self::PASS_TAG_01 => wgpu::TextureFormat::Rgba16Float,
-            _ => wgpu::TextureFormat::Rgba8Unorm,
-        }
-    }
-    pub fn depth_format(val: PassTag) -> Option<wgpu::TextureFormat> {
-        match val {
-            Self::PASS_TAG_01 => Some(wgpu::TextureFormat::Depth24PlusStencil8),
-            _ => Some(wgpu::TextureFormat::Depth24PlusStencil8),
-        }
-    }
-    pub fn depth_write(val: PassTag) -> bool {
-        match val {
-            Self::PASS_TAG_01 => true,
-            _ => false,
-        }
-    }
-    pub fn depth_compare(val: PassTag) -> Option<wgpu::CompareFunction> {
-        match val {
-            Self::PASS_TAG_01 => Some(wgpu::CompareFunction::GreaterEqual),
-            _ => None,
-        }
-    }
-    pub fn blend(val: PassTag) -> bool {
-        match val {
-            Self::PASS_TAG_01 => false,
-            Self::PASS_TAG_02 => false,
-            Self::PASS_TAG_03 => false,
-            _ => true,
-        }
-    }
+
     pub fn index(&self) -> usize {
         match self {
             EPassTag::ShadowCast => 1,
@@ -102,6 +70,42 @@ impl EPassTag {
             EPassTag::OpaqueExtend => Self::PASS_TAG_07,
             EPassTag::TransparentExtend => Self::PASS_TAG_08,
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PassRenderInfo {
+    pub color_format: ColorFormat,
+    pub depth_stencil_format: DepthStencilFormat,
+    pub blendable: bool,
+}
+impl PassRenderInfo {
+    pub fn shadow() -> Self {
+        Self {
+            color_format: ColorFormat::Rgba16Float,
+            depth_stencil_format: DepthStencilFormat::Depth32Float,
+            blendable: true,
+        }
+    }
+    pub fn normal() -> Self {
+        Self {
+            color_format: ColorFormat::Rgba8Unorm,
+            depth_stencil_format: DepthStencilFormat::Depth32Float,
+            blendable: true,
+        }
+    }
+    pub fn color_format(&self) -> wgpu::TextureFormat {
+        self.color_format.val()
+    }
+    pub fn depth_format(&self) -> Option<wgpu::TextureFormat> {
+        self.depth_stencil_format.val()
+    }
+
+    pub fn depth_write(&self) -> bool {
+        self.depth_stencil_format != DepthStencilFormat::None
+    }
+    pub fn blend(&self) -> bool {
+        self.blendable
     }
 }
 

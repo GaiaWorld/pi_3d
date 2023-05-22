@@ -3,7 +3,14 @@ use std::marker::PhantomData;
 use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
 
-use crate::{renderers::{sys_renderer::*, base::{Pipeline3D, Pipeline3DUsage}, pass::{PassPipeline, PassBindGroups, PassShader, PassDraw}, renderer::{RenderSize, Renderer, RenderColorFormat, RenderColorClear, RenderDepthFormat, RenderDepthClear}, render_object::RendererID, ViewerRenderersInfo}, pass::{PassSource, TPassData, PassBindGroupScene, PassBindGroupModel, PassBindGroupTextureSamplers, Pass01, PassID01, EPassTag, TPass, PassTag, Pass02, Pass03, Pass04, Pass06, Pass07, Pass08, Pass05}, meshes::abstract_mesh::AbstructMesh, geometry::geometry::{RenderGeometry, RenderGeometryEable}, viewer::{ViewerActive, BindViewer, ModelList}, flags::SceneID};
+use crate::{
+    pass::*,
+    renderers::prelude::*, 
+    meshes::prelude::*,
+    geometry::prelude::*,
+    viewer::prelude::*,
+    flags::*
+};
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

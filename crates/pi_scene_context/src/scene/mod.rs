@@ -2,13 +2,21 @@
 use pi_engine_shell::prelude::*;
 
 
-use self::{environment::{*, ambient_light::sys_bind_update_scene_ambient, fog::sys_bind_update_scene_fog, scene_time::sys_bind_update_scene_time}, command::{ActionListSceneCreate, sys_act_scene_create}};
+use self::{
+    environment::sys::*,
+    command_sys::*,
+    prelude::*,
+};
 
 pub mod coordinate_system;
 pub mod command;
+pub mod command_sys;
 pub mod interface;
 pub mod environment;
 pub mod light;
+pub mod passes_cfg;
+pub mod prelude;
+
 
 pub struct PluginScene;
 impl Plugin for PluginScene {
@@ -28,9 +36,4 @@ impl Plugin for PluginScene {
         );
     }
     
-}
-
-#[derive(SystemParam)]
-pub struct ActionSetScene<'w> {
-    pub create: ResMut<'w, ActionListSceneCreate>,
 }

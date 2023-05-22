@@ -18,33 +18,29 @@ use self::{
     sys_renderer_pre::*,
     sys_renderer::*,
     pass::*,
-    render_primitive::*, render_blend::{ActionListBlend, sys_act_model_blend},
+    render_primitive::*,
+    render_blend::{ActionListBlend, sys_act_model_blend},
+    command::*,
+    command_sys::*
 };
 
-pub mod render_object;
-pub mod opaque;
-pub mod renderer;
-pub mod render_mode;
-pub mod render_blend;
-pub mod render_depth_and_stencil;
-pub mod render_primitive;
-pub mod render_sort;
-pub mod render_target_state;
-pub mod graphic;
-pub mod sys_renderer_pre;
-pub mod sys_renderer;
-pub mod pass;
-pub mod command;
-pub mod base;
-
-
-#[derive(Debug, Clone, Default, Component)]
-pub struct ViewerRenderersInfo {
-    pub map: XHashMap<Atom, (RendererGraphicDesc, RendererID)>,
-}
-
-#[derive(Component)]
-pub struct DirtyViewerRenderersInfo;
+mod render_object;
+mod opaque;
+mod renderer;
+mod render_mode;
+mod render_blend;
+mod render_depth_and_stencil;
+mod render_primitive;
+mod render_sort;
+mod render_target_state;
+mod graphic;
+mod sys_renderer_pre;
+mod sys_renderer;
+mod pass;
+mod command;
+pub mod command_sys;
+mod base;
+pub mod prelude;
 
 pub struct PluginRenderer;
 impl Plugin for PluginRenderer {
@@ -94,6 +90,7 @@ impl Plugin for PluginRenderer {
         app.insert_resource(ActionListCullMode::default());
         app.insert_resource(ActionListPolyginMode::default());
         app.insert_resource(ActionListFrontFace::default());
+        app.insert_resource(ActionListRendererModify::default());
         app.add_systems(
             (
                 sys_act_mesh_cull_mode,
@@ -105,6 +102,10 @@ impl Plugin for PluginRenderer {
         app.add_system(
             sys_render_primitive_modify.in_set(ERunStageChap::Command)
         );
+        app.add_system(
+            sys_renderer_modify.in_set(ERunStageChap::Command)
+        );
+
 
         app.add_systems(
             (

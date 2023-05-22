@@ -1,10 +1,8 @@
 
-
-use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Number, Matrix, Vector4, Vector2, Matrix2};
 
-use crate::{object::{ObjectID}, renderers::render_mode::ERenderMode};
+use crate::{renderers::prelude::*};
 
 pub trait TMaterial {
     fn render_mode(&self) -> ERenderMode;

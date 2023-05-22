@@ -95,6 +95,8 @@ impl Node for RenderNode {
         //  log::debug!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
         // if let Some((renderer , rendersize , rendercolor , rendercolorclear , renderdepth , renderdepthclear)) = query.get(&context.world, self.renderer_id) {
 
+        log::warn!("Draws: Graphic");
+
         let param: QueryParam = param.get(world);
         let (window, device, queue, final_render_target, atlas_allocator, query) = (param.0, param.1, param.2, param.3, param.4, param.5);
         if let Ok((
@@ -102,6 +104,7 @@ impl Node for RenderNode {
         )) = query.get(self.renderer_id) {
             // query.
     
+            log::warn!("Draws: Graphic {:?}", enable.0);
             if !enable.0 {
                 return Box::pin(
                     async move {
@@ -111,17 +114,11 @@ impl Node for RenderNode {
             }
     
             let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
-            let width = rendersize.width();
-            let height = rendersize.height();
-            x = width as f32 * x;
-            y = height as f32 * y;
-            w = width as f32 * w;
-            h = height as f32 * h;
             let renderformat = format.0;
             let need_depth = if depth.0.is_some() { true } else { false };
             
             let clear_color_ops = if auto_clear_color.0 {
-                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.0.clone()), store: true }
+                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: true }
             } else {
                 wgpu::Operations { load: wgpu::LoadOp::Load, store: true }
             };
@@ -134,7 +131,14 @@ impl Node for RenderNode {
                 None
             };
     
+            log::warn!("Draws: to_final_target {:?}", to_final_target.0);
             if to_final_target.0 {
+                let width = rendersize.width();
+                let height = rendersize.height();
+                x = width as f32 * x;
+                y = height as f32 * y;
+                w = width as f32 * w;
+                h = height as f32 * h;
                 if let Some(view) =  final_render_target.view() {
                     // let mut vx = 0;
                     // let mut vy = 0;
@@ -212,7 +216,7 @@ impl Node for RenderNode {
         
                     renderpass.set_viewport(x, y, w, h, 0., max_depth);
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                    // log::warn!("Draws: {:?}", renderer.draws.list.len());
+                    log::warn!("Draws: {:?}", renderer.draws.list.len());
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
     
                     let time1 = pi_time::Instant::now();
@@ -247,6 +251,8 @@ impl Node for RenderNode {
                 let srt = if let Some(srt) = srt {
                     srt
                 } else {
+                    let width = rendersize.width();
+                    let height = rendersize.height();
                     let target_type = atlas_allocator.get_or_create_type(
                         TargetDescriptor {
                             texture_descriptor: SmallVec::from_slice(
@@ -255,7 +261,7 @@ impl Node for RenderNode {
                                         mip_level_count: 1,
                                         sample_count: 1,
                                         dimension: wgpu::TextureDimension::D2,
-                                        format: renderformat,
+                                        format: renderformat.val(),
                                         usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
                                         base_mip_level: 0,
                                         base_array_layer: 0,
@@ -284,6 +290,7 @@ impl Node for RenderNode {
                 y = vh as f32 * y + vy as f32;
                 w = vw as f32 * w;
                 h = vh as f32 * h;
+                log::warn!("Render Size: {:?}", (x, y, w, h));
     
                 let (depth_stencil_attachment, clear_depth) = if let Some(depth) = &srt.target().depth {
                     let depth_stencil_attachment = Some(

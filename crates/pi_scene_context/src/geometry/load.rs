@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use super::{vertex_buffer_useinfo::*, GeometryVBLoader};
+use super::{vertex_buffer_useinfo::*, base::*};
 
 
 // pub struct SysVertexBufferLoad;

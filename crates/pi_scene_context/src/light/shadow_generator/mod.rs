@@ -5,7 +5,7 @@ use pi_render::{
     renderer::shader::KeyShaderMeta
 };
 use crate::{
-    materials::{shader_effect::ShaderEffectValueUniformDesc},
+    materials::prelude::*,
     pass::EPassTag
 };
 

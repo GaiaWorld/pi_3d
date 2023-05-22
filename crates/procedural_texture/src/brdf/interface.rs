@@ -2,7 +2,7 @@ use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 
 use pi_render::renderer::shader::KeyShaderMeta;
-use pi_scene_context::{object::ObjectID, pass::*, materials::command::ActionMaterial};
+use pi_scene_context::prelude::*;
 
 use super::shader::BRDFShader;
 

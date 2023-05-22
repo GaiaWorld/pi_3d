@@ -1,7 +1,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
 
-use crate::{viewer::{TViewerProjectMatrix, ViewerProjectionMatrix}};
+use crate::{viewer::prelude::*,};
 
 
 #[derive(Debug, Clone, Copy, Component)]
@@ -58,11 +58,14 @@ pub struct CameraOrthograhicParam {
     pub bottom: Number,
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraFov(pub Number);
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraOrthSize(pub Number);
+
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
+pub struct CameraToScreen(pub bool);
 
 #[derive(Debug, Clone, Component)]
 pub struct CameraParam {

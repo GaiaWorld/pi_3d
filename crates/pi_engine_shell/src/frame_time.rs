@@ -1,4 +1,3 @@
-use std::time::{Instant, Duration};
 
 use crate::{prelude::*, run_stage::ERunStageChap};
 
@@ -6,13 +5,13 @@ use crate::engine_shell::EnginShell;
 
 #[derive(Debug, Resource)]
 pub struct SingleFrameTimeCommand {
-    pub last: Instant,
+    pub last: pi_time::Instant,
     pub frame_ms: u64,
 }
 impl Default for SingleFrameTimeCommand {
     fn default() -> Self {
         Self {
-            last: Instant::now(),
+            last: pi_time::Instant::now(),
             frame_ms: 2,
         }
     }
@@ -36,28 +35,28 @@ impl InterfaceFrameTime for EnginShell {
         self
     }
 }
-
+#[cfg(not(target_arch = "wasm32"))]
 pub fn sys_frame_time(
     mut frame: ResMut<SingleFrameTimeCommand>,
 ) {
     let last = frame.last;
 
-    let time = Instant::now();
+    let time = pi_time::Instant::now();
 
     if time > last {
         let d = time - last;
 
         let delay = frame.frame_ms;
 
-        let duration = if d > Duration::from_millis(delay) {
-            Duration::from_millis(0)
+        let duration = if d > std::time::Duration::from_millis(delay) {
+            std::time::Duration::from_millis(0)
         } else {
-            Duration::from_millis(delay) - d
+            std::time::Duration::from_millis(delay) - d
         };
         spin_sleep::sleep(duration);
     }
 
-    frame.last = Instant::now();
+    frame.last = pi_time::Instant::now();
     
     log::debug!("Frame Time: {:?}", frame.last - last);
 }
@@ -70,6 +69,7 @@ impl Plugin for PluginFrameTime {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.world.insert_resource(SingleFrameTimeCommand::default());
 
+        #[cfg(not(target_arch = "wasm32"))]
         app.add_system(sys_frame_time.in_set(ERunStageChap::Initial));
     }
 }

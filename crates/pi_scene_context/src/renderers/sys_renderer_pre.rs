@@ -9,9 +9,9 @@ use crate::{
     scene::{
         environment::{BindSceneEffect,},
     },
-    viewer::{BindViewer, ModelList, ViewerActive, FlagModelList},
-    skeleton::{skeleton::{BindSkinValue}, SkeletonID},
-    meshes::model::BindModel,
+    viewer::prelude::*,
+    skeleton::prelude::*,
+    meshes::prelude::*,
     pass::*,
     bindgroup::*,
 };

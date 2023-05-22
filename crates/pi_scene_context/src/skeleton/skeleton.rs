@@ -37,3 +37,20 @@ impl Skeleton {
 
 #[derive(Debug, Clone, Component)]
 pub struct BindSkinValue(pub Option<Arc<ShaderBindModelAboutSkinValue>>);
+
+
+#[derive(Component)]
+pub struct SkeletonID(pub ObjectID);
+impl TEntityRef for SkeletonID {
+    fn id(&self) -> Entity {
+        self.0
+    }
+}
+
+#[derive(Default, Clone, Component)]
+pub struct DirtySkeletonRefs(pub bool);
+
+pub type SkeletonRefs = EntityRefInfo<DirtySkeletonRefs, SkeletonID>;
+
+#[derive(Component)]
+pub struct SkeletonBonesDirty(pub bool);

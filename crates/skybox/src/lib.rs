@@ -1,6 +1,6 @@
 use pi_mesh_builder::cube::ActionCube;
 use pi_engine_shell::prelude::*;
-use pi_scene_context::{materials::{command::*, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta}}, pass::EPassTag};
+use pi_scene_context::prelude::*;
 
 use shader::SkyboxShader;
 

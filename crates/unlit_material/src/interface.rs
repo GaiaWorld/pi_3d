@@ -1,6 +1,6 @@
 use pi_engine_shell::prelude::*;
 
-use pi_scene_context::{object::ObjectID, pass::EPassTag, materials::command::ActionMaterial};
+use pi_scene_context::prelude::*;
 
 use crate::shader::UnlitShader;
 

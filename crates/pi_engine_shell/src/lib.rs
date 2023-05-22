@@ -28,16 +28,16 @@ impl Default for DispatchEnd {
     }
 }
 
-pub struct PreFrameTime(pub Arc<Mutex<Instant>>);
-pub struct FrameStartTime(pub Instant);
+pub struct PreFrameTime(pub Arc<Mutex< pi_time::Instant>>);
+pub struct FrameStartTime(pub  pi_time::Instant);
 impl Default for FrameStartTime {
     fn default() -> Self {
-        Self(Instant::now())
+        Self( pi_time::Instant::now())
     }
 }
 
 impl Default for PreFrameTime {
     fn default() -> Self {
-        Self(Arc::new(Mutex::new(Instant::now())))
+        Self(Arc::new(Mutex::new( pi_time::Instant::now())))
     }
 }

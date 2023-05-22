@@ -1,9 +1,13 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{transforms::{transform_node::*}, cameras::{target_camera::*}, renderers::{renderer::RenderSize, ViewerRenderersInfo}};
+use crate::{
+    transforms::{prelude::*},
+    renderers::prelude::*,
+    viewer::prelude::*,
+};
 
-use super::{camera::*};
+use super::{camera::*, target_camera::*};
 
 
     pub fn sys_calc_target_camera_local_rot(
@@ -38,13 +42,12 @@ use super::{camera::*};
 
     pub fn sys_change_camera_render_size(
         window: Res<PiRenderWindow>,
-        cameras: Query<&ViewerRenderersInfo, With<Camera>>,
-        mut commands: Commands,
+        mut cameras: Query<(&mut ViewerSize, &CameraToScreen), With<Camera>>,
     ) {
-        cameras.iter().for_each(|renderers| {
-            renderers.map.iter().for_each(|(_, v)| {
-                commands.entity(v.1.0).insert(RenderSize::new(window.width, window.height));
-            });
+        cameras.iter_mut().for_each(|(mut viewersize, toscreen)| {
+            if toscreen.0 {
+                *viewersize = ViewerSize(window.width, window.height);
+            }
         });
     }
 

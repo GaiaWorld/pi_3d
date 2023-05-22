@@ -73,25 +73,3 @@ impl WriteBuffer for SceneTime {
     }
 
 }
-
-// pub struct SysSceneTimeUpdate;
-// impl TSystemStageInfo for SysSceneTimeUpdate {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             // SysSceneCreateCommand::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysSceneTimeUpdate {
-//     #[system]
-    pub fn sys_bind_update_scene_time(
-        mut scenes: Query<(&mut SceneTime, &mut BindSceneEffect)>,
-        frame: Res<SingleFrameTimeCommand>,
-    ) {
-        scenes.iter_mut().for_each(|(mut scene_time, mut bind)| {
-            scene_time.reset(frame.frame_ms);
-            scene_time.update(&mut bind);
-        });
-    }
-// }

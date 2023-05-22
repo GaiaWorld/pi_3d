@@ -3,7 +3,8 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     geometry::{
-        vertex_buffer_useinfo::*, GeometryVBLoader, 
+        vertex_buffer_useinfo::*, 
+        base::*, 
     },
 };
 
