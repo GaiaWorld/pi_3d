@@ -8,13 +8,15 @@ use crate::{
     cameras::prelude::*,
     scene::prelude::*,
     flags::*,
+    transforms::prelude::*,
 };
 
 use super::{
-    render_primitive::PrimitiveState,
+    render_primitive::*,
     base::*,
     pass::*,
     render_depth_and_stencil::*,
+    render_sort::*,
     render_blend::ModelBlend,
     render_target_state::RenderTargetState,
     renderer::{Renderer, RendererEnable, RenderSize},
@@ -226,12 +228,14 @@ use super::{
         models: Query<
             (
                 &SceneID,
-                &PrimitiveState, &ModelBlend,
+                (&CCullMode, &Topology, &CPolygonMode, &CFrontFace, &CUnClipDepth),
+                &ModelBlend,
                 &GeometryID, &I,
                 (&DepthWrite, &DepthCompare, &DepthBias, &StencilFront, &StencilBack, &StencilRead, &StencilWrite)
             ),
             Or<(
-                Changed<PrimitiveState>, Changed<ModelBlend>, Changed<GeometryID>,
+                Changed<ModelBlend>, Changed<GeometryID>,
+                Changed<CCullMode>, Changed<Topology>, Changed<CPolygonMode>, Changed<CFrontFace>, Changed<CUnClipDepth>,
                 Changed<DepthWrite>, Changed<DepthCompare>, Changed<DepthBias>, Changed<StencilFront>, Changed<StencilBack>, Changed<StencilRead>, Changed<StencilWrite>
             )>
         >,
@@ -249,7 +253,8 @@ use super::{
 
         models.iter().for_each(| (
             idscene,
-            primitive, blend, id_geo, passid, 
+            (cull, topology, polygon, face, unclip_depth),
+            blend, id_geo, passid, 
             (depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write)
         ) |{
             let passcfgs = if let Ok(cfg) = scenes.get(idscene.0) {
@@ -293,7 +298,7 @@ use super::{
 
                     let targets = RenderTargetState::color_target(pass_color_format, &blend);
                     let key_state = KeyRenderPipelineState {
-                        primitive: primitive.state,
+                        primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
                         target_state: vec![targets[0].clone()],
                         depth_stencil: depth_stencil,
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
@@ -336,7 +341,9 @@ use super::{
         models: Query<
             (
                 &SceneID,
-                &GeometryID, &PrimitiveState, &ModelBlend,
+                &GeometryID,
+                (&CCullMode, &Topology, &CPolygonMode, &CFrontFace, &CUnClipDepth),
+                &ModelBlend,
                 (&DepthWrite, &DepthCompare, &DepthBias, &StencilFront, &StencilBack, &StencilRead, &StencilWrite)
             ),
         >,
@@ -357,7 +364,9 @@ use super::{
             if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
                 log::debug!("SysPipeline: 1 Pass");
                 if let Ok((
-                    idscene, id_geo, primitive, blend,
+                    idscene, id_geo, 
+                    (cull, topology, polygon, face, unclip_depth),
+                    blend,
                     (depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write)
                 )) = models.get(id_model.0) {
                     let passcfgs = if let Ok(cfg) = scenes.get(idscene.0) {
@@ -394,7 +403,7 @@ use super::{
     
                     let targets = RenderTargetState::color_target(pass_color_format, &blend);
                     let key_state = KeyRenderPipelineState {
-                        primitive: primitive.state,
+                        primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
                         target_state: vec![targets[0].clone()],
                         depth_stencil: depth_stencil,
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
@@ -519,16 +528,20 @@ use super::{
     }
 
     pub fn sys_renderer_draws_modify(
+        mut scenes: Query<&ScenePassRenderCfg>,
         mut renderers: Query<
             (
                 ObjectID, &ViewerID, &mut Renderer, &PassTagOrders, &RendererEnable, &mut RenderSize
             )
         >,
         viewers: Query<
-            (&ModelListAfterCulling, &ViewerSize, Option<&CameraViewport>),
+            (&SceneID, &ModelListAfterCulling, &ViewerSize, Option<&CameraViewport>, &ViewerGlobalPosition),
         >,
         models: Query<
-            (&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08)
+            (
+                &GlobalTransform, &TransparentSortParam,
+                (&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08)
+            )
         >,
         passes: Query<
             &PassDraw
@@ -538,50 +551,112 @@ use super::{
 
         renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
+            let mut list_sort_opaque: Vec<(Entity, f32, TransparentSortParam, u8)> = vec![];
+            let mut list_sort_blend: Vec<(Entity, f32, TransparentSortParam, u8)> = vec![];
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
             if enable.0 == false {
                 return;
             }
-            if let Ok((list_model, viewersize, viewport)) = viewers.get(id_viewer.0) {
-                *rendersize = RenderSize(viewersize.0, viewersize.1);
-
-                if let Some(viewport) = viewport {
-                    renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);
-                } else {
-                    renderer.draws.viewport = (0., 0., 1., 1., -1., 1.);
-                }
-                list_model.0.iter().for_each(|id_obj| {
-                    if let Ok(passrecord) = models.get(id_obj.clone()) {
-                        passtag_orders.0.iter().for_each(|tag| {
-                            let pass = tag.as_pass();
-                            if pass == EPassTag::PASS_TAG_01 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.0.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                            else if pass == EPassTag::PASS_TAG_02 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.1.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                            else if pass == EPassTag::PASS_TAG_03 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.2.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                            else if pass == EPassTag::PASS_TAG_04 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.3.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                            else if pass == EPassTag::PASS_TAG_05 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.4.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                            else if pass == EPassTag::PASS_TAG_06 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.5.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                            else if pass == EPassTag::PASS_TAG_07 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.6.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                            else if pass == EPassTag::PASS_TAG_08 {
-                                if let Ok(PassDraw(Some(draw))) = passes.get(passrecord.7.0) { renderer.draws.list.push(draw.clone()) }
-                            }
-                        });
+            if let Ok((idscene, list_model, viewersize, viewport, viewposition)) = viewers.get(id_viewer.0) {
+                if let Ok(passcfg) = scenes.get(idscene.0) {
+                    *rendersize = RenderSize(viewersize.0, viewersize.1);
+                    
+    
+                    if let Some(viewport) = viewport {
+                        renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);
+                    } else {
+                        renderer.draws.viewport = (0., 0., 1., 1., -1., 1.);
                     }
-                });
-                // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
+                    list_model.0.iter().for_each(|id_obj| {
+    
+                        if let Ok((nodeposition, rendersort, passrecord)) = models.get(id_obj.clone()) {
+                            
+                            let temp = nodeposition.position() - &viewposition.0;
+                            let distance = temp.x * temp.x + temp.y * temp.y + temp.z * temp.z;
+    
+                            let mut index = 0;
+                            for tag in passtag_orders.0.iter() {
+                                let pass = tag.as_pass();
+
+                                let list = if passcfg.query(pass).blend() {
+                                    &mut list_sort_blend
+                                } else {
+                                    &mut list_sort_opaque
+                                };
+
+                                if pass == EPassTag::PASS_TAG_01 {
+                                    list.push((passrecord.0.0, distance, rendersort.clone(), index));
+                                }
+                                else if pass == EPassTag::PASS_TAG_02 {
+                                    list.push((passrecord.1.0, distance, rendersort.clone(), index));
+                                }
+                                else if pass == EPassTag::PASS_TAG_03 {
+                                    list.push((passrecord.2.0, distance, rendersort.clone(), index));
+                                }
+                                else if pass == EPassTag::PASS_TAG_04 {
+                                    list.push((passrecord.3.0, distance, rendersort.clone(), index));
+                                }
+                                else if pass == EPassTag::PASS_TAG_05 {
+                                    list.push((passrecord.4.0, distance, rendersort.clone(), index));
+                                }
+                                else if pass == EPassTag::PASS_TAG_06 {
+                                    list.push((passrecord.5.0, distance, rendersort.clone(), index));
+                                }
+                                else if pass == EPassTag::PASS_TAG_07 {
+                                    list.push((passrecord.6.0, distance, rendersort.clone(), index));
+                                }
+                                else if pass == EPassTag::PASS_TAG_08 {
+                                    list.push((passrecord.7.0, distance, rendersort.clone(), index));
+                                }
+    
+                                index += 1;
+                            }
+                        }
+                    });
+    
+                    list_sort_opaque.sort_by(|a, b| {
+                        match a.3.cmp(&b.3) {
+                            std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
+                            std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
+                            std::cmp::Ordering::Equal => {
+                                match a.1.partial_cmp(&b.1) {
+                                    Some(ord) => ord,
+                                    None => std::cmp::Ordering::Less,
+                                }
+                            }
+                        }
+                    });
+                    list_sort_blend.sort_by(|a, b| {
+                        match a.3.cmp(&b.3) {
+                            std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
+                            std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
+                            std::cmp::Ordering::Equal => {
+                                match a.2.cmp(&b.2) {
+                                    std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
+                                    std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
+                                    std::cmp::Ordering::Equal => {
+                                        match b.1.partial_cmp(&a.1) {
+                                            Some(ord) => ord,
+                                            None => std::cmp::Ordering::Less,
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+    
+                    list_sort_opaque.iter().for_each(|(entity, _ , _ , _)| {
+                        if let Ok(PassDraw(Some(draw))) = passes.get(*entity) {
+                            renderer.draws.list.push(draw.clone());
+                        }
+                    });
+                    list_sort_blend.iter().for_each(|(entity, _ , _ , _)| {
+                        if let Ok(PassDraw(Some(draw))) = passes.get(*entity) {
+                            renderer.draws.list.push(draw.clone());
+                        }
+                    });
+                    // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
+                }
             }
         });
 

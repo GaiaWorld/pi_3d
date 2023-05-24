@@ -38,7 +38,7 @@ impl Plugin for PluginLocalLoad {
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ResMut<ActionListSceneCreate>,
+    mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut transformanime: ActionSetTransformNodeAnime,
@@ -57,7 +57,7 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
+    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));

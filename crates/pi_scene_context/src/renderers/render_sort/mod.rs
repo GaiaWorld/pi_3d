@@ -24,9 +24,9 @@ impl Eq for OpaqueSortParam {
 #[derive(Debug, Clone, Copy, Component)]
 pub struct TransparentSortParam {
     /// 同 渲染类型 中的 渲染分组
-    pub group: u8,
+    pub group: i32,
     /// 同 渲染分组 中的 渲染顺序
-    pub index: u32,
+    pub index: i32,
 }
 impl TransparentSortParam {
     pub fn opaque() -> Self {
@@ -79,6 +79,14 @@ impl Ord for TransparentSortParam {
     }
 }
 
+pub struct OpsRenderQueue(pub(crate) Entity, pub(crate) TransparentSortParam, pub(crate) u16);
+impl OpsRenderQueue {
+    pub fn ops(mesh: Entity, group: i32, index: i32) -> Self {
+        Self(mesh, TransparentSortParam { group, index }, 0)
+    }
+}
+pub type ActionListRenderQueue = ActionList<OpsRenderQueue>;
+
 pub struct ActionRenderSort;
 impl ActionRenderSort {
     pub fn modify(
@@ -89,63 +97,18 @@ impl ActionRenderSort {
     }
 }
 
-// #[derive(Debug, Default)]
-// pub struct SingleRenderSortCommandList {
-//     pub list: Vec<(ObjectID, TransparentSortParam)>
-// }
+pub fn sys_act_render_queue(
+    mut cmds: ResMut<ActionListRenderQueue>,
+    mut items: Query<&mut TransparentSortParam>,
+) {
+    cmds.drain().drain(..).for_each(|OpsRenderQueue(entity, val, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = val;
+            return;
+        }
 
-// pub struct SysRenderSortCommand;
-// impl TSystemStageInfo for SysRenderSortCommand {
-
-// }
-// #[setup]
-// impl SysRenderSortCommand {
-//     #[system]
-//     pub fn cmds(
-//         mut cmds: ResMut<SingleRenderSortCommandList>,
-//         mut items: Commands<GameObject, TransparentSortParam>,
-//     ) {
-//         let mut  list = replace(&mut cmds.list, vec![]);
-
-//         list.drain(..).for_each(|(obj, value)| {
-//             items.insert(obj, value);
-//         });
-//     }
-// }
-
-// pub trait InterfaceRenderSort {
-//     fn render_sort(
-//         &self,
-//         entity: ObjectID,
-//         value: TransparentSortParam,
-//     ) -> &Self;
-// }
-
-// impl InterfaceRenderSort for crate::engine::Engine {
-//     fn render_sort(
-//         &self,
-//         entity: ObjectID,
-//         value: TransparentSortParam,
-//     ) -> &Self {
-//         let commands = self.world().get_resource_mut::<SingleRenderSortCommandList>().unwrap();
-//         commands.list.push((entity, value));
-
-//         self
-//     }
-// }
-
-// pub struct PluginRenderSort;
-// impl crate::Plugin for PluginRenderSort {
-//     fn init(
-//         &mut self,
-//         engine: &mut crate::engine::Engine,
-//         stages: &mut crate::run_stage::RunStage,
-//     ) -> Result<(), crate::plugin::ErrorPlugin> {
-//         let world = engine.world_mut();
-
-//         world.insert_resource(SingleRenderSortCommandList::default());
-//         SysRenderSortCommand::setup(world, stages.query_stage::<SysRenderSortCommand>(ERunStageChap::Initial));
-
-//         Ok(())
-//     }
-// }
+        if count < ACTION_WAIT_FRAME {
+            cmds.push(OpsRenderQueue(entity, val, count + 1));
+        }
+    });
+}

@@ -128,6 +128,13 @@ pub type KeyShaderMeta = Atom;
 #[derive(Deref, DerefMut, Resource)]
 pub struct ResBindsRecorder(pub BindsRecorder);
 
+/// 操作队列 最多等待 ACTION_WAIT_FRAME 帧
+pub const ACTION_WAIT_FRAME: u16 = 10;
+
+pub trait TAction {
+    fn again<T: Clone>(entity: Entity, val: T, count: u16) -> Self;
+}
+
 ////////////////////////////////////// Commands
 #[derive(Resource)]
 // pub struct ActionList<T: Send + Sync + 'static>(Events<T>);

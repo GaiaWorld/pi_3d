@@ -36,47 +36,21 @@ impl Plugin for PluginLocalLoad {
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ResMut<ActionListSceneCreate>,
-    mut cameracmds: (
-        ResMut<ActionListCameraCreate>,
-        ResMut<ActionListCameraTarget>,
-        ResMut<ActionListCameraMode>,
-        ResMut<ActionListCameraRenderer>,
-        ResMut<ActionListCameraActive>,
-        ResMut<ActionListCameraFixedMode>,
-        ResMut<ActionListCameraFov>,
-        ResMut<ActionListCameraOrthSize>,
-        ResMut<ActionListCameraNearFar>,
-    ),
-    mut transformcmds: (
-        ResMut<ActionListTransformNodeParent>,
-        ResMut<ActionListTransformNodeLocalPosition>,
-        ResMut<ActionListTransformNodeLocalEuler>,
-        ResMut<ActionListMeshCreate>,
-        ResMut<ActionListInstanceMeshCreate>,
-        ResMut<ActionListInstanceTillOff>,
-    ),
-    mut geometrycreate: ResMut<ActionListGeometryCreate>,
-    mut matcmds: (
-        ResMut<ActionListMaterialUse>,
-        ResMut<ActionListMaterialCreate>,
-        ResMut<ActionListUniformByName>,
-        Res<ShareAssetMgr<ShaderEffectMeta>>,
-        ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
-        ResMut<ActionListBlend>,
-        ResMut<NodeMaterialBlocks>,
-    ),
+    mut scenecmds: ActionSetScene,
+    mut cameracmds: ActionSetCamera,
+    mut transformcmds: ActionSetTransform,
+    mut transformanime: ActionSetTransformNodeAnime,
+    mut meshcmds: ActionSetMesh,
+    mut instancemeshcmds: ActionSetInstanceMesh,
+    mut geometrycmd: ActionSetGeometry,
+    mut matcmds: ActionSetMaterial,
+    mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut anime: (
-        ResMut<ActionListAnimeGroupCreate>,
-        ResMut<ActionListAddTargetAnime>,
-        ResMut<ActionListAnimeGroupStart>,
-    ),
     mut final_render: ResMut<WindowRenderer>,
-    mut scaling_ctx: ResMut<TypeAnimeContext<LocalEulerAngles>>,
-    scaling_curves: Res<ShareAssetMgr<TypeFrameCurve<LocalEulerAngles>>>,
+    nodematblocks: Res<NodeMaterialBlocks>,
+    defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
-    ActionMaterial::regist_material_meta(&matcmds.3, &mut matcmds.4, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&matcmds.6));
+    ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
 
     let tes_size = 5;
     fps.frame_ms = 4;
@@ -84,13 +58,13 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
+    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
-    cameracmds.0.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.1.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-    cameracmds.4.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.7.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
+    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
     let desc = RendererGraphicDesc {
@@ -100,38 +74,37 @@ fn setup(
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
     let id_renderer = commands.spawn_empty().id();
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let source = commands.spawn_empty().id();
-    transformcmds.3.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
     let mut blend = ModelBlend::default(); blend.combine();
-    matcmds.5.push(OpsRenderBlend::ops(source, blend));
+    meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
-    geometrycreate.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.0.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.1.push(OpsMaterialCreate::ops(idmat, OpacityClipShader::KEY, EPassTag::Transparent));
-    matcmds.2.push(OpsUniformByName::Texture(idmat, UniformTextureWithSamplerParam {
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, OpacityClipShader::KEY, EPassTag::Transparent));
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
-    }, true));
-    matcmds.2.push(OpsUniformByName::Texture(idmat, UniformTextureWithSamplerParam {
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+    }));
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
-    }, true));
-    matcmds.2.push(
-        OpsUniformByName::Vec4(
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
+    }));
+    matcmds.vec4.push(
+        OpsUniformVec4::ops(
             idmat, 
-            String::from(BlockEmissiveBase::KEY_INFO), 
-            Vector4::new(1., 1., 1., 1.), 
-            true
+            Atom::from(BlockEmissiveBase::KEY_INFO), 
+            1., 1., 1., 1.
         )
     );
 }

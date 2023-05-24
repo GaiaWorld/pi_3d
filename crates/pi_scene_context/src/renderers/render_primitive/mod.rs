@@ -5,143 +5,175 @@ use pi_engine_shell::prelude::*;
 use crate::{scene::coordinate_system::ESceneCoordinateMode};
 
 /// * 默认值 Back
-#[derive(Debug, Clone, Copy, Component)]
-pub enum ECullMode {
-    Off,
-    Back,
-    Front
-}
-impl ECullMode {
-    pub fn mode(&self) -> Option<wgpu::Face> {
-        match self {
-            ECullMode::Off => None,
-            ECullMode::Back => Some(wgpu::Face::Back),
-            ECullMode::Front => Some(wgpu::Face::Front),
-        }
-    }
-}
-pub struct OpsCullMode(Entity, ECullMode);
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
+pub struct CCullMode(pub CullMode);
+pub struct OpsCullMode(pub(crate) Entity, pub(crate) CCullMode, pub u16);
 impl OpsCullMode {
-    pub fn ops(mesh: Entity, mode: ECullMode) -> Self {
-        Self(mesh, mode)
+    pub fn ops(mesh: Entity, mode: CullMode) -> Self {
+        Self(mesh, CCullMode(mode), 0)
     }
 }
 pub type ActionListCullMode = ActionList<OpsCullMode>;
 pub fn sys_act_mesh_cull_mode(
     mut cmds: ResMut<ActionListCullMode>,
-    mut commands: Commands,
+    mut items: Query<&mut CCullMode>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCullMode(entity, mode)| {
-        commands.entity(entity).insert(mode);
+    cmds.drain().drain(..).for_each(|OpsCullMode(entity, mode, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = mode;
+            return;
+        }
+
+        if count < ACTION_WAIT_FRAME {
+            cmds.push(OpsCullMode(entity, mode, count + 1));
+        }
+    });
+}
+
+// #[derive(Debug, Clone, Copy)]
+/// * 默认值 Fill
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
+pub struct CPolygonMode(pub PolygonMode);
+pub struct OpsPolygonMode(pub(crate) Entity, pub(crate) CPolygonMode, pub u16);
+impl OpsPolygonMode {
+    pub fn ops(mesh: Entity, mode: PolygonMode) -> Self {
+        Self(mesh, CPolygonMode(mode), 0)
+    }
+}
+pub type ActionListPolyginMode = ActionList<OpsPolygonMode>;
+pub fn sys_act_mesh_polygon_mode(
+    mut cmds: ResMut<ActionListPolyginMode>,
+    mut items: Query<&mut CPolygonMode>,
+) {
+    cmds.drain().drain(..).for_each(|OpsPolygonMode(entity, mode, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = mode;
+            return;
+        }
+
+        if count < ACTION_WAIT_FRAME {
+            cmds.push(OpsPolygonMode(entity, mode, count + 1));
+        }
+    });
+}
+
+// #[derive(Debug, Clone, Copy)]
+/// * 默认值 Fill
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
+pub struct Topology(pub PrimitiveTopology);
+pub struct OpsTopology(pub(crate) Entity, pub(crate) Topology, pub u16);
+impl OpsTopology {
+    pub fn ops(mesh: Entity, mode: PrimitiveTopology) -> Self {
+        Self(mesh, Topology(mode), 0)
+    }
+}
+pub type ActionListTopology = ActionList<OpsTopology>;
+pub fn sys_act_mesh_topolygon(
+    mut cmds: ResMut<ActionListTopology>,
+    mut items: Query<&mut Topology>,
+) {
+    cmds.drain().drain(..).for_each(|OpsTopology(entity, mode, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = mode;
+            return;
+        }
+
+        if count < ACTION_WAIT_FRAME {
+            cmds.push(OpsTopology(entity, mode, count + 1));
+        }
     });
 }
 
 // #[derive(Debug, Clone, Copy)]
 /// * 默认值 Fill
 #[derive(Debug, Clone, Copy, Component)]
-pub enum PolygonMode {
-    Fill = 0,
-    /// Polygons are drawn as line segments
-    Line = 1,
-    /// Polygons are drawn as points
-    Point = 2,
-}
-impl PolygonMode {
-    pub fn val(&self) -> wgpu::PolygonMode {
-        match self {
-            PolygonMode::Fill => wgpu::PolygonMode::Fill,
-            PolygonMode::Line => wgpu::PolygonMode::Line,
-            PolygonMode::Point => wgpu::PolygonMode::Point,
-        }
+pub struct CUnClipDepth(pub bool);
+pub struct OpsUnClipDepth(pub(crate) Entity, pub(crate) bool, pub u16);
+impl OpsUnClipDepth {
+    pub fn ops(mesh: Entity, mode: bool) -> Self {
+        Self(mesh, mode, 0)
     }
 }
-pub struct OpsPolygonMode(Entity, PolygonMode);
-impl OpsPolygonMode {
-    pub fn ops(mesh: Entity, mode: PolygonMode) -> Self {
-        Self(mesh, mode)
-    }
-}
-pub type ActionListPolyginMode = ActionList<OpsPolygonMode>;
-pub fn sys_act_mesh_polygon_mode(
-    mut cmds: ResMut<ActionListPolyginMode>,
-    mut commands: Commands,
+pub type ActionListUnClipDepth = ActionList<OpsUnClipDepth>;
+pub fn sys_act_mesh_unclip_depth(
+    mut cmds: ResMut<ActionListUnClipDepth>,
+    mut items: Query<&mut CUnClipDepth>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsPolygonMode(entity, mode)| {
-        commands.entity(entity).insert(mode);
+    cmds.drain().drain(..).for_each(|OpsUnClipDepth(entity, mode, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = CUnClipDepth(mode);
+            return;
+        }
+
+        if count < ACTION_WAIT_FRAME {
+            cmds.push(OpsUnClipDepth(entity, mode, count + 1));
+        }
     });
 }
 
 /// * 默认值 Ccw
-#[derive(Debug, Clone, Copy, Component)]
-pub enum FrontFace {
-    Ccw = 0,
-    /// Triangles with vertices in clockwise order are considered the front face.
-    ///
-    /// This is the default with left handed coordinate spaces.
-    Cw = 1,
-}
-impl FrontFace {
-    pub fn val(&self) -> wgpu::FrontFace {
-        match self {
-            FrontFace::Ccw => wgpu::FrontFace::Ccw,
-            FrontFace::Cw => wgpu::FrontFace::Cw,
-        }
-    }
-}
-pub struct OpsFrontFace(Entity, FrontFace);
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
+pub struct CFrontFace(pub FrontFace);
+pub struct OpsFrontFace(pub(crate) Entity, pub(crate) CFrontFace, pub u16);
 impl OpsFrontFace {
     pub fn ops(mesh: Entity, mode: FrontFace) -> Self {
-        Self(mesh, mode)
+        Self(mesh, CFrontFace(mode), 0)
     }
 }
 pub type ActionListFrontFace = ActionList<OpsFrontFace>;
 pub fn sys_act_mesh_frontface(
     mut cmds: ResMut<ActionListFrontFace>,
-    mut commands: Commands,
+    mut items: Query<&mut CFrontFace>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsFrontFace(entity, mode)| {
-        commands.entity(entity).insert(mode);
+    cmds.drain().drain(..).for_each(|OpsFrontFace(entity, mode, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = mode;
+            return;
+        }
+
+        if count < ACTION_WAIT_FRAME {
+            cmds.push(OpsFrontFace(entity, mode, count + 1));
+        }
     });
 }
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct PrimitiveState {
-    pub state: wgpu::PrimitiveState,
+    // pub state: wgpu::PrimitiveState,
 }
 impl PrimitiveState {
-    pub fn state(cull: &ECullMode, polygon: &PolygonMode, face: &FrontFace) -> wgpu::PrimitiveState {
+    pub fn state(cull: &CCullMode, topology: &Topology, polygon: &CPolygonMode, face: &CFrontFace, unclip_depth: &CUnClipDepth) -> wgpu::PrimitiveState {
         wgpu::PrimitiveState {
-            topology: wgpu::PrimitiveTopology::TriangleList,
+            topology: topology.val(),
             front_face: face.val(),
             polygon_mode: polygon.val(),
-            cull_mode: cull.mode(),
+            cull_mode: cull.val(),
             // 不设置可能渲染出来黑的
-            #[cfg(not(target_arch = "wasm32"))]
-            unclipped_depth: true,
+            unclipped_depth: unclip_depth.0,
             ..Default::default()
         }
     }
-    pub fn new(cull: &ECullMode, polygon: &PolygonMode, face: &FrontFace) -> Self {
-        Self {
-            state: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                front_face: face.val(),
-                polygon_mode: polygon.val(),
-                cull_mode: cull.mode(),
-                // 不设置可能渲染出来黑的
-                #[cfg(not(target_arch = "wasm32"))]
-                unclipped_depth: true,
-                ..Default::default()
-            }
-        }
-    }
+    // pub fn new(cull: &ECullMode, polygon: &PolygonMode, face: &FrontFace) -> Self {
+    //     Self {
+    //         state: wgpu::PrimitiveState {
+    //             topology: wgpu::PrimitiveTopology::TriangleList,
+    //             front_face: face.val(),
+    //             polygon_mode: polygon.val(),
+    //             cull_mode: cull.mode(),
+    //             // 不设置可能渲染出来黑的
+    //             #[cfg(not(target_arch = "wasm32"))]
+    //             unclipped_depth: true,
+    //             ..Default::default()
+    //         }
+    //     }
+    // }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum ERenderPrimitiveCommand {
-    CullMode(ECullMode),
-    PolygonMode(PolygonMode),
-    FrontFace(FrontFace),
+    CullMode(CCullMode),
+    PolygonMode(CPolygonMode),
+    FrontFace(CFrontFace),
 }
 
 pub struct ActionRenderPrimitive;
@@ -163,139 +195,3 @@ impl ActionRenderPrimitive {
         }
     }
 }
-
-// #[derive(Debug, Default)]
-// pub struct SingleRenderPrimitiveCreateCommandList {
-//     pub list: Vec<ERenderPrimitiveCommand>,
-// }
-
-// pub struct SysRenderPrimitiveCreateCommand;
-// impl TSystemStageInfo for SysRenderPrimitiveCreateCommand {
-
-// }
-// #[setup]
-// impl SysRenderPrimitiveCreateCommand {
-//     #[system]
-//     pub fn cmd(
-//         mut cmds: ResMut<SingleRenderPrimitiveCreateCommandList>,
-//         mut cullmode: Commands<GameObject, ECullMode>,
-//         mut polygon: Commands<GameObject, EPolygonMode>,
-//         mut front: Commands<GameObject, EFrontFace>,
-//     ) {
-//         let mut list = replace(&mut cmds.list, vec![]);
-
-//         list.drain(..).for_each(|cmd| {
-//             match cmd {
-//                 ERenderPrimitiveCommand::CullMode(entity, value) => {
-//                     cullmode.insert(entity, value);
-//                 },
-//                 ERenderPrimitiveCommand::PolygonMode(entity, value) => {
-//                     polygon.insert(entity, value);
-//                 },
-//                 ERenderPrimitiveCommand::FrontFace(entity, value) => {
-//                     front.insert(entity, value);
-//                 },
-//             }
-//         });
-//     }
-// }
-
-// pub struct SysRenderPrimitiveCommand;
-// impl TSystemStageInfo for SysRenderPrimitiveCommand {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             SysRenderPrimitiveCreateCommand::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysRenderPrimitiveCommand {
-//     #[system]
-    pub fn sys_render_primitive_modify(
-        mut item: Query<(ObjectID, &ECullMode, &PolygonMode, &FrontFace), Or<(Changed<ECullMode>, Changed<PolygonMode>, Changed<FrontFace>)>>,
-        mut commands: Commands,
-    ) {
-        item.iter().for_each(|(id_obj, cull, polygon, front)| {
-            commands.entity(id_obj).insert(PrimitiveState::new(cull, polygon, front));
-        });
-    }
-// }
-
-// pub trait InterfaceRenderPrimitive {
-//     fn cull_mode(
-//         &self,
-//         entity: ObjectID,
-//         value: ECullMode,
-//     ) -> &Self;
-    
-//     fn polygon_mode(
-//         &self,
-//         entity: ObjectID,
-//         value: EPolygonMode,
-//     ) -> &Self;
-    
-//     fn front_face(
-//         &self,
-//         entity: ObjectID,
-//         value: EFrontFace,
-//     ) -> &Self;
-// }
-
-// impl InterfaceRenderPrimitive for crate::engine::Engine {
-//     fn cull_mode(
-//         &self,
-//         entity: ObjectID,
-//         value: ECullMode,
-//     ) -> &Self {
-//         let world = self.world();
-
-//         let commands = world.get_resource_mut::<SingleRenderPrimitiveCreateCommandList>().unwrap();
-//         commands.list.push(ERenderPrimitiveCommand::CullMode(entity, value));
-
-//         self
-//     }
-    
-//     fn polygon_mode(
-//         &self,
-//         entity: ObjectID,
-//         value: EPolygonMode,
-//     ) -> &Self {
-//         let world = self.world();
-
-//         let commands = world.get_resource_mut::<SingleRenderPrimitiveCreateCommandList>().unwrap();
-//         commands.list.push(ERenderPrimitiveCommand::PolygonMode(entity, value));
-
-//         self
-//     }
-    
-//     fn front_face(
-//         &self,
-//         entity: ObjectID,
-//         value: EFrontFace,
-//     ) -> &Self {
-//         let world = self.world();
-
-//         let commands = world.get_resource_mut::<SingleRenderPrimitiveCreateCommandList>().unwrap();
-//         commands.list.push(ERenderPrimitiveCommand::FrontFace(entity, value));
-
-//         self
-//     }
-// }
-
-// pub struct PluginRenderPrimitive;
-// impl crate::Plugin for PluginRenderPrimitive {
-//     fn init(
-//         &mut self,
-//         engine: &mut crate::engine::Engine,
-//         stages: &mut crate::run_stage::RunStage,
-//     ) -> Result<(), crate::plugin::ErrorPlugin> {
-//         let world = engine.world_mut();
-
-//         world.insert_resource(SingleRenderPrimitiveCreateCommandList::default());
-
-//         SysRenderPrimitiveCreateCommand::setup(world, stages.query_stage::<SysRenderPrimitiveCreateCommand>(ERunStageChap::Initial));
-//         SysRenderPrimitiveCommand::setup(world, stages.query_stage::<SysRenderPrimitiveCommand>(ERunStageChap::Initial));
-
-//         Ok(())
-//     }
-// }

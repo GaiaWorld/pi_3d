@@ -86,8 +86,8 @@ pub fn sys_act_bone_create(
     cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene, name)| {
         let mut bonecmd = commands.entity(bone);
         ActionScene::add_to_scene(&mut bonecmd, &mut tree, scene);
-        ActionTransformNode::as_transform_node(&mut bonecmd, name);
         ActionTransformNode::init_for_tree(&mut bonecmd);
+        ActionTransformNode::as_transform_node(&mut bonecmd, name);
         ActionAnime::as_anime_group_target(&mut bonecmd);
         ActionBone::init(&mut bonecmd, &empty, parent);
     });

@@ -36,7 +36,7 @@ pub struct BindEffectValues {
     pub uint_: UintUniform,
     pub bind: Arc<ShaderBindEffectValue>,
     pub dirty: bool,
-    pub keys: XHashMap<String, usize>,
+    pub keys: XHashMap<Atom, usize>,
 }
 impl BindEffectValues {
     pub fn new(
@@ -60,31 +60,31 @@ impl BindEffectValues {
             
             let mut index = 0;
             uniforms.mat4_list.iter().for_each(|v| {
-                keys.insert(v.0.to_string(), index); index += 1;
+                keys.insert(v.0.clone(), index); index += 1;
             });
             let mut index = 0;
             uniforms.mat2_list.iter().for_each(|v| {
-                keys.insert(v.0.to_string(), index); index += 1;
+                keys.insert(v.0.clone(), index); index += 1;
             });
             let mut index = 0;
             uniforms.vec4_list.iter().for_each(|v| {
-                keys.insert(v.0.to_string(), index); index += 1;
+                keys.insert(v.0.clone(), index); index += 1;
             });
             let mut index = 0;
             uniforms.vec2_list.iter().for_each(|v| {
-                keys.insert(v.0.to_string(), index); index += 1;
+                keys.insert(v.0.clone(), index); index += 1;
             });
             let mut index = 0;
             uniforms.float_list.iter().for_each(|v| {
-                keys.insert(v.0.to_string(), index); index += 1;
+                keys.insert(v.0.clone(), index); index += 1;
             });
             let mut index = 0;
             uniforms.int_list.iter().for_each(|v| {
-                keys.insert(v.0.to_string(), index); index += 1;
+                keys.insert(v.0.clone(), index); index += 1;
             });
             let mut index = 0;
             uniforms.uint_list.iter().for_each(|v| {
-                keys.insert(v.0.to_string(), index); index += 1;
+                keys.insert(v.0.clone(), index); index += 1;
             });
 
             Some(Self {

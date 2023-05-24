@@ -20,8 +20,10 @@ use self::{
     pass::*,
     render_primitive::*,
     render_blend::{ActionListBlend, sys_act_model_blend},
+    render_depth_and_stencil::*,
     command::*,
-    command_sys::*
+    command_sys::*,
+    render_sort::*
 };
 
 mod render_object;
@@ -90,18 +92,40 @@ impl Plugin for PluginRenderer {
         app.insert_resource(ActionListCullMode::default());
         app.insert_resource(ActionListPolyginMode::default());
         app.insert_resource(ActionListFrontFace::default());
+        app.insert_resource(ActionListTopology::default());
+        app.insert_resource(ActionListUnClipDepth::default());
+        app.insert_resource(ActionListDepthWrite::default());
+        app.insert_resource(ActionListDepthBias::default());
+        app.insert_resource(ActionListDepthCompare::default());
+        app.insert_resource(ActionListStencilBack::default());
+        app.insert_resource(ActionListStencilFront::default());
+        app.insert_resource(ActionListStencilRead::default());
+        app.insert_resource(ActionListStencilWrite::default());
+        app.insert_resource(ActionListRenderQueue::default());
         app.insert_resource(ActionListRendererModify::default());
         app.add_systems(
             (
+                sys_act_model_blend,
                 sys_act_mesh_cull_mode,
                 sys_act_mesh_polygon_mode,
                 sys_act_mesh_frontface,
-                sys_act_model_blend,
+                sys_act_mesh_topolygon,
+                sys_act_mesh_unclip_depth,
+                
+                sys_act_depth_write,
+                sys_act_depth_compare,
+                sys_act_depth_bias,
+                sys_act_stencil_front,
+                sys_act_stencil_back,
+                sys_act_stencil_read,
+                sys_act_stencil_write,
+                
+                sys_act_render_queue,
             ).in_set(ERunStageChap::SecondInitial)
         );
-        app.add_system(
-            sys_render_primitive_modify.in_set(ERunStageChap::Command)
-        );
+        // app.add_system(
+        //     sys_render_primitive_modify.in_set(ERunStageChap::Command)
+        // );
         app.add_system(
             sys_renderer_modify.in_set(ERunStageChap::Command)
         );

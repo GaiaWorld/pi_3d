@@ -8,6 +8,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime, };
+use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
@@ -35,49 +36,20 @@ impl Plugin for PluginLocalLoad {
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ResMut<ActionListSceneCreate>,
-    mut cameracmds: (
-        ResMut<ActionListCameraCreate>,
-        ResMut<ActionListCameraTarget>,
-        ResMut<ActionListCameraMode>,
-        ResMut<ActionListCameraRenderer>,
-        ResMut<ActionListCameraActive>,
-        ResMut<ActionListCameraFixedMode>,
-        ResMut<ActionListCameraFov>,
-        ResMut<ActionListCameraOrthSize>,
-        ResMut<ActionListCameraNearFar>,
-    ),
-    mut transformcmds: (
-        ResMut<ActionListTransformNodeParent>,
-        ResMut<ActionListTransformNodeLocalPosition>,
-        ResMut<ActionListTransformNodeLocalEuler>,
-        ResMut<ActionListMeshCreate>,
-        ResMut<ActionListInstanceMeshCreate>,
-        ResMut<ActionListInstanceTillOff>,
-        ResMut<ActionListSkinCreate>,
-        ResMut<ActionListSkinUse>,
-        ResMut<ActionListBoneCreate>,
-        ResMut<ActionListCullMode>,
-    ),
-    mut geometrycreate: ResMut<ActionListGeometryCreate>,
-    mut matcmds: (
-        ResMut<ActionListMaterialUse>,
-        ResMut<ActionListMaterialCreate>,
-        ResMut<ActionListUniform>,
-    ),
+    mut scenecmds: ActionSetScene,
+    mut cameracmds: ActionSetCamera,
+    mut transformcmds: ActionSetTransform,
+    mut transformanime: ActionSetTransformNodeAnime,
+    mut meshcmds: ActionSetMesh,
+    mut instancemeshcmds: ActionSetInstanceMesh,
+    mut skincmds: ActionSetSkeleton,
+    mut geometrycmd: ActionSetGeometry,
+    mut matcmds: ActionSetMaterial,
+    mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut anime: (
-        ResMut<ActionListAnimeGroupCreate>,
-        ResMut<ActionListAddTargetAnime>,
-        ResMut<ActionListAnimeGroupStart>,
-    ),
     mut final_render: ResMut<WindowRenderer>,
-    mut vbbuffer: (
-        Res<ShareAssetMgr<EVertexBufferRange>>,
-        ResMut<VertexBufferDataMap3D>,
-    ),
-    mut position_ctx: ResMut<TypeAnimeContext<LocalPosition>>,
-    position_curves: Res<ShareAssetMgr<TypeFrameCurve<LocalPosition>>>,
+    nodematblocks: Res<NodeMaterialBlocks>,
+    defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
     let tes_size = 5;
     fps.frame_ms = 4;
@@ -85,14 +57,13 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
+    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
-    cameracmds.0.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.1.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-    cameracmds.4.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.7.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-    transformcmds.0.push(OpsTransformNodeParent::ops(camera01, scene));
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
+    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
     let desc = RendererGraphicDesc {
@@ -102,56 +73,56 @@ fn setup(
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
     let id_renderer = commands.spawn_empty().id();
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let source = commands.spawn_empty().id();
-    transformcmds.3.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
-    transformcmds.0.push(OpsTransformNodeParent::ops(source, scene));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     
     let key_group = pi_atom::Atom::from("key_group");
-    anime.0.push(OpsAnimationGroupCreation::ops(source, key_group.clone()));
+    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone()));
     
     let bone0 = commands.spawn_empty().id();
     let bone1 = commands.spawn_empty().id();
     let key_curve0 = pi_atom::Atom::from((1).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
-    if let Ok(asset_curve) = position_curves.insert(key_curve0, TypeFrameCurve(curve)) {
-        let animation = position_ctx.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        anime.1.push(OpsAddTargetAnimation::ops(source, bone1, key_group.clone(), animation));
+    if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+        let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone1, key_group.clone(), animation));
     }
     let bone2 = commands.spawn_empty().id();
     let key_curve0 = pi_atom::Atom::from((2).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
-    if let Ok(asset_curve) = position_curves.insert(key_curve0, TypeFrameCurve(curve)) {
-        let animation = position_ctx.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        anime.1.push(OpsAddTargetAnimation::ops(source, bone2, key_group.clone(), animation));
+    if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+        let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone2, key_group.clone(), animation));
     }
     let bone3 = commands.spawn_empty().id();
     let key_curve0 = pi_atom::Atom::from((3).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
-    if let Ok(asset_curve) = position_curves.insert(key_curve0, TypeFrameCurve(curve)) {
-        let animation = position_ctx.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        anime.1.push(OpsAddTargetAnimation::ops(source, bone3, key_group.clone(), animation));
+    if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+        let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone3, key_group.clone(), animation));
     }
     let bone4 = commands.spawn_empty().id();
     let key_curve0 = pi_atom::Atom::from((4).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
-    if let Ok(asset_curve) = position_curves.insert(key_curve0, TypeFrameCurve(curve)) {
-        let animation = position_ctx.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        anime.1.push(OpsAddTargetAnimation::ops(source, bone4, key_group.clone(), animation));
+    if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+        let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone4, key_group.clone(), animation));
     }
-    anime.2.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
 
-    transformcmds.8.push(OpsBoneCreation::ops(bone0, scene, scene, String::from("Bone00")));
-    transformcmds.8.push(OpsBoneCreation::ops(bone1, bone0, scene, String::from("Bone01")));
-    transformcmds.8.push(OpsBoneCreation::ops(bone2, bone0, scene, String::from("Bone02")));
-    transformcmds.8.push(OpsBoneCreation::ops(bone3, bone0, scene, String::from("Bone03")));
-    transformcmds.8.push(OpsBoneCreation::ops(bone4, bone0, scene, String::from("Bone04")));
-    transformcmds.0.push(OpsTransformNodeParent::ops(bone0, scene));
-    transformcmds.0.push(OpsTransformNodeParent::ops(bone1, bone0));
-    transformcmds.0.push(OpsTransformNodeParent::ops(bone2, bone0));
-    transformcmds.0.push(OpsTransformNodeParent::ops(bone3, bone0));
-    transformcmds.0.push(OpsTransformNodeParent::ops(bone4, bone0));
+    skincmds.bone_create.push(OpsBoneCreation::ops(bone0, scene, scene, String::from("Bone00")));
+    skincmds.bone_create.push(OpsBoneCreation::ops(bone1, bone0, scene, String::from("Bone01")));
+    skincmds.bone_create.push(OpsBoneCreation::ops(bone2, bone0, scene, String::from("Bone02")));
+    skincmds.bone_create.push(OpsBoneCreation::ops(bone3, bone0, scene, String::from("Bone03")));
+    skincmds.bone_create.push(OpsBoneCreation::ops(bone4, bone0, scene, String::from("Bone04")));
+    // transformcmds.tree.push(OpsTransformNodeParent::ops(bone0, scene));
+    // transformcmds.tree.push(OpsTransformNodeParent::ops(bone1, bone0));
+    // transformcmds.tree.push(OpsTransformNodeParent::ops(bone2, bone0));
+    // transformcmds.tree.push(OpsTransformNodeParent::ops(bone3, bone0));
+    // transformcmds.tree.push(OpsTransformNodeParent::ops(bone4, bone0));
 
     let data: [u16; 48] = [
         0, 0, 0, 0, 0, 0, 0, 0,
@@ -163,7 +134,7 @@ fn setup(
     ];
     // normals
     let jointkey = KeyVertexBuffer::from("TestJoint");
-    vbbuffer.1.0.add(&jointkey, bytemuck::cast_slice(&data).iter().map(|v| *v).collect::<Vec<u8>>());
+    geometrycmd.vb_wait.add(&jointkey, bytemuck::cast_slice(&data).iter().map(|v| *v).collect::<Vec<u8>>());
 
     let format = wgpu::VertexFormat::Uint16x2;
     let jointdesc = VertexBufferDesc::vertices(jointkey.clone(), None, vec![VertexAttribute { kind: EVertexDataKind::MatricesIndices1, format }]);
@@ -171,24 +142,24 @@ fn setup(
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(jointdesc);
-    geometrycreate.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.0.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.1.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
-    matcmds.2.push(EUniformCommand::Texture(idmat, UniformTextureWithSamplerParam {
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from("_MainTex"),
         filter: true,
         sample: KeySampler::default(),
-        url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
-    }, true));
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
+    }));
     
     let skeleton = commands.spawn_empty().id();
-    transformcmds.6.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, bone0, &vec![bone0, bone1, bone2, bone3, bone4]));
-    transformcmds.7.push(OpsSkinUse::ops(source, skeleton));
+    skincmds.skin_create.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, bone0, &vec![bone0, bone1, bone2, bone3, bone4]));
+    skincmds.skin_use.push(OpsSkinUse::ops(source, skeleton));
 
-    transformcmds.2.push(OpsTransformNodeLocalEuler::ops(source, 1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2));
-    transformcmds.9.push(OpsCullMode::ops(source, ECullMode::Off));
+    transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(source, 1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2));
+    meshcmds.cullmode.push(OpsCullMode::ops(source, CullMode::Off));
 }
 
     // pub fn setup(
@@ -217,7 +188,7 @@ fn setup(
     //             slotname: Atom::from("_MainTex"),
     //             filter: true,
     //             sample: KeySampler::default(),
-    //             url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"),
+    //             url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/top.jpg"),
     //         },
     //         false
     //     );
@@ -318,6 +289,7 @@ pub fn main() {
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugins(PluginBundleDefault);
+    app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     
     app.add_startup_system(setup);

@@ -43,7 +43,17 @@ impl Plugin for PluginMaterial {
         };
         if world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
             world.insert_resource(
-                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, 60 * 1024 * 1024, 60 * 1000)
+                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, 30 * 1024 * 1024, 60 * 1000)
+            );
+        };
+        if world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
+            world.insert_resource(
+                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), false, 40 * 1024 * 1024, 1000)
+            );
+        };
+        if world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
+            world.insert_resource(
+                ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 60 * 1000)
             );
         };
 
@@ -52,8 +62,16 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ShareAssetMgr::<Shader3D>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
-        app.insert_resource(ActionListUniform::default());
-        app.insert_resource(ActionListUniformByName::default());
+        // app.insert_resource(ActionListUniform::default());
+        // app.insert_resource(ActionListUniformByName::default());
+        app.insert_resource(ActionListUniformFloat::default());
+        app.insert_resource(ActionListUniformInt::default());
+        app.insert_resource(ActionListUniformUint::default());
+        app.insert_resource(ActionListUniformVec2::default());
+        app.insert_resource(ActionListUniformVec4::default());
+        app.insert_resource(ActionListUniformMat2::default());
+        app.insert_resource(ActionListUniformMat4::default());
+        app.insert_resource(ActionListUniformTexture::default());
 
         app.add_systems(
             (
@@ -69,8 +87,16 @@ impl Plugin for PluginMaterial {
 
         app.add_systems(
             (
-                sys_act_uniform,
-                sys_act_uniform_by_name,
+                // sys_act_uniform,
+                // sys_act_uniform_by_name,
+                sys_act_material_mat4,
+                sys_act_material_mat2,
+                sys_act_material_vec4,
+                sys_act_material_vec2,
+                sys_act_material_float,
+                sys_act_material_int,
+                sys_act_material_uint,
+                sys_act_material_texture,
             ).in_set(ERunStageChap::SecondInitial).after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
         

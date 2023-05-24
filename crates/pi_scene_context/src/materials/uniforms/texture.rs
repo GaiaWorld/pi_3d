@@ -21,7 +21,7 @@ pub struct UniformTextureWithSamplerParams(pub XHashMap<Atom, Arc<UniformTexture
 
 pub trait ValueTextureKey: ThreadSync + 'static {
     fn new(param: UniformTextureWithSamplerParam) -> Self;
-    fn key(&self) -> &KeyTexture;
+    fn key(&self) -> &EKeyTexture;
     fn param(&self) -> Arc<UniformTextureWithSamplerParam>;
 }
 
@@ -47,7 +47,7 @@ impl ValueTextureKey for TextureSlot01 {
     fn new(param: UniformTextureWithSamplerParam) -> Self {
         Self(Arc::new(param))
     }
-    fn key(&self) -> &KeyTexture {
+    fn key(&self) -> &EKeyTexture {
         &self.0.url
     }
     fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
@@ -55,7 +55,7 @@ impl ValueTextureKey for TextureSlot01 {
     }
 }
 impl std::ops::Deref for TextureSlot01 {
-    type Target = KeyTexture;
+    type Target = EKeyTexture;
 
     fn deref(&self) -> &Self::Target {
         &self.0.url
@@ -110,7 +110,7 @@ impl ValueTextureKey for TextureSlot02 {
     fn new(param: UniformTextureWithSamplerParam) -> Self {
         Self(Arc::new(param))
     }
-    fn key(&self) -> &KeyTexture {
+    fn key(&self) -> &EKeyTexture {
         &self.0.url
     }
     fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
@@ -118,7 +118,7 @@ impl ValueTextureKey for TextureSlot02 {
     }
 }
 impl std::ops::Deref for TextureSlot02 {
-    type Target = KeyTexture;
+    type Target = EKeyTexture;
 
     fn deref(&self) -> &Self::Target {
         &self.0.url
@@ -173,7 +173,7 @@ impl ValueTextureKey for TextureSlot03 {
     fn new(param: UniformTextureWithSamplerParam) -> Self {
         Self(Arc::new(param))
     }
-    fn key(&self) -> &KeyTexture {
+    fn key(&self) -> &EKeyTexture {
         &self.0.url
     }
     fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
@@ -181,7 +181,7 @@ impl ValueTextureKey for TextureSlot03 {
     }
 }
 impl std::ops::Deref for TextureSlot03 {
-    type Target = KeyTexture;
+    type Target = EKeyTexture;
 
     fn deref(&self) -> &Self::Target {
         &self.0.url
@@ -237,7 +237,7 @@ impl ValueTextureKey for TextureSlot04 {
     fn new(param: UniformTextureWithSamplerParam) -> Self {
         Self(Arc::new(param))
     }
-    fn key(&self) -> &KeyTexture {
+    fn key(&self) -> &EKeyTexture {
         &self.0.url
     }
     fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
@@ -245,7 +245,7 @@ impl ValueTextureKey for TextureSlot04 {
     }
 }
 impl std::ops::Deref for TextureSlot04 {
-    type Target = KeyTexture;
+    type Target = EKeyTexture;
 
     fn deref(&self) -> &Self::Target {
         &self.0.url
@@ -302,7 +302,7 @@ impl ValueTextureKey for TextureSlot05 {
     fn new(param: UniformTextureWithSamplerParam) -> Self {
         Self(Arc::new(param))
     }
-    fn key(&self) -> &KeyTexture {
+    fn key(&self) -> &EKeyTexture {
         &self.0.url
     }
     fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
@@ -310,7 +310,7 @@ impl ValueTextureKey for TextureSlot05 {
     }
 }
 impl std::ops::Deref for TextureSlot05 {
-    type Target = KeyTexture;
+    type Target = EKeyTexture;
 
     fn deref(&self) -> &Self::Target {
         &self.0.url
@@ -346,7 +346,7 @@ impl ValueTextureKey for TextureSlot06 {
     fn new(param: UniformTextureWithSamplerParam) -> Self {
         Self(Arc::new(param))
     }
-    fn key(&self) -> &KeyTexture {
+    fn key(&self) -> &EKeyTexture {
         &self.0.url
     }
     fn param(&self) -> Arc<UniformTextureWithSamplerParam> {
@@ -354,7 +354,7 @@ impl ValueTextureKey for TextureSlot06 {
     }
 }
 impl std::ops::Deref for TextureSlot06 {
-    type Target = KeyTexture;
+    type Target = EKeyTexture;
 
     fn deref(&self) -> &Self::Target {
         &self.0.url

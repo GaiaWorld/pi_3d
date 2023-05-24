@@ -55,7 +55,7 @@ impl PluginTest {
                 slotname: Atom::from("_MainTex"),
                 filter: true,
                 sample: KeySampler::default(),
-                url: KeyTexture::from("E:/rust_render/pi_3d/assets/images/fractal.png"),
+                url: EKeyTexture::from("E:/rust_render/pi_3d/assets/images/fractal.png"),
             },
             false
         );

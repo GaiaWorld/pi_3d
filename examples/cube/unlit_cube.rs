@@ -101,7 +101,7 @@ impl PluginTest {
                 slotname: Atom::from("_MainTex"),
                 filter: true,
                 sample: KeySampler::default(),
-                url: KeyTexture::from("assets/images/top.jpg"),
+                url: EKeyTexture::from("assets/images/top.jpg"),
             },
             false
         );

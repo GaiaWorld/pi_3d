@@ -5,23 +5,23 @@ use pi_engine_shell::prelude::*;
 #[derive(Debug, Clone, Copy, Component)]
 pub struct ModelBlend {
     pub enable: bool,
-    pub src_color: wgpu::BlendFactor,
-    pub dst_color: wgpu::BlendFactor,
-    pub src_alpha: wgpu::BlendFactor,
-    pub dst_alpha: wgpu::BlendFactor,
-    pub opt_color: wgpu::BlendOperation,
-    pub opt_alpha: wgpu::BlendOperation,
+    pub src_color: BlendFactor,
+    pub dst_color: BlendFactor,
+    pub src_alpha: BlendFactor,
+    pub dst_alpha: BlendFactor,
+    pub opt_color: BlendOperation,
+    pub opt_alpha: BlendOperation,
 }
 impl Default for ModelBlend {
     fn default() -> Self {
         Self {
             enable: false,
-            src_color: wgpu::BlendFactor::One,
-            dst_color: wgpu::BlendFactor::OneMinusSrcAlpha,
-            src_alpha: wgpu::BlendFactor::One,
-            dst_alpha: wgpu::BlendFactor::OneMinusSrcAlpha,
-            opt_color: wgpu::BlendOperation::Add,
-            opt_alpha: wgpu::BlendOperation::Add,
+            src_color: BlendFactor::One,
+            dst_color: BlendFactor::OneMinusSrcAlpha,
+            src_alpha: BlendFactor::One,
+            dst_alpha: BlendFactor::OneMinusSrcAlpha,
+            opt_color: BlendOperation::Add,
+            opt_alpha: BlendOperation::Add,
         }
     }
 }
@@ -32,12 +32,12 @@ impl ModelBlend {
     pub fn one_one() -> Self {
         Self {
             enable: true,
-            src_color: wgpu::BlendFactor::One,
-            dst_color: wgpu::BlendFactor::One,
-            src_alpha: wgpu::BlendFactor::One,
-            dst_alpha: wgpu::BlendFactor::One,
-            opt_color: wgpu::BlendOperation::Add,
-            opt_alpha: wgpu::BlendOperation::Add,
+            src_color: BlendFactor::One,
+            dst_color: BlendFactor::One,
+            src_alpha: BlendFactor::One,
+            dst_alpha: BlendFactor::One,
+            opt_color: BlendOperation::Add,
+            opt_alpha: BlendOperation::Add,
         }
     }
 }

@@ -37,7 +37,7 @@ impl Plugin for PluginLocalLoad {
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ResMut<ActionListSceneCreate>,
+    mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut transformanime: ActionSetTransformNodeAnime,
@@ -56,7 +56,7 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
+    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
@@ -86,18 +86,17 @@ fn setup(
     let idmat = commands.spawn_empty().id();
     matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
     matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
-    matcmds.uniform.push(OpsUniformByName::Texture(idmat, UniformTextureWithSamplerParam {
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::default(),
-        url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
-    }, true));
-    matcmds.uniform.push(
-        OpsUniformByName::Vec4(
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
+    }));
+    matcmds.vec4.push(
+        OpsUniformVec4::ops(
             idmat, 
-            String::from(BlockEmissiveBase::KEY_INFO), 
-            Vector4::new(1., 0., 0., 1.), 
-            true
+            Atom::from(BlockEmissiveBase::KEY_INFO), 
+            1., 0., 0., 1.
         )
     );
     

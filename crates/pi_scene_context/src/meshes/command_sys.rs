@@ -174,6 +174,13 @@ impl ActionMesh {
     pub(crate) fn as_mesh(
         commands: &mut EntityCommands,
     ) {
+        let mut unclipdepth = false;
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            unclipdepth = true;
+        }
+
         commands
             .insert(AbstructMesh(true))
             .insert(Mesh)
@@ -189,9 +196,11 @@ impl ActionMesh {
             .insert(LayerMask::default())
             .insert(Opaque)
             .insert(TransparentSortParam::opaque())
-            .insert(ECullMode::Back)
-            .insert(FrontFace::Ccw)
-            .insert(PolygonMode::Fill)
+            .insert(CCullMode(CullMode::Back))
+            .insert(CFrontFace(FrontFace::Ccw))
+            .insert(CPolygonMode(PolygonMode::Fill))
+            .insert(Topology(PrimitiveTopology::TriangleList))
+            .insert(CUnClipDepth(unclipdepth))
             .insert(DepthWrite::default())
             .insert(DepthCompare::default())
             .insert(DepthBias::default())

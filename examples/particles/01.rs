@@ -7,6 +7,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
+use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
@@ -23,9 +24,13 @@ impl Plugin for PluginLocalLoad {
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                    log::debug!("Load {}", path);
-                    let r = std::fs::read(path.clone()).unwrap();
-                    on_load(&path, r);
+                    log::warn!("Load {}", path);
+                    if let Ok(r) = std::fs::read(path.clone()) {
+                        on_load(&path, r);
+                    } else {
+                        log::error!("Load Error: {:?}", path);
+                    }
+                    // let r = std::fs::read(path.clone()).unwrap();
                 })
                 .unwrap();
         }));
@@ -34,41 +39,19 @@ impl Plugin for PluginLocalLoad {
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ResMut<ActionListSceneCreate>,
-    mut cameracmds: (
-        ResMut<ActionListCameraCreate>,
-        ResMut<ActionListCameraTarget>,
-        ResMut<ActionListCameraMode>,
-        ResMut<ActionListCameraRenderer>,
-        ResMut<ActionListCameraActive>,
-        ResMut<ActionListCameraFixedMode>,
-        ResMut<ActionListCameraFov>,
-        ResMut<ActionListCameraOrthSize>,
-        ResMut<ActionListCameraNearFar>,
-    ),
-    mut transformcmds: (
-        ResMut<ActionListTransformNodeParent>,
-        ResMut<ActionListTransformNodeLocalPosition>,
-        ResMut<ActionListTransformNodeLocalEuler>,
-        ResMut<ActionListMeshCreate>,
-        ResMut<ActionListInstanceMeshCreate>,
-        ResMut<ActionListInstanceTillOff>
-    ),
-    mut geometrycreate: ResMut<ActionListGeometryCreate>,
-    mut matcmds: (
-        ResMut<ActionListMaterialUse>,
-        ResMut<ActionListMaterialCreate>,
-        ResMut<ActionListUniform>,
-    ),
+    mut scenecmds: ActionSetScene,
+    mut cameracmds: ActionSetCamera,
+    mut transformcmds: ActionSetTransform,
+    mut transformanime: ActionSetTransformNodeAnime,
+    mut meshcmds: ActionSetMesh,
+    mut instancemeshcmds: ActionSetInstanceMesh,
+    mut geometrycmd: ActionSetGeometry,
+    mut matcmds: ActionSetMaterial,
+    mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut anime: (
-        ResMut<ActionListAnimeGroupCreate>,
-        ResMut<ActionListAddTargetAnime>,
-        ResMut<ActionListAnimeGroupStart>,
-    ),
     mut final_render: ResMut<WindowRenderer>,
-    mut scaling_ctx: ResMut<TypeAnimeContext<LocalEulerAngles>>,
-    scaling_curves: Res<ShareAssetMgr<TypeFrameCurve<LocalEulerAngles>>>,
+    nodematblocks: Res<NodeMaterialBlocks>,
+    defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
     let tes_size = 50;
     fps.frame_ms = 4;
@@ -76,13 +59,13 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
-    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
+    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
-    cameracmds.0.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.1.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-    cameracmds.4.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.7.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
+    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
     let desc = RendererGraphicDesc {
@@ -92,26 +75,26 @@ fn setup(
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
     let id_renderer = commands.spawn_empty().id();
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let source = commands.spawn_empty().id();
-    transformcmds.3.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(VertexBufferDesc::instance_world_matrix());
     attrs.push(VertexBufferDesc::instance_color());
-    geometrycreate.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.0.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.1.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
-    // matcmds.2.push(EUniformCommand::Texture(idmat, UniformTextureWithSamplerParam {
-    //     slotname: Atom::from("_MainTex"),
-    //     filter: true,
-    //     sample: KeySampler::default(),
-    //     url: KeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
-    // }, true));
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from("_MainTex"),
+        filter: true,
+        sample: KeySampler::default(),
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
+    }));
     
     commands.entity(source).insert(Particle);
 }
@@ -232,6 +215,7 @@ pub fn main() {
     app.add_plugin(PluginStateToFile);
     app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginUnlitMaterial);
+    app.add_plugin(PluginNodeMaterial);
     
     app.add_system(
         sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix)

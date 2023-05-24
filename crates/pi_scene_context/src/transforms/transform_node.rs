@@ -193,7 +193,7 @@ impl WorldMatrixInv {
 
 #[derive(Debug, Clone, Component)]
 pub struct GlobalTransform {
-    pub position: Option<Vector3>,
+    pub position: Vector3,
     pub scaling: Option<Vector3>,
     pub rotation: Option<Rotation3>,
     pub matrix: Matrix,
@@ -203,7 +203,7 @@ pub struct GlobalTransform {
 impl Default for GlobalTransform {
     fn default() -> Self {
         Self {
-            position: None,
+            position: Vector3::new(0., 0., 0.),
             scaling: None,
             rotation: None,
             matrix: Matrix::identity(),
@@ -221,9 +221,8 @@ impl GlobalTransform {
         self.decompose();
         Quaternion::from_rotation_matrix(&self.rotation.unwrap())
     }
-    pub fn position(&mut self) -> &Vector3 {
-        self.decompose();
-        self.position.as_ref().unwrap()
+    pub fn position(&self) -> &Vector3 {
+        &self.position
     }
     pub fn scaling(&mut self) -> &Vector3 {
         self.decompose();
@@ -236,6 +235,8 @@ impl GlobalTransform {
     pub fn calc(p_m: &Matrix, l_matrix: &LocalMatrix) -> Self {
         let mut result = Self::default();
         result.matrix.copy_from(&(p_m * l_matrix.0));
+        
+        result.position = Vector3::from(result.matrix.fixed_view::<3, 1>(0, 3));
 
         match result.matrix.try_inverse() {
             Some(inv) => result.matrix_inv = inv,
@@ -265,7 +266,6 @@ impl GlobalTransform {
             self.iso = Some(iso);
             self.rotation = Some(g_r);
             self.scaling = Some(g_s);
-            self.position = Some(g_p);
         }
     }
 }

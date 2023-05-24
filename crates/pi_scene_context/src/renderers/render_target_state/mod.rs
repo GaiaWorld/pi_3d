@@ -17,14 +17,14 @@ impl RenderTargetState {
                         blend: Some(
                             wgpu::BlendState {
                                 color: wgpu::BlendComponent {
-                                    src_factor: blend.src_color,
-                                    dst_factor: blend.dst_color,
-                                    operation: blend.opt_color,
+                                    src_factor: blend.src_color.val(),
+                                    dst_factor: blend.dst_color.val(),
+                                    operation: blend.opt_color.val(),
                                 },
                                 alpha: wgpu::BlendComponent {
-                                    src_factor: blend.src_alpha,
-                                    dst_factor: blend.dst_alpha,
-                                    operation: blend.opt_alpha,
+                                    src_factor: blend.src_alpha.val(),
+                                    dst_factor: blend.dst_alpha.val(),
+                                    operation: blend.opt_alpha.val(),
                                 },
                             }
                         ),
