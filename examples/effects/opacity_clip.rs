@@ -100,6 +100,13 @@ fn setup(
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
     }));
+    matcmds.float.push(
+        OpsUniformFloat::ops(
+            idmat, 
+            Atom::from(BlockCutoff::KEY_VALUE), 
+            0.5
+        )
+    );
     matcmds.vec4.push(
         OpsUniformVec4::ops(
             idmat, 

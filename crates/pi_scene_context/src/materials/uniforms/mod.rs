@@ -42,33 +42,34 @@ pub(crate) fn update_data(
 }
 
 pub fn set_up_uniforms(
-    asset_tex: Res<ShareAssetMgr<TextureRes>>,
-    device: Res<PiRenderDevice>,
-    queue: Res<PiRenderQueue>,
+    asset_tex: &ShareAssetMgr<TextureRes>,
+    device: &PiRenderDevice,
+    queue: &PiRenderQueue,
 ) {
     let desc = wgpu::TextureViewDescriptor::default();
     // 
-    let texture = DefaultTexture::create(&device, &queue, EDefaultTexture::White, wgpu::TextureDimension::D1);
+    let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D1);
     let texture = texture.create_view(&desc);
-    asset_tex.insert(Atom::from(DefaultTexture::WHITE_1D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+    asset_tex.insert(Atom::from(DefaultTexture::WHITE_1D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true));
     // 
-    let texture = DefaultTexture::create(&device, &queue, EDefaultTexture::White, wgpu::TextureDimension::D2);
+    let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D2);
     let texture = texture.create_view(&desc);
-    asset_tex.insert(Atom::from(DefaultTexture::WHITE_2D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+    asset_tex.insert(Atom::from(DefaultTexture::WHITE_2D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true));
     // 
-    let texture = DefaultTexture::create(&device, &queue, EDefaultTexture::White, wgpu::TextureDimension::D3);
+    let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D3);
     let texture = texture.create_view(&desc);
-    asset_tex.insert(Atom::from(DefaultTexture::WHITE_3D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+    asset_tex.insert(Atom::from(DefaultTexture::WHITE_3D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true));
     // 
-    let texture = DefaultTexture::create(&device, &queue, EDefaultTexture::Black, wgpu::TextureDimension::D1);
+    let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D1);
     let texture = texture.create_view(&desc);
-    asset_tex.insert(Atom::from(DefaultTexture::BLACK_1D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+    asset_tex.insert(Atom::from(DefaultTexture::BLACK_1D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true));
     // 
-    let texture = DefaultTexture::create(&device, &queue, EDefaultTexture::Black, wgpu::TextureDimension::D2);
+    let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D2);
     let texture = texture.create_view(&desc);
-    asset_tex.insert(Atom::from(DefaultTexture::BLACK_2D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+    asset_tex.insert(Atom::from(DefaultTexture::BLACK_2D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true));
     // 
-    let texture = DefaultTexture::create(&device, &queue, EDefaultTexture::Black, wgpu::TextureDimension::D3);
+    let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D3);
     let texture = texture.create_view(&desc);
-    asset_tex.insert(Atom::from(DefaultTexture::BLACK_3D).get_hash() as u64, TextureRes::new(1, 1, 4, texture, true));
+    asset_tex.insert(Atom::from(DefaultTexture::BLACK_3D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true));
+    log::warn!("DefaultTexture OK!");
 }

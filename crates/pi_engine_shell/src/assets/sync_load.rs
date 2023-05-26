@@ -152,29 +152,29 @@ impl<
         query: Query<&K>,
         mut data_cmd: Commands,
     ) {
-        // log::debug!("check_await: ");
-        let mut data_list = std::mem::replace(&mut list_await.1, vec![]);
-        data_list.drain(..).for_each(|(key, data)| {
-            if let Some(list) = list_await.0.get_mut(&key) {
-                let mut ids = std::mem::replace(list, vec![]);
-                ids.drain(..).for_each(|id| {
+        // // log::debug!("check_await: ");
+        // let mut data_list = std::mem::replace(&mut list_await.1, vec![]);
+        // data_list.drain(..).for_each(|(key, data)| {
+        //     if let Some(list) = list_await.0.get_mut(&key) {
+        //         let mut ids = std::mem::replace(list, vec![]);
+        //         ids.drain(..).for_each(|id| {
 
-                    match query.get(id) {
-                        Ok(key0) => {
-                            // key 已经修改，不需要设置
-                            if key == *key0.deref() {
-                                // log::debug!("AssetSyncLoad: Loaded {:?}", key);
-                                data_cmd.entity(id).insert(R::from(data.clone()));
-                            }
-                        }
-                        // 节点已经销毁，或 key 已经被删除，不需要设置
-                        _ => {
-                            list.push(id);
-                        },
-                    };
-                });
-            };
-        });
+        //             match query.get(id) {
+        //                 Ok(key0) => {
+        //                     // key 已经修改，不需要设置
+        //                     if key == *key0.deref() {
+        //                         // log::debug!("AssetSyncLoad: Loaded {:?}", key);
+        //                         data_cmd.entity(id).insert(R::from(data.clone()));
+        //                     }
+        //                 }
+        //                 // 节点已经销毁，或 key 已经被删除，不需要设置
+        //                 _ => {
+        //                     list.push(id);
+        //                 },
+        //             };
+        //         });
+        //     };
+        // });
     }
 // }
 

@@ -3,7 +3,7 @@ use std::{ sync::Arc};
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    materials::{shader_effect::AssetResShaderEffectMeta},
+    materials::{shader_effect::*},
 };
 
 use super::{

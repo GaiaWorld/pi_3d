@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 
 pub struct BlockMainTexture;
 impl BlockMainTexture {
-    pub const KEY_INFO: &'static str = "uMainInfo";
+    pub const KEY_COLOR: &'static str = "uMainInfo";
     pub const KEY_TILLOFF: &'static str = "uMainTilloff";
     pub const KEY_TEX: &'static str = "_MainTex";
 }
@@ -16,7 +16,7 @@ impl TNodeMaterialBlock for BlockMainTexture {
 
     fn vec4() -> Vec<UniformPropertyVec4> {
         vec![
-            UniformPropertyVec4(Atom::from(Self::KEY_INFO), [1., 1., 1., 1.]),
+            UniformPropertyVec4(Atom::from(Self::KEY_COLOR), [1., 1., 1., 1.]),
             UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.]),
         ]
     }

@@ -1,5 +1,5 @@
     vec4 baseColor = v_color;
-    float alpha = 1.0;
+    float alpha = opacity();
 
 	float glossiness 			= 0.;
 	vec3 specularColor 		    = vec3(0., 0., 0.);
@@ -17,8 +17,9 @@
     alpha                   *= mainTextureColor.a;
 
     vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS));
-    float opacityValue      = opacityChannel(opacityData) * opacityStrength();
-    if (opacityValue < (uOpacityClip * 0.99 + 0.005)) {
+    float opacityValue      = opacityChannel(opacityData);
+
+    if (cutoff(opacityValue - 0.001)) {
         discard;
     }
 

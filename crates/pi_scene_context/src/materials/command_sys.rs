@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     material::{MaterialID, MaterialRefs, DirtyMaterialRefs},
-    shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta},
+    shader_effect::*,
     uniforms::{
         texture::{UniformTextureWithSamplerParams},
         uniform::*,
@@ -20,15 +20,25 @@ use super::{
 
 pub fn sys_act_material_create(
     mut cmds: ResMut<ActionListMaterialCreate>,
+    mut asset_shader: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    mut allocator: ResMut<ResBindBufferAllocator>,
+    device: Res<PiRenderDevice>,
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, passtag)| {
         let mut matcmds = commands.entity(entity);
 
+        if let Some(meta) = asset_shader.get(&key_shader) {
+
+            if let Some(effect_val_bind) = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator) {
+                matcmds.insert(BindEffect(effect_val_bind));
+            }
+            matcmds.insert(AssetResShaderEffectMeta::from(meta));
+        }
+
         matcmds
             .insert(AssetKeyShaderEffect(key_shader))
             .insert(MaterialRefs::default())
-            .insert(BindEffect(None))
             .insert(BindEffectValueDirty(false))
             .insert(passtag)
             .insert(UniformTextureWithSamplerParams::default())
@@ -121,17 +131,15 @@ pub fn sys_act_material_use(
 
 pub fn sys_act_material_mat4(
     mut cmds: ResMut<ActionListUniformMat4>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(bindvalues) = &mut bindvalues.0 {
-                if let Some(slot) = bindvalues.keys.get(&slot) {
-                    bindvalues.mat4(*slot, &value);
-                    *flag = BindEffectValueDirty(true);
-                }
-                return;
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.mat4(slot, &value);
+                *flag = BindEffectValueDirty(true);
             }
+            return;
         }
 
         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
@@ -142,17 +150,15 @@ pub fn sys_act_material_mat4(
 
 pub fn sys_act_material_mat2(
     mut cmds: ResMut<ActionListUniformMat2>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformMat2(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(bindvalues) = &mut bindvalues.0 {
-                if let Some(slot) = bindvalues.keys.get(&slot) {
-                    bindvalues.mat2(*slot, &value);
-                    *flag = BindEffectValueDirty(true);
-                }
-                return;
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.mat2(slot, &value);
+                *flag = BindEffectValueDirty(true);
             }
+            return;
         }
 
         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
@@ -163,17 +169,15 @@ pub fn sys_act_material_mat2(
 
 pub fn sys_act_material_vec4(
     mut cmds: ResMut<ActionListUniformVec4>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformVec4(entity, slot, x, y, z, w, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(bindvalues) = &mut bindvalues.0 {
-                if let Some(slot) = bindvalues.keys.get(&slot) {
-                    bindvalues.vec4(*slot, &[x, y, z, w]);
-                    *flag = BindEffectValueDirty(true);
-                }
-                return;
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.vec4(slot, &[x, y, z, w]);
+                *flag = BindEffectValueDirty(true);
             }
+            return;
         }
 
         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
@@ -184,17 +188,15 @@ pub fn sys_act_material_vec4(
 
 pub fn sys_act_material_vec2(
     mut cmds: ResMut<ActionListUniformVec2>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformVec2(entity, slot, x, y, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(bindvalues) = &mut bindvalues.0 {
-                if let Some(slot) = bindvalues.keys.get(&slot) {
-                    bindvalues.vec2(*slot, &[x, y]);
-                    *flag = BindEffectValueDirty(true);
-                }
-                return;
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.vec2(slot, &[x, y]);
+                *flag = BindEffectValueDirty(true);
             }
+            return;
         }
 
         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
@@ -205,17 +207,15 @@ pub fn sys_act_material_vec2(
 
 pub fn sys_act_material_float(
     mut cmds: ResMut<ActionListUniformFloat>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformFloat(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(bindvalues) = &mut bindvalues.0 {
-                if let Some(slot) = bindvalues.keys.get(&slot) {
-                    bindvalues.float(*slot, value);
-                    *flag = BindEffectValueDirty(true);
-                }
-                return;
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.float(slot, value);
+                *flag = BindEffectValueDirty(true);
             }
+            return;
         }
 
         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
@@ -226,17 +226,15 @@ pub fn sys_act_material_float(
 
 pub fn sys_act_material_int(
     mut cmds: ResMut<ActionListUniformInt>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformInt(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(bindvalues) = &mut bindvalues.0 {
-                if let Some(slot) = bindvalues.keys.get(&slot) {
-                    bindvalues.int(*slot, value);
-                    *flag = BindEffectValueDirty(true);
-                }
-                return;
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.int(slot, value);
+                *flag = BindEffectValueDirty(true);
             }
+            return;
         }
 
         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
@@ -247,17 +245,15 @@ pub fn sys_act_material_int(
 
 pub fn sys_act_material_uint(
     mut cmds: ResMut<ActionListUniformUint>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+    mut bindvalues: Query<(&BindEffect, &mut BindEffectValueDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformUint(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(bindvalues) = &mut bindvalues.0 {
-                if let Some(slot) = bindvalues.keys.get(&slot) {
-                    bindvalues.uint(*slot, value);
-                    *flag = BindEffectValueDirty(true);
-                }
-                return;
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.uint(slot, value);
+                *flag = BindEffectValueDirty(true);
             }
+            return;
         }
 
         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
@@ -293,7 +289,7 @@ impl ActionMaterial {
     ) {
         if !asset_mgr.contains_key(&key) {
             if let Ok(meta) = asset_mgr.insert(key.clone(), meta) {
-                wait_list.1.push((key.clone(), meta));
+                // wait_list.1.push((key.clone(), meta));
             }
             // let meta = asset_mgr.insert(key.clone(), meta);
             // wait_list.1.push((key.clone(), meta));

@@ -319,7 +319,7 @@ impl Plugin for PluginRenderer {
                 sys_pass_draw_modify_by_pass::<Pass06, PassID06>,
                 sys_pass_draw_modify_by_pass::<Pass07, PassID07>,
                 sys_pass_draw_modify_by_pass::<Pass08, PassID08>,
-            ).in_set(ERunStageChap::DrawCall)
+            ).in_set(ERunStageChap::DrawCall).after(sys_pass_draw_modify_by_model::<Pass01, PassID01>)
         );
 
         // app.add_systems(

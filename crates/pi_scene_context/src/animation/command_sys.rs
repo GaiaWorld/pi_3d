@@ -4,6 +4,7 @@ use pi_animation::{animation::AnimationInfo, loop_mode::ELoopMode, amount::Anima
 use pi_atom::Atom;
 use pi_curves::{curve::{frame::{KeyFrameCurveValue, FrameDataValue}, FramePerSecond, FrameIndex, frame_curve::FrameCurve}, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
+use pi_slotmap::DefaultKey;
 
 use crate::{flags::SceneID};
 
@@ -13,32 +14,28 @@ use super::command::*;
 
 pub fn sys_anime_group_create(
     mut cmds: ResMut<ActionListAnimeGroupCreate>,
-    mut sce: Query<&mut SceneAnimationContext>,
     mut obj: Query<(&SceneID, &mut AnimationGroups)>,
 ) {
     // let mut list = 
-    cmds.drain().drain(..).for_each(|OpsAnimationGroupCreation(id_obj, key_group)| {
+    cmds.drain().drain(..).for_each(|OpsAnimationGroupCreation(id_obj, key_group, id_group)| {
         if let Ok((id_scene, mut groups)) = obj.get_mut(id_obj) {
             if groups.map.contains_key(&key_group) == false {
-                if let Ok(mut ctx) = sce.get_mut(id_scene.0) {
-                    let id_group = ctx.0.create_animation_group();
-                    groups.map.insert(key_group, id_group);
-                }
+                groups.map.insert(key_group, id_group);
             }
         } else {
-            cmds.push(OpsAnimationGroupCreation(id_obj, key_group))
+            cmds.push(OpsAnimationGroupCreation(id_obj, key_group, id_group))
         }
     });
 }
 
 pub fn sys_anime_pause(
     mut cmds: ResMut<ActionListAnimeGroupPause>,
-    mut sce: Query<&mut SceneAnimationContext>,
     obj: Query<(&SceneID, & AnimationGroups)>,
+    mut scenectxs: ResMut<SceneAnimationContextMap>,
 ) {
     cmds.drain().drain(..).for_each(|OpsAnimationGroupPause(id_obj, key_group)| {
         if let Ok((id_scene, groups)) = obj.get(id_obj) {
-            if let Ok(mut ctx) = sce.get_mut(id_scene.0) {
+            if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
                 if let Some(id_group) = groups.map.get(&key_group) {
                     ctx.0.pause(id_group.clone());
                 }
@@ -52,12 +49,12 @@ pub fn sys_anime_pause(
 
 pub fn sys_anime_start(
     mut cmds: ResMut<ActionListAnimeGroupStart>,
-    mut sce: Query<&mut SceneAnimationContext>,
     obj: Query<(&SceneID, & AnimationGroups)>,
+    mut scenectxs: ResMut<SceneAnimationContextMap>,
 ) {
     cmds.drain().drain(..).for_each(|OpsAnimationGroupStart(id_obj, key_group, param)| {
         if let Ok((id_scene, groups)) = obj.get(id_obj) {
-            if let Ok(mut ctx) = sce.get_mut(id_scene.0) {
+            if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
                 if let Some(id_group) = groups.map.get(&key_group) {
                     ctx.0.start_with_progress(id_group.clone(), param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc);
                 }
@@ -70,15 +67,15 @@ pub fn sys_anime_start(
 
 pub fn sys_anime_add_target_anime(
     mut cmds: ResMut<ActionListAddTargetAnime>,
-    mut sce: Query<&mut SceneAnimationContext>,
     obj: Query<(&SceneID, & AnimationGroups)>,
+    mut scenectxs: ResMut<SceneAnimationContextMap>,
 ) {
     // log::warn!("AddTargetAnime");
     cmds.drain().drain(..).for_each(|OpsAddTargetAnimation(id_obj, id_target, key_group, animation)| {
         if let Ok((id_scene, groups)) = obj.get(id_obj) {
             // log::warn!("AddTargetAnime 1");
             if let Some(id_group) = groups.map.get(&key_group) {
-                if let Ok(mut ctx) = sce.get_mut(id_scene.0) {
+                if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
                     // log::warn!("AddTargetAnime Ok");
                     ctx.0.add_target_animation(animation, id_group.clone(), id_target);
                 }
@@ -98,11 +95,17 @@ impl ActionAnime {
     }
     pub fn create_animation_group(
         app: &mut App,
+        id_scene: Entity,
         id_obj: Entity,
         key_group: &Atom,
+        id_group: DefaultKey,
     ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListAnimeGroupCreate>().unwrap();
-        cmds.push(OpsAnimationGroupCreation(id_obj, key_group.clone()));
+        if let Some(id_group) = app.world.get_resource_mut::<SceneAnimationContextMap>().unwrap().create_group(id_scene) {
+            app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().record_group(id_obj, key_group, id_group);
+            let mut cmds = app.world.get_resource_mut::<ActionListAnimeGroupCreate>().unwrap();
+            cmds.push(OpsAnimationGroupCreation(id_obj, key_group.clone(), id_group));
+        }
+
     }
     pub fn pause_animation_group(
         app: &mut App,

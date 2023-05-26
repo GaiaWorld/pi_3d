@@ -44,7 +44,6 @@ impl ActionScene {
             .insert(SceneTime::new())
             .insert(SceneFog::new())
             .insert(AmbientLight::new())
-            .insert(SceneAnimationContext::new())
             .insert(TreeLeftRoot::new(id_left))
             .insert(TreeRightRoot::new(id_right))
             .insert(AnimationGroups::default())
@@ -71,7 +70,6 @@ impl ActionScene {
             .insert(SceneTime::new())
             .insert(SceneFog::new())
             .insert(AmbientLight::new())
-            .insert(SceneAnimationContext::new())
             .insert(TreeLeftRoot::new(id_left))
             .insert(TreeRightRoot::new(id_right))
             .insert(AnimationGroups::default());

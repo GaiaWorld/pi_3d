@@ -4,16 +4,17 @@ use pi_animation::{animation::AnimationInfo, loop_mode::ELoopMode, amount::Anima
 use pi_atom::Atom;
 use pi_curves::{curve::{frame::{KeyFrameCurveValue, FrameDataValue}, FramePerSecond, FrameIndex, frame_curve::FrameCurve}, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
+use pi_slotmap::DefaultKey;
 
 use crate::{flags::SceneID};
 
 use super::base::*;
 
 #[derive(Clone)]
-pub struct OpsAnimationGroupCreation(pub(crate) ObjectID, pub(crate) Atom);
+pub struct OpsAnimationGroupCreation(pub(crate) ObjectID, pub(crate) Atom, pub(crate) DefaultKey);
 impl OpsAnimationGroupCreation {
-    pub fn ops(group_target: Entity, group_key: Atom) -> Self {
-        Self(group_target, group_key)
+    pub fn ops(group_target: Entity, group_key: Atom, id: DefaultKey) -> Self {
+        Self(group_target, group_key, id)
     }
 }
 pub type ActionListAnimeGroupCreate = ActionList<OpsAnimationGroupCreation>;
@@ -61,6 +62,25 @@ impl Default for AnimationGroupParam {
             to: 1.,
             fps: 60,
             amountcalc: AnimationAmountCalc::from_easing(EEasingMode::None),
+        }
+    }
+}
+impl AnimationGroupParam {
+    pub fn new(
+        speed: f32,
+        loop_mode: ELoopMode,
+        from: f32,
+        to: f32,
+        fps: u16,
+        amountcalc: AnimationAmountCalc,
+    ) -> Self {
+        Self {
+            speed,
+            loop_mode,
+            from,
+            to,
+            fps,
+            amountcalc,
         }
     }
 }

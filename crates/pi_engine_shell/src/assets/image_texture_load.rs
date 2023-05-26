@@ -59,38 +59,41 @@ fn image_change<
     query.iter().for_each(|(obj, vkey)| {
         match vkey.deref() {
             EKeyTexture::Tex(key) => {
-                let result = AssetMgr::load(&textureres_assets_mgr, &key.asset_u64());
-                match result {
-                    LoadResult::Ok(r) => {
-                        log::warn!("image_loaded: {:?}", key.as_str());
-                        image_cmd.entity(obj).insert(
-                            D::from(ETextureViewUsage::Tex(r))
-                        );
-                    }
-                    ,
-                    _ => {
-                        let (view_await, device, queue) = (image_await.0.clone(), (device).clone(), (queue).clone());
-                        let (id, key) = (obj, key.clone());
-        
-                        MULTI_MEDIA_RUNTIME
-                            .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                                let desc = ImageTextureDesc {
-                                    url: &key,
-                                    device: &device,
-                                    queue: &queue,
-                                };
-        
-                                let r = TextureRes::async_load(desc, result).await;
-                                match r {
-                                    Ok(r) => {
-                                        view_await.push((id, EKeyTexture::Tex(key), ETextureViewUsage::Tex(r)));
-                                    }
-                                    Err(e) => {
-                                        log::error!("load image fail, {:?}", e);
-                                    }
-                                };
-                            })
-                            .unwrap();
+                log::warn!("image_loaded: {:?}", key.as_str());
+                if let Some(texture_view) = textureres_assets_mgr.get(&key.asset_u64()) {
+                    image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Tex(texture_view)) );
+                } else {
+                    let result = AssetMgr::load(&textureres_assets_mgr, &key.asset_u64());
+                    match result {
+                        LoadResult::Ok(r) => {
+                            log::warn!("image_loaded: {:?}", key.as_str());
+                            image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Tex(r)) );
+                        }
+                        ,
+                        _ => {
+                            let (view_await, device, queue) = (image_await.0.clone(), (device).clone(), (queue).clone());
+                            let (id, key) = (obj, key.clone());
+            
+                            MULTI_MEDIA_RUNTIME
+                                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                                    let desc = ImageTextureDesc {
+                                        url: &key,
+                                        device: &device,
+                                        queue: &queue,
+                                    };
+            
+                                    let r = TextureRes::async_load(desc, result).await;
+                                    match r {
+                                        Ok(r) => {
+                                            view_await.push((id, EKeyTexture::Tex(key), ETextureViewUsage::Tex(r)));
+                                        }
+                                        Err(e) => {
+                                            log::error!("load image fail, {:?}", e);
+                                        }
+                                    };
+                                })
+                                .unwrap();
+                        }
                     }
                 }
             },

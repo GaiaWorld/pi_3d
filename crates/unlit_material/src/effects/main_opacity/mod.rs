@@ -41,6 +41,7 @@ impl MainOpacityShader {
         nodemat.apply::<BlockUVOffsetSpeed>();
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
+        nodemat.apply::<BlockOpacity>();
         nodemat.apply::<BlockOpacityTexture>();
         nodemat.apply::<BlockOpacityTextureUVOffsetSpeed>();
         nodemat.apply::<BlockEmissiveBase>();

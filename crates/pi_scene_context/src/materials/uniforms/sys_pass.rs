@@ -3,7 +3,7 @@
 use pi_engine_shell::prelude::*;
 use crate::{
     materials::{
-        material::{MaterialRefs, DirtyMaterialRefs}, shader_effect::{AssetKeyShaderEffect, AssetResShaderEffectMeta},
+        material::{MaterialRefs, DirtyMaterialRefs}, shader_effect::*,
     },
     pass::*
 };
@@ -36,39 +36,22 @@ use super::{
     ) {
         // log::info!("MaterialBind : ");
         materials.iter().for_each(|(effect_key, effect, bind, list, pass)| {
-            if let Some(bind) = &bind.0 {
-                // log::info!("MaterialBind : 1");
-                list.iter().for_each(|target| {
-                    // log::info!("MaterialBind : 2");
-                    if let Ok((mut passready, mut passbind)) = passes.get_mut(target.clone()) {
-                        // log::info!("MaterialBind : 3");
-                        // let pass = pass.as_pass();
-                        // if dirty.0 & pass == 0 {
-                        //     dirty.0 += pass;
-                        // }
-                        // commands.entity(id_obj.clone()).insert(FlagPassDirtyBindEffectValue);
-    
-                        let data = if effect.textures.len() == 0 {
-                            Some((effect_key.0.clone(), effect.0.clone()))
-                        } else {
-                            None
-                        };
-                        
-                        // log::info!("MaterialBind PassReady : {:?}", data);
-                        // list_model.0.iter().for_each(|(id_obj, _)| {
-                        //     if let Some(passid) = models.get(id_obj.clone()) {
-                        //         ready01_cmd.insert(passid.id(), PassReady(data.clone()));
-                        //     }
-                        // });
-    
-                        // if pass & T::TAG == T::TAG {
-                        //     commands.entity(passid.id()).insert(PassReady(data)).insert(PassBindEffectValue(Some(bind.bind.clone())));
-                        // }
-                        *passready = PassReady(data);
-                        *passbind = PassBindEffectValue(Some(bind.bind.clone()));
-                    }
-                });
-            }
+            
+            // log::info!("MaterialBind : 1");
+            list.iter().for_each(|target| {
+                // log::info!("MaterialBind : 2");
+                if let Ok((mut passready, mut passbind)) = passes.get_mut(target.clone()) {
+
+                    let data = if effect.textures.len() == 0 {
+                        Some((effect_key.0.clone(), effect.0.clone()))
+                    } else {
+                        None
+                    };
+                    
+                    *passready = PassReady(data);
+                    *passbind = PassBindEffectValue(Some(bind.bind.clone()));
+                }
+            });
         });
     }
 // }

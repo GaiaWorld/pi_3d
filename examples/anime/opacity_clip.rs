@@ -1,5 +1,6 @@
+#![feature(box_into_inner)]
 
-use default_render::{SingleIDBaseDefaultMaterial, shader::DefaultShader};
+use default_render::SingleIDBaseDefaultMaterial;
 use pi_3d::PluginBundleDefault;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
@@ -7,11 +8,11 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
-use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
+use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
+use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, opacity_clip::OpacityClipShader}};
 
 use std::sync::Arc;
 use pi_async::rt::AsyncRuntime;
@@ -24,13 +25,9 @@ impl Plugin for PluginLocalLoad {
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                    log::warn!("Load {}", path);
-                    if let Ok(r) = std::fs::read(path.clone()) {
-                        on_load(&path, r);
-                    } else {
-                        log::error!("Load Error: {:?}", path);
-                    }
-                    // let r = std::fs::read(path.clone()).unwrap();
+                    log::debug!("Load {}", path);
+                    let r = std::fs::read(path.clone()).unwrap();
+                    on_load(&path, r);
                 })
                 .unwrap();
         }));
@@ -52,13 +49,17 @@ fn setup(
     mut final_render: ResMut<WindowRenderer>,
     nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    mut matanime: ActionSetMaterialAnime,
 ) {
-    let tes_size = 50;
-    fps.frame_ms = 4;
+    ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
+
+    let tes_size = 5;
+    fps.frame_ms = 10;
 
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
+    animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
@@ -79,89 +80,70 @@ fn setup(
 
     let source = commands.spawn_empty().id();
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    let mut blend = ModelBlend::default(); blend.combine();
+    meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
-    attrs.push(VertexBufferDesc::instance_world_matrix());
-    attrs.push(VertexBufferDesc::instance_color());
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
     matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
-    // matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
-    //     slotname: Atom::from("_MainTex"),
-    //     filter: true,
-    //     sample: KeySampler::default(),
-    //     url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
-    // }));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, OpacityClipShader::KEY, EPassTag::Transparent));
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockMainTexture::KEY_TEX),
+        filter: true,
+        sample: KeySampler::linear_repeat(),
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+    }));
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
+        filter: true,
+        sample: KeySampler::linear_repeat(),
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
+    }));
+    matcmds.float.push(
+        OpsUniformFloat::ops(
+            idmat, 
+            Atom::from(BlockCutoff::KEY_VALUE), 
+            0.5
+        )
+    );
+    matcmds.vec4.push(
+        OpsUniformVec4::ops(
+            idmat, 
+            Atom::from(BlockEmissiveBase::KEY_INFO), 
+            1., 1., 1., 1.
+        )
+    );
     
-    commands.entity(source).insert(Particle);
-}
-
-#[derive(Component)]
-pub struct Particle;
-
-fn sys_demo_particle(
-    particles: Query<(&SceneID, &GeometryID), With<Particle>>,
-    scenes: Query<&SceneTime>,
-    mut geometrys: Query<(&mut InstanceBufferWorldMatrix, &mut InstanceBufferColor)>,
-    mut geoloader: ResMut<GeometryVBLoader>,
-    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
-) {
-    particles.iter().for_each(|(idscene, idgeo)| {
-        if let Ok(scenetime) = scenes.get(idscene.0) {
-            if let Ok((mut wm, mut colors)) = geometrys.get_mut(idgeo.0) {
-                let mut buffermatrix = vec![];
-                let mut buffercolor = vec![];
-            
-                for z in 0..20 {
-                    let ringcount = (z + 1) * 10;
-                    let tt = if z % 2 == 0 {
-                        scenetime.time_ms as f32 * 0.002
-                    } else {
-                        scenetime.time_ms as f32 * 0.002 * -1.
-                    };
-                    for x in 0..ringcount {
-                        let t: f32 = (tt + x as f32 * (1. / ringcount as f32)) * 3.1415926 * 2.;
-                        let mut wm = Matrix::identity();
-                        wm.append_translation_mut(
-                            &Vector3::new(
-                                f32::cos(t) * 2. * ( z as f32 + 1.0),
-                                f32::sin(t) * 2. * ( z as f32 + 1.0),
-                                0.,
-                            )
-                        );
-                        buffermatrix.push(wm);
-
-                        buffercolor.push(Vector4::new(
-                            f32::cos(tt + x as f32) * 0.5 + 0.5,
-                            f32::sin(tt) * 0.5 + 0.5,
-                            f32::sin(tt + z as f32) * 0.5 + 0.5,
-                            f32::cos(tt) * 0.5 + 0.5,
-                        ));
-                    }
-                }
-
-                let mut colordata : Vec<u8> = vec![];
-                buffercolor.iter().for_each(|v| {
-                    bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
-                        colordata.push(*v);
-                    })
-                });
-                
-                let mut wmdata: Vec<u8> = vec![];
-                buffermatrix.iter().for_each(|v| {
-                    bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
-                        wmdata.push(*v);
-                    })
-                });
-
-                geometry_update_instance_buffer::<InstanceBufferWorldMatrix>(Some(wmdata), idgeo.0, &mut wm, &mut geoloader, &mut vb_data_map);
-                geometry_update_instance_buffer::<InstanceBufferColor>(Some(colordata), idgeo.0, &mut colors, &mut geoloader, &mut vb_data_map);
+    let key_group = pi_atom::Atom::from("key_group");
+    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    {
+        let key_curve0 = pi_atom::Atom::from("cutoff");
+        let curve = FrameCurve::<Cutoff>::curve_easing(Cutoff(0.0), Cutoff(1.0), 30, 30, EEasingMode::None);
+        
+        let asset_curve = if let Some(curve) = matanime.cutoff.1.get(&key_curve0) {
+            curve
+        } else {
+            match matanime.cutoff.1.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => {
+                    value
+                },
+                Err(_) => {
+                    return;
+                },
             }
-        }
-    });
+        };
+    
+        let animation = matanime.cutoff.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, idmat, key_group.clone(), animation));
+    }
+    let mut parma = AnimationGroupParam::default();
+    parma.loop_mode = ELoopMode::Positive(Some(5));
+    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), parma));
+
 }
 
 pub trait AddEvent {
@@ -207,20 +189,17 @@ pub fn main() {
     // .add_plugin(WorldInspectorPlugin::new())
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
+    app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
     app.add_plugin(PluginCubeBuilder);
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugins(PluginBundleDefault);
-    app.add_plugin(PluginUnlitMaterial);
     app.add_plugin(PluginNodeMaterial);
-    app.add_plugin(PluginTest);
+    app.add_plugin(PluginUnlitMaterial);
+    app.add_plugins(PluginGroupNodeMaterialAnime);
     
-    app.add_system(
-        sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix)
-    );
-
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     

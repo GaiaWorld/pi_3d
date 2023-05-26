@@ -9,7 +9,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
-use pi_node_materials::{main_tex::BlockMainTexture, emissive::emissive_base::BlockEmissiveBase, PluginNodeMaterial};
+use pi_node_materials::prelude::*;
 use pi_scene_context::{prelude::*};
 use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
@@ -56,6 +56,7 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
+    animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
@@ -101,7 +102,8 @@ fn setup(
     );
     
     let key_group = pi_atom::Atom::from("key_group");
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone()));
+    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
 
     let cell_col = 4.;
     let cell_row = 4.;

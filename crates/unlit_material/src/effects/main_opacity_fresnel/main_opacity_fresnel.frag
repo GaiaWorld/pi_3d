@@ -1,5 +1,5 @@
     vec4 baseColor = v_color;
-    float alpha = 1.0;
+    float alpha = opacity();
 
 	float glossiness 			= 0.;
 	vec3 specularColor 		    = vec3(0., 0., 0.);
@@ -25,7 +25,7 @@
     alpha                   *= mainTextureColor.a;
 
     vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS));
-    alpha                   *= opacityChannel(opacityData) * opacityStrength();
+    alpha                   *= opacityChannel(opacityData);
 
     vec3 emissiveColor      = emissive();
     emissiveColor           = emissiveFresnel(absNdV, emissiveColor);

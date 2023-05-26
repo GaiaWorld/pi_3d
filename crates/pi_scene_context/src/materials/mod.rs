@@ -25,6 +25,7 @@ mod command;
 pub mod command_sys;
 mod interface;
 mod system;
+mod animation;
 pub mod prelude;
 
 pub type MBKK = usize;
@@ -57,6 +58,12 @@ impl Plugin for PluginMaterial {
             );
         };
 
+        set_up_uniforms(
+            &world.get_resource::<ShareAssetMgr<TextureRes>>().unwrap(),
+            &world.get_resource::<PiRenderDevice>().unwrap(),
+            &world.get_resource::<PiRenderQueue>().unwrap(),
+        );
+
         app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
         app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
         app.insert_resource(ShareAssetMgr::<Shader3D>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
@@ -76,8 +83,8 @@ impl Plugin for PluginMaterial {
         app.add_systems(
             (
                 sys_act_material_create,
-                sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
-                sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
+                // sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
+                // sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
             ).chain().in_set(ERunStageChap::Initial)
         );
         
@@ -97,12 +104,13 @@ impl Plugin for PluginMaterial {
                 sys_act_material_int,
                 sys_act_material_uint,
                 sys_act_material_texture,
-            ).in_set(ERunStageChap::SecondInitial).after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
+            ).in_set(ERunStageChap::SecondInitial)
+            // .after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
         
         app.add_systems(
             (
-                sys_material_init,
+                // sys_material_init,
                 sys_material_textures_modify,
             ).in_set(ERunStageChap::Command)
         );
@@ -143,8 +151,6 @@ impl Plugin for PluginMaterial {
         app.add_system(
             sys_material_uniform_apply.in_set(ERunStageChap::Uniform)
         );
-
-        app.add_startup_system(set_up_uniforms);
 
         // PluginMaterialUniforms.build(app);
         // app.add_plugin(PluginMaterialUniforms);

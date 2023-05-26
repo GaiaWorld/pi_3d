@@ -57,6 +57,7 @@ fn setup(
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
+    animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id();
@@ -80,7 +81,8 @@ fn setup(
     transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     
     let key_group = pi_atom::Atom::from("key_group");
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone()));
+    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
     
     let bone0 = commands.spawn_empty().id();
     let bone1 = commands.spawn_empty().id();

@@ -1,3 +1,4 @@
+use animation_sys::sys_material_anime_init;
 use base::{NodeMaterialBlockInfo, TNodeMaterialBlock};
 use common::*;
 use emissive::{emissive_base::BlockEmissiveBase, emissive_texture::BlockEmissiveTexture};
@@ -6,21 +7,25 @@ use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
 use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
+use pi_scene_context::prelude::sys_act_material_create;
 use prelude::*;
 
-pub mod common;
-pub mod math;
-pub mod render;
-pub mod lighting;
-pub mod fresnel;
-pub mod base;
-pub mod emissive;
-pub mod main_tex;
-pub mod mix_texture;
-pub mod mask_texture;
-pub mod opacity;
-pub mod fog;
+mod cutoff;
+mod common;
+mod math;
+mod render;
+mod lighting;
+mod fresnel;
+mod base;
+mod emissive;
+mod main_tex;
+mod mix_texture;
+mod mask_texture;
+mod opacity;
+mod fog;
+mod animation;
 pub mod prelude;
+pub mod animation_sys;
 
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct NodeMaterialBlocks(pub XHashMap<&'static str, NodeMaterialBlockInfo>);
@@ -45,10 +50,13 @@ impl Plugin for PluginNodeMaterial {
         blocks.regist::<BlockUVOffsetSpeed>();
         
         blocks.regist::<BlockFog>();
+        
+        blocks.regist::<BlockCutoff>();
 
         blocks.regist::<BlockMainTexture>();
         blocks.regist::<BlockMainTextureUVOffsetSpeed>();
 
+        blocks.regist::<BlockOpacity>();
         blocks.regist::<BlockOpacityTexture>();
         blocks.regist::<BlockOpacityTextureUVOffsetSpeed>();
         
@@ -69,5 +77,34 @@ impl Plugin for PluginNodeMaterial {
         blocks.regist::<BlockOpacityFresnel>();
 
         app.insert_resource(blocks);
+
+        app.add_system(sys_material_anime_init.after(sys_act_material_create));
+    }
+}
+
+pub struct PluginGroupNodeMaterialAnime;
+impl PluginGroup for PluginGroupNodeMaterialAnime {
+    fn build(self) -> PluginGroupBuilder {
+        let group = PluginGroupBuilder::start::<Self>();
+
+        group
+            .add(PluginAnimeMainTexUScale       ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMainTexVScale       ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMainTexUOffset      ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMainTexVOffset      ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeOpacityTexUScale    ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeOpacityTexVScale    ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeOpacityTexUOffset   ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeOpacityTexVOffset   ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMaskTexUScale       ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMaskTexVScale       ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMaskTexUOffset      ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMaskTexVOffset      ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMainColor           ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeAlpha               ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeCutoff              ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeMaskCutoff          ::new(false, 1 * 1024 * 1024, 1000))
+            .add(PluginAnimeLightDiffuse        ::new(false, 1 * 1024 * 1024, 1000))
+
     }
 }

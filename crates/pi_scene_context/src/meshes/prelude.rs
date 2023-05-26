@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::renderers::prelude::*;
+use crate::{renderers::prelude::*, layer_mask::prelude::*};
 
 pub use super::{
     model::*,
@@ -32,6 +32,7 @@ pub struct ActionSetMesh<'w> {
     pub stencil_read: ResMut<'w, ActionListStencilRead>,
     pub stencil_write: ResMut<'w, ActionListStencilWrite>,
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
+    pub layer_mask: ResMut<'w, ActionListLayerMask>,
 }
 
 #[derive(SystemParam)]

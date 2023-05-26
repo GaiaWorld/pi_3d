@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Number;
 use crate::{materials::{value::{FromValueUniformStatistics}}};
@@ -108,6 +110,28 @@ impl FloatUniform {
             Self::Slot16(_, data) => data[slot],
         }
     }
+    // pub fn value_mut(&mut self, slot: usize) -> Option<&mut [f32]> {
+    //     let range = Range { start: slot * 1, end: (slot + 1) * 1 };
+    //     match self {
+    //         Self::Slot0(_) => None,
+    //         Self::Slot1(_, data) => Some(&mut data[range]),
+    //         Self::Slot2(_, data) => Some(&mut data[range]),
+    //         Self::Slot3(_, data) => Some(&mut data[range]),
+    //         Self::Slot4(_, data) => Some(&mut data[range]),
+    //         Self::Slot5(_, data) => Some(&mut data[range]),
+    //         Self::Slot6(_, data) => Some(&mut data[range]),
+    //         Self::Slot7(_, data) => Some(&mut data[range]),
+    //         Self::Slot8(_, data) => Some(&mut data[range]),
+    //         Self::Slot9(_, data) => Some(&mut data[range]),
+    //         Self::Slot10(_, data) => Some(&mut data[range]),
+    //         Self::Slot11(_, data) => Some(&mut data[range]),
+    //         Self::Slot12(_, data) => Some(&mut data[range]),
+    //         Self::Slot13(_, data) => Some(&mut data[range]),
+    //         Self::Slot14(_, data) => Some(&mut data[range]),
+    //         Self::Slot15(_, data) => Some(&mut data[range]),
+    //         Self::Slot16(_, data) => Some(&mut data[range]),
+    //     }
+    // }
     pub fn set(
         &mut self,
         slot: usize,
