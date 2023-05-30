@@ -90,6 +90,13 @@ impl Default for ViewerViewMatrix {
     }
 }
 impl ViewerViewMatrix {
+    pub fn get_rotation_matrix(&self) -> Matrix {
+        let mut result = self.0.clone();
+        let mut temp = result.fixed_view_mut::<3, 1>(0, 3);
+        let vv = temp.as_mut_slice();
+        vv[0] = 0.;vv[1] = 0.;vv[2] = 0.;
+        result
+    }
     pub fn update(&self, range: &BindBufferRange) {
         range.write_data(ShaderBindSceneAboutBase::OFFSET_VIEW_MATRIX as usize, bytemuck::cast_slice(self.0.transpose().as_slice()));
     }
