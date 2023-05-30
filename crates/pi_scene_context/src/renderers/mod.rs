@@ -47,39 +47,46 @@ pub mod prelude;
 pub struct PluginRenderer;
 impl Plugin for PluginRenderer {
     fn build(&self, app: &mut App) {
-        app.insert_resource(RendererHasher::default())
-            .insert_resource(ShareAssetMgr::<RenderRes<wgpu::TextureView>>::new(
-                GarbageEmpty(), 
-                false,
-                60 * 1024 * 1024, 
-                3 * 60 * 1000
-            ));
-        if app.world.get_resource::<ShareAssetMgr<RenderRes<RenderPipeline>>>().is_none() {
-            app.insert_resource(ShareAssetMgr::<RenderRes::<RenderPipeline>>::new(GarbageEmpty(), false, 10 * 1024 * 1024, 60 * 1000));
-        }
+        app.insert_resource(RendererHasher::default());
+
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         if app.world.get_resource::<PiSafeAtlasAllocator>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgRenderResTextureView>() { cfg } else {
+                app.insert_resource(AssetCfgRenderResTextureView::default());
+                app.world.get_resource::<AssetCfgRenderResTextureView>().unwrap()
+            };
             let texture_assets_mgr = AssetMgr::<RenderRes<wgpu::TextureView>>::new(
                 GarbageEmpty(), 
                 false,
-                60 * 1024 * 1024, 
-                3 * 60 * 1000
+                cfg.0.min, cfg.0.timeout
             );
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgRenderResUnuseTexture>() { cfg } else {
+                app.insert_resource(AssetCfgRenderResUnuseTexture::default());
+                app.world.get_resource::<AssetCfgRenderResUnuseTexture>().unwrap()
+            };
             let unusetexture_assets_mgr = HomogeneousMgr::<RenderRes<UnuseTexture>>::new(
                 pi_assets::homogeneous::GarbageEmpty(), 
-                10 * size_of::<UnuseTexture>(),
-                size_of::<UnuseTexture>(),
-                3 * 60 * 1000,
+                cfg.0.min, size_of::<UnuseTexture>(), cfg.0.timeout
             );
             let atlas = SafeAtlasAllocator::new(device, texture_assets_mgr, unusetexture_assets_mgr);
             app.insert_resource(PiSafeAtlasAllocator(atlas));
         }
         
         if app.world.get_resource::<AssetDataCenterShader3D>().is_none() {
-            app.insert_resource(AssetDataCenterShader3D::new(false, 10 * 1024 * 1024, 60 * 1000));
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgShader3D>() { cfg } else {
+                app.insert_resource(AssetCfgShader3D::default());
+                app.world.get_resource::<AssetCfgShader3D>().unwrap()
+            };
+            app.insert_resource(AssetDataCenterShader3D::new(false, cfg.0.min, cfg.0.timeout));
         }
         if app.world.get_resource::<AssetDataCenterPipeline3D>().is_none() {
-            app.insert_resource(AssetDataCenterPipeline3D::new(false, 10 * 1024 * 1024, 60 * 1000));
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgRenderPipeline>() {
+                cfg
+            } else {
+                app.insert_resource(AssetCfgRenderPipeline::default());
+                app.world.get_resource::<AssetCfgRenderPipeline>().unwrap()
+            };
+            app.insert_resource(AssetDataCenterPipeline3D::new(false, cfg.0.min, cfg.0.timeout));
         }
         if app.world.get_resource::<AssetLoaderShader3D>().is_none() {
             app.insert_resource(AssetLoaderShader3D::default());
@@ -319,7 +326,7 @@ impl Plugin for PluginRenderer {
                 sys_pass_draw_modify_by_pass::<Pass06, PassID06>,
                 sys_pass_draw_modify_by_pass::<Pass07, PassID07>,
                 sys_pass_draw_modify_by_pass::<Pass08, PassID08>,
-            ).in_set(ERunStageChap::DrawCall)
+            ).in_set(ERunStageChap::DrawCall).after(sys_pass_draw_modify_by_model::<Pass01, PassID01>)
         );
 
         // app.add_systems(

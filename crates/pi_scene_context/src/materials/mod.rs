@@ -25,6 +25,7 @@ mod command;
 pub mod command_sys;
 mod interface;
 mod system;
+mod animation;
 pub mod prelude;
 
 pub type MBKK = usize;
@@ -35,31 +36,67 @@ pub type MBKK = usize;
 struct PluginMaterial;
 impl Plugin for PluginMaterial {
     fn build(&self, app: &mut bevy::prelude::App) {
-        let world = &mut app.world;
-        if world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), false, 60 * 1024, 60 * 1000)
+        if app.world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgSamplerRes>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgSamplerRes::default());
+                app.world.get_resource::<AssetCfgSamplerRes>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
-        if world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, 30 * 1024 * 1024, 60 * 1000)
+        if app.world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgTextureRes>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgTextureRes::default());
+                app.world.get_resource::<AssetCfgTextureRes>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
-        if world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), false, 40 * 1024 * 1024, 1000)
+        if app.world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgImageTexture>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgImageTexture::default());
+                app.world.get_resource::<AssetCfgImageTexture>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
-        if world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 60 * 1000)
+        if app.world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgImageTextureView>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgImageTextureView::default());
+                app.world.get_resource::<AssetCfgImageTextureView>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
 
-        app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+        set_up_uniforms(
+            &app.world.get_resource::<ShareAssetMgr<TextureRes>>().unwrap(),
+            &app.world.get_resource::<PiRenderDevice>().unwrap(),
+            &app.world.get_resource::<PiRenderQueue>().unwrap(),
+        );
+
+        let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgShaderMeta3D>() {
+            cfg
+        } else {
+            app.insert_resource(AssetCfgShaderMeta3D::default());
+            app.world.get_resource::<AssetCfgShaderMeta3D>().unwrap()
+        };
+        app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout));
+
         app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
-        app.insert_resource(ShareAssetMgr::<Shader3D>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
         // app.insert_resource(ActionListUniform::default());
@@ -76,8 +113,8 @@ impl Plugin for PluginMaterial {
         app.add_systems(
             (
                 sys_act_material_create,
-                sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
-                sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
+                // sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
+                // sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
             ).chain().in_set(ERunStageChap::Initial)
         );
         
@@ -97,12 +134,13 @@ impl Plugin for PluginMaterial {
                 sys_act_material_int,
                 sys_act_material_uint,
                 sys_act_material_texture,
-            ).in_set(ERunStageChap::SecondInitial).after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
+            ).in_set(ERunStageChap::SecondInitial)
+            // .after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
         
         app.add_systems(
             (
-                sys_material_init,
+                // sys_material_init,
                 sys_material_textures_modify,
             ).in_set(ERunStageChap::Command)
         );
@@ -143,8 +181,6 @@ impl Plugin for PluginMaterial {
         app.add_system(
             sys_material_uniform_apply.in_set(ERunStageChap::Uniform)
         );
-
-        app.add_startup_system(set_up_uniforms);
 
         // PluginMaterialUniforms.build(app);
         // app.add_plugin(PluginMaterialUniforms);

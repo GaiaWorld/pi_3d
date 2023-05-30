@@ -1,6 +1,5 @@
 #![feature(box_into_inner)]
 
-
 use default_render::SingleIDBaseDefaultMaterial;
 use pi_3d::PluginBundleDefault;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
@@ -8,14 +7,14 @@ use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
-use pi_node_materials::prelude::*;
-use pi_scene_context::{prelude::*};
-use pi_scene_math::{Vector3, Vector4};
+use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
+use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
+use pi_scene_context::prelude::*;
+use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
+use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, opacity_clip::OpacityClipShader}};
 
-use std::{sync::Arc, mem::replace, ops::DerefMut};
+use std::{sync::Arc, mem::replace};
 use pi_async::rt::AsyncRuntime;
 use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
@@ -48,10 +47,14 @@ fn setup(
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
+    nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    mut matanime: ActionSetMaterialAnime,
 ) {
-    let tes_size = 100;
-    fps.frame_ms = 4;
+    ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
+
+    let tes_size = 5;
+    fps.frame_ms = 10;
 
     final_render.cleardepth = 0.0;
 
@@ -77,75 +80,84 @@ fn setup(
 
     let source = commands.spawn_empty().id();
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    let mut blend = ModelBlend::default(); blend.combine();
+    meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
-    attrs.push(VertexBufferDesc::instance_world_matrix());
-    attrs.push(VertexBufferDesc::instance_tilloff());
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
     matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, OpacityClipShader::KEY, EPassTag::Transparent));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
-        sample: KeySampler::default(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
+        sample: KeySampler::linear_repeat(),
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
     }));
+    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
+        filter: true,
+        sample: KeySampler::linear_repeat(),
+        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
+    }));
+    matcmds.float.push(
+        OpsUniformFloat::ops(
+            idmat, 
+            Atom::from(BlockCutoff::KEY_VALUE), 
+            0.5
+        )
+    );
     matcmds.vec4.push(
         OpsUniformVec4::ops(
             idmat, 
             Atom::from(BlockEmissiveBase::KEY_INFO), 
-            1., 0., 0., 1.
+            1., 1., 1., 1.
         )
     );
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+    animegroupcmd.global.record_group(source, &key_group, id_group);
     animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
-
-    let cell_col = 4.;
-    let cell_row = 4.;
-    for i in 0..tes_size {
-        for j in 0..tes_size {
-            for k in 0..1 {
-                
-                let cube: Entity = commands.spawn_empty().id();
-                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
-
-                let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32);
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition(cube, pos.clone()));
-
-                instancemeshcmds.tilloff.push(OpsInstanceTillOff::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
-                
-                let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
-                let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(pos), LocalEulerAngles(Vector3::new(10., 10., 10.)), 30, 30, EEasingMode::None);
-                
-                let asset_curve = if let Some(curve) = transformanime.euler.curves.get(&key_curve0) {
-                    curve
-                } else {
-                    match transformanime.euler.curves.insert(key_curve0, TypeFrameCurve(curve)) {
-                        Ok(value) => {
-                            value
-                        },
-                        Err(_) => {
-                            break;
-                        },
-                    }
-                };
-
-                let animation = transformanime.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
-                // engine.create_target_animation(source, cube, &key_group, animation);
+    {
+        let key_curve0 = pi_atom::Atom::from("cutoff");
+        let curve = FrameCurve::<Cutoff>::curve_easing(Cutoff(0.0), Cutoff(1.0), 30, 30, EEasingMode::None);
+        
+        let asset_curve = if let Some(curve) = matanime.cutoff.1.get(&key_curve0) {
+            curve
+        } else {
+            match matanime.cutoff.1.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => {
+                    value
+                },
+                Err(_) => {
+                    return;
+                },
             }
-        }
+        };
+    
+        let animation = matanime.cutoff.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, idmat, key_group.clone(), animation));
     }
+    let mut parma = AnimationGroupParam::default();
+    parma.loop_mode = ELoopMode::Positive(Some(5));
+    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), parma));
 
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
-    // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
-
+    animegroupcmd.global.add_frame_event_listen(id_group);
+    animegroupcmd.global.add_frame_event(id_group, 0.5, 100);
 }
+
+pub fn sys_anime_event(
+    mut events: ResMut<GlobalAnimeEvents>,
+) {
+    let mut list: Vec<(Entity, usize, u8, u32)> = replace(&mut events, vec![]);
+    list.drain(..).for_each(|item| {
+        log::warn!("Event {:?}", item);
+    });
+}
+
 
 pub trait AddEvent {
 	// 添加事件， 该实现每帧清理一次
@@ -170,15 +182,6 @@ impl Plugin for PluginTest {
         app.insert_resource(ActionListTestData::default());
         app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
-}
-
-pub fn sys_anime_event(
-    mut events: ResMut<GlobalAnimeEvents>,
-) {
-    let mut list: Vec<(Entity, usize, u8, u32)> = replace(events.deref_mut(), vec![]);
-    list.drain(..).for_each(|item| {
-        log::warn!("Event {:?}", item);
-    });
 }
 
 
@@ -208,10 +211,10 @@ pub fn main() {
     app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
+    app.add_plugins(PluginGroupNodeMaterialAnime);
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
-
     app.add_system(sys_anime_event.in_set(ERunStageChap::Anime));
     
     app.run()

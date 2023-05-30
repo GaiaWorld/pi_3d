@@ -1,4 +1,6 @@
 
+use std::ops::Range;
+
 use pi_engine_shell::prelude::*;
 use crate::materials::value::FromValueUniformStatistics;
 
@@ -67,6 +69,24 @@ impl UintUniform {
             Self::Slot8(_, data) => data[index],
         }
     }
+    // pub fn value_mut(&mut self, slot: usize) -> Option<&mut [u32]> {
+    //     let range = Range { start: slot * 1, end: (slot + 1) * 1 };
+    //     match self {
+    //         Self::Slot0(_) => None,
+    //         Self::Slot1(_, data) => Some(&mut data[range]),
+    //         Self::Slot2(_, data) => Some(&mut data[range]),
+    //         Self::Slot3(_, data) => Some(&mut data[range]),
+    //         Self::Slot4(_, data) => Some(&mut data[range]),
+    //         Self::Slot5(_, data) => Some(&mut data[range]),
+    //         Self::Slot6(_, data) => Some(&mut data[range]),
+    //         Self::Slot7(_, data) => Some(&mut data[range]),
+    //         Self::Slot8(_, data) => Some(&mut data[range]),
+    //         // Self::Slot9(_, data) => Some(&mut data[range]),
+    //         // Self::Slot10(_, data) => Some(&mut data[range]),
+    //         // Self::Slot11(_, data) => Some(&mut data[range]),
+    //         // Self::Slot12(_, data) => Some(&mut data[range]),
+    //     }
+    // }
     pub fn set(
         &mut self,
         slot: usize,

@@ -266,6 +266,7 @@ fn sys_demo_particle(
             let uvdata: Vec<u8> = bytemuck::cast_slice(bufferuv).to_vec();
             let wmdata: Vec<u8> = bytemuck::cast_slice(&buffermatrix).to_vec();
 
+     
             // let mut buffermatrix = vec![];
             // let mut buffercolor = vec![];
 
@@ -377,7 +378,6 @@ pub fn main() {
     // .add_plugin(WorldInspectorPlugin::new())
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
-    app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
     app.add_plugin(PluginCubeBuilder);

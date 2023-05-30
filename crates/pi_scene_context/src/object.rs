@@ -6,7 +6,7 @@ use crate::{
     renderers::prelude::*,
     flags::SceneID,
     skeleton::prelude::*,
-    pass::*,
+    pass::*, prelude::{SceneAnimationContextMap, GlobalAnimeAbout, AnimationGroups},
 };
 
 pub struct OpsDispose(Entity);
@@ -26,13 +26,22 @@ pub(crate) fn sys_dispose(
     mut instancesources: Query<&mut InstanceSourceRefs>,
     mut meshes: Query<(&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08, &GeometryID, &SkeletonID)>,
     mut geometries: Query<&mut GeometryRefs>,
-    mut skeletons: Query<&mut SkeletonRefs>,
+    mut skeletons: Query<(&mut SkeletonRefs, &Skeleton)>,
     mut passes: Query<&MaterialID>,
     mut materials: Query<&mut MaterialRefs>,
     mut viewers: Query<(&ViewerRenderersInfo)>,
     mut scenes: Query<&SceneID>,
+    mut groupmaps: Query<&AnimationGroups>,
+    mut anime_scene_ctxs: ResMut<SceneAnimationContextMap>,
+    mut animeglobal: ResMut<GlobalAnimeAbout>,
 ) {
     cmds.drain().drain(..).for_each(|OpsDispose(entity)| {
+        if let Ok(groupmap) = groupmaps.get(entity) {
+            groupmap.map.iter().for_each(|(k, id_group)| {
+                animeglobal.remove(id_group)
+            });
+        }
+
         if let Ok(idsource) = instancemeshes.get(entity) {
             if let Ok(mut refs) = instancesources.get_mut(idsource.0) {
                 refs.remove(&entity);
@@ -54,7 +63,13 @@ pub(crate) fn sys_dispose(
             sys_pass_dispose(&mut commands, pass07.id(), &passes, &mut materials);
             sys_pass_dispose(&mut commands, pass08.id(), &passes, &mut materials);
 
+            // Instance
             refs.iter().for_each(|entity| {
+                if let Ok(groupmap) = groupmaps.get(*entity) {
+                    groupmap.map.iter().for_each(|(k, id_group)| {
+                        animeglobal.remove(id_group)
+                    });
+                }
                 commands.entity(*entity).despawn();
             });
 
@@ -65,9 +80,18 @@ pub(crate) fn sys_dispose(
                 }
             }
             
-            if let Ok(mut refs) = skeletons.get_mut(idskin.0) {
+            if let Ok((mut refs, skin)) = skeletons.get_mut(idskin.0) {
                 refs.remove(&entity);
                 if refs.len() == 0 && refs.request_dispose {
+                    skin.bones.iter().for_each(|entity| {
+                        if let Ok(groupmap) = groupmaps.get(*entity) {
+                            groupmap.map.iter().for_each(|(k, id_group)| {
+                                animeglobal.remove(id_group)
+                            });
+                        }
+                        commands.entity(*entity).despawn();
+                    });
+
                     commands.entity(idskin.0).despawn();
                 }
             }
@@ -85,10 +109,19 @@ pub(crate) fn sys_dispose(
                 commands.entity(entity).despawn();
             }
             return;
-        } else if let Ok(mut refs) = skeletons.get_mut(entity) {
+        } else if let Ok((mut refs, skin)) = skeletons.get_mut(entity) {
             // refs.
             refs.request_dispose = true;
             if refs.len() == 0 && refs.request_dispose {
+                skin.bones.iter().for_each(|entity| {
+                    if let Ok(groupmap) = groupmaps.get(*entity) {
+                        groupmap.map.iter().for_each(|(k, id_group)| {
+                            animeglobal.remove(id_group)
+                        });
+                    }
+                    commands.entity(*entity).despawn();
+                });
+
                 commands.entity(entity).despawn();
             }
             return;

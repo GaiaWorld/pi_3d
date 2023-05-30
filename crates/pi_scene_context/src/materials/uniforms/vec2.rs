@@ -93,6 +93,24 @@ impl Vec2Uniform {
             Self::Slot12(_, data) => &data[range],
         }
     }
+    pub fn value_mut(&mut self, slot: usize) -> Option<&mut [Number]> {
+        let range = Range { start: slot * Self::N, end: (slot + 1) * Self::N };
+        match self {
+            Self::Slot0(_) => None,
+            Self::Slot1(_, data) => Some(&mut data[range]),
+            Self::Slot2(_, data) => Some(&mut data[range]),
+            Self::Slot3(_, data) => Some(&mut data[range]),
+            Self::Slot4(_, data) => Some(&mut data[range]),
+            Self::Slot5(_, data) => Some(&mut data[range]),
+            Self::Slot6(_, data) => Some(&mut data[range]),
+            Self::Slot7(_, data) => Some(&mut data[range]),
+            Self::Slot8(_, data) => Some(&mut data[range]),
+            Self::Slot9(_, data) => Some(&mut data[range]),
+            Self::Slot10(_, data) => Some(&mut data[range]),
+            Self::Slot11(_, data) => Some(&mut data[range]),
+            Self::Slot12(_, data) => Some(&mut data[range]),
+        }
+    }
     pub fn set(
         &mut self,
         slot: usize,

@@ -11,10 +11,15 @@ pub use bevy::{
 pub use pi_atom::Atom;
 pub use pi_bevy_winit_window::*;
 pub use pi_bevy_ecs_extend::prelude::*;
-pub use pi_bevy_asset::{AssetMgrConfigs, AssetCapacity, ShareAssetMgr};
+pub use pi_bevy_asset::{
+    // AssetMgrConfigs,
+    AssetCapacity,
+    ShareAssetMgr
+};
 pub use pi_bevy_render_plugin::{
     PiRenderDevice, PiRenderQueue, PiRenderGraph, PiRenderWindow, PiRenderOptions, PiSafeAtlasAllocator, PiScreenTexture,
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
+    asset_config::*,
 };
 pub use pi_window_renderer::*;
 pub use pi_render::{
@@ -55,7 +60,7 @@ pub use pi_render::{
     },
     components::view::{
         target_alloc::*,
-    }
+    },
 };
 pub use pi_assets::{asset::GarbageEmpty};
 

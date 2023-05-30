@@ -7,8 +7,6 @@ pub struct OpacityClipShader;
 impl OpacityClipShader {
     pub const KEY: &'static str = "OpacityClipShader";
 
-    pub const KEY_CLIP: &'static str = "uOpacityClip";
-
     pub fn create(infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
@@ -38,13 +36,13 @@ impl OpacityClipShader {
             ]
         );
 
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_CLIP), 0.5));
-
         nodemat.include(BlockColorGray::KEY, infos);
         nodemat.include(BlockTextureChannel::KEY, infos);
         nodemat.include(BlockUVOffsetSpeed::KEY, infos);
         nodemat.include(BlockMainTexture::KEY, infos);
         nodemat.include(BlockMainTextureUVOffsetSpeed::KEY, infos);
+        nodemat.include(BlockCutoff::KEY, infos);
+        nodemat.include(BlockOpacity::KEY, infos);
         nodemat.include(BlockOpacityTexture::KEY, infos);
         nodemat.include(BlockOpacityTextureUVOffsetSpeed::KEY, infos);
         nodemat.include(BlockEmissiveBase::KEY, infos);

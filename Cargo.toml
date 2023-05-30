@@ -220,3 +220,11 @@ path = "examples/effects/stripes_virtual.rs"
 [[example]]
 name = "distortion_uv"
 path = "examples/effects/distortion_uv.rs"
+
+[[example]]
+name = "anime_opacity_clip"
+path = "examples/anime/opacity_clip.rs"
+
+[[example]]
+name = "anime_main_opacity"
+path = "examples/anime/main_opacity.rs"

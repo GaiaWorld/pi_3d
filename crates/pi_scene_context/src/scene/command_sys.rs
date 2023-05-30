@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
     animation::prelude::*,
-    flags::SceneID,
+    flags::SceneID, prelude::SceneMainCameraID,
 };
 
 use super::{prelude::*};
@@ -44,10 +44,10 @@ impl ActionScene {
             .insert(SceneTime::new())
             .insert(SceneFog::new())
             .insert(AmbientLight::new())
-            .insert(SceneAnimationContext::new())
             .insert(TreeLeftRoot::new(id_left))
             .insert(TreeRightRoot::new(id_right))
             .insert(AnimationGroups::default())
+            .insert(SceneMainCameraID(None))
         ;
 
         let entity = entitycmds.id();
@@ -71,10 +71,11 @@ impl ActionScene {
             .insert(SceneTime::new())
             .insert(SceneFog::new())
             .insert(AmbientLight::new())
-            .insert(SceneAnimationContext::new())
             .insert(TreeLeftRoot::new(id_left))
             .insert(TreeRightRoot::new(id_right))
-            .insert(AnimationGroups::default());
+            .insert(AnimationGroups::default())
+            .insert(SceneMainCameraID(None))
+            ;
     }
 
     pub(crate) fn add_to_scene(

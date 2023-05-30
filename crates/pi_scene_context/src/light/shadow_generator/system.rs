@@ -37,11 +37,9 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
     ) {
         shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
-                if let Some(bind) = &mut bind.0 {
-                    bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
-                    bind.vec2(0, &[**minz, **minz + **maxz]);
-                    *flag = BindEffectValueDirty(true);
-                }
+                bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
+                bind.vec2(0, &[**minz, **minz + **maxz]);
+                *flag = BindEffectValueDirty(true);
             }
         });
     }
@@ -73,11 +71,9 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
         shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if enable.0 {
                 if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
-                    if let Some(bind) = &mut bind.0 {
-                        bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
-                        bind.vec2(0, &[**minz, **minz + **maxz]);
-                        *flag = BindEffectValueDirty(true);
-                    }
+                    bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
+                    bind.vec2(0, &[**minz, **minz + **maxz]);
+                    *flag = BindEffectValueDirty(true);
                 }
             }
         });

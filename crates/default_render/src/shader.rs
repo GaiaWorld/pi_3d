@@ -1,6 +1,6 @@
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
-use pi_node_materials::{base::NodeMaterialBuilder, emissive::emissive_base::BlockEmissiveBase};
+use pi_node_materials::prelude::*;
 
 pub struct DefaultShader;
 impl DefaultShader {

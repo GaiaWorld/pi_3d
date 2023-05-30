@@ -23,7 +23,7 @@ pub struct BindEffectValueDirty(pub bool);
 
 
 #[derive(Component, Deref, DerefMut)]
-pub struct BindEffect(pub Option<BindEffectValues>);
+pub struct BindEffect(pub BindEffectValues);
 
 
 pub struct BindEffectValues {
@@ -104,39 +104,46 @@ impl BindEffectValues {
         }
     }
 
-    pub fn mat4(&mut self, slot: usize, value: &[Number]) {
-        self.dirty = true;
-        self.mat4_.set(slot, value);
+    pub fn mat4(& self, slot: usize, value: &[Number]) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.mat4_.set(slot, value);
     }
     
-    pub fn mat2(&mut self, slot: usize, value: &[Number]) {
-        self.dirty = true;
-        self.mat2_.set(slot, value);
+    pub fn mat2(& self, slot: usize, value: &[Number]) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.mat2_.set(slot, value);
     }
     
-    pub fn vec4(&mut self, slot: usize, value: &[Number]) {
-        self.dirty = true;
-        self.vec4_.set(slot, value);
+    pub fn vec4(& self, slot: usize, value: &[Number]) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.vec4_.set(slot, value);
     }
     
-    pub fn vec2(&mut self, slot: usize, value: &[Number]) {
-        self.dirty = true;
-        self.vec2_.set(slot, value);
+    pub fn vec2(& self, slot: usize, value: &[Number]) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.vec2_.set(slot, value);
     }
     
-    pub fn float(&mut self, slot: usize, value: Number) {
-        self.dirty = true;
-        self.float.set(slot, value);
+    pub fn float(& self, slot: usize, value: Number) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.float.set(slot, value);
     }
     
-    pub fn int(&mut self, slot: usize, value: i32) {
-        self.dirty = true;
-        self.int__.set(slot, value);
+    pub fn int(& self, slot: usize, value: i32) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.int__.set(slot, value);
     }
     
-    pub fn uint(&mut self, slot: usize, value: u32) {
-        self.dirty = true;
-        self.uint_.set(slot, value);
+    pub fn uint(& self, slot: usize, value: u32) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.uint_.set(slot, value);
     }
 
     pub fn update(&self) {
@@ -148,5 +155,45 @@ impl BindEffectValues {
         self.float.update(range);
         self.int__.update(range);
         self.uint_.update(range);
+    }
+
+    pub fn mat4_one(& self, slot: usize, offset: usize, value: Number) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        if let Some(data) = item.mat4_.value_mut(slot) {
+            data[offset] = value;
+        }
+    }
+
+    pub fn mat2_one(& self, slot: usize, offset: usize, value: Number) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        if let Some(data) = item.mat2_.value_mut(slot) {
+            data[offset] = value;
+        }
+    }
+
+    pub fn vec4_one(& self, slot: usize, offset: usize, value: Number) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        if let Some(data) = item.vec4_.value_mut(slot) {
+            data[offset] = value;
+        }
+    }
+
+    pub fn vec2_one(& self, slot: usize, offset: usize, value: Number) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        if let Some(data) = item.vec2_.value_mut(slot) {
+            data[offset] = value;
+        }
+    }
+
+    pub fn slot(&self, key: &Atom) -> Option<usize> {
+        if let Some(slot) = self.keys.get(key) {
+            Some(*slot)
+        } else {
+            None
+        }
     }
 }

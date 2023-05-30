@@ -5,10 +5,6 @@ vec4 opacityTexture(
     return texture(sampler2D(_OpacityTex, sampler_OpacityTex), vOpacityUV * uOpacityTilloff.xy + uOpacityTilloff.zw + vUVOS);
 }
 
-float opacityStrength() {
-    return uOpacity;
-}
-
 float opacityChannel(vec4 data) {
-    return valueByChannel(data, uOpacityChannel);
+    return valueByChannel(data, uOpacityChannel) * uOpacityLevel;
 }
