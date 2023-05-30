@@ -11,4 +11,6 @@ pub struct ActionSetAnimationGroup<'w> {
     pub start: ResMut<'w, ActionListAnimeGroupStart>,
     pub pause: ResMut<'w, ActionListAnimeGroupPause>,
     pub scene_ctxs: ResMut<'w, SceneAnimationContextMap>,
+    pub global: ResMut<'w, GlobalAnimeAbout>,
+    pub events: ResMut<'w, GlobalAnimeEvents>,
 }

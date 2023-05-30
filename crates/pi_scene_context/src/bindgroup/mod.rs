@@ -74,49 +74,31 @@ impl Plugin for PluginRenderBindGroup {
     // }
 
     fn build(&self, app: &mut App) {
-        let world = &mut app.world;
-        let mut cfgs = if let Some(cfgs) = world.get_resource_mut::<AssetMgrConfigs>() {
-            cfgs
-        } else {
-            world.insert_resource(AssetMgrConfigs::default());
-            world.get_resource_mut::<AssetMgrConfigs>().unwrap()
-        };
 
-        let cfg_bind_group = if let Some(cfg) = cfgs.0.get("ASSET_BIND_GROUP") {
-            cfg.clone()
-        } else {
-            let cfg = AssetCapacity { ty: String::from("ASSET_BIND_GROUP"), min: 1024 * 100, max: 1024 * 200, timeout: 10 * 1000 };
-            cfgs.insert(cfg.clone());
-            cfg
-        };
-        
-        let cfg_bind_group_layout = if let Some(cfg) = cfgs.0.get("ASSET_BIND_GROUP_LAYOUT") {
-            cfg.clone()
-        } else {
-            let cfg = AssetCapacity { ty: String::from("ASSET_BIND_GROUP_LAYOUT"), min: 1024 * 100, max: 1024 * 200, timeout: 10 * 1000 };
-            cfgs.insert(cfg.clone());
-            cfg
-        };
+        let device = app.world.get_resource::<PiRenderDevice>().unwrap();
 
-        let device = world.get_resource::<PiRenderDevice>().unwrap();
-
-        if world.get_resource::<ResBindBufferAllocator>().is_none() {
+        if app.world.get_resource::<ResBindBufferAllocator>().is_none() {
             let allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
-            world.insert_resource(allocator);
+            app.insert_resource(allocator);
         }
         
         
-        world.insert_resource(AssetBindGroupSceneWaits::default());
-        world.insert_resource(AssetBindGroupModelWaits::default());
-        world.insert_resource(AssetBindGroupTextureSamplersWaits::default());
+        app.insert_resource(AssetBindGroupSceneWaits::default());
+        app.insert_resource(AssetBindGroupModelWaits::default());
+        app.insert_resource(AssetBindGroupTextureSamplersWaits::default());
         
         // log::debug!("{:?}", device.limits());
-        world.insert_resource(ShareAssetMgr::<BindGroup>::create(GarbageEmpty(), false, &cfg_bind_group));
-        world.insert_resource(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg_bind_group_layout));
         
-        if world.get_resource::<ResBindsRecorder>().is_none() {
+        let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgBindGroup>() { cfg.0.clone() } else {
+            app.insert_resource(AssetCfgBindGroup::default());
+            app.world.get_resource::<AssetCfgBindGroup>().unwrap().0.clone()
+        };
+        app.insert_resource(ShareAssetMgr::<BindGroup>::create(GarbageEmpty(), false, &cfg));
+        app.insert_resource(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg));
+        
+        if app.world.get_resource::<ResBindsRecorder>().is_none() {
             let allocator = ResBindsRecorder(BindsRecorder::new());
-            world.insert_resource(allocator);
+            app.insert_resource(allocator);
             app.add_system(sys_recycle_binds_recorder.in_set(ERunStageChap::Initial));
         }
     }

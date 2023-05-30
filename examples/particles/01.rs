@@ -159,6 +159,7 @@ fn sys_demo_particle(
 
                 geometry_update_instance_buffer::<InstanceBufferWorldMatrix>(Some(wmdata), idgeo.0, &mut wm, &mut geoloader, &mut vb_data_map);
                 geometry_update_instance_buffer::<InstanceBufferColor>(Some(colordata), idgeo.0, &mut colors, &mut geoloader, &mut vb_data_map);
+                geometry_update_instance_buffer::<InstanceBufferTillOff>(Some(colordata), idgeo.0, &mut colors, &mut geoloader, &mut vb_data_map);
             }
         }
     });

@@ -101,44 +101,51 @@ fn image_change<
                 if let Some(texture_view) = texture_assets_mgr.get(&key.asset_u64()) {
                     image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Image(texture_view)) );
                 } else {
-                    let imageresult = AssetMgr::load(&image_assets_mgr, key.url());
-                    match imageresult {
-                        LoadResult::Ok(texture) => {
-                            let texture_view = ImageTextureView::new(key, texture);
-                            match texture_assets_mgr.insert(key.asset_u64(), texture_view) {
-                                Ok(texture_view) => {
-                                    image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Image(texture_view)) );
-                                },
-                                Err(e) => {
-                                    log::error!("image_texture_view_load fail, while insert: {:?}", key.url().as_str());
-                                },
-                            }
+                    match key.url() {
+                        KeyImageTexture::Data(url, _) => {
+                            log::error!("image_texture_view_load fail, Not Found DateTexture: {:?}", url);
                         },
-                        _ => {
-                            let (image_wait, device, queue) = (image_await.1.clone(), (device).clone(), (queue).clone());
-                            let (id, imagekey) = (obj, key.url().clone());
-                            let key = key.clone();
-                            MULTI_MEDIA_RUNTIME
-                                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                                    let desc = ImageTexture2DDesc {
-                                        url: &imagekey,
-                                        device: &device,
-                                        queue: &queue,
-                                    };
-            
-                                    let result = ImageTexture::async_load(desc, imageresult).await;
-                                    match result {
-                                        Ok(texture) => {
-                                            image_wait.push((id, EKeyTexture::Image(key.clone()), texture));
+                        KeyImageTexture::File(url, _) => {
+                            let imageresult = AssetMgr::load(&image_assets_mgr, key.url());
+                            match imageresult {
+                                LoadResult::Ok(texture) => {
+                                    let texture_view = ImageTextureView::new(key, texture);
+                                    match texture_assets_mgr.insert(key.asset_u64(), texture_view) {
+                                        Ok(texture_view) => {
+                                            image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Image(texture_view)) );
                                         },
                                         Err(e) => {
-                                            log::error!("load image fail, {:?}", e);
-                                        }
+                                            log::error!("image_texture_view_load fail, while insert: {:?}", key.url().as_str());
+                                        },
                                     }
-
-                                })
-                                .unwrap();
-                        }
+                                },
+                                _ => {
+                                    let (image_wait, device, queue) = (image_await.1.clone(), (device).clone(), (queue).clone());
+                                    let (id, imagekey) = (obj, key.url().clone());
+                                    let key = key.clone();
+                                    MULTI_MEDIA_RUNTIME
+                                        .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                                            let desc = ImageTexture2DDesc {
+                                                url: imagekey,
+                                                device: device,
+                                                queue: queue,
+                                            };
+                    
+                                            let result = ImageTexture::async_load(desc, imageresult).await;
+                                            match result {
+                                                Ok(texture) => {
+                                                    image_wait.push((id, EKeyTexture::Image(key.clone()), texture));
+                                                },
+                                                Err(e) => {
+                                                    log::error!("load image fail, {:?}", e);
+                                                }
+                                            }
+        
+                                        })
+                                        .unwrap();
+                                }
+                            }
+                        },
                     }
                 }
             },

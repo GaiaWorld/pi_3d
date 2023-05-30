@@ -14,7 +14,7 @@ use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
 use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, opacity_clip::OpacityClipShader}};
 
-use std::sync::Arc;
+use std::{sync::Arc, mem::replace};
 use pi_async::rt::AsyncRuntime;
 use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
@@ -119,6 +119,7 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+    animegroupcmd.global.record_group(source, &key_group, id_group);
     animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
     {
         let key_curve0 = pi_atom::Atom::from("cutoff");
@@ -144,7 +145,19 @@ fn setup(
     parma.loop_mode = ELoopMode::Positive(Some(5));
     animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), parma));
 
+    animegroupcmd.global.add_frame_event_listen(id_group);
+    animegroupcmd.global.add_frame_event(id_group, 0.5, 100);
 }
+
+pub fn sys_anime_event(
+    mut events: ResMut<GlobalAnimeEvents>,
+) {
+    let mut list: Vec<(Entity, usize, u8, u32)> = replace(&mut events, vec![]);
+    list.drain(..).for_each(|item| {
+        log::warn!("Event {:?}", item);
+    });
+}
+
 
 pub trait AddEvent {
 	// 添加事件， 该实现每帧清理一次
@@ -202,6 +215,7 @@ pub fn main() {
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
+    app.add_system(sys_anime_event.in_set(ERunStageChap::Anime));
     
     app.run()
 

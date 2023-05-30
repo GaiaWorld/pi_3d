@@ -36,37 +36,67 @@ pub type MBKK = usize;
 struct PluginMaterial;
 impl Plugin for PluginMaterial {
     fn build(&self, app: &mut bevy::prelude::App) {
-        let world = &mut app.world;
-        if world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), false, 60 * 1024, 60 * 1000)
+        if app.world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgSamplerRes>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgSamplerRes::default());
+                app.world.get_resource::<AssetCfgSamplerRes>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
-        if world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, 30 * 1024 * 1024, 60 * 1000)
+        if app.world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgTextureRes>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgTextureRes::default());
+                app.world.get_resource::<AssetCfgTextureRes>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
-        if world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), false, 40 * 1024 * 1024, 1000)
+        if app.world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgImageTexture>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgImageTexture::default());
+                app.world.get_resource::<AssetCfgImageTexture>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
-        if world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
-            world.insert_resource(
-                ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 60 * 1000)
+        if app.world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
+            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgImageTextureView>() {
+                cfg.clone()
+            } else {
+                app.insert_resource(AssetCfgImageTextureView::default());
+                app.world.get_resource::<AssetCfgImageTextureView>().unwrap().clone()
+            };
+            app.insert_resource(
+                ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
             );
         };
 
         set_up_uniforms(
-            &world.get_resource::<ShareAssetMgr<TextureRes>>().unwrap(),
-            &world.get_resource::<PiRenderDevice>().unwrap(),
-            &world.get_resource::<PiRenderQueue>().unwrap(),
+            &app.world.get_resource::<ShareAssetMgr<TextureRes>>().unwrap(),
+            &app.world.get_resource::<PiRenderDevice>().unwrap(),
+            &app.world.get_resource::<PiRenderQueue>().unwrap(),
         );
 
-        app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+        let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgShaderMeta3D>() {
+            cfg
+        } else {
+            app.insert_resource(AssetCfgShaderMeta3D::default());
+            app.world.get_resource::<AssetCfgShaderMeta3D>().unwrap()
+        };
+        app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout));
+
         app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
-        app.insert_resource(ShareAssetMgr::<Shader3D>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
         // app.insert_resource(ActionListUniform::default());

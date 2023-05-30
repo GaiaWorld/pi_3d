@@ -73,7 +73,14 @@ impl Plugin for PluginGeometry {
         // app.world.insert_resource(SingleGeometryVBCommands::default());
         app.insert_resource(ActionListGeometryCreate::default());
         app.insert_resource(VertexBufferDataMap3D(SingleVertexBufferDataMap::default()));
-        app.insert_resource(VertexBufferAllocator3D(VertexBufferAllocator::new()));
+        
+        let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgVertexBuffer3D>() {
+            cfg
+        } else {
+            app.insert_resource(AssetCfgVertexBuffer3D::default());
+            app.world.get_resource::<AssetCfgVertexBuffer3D>().unwrap()
+        };
+        app.insert_resource(VertexBufferAllocator3D(VertexBufferAllocator::new(cfg.0.min, cfg.0.timeout)));
         app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
         app.insert_resource(GeometryVBLoader::default());
 

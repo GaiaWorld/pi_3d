@@ -9,7 +9,7 @@ use crate::{
     animation::{command_sys::*},
     scene::command_sys::ActionScene,
     transforms::{command_sys::ActionTransformNode, prelude::*},
-    layer_mask::prelude::*,
+    layer_mask::prelude::*, prelude::{SceneMainCameraID, SceneID},
 };
 
 use super::{
@@ -58,16 +58,22 @@ pub fn sys_camera_mode(
 
 pub fn sys_camera_active(
     mut cmds: ResMut<ActionListCameraActive>,
-    mut cameras: Query<(&mut Camera, &mut ViewerActive)>,
+    mut cameras: Query<(&SceneID, &mut Camera, &mut ViewerActive)>,
+    mut scenes: Query<&mut SceneMainCameraID>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraActive(entity, mode)| {
         log::warn!("CameraActive ");
-        if let Ok((mut camera, mut viewer)) = cameras.get_mut(entity) {
+        if let Ok((idscene, mut camera, mut viewer)) = cameras.get_mut(entity) {
             log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
             if camera.0 != mode {
                 *camera = Camera(mode);
                 *viewer = ViewerActive(mode);
                 log::warn!("CameraActive Ok");
+            }
+            if mode {
+                if let Ok(mut maincamera) = scenes.get_mut(idscene.0) {
+                    *maincamera = SceneMainCameraID(Some(entity));
+                }
             }
         } else {
             cmds.push(OpsCameraActive(entity, mode))

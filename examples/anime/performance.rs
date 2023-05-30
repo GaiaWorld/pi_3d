@@ -15,7 +15,7 @@ use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
 use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
 
-use std::sync::Arc;
+use std::{sync::Arc, mem::replace, ops::DerefMut};
 use pi_async::rt::AsyncRuntime;
 use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
@@ -144,6 +144,7 @@ fn setup(
 
     animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
+
 }
 
 pub trait AddEvent {
@@ -169,6 +170,15 @@ impl Plugin for PluginTest {
         app.insert_resource(ActionListTestData::default());
         app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
+}
+
+pub fn sys_anime_event(
+    mut events: ResMut<GlobalAnimeEvents>,
+) {
+    let mut list: Vec<(Entity, usize, u8, u32)> = replace(events.deref_mut(), vec![]);
+    list.drain(..).for_each(|item| {
+        log::warn!("Event {:?}", item);
+    });
 }
 
 
@@ -201,6 +211,8 @@ pub fn main() {
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
+
+    app.add_system(sys_anime_event.in_set(ERunStageChap::Anime));
     
     app.run()
 

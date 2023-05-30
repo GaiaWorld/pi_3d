@@ -65,7 +65,7 @@ pub fn sys_scene_anime_ctx(
                 }
 
                 if let Some((idobj, name, frameevents, listen)) = animeglobal.group_records.get(&i) {
-
+                    log::warn!("Group : {:?}", listen);
                     if group_info.start_event && (listen & TagGroupListen::START) == TagGroupListen::START {
                         animeevents.push((*idobj, name.get_hash(), TagGroupListen::START, 0));
                     }

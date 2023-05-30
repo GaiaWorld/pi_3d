@@ -95,7 +95,7 @@ impl GlobalAnimeAbout {
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-pub struct GlobalAnimeEvents(Vec<(Entity, usize, u8, u32)>);
+pub struct GlobalAnimeEvents(pub Vec<(Entity, usize, u8, u32)>);
 
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct SceneAnimationContextMap(XHashMap<Entity, SceneAnimationContext>);
