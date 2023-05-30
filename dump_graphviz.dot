@@ -1,0 +1,12 @@
+digraph Render {
+	 "NodeId(1v1)" ["style"="filled" "label"=clear_window "fillcolor"="white"]
+	 "NodeId(2v1)" ["style"="filled" "label"=FinalRenderClear "fillcolor"="white"]
+	 "NodeId(3v1)" ["style"="filled" "label"=FinalRender "fillcolor"="red"]
+	 "NodeId(4v1)" ["style"="filled" "label"=TestCamera "fillcolor"="white"]
+
+	 "NodeId(2v1)" -> "NodeId(4v1)"
+	 "NodeId(4v1)" -> "NodeId(3v1)"
+	 "NodeId(1v1)" -> "NodeId(2v1)"
+	 "NodeId(1v1)" -> "NodeId(3v1)"
+	 "NodeId(1v1)" -> "NodeId(4v1)"
+}

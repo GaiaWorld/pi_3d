@@ -21,7 +21,7 @@ skybox                  = { path = "crates/skybox" }
 procedural_texture      = { path = "crates/procedural_texture" }
 skeletons               = { path = "crates/skeletons" }
 axis                    = { path = "crates/axis" }
-
+particle                    = { path = "crates/particle" }
 
 pi_node_materials       = { path = "crates/node_materials" }
 unlit_material          = { path = "crates/unlit_material" }
