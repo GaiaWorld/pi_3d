@@ -57,7 +57,6 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
             let mut globalaboput = GlobalAnimeAbout {
                 ty_alloc: KeyFrameDataTypeAllocator::default(),
                 runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap::<ObjectID>::default(),
-                dispose_animations: vec![],
                 dispose_animationgroups: vec![],
                 group_records: XHashMap::default(),
             };
