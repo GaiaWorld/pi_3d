@@ -51,7 +51,7 @@ impl IParticleModifier for ForceOverLifetime{
         );
 
         localForce = localForce * deltaSeconds;
-
+        
         particle.direction = particle.direction + localForce;
     }
 }

@@ -1,5 +1,5 @@
 use super::base::{IParticleModifier, ScalingInterpolate};
-use crate::{interpolation::FloatInterpolation, particle::Particle};
+use crate::{interpolation::FloatInterpolation, multiply, particle::Particle};
 use pi_scene_math::Vector3;
 
 #[derive(Clone)]
@@ -22,6 +22,6 @@ impl IParticleModifier for SizeOverLifetime {
         self.scalingInterpolate
             .compute(*amount, particle.base_random, &mut localResult);
 
-        particle.scaling = localResult.cross(&particle.scaling);
+        particle.scaling = multiply(&localResult, &particle.scaling);
     }
 }

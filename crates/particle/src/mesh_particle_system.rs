@@ -1,3 +1,7 @@
+use std::time::UNIX_EPOCH;
+
+use pi_scene_math::{Matrix, Vector3};
+
 use crate::particle_system_tool::ParticleSystemTool;
 
 pub struct MeshParticleSystem {
@@ -143,18 +147,32 @@ impl MeshParticleSystem {
         }
     }
 
-    // pub fn _computeCall (&self) {
-    // self.computeWorldMatrix();
-    // self.psTool.varCompute(std::time::Instant::now());
-    // self._mpDirty = true;
+    pub fn computeCall(&mut self, world_matrix: Matrix, local_matrix: Matrix) {
+        // self.computeWorldMatrix();
+        self.psTool.varCompute(std::time::SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64, world_matrix, local_matrix);
+        // self._mpDirty = true;
 
-    //     self._recycleCall();
-    // }
+        // self._recycleCall();
+    }
 
     // private _mpDirty = true;
-    pub fn updateCall(&mut self) {
+    pub fn updateCall(
+        &mut self,
+        world_matrix: Matrix,
+        local_matrix: Matrix,
+        camera_pos: Vector3,
+        camera_rotation_matrix_invert: Matrix,
+    ) {
         // if (self._mpDirty) {
-        let _ = self.psTool.mpUpdate();
+        let _ = self.psTool.mpUpdate(
+            world_matrix,
+            local_matrix,
+            camera_pos,
+            camera_rotation_matrix_invert,
+        );
 
         // if (self.source) {
         //     self.source.thinInstanceBufferUpdated("matrix");

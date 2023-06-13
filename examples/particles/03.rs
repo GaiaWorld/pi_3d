@@ -3,8 +3,8 @@ use particle::{
     emitter::ishape_emitter_type::EShapeEmitterArcMode,
     extend::formatMeshParticle,
     iparticle_system_config::{
-        FourGradientInfo, IParticleSystemConfig, IShape, IShapeArc, IShapeArcRandom, IShapeCone,
-        OneParamInfo, ParamInfo, ThreeParamInfo,
+        FourGradientInfo, IParticleSystemConfig, IShape, IShapeArc, IShapeArcLoop, IShapeArcRandom,
+        IShapeCone, OneParamInfo, ParamInfo, ThreeParamInfo,
     },
     mesh_particle_system::MeshParticleSystem,
     particle_system_tool::{
@@ -21,7 +21,10 @@ use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{frame_time::PluginFrameTime, prelude::*};
 use pi_hal::{init_load_cb, on_load, runtime::MULTI_MEDIA_RUNTIME};
 use pi_mesh_builder::{ball::*, cube::*, quad::PluginQuadBuilder};
-use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial, prelude::{MainColor, BlockMainTexture}};
+use pi_node_materials::{
+    prelude::{BlockMainTexture, MainColor},
+    NodeMaterialBlocks, PluginNodeMaterial,
+};
 use pi_scene_context::{
     prelude::*,
     viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix},
@@ -147,13 +150,14 @@ fn setup(
             url: EKeyTexture::from("assets/images/bubbles.png"),
         },
     ));
-    matcmds.vec4.push(
-        OpsUniformVec4::ops(
-            idmat,
-            Atom::from(BlockMainTexture::KEY_COLOR),
-            1., 1., 1., 1.
-        )
-    );
+    matcmds.vec4.push(OpsUniformVec4::ops(
+        idmat,
+        Atom::from(BlockMainTexture::KEY_COLOR),
+        1.,
+        1.,
+        1.,
+        1.,
+    ));
 
     let mut config = IParticleSystemConfig {
         name: "MP".to_string(),
@@ -167,7 +171,7 @@ fn setup(
         renderMode: ERenderMode::Billboard,
         stretchedVelocityScale: 0.,
         stretchedLengthScale: 0.,
-        maxParticles: 10.,
+        maxParticles: 1000.,
         startSpeed: OneParamInfo::TInterpolateConstant(8.0),
         lifetime: OneParamInfo::TInterpolateConstant(2.0),
         delay: vec![0.],
@@ -175,23 +179,16 @@ fn setup(
         startSize: ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(1.0)),
         startRotation: ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(0.0)),
         gravity: OneParamInfo::TInterpolateConstant(0.0),
-        emission: (
-            5.0,
-            Some(vec![
-                [0., 100., 2., 0.1],
-                [1000., 100., 100., 0.1],
-                [2000., 100., 100., 0.1],
-            ]),
-        ),
+        emission: (100.0, None),
         shape: IShape::ShapeCone(IShapeCone {
             _type: 0,
             radius: 0.01,
             angle: 90.0,
             radiusThickness: 0.,
-            arc: IShapeArc::IShapeArcRandom(IShapeArcRandom {
-                mode: EShapeEmitterArcMode::Random,
+            arc: IShapeArc::IShapeArcLoop(IShapeArcLoop {
+                mode: EShapeEmitterArcMode::Loop,
                 value: 360.,
-                spread: 0.,
+                spread: 0.0,
                 speed: 1.,
             }),
             emitAsVolume: false,
@@ -218,9 +215,9 @@ fn setup(
             [0.5, 0.5, 0., 1.],
         )),
         colorBySpeed: default(),
-        sizeOverLifetime: Some(ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(
-            0.25,
-        ))),
+        sizeOverLifetime: Some(ParamInfo::ThreeParamInfo(
+            ThreeParamInfo::TInterpolateTwoConstants([0.25, 0.25, 0.25], [2.0, 2.0, 1.0]),
+        )),
         sizeBySpeed: default(),
         rotationOverLifetime: Some(ParamInfo::ThreeParamInfo(
             ThreeParamInfo::TInterpolateConstant([0., 0., 0.]),
@@ -238,8 +235,8 @@ fn setup(
     };
     let mut mp = MeshParticleSystem::new();
     formatMeshParticle(&mut config, &mut mp);
-    let a  =    Vector3::new(1., 1., 2.);
-    let b  =    Vector3::new(0.25, 0.5, 0.4);
+    let a = Vector3::new(1., 1., 2.);
+    let b = Vector3::new(0.25, 0.5, 0.4);
 
     let c = a.ad_mul(&b);
     println!("============= IParticleSystemConfig End: {:?}", c);
@@ -275,7 +272,6 @@ fn sys_demo_particle(
     // println!("============= buffermatrix:");
     particles.iter_mut().for_each(
         |(idscene, idgeo, mut particle, world_matrix, local_matrix)| {
-
             let (mut camerapos, mut camera_rotation_matrix) =
                 (Vector3::new(0., 0., -1.), Matrix::identity());
 
@@ -284,8 +280,8 @@ fn sys_demo_particle(
                     if let Ok((viewpos, wiewmat)) = cameras.get(main_crame) {
                         camerapos = viewpos.0;
                         camera_rotation_matrix = wiewmat.get_rotation_matrix();
-                        if let Some(inverse) = camera_rotation_matrix.try_inverse(){
-                            println!("相机旋转矩阵有逆");
+                        if let Some(inverse) = camera_rotation_matrix.try_inverse() {
+                            // println!("相机旋转矩阵有逆");
                             camera_rotation_matrix = inverse;
                         }
                     };
@@ -298,16 +294,24 @@ fn sys_demo_particle(
                 mut uv, // mut uv
             )) = geometrys.get_mut(idgeo.0)
             {
-                particle.as_mut().0.computeCall(world_matrix.0, local_matrix.0);
-                particle.as_mut().0.updateCall(world_matrix.0, local_matrix.0, camerapos, camera_rotation_matrix);
+                particle
+                    .as_mut()
+                    .0
+                    .computeCall(world_matrix.0, local_matrix.0);
+                particle.as_mut().0.updateCall(
+                    world_matrix.0,
+                    local_matrix.0,
+                    camerapos,
+                    camera_rotation_matrix,
+                );
 
                 let buffercolor = particle.0.psTool.colorData.as_ref().unwrap();
                 let bufferuv = particle.0.psTool.uvData.as_ref().unwrap();
                 let buffermatrix = particle.0.psTool.get_mpMatrixList().unwrap();
 
-                println!("============= buffercolor: {:?}", buffercolor);
-                println!("============= buffermatrix: {:?}", buffermatrix);
-                println!("============= uvdata: {:?}", bufferuv);
+                // println!("============= buffercolor: {:?}", buffercolor);
+                // println!("============= buffermatrix: {:?}", buffermatrix);
+                // println!("============= uvdata: {:?}", bufferuv);
 
                 let colordata: Vec<u8> = bytemuck::cast_slice(buffercolor).to_vec();
                 let uvdata: Vec<u8> = bytemuck::cast_slice(bufferuv).to_vec();

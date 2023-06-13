@@ -393,7 +393,11 @@ pub fn formatMeshParticle(config: &mut IParticleSystemConfig, mp: &mut MeshParti
     ps.scalingSpace = config.scalingMode;
     ps.set_renderAlignment(config.renderAlignment);
     ps.set_renderMode(config.renderMode);
-    ps.stretchedLengthScale = config.stretchedLengthScale;
+    ps.stretchedLengthScale = if config.stretchedLengthScale == 0.0 {
+        1.0
+    } else {
+        config.stretchedLengthScale
+    };
     ps.stretchedVelocityScale = config.stretchedVelocityScale;
 
     // bursts
@@ -677,32 +681,25 @@ pub fn formatMeshParticle(config: &mut IParticleSystemConfig, mp: &mut MeshParti
  */
 fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
     if let Some(shape) = &shape {
+        let mut pos = None;
+        let mut rotation = None;
+        let mut scale = None;
+        let mut randomize = None;
+        let mut alignDir = 0;
         let mut shapeEmitter: Box<dyn IShapeEmitterType> = match shape {
             // 2
             IShape::ShapeBox(shape) => {
                 let mut temp = BoxShapeEmitter::new();
-                temp.emitMode = if let Some(mode) = &shape.boxEmitMode {
+                temp.emit_mode = if let Some(mode) = &shape.boxEmitMode {
                     *mode
                 } else {
                     EBoxShapeMode::Volume
                 };
-                temp.set_postion(Vector3::new(
-                    shape.position[0],
-                    shape.position[1],
-                    shape.position[2],
-                ));
-                temp.set_rotation(Vector3::new(
-                    shape.rotation[0],
-                    shape.rotation[1],
-                    shape.rotation[2],
-                ));
-                temp.set_scaling(Vector3::new(shape.scale[0], shape.scale[1], shape.scale[2]));
-                temp.set_alignDirection(shape.alignDir != 0);
-                if let Some(randomize) = &shape.randomize {
-                    temp.set_randomizeDirection(randomize[0]);
-                    temp.set_spherizeDirection(randomize[1]);
-                    temp.set_randomizePosition(randomize[2]);
-                }
+                pos = shape.position.clone();
+                rotation = shape.rotation.clone();
+                scale = shape.scale.clone();
+                randomize = shape.randomize.clone();
+                alignDir = shape.alignDir;
                 Box::new(temp)
             }
             // 3
@@ -722,37 +719,25 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                         (v.mode, v.value, v.spread, v.speed)
                     }
                 };
-                temp.arcMode = mode;
-                temp.arcValue = value * std::f32::consts::PI / 180.;
-                temp.arcSpread = spread;
-                temp.arcSpeed = speed;
+                temp.arc_mode = mode;
+                temp.arc_value = value * std::f32::consts::PI / 180.;
+                temp.arc_spread = spread;
+                temp.arc_speed = speed;
 
-                temp.set_postion(Vector3::new(
-                    shape.position[0],
-                    shape.position[1],
-                    shape.position[2],
-                ));
-                temp.set_rotation(Vector3::new(
-                    shape.rotation[0],
-                    shape.rotation[1],
-                    shape.rotation[2],
-                ));
-                temp.set_scaling(Vector3::new(shape.scale[0], shape.scale[1], shape.scale[2]));
-                temp.set_alignDirection(shape.alignDir != 0);
-                if let Some(randomize) = &shape.randomize {
-                    temp.set_randomizeDirection(randomize[0]);
-                    temp.set_spherizeDirection(randomize[1]);
-                    temp.set_randomizePosition(randomize[2]);
-                }
+                pos = shape.position.clone();
+                rotation = shape.rotation.clone();
+                scale = shape.scale.clone();
+                randomize = shape.randomize.clone();
+                alignDir = shape.alignDir;
                 Box::new(temp)
             }
             // 0
             IShape::ShapeCone(shape) => {
                 let mut temp =
                     ConeShapeEmitter::new(shape.radius, shape.angle * std::f32::consts::PI / 180.);
-                temp.radiusRange = shape.radiusThickness;
+                temp.radius_range = shape.radiusThickness;
                 temp.set_height(shape.height);
-                temp.heightRange = if shape.emitAsVolume { 1.0 } else { 0.0 };
+                temp.height_range = if shape.emitAsVolume { 1.0 } else { 0.0 };
                 let (mode, value, spread, speed) = match &shape.arc {
                     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
                         (v.mode, v.value, v.spread, v.speed)
@@ -768,28 +753,16 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                     }
                 };
 
-                temp.arcMode = mode;
-                temp.arcValue = value * std::f32::consts::PI / 180.;
-                temp.arcSpread = spread;
-                temp.arcSpeed = speed;
+                temp.arc_mode = mode;
+                temp.arc_value = value * std::f32::consts::PI / 180.;
+                temp.arc_spread = spread;
+                temp.arc_speed = speed;
 
-                temp.set_postion(Vector3::new(
-                    shape.position[0],
-                    shape.position[1],
-                    shape.position[2],
-                ));
-                temp.set_rotation(Vector3::new(
-                    shape.rotation[0],
-                    shape.rotation[1],
-                    shape.rotation[2],
-                ));
-                temp.set_scaling(Vector3::new(shape.scale[0], shape.scale[1], shape.scale[2]));
-                temp.set_alignDirection(shape.alignDir != 0);
-                if let Some(randomize) = &shape.randomize {
-                    temp.set_randomizeDirection(randomize[0]);
-                    temp.set_spherizeDirection(randomize[1]);
-                    temp.set_randomizePosition(randomize[2]);
-                }
+                pos = shape.position.clone();
+                rotation = shape.rotation.clone();
+                scale = shape.scale.clone();
+                randomize = shape.randomize.clone();
+                alignDir = shape.alignDir;
                 Box::new(temp)
             }
             //5
@@ -815,23 +788,12 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                 temp.arcSpread = spread;
                 temp.arcSpeed = speed;
 
-                temp.set_postion(Vector3::new(
-                    shape.position[0],
-                    shape.position[1],
-                    shape.position[2],
-                ));
-                temp.set_rotation(Vector3::new(
-                    shape.rotation[0],
-                    shape.rotation[1],
-                    shape.rotation[2],
-                ));
-                temp.set_scaling(Vector3::new(shape.scale[0], shape.scale[1], shape.scale[2]));
-                temp.set_alignDirection(shape.alignDir != 0);
-                if let Some(randomize) = &shape.randomize {
-                    temp.set_randomizeDirection(randomize[0]);
-                    temp.set_spherizeDirection(randomize[1]);
-                    temp.set_randomizePosition(randomize[2]);
-                }
+                pos = shape.position.clone();
+                rotation = shape.rotation.clone();
+                scale = shape.scale.clone();
+                randomize = shape.randomize.clone();
+                alignDir = shape.alignDir;
+
                 Box::new(temp)
             }
             //4
@@ -856,45 +818,23 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                 temp.arcSpread = spread;
                 temp.arcSpeed = speed;
 
-                temp.set_postion(Vector3::new(
-                    shape.position[0],
-                    shape.position[1],
-                    shape.position[2],
-                ));
-                temp.set_rotation(Vector3::new(
-                    shape.rotation[0],
-                    shape.rotation[1],
-                    shape.rotation[2],
-                ));
-                temp.set_scaling(Vector3::new(shape.scale[0], shape.scale[1], shape.scale[2]));
-                temp.set_alignDirection(shape.alignDir != 0);
-                if let Some(randomize) = &shape.randomize {
-                    temp.set_randomizeDirection(randomize[0]);
-                    temp.set_spherizeDirection(randomize[1]);
-                    temp.set_randomizePosition(randomize[2]);
-                }
+                pos = shape.position.clone();
+                rotation = shape.rotation.clone();
+                scale = shape.scale.clone();
+                randomize = shape.randomize.clone();
+                alignDir = shape.alignDir;
+
                 Box::new(temp)
             }
             // 6
             IShape::ShapeRectangle(shape) => {
                 let mut temp = RectangleShapeEmitter::new();
-                temp.set_postion(Vector3::new(
-                    shape.position[0],
-                    shape.position[1],
-                    shape.position[2],
-                ));
-                temp.set_rotation(Vector3::new(
-                    shape.rotation[0],
-                    shape.rotation[1],
-                    shape.rotation[2],
-                ));
-                temp.set_scaling(Vector3::new(shape.scale[0], shape.scale[1], shape.scale[2]));
-                temp.set_alignDirection(shape.alignDir != 0);
-                if let Some(randomize) = &shape.randomize {
-                    temp.set_randomizeDirection(randomize[0]);
-                    temp.set_spherizeDirection(randomize[1]);
-                    temp.set_randomizePosition(randomize[2]);
-                }
+
+                pos = shape.position.clone();
+                rotation = shape.rotation.clone();
+                scale = shape.scale.clone();
+                randomize = shape.randomize.clone();
+                alignDir = shape.alignDir;
 
                 Box::new(temp)
             }
@@ -920,37 +860,39 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                 temp.arcValue = value * std::f32::consts::PI / 180.;
                 temp.arcSpread = spread;
                 temp.arcSpeed = speed;
-                temp.set_postion(Vector3::new(
-                    shape.position[0],
-                    shape.position[1],
-                    shape.position[2],
-                ));
-                temp.set_rotation(Vector3::new(
-                    shape.rotation[0],
-                    shape.rotation[1],
-                    shape.rotation[2],
-                ));
-                temp.set_scaling(Vector3::new(shape.scale[0], shape.scale[1], shape.scale[2]));
-                temp.set_alignDirection(shape.alignDir != 0);
 
-                if let Some(randomize) = &shape.randomize {
-                    temp.set_randomizeDirection(randomize[0]);
-                    temp.set_spherizeDirection(randomize[1]);
-                    temp.set_randomizePosition(randomize[2]);
-                }
+                pos = shape.position.clone();
+                rotation = shape.rotation.clone();
+                scale = shape.scale.clone();
+                randomize = shape.randomize.clone();
+                alignDir = shape.alignDir;
 
                 Box::new(temp)
             }
         };
 
-        let mat = Matrix::new_nonuniform_scaling(&shapeEmitter.get_scaling())
-            * Matrix::from_euler_angles(
-                shapeEmitter.get_rotation()[0],
-                shapeEmitter.get_rotation()[1],
-                shapeEmitter.get_rotation()[2],
-            )
-            * Matrix::new_translation(&shapeEmitter.get_postion());
-        shapeEmitter.set_localMatrix(mat);
+        if let (Some(pos), Some(rotation), Some(scale)) = (pos, rotation, scale) {
+            shapeEmitter.set_postion(Vector3::new(pos[0], pos[1], pos[2]));
+            shapeEmitter.set_rotation(Vector3::new(rotation[0], rotation[1], rotation[2]));
+            shapeEmitter.set_scaling(Vector3::new(scale[0], scale[1], scale[2]));
+
+            let mat = Matrix::new_nonuniform_scaling(&shapeEmitter.get_scaling())
+                * Matrix::from_euler_angles(
+                    shapeEmitter.get_rotation()[0],
+                    shapeEmitter.get_rotation()[1],
+                    shapeEmitter.get_rotation()[2],
+                )
+                * Matrix::new_translation(&shapeEmitter.get_postion());
+            shapeEmitter.set_localMatrix(mat);
+        }
+
+        shapeEmitter.set_alignDirection(alignDir != 0);
+
+        if let Some(randomize) = &randomize {
+            shapeEmitter.set_randomizeDirection(randomize[0]);
+            shapeEmitter.set_spherizeDirection(randomize[1]);
+            shapeEmitter.set_randomizePosition(randomize[2]);
+        }
 
         return shapeEmitter;
     } else {

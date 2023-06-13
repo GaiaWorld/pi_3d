@@ -23,7 +23,7 @@ impl Gravity {
             .transform_vector(&localForce);
 
         localForce = localForce * deltaSeconds;
-
+        
         particle.direction = particle.direction + (localForce);
     }
 

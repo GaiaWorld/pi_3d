@@ -56,7 +56,7 @@ impl VelocityOverLifetime {
         localResult = localResult - (particle.velocity);
 
         particle.velocity = Vector3::new(x, y, z);
-
+       
         particle.direction += localResult;
     }
 

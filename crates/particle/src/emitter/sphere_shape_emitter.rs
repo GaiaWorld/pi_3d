@@ -1,6 +1,8 @@
 use pi_scene_math::{Matrix, Vector3};
 use rand::Rng;
 
+use crate::normalize;
+
 use super::ishape_emitter_type::{
     compute_radians, EShapeEmitterArcMode, EShapeEmitterDirectionMode, IShapeEmitterType,
     IShapeEmitterTypeValue,
@@ -88,10 +90,11 @@ impl IShapeEmitterType for SphereShapeEmitter {
         is_local: bool,
     ) {
         let mut direction = if (is_local) {
-            local_position.normalize()
+            normalize(&local_position)
         } else {
-            (position - Vector3::new(world_matrix[3], world_matrix[7], world_matrix[11]))
-                .normalize()
+            normalize(
+                &(position - Vector3::new(world_matrix[3], world_matrix[7], world_matrix[11])),
+            )
         };
 
         let mut rng = rand::thread_rng();
@@ -99,11 +102,11 @@ impl IShapeEmitterType for SphereShapeEmitter {
         direction[1] += rng.gen::<f32>() * Self::RANDOMIZE_DIRECTION;
         direction[2] += rng.gen::<f32>() * Self::RANDOMIZE_DIRECTION;
 
-        direction = direction.normalize();
+        direction = normalize(&direction);
         if (is_local) {
             *direction_to_update = direction;
         } else {
-            *direction_to_update = world_matrix.transform_vector(&direction).normalize();
+            *direction_to_update = normalize(&world_matrix.transform_vector(&direction));
         }
     }
 

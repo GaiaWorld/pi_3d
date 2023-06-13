@@ -1,6 +1,8 @@
 use pi_scene_math::{Matrix, Vector3};
 use rand::Rng;
 
+use crate::normalize;
+
 use super::{
     ishape_emitter_type::{
         compute_radians, EShapeEmitterArcMode, EShapeEmitterDirectionMode, IShapeEmitterType,
@@ -106,21 +108,21 @@ impl IShapeEmitterType for EdgeShapeEmitter {
         // direction.copyFromFloats();
 
         // localPosition.normalizeToRef(TmpVectors.Vector3[1]);
-        let local_position = local_position.normalize();
+        let local_position = normalize(&local_position);
         direction[0] = direction[0] * (1.0 - self.spherizeDirection)
             + local_position[0] * self.spherizeDirection;
         direction[1] = direction[1] * (1.0 - self.spherizeDirection)
             + local_position[1] * self.spherizeDirection;
         direction[2] = direction[2] * (1.0 - self.spherizeDirection)
             + local_position[2] * self.spherizeDirection;
-        direction = direction.normalize();
+        direction = normalize(&direction);
 
         let mut rng = rand::thread_rng();
         direction[0] += rng.gen::<f32>() * self.randomizeDirection;
         direction[1] += rng.gen::<f32>() * self.randomizeDirection;
         direction[2] += rng.gen::<f32>() * self.randomizeDirection;
 
-        direction = direction.normalize();
+        direction = normalize(&direction);
 
         if (is_local) {
             *direction_to_update = direction;

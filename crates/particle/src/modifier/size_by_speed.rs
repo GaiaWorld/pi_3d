@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{interpolation::FloatInterpolation, particle::Particle};
+use crate::{interpolation::FloatInterpolation, multiply, particle::Particle};
 
 use super::base::{IParticleModifier, ScalingInterpolate};
 
@@ -47,6 +47,6 @@ impl IParticleModifier for SizeBySpeed {
         self.scalingInterpolate
             .compute(*amount, particle.base_random, &mut localResult);
 
-        particle.scaling = particle.scaling.cross(&localResult);
+        particle.scaling = multiply(&particle.scaling, &localResult);
     }
 }

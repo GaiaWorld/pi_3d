@@ -189,6 +189,14 @@ path = "examples/anime/performance.rs"
 name = "particle01"
 path = "examples/particles/01.rs"
 
+[[example]]
+name = "particle02"
+path = "examples/particles/02.rs"
+
+[[example]]
+name = "particle03"
+path = "examples/particles/03.rs"
+
 # [[example]]
 # name = "gltfskin"
 # path = "examples/gltf/simple_skin.rs"

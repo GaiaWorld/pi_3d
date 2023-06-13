@@ -4,7 +4,7 @@ use pi_scene_math::Vector3;
 use crate::{
     interpolation::{Color4Gradient, FloatInterpolation, IInterpolation},
     iparticle_system_config::EInterpolationCurveMode,
-    particle::Particle,
+    particle::Particle, normalize,
 };
 
 use super::{
@@ -241,7 +241,7 @@ impl TrailModifier {
             let pointLenght = particle.global_record_list.len();
             if (pointLenght == 0) {
                 let tempPoint = particle.direction;
-                let tempPoint = tempPoint.normalize();
+                let tempPoint = normalize(&tempPoint);
                 let tempPoint = tempPoint * (0.01);
                 // particle.position.subtractToRef(TrailModifier.tempPoint, TrailModifier.tempPoint);
                 let tempPoint = particle.position - tempPoint;
@@ -336,10 +336,10 @@ impl TrailModifier {
                         tempRecordList[j + 1][2],
                     );
                     let tempDirection = tempDirection - tempPoint;
-                    let tempDirection = tempDirection.normalize();
+                    let tempDirection = normalize(&tempDirection);
 
                     let tempView = cameraGlobalPos - tempPoint;
-                    let tempView = tempView.normalize();
+                    let tempView = normalize(&tempView);
 
                     // Vector3.CrossToRef(TrailModifier.tempDirection, TrailModifier.tempView, TrailModifier.tempExtend);
                     let mut tempExtend = tempDirection.cross(&tempView);
@@ -565,10 +565,10 @@ impl TrailModifier {
                         tempRecordList[j + 1][2],
                     );
                     let temp_direction = temp_direction - tempPoint;
-                    let temp_direction = temp_direction.normalize();
+                    let temp_direction = normalize(&temp_direction);
 
                     let tempView = camera_global_pos - tempPoint;
-                    let tempView = tempView.normalize();
+                    let tempView = normalize(&tempView);
 
                     let mut tempExtend = temp_direction - tempView;
                     let xSquareLength = tempExtend.magnitude_squared();

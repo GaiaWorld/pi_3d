@@ -1,6 +1,8 @@
 use pi_scene_math::{Matrix, Vector3};
 use rand::Rng;
 
+use crate::normalize;
+
 use super::{
     ishape_emitter_type::{IShapeEmitterType, IShapeEmitterTypeValue},
     serializationObject,
@@ -26,8 +28,8 @@ impl RectangleShapeEmitter {
     pub fn parse(arg: serializationObject) {
         todo!()
     }
-    pub fn new()->Self{
-        Self{
+    pub fn new() -> Self {
+        Self {
             direction: Vector3::new(0.0, 0.0, 1.0),
             rotation: Vector3::new(0., 0., 0.),
             position: Vector3::new(0., 0., 0.),
@@ -53,7 +55,7 @@ impl IShapeEmitterType for RectangleShapeEmitter {
     ) {
         let mut direction = self.direction;
 
-        let local_position = local_position.normalize();
+        let local_position = normalize(&local_position);
 
         direction[0] = direction[0] * (1.0 - self.spherizeDirection)
             + local_position[0] * self.spherizeDirection;
@@ -61,19 +63,19 @@ impl IShapeEmitterType for RectangleShapeEmitter {
             + local_position[1] * self.spherizeDirection;
         direction[2] = direction[2] * (1.0 - self.spherizeDirection)
             + local_position[2] * self.spherizeDirection;
-        direction = direction.normalize();
+        direction = normalize(&direction);
 
         let mut rng = rand::thread_rng();
         direction[0] += rng.gen::<f32>() * self.randomizeDirection;
         direction[1] += rng.gen::<f32>() * self.randomizeDirection;
         direction[2] += rng.gen::<f32>() * self.randomizeDirection;
-        
-        direction = direction.normalize();
+
+        direction = normalize(&direction);
 
         if (is_local) {
             *direction_to_update = direction;
         } else {
-            *direction_to_update = world_matrix.transform_vector(&direction).normalize();
+            *direction_to_update = normalize(&world_matrix.transform_vector(&direction));
         }
     }
 
@@ -105,14 +107,15 @@ impl IShapeEmitterType for RectangleShapeEmitter {
 
     fn get_class_name() -> String
     where
-        Self: Sized {
-            todo!()
+        Self: Sized,
+    {
+        todo!()
     }
 
     fn dispose()
     where
-        Self: Sized {
-        
+        Self: Sized,
+    {
     }
 
     fn set_postion(&mut self, position: Vector3) {
@@ -126,8 +129,6 @@ impl IShapeEmitterType for RectangleShapeEmitter {
     fn set_scaling(&mut self, scaling: Vector3) {
         self.scaling = scaling;
     }
-
-    
 
     fn get_postion(&self) -> Vector3 {
         self.position.clone()
@@ -148,7 +149,6 @@ impl IShapeEmitterType for RectangleShapeEmitter {
     fn set_alignDirection(&mut self, alignDirection: bool) {
         self.alignDirection = alignDirection;
     }
-    
 
     fn set_randomizeDirection(&mut self, randomizeDirection: f32) {
         self.randomizeDirection = randomizeDirection;
@@ -170,7 +170,7 @@ impl IShapeEmitterType for RectangleShapeEmitter {
         self.alignDirection.clone()
     }
 
-    fn get_randomizeDirection(&mut self, ) -> f32 {
+    fn get_randomizeDirection(&mut self) -> f32 {
         self.randomizeDirection.clone()
     }
 

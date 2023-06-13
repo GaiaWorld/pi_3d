@@ -2,11 +2,13 @@ use pi_scene_math::{Quaternion, Vector3};
 
 use crate::{
     interpolation::{FloatInterpolation, IInterpolation},
+    iparticle_system_config::EInterpolationCurveMode,
     particle::Particle,
 };
 
 use super::base::{
-    TempQuaternionA, TempVector3A, TempVector3B, TempVector3C, TempVector3D, TranslationInterpolate, IParticleModifier,
+    IParticleModifier, TempQuaternionA, TempVector3A, TempVector3B, TempVector3C, TempVector3D,
+    TranslationInterpolate,
 };
 
 #[derive(Clone)]
@@ -18,8 +20,10 @@ pub struct LocalPosition {
 }
 
 impl LocalPosition {
-    
     pub fn new() -> Self {
+        let mut speedModifier = FloatInterpolation::new();
+        speedModifier.mode = EInterpolationCurveMode::Constant;
+        speedModifier.constant0 = Some(1.0);
         Self {
             orbitalRotateSpeed: TranslationInterpolate::new(
                 FloatInterpolation::new(),
@@ -32,12 +36,12 @@ impl LocalPosition {
                 FloatInterpolation::new(),
             ),
             radial: FloatInterpolation::new(),
-            speedModifier: FloatInterpolation::new(),
+            speedModifier,
         }
     }
 }
 
-impl IParticleModifier for LocalPosition{
+impl IParticleModifier for LocalPosition {
     fn modify(&mut self, particle: &mut Particle, amount: &mut f32, deltaSeconds: f32) {
         particle.direction_length = particle.direction.magnitude();
 
@@ -49,7 +53,9 @@ impl IParticleModifier for LocalPosition{
             &mut orbitalRotate,
         );
 
-        let speedModifier = self.speedModifier.interpolate(*amount, particle.base_random);
+        let speedModifier = self
+            .speedModifier
+            .interpolate(*amount, particle.base_random);
 
         let radial = self.radial.interpolate(*amount, particle.base_random);
 
@@ -68,16 +74,12 @@ impl IParticleModifier for LocalPosition{
         let mut orbtialDiff = TempVector3D;
         orbtialDiff = particle.position - centerOffset;
 
-        if (orbtialDiff.magnitude_squared() > 0.) {
-            let mut rotate =
+        if orbtialDiff.magnitude_squared() > 0. {
+            let rotate =
                 Quaternion::from_euler_angles(orbitalRotate[0], orbitalRotate[1], orbitalRotate[2]);
 
-            orbtialDiff = rotate.transform_vector(&(centerOffset + (-particle.position)));
-            // let rotated_v = Rotation3::from_quaternion(rotation_quaternion) * rotated_v + rotation_point.coords;
-
-            // particle
-            //     .position
-            //     .rotateByQuaternionAroundPointToRef(rotate, centerOffset, orbtialDiff);
+            let temp = rotate.transform_vector(&(particle.position - centerOffset));
+            orbtialDiff = temp + centerOffset;
 
             // 基础径向向量
             // orbtialDiff.subtractToRef(centerOffset, orbtialDiff);
@@ -100,11 +102,19 @@ impl IParticleModifier for LocalPosition{
         // particle.direction.scaleToRef(deltaSeconds, localResult);
         localResult = particle.direction * deltaSeconds;
         localResult = localResult * speedModifier;
+        // println!("particle.direction: {:?}, deltaSeconds: {:?}, speedModifier: {:?}",particle.direction, deltaSeconds, speedModifier);
+        particle.readldirection = orbtialDiff;
 
-        particle.readldirection = (orbtialDiff);
-        particle.readldirection = particle.readldirection + (localResult);
-
+        particle.readldirection = particle.readldirection + localResult;
+        // println!(
+        //     "LocalPosition1 particle.position: {:?}, particle.readldirection: {:?}",
+        //     particle.position, particle.readldirection
+        // );
         particle.position = particle.position + (particle.readldirection);
+        // println!(
+        //     "LocalPosition2 particle.position: {:?}, particle.readldirection: {:?}",
+        //     particle.position, particle.readldirection
+        // );
 
         if (deltaSeconds != 0.) {
             particle.readldirection = particle.readldirection * (1. / deltaSeconds.abs());

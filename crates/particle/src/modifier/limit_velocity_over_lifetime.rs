@@ -26,6 +26,7 @@ impl IParticleModifier for LimitVelocityOverLifetime {
 
         let currLength = particle.direction_length;
         if (currLength > localResult) {
+            println!("LimitVelocityOverLifetime particle.direction: {:?}",  particle.direction);
             particle.direction = particle.direction
                 * (1.0 - self.dampen * (currLength - localResult) / currLength * (0.66));
         }

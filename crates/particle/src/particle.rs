@@ -1,7 +1,7 @@
 use pi_scene_math::{Color4, Matrix, Vector3};
 use rand::Rng;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Particle {
     pub start_world_matrix: Matrix,
     pub start_world_matrix_invert: Matrix,

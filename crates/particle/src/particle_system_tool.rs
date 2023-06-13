@@ -37,6 +37,7 @@ use crate::{
         trail::TrailModifier,
         velocity_over_lifetime::VelocityOverLifetime,
     },
+    multiply, normalize,
     particle::Particle,
     pool::Pool,
 };
@@ -241,7 +242,7 @@ pub struct ParticleSystemTool {
     _particleSystemAge: u64,
 
     _lastTime: u64,
-    _deltaTime: u64,
+    _deltaTime: f32,
     _lastCreateTime: u64,
 
     _isPlaying: bool,
@@ -287,7 +288,7 @@ pub struct ParticleSystemTool {
     _start_l_p: Vector3,
 
     _maxLifetimeOverage: u64,
-    _stepTime: u64,
+    _stepTime: f32,
 }
 
 impl ParticleSystemTool {
@@ -426,7 +427,7 @@ impl ParticleSystemTool {
             activeParticleList: vec![],
             _particleSystemAge: 0,
             _lastTime: 0,
-            _deltaTime: 0,
+            _deltaTime: 0.,
             _lastCreateTime: 0,
             _isPlaying: false,
             _isComputeable: false,
@@ -458,7 +459,7 @@ impl ParticleSystemTool {
             _start_l_r: Quaternion::identity(),
             _start_l_p: Vector3::zeros(),
             _maxLifetimeOverage: 0,
-            _stepTime: 16,
+            _stepTime: 16.0,
             colorData: None,
             uvData: None,
         }
@@ -512,8 +513,11 @@ impl ParticleSystemTool {
         self.uvData = Some(vec![0.; 4 * self.maxParticles]);
         // self._mpUVSheetData = new Float32Array(4 * self.maxParticles);
 
-        for _ in self._maxId..self.maxParticles {
+        for i in self._maxId..self.maxParticles {
+            let r = self.pool.createParticle();
+            // println!("r.pos: {:?}", r.position);
             self.particleList.push(self.pool.createParticle());
+            // pru
         }
         self._maxId = self.maxParticles;
     }
@@ -531,7 +535,7 @@ impl ParticleSystemTool {
     }
 
     fn _startCall(&mut self) {
-        // println!("=========== _startCall1");
+        println!("=========== _startCall1");
         if !self._isDisposed {
             // println!("=========== _startCall2");
             let now = std::time::SystemTime::now()
@@ -549,6 +553,7 @@ impl ParticleSystemTool {
             let count = self.particleList.len();
             for i in 0..count {
                 self.particleList[i].reset();
+                // println!("r.pos{:p}: {:?}", &self.particleList[i], self.particleList[i].position)
             }
             // println!("=========== _startCall3, self.prewarm: {}", self.prewarm);
             if self.prewarm {
@@ -556,15 +561,21 @@ impl ParticleSystemTool {
                 let deltaTime = self.computeDeltaTime;
                 let counter = self.duration / deltaTime;
                 // now.checked_sub(duration)
-                self._lastTime = (now - self.duration);
+                self._lastTime = now - self.duration;
                 self._lastCreateTime = self._lastTime;
 
-                let mut tempCurr = (now - self.duration);
+                let mut tempCurr = now - self.duration;
 
                 for i in 1..counter as usize {
                     tempCurr = tempCurr + deltaTime;
                     // println!("=========== _startCall5, tempCurr: {}", tempCurr);
-                    self.varCompute(tempCurr);
+                    for j in 0..count {
+                        // self.particleList[j].reset();
+                        // println!("count: {:?}, j: {}", count, j);
+                        // println!("r.pos{}: {:?}",i, self.particleList[j].position);
+                        // println!("r.pos{:p}: {:?}", &self.particleList[j], self.particleList[j].position)
+                    }
+                    self.varCompute(tempCurr, Matrix::identity(), Matrix::identity());
                 }
             }
 
@@ -596,8 +607,19 @@ impl ParticleSystemTool {
         // self.trail.enable = false;
     }
 
-    pub fn mpUpdate(&mut self) -> f32 {
-        return self._update();
+    pub fn mpUpdate(
+        &mut self,
+        world_matrix: Matrix,
+        local_matrix: Matrix,
+        camera_pos: Vector3,
+        camera_rotation_matrix_invert: Matrix,
+    ) -> f32 {
+        return self._update(
+            world_matrix,
+            local_matrix,
+            camera_pos,
+            camera_rotation_matrix_invert,
+        );
     }
 
     fn _updateParticleWorldMatrixCompute(&mut self) {
@@ -644,7 +666,7 @@ impl ParticleSystemTool {
         // 分解出 TRS
         if let Some(matrix) = parentWM.as_ref() {
             // parentWM.decompose(self._start_p_s, self._start_p_r, self._start_p_p);
-            println!("matrix: {:?}", matrix);
+            // println!("matrix: {:?}", matrix);
             let mut rotation = Rotation3::identity();
             CoordinateSytem3::matrix4_decompose_rotation(
                 &matrix,
@@ -697,13 +719,20 @@ impl ParticleSystemTool {
         }
         // pubMatrix.ComposeToRef(self._start_p_s, self._start_p_r, self._start_p_p, resultStartMatrix);
         // let a = Matrix::f
-        println!("self._start_p_r: {:?}, self._start_p_s: {:?}, self._start_p_p: {:?}", self._start_p_r, self._start_p_s, self._start_p_p);
-        println!("self._start_l_r: {:?}, self._start_l_s: {:?}, self._start_l_p: {:?}", self._start_l_r, self._start_l_s, self._start_l_p);
+        // println!(
+        //     "self._start_p_r: {:?}, self._start_p_s: {:?}, self._start_p_p: {:?}",
+        //     self._start_p_r, self._start_p_s, self._start_p_p
+        // );
+        // println!(
+        //     "self._start_l_r: {:?}, self._start_l_s: {:?}, self._start_l_p: {:?}",
+        //     self._start_l_r, self._start_l_s, self._start_l_p
+        // );
+        // println!("resultStartMatrix: {:?}  ", resultStartMatrix);
         let euler_angles = self._start_p_r.euler_angles();
         *resultStartMatrix = Matrix::new_nonuniform_scaling(&self._start_p_s)
             * Matrix::from_euler_angles(euler_angles.0, euler_angles.1, euler_angles.2)
             * Matrix::new_translation(&self._start_p_p);
-
+        // println!("resultStartMatrix1: {:?}  ", resultStartMatrix);
         // pubMatrix.ComposeToRef(self._start_l_s, self._start_l_r, self._start_l_p, ParticleSystemTool.TempMatrix_1);
         let euler_angles = self._start_l_r.euler_angles();
         let mat = Matrix::new_nonuniform_scaling(&self._start_l_s)
@@ -711,25 +740,38 @@ impl ParticleSystemTool {
             * Matrix::new_translation(&self._start_l_p);
 
         *resultStartMatrix = mat * (*resultStartMatrix);
+        // println!("resultStartMatrix2: {:?}  ", resultStartMatrix);
         // ParticleSystemTool.TempMatrix_1.multiplyToRef(resultStartMatrix, resultStartMatrix);
     }
 
-    fn _update(&mut self) -> f32 {
+    fn _update(
+        &mut self,
+        world_matrix: Matrix,
+        local_matrix: Matrix,
+        camera_pos: Vector3,
+        camera_rotation_matrix_invert: Matrix,
+    ) -> f32 {
         if self._mpColorData.is_none() || self._mpMatrixList.is_none() {
             return 0.0;
         }
 
         // const cameraWM = self.getCameraMatrix();
-        let cameraRotationMatrix = (self.getCameraRotationMatrixInvert)();
-        let cameraGlobalPos = (self.getCameraPosition)();
-        let _start_parent_m = (self.getParentWorldMatrix)();
-        let _start_local_m = (self.getLocalMatrix)();
-        let mut _start_w_m = (self.getWorldMatrix)().clone();
+        let cameraRotationMatrix = camera_rotation_matrix_invert;
+        let cameraGlobalPos = camera_pos;
+        let _start_parent_m = world_matrix.clone();
+        let _start_local_m = local_matrix;
+        let mut _start_w_m = world_matrix;
 
-        let mut tempStartMatrix = Matrix::identity();
-        self._formatStartInfo(Some(_start_parent_m), _start_local_m, &mut tempStartMatrix);
-        let mut realStartMatrix = Matrix::identity();
+        let mut temp_start_matrix = Matrix::identity();
+        // println!("temp_start_matrix1: {:?}", temp_start_matrix);
+        self._formatStartInfo(
+            Some(_start_parent_m),
+            _start_local_m,
+            &mut temp_start_matrix,
+        );
+        let mut real_start_matrix = Matrix::identity();
 
+        // println!("temp_start_matrix: {:?}", temp_start_matrix);
         let mut activeCount = 0;
         if let ERenderMode::None = self._renderMode {
         } else {
@@ -780,7 +822,7 @@ impl ParticleSystemTool {
                 // }
                 // else {
                 // realStartMatrix.copyFrom(tempStartMatrix);
-                realStartMatrix = particle.emit_world_matrix;
+                real_start_matrix = particle.emit_world_matrix;
                 _start_w_m = particle.start_world_matrix;
                 // }
 
@@ -793,12 +835,16 @@ impl ParticleSystemTool {
                 // }
 
                 // let mut pivot = Vector3::zeros();
-                let mut pivot = particle.scaling.cross(&self.renderPivot);
+                let mut pivot = multiply(&particle.scaling, &self.renderPivot);
+                // println!("pivot: {:?}", pivot);
                 pivot = pivot + particle.position;
+                // println!("particle.position: {:?}", particle.position);
+                // println!("pivot2: {:?}", pivot);
+                // println!("tempStartMatrix0: {:?}", temp_start_matrix);
                 (self.particleWorldMatrixCompute)(
                     _start_w_m,
-                    &mut realStartMatrix,
-                    &mut tempStartMatrix,
+                    &mut real_start_matrix,
+                    &mut temp_start_matrix,
                     cameraRotationMatrix,
                     cameraGlobalPos,
                     &mut particle.readldirection,
@@ -809,24 +855,28 @@ impl ParticleSystemTool {
                     self.stretchedLengthScale,
                     self.stretchedVelocityScale,
                 );
-                println!("tempStartMatrix: {:?}", tempStartMatrix);
+                // println!("tempStartMatrix: {:?}", temp_start_matrix);
                 if let Some(matlist) = &mut self._mpMatrixList {
-                    matlist[activeCount * 16] = tempStartMatrix[0];
-                    matlist[activeCount * 16 + 1] = tempStartMatrix[1];
-                    matlist[activeCount * 16 + 2] = tempStartMatrix[2];
-                    matlist[activeCount * 16 + 3] = tempStartMatrix[3];
-                    matlist[activeCount * 16 + 4] = tempStartMatrix[4];
-                    matlist[activeCount * 16 + 5] = tempStartMatrix[5];
-                    matlist[activeCount * 16 + 6] = tempStartMatrix[6];
-                    matlist[activeCount * 16 + 7] = tempStartMatrix[7];
-                    matlist[activeCount * 16 + 8] = tempStartMatrix[8];
-                    matlist[activeCount * 16 + 9] = tempStartMatrix[9];
-                    matlist[activeCount * 16 + 10] = tempStartMatrix[10];
-                    matlist[activeCount * 16 + 11] = tempStartMatrix[11];
-                    matlist[activeCount * 16 + 12] = tempStartMatrix[12];
-                    matlist[activeCount * 16 + 13] = tempStartMatrix[13];
-                    matlist[activeCount * 16 + 14] = tempStartMatrix[14];
-                    matlist[activeCount * 16 + 15] = tempStartMatrix[15];
+                    temp_start_matrix.transpose_mut();
+                    // temp_start_matrix.as_slice().iter().enumerate().for_each(|(idx, val)| {
+                    //     matlist[activeCount * 16 + idx] = *val;
+                    // });
+                    matlist[activeCount * 16] = temp_start_matrix[0];
+                    matlist[activeCount * 16 + 1] = temp_start_matrix[1];
+                    matlist[activeCount * 16 + 2] = temp_start_matrix[2];
+                    matlist[activeCount * 16 + 3] = temp_start_matrix[3];
+                    matlist[activeCount * 16 + 4] = temp_start_matrix[4];
+                    matlist[activeCount * 16 + 5] = temp_start_matrix[5];
+                    matlist[activeCount * 16 + 6] = temp_start_matrix[6];
+                    matlist[activeCount * 16 + 7] = temp_start_matrix[7];
+                    matlist[activeCount * 16 + 8] = temp_start_matrix[8];
+                    matlist[activeCount * 16 + 9] = temp_start_matrix[9];
+                    matlist[activeCount * 16 + 10] = temp_start_matrix[10];
+                    matlist[activeCount * 16 + 11] = temp_start_matrix[11];
+                    matlist[activeCount * 16 + 12] = temp_start_matrix[12];
+                    matlist[activeCount * 16 + 13] = temp_start_matrix[13];
+                    matlist[activeCount * 16 + 14] = temp_start_matrix[14];
+                    matlist[activeCount * 16 + 15] = temp_start_matrix[15];
                 }
 
                 activeCount += 1;
@@ -837,7 +887,7 @@ impl ParticleSystemTool {
     }
 
     // 变量计算 - 异步计算
-    pub fn varCompute(&mut self, currTime: u64) {
+    pub fn varCompute(&mut self, currTime: u64, world_matrix: Matrix, local_matrix: Matrix) {
         // println!("============varCompute1");
         let now = currTime;
         let delta = now - self._lastTime;
@@ -851,10 +901,10 @@ impl ParticleSystemTool {
             // println!("============varCompute3");
             self._lastTime = now;
             self._particleSystemAge += delta;
-            self._deltaTime = delta / 1000;
+            self._deltaTime = delta as f32 / 1000.0;
 
-            let scaleUpdateSpeed = (self._deltaTime).min(50 / 1000);
-            self._stepTime = scaleUpdateSpeed * 1000;
+            let scaleUpdateSpeed = (self._deltaTime).min(50.0 / 1000.0);
+            self._stepTime = scaleUpdateSpeed * 1000.0;
             // println!(
             //     "============varCompute3.1:  now: {}, self._lastCreateTime: {}",
             //     now, self._lastCreateTime
@@ -885,7 +935,7 @@ impl ParticleSystemTool {
             let localTimeDiff = self._particleSystemAge % self.duration;
             let mut burstCreateCount = 0;
 
-            self.emissionLoop = (self._particleSystemAge as f32 / self.emissionTime as f32);
+            self.emissionLoop = (self._particleSystemAge as f32 / self.emissionTime as f32).floor();
             self.emissionProgress =
                 self._particleSystemAge as f32 % self.emissionTime / self.emissionTime;
 
@@ -961,6 +1011,7 @@ impl ParticleSystemTool {
 
             let mut newParticleList = vec![];
             let mut deltaAge = 0.;
+            // println!("pos: {:?}", self.particleList);
             for i in 0..self.maxParticles {
                 let particle = &mut self.particleList[i];
 
@@ -971,20 +1022,26 @@ impl ParticleSystemTool {
                 if (particle.age - particle.lifetime >= deltaAge) {
                     if (newCount > 0.) {
                         newParticleList.push(particle as *mut Particle);
+
                         self.activeParticleList.push(particle as *mut Particle);
-                        newCount = -1.;
+                        newCount -= 1.;
                     }
                 } else {
                     self.activeParticleList.push(particle);
                 }
             }
-            // self.activeParticleList.sort();
+            self.activeParticleList.sort_by(|a, b| {
+                let a = unsafe { &*(*a) };
+                let b = unsafe { &*(*b) };
+                // println!("pos: {:?}", a.position);
+                a.age.partial_cmp(&b.age).unwrap()
+            });
 
             let mut emitWorldMatrix = Matrix::identity();
             // let _startWorldRM = Matrix::identity();
-            let parentWorldMatrix = (self.getParentWorldMatrix)();
-            let worldMatrix = (self.getWorldMatrix)();
-            let localMatrix = (self.getLocalMatrix)();
+            let parentWorldMatrix = world_matrix.clone();
+            let worldMatrix = world_matrix;
+            let localMatrix = local_matrix;
 
             // let mut postion = Vector3::new(0., 0., 0.);
             let mut _startWorldRM = Rotation3::identity();
@@ -1023,8 +1080,31 @@ impl ParticleSystemTool {
             self._formatStartInfo(Some(parentWorldMatrix), localMatrix, &mut emitWorldMatrix);
 
             self.applyModifier();
-            self.varInit(newParticleList, worldMatrix, _startWorldRM, emitWorldMatrix);
-            // let activeParticleList = self.activeParticleList.clone();
+
+            // for p in &self.activeParticleList{
+            //     let r = unsafe { &mut *(*p) };
+            //     println!("1activeParticleList pos{:?}: {:?}", *p, r.position);
+            // }
+            // for p in &newParticleList{
+            //     let r = unsafe { &mut *(*p) };
+            //     println!("1newParticleList pos{:?}: {:?}", p, r.position);
+            // }
+
+            self.varInit(
+                newParticleList.clone(),
+                worldMatrix,
+                _startWorldRM,
+                emitWorldMatrix,
+            );
+            // for p in &self.activeParticleList{
+            //     let r = unsafe { &mut *(*p) };
+            //     println!("2activeParticleList pos{:?}: {:?}", *p, r.position);
+            // }
+            // for p in &newParticleList{
+            //     let r = unsafe { &mut *(*p) };
+            //     println!("2newParticleList pos{:?}: {:?}", p, r.position);
+            // }
+
             self.varPre(
                 delta as f32,
                 scaleUpdateSpeed as f32,
@@ -1121,6 +1201,7 @@ impl ParticleSystemTool {
         let mut i = 0;
         for particle in newParticleList {
             let particle = unsafe { &mut *particle };
+
             particle.reset();
 
             particle.global_record_list.clear();
@@ -1134,6 +1215,7 @@ impl ParticleSystemTool {
             //     particle.emit_world_matrix
             // );
             self.initNew(particle, progress, i, newCount);
+
             i += 1;
         }
     }
@@ -1152,7 +1234,7 @@ impl ParticleSystemTool {
         let startSpeed = self
             .startSpeedInterpolation
             .interpolate(progress as f32, rng.gen::<f32>());
-
+        // println!("startSpeed: {:?}", startSpeed);
         let mut startLocalPosition = Vector3::zeros();
         if let Some(emitterShape) = &self.emitterShape {
             emitterShape.start_position_function(
@@ -1175,7 +1257,10 @@ impl ParticleSystemTool {
             .transform_vector(&startLocalPosition);
 
         let mut startDirection = Vector3::zeros();
+        // println!(":startDirection0 {:?}, particle.start_world_matrix: {:?}", startDirection, particle.start_world_matrix);
+        // println!("startLocalPosition: {:?}", startLocalPosition);
         if let Some(emitterShape) = &self.emitterShape {
+            // println!("emitterShape: {:?}", emitterShape);
             emitterShape.start_direction_function(
                 particle.start_world_matrix,
                 &mut startDirection,
@@ -1184,14 +1269,16 @@ impl ParticleSystemTool {
                 true,
             );
         }
+        // println!("startDirection0: {:?}", startDirection);
         startDirection *= (startSpeed);
         // println!("initNew {:?}", 1);
         particle.age = 0.;
         particle.lifetime = self
             .startLifetimeInterpolation
             .interpolate(progress as f32, rng.gen::<f32>());
-
+        // println!("startLocalPosition: {:?}", startLocalPosition);
         particle.position = (startLocalPosition);
+        // println!("startDirection: {:?}", startDirection);
         particle.direction = (startDirection);
 
         // emitRotation
@@ -1233,7 +1320,7 @@ impl ParticleSystemTool {
             }
         }
 
-        startDirection = startDirection.normalize();
+        startDirection = normalize(&startDirection);
         startDirection = startDirection * (0.01);
         particle.local_record_list.push([
             -0.002,
@@ -1288,6 +1375,7 @@ impl ParticleSystemTool {
         self._maxLifetimeOverage = 0;
         for i in 0..count {
             let particle = unsafe { &mut *activeParticles[i] };
+            // println!("varPre particle.pos:{}", particle.position);
             // if i == 0 {
             //     println!("{}particle.age:{}", i, particle.age);
             // }
@@ -1321,10 +1409,15 @@ impl ParticleSystemTool {
 
                 let modifierCount = self.overLifetimeModifierList.len();
                 // println!("=========== modifierCount:{}", modifierCount);
+
+                // let r = unsafe { &mut *(*p) };
+                // println!("varPre1 pos: {:?}", particle.position);
+
                 for j in 0..modifierCount {
                     let modifier = &mut self.overLifetimeModifierList[j];
                     modifier.modify(particle, &mut particleAmount, scaleUpdateSpeed);
                 }
+                // println!("varPre2 pos: {:?}", particle.position);
             }
         }
     }

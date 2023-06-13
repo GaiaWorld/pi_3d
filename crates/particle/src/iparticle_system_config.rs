@@ -6,7 +6,9 @@ use crate::{
         texture_sheet::{AnimationMode, RowMode},
         trail::{ETrailMode, ETrailTextureMode},
     },
-    particle_system_tool::{EMeshParticleScaleMode, ERenderAlignment, ERenderMode, EMeshParticleSpaceMode},
+    particle_system_tool::{
+        EMeshParticleScaleMode, EMeshParticleSpaceMode, ERenderAlignment, ERenderMode,
+    },
 };
 /**
  * 形状发射器类型
@@ -268,9 +270,9 @@ pub struct IShapeCone {
      */
     pub emitAsVolume: bool,
     pub height: f32,
-    pub scale: [f32; 3],
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
+    pub scale: Option<[f32; 3]>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
     pub alignDir: u32,
     pub randomize: Option<[f32; 3]>,
 }
@@ -282,9 +284,9 @@ pub struct IShapeSphere {
     pub radius: f32,
     pub radiusThickness: f32,
     pub arc: IShapeArc,
-    pub scale: [f32; 3],
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
+    pub scale: Option<[f32; 3]>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
     pub alignDir: u32,
     pub randomize: Option<[f32; 3]>,
 }
@@ -294,9 +296,9 @@ pub struct IShapeSphere {
 pub struct IShapeBox {
     _type: u32,
     pub isVolume: u32,
-    pub scale: [f32; 3],
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
+    pub scale: Option<[f32; 3]>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
     pub alignDir: u32,
     pub randomize: Option<[f32; 3]>,
     pub boxEmitMode: Option<EBoxShapeMode>,
@@ -309,9 +311,9 @@ pub struct IShapeHemisphere {
     pub radius: f32,
     pub radiusThickness: f32,
     pub arc: IShapeArc,
-    pub scale: [f32; 3],
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
+    pub scale: Option<[f32; 3]>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
     pub alignDir: u32,
     pub randomize: Option<[f32; 3]>,
 }
@@ -323,9 +325,9 @@ pub struct IShapeCircle {
     pub radius: f32,
     pub radiusThickness: f32,
     pub arc: IShapeArc,
-    pub scale: [f32; 3],
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
+    pub scale: Option<[f32; 3]>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
     pub alignDir: u32,
     pub randomize: Option<[f32; 3]>,
 }
@@ -336,9 +338,9 @@ pub struct IShapeEdge {
     _type: u32,
     pub radius: f32,
     pub arc: IShapeArc,
-    pub scale: [f32; 3],
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
+    pub scale: Option<[f32; 3]>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
     pub alignDir: u32,
     pub randomize: Option<[f32; 3]>,
 }
@@ -347,9 +349,9 @@ pub struct IShapeEdge {
  */
 pub struct IShapeRectangle {
     _type: u32,
-    pub scale: [f32; 3],
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
+    pub scale: Option<[f32; 3]>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
     pub alignDir: u32,
     pub randomize: Option<[f32; 3]>,
 }
