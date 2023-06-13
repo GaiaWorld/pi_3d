@@ -77,7 +77,7 @@ pub fn sys_anime_add_target_anime(
             if let Some(id_group) = groups.map.get(&key_group) {
                 if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
                     // log::warn!("AddTargetAnime Ok");
-                    ctx.0.add_target_animation(animation, id_group.clone(), id_target);
+                    ctx.0.add_target_animation_notype(animation, id_group.clone(), id_target);
                 }
             }
         } else {

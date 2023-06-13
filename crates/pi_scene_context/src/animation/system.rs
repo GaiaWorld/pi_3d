@@ -35,7 +35,6 @@ pub fn sys_scene_anime_ctx(
 ) {
     let time0 = pi_time::Instant::now();
 
-    animeglobal.dispose_animations.clear();
     animeglobal.runtimeinfos.reset();
     scenes.iter_mut().for_each(|(id_scene, scene_time)| {
         let ctx = if let Some(ctx) = scenectxs.get_mut(&id_scene) {

@@ -20,6 +20,15 @@ impl OpsAnimationGroupCreation {
 pub type ActionListAnimeGroupCreate = ActionList<OpsAnimationGroupCreation>;
 
 #[derive(Clone)]
+pub struct OpsAnimationGroupDispose(pub(crate) ObjectID, pub(crate) DefaultKey);
+impl OpsAnimationGroupDispose {
+    pub fn ops(group_target: Entity, id: DefaultKey) -> Self {
+        Self(group_target, id)
+    }
+}
+pub type ActionListAnimeGroupDispose = ActionList<OpsAnimationGroupDispose>;
+
+#[derive(Clone)]
 pub struct OpsAnimationGroupPause(pub(crate) ObjectID, pub(crate) Atom);
 impl OpsAnimationGroupPause {
     pub fn ops(group_target: Entity, group_key: Atom) -> Self {
@@ -36,7 +45,6 @@ impl OpsAnimationGroupStart {
 }
 pub type ActionListAnimeGroupStart = ActionList<OpsAnimationGroupStart>;
 
-#[derive(Clone)]
 pub struct OpsAddTargetAnimation(pub(crate) Entity, pub(crate) Entity, pub(crate) Atom, pub(crate) AnimationInfo);
 impl OpsAddTargetAnimation {
     pub fn ops(group_target: Entity, anime_target: Entity, group_name: Atom, anime: AnimationInfo) -> Self {

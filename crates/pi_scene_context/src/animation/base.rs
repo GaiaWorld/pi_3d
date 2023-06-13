@@ -55,7 +55,6 @@ pub type AnimeFrameEventData = u32;
 pub struct GlobalAnimeAbout {
     pub ty_alloc: KeyFrameDataTypeAllocator,
     pub runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap<ObjectID>,
-    pub dispose_animations: Vec<AnimationInfo>,
     pub dispose_animationgroups: Vec<(SceneID, AnimationGroupID)>,
     pub group_records: XHashMap<DefaultKey, (Entity, Atom, CurveFrameEvent<AnimeFrameEventData>, u8)>,
 }
@@ -106,6 +105,7 @@ impl SceneAnimationContextMap {
     pub fn remove_scene(&mut self, idscene: &Entity) -> Option<SceneAnimationContext> {
         self.0.remove(idscene)
     }
+    /// 动画组创建 为 立即执行
     pub fn create_group(
         &mut self,
         id_scene: Entity,
@@ -118,9 +118,26 @@ impl SceneAnimationContextMap {
 
         Some(id_group)
     }
+    /// 动画组销毁 为 立即执行
+    pub fn delete_group(&mut self, idscene: &Entity, idgroup: DefaultKey) {
+        if let Some(ctx) = self.0.get_mut(idscene) {
+            ctx.0.del_animation_group(idgroup);
+        }
+    }
+    /// 最外层 的 system 中调用
+    pub fn apply_removed_animations<F: FrameDataValue, D: AsRef<FrameCurve<F>>>(&mut self, typectx: &mut TypeAnimationContext<F, D>) {
+        self.0.iter_mut().for_each(|ctx| {
+            ctx.1.0.apply_removed_animations(typectx);
+        });
+    }
+    /// 最外层 的 system 中调用 - 在 所有 apply_removed_animations 调用之后
+    pub fn clear_removed_animations(&mut self) {
+        self.0.iter_mut().for_each(|ctx| {
+            ctx.1.0.clear_removed_animations();
+        });
+    }
 }
 
-#[derive(Component)]
 pub struct SceneAnimationContext(pub(crate) AnimationContextAmount<ObjectID, AnimationGroupManagerDefault<ObjectID>>, pub(crate) Vec<AnimationGroupID>);
 impl SceneAnimationContext {
     pub fn new() -> Self {
