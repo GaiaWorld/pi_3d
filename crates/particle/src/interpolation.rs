@@ -8,60 +8,32 @@ use crate::iparticle_system_config::{
  * 时间点
  */
 type TCurveTime = f32;
-/**
- * 当前时间点对应值
- */
-type TCurveValue = f32;
-/**
- * 当前时间点的进入时切线斜率
- */
-type TCurveInTangent = f32;
-/**
- * 当前时间点的离开时切线斜率
- */
-type TCurveOutTangent = f32;
-/**
- * 曲线模式
- */
-type TCurveMode = f32;
-//#endregion
 
 //#region 曲线关键帧 各属性数据在 数组中的序号描述
 /**
  * 关键帧 时间信息 的数组序号
  */
-const KeyIndexFrame: usize = 0;
+const KEY_INDEX_FRAME: usize = 0;
 /**
  * 关键帧 值信息 的数组序号
  */
-const KeyIndexValue: usize = 1;
+const KEY_INDEX_VALUE: usize = 1;
 /**
  * 关键帧 InTangent 的数组序号
  */
-const KeyIndexInTangent: usize = 2;
+const KEY_INDEX_IN_TANGENT: usize = 2;
 /**
  * 关键帧 OutTangent 的数组序号
  */
-const KeyIndexOutTangent: usize = 3;
-/**
- * 关键帧 曲线模式 的数组序号
- */
-const KeyIndexMode: usize = 4;
+const KEY_INDEX_OUT_TANGENT: usize = 3;
+
 /**
  * 曲线 关键帧信息 - 数组形式
  */
 type ICurveKey = Vec<TCurveTime>;
 //#endregion
 
-/**
- * Enum for the animation key frame interpolation type
- */
-enum AnimationKeyInterpolation {
-    /**
-     * Do not interpolate between keys and use the start key value only. Tangents are ignored
-     */
-    STEP = 1,
-}
+
 
 /**
  * 插值工具模块描述
@@ -78,15 +50,6 @@ pub trait IInterpolation<T> {
     fn dispose(&mut self);
 }
 
-//#region 曲线信息描述
-/**
- * 曲线 关键帧信息数组 在曲线信息 数据中的序号
- */
-const CurveIndexKeys: u32 = 0;
-/**
- * 曲线 值域缩放数据 在曲线信息 数据中的序号
- */
-const CurveIndexScalar: u32 = 1;
 /**
  * 曲线 值域缩放数据 值类型
  */
@@ -124,7 +87,7 @@ type InterpolationData4 = [f32; 4];
  * @param random 随机因子
  * @returns
  */
-pub fn RandomRange(
+pub fn random_range(
     min: InterpolationData1,
     max: InterpolationData1,
     random: f32,
@@ -143,15 +106,15 @@ pub fn RandomRange(
  * @param random0 第一随机因子
  * @param random1 第二随机因子
  */
-pub fn RandomRange2(
+pub fn random_range2(
     min: InterpolationData2,
     max: InterpolationData2,
     result: &mut InterpolationData2,
     random0: f32,
     random1: f32,
 ) {
-    result[0] = RandomRange(min[0], max[0], random0);
-    result[1] = RandomRange(min[1], max[1], random1);
+    result[0] = random_range(min[0], max[0], random0);
+    result[1] = random_range(min[1], max[1], random1);
 }
 /**
  * 三维数据间的随机
@@ -162,7 +125,7 @@ pub fn RandomRange2(
  * @param random1 第二随机因子
  * @param random2 第三随机因子
  */
-pub fn RandomRange3(
+pub fn random_range3(
     min: InterpolationData3,
     max: InterpolationData3,
     result: &mut InterpolationData3,
@@ -170,9 +133,9 @@ pub fn RandomRange3(
     random1: f32,
     random2: f32,
 ) {
-    result[0] = RandomRange(min[0], max[0], random0);
-    result[1] = RandomRange(min[1], max[1], random1);
-    result[2] = RandomRange(min[2], max[2], random2);
+    result[0] = random_range(min[0], max[0], random0);
+    result[1] = random_range(min[1], max[1], random1);
+    result[2] = random_range(min[2], max[2], random2);
 }
 /**
  * 四维数据间的随机
@@ -184,7 +147,7 @@ pub fn RandomRange3(
  * @param random2 第三随机因子
  * @param random3 第四随机因子
  */
-pub fn RandomRange4(
+pub fn random_range4(
     min: InterpolationData4,
     max: InterpolationData4,
     result: &mut InterpolationData4,
@@ -193,19 +156,16 @@ pub fn RandomRange4(
     random2: f32,
     random3: f32,
 ) {
-    result[0] = RandomRange(min[0], max[0], random0);
-    result[1] = RandomRange(min[1], max[1], random1);
-    result[2] = RandomRange(min[2], max[2], random2);
-    result[3] = RandomRange(min[3], max[3], random3);
+    result[0] = random_range(min[0], max[0], random0);
+    result[1] = random_range(min[1], max[1], random1);
+    result[2] = random_range(min[2], max[2], random2);
+    result[3] = random_range(min[3], max[3], random3);
 }
-/**
- * 全局随机数缓存
- */
-const RandomList: [u32; 4] = [0, 0, 0, 0];
+
 /**
  * 更新数据缓存
  */
-pub fn UpdateRandom() {
+pub fn update_random() {
     // random() = Math.random();
     // random() = Math.random();
     // random() = Math.random();
@@ -226,7 +186,7 @@ pub fn UpdateRandom() {
  * @param amount 插值因子
  * @returns
  */
-pub fn Hermite(value1: f32, tangent1: f32, value2: f32, tangent2: f32, amount: f32) -> f32 {
+pub fn hermite(value1: f32, tangent1: f32, value2: f32, tangent2: f32, amount: f32) -> f32 {
     let squared = amount * amount;
     let cubed = amount * squared;
     let part1 = ((2.0 * cubed) - (3.0 * squared)) + 1.0;
@@ -242,60 +202,60 @@ pub fn Hermite(value1: f32, tangent1: f32, value2: f32, tangent2: f32, amount: f
  * @param curve 曲线描述
  * @returns
  */
-pub fn InterpolationCurve(amount: f32, curve: &ICurve) -> InterpolationData1 {
-    let keyCount = curve.0.len();
+pub fn interpolation_curve(amount: f32, curve: &ICurve) -> InterpolationData1 {
+    let key_count = curve.0.len();
 
-    if keyCount == 0 {
+    if key_count == 0 {
         return curve.1;
     }
 
-    let mut preIndex = 0;
-    let mut nextIndex = keyCount - 1;
+    let mut pre_index = 0;
+    let mut next_index = key_count - 1;
     // let i = 0;
-    let mut pre = &curve.0[preIndex];
-    let mut next = &curve.0[nextIndex];
+    let mut pre = &curve.0[pre_index];
+    let mut next = &curve.0[next_index];
 
-    if keyCount == 1 {
-        return pre[KeyIndexValue] * curve.1;
+    if key_count == 1 {
+        return pre[KEY_INDEX_VALUE] * curve.1;
     }
 
-    for i in 0..keyCount {
-        preIndex = i;
-        nextIndex = i + 1;
+    for i in 0..key_count {
+        pre_index = i;
+        next_index = i + 1;
 
-        pre = &curve.0[preIndex];
-        next = &curve.0[nextIndex];
+        pre = &curve.0[pre_index];
+        next = &curve.0[next_index];
 
-        if preIndex == 0 && amount <= pre[KeyIndexFrame] {
-            nextIndex = preIndex;
+        if pre_index == 0 && amount <= pre[KEY_INDEX_FRAME] {
+            next_index = pre_index;
             next = pre;
             break;
         }
 
-        if pre[KeyIndexFrame] < amount && amount <= next[KeyIndexFrame] {
+        if pre[KEY_INDEX_FRAME] < amount && amount <= next[KEY_INDEX_FRAME] {
             break;
         }
 
-        if nextIndex == keyCount - 1 && next[KeyIndexFrame] <= amount {
-            preIndex = nextIndex;
+        if next_index == key_count - 1 && next[KEY_INDEX_FRAME] <= amount {
+            pre_index = next_index;
             pre = next;
             break;
         }
     }
 
-    if preIndex == nextIndex {
-        return pre[KeyIndexValue] * curve.1;
+    if pre_index == next_index {
+        return pre[KEY_INDEX_VALUE] * curve.1;
     }
 
     // https://en.wikipedia.org/wiki/Cubic_Hermite_spline Interpolation on an arbitrary interval
-    let deltaT = next[KeyIndexFrame] - pre[KeyIndexFrame];
-    let amount = (amount - pre[KeyIndexFrame]) / deltaT;
+    let delta_t = next[KEY_INDEX_FRAME] - pre[KEY_INDEX_FRAME];
+    let amount = (amount - pre[KEY_INDEX_FRAME]) / delta_t;
 
-    return Hermite(
-        pre[KeyIndexValue],
-        pre[KeyIndexOutTangent] * deltaT,
-        next[KeyIndexValue],
-        next[KeyIndexInTangent] * deltaT,
+    return hermite(
+        pre[KEY_INDEX_VALUE],
+        pre[KEY_INDEX_OUT_TANGENT] * delta_t,
+        next[KEY_INDEX_VALUE],
+        next[KEY_INDEX_IN_TANGENT] * delta_t,
         amount,
     ) * curve.1;
 }
@@ -305,55 +265,55 @@ pub fn InterpolationCurve(amount: f32, curve: &ICurve) -> InterpolationData1 {
  * @param gradient 渐变控制点数组
  * @returns
  */
-pub fn InterpolationGradient(amount: f32, gradient: &Vec<IGradient>) -> f32 {
-    let keyCount = gradient.len();
+pub fn interpolation_gradient(amount: f32, gradient: &Vec<IGradient>) -> f32 {
+    let key_count = gradient.len();
 
-    if keyCount == 0 {
+    if key_count == 0 {
         return 1.0;
     }
 
-    let mut preIndex = 0;
-    let mut nextIndex = keyCount - 1;
+    let mut pre_index = 0;
+    let mut next_index = key_count - 1;
 
-    let mut pre = gradient[preIndex];
-    let mut next = gradient[nextIndex];
+    let mut pre = gradient[pre_index];
+    let mut next = gradient[next_index];
 
-    if keyCount == 1 {
-        return pre[GradientIndexValue];
+    if key_count == 1 {
+        return pre[GRADIENT_INDEX_VALUE];
     }
 
-    for i in 0..keyCount {
-        preIndex = i;
-        nextIndex = i + 1;
+    for i in 0..key_count {
+        pre_index = i;
+        next_index = i + 1;
 
-        pre = gradient[preIndex];
-        next = gradient[nextIndex];
+        pre = gradient[pre_index];
+        next = gradient[next_index];
 
-        if preIndex == 0 && amount <= pre[GradientIndexFrame] {
-            nextIndex = preIndex;
+        if pre_index == 0 && amount <= pre[GRADIENT_INDEX_FRAME] {
+            next_index = pre_index;
             next = pre;
             break;
         }
 
-        if pre[GradientIndexFrame] < amount && amount <= next[GradientIndexFrame] {
+        if pre[GRADIENT_INDEX_FRAME] < amount && amount <= next[GRADIENT_INDEX_FRAME] {
             break;
         }
 
-        if nextIndex == keyCount - 1 && next[GradientIndexFrame] <= amount {
-            preIndex = nextIndex;
+        if next_index == key_count - 1 && next[GRADIENT_INDEX_FRAME] <= amount {
+            pre_index = next_index;
             pre = next;
             break;
         }
     }
 
-    if preIndex == nextIndex {
-        return pre[GradientIndexValue];
+    if pre_index == next_index {
+        return pre[GRADIENT_INDEX_VALUE];
     }
 
     let amount =
-        (amount - pre[GradientIndexFrame]) / (next[GradientIndexFrame] - pre[GradientIndexFrame]);
+        (amount - pre[GRADIENT_INDEX_FRAME]) / (next[GRADIENT_INDEX_FRAME] - pre[GRADIENT_INDEX_FRAME]);
 
-    return pre[GradientIndexValue] + (next[GradientIndexValue] - pre[GradientIndexValue]) * amount;
+    return pre[GRADIENT_INDEX_VALUE] + (next[GRADIENT_INDEX_VALUE] - pre[GRADIENT_INDEX_VALUE]) * amount;
 }
 //#endregion
 
@@ -365,8 +325,8 @@ pub fn InterpolationGradient(amount: f32, gradient: &Vec<IGradient>) -> f32 {
 pub struct FloatInterpolation {
     pub constant0: Option<InterpolationData1>,
     pub constant1: Option<InterpolationData1>,
-    pub minCurve: Option<ICurve>,
-    pub maxCurve: Option<ICurve>,
+    pub min_curve: Option<ICurve>,
+    pub max_curve: Option<ICurve>,
     pub mode: EInterpolationCurveMode,
 }
 
@@ -375,8 +335,8 @@ impl FloatInterpolation {
         Self {
             constant0: Some(0.),
             constant1: Some(0.),
-            minCurve: None,
-            maxCurve: None,
+            min_curve: None,
+            max_curve: None,
             mode: EInterpolationCurveMode::Constant,
         }
     }
@@ -396,21 +356,21 @@ impl IInterpolation<InterpolationData1> for FloatInterpolation {
                 } else {
                     0.0
                 };
-                return RandomRange(constant0, constant1, random);
+                return random_range(constant0, constant1, random);
             }
             EInterpolationCurveMode::Curve => {
-                let curve = if self.minCurve.is_some() {
-                    self.minCurve.as_ref().unwrap()
+                let curve = if self.min_curve.is_some() {
+                    self.min_curve.as_ref().unwrap()
                 } else {
-                    self.maxCurve.as_ref().unwrap()
+                    self.max_curve.as_ref().unwrap()
                 };
-                return InterpolationCurve(amount, curve);
+                return interpolation_curve(amount, curve);
             }
             EInterpolationCurveMode::TwoCurves => {
                 // se
-                let min = InterpolationCurve(amount, self.minCurve.as_ref().unwrap());
-                let max = InterpolationCurve(amount, self.maxCurve.as_ref().unwrap());
-                return RandomRange(min, max, random);
+                let min = interpolation_curve(amount, self.min_curve.as_ref().unwrap());
+                let max = interpolation_curve(amount, self.max_curve.as_ref().unwrap());
+                return random_range(min, max, random);
             }
             _ => {
                 if let Some(v) = self.constant0 {
@@ -428,40 +388,34 @@ impl IInterpolation<InterpolationData1> for FloatInterpolation {
         self.constant0 = None;
         self.constant1 = None;
 
-        self.minCurve = None;
-        self.maxCurve = None;
+        self.min_curve = None;
+        self.max_curve = None;
     }
 }
-//#endregion
 
-//#region 从 json 描述创建曲线插值模块
-const ZeroInterpolateConstant: InterpolationData1 = 0.;
-const ZeroInterpolateCurve: ICurve = (vec![], 1.);
-const OneInterpolateConstant: InterpolationData1 = 1.;
-const OneInterpolateCurve: ICurve = (vec![], 0.);
 /**
  * 一维 - 根据目标数据使用场景 创建对应 默认插值模块
  * @param ptype 使用场景标识
  * @returns
  */
-pub fn defaultFloatInterpolation(ptype: TParamType) -> Option<FloatInterpolation> {
+pub fn default_float_interpolation(ptype: TParamType) -> Option<FloatInterpolation> {
     let mut interpolate = None;
     match ptype {
         TParamType::TParamStartSpeed => {
             let mut temp = FloatInterpolation::default();
             temp.mode = EInterpolationCurveMode::Constant;
-            temp.constant0 = Some(DefaultValue::startSpeed);
+            temp.constant0 = Some(DefaultValue::START_SPEED);
             interpolate = Some(temp);
         }
         TParamType::TParamStartLifetime => {
             let mut temp = FloatInterpolation::default();
             temp.mode = EInterpolationCurveMode::Constant;
-            temp.constant0 = Some(DefaultValue::startLifetime);
+            temp.constant0 = Some(DefaultValue::START_LIFETIME);
         }
         TParamType::TParamTextureSheet => {
             let mut temp = FloatInterpolation::default();
             temp.mode = EInterpolationCurveMode::Constant;
-            temp.constant0 = Some(DefaultValue::textureSheetFrame);
+            temp.constant0 = Some(DefaultValue::TEXTURE_SHEET_FRAME);
             interpolate = Some(temp);
         }
         _ => {}
@@ -477,9 +431,9 @@ pub fn defaultFloatInterpolation(ptype: TParamType) -> Option<FloatInterpolation
  * @param scale 数据值域缩放 - 如角度转弧度，秒转毫秒，重力因子转重力值
  * @returns
  */
-pub fn parseFloatInterpolation(
+pub fn parse_float_interpolation(
     interpolation: &mut FloatInterpolation,
-    mut config: &Option<OneParamInfo>,
+    config: &Option<OneParamInfo>,
     ptype: TParamType,
     scale: f32,
 ) {
@@ -497,22 +451,22 @@ pub fn parseFloatInterpolation(
             }
             OneParamInfo::TInterpolateCurve(curve) => {
                 interpolation.mode = EInterpolationCurveMode::Curve;
-                interpolation.minCurve = Some(scaleCurve(curve.clone(), scale));
+                interpolation.min_curve = Some(scale_curve(curve.clone(), scale));
             }
             OneParamInfo::TInterpolateTwoCurves(curve1, curve2) => {
                 interpolation.mode = EInterpolationCurveMode::Curve;
-                interpolation.minCurve = Some(scaleCurve(curve1.clone(), scale));
-                interpolation.maxCurve = Some(scaleCurve(curve2.clone(), scale));
+                interpolation.min_curve = Some(scale_curve(curve1.clone(), scale));
+                interpolation.max_curve = Some(scale_curve(curve2.clone(), scale));
             }
         }
     } else {
-        if let Some(res) = defaultFloatInterpolation(ptype) {
+        if let Some(res) = default_float_interpolation(ptype) {
             *interpolation = res;
         }
     }
 }
 
-pub fn scaleCurve(mut curve: ICurve, scale: f32) -> ICurve {
+pub fn scale_curve(mut curve: ICurve, scale: f32) -> ICurve {
     curve.1 *= scale;
     return curve;
 }
@@ -523,18 +477,15 @@ pub fn scaleCurve(mut curve: ICurve, scale: f32) -> ICurve {
  * 渐变控制点 时间 数据类型
  */
 type TGradientTime = f32;
-/**
- * 渐变控制点 值 数据类型
- */
-type TGradientValue = f32;
+
 /**
  * 渐变控制点 时间 数据在渐变信息中的序号
  */
-const GradientIndexFrame: usize = 0;
+const GRADIENT_INDEX_FRAME: usize = 0;
 /**
  * 渐变控制点 值 数据在渐变信息中的序号
  */
-const GradientIndexValue: usize = 1;
+const GRADIENT_INDEX_VALUE: usize = 1;
 /**
  * 渐变控制点数据 - 数组形式
  */
@@ -548,12 +499,12 @@ pub struct Color4Gradient {
     pub mode: EInterpolationGradienMode,
     pub constant0: Option<[f32; 4]>,
     pub constant1: Option<[f32; 4]>,
-    pub minGradients: Option<IGradient4>,
-    pub maxGradients: Option<IGradient4>,
+    pub min_gradients: Option<IGradient4>,
+    pub max_gradients: Option<IGradient4>,
 }
 
 impl Color4Gradient {
-    pub fn interpolate(&self, amount: f32, result: &mut [f32; 4], startAmout: f32) {
+    pub fn interpolate(&self, amount: f32, result: &mut [f32; 4], start_amout: f32) {
         match self.mode {
             EInterpolationGradienMode::Color => {
                 let temp = if self.constant0.is_some() {
@@ -595,7 +546,7 @@ impl Color4Gradient {
                 // result[2] = RandomRange(minB, maxB, random());
                 // result[3] = RandomRange(minA, maxA, random());
 
-                let use_min = startAmout > 0.5;
+                let use_min = start_amout > 0.5;
                 if use_min {
                     result[0] = temp_min[0];
                     result[1] = temp_min[1];
@@ -611,56 +562,56 @@ impl Color4Gradient {
                 return;
             }
             EInterpolationGradienMode::Gradient => {
-                let gradient0 = if self.minGradients.is_some() {
-                    &self.minGradients.as_ref().unwrap()[0]
+                let gradient0 = if self.min_gradients.is_some() {
+                    &self.min_gradients.as_ref().unwrap()[0]
                 } else {
-                    &self.maxGradients.as_ref().unwrap()[0]
+                    &self.max_gradients.as_ref().unwrap()[0]
                 };
-                let gradient1 = if self.minGradients.is_some() {
-                    &self.minGradients.as_ref().unwrap()[1]
+                let gradient1 = if self.min_gradients.is_some() {
+                    &self.min_gradients.as_ref().unwrap()[1]
                 } else {
-                    &self.maxGradients.as_ref().unwrap()[1]
+                    &self.max_gradients.as_ref().unwrap()[1]
                 };
-                let gradient2 = if self.minGradients.is_some() {
-                    &self.minGradients.as_ref().unwrap()[2]
+                let gradient2 = if self.min_gradients.is_some() {
+                    &self.min_gradients.as_ref().unwrap()[2]
                 } else {
-                    &self.maxGradients.as_ref().unwrap()[2]
+                    &self.max_gradients.as_ref().unwrap()[2]
                 };
-                let gradient3 = if self.minGradients.is_some() {
-                    &self.minGradients.as_ref().unwrap()[3]
+                let gradient3 = if self.min_gradients.is_some() {
+                    &self.min_gradients.as_ref().unwrap()[3]
                 } else {
-                    &self.maxGradients.as_ref().unwrap()[3]
+                    &self.max_gradients.as_ref().unwrap()[3]
                 };
 
-                result[0] = InterpolationGradient(amount, gradient0);
-                result[1] = InterpolationGradient(amount, gradient1);
-                result[2] = InterpolationGradient(amount, gradient2);
-                result[3] = InterpolationGradient(amount, gradient3);
+                result[0] = interpolation_gradient(amount, gradient0);
+                result[1] = interpolation_gradient(amount, gradient1);
+                result[2] = interpolation_gradient(amount, gradient2);
+                result[3] = interpolation_gradient(amount, gradient3);
 
                 return;
             }
             EInterpolationGradienMode::TwoGradients => {
-                let minGradient0 = &self.minGradients.as_ref().unwrap()[0];
-                let minGradient1 = &self.minGradients.as_ref().unwrap()[1];
-                let minGradient2 = &self.minGradients.as_ref().unwrap()[2];
-                let minGradient3 = &self.minGradients.as_ref().unwrap()[3];
+                let min_gradient0 = &self.min_gradients.as_ref().unwrap()[0];
+                let min_gradient1 = &self.min_gradients.as_ref().unwrap()[1];
+                let min_gradient2 = &self.min_gradients.as_ref().unwrap()[2];
+                let min_gradient3 = &self.min_gradients.as_ref().unwrap()[3];
 
-                let maxGradient0 = &self.maxGradients.as_ref().unwrap()[0];
-                let maxGradient1 = &self.maxGradients.as_ref().unwrap()[1];
-                let maxGradient2 = &self.maxGradients.as_ref().unwrap()[2];
-                let maxGradient3 = &self.maxGradients.as_ref().unwrap()[3];
+                let max_gradient0 = &self.max_gradients.as_ref().unwrap()[0];
+                let max_gradient1 = &self.max_gradients.as_ref().unwrap()[1];
+                let max_gradient2 = &self.max_gradients.as_ref().unwrap()[2];
+                let max_gradient3 = &self.max_gradients.as_ref().unwrap()[3];
 
-                let useMin = startAmout > 0.5;
-                if useMin {
-                    result[0] = InterpolationGradient(amount, minGradient0);
-                    result[1] = InterpolationGradient(amount, minGradient1);
-                    result[2] = InterpolationGradient(amount, minGradient2);
-                    result[3] = InterpolationGradient(amount, minGradient3);
+                let use_min = start_amout > 0.5;
+                if use_min {
+                    result[0] = interpolation_gradient(amount, min_gradient0);
+                    result[1] = interpolation_gradient(amount, min_gradient1);
+                    result[2] = interpolation_gradient(amount, min_gradient2);
+                    result[3] = interpolation_gradient(amount, min_gradient3);
                 } else {
-                    result[0] = InterpolationGradient(amount, maxGradient0);
-                    result[1] = InterpolationGradient(amount, maxGradient1);
-                    result[2] = InterpolationGradient(amount, maxGradient2);
-                    result[3] = InterpolationGradient(amount, maxGradient3);
+                    result[0] = interpolation_gradient(amount, max_gradient0);
+                    result[1] = interpolation_gradient(amount, max_gradient1);
+                    result[2] = interpolation_gradient(amount, max_gradient2);
+                    result[3] = interpolation_gradient(amount, max_gradient3);
                 }
 
                 return;
@@ -677,7 +628,7 @@ impl Color4Gradient {
         }
     }
 
-    fn dispose(&mut self) {
+    pub fn dispose(&mut self) {
         self.constant0 = None;
         self.constant1 = None;
     }
@@ -690,10 +641,10 @@ impl Color4Gradient {
  * @param ptype
  * @returns
  */
-pub fn parseColor4Gradient(
+pub fn parse_color4_gradient(
     interpolation: &mut Color4Gradient,
     config: Option<&FourGradientInfo>,
-    ptype: TParamType,
+    _ptype: TParamType,
 ) {
     if let Some(config) = config {
         // if interpolation.is_some() {
@@ -718,13 +669,13 @@ pub fn parseColor4Gradient(
             }
             FourGradientInfo::TInterpolateGradient(graient) => {
                 interpolation.mode = EInterpolationGradienMode::Gradient;
-                interpolation.minGradients = Some(graient.clone());
-                interpolation.maxGradients = Some(graient.clone());
+                interpolation.min_gradients = Some(graient.clone());
+                interpolation.max_gradients = Some(graient.clone());
             }
             FourGradientInfo::TInterpolateTwoGradients(graient1, graient2) => {
                 interpolation.mode = EInterpolationGradienMode::TwoGradients;
-                interpolation.minGradients = Some(graient1.clone());
-                interpolation.maxGradients = Some(graient2.clone());
+                interpolation.min_gradients = Some(graient1.clone());
+                interpolation.max_gradients = Some(graient2.clone());
             }
         }
     } else {

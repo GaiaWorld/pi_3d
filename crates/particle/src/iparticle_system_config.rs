@@ -10,47 +10,32 @@ use crate::{
         EMeshParticleScaleMode, EMeshParticleSpaceMode, ERenderAlignment, ERenderMode,
     },
 };
-/**
- * 形状发射器类型
- */
-const TShapeTypeCone: u32 = 0;
-const TShapeTypeSphere: u32 = 1;
-const TShapeTypeBox: u32 = 2;
-const TShapeTypeCircle: u32 = 3;
-const TShapeTypeHemisphere: u32 = 4;
-const TShapeTypeEdge: u32 = 5;
-const TShapeTypeRectangle: u32 = 6;
+
 
 /**
  * ArcMode 类型
  */
-pub const TShapeArcModeRandom: isize = 1;
-pub const TShapeArcModeLoop: isize = 2;
-pub const TShapeArcModePingPong: isize = 3;
-pub const TShapeArcModeBurstSpread: isize = 4;
+pub const TSHAPE_ARC_MODE_RANDOM: isize = 1;
+pub const TSHAPE_ARC_MODE_LOOP: isize = 2;
+pub const TSHAPE_ARC_MODE_PING_PONG: isize = 3;
+pub const TSHAPE_ARC_MODE_BURST_SPREAD: isize = 4;
 
 /**
  * 曲线类型
  */
-const TInterpolateConstant: isize = 1;
-const TInterpolateTwoConstants: isize = 2;
-const TInterpolateCurve: isize = 4;
-const TInterpolateTwoCurves: isize = 8;
+const TINTERPOLATE_CONSTANT: isize = 1;
+const TINTERPOLATE_TWO_CONSTANTS: isize = 2;
+const TINTERPOLATE_CURVE: isize = 4;
+const TINTERPOLATE_TWO_CURVES: isize = 8;
 
 /**
  * 渐变类型
  */
-const TInterpolateColor: isize = 1;
-const TInterpolateTwoColors: isize = 2;
-const TInterpolateGradient: isize = 4;
-const TInterpolateTwoGradients: isize = 8;
-const TInterpolateRandom: isize = 16;
-
-/**
- * josn数据中 Emission 数据Index类型
- */
-const TEmissionIndexRate: u32 = 0;
-const TEmissionIndexBursts: u32 = 1;
+const TINTERPOLATE_COLOR: isize = 1;
+const TINTERPOLATE_TWO_COLORS: isize = 2;
+const TINTERPOLATE_GRADIENT: isize = 4;
+const TINTERPOLATE_TWO_GRADIENTS: isize = 8;
+const TINTERPOLATE_RANDOM: isize = 16;
 
 /**
  * 默认数据配置
@@ -58,21 +43,21 @@ const TEmissionIndexBursts: u32 = 1;
 pub struct DefaultValue;
 
 impl DefaultValue {
-    pub const duration: u32 = 5;
-    pub const startSpeed: f32 = 1.0;
-    pub const startLifetime: f32 = 2.;
-    pub const textureSheetFrame: f32 = 0.;
-    pub const startSize: [u32; 3] = [1, 1, 1];
-    pub const startRotation: [u32; 3] = [0, 0, 0];
-    pub const startColor: [u32; 4] = [1, 1, 1, 1];
-    pub const gravity: [u32; 3] = [0, 0, 0];
-    pub const velocityOverLifetime: [u32; 3] = [0, 0, 0];
-    pub const limitVelocityOverLifetime: [u32; 3] = [999999, 999999, 999999];
-    pub const limitVelocityOverLifetimeDampen: u32 = 0;
-    pub const forceOverLifetime: [u32; 3] = [0, 0, 0];
-    pub const colorOverLifetime: [u32; 4] = [1, 1, 1, 1];
-    pub const sizeOverLifetime: [u32; 3] = [1, 1, 1];
-    pub const rotationOverLifetime: [u32; 3] = [0, 0, 0];
+    pub const DURATION: u32 = 5;
+    pub const START_SPEED: f32 = 1.0;
+    pub const START_LIFETIME: f32 = 2.;
+    pub const TEXTURE_SHEET_FRAME: f32 = 0.;
+    pub const START_SIZE: [u32; 3] = [1, 1, 1];
+    pub const START_ROTATION: [u32; 3] = [0, 0, 0];
+    pub const START_COLOR: [u32; 4] = [1, 1, 1, 1];
+    pub const GRAVITY: [u32; 3] = [0, 0, 0];
+    pub const VELOCITY_OVER_LIFETIME: [u32; 3] = [0, 0, 0];
+    pub const LIMIT_VELOCITY_OVER_LIFETIME: [u32; 3] = [999999, 999999, 999999];
+    pub const LIMIT_VELOCITY_OVER_LIFETIME_DAMPEN: u32 = 0;
+    pub const FORCE_OVER_LIFETIME: [u32; 3] = [0, 0, 0];
+    pub const COLOR_OVER_LIFETIME: [u32; 4] = [1, 1, 1, 1];
+    pub const SIZE_OVER_LIFETIME: [u32; 3] = [1, 1, 1];
+    pub const ROTATION_OVER_LIFETIME: [u32; 3] = [0, 0, 0];
 }
 
 pub enum TParamType {
@@ -98,13 +83,7 @@ pub enum IShapeArc {
     IShapeArcPingPong(IShapeArcPingPong),
     IShapeArcBurstSpread(IShapeArcBurstSpread),
 }
-/**
- * 曲线插值模式
- */
-enum RandomUnit {
-    One = 1,
-    Three = 3,
-}
+
 /**
  * 曲线插值模式
  */
@@ -113,19 +92,19 @@ pub enum EInterpolationCurveMode {
     /**
      * 静态数值
      */
-    Constant = TInterpolateConstant,
+    Constant = TINTERPOLATE_CONSTANT,
     /**
      * 静态数值随机 - XYZ 随机值相同
      */
-    TwoConstants = TInterpolateTwoConstants,
+    TwoConstants = TINTERPOLATE_TWO_CONSTANTS,
     /**
      * 曲线插值
      */
-    Curve = TInterpolateCurve,
+    Curve = TINTERPOLATE_CURVE,
     /**
      * 曲线插值
      */
-    TwoCurves = TInterpolateTwoCurves,
+    TwoCurves = TINTERPOLATE_TWO_CURVES,
 }
 
 impl Default for EInterpolationCurveMode {
@@ -141,23 +120,23 @@ pub enum EInterpolationGradienMode {
     /**
      * 静态数值
      */
-    Color = TInterpolateColor,
+    Color = TINTERPOLATE_COLOR,
     /**
      * 静态数值随机 - XYZ 随机值相同
      */
-    TwoColors = TInterpolateTwoColors,
+    TwoColors = TINTERPOLATE_TWO_COLORS,
     /**
      * 曲线插值
      */
-    Gradient = TInterpolateGradient,
+    Gradient = TINTERPOLATE_GRADIENT,
     /**
      * 曲线插值
      */
-    TwoGradients = TInterpolateTwoGradients,
+    TwoGradients = TINTERPOLATE_TWO_GRADIENTS,
     /**
      * 曲线插值
      */
-    Random = TInterpolateRandom,
+    Random = TINTERPOLATE_RANDOM,
 }
 impl Default for EInterpolationGradienMode {
     fn default() -> EInterpolationGradienMode {
@@ -260,7 +239,7 @@ pub struct IShapeCone {
     /**
      * 半径范围
      */
-    pub radiusThickness: f32,
+    pub radius_thickness: f32,
     /**
      * 发射弧度信息
      */
@@ -268,12 +247,12 @@ pub struct IShapeCone {
     /**
      * 沿高度体积发射
      */
-    pub emitAsVolume: bool,
+    pub emit_as_volume: bool,
     pub height: f32,
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
-    pub alignDir: u32,
+    pub align_dir: u32,
     pub randomize: Option<[f32; 3]>,
 }
 /**
@@ -282,12 +261,12 @@ pub struct IShapeCone {
 pub struct IShapeSphere {
     _type: u32,
     pub radius: f32,
-    pub radiusThickness: f32,
+    pub radius_thickness: f32,
     pub arc: IShapeArc,
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
-    pub alignDir: u32,
+    pub align_dir: u32,
     pub randomize: Option<[f32; 3]>,
 }
 /**
@@ -295,13 +274,13 @@ pub struct IShapeSphere {
  */
 pub struct IShapeBox {
     _type: u32,
-    pub isVolume: u32,
+    pub is_volume: u32,
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
-    pub alignDir: u32,
+    pub align_dir: u32,
     pub randomize: Option<[f32; 3]>,
-    pub boxEmitMode: Option<EBoxShapeMode>,
+    pub box_emit_mode: Option<EBoxShapeMode>,
 }
 /**
  * Hemisphere 形状发射器描述
@@ -309,12 +288,12 @@ pub struct IShapeBox {
 pub struct IShapeHemisphere {
     _type: u32,
     pub radius: f32,
-    pub radiusThickness: f32,
+    pub radius_thickness: f32,
     pub arc: IShapeArc,
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
-    pub alignDir: u32,
+    pub align_dir: u32,
     pub randomize: Option<[f32; 3]>,
 }
 /**
@@ -323,12 +302,12 @@ pub struct IShapeHemisphere {
 pub struct IShapeCircle {
     _type: u32,
     pub radius: f32,
-    pub radiusThickness: f32,
+    pub radius_thickness: f32,
     pub arc: IShapeArc,
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
-    pub alignDir: u32,
+    pub align_dir: u32,
     pub randomize: Option<[f32; 3]>,
 }
 /**
@@ -341,7 +320,7 @@ pub struct IShapeEdge {
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
-    pub alignDir: u32,
+    pub align_dir: u32,
     pub randomize: Option<[f32; 3]>,
 }
 /**
@@ -352,7 +331,7 @@ pub struct IShapeRectangle {
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
-    pub alignDir: u32,
+    pub align_dir: u32,
     pub randomize: Option<[f32; 3]>,
 }
 /**
@@ -411,33 +390,33 @@ pub enum FourGradientInfo {
 }
 
 pub struct ITextureSheet {
-    pub frameOverTime: OneParamInfo,
-    pub animMode: AnimationMode,
-    pub customRow: f32,
+    pub frame_over_time: OneParamInfo,
+    pub anim_mode: AnimationMode,
+    pub custom_row: f32,
     pub cycles: f32,
-    pub rowMode: RowMode,
-    pub startFrame: OneParamInfo,
-    pub tilesX: f32,
-    pub tilesY: f32,
-    pub timeMode: TimeMode,
+    pub row_mode: RowMode,
+    pub start_frame: OneParamInfo,
+    pub tiles_x: f32,
+    pub tiles_y: f32,
+    pub time_mode: TimeMode,
 }
 
 pub struct ITrail {
     pub ratio: f32,
     pub mode: ETrailMode,
     pub lifetime: OneParamInfo,
-    pub ribbonCount: f32,
-    pub attachRTT: u32,
-    pub minDist: f32,
-    pub worldSpace: u32,
-    pub dieWith: u32,
-    pub texMode: ETrailTextureMode,
-    pub sizeAWidth: u32,
-    pub sizeALifetime: u32,
-    pub inheritColor: u32,
-    pub colorOverLife: FourGradientInfo,
-    pub widthOverTrail: OneParamInfo,
-    pub colorOverTrail: FourGradientInfo,
+    pub ribbon_count: f32,
+    pub attach_rtt: u32,
+    pub min_dist: f32,
+    pub world_space: u32,
+    pub die_with: u32,
+    pub tex_mode: ETrailTextureMode,
+    pub size_awidth: u32,
+    pub size_alifetime: u32,
+    pub inherit_color: u32,
+    pub color_over_life: FourGradientInfo,
+    pub width_over_trail: OneParamInfo,
+    pub color_over_trail: FourGradientInfo,
     pub material: f32,
 }
 
@@ -448,44 +427,44 @@ pub struct ITrail {
 pub struct IParticleSystemConfig {
     pub name: String,
     pub duration: f32,
-    pub startDelay: f32,
+    pub start_delay: f32,
     pub looping: u32,
     pub prewarm: bool,
-    pub simulationSpaceIsWorld: EMeshParticleSpaceMode,
-    pub scalingMode: EMeshParticleScaleMode,
-    pub renderAlignment: ERenderAlignment,
-    pub renderMode: ERenderMode,
-    pub stretchedVelocityScale: f32,
-    pub stretchedLengthScale: f32,
-    pub maxParticles: f32,
-    pub startSpeed: OneParamInfo,
+    pub simulation_space_is_world: EMeshParticleSpaceMode,
+    pub scaling_mode: EMeshParticleScaleMode,
+    pub render_alignment: ERenderAlignment,
+    pub render_mode: ERenderMode,
+    pub stretched_velocity_scale: f32,
+    pub stretched_length_scale: f32,
+    pub max_particles: f32,
+    pub start_speed: OneParamInfo,
     pub lifetime: OneParamInfo,
     pub delay: Vec<f32>,
-    pub startColor: FourGradientInfo,
-    pub startSize: ParamInfo,
-    pub startRotation: ParamInfo,
+    pub start_color: FourGradientInfo,
+    pub start_size: ParamInfo,
+    pub start_rotation: ParamInfo,
     pub gravity: OneParamInfo,
     pub emission: (f32, Option<Vec<[f32; 4]>>),
     pub shape: IShape,
-    pub velocityOverLifetime: Option<ParamInfo>,
-    pub velocityOverLifetimeIsLocal: Option<u32>,
-    pub limitVelocityOverLifetime: Option<OneParamInfo>,
-    pub limitVelocityOverLifetimeDampen: Option<f32>,
-    pub forceOverLifetime: Option<ParamInfo>,
-    pub forceSpaceIsLocal: Option<u32>,
-    pub colorOverLifetime: Option<FourGradientInfo>,
-    pub colorBySpeed: Option<(FourGradientInfo, f32, f32)>,
-    pub sizeOverLifetime: Option<ParamInfo>,
-    pub sizeBySpeed: Option<(OneParamInfo, f32, f32)>,
-    pub rotationOverLifetime: Option<ParamInfo>,
-    pub rotationBySpeed: Option<(OneParamInfo, f32, f32)>,
-    pub textureSheet: Option<ITextureSheet>,
+    pub velocity_over_lifetime: Option<ParamInfo>,
+    pub velocity_over_lifetime_is_local: Option<u32>,
+    pub limit_velocity_over_lifetime: Option<OneParamInfo>,
+    pub limit_velocity_over_lifetime_dampen: Option<f32>,
+    pub force_over_lifetime: Option<ParamInfo>,
+    pub force_space_is_local: Option<u32>,
+    pub color_over_lifetime: Option<FourGradientInfo>,
+    pub color_by_speed: Option<(FourGradientInfo, f32, f32)>,
+    pub size_over_lifetime: Option<ParamInfo>,
+    pub size_by_speed: Option<(OneParamInfo, f32, f32)>,
+    pub rotation_over_lifetime: Option<ParamInfo>,
+    pub rotation_by_speed: Option<(OneParamInfo, f32, f32)>,
+    pub texture_sheet: Option<ITextureSheet>,
     pub texture: Option<String>,
     pub trail: Option<ITrail>,
-    pub orbtialVelocity: Option<ParamInfo>,
-    pub orbitalOffset: Option<ParamInfo>,
-    pub orbitalRadial: Option<OneParamInfo>,
-    pub speedModifier: Option<OneParamInfo>,
-    pub renderPivot: Option<[f32; 3]>,
+    pub orbtial_velocity: Option<ParamInfo>,
+    pub orbital_offset: Option<ParamInfo>,
+    pub orbital_radial: Option<OneParamInfo>,
+    pub speed_modifier: Option<OneParamInfo>,
+    pub render_pivot: Option<[f32; 3]>,
     pub custom1: Option<[OneParamInfo; 4]>,
 }

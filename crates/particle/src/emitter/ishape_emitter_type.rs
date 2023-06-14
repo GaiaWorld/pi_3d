@@ -1,5 +1,5 @@
 use crate::iparticle_system_config::{
-    TShapeArcModeBurstSpread, TShapeArcModeLoop, TShapeArcModePingPong, TShapeArcModeRandom,
+    TSHAPE_ARC_MODE_BURST_SPREAD, TSHAPE_ARC_MODE_LOOP, TSHAPE_ARC_MODE_PING_PONG, TSHAPE_ARC_MODE_RANDOM,
 };
 use pi_scene_math::{Matrix, Vector3};
 use rand::Rng;
@@ -67,20 +67,20 @@ pub trait IShapeEmitterType {
     fn set_postion(&mut self, position: Vector3);
     fn set_rotation(&mut self, rotation: Vector3);
     fn set_scaling(&mut self, scaling: Vector3);
-    fn set_localMatrix(&mut self, localMatrix: Matrix);
-    fn set_alignDirection(&mut self, alignDirection: bool);
-    fn set_randomizeDirection(&mut self, randomizeDirection: f32);
-    fn set_spherizeDirection(&mut self, spherizeDirection: f32);
-    fn set_randomizePosition(&mut self, randomizePosition: f32);
+    fn set_local_matrix(&mut self, local_matrix: Matrix);
+    fn set_align_direction(&mut self, align_direction: bool);
+    fn set_randomize_direction(&mut self, randomize_direction: f32);
+    fn set_spherize_direction(&mut self, spherize_direction: f32);
+    fn set_randomize_position(&mut self, randomize_position: f32);
 
     fn get_postion(&self) -> Vector3;
     fn get_rotation(&self) -> Vector3;
     fn get_scaling(&self) -> Vector3;
-    fn get_localMatrix(&mut self) -> Matrix;
-    fn get_alignDirection(&mut self) -> bool;
-    fn get_randomizeDirection(&mut self, ) -> f32;
-    fn get_spherizeDirection(&mut self) -> f32;
-    fn get_randomizePosition(&mut self) -> f32;
+    fn get_local_matrix(&mut self) -> Matrix;
+    fn get_align_direction(&mut self) -> bool;
+    fn get_randomize_direction(&mut self, ) -> f32;
+    fn get_spherize_direction(&mut self) -> f32;
+    fn get_randomize_position(&mut self) -> f32;
 }
 
 #[derive(Clone, Copy)]
@@ -88,19 +88,19 @@ pub enum EShapeEmitterArcMode {
     /**
      * 弧形周围随机生成粒子
      */
-    Random = TShapeArcModeRandom,
+    Random = TSHAPE_ARC_MODE_RANDOM,
     /**
      * 形状的弧形周围依序生成粒子，并在每个周期结束时循环回到起点
      */
-    Loop = TShapeArcModeLoop,
+    Loop = TSHAPE_ARC_MODE_LOOP,
     /**
      * 每个连续循环的发生方向与上一个循环相反
      */
-    PingPong = TShapeArcModePingPong,
+    PingPong = TSHAPE_ARC_MODE_PING_PONG,
     /**
      * 在形状周围均匀分布粒子生成位置
      */
-    BurstsSpread = TShapeArcModeBurstSpread,
+    BurstsSpread = TSHAPE_ARC_MODE_BURST_SPREAD,
 }
 /**
  * 形状发射器创建模式
@@ -129,7 +129,7 @@ pub fn compute_radians(
     arc_mode: EShapeEmitterArcMode,
 ) -> f32 {
     let arc_spread_limit = 0.001;
-    let mut s = 0.;
+    let mut _s = 0.;
     let mut spread = arc_spread;
     let mut emission_progress = emission_progress * arc_speed;
 
@@ -137,27 +137,27 @@ pub fn compute_radians(
         EShapeEmitterArcMode::Loop => {
             let radians = (emission_loop + emission_progress) * arc_total_value;
             // let loopCount = f32::floor(radians / arcValue);
-            s = radians % arc_value;
+            _s = radians % arc_value;
 
             if spread > arc_spread_limit {
                 spread = spread * arc_value;
 
-                s = f32::round(s / spread) * spread;
+                _s = f32::round(_s / spread) * spread;
             }
         }
         EShapeEmitterArcMode::PingPong => {
             let radians = (emission_loop + emission_progress) * arc_total_value;
             let loop_count = f32::floor(radians / arc_value);
-            s = radians % arc_value;
+            _s = radians % arc_value;
 
             if spread > arc_spread_limit {
                 spread = spread * arc_value;
 
-                s = f32::round(s / spread) * spread;
+                _s = f32::round(_s / spread) * spread;
             }
 
             if loop_count % 2. == 1. {
-                s = arc_value - s;
+                _s = arc_value - _s;
             }
         }
         EShapeEmitterArcMode::BurstsSpread => {
@@ -168,15 +168,15 @@ pub fn compute_radians(
                 emission_progress = f32::round(emission_progress / spread) * spread;
             }
 
-            s = arc_value * emission_progress;
+            _s = arc_value * emission_progress;
         }
         _ => {
             let mut rng = rand::thread_rng();
             let random: f32 = rng.gen();
 
-            s = 0. + random * (arc_value - 0.);
+            _s = 0. + random * (arc_value - 0.);
         }
     }
 
-    return s;
+    return _s;
 }

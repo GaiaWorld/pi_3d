@@ -1,7 +1,7 @@
 use default_render::{shader::DefaultShader, SingleIDBaseDefaultMaterial};
 use particle::{
     emitter::ishape_emitter_type::EShapeEmitterArcMode,
-    extend::formatMeshParticle,
+    extend::format_mesh_particle,
     iparticle_system_config::{
         FourGradientInfo, IParticleSystemConfig, IShape, IShapeArc, IShapeArcRandom, IShapeCone,
         OneParamInfo, ParamInfo, ThreeParamInfo, IShapeArcLoop,
@@ -162,79 +162,79 @@ fn setup(
     let mut config = IParticleSystemConfig {
         name: "MP".to_string(),
         duration: 5.,
-        startDelay: 0.,
+        start_delay: 0.,
         looping: 1,
         prewarm: true,
-        simulationSpaceIsWorld: EMeshParticleSpaceMode::Local,
-        scalingMode: EMeshParticleScaleMode::Hierarchy,
-        renderAlignment: ERenderAlignment::Local,
-        renderMode: ERenderMode::Billboard,
-        stretchedVelocityScale: 0.,
-        stretchedLengthScale: 0.,
-        maxParticles: 1000.,
-        startSpeed: OneParamInfo::TInterpolateConstant(8.0),
+        simulation_space_is_world: EMeshParticleSpaceMode::Local,
+        scaling_mode: EMeshParticleScaleMode::Hierarchy,
+        render_alignment: ERenderAlignment::Local,
+        render_mode: ERenderMode::Billboard,
+        stretched_velocity_scale: 0.,
+        stretched_length_scale: 0.,
+        max_particles: 1000.,
+        start_speed: OneParamInfo::TInterpolateConstant(8.0),
         lifetime: OneParamInfo::TInterpolateConstant(2.0),
         delay: vec![0.],
-        startColor: FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]),
-        startSize: ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(1.0)),
-        startRotation: ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(0.0)),
+        start_color: FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]),
+        start_size: ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(1.0)),
+        start_rotation: ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(0.0)),
         gravity: OneParamInfo::TInterpolateConstant(0.0),
         emission: (500.0, None),
         shape: IShape::ShapeCone(IShapeCone {
             _type: 0,
             radius: 0.01,
             angle: 90.0,
-            radiusThickness: 0.,
+            radius_thickness: 0.,
             arc: IShapeArc::IShapeArcLoop(IShapeArcLoop {
                 mode: EShapeEmitterArcMode::Loop,
                 value: 360.,
                 spread: 0.1,
                 speed: 1.,
             }),
-            emitAsVolume: false,
+            emit_as_volume: false,
             height: 0.,
 
             scale: default(),
             position: default(),
             rotation: default(),
-            alignDir: default(),
+            align_dir: default(),
             randomize: None,
         }),
-        velocityOverLifetime: Some(ParamInfo::ThreeParamInfo(
+        velocity_over_lifetime: Some(ParamInfo::ThreeParamInfo(
             ThreeParamInfo::TInterpolateConstant([0., 0., 0.]),
         )),
-        limitVelocityOverLifetime: Some(OneParamInfo::TInterpolateConstant(100.)),
-        velocityOverLifetimeIsLocal: default(),
-        limitVelocityOverLifetimeDampen: Some(0.9),
-        forceOverLifetime: Some(ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(
+        limit_velocity_over_lifetime: Some(OneParamInfo::TInterpolateConstant(100.)),
+        velocity_over_lifetime_is_local: default(),
+        limit_velocity_over_lifetime_dampen: Some(0.9),
+        force_over_lifetime: Some(ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(
             0.,
         ))),
-        forceSpaceIsLocal: default(),
-        colorOverLifetime: Some(FourGradientInfo::TInterpolateTwoColors(
+        force_space_is_local: default(),
+        color_over_lifetime: Some(FourGradientInfo::TInterpolateTwoColors(
             [0.5, 0.5, 0.5, 1.],
             [0.5, 0.5, 0., 1.],
         )),
-        colorBySpeed: default(),
-        sizeOverLifetime: Some(ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(
+        color_by_speed: default(),
+        size_over_lifetime: Some(ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(
             0.25,
         ))),
-        sizeBySpeed: default(),
-        rotationOverLifetime: Some(ParamInfo::ThreeParamInfo(
+        size_by_speed: default(),
+        rotation_over_lifetime: Some(ParamInfo::ThreeParamInfo(
             ThreeParamInfo::TInterpolateConstant([0., 0., 0.]),
         )),
-        rotationBySpeed: default(),
-        textureSheet: default(),
+        rotation_by_speed: default(),
+        texture_sheet: default(),
         texture: default(),
         trail: default(),
-        orbtialVelocity: default(),
-        orbitalOffset: default(),
-        orbitalRadial: default(),
-        speedModifier: default(),
-        renderPivot: default(),
+        orbtial_velocity: default(),
+        orbital_offset: default(),
+        orbital_radial: default(),
+        speed_modifier: default(),
+        render_pivot: default(),
         custom1: default(),
     };
     let mut mp = MeshParticleSystem::new();
-    formatMeshParticle(&mut config, &mut mp);
+    format_mesh_particle(&mut config, &mut mp);
     let a = Vector3::new(1., 1., 2.);
     let b = Vector3::new(0.25, 0.5, 0.4);
 
@@ -297,17 +297,17 @@ fn sys_demo_particle(
                 particle
                     .as_mut()
                     .0
-                    .computeCall(world_matrix.0, local_matrix.0);
-                particle.as_mut().0.updateCall(
+                    .compute_call(world_matrix.0, local_matrix.0);
+                particle.as_mut().0.update_call(
                     world_matrix.0,
                     local_matrix.0,
                     camerapos,
                     camera_rotation_matrix,
                 );
 
-                let buffercolor = particle.0.psTool.colorData.as_ref().unwrap();
-                let bufferuv = particle.0.psTool.uvData.as_ref().unwrap();
-                let buffermatrix = particle.0.psTool.get_mpMatrixList().unwrap();
+                let buffercolor = particle.0.ps_tool.color_data.as_ref().unwrap();
+                let bufferuv = particle.0.ps_tool.uv_data.as_ref().unwrap();
+                let buffermatrix = particle.0.ps_tool.get_mp_matrix_list().unwrap();
 
                 // println!("============= buffercolor: {:?}", buffercolor);
                 // println!("============= buffermatrix: {:?}", buffermatrix);

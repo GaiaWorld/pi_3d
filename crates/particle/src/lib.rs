@@ -1,7 +1,7 @@
 // #![feature(allocator_api)]
 
-use nalgebra::UnitQuaternion;
-use pi_scene_math::{Vector3, Quaternion};
+
+use pi_scene_math::Vector3;
 
 #[macro_use]
 extern crate lazy_static;
@@ -27,8 +27,4 @@ pub fn normalize(v: &Vector3) -> Vector3 {
 
 pub fn multiply(v1: &Vector3, v2: &Vector3) -> Vector3 {
     Vector3::new(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z)
-}
-
-pub fn rotateByQuaternionAroundPointToRef(v: &Vector3, center: &Vector3, q: Quaternion) -> Vector3{
-    q.transform_vector(&(v - center)) + center
 }

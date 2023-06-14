@@ -166,43 +166,43 @@ impl IShapeEmitterType for BoxShapeEmitter {
         self.scaling.clone()
     }
 
-    fn set_localMatrix(&mut self, local_matrix: Matrix) {
+    fn set_local_matrix(&mut self, local_matrix: Matrix) {
         self.local_matrix = local_matrix;
     }
 
-    fn set_alignDirection(&mut self, align_direction: bool) {
+    fn set_align_direction(&mut self, align_direction: bool) {
         self.align_direction = align_direction;
     }
 
-    fn set_randomizeDirection(&mut self, randomize_direction: f32) {
+    fn set_randomize_direction(&mut self, randomize_direction: f32) {
         self.randomize_direction = randomize_direction;
     }
 
-    fn set_spherizeDirection(&mut self, spherize_direction: f32) {
+    fn set_spherize_direction(&mut self, spherize_direction: f32) {
         self.spherize_direction = spherize_direction;
     }
 
-    fn set_randomizePosition(&mut self, randomize_position: f32) {
+    fn set_randomize_position(&mut self, randomize_position: f32) {
         self.randomize_position = randomize_position;
     }
 
-    fn get_localMatrix(&mut self) -> Matrix {
+    fn get_local_matrix(&mut self) -> Matrix {
         self.local_matrix.clone()
     }
 
-    fn get_alignDirection(&mut self) -> bool {
+    fn get_align_direction(&mut self) -> bool {
         self.align_direction.clone()
     }
 
-    fn get_randomizeDirection(&mut self) -> f32 {
+    fn get_randomize_direction(&mut self) -> f32 {
         self.randomize_direction.clone()
     }
 
-    fn get_spherizeDirection(&mut self) -> f32 {
+    fn get_spherize_direction(&mut self) -> f32 {
         self.spherize_direction.clone()
     }
 
-    fn get_randomizePosition(&mut self) -> f32 {
+    fn get_randomize_position(&mut self) -> f32 {
         self.randomize_position.clone()
     }
 }

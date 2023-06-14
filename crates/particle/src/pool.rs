@@ -3,40 +3,40 @@ use pi_scene_math::Vector3;
 use crate::particle::Particle;
 
 pub struct Pool {
-    particleList: Vec<Particle>,
-    vector3List: Vec<Vector3>,
+    particle_list: Vec<Particle>,
+    vector3_list: Vec<Vector3>,
 }
 
 impl Pool {
-    pub fn createParticle(&mut self) -> Particle {
-        if let Some(value) = self.particleList.pop() {
+    pub fn create_particle(&mut self) -> Particle {
+        if let Some(value) = self.particle_list.pop() {
             return value;
         }
 
         return Particle::default();
     }
 
-    pub fn recycleParticle(&mut self, mut value: Particle) {
+    pub fn recycle_particle(&mut self, mut value: Particle) {
         value.reset();
-        self.particleList.push(value);
+        self.particle_list.push(value);
     }
 
-    pub fn createVector3(&mut self) -> Vector3 {
-        if let Some(value) = self.vector3List.pop() {
+    pub fn create_vector3(&mut self) -> Vector3 {
+        if let Some(value) = self.vector3_list.pop() {
             return value;
         }
 
         return Vector3::zeros();
     }
 
-    pub fn recycleVector3(&mut self, value: Vector3) {
-        self.vector3List.push(value);
+    pub fn recycle_vector3(&mut self, value: Vector3) {
+        self.vector3_list.push(value);
     }
 
     pub fn new() -> Self {
         Self {
-            particleList: vec![],
-            vector3List: vec![],
+            particle_list: vec![],
+            vector3_list: vec![],
         }
     }
 }

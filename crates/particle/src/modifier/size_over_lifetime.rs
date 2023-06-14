@@ -4,24 +4,24 @@ use pi_scene_math::Vector3;
 
 #[derive(Clone)]
 pub struct SizeOverLifetime {
-    pub scalingInterpolate: ScalingInterpolate,
+    pub scaling_interpolate: ScalingInterpolate,
 }
 
 impl SizeOverLifetime {
     pub fn new(x: FloatInterpolation, y: FloatInterpolation, z: FloatInterpolation) -> Self {
         Self {
-            scalingInterpolate: ScalingInterpolate::new(x, y, z),
+            scaling_interpolate: ScalingInterpolate::new(x, y, z),
         }
     }
 }
 
 impl IParticleModifier for SizeOverLifetime {
-    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, deltaSeconds: f32) {
-        let mut localResult = Vector3::zeros();
+    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, _delta_seconds: f32) {
+        let mut local_result = Vector3::zeros();
 
-        self.scalingInterpolate
-            .compute(*amount, particle.base_random, &mut localResult);
+        self.scaling_interpolate
+            .compute(*amount, particle.base_random, &mut local_result);
 
-        particle.scaling = multiply(&localResult, &particle.scaling);
+        particle.scaling = multiply(&local_result, &particle.scaling);
     }
 }
