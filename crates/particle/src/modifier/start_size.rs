@@ -12,24 +12,24 @@ use super::base::ScalingInterpolate;
 use crate::{particle::Particle, iparticle_system_config::ParamInfo};
 
 pub struct StartSize {
-    pub scalingInterpolate: ScalingInterpolate,
+    pub scaling_interpolate: ScalingInterpolate,
 }
 
 impl Default for StartSize {
     fn default() -> Self {
         Self {
-            scalingInterpolate: ScalingInterpolate::default(),
+            scaling_interpolate: ScalingInterpolate::default(),
         }
     }
 }
 
 impl StartSize {
-    pub fn modify(&self, particle: &mut Particle, amount: f32, deltaSeconds: f32) {
-        self.scalingInterpolate
+    pub fn modify(&self, particle: &mut Particle, amount: f32, _delta_seconds: f32) {
+        self.scaling_interpolate
             .compute(amount, particle.base_random, &mut particle.start_scaling);
     }
 
     pub fn format(config: &ParamInfo, target: &mut StartSize){
-        ScalingInterpolate::format(config, &mut target.scalingInterpolate)
+        ScalingInterpolate::format(config, &mut target.scaling_interpolate)
     }
 }

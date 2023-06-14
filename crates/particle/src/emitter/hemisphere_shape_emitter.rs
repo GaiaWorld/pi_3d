@@ -8,15 +8,15 @@ use super::{
         compute_radians, EShapeEmitterArcMode, EShapeEmitterDirectionMode, IShapeEmitterType,
         IShapeEmitterTypeValue,
     },
-    serializationObject,
+    SerializationObject,
 };
 
 /**
  * 半球体发射器
  */
 pub struct HemisphereShapeEmitter {
-    MAX_Z: f32,
-    pub directionMode: EShapeEmitterDirectionMode,
+    _max_z: f32,
+    pub direction_mode: EShapeEmitterDirectionMode,
 
     /**
      * 半径
@@ -25,62 +25,62 @@ pub struct HemisphereShapeEmitter {
     /**
      * 半径域
      */
-    pub radiusRange: f32,
+    pub radius_range: f32,
     /**
      * 弧形范围
      */
-    pub arcValue: f32,
+    pub arc_value: f32,
     /**
      * 弧形范围发射模式
      */
-    pub arcMode: EShapeEmitterArcMode,
+    pub arc_mode: EShapeEmitterArcMode,
     /**
      * 弧形周围可产生粒子的离散间隔 - 小于0.01 时, 不做间隔计算
      */
-    pub arcSpread: f32,
+    pub arc_spread: f32,
     /**
      * 弧形范围发射速度
      */
-    pub arcSpeed: f32,
+    pub arc_speed: f32,
     /**
      * 弧形范围精度
      */
-    pub arcSpreadLimit: f32,
-    pub directionRandomizer: f32,
+    pub arc_spread_limit: f32,
+    pub direction_randomizer: f32,
 
     pub rotation: Vector3,
     pub position: Vector3,
     pub scaling: Vector3,
 
-    localMatrix: Matrix,
-    alignDirection: bool,
-    randomizeDirection: f32,
-    spherizeDirection: f32,
-    randomizePosition: f32,
+    local_matrix: Matrix,
+    align_direction: bool,
+    randomize_direction: f32,
+    spherize_direction: f32,
+    randomize_position: f32,
 }
 
 impl HemisphereShapeEmitter {
-    pub fn new(radius: f32, radiusRange: f32) -> Self {
+    pub fn new(radius: f32, radius_range: f32) -> Self {
         Self {
-            MAX_Z: 9999999999.,
-            directionMode: EShapeEmitterDirectionMode::Unity,
+            _max_z: 9999999999.,
+            direction_mode: EShapeEmitterDirectionMode::Unity,
             radius,
-            radiusRange,
-            arcValue: std::f32::consts::PI,
-            arcMode: EShapeEmitterArcMode::Random,
-            arcSpread: 0.,
-            arcSpeed: 1.,
-            arcSpreadLimit: 0.001,
-            directionRandomizer: 1.,
+            radius_range,
+            arc_value: std::f32::consts::PI,
+            arc_mode: EShapeEmitterArcMode::Random,
+            arc_spread: 0.,
+            arc_speed: 1.,
+            arc_spread_limit: 0.001,
+            direction_randomizer: 1.,
             rotation: Vector3::new(0., 0., 0.),
             position: Vector3::new(0., 0., 0.),
             scaling: Vector3::new(1., 1., 1.),
 
-            localMatrix: Matrix::identity(),
-            alignDirection: false,
-            randomizeDirection: 0.,
-            spherizeDirection: 0.,
-            randomizePosition: 0.,
+            local_matrix: Matrix::identity(),
+            align_direction: false,
+            randomize_direction: 0.,
+            spherize_direction: 0.,
+            randomize_position: 0.,
         }
     }
     /**
@@ -88,15 +88,15 @@ impl HemisphereShapeEmitter {
      * Serializes the particle system to a JSON object.
      * @returns the JSON object
      */
-    pub fn serialize(&self) -> serializationObject {
-        serializationObject {
+    pub fn serialize(&self) -> SerializationObject {
+        SerializationObject {
             _type: Some(HemisphereShapeEmitter::get_class_name()),
             radius: Some(self.radius),
             angle: None,
-            directionRandomizer: Some(self.directionRandomizer),
-            radiusRange: Some(self.radiusRange),
-            heightRange: None,
-            emitFromSpawnPointOnly: None,
+            direction_randomizer: Some(self.direction_randomizer),
+            radius_range: Some(self.radius_range),
+            height_range: None,
+            emit_from_spawn_point_only: None,
             size: None,
             direction1: None,
             direction2: None,
@@ -107,10 +107,10 @@ impl HemisphereShapeEmitter {
      * Parse properties from a JSON object
      * @param serializationObject defines the JSON object
      */
-    pub fn parse(&mut self, arg: serializationObject) {
+    pub fn parse(&mut self, arg: SerializationObject) {
         self.radius = arg.radius.unwrap();
-        self.radiusRange = arg.radiusRange.unwrap();
-        self.directionRandomizer = arg.directionRandomizer.unwrap();
+        self.radius_range = arg.radius_range.unwrap();
+        self.direction_randomizer = arg.direction_randomizer.unwrap();
     }
 
     /**
@@ -125,60 +125,60 @@ impl HemisphereShapeEmitter {
         // return newOne;
     }
 
-    pub fn startPositionFunctionLocal(
+    pub fn start_position_function_local(
         &self,
-        worldMatrix: Matrix,
-        positionToUpdate: &mut Vector3,
-        emissionLoop: f32,
-        emissionProgress: f32,
-        emissionIndex: f32,
-        emissionTotal: f32,
+        _world_matrix: Matrix,
+        position_to_update: &mut Vector3,
+        emission_loop: f32,
+        emission_progress: f32,
+        emission_index: f32,
+        emission_total: f32,
     ) {
-        let mut s = 0.;
-        let spread = self.arcSpread;
-        let mut emissionProgress = emissionProgress * self.arcSpeed;
+        let mut _s = 0.;
+        let spread = self.arc_spread;
+        let mut emission_progress = emission_progress * self.arc_speed;
 
         let mut rng = rand::thread_rng();
-        match (self.arcMode) {
+        match self.arc_mode {
             EShapeEmitterArcMode::Loop => {
-                if (spread > self.arcSpreadLimit) {
-                    emissionProgress = (emissionProgress / spread).round() * spread;
+                if spread > self.arc_spread_limit {
+                    emission_progress = (emission_progress / spread).round() * spread;
                 }
 
-                s = self.arcValue * emissionProgress;
+                _s = self.arc_value * emission_progress;
             }
             EShapeEmitterArcMode::PingPong => {
-                if (spread > self.arcSpreadLimit) {
-                    emissionProgress = (emissionProgress / spread).round() * spread;
+                if spread > self.arc_spread_limit {
+                    emission_progress = (emission_progress / spread).round() * spread;
                 }
 
-                s = self.arcValue * emissionProgress * ((emissionLoop % 2. - 0.5) * -2.);
+                _s = self.arc_value * emission_progress * ((emission_loop % 2. - 0.5) * -2.);
             }
             EShapeEmitterArcMode::BurstsSpread => {
-                emissionProgress = emissionIndex / emissionTotal;
-                if (spread > self.arcSpreadLimit) {
-                    emissionProgress = (emissionProgress / spread).floor() * spread;
+                emission_progress = emission_index / emission_total;
+                if spread > self.arc_spread_limit {
+                    emission_progress = (emission_progress / spread).floor() * spread;
                 }
 
-                s = self.arcValue * emissionProgress;
+                _s = self.arc_value * emission_progress;
             }
             _ => {
-                s = rng.gen_range(0.0..self.arcValue);
+                _s = rng.gen_range(0.0..self.arc_value);
             }
         }
-        let randRadius = self.radius - rng.gen::<f32>() * (self.radius * self.radiusRange);
+        let rand_radius = self.radius - rng.gen::<f32>() * (self.radius * self.radius_range);
         let v: f32 = rng.gen_range(0.0..1.0);
-        let phi = s;
+        let phi = _s;
         let theta = (2. * v - 1.).acos();
-        let mut randX = randRadius * phi.cos() * theta.sin();
-        let mut randZ = randRadius * theta.cos();
-        let mut randY = randRadius * phi.sin() * theta.sin();
+        let mut rand_x = rand_radius * phi.cos() * theta.sin();
+        let mut rand_z = rand_radius * theta.cos();
+        let mut rand_y = rand_radius * phi.sin() * theta.sin();
 
-        randX += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        randZ += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        randY += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        rand_x += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        rand_z += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        rand_y += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
 
-        *positionToUpdate = Vector3::new(randX, randY.abs(), randZ);
+        *position_to_update = Vector3::new(rand_x, rand_y.abs(), rand_z);
     }
 }
 impl IShapeEmitterType for HemisphereShapeEmitter {
@@ -190,7 +190,7 @@ impl IShapeEmitterType for HemisphereShapeEmitter {
         local_position: pi_scene_math::Vector3,
         is_local: bool,
     ) {
-        let mut direction = if (is_local) {
+        let mut direction = if is_local {
             normalize(&local_position)
         } else {
             normalize(
@@ -205,7 +205,7 @@ impl IShapeEmitterType for HemisphereShapeEmitter {
 
         direction = normalize(&direction);
 
-        if (is_local) {
+        if is_local {
             *direction_to_update = direction;
         } else {
             *direction_to_update = world_matrix.transform_vector(&direction);
@@ -228,31 +228,31 @@ impl IShapeEmitterType for HemisphereShapeEmitter {
             emission_index,
             emission_total,
             std::f32::consts::PI * 2.,
-            self.arcValue,
-            self.arcSpread,
-            self.arcSpeed,
-            self.arcMode,
+            self.arc_value,
+            self.arc_spread,
+            self.arc_speed,
+            self.arc_mode,
         );
 
         let mut rng = rand::thread_rng();
 
-        let range = rng.gen::<f32>() * (self.radiusRange);
-        let randRadius = self.radius - self.radius * range * range;
+        let range = rng.gen::<f32>() * (self.radius_range);
+        let rand_radius = self.radius - self.radius * range * range;
         let v: f32 = rng.gen_range(0.0..1.0);
         let phi = s;
         let theta = (2.0 * v - 1.0).acos();
-        let mut randX = randRadius * phi.cos() * theta.sin();
-        let mut randZ = (randRadius * v).abs();
-        let mut randY = randRadius * phi.sin() * theta.sin();
+        let mut rand_x = rand_radius * phi.cos() * theta.sin();
+        let mut rand_z = (rand_radius * v).abs();
+        let mut rand_y = rand_radius * phi.sin() * theta.sin();
 
-        randX += rng.gen::<f32>() * Self::RANDOMIZE_POSITION;
-        randZ += rng.gen::<f32>() * Self::RANDOMIZE_POSITION;
-        randY += rng.gen::<f32>() * Self::RANDOMIZE_POSITION;
+        rand_x += rng.gen::<f32>() * Self::RANDOMIZE_POSITION;
+        rand_z += rng.gen::<f32>() * Self::RANDOMIZE_POSITION;
+        rand_y += rng.gen::<f32>() * Self::RANDOMIZE_POSITION;
 
         if is_local {
-            *position_to_update = Vector3::new(randX, randY, randZ);
+            *position_to_update = Vector3::new(rand_x, rand_y, rand_z);
         } else {
-            *position_to_update = world_matrix.transform_vector(&Vector3::new(randX, randY, randZ));
+            *position_to_update = world_matrix.transform_vector(&Vector3::new(rand_x, rand_y, rand_z));
         }
     }
 
@@ -293,44 +293,44 @@ impl IShapeEmitterType for HemisphereShapeEmitter {
         self.scaling.clone()
     }
 
-    fn set_localMatrix(&mut self, localMatrix: Matrix) {
-        self.localMatrix = localMatrix;
+    fn set_local_matrix(&mut self, local_matrix: Matrix) {
+        self.local_matrix = local_matrix;
     }
 
-    fn set_alignDirection(&mut self, alignDirection: bool) {
-        self.alignDirection = alignDirection;
+    fn set_align_direction(&mut self, align_direction: bool) {
+        self.align_direction = align_direction;
     }
 
-    fn set_randomizeDirection(&mut self, randomizeDirection: f32) {
-        self.randomizeDirection = randomizeDirection;
+    fn set_randomize_direction(&mut self, randomize_direction: f32) {
+        self.randomize_direction = randomize_direction;
     }
 
-    fn set_spherizeDirection(&mut self, spherizeDirection: f32) {
-        self.spherizeDirection = spherizeDirection;
+    fn set_spherize_direction(&mut self, spherize_direction: f32) {
+        self.spherize_direction = spherize_direction;
     }
 
-    fn set_randomizePosition(&mut self, randomizePosition: f32) {
-        self.randomizePosition = randomizePosition;
+    fn set_randomize_position(&mut self, randomize_position: f32) {
+        self.randomize_position = randomize_position;
     }
 
-    fn get_localMatrix(&mut self) -> Matrix {
-        self.localMatrix.clone()
+    fn get_local_matrix(&mut self) -> Matrix {
+        self.local_matrix.clone()
     }
 
-    fn get_alignDirection(&mut self) -> bool {
-        self.alignDirection.clone()
+    fn get_align_direction(&mut self) -> bool {
+        self.align_direction.clone()
     }
 
-    fn get_randomizeDirection(&mut self) -> f32 {
-        self.randomizeDirection.clone()
+    fn get_randomize_direction(&mut self) -> f32 {
+        self.randomize_direction.clone()
     }
 
-    fn get_spherizeDirection(&mut self) -> f32 {
-        self.spherizeDirection.clone()
+    fn get_spherize_direction(&mut self) -> f32 {
+        self.spherize_direction.clone()
     }
 
-    fn get_randomizePosition(&mut self) -> f32 {
-        self.randomizePosition.clone()
+    fn get_randomize_position(&mut self) -> f32 {
+        self.randomize_position.clone()
     }
 }
 

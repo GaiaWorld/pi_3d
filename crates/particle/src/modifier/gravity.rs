@@ -5,32 +5,32 @@ use crate::{
     particle::Particle,
 };
 
-use super::base::TempVector3A;
+use super::base::TEMP_VECTOR3_A;
 
 pub struct Gravity {
-    defualtForce: Vector3,
+    defualt_force: Vector3,
     pub interpolation: FloatInterpolation,
 }
 
 impl Gravity {
-    pub fn modify(&mut self, particle: &mut Particle, amount: f32, deltaSeconds: f32) {
+    pub fn modify(&mut self, particle: &mut Particle, amount: f32, delta_seconds: f32) {
         let factor = self.interpolation.interpolate(amount, particle.base_random);
 
-        let mut localForce = TempVector3A;
-        localForce = self.defualtForce * factor;
-        localForce = particle
+        let mut _local_force = TEMP_VECTOR3_A;
+        _local_force = self.defualt_force * factor;
+        _local_force = particle
             .start_world_matrix_invert
-            .transform_vector(&localForce);
+            .transform_vector(&_local_force);
 
-        localForce = localForce * deltaSeconds;
+        _local_force = _local_force * delta_seconds;
         
-        particle.direction = particle.direction + (localForce);
+        particle.direction = particle.direction + (_local_force);
     }
 
     pub fn new(interpolation: FloatInterpolation) ->Self{
         Self {
             interpolation,
-            defualtForce: Vector3::new(0., -9.8, 0.),
+            defualt_force: Vector3::new(0., -9.8, 0.),
         }
     }
 }

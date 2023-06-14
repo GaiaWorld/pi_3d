@@ -12,22 +12,18 @@ use crate::{
         rectangle_shape_emitter::RectangleShapeEmitter,
         sphere_shape_emitter::SphereShapeEmitter,
     },
-    interpolation::{parseColor4Gradient, parseFloatInterpolation},
+    interpolation::{parse_color4_gradient, parse_float_interpolation},
     iparticle_system_config::{IParticleSystemConfig, IShape, ParamInfo, TParamType},
     mesh_particle_system::MeshParticleSystem,
     modifier::{
         base::{
             Color4Interpolate, RotationInterpolate, ScalingInterpolate, TranslationInterpolate,
         },
-        force_over_lifetime::ForceOverLifetime,
-        rotation_over_lifetime::RotationOverLifetime,
-        size_over_lifetime::SizeOverLifetime,
         start_color::StartColor,
         start_rotation::StartRotation,
         start_size::StartSize,
         velocity_over_lifetime::VelocityOverLifetime,
     },
-    particle_system_tool::EMeshParticleSpaceMode,
 };
 
 // pub fn initial() {
@@ -380,25 +376,25 @@ use crate::{
  * @param config josn描述
  * @param mp 目标粒子系统
  */
-pub fn formatMeshParticle(config: &mut IParticleSystemConfig, mp: &mut MeshParticleSystem) {
-    let ps = &mut mp.psTool;
+pub fn format_mesh_particle(config: &mut IParticleSystemConfig, mp: &mut MeshParticleSystem) {
+    let ps = &mut mp.ps_tool;
 
     ps.looping = config.looping == 1;
     ps.duration = config.duration as u64 * 1000;
-    ps.startDelay = config.startDelay as i32 * 1000;
-    ps.maxParticles = config.maxParticles as usize;
+    ps.start_delay = config.start_delay as i32 * 1000;
+    ps.max_particles = config.max_particles as usize;
     ps.prewarm = config.prewarm;
-    ps.rateOverTime = config.emission.0;
-    ps.simulationSpace = config.simulationSpaceIsWorld;
-    ps.scalingSpace = config.scalingMode;
-    ps.set_renderAlignment(config.renderAlignment);
-    ps.set_renderMode(config.renderMode);
-    ps.stretchedLengthScale = if config.stretchedLengthScale == 0.0 {
+    ps.rate_over_time = config.emission.0;
+    ps.simulation_space = config.simulation_space_is_world;
+    ps.scaling_space = config.scaling_mode;
+    ps.set_render_alignment(config.render_alignment);
+    ps.set_render_mode(config.render_mode);
+    ps.stretched_length_scale = if config.stretched_length_scale == 0.0 {
         1.0
     } else {
-        config.stretchedLengthScale
+        config.stretched_length_scale
     };
-    ps.stretchedVelocityScale = config.stretchedVelocityScale;
+    ps.stretched_velocity_scale = config.stretched_velocity_scale;
 
     // bursts
     if let Some(v) = &config.emission.1 {
@@ -409,269 +405,268 @@ pub fn formatMeshParticle(config: &mut IParticleSystemConfig, mp: &mut MeshParti
     }
 
     // emitter Shape
-    ps.emitterShape = Some(formatShape(Some(&config.shape)));
+    ps.emitter_shape = Some(format_shape(Some(&config.shape)));
 
     // startLifetime
-    parseFloatInterpolation(
-        &mut ps.startLifetimeInterpolation,
+    parse_float_interpolation(
+        &mut ps.start_lifetime_interpolation,
         &Some(config.lifetime.clone()),
         TParamType::TParamStartLifetime,
         1000.0,
     );
 
     // startSpeed
-    parseFloatInterpolation(
-        &mut ps.startSpeedInterpolation,
-        &Some(config.startSpeed.clone()),
+    parse_float_interpolation(
+        &mut ps.start_speed_interpolation,
+        &Some(config.start_speed.clone()),
         TParamType::TParamStartSpeed,
         1.,
     );
 
     // startSize
-    StartSize::format(&config.startSize, &mut ps.startSizeInterpolation);
+    StartSize::format(&config.start_size, &mut ps.start_size_interpolation);
 
     // startRotation
-    StartRotation::format(&config.startRotation, &mut ps.startRotationInterpolation);
+    StartRotation::format(&config.start_rotation, &mut ps.start_rotation_interpolation);
 
     // startColor
-    StartColor::format(&config.startColor, &mut ps.startColorInterpolation);
+    StartColor::format(&config.start_color, &mut ps.start_color_interpolation);
 
     // // gravity
-    parseFloatInterpolation(
-        &mut ps.gravityInterpolation.interpolation,
+    parse_float_interpolation(
+        &mut ps.gravity_interpolation.interpolation,
         &Some(config.gravity.clone()),
         TParamType::TParamGravity,
         1.0,
     );
 
     // velocityOverLifetime
-    if let Some(velocityOverLifetime) = &config.velocityOverLifetime {
+    if let Some(velocity_over_lifetime) = &config.velocity_over_lifetime {
         VelocityOverLifetime::format(
-            velocityOverLifetime,
-            &mut ps.velocityOverLifetimeInterpolation.translationInterpolate,
+            velocity_over_lifetime,
+            &mut ps.velocity_over_lifetime_interpolation.translation_interpolate,
         );
-        let res = if let Some(velocity_over_lifetime_is_local) = config.velocityOverLifetimeIsLocal
+        let res = if let Some(velocity_over_lifetime_is_local) = config.velocity_over_lifetime_is_local
         {
             velocity_over_lifetime_is_local != 0
         } else {
             false
         };
 
-        ps.velocityOverLifetimeInterpolation.set_isLocalSpace(res);
-        ps.enableVelocityOverLifeTime = true;
+        ps.velocity_over_lifetime_interpolation.set_is_local_space(res);
+        ps.enable_velocity_over_life_time = true;
     }
 
-    if let Some(orbtialVelocity) = &(config.orbtialVelocity) {
+    if let Some(orbtial_velocity) = &(config.orbtial_velocity) {
         VelocityOverLifetime::format(
-            orbtialVelocity,
-            &mut ps.localPositionModifier.orbitalRotateSpeed,
+            orbtial_velocity,
+            &mut ps.local_position_modifier.orbital_rotate_speed,
         );
     }
-    if let Some(orbitalOffset) = (&config.orbitalOffset) {
-        VelocityOverLifetime::format(orbitalOffset, &mut ps.localPositionModifier.orbitalOffset);
+    if let Some(orbital_offset) = &config.orbital_offset {
+        VelocityOverLifetime::format(orbital_offset, &mut ps.local_position_modifier.orbital_offset);
     }
-    if config.orbitalRadial.is_some() {
-        parseFloatInterpolation(
-            &mut ps.localPositionModifier.radial,
-            &config.orbitalRadial,
+    if config.orbital_radial.is_some() {
+        parse_float_interpolation(
+            &mut ps.local_position_modifier.radial,
+            &config.orbital_radial,
             TParamType::TParamStartSpeed,
             1.0,
         );
     }
-    if config.speedModifier.is_some() {
-        parseFloatInterpolation(
-            &mut ps.localPositionModifier.speedModifier,
-            &config.speedModifier,
+    if config.speed_modifier.is_some() {
+        parse_float_interpolation(
+            &mut ps.local_position_modifier.speed_modifier,
+            &config.speed_modifier,
             TParamType::TParamStartSpeed,
             1.0,
         );
     }
 
     // limitVelocityOverLifetime
-    if config.limitVelocityOverLifetime.is_some() {
-        parseFloatInterpolation(
-            &mut ps.limitVelocityOverLifetimeInterpolation.interpolation,
-            &config.limitVelocityOverLifetime,
+    if config.limit_velocity_over_lifetime.is_some() {
+        parse_float_interpolation(
+            &mut ps.limit_velocity_over_lifetime_interpolation.interpolation,
+            &config.limit_velocity_over_lifetime,
             TParamType::TParamLimitVelocityOverLifetime,
             1.0,
         );
-        ps.limitVelocityOverLifetimeInterpolation.dampen =
-            if let Some(limitVelocityOverLifetimeDampen) = config.limitVelocityOverLifetimeDampen {
-                limitVelocityOverLifetimeDampen
+        ps.limit_velocity_over_lifetime_interpolation.dampen =
+            if let Some(limit_velocity_over_lifetime_dampen) = config.limit_velocity_over_lifetime_dampen {
+                limit_velocity_over_lifetime_dampen
             } else {
                 0.
             };
-        ps.enableLimitVelocityOverLifeTime = true;
+        ps.enable_limit_velocity_over_life_time = true;
     }
 
     // forceOverLifetime
-    if let Some(forceOverLifetime) = &config.forceOverLifetime {
+    if let Some(force_over_lifetime) = &config.force_over_lifetime {
         TranslationInterpolate::format(
-            &forceOverLifetime,
-            &mut ps.forceOverLifetimeInterpolation.translationInterpolate,
+            &force_over_lifetime,
+            &mut ps.force_over_lifetime_interpolation.translation_interpolate,
         );
-        let res = if let Some(forceSpaceIsLocal) = config.forceSpaceIsLocal {
-            forceSpaceIsLocal != 0
+        let res = if let Some(force_space_is_local) = config.force_space_is_local {
+            force_space_is_local != 0
         } else {
             false
         };
 
-        ps.forceOverLifetimeInterpolation.set_isLocalSpace(res);
-        ps.enableForceOverLifeTime = true;
+        ps.force_over_lifetime_interpolation.set_is_local_space(res);
+        ps.enable_force_over_life_time = true;
     }
 
     // colorOverLifetime
-    if let Some(colorOverLifetime) = &(config.colorOverLifetime) {
+    if let Some(color_over_lifetime) = &config.color_over_lifetime {
         Color4Interpolate::format(
-            colorOverLifetime,
-            &mut ps.colorOverLifetimeInterpolation.color4Interpolate,
+            color_over_lifetime,
+            &mut ps.color_over_lifetime_interpolation.color4_interpolate,
         );
-        ps.enableColorOverLifeTime = true;
+        ps.enable_color_over_life_time = true;
     }
-    if let Some(colorBySpeed) = &(config.colorBySpeed) {
+    if let Some(color_by_speed) = &config.color_by_speed {
         Color4Interpolate::format(
-            &colorBySpeed.0,
-            &mut ps.colorBySpeedInterpolation.color4Interpolate,
+            &color_by_speed.0,
+            &mut ps.color_by_speed_interpolation.color4_interpolate,
         );
-        ps.colorBySpeedInterpolation.set_rangeX(colorBySpeed.1);
-        ps.colorBySpeedInterpolation.set_rangeY(colorBySpeed.2);
-        ps.enableColorBySpeed = true;
+        ps.color_by_speed_interpolation.set_range_x(color_by_speed.1);
+        ps.color_by_speed_interpolation.set_range_y(color_by_speed.2);
+        ps.enable_color_by_speed = true;
     }
 
     // sizeOverLifetime
-    if let Some(sizeOverLifetime) = &(config.sizeOverLifetime) {
+    if let Some(size_over_lifetime) = &(config.size_over_lifetime) {
         ScalingInterpolate::format(
-            &sizeOverLifetime,
-            &mut ps.sizeOverLifetimeInterpolation.scalingInterpolate,
+            &size_over_lifetime,
+            &mut ps.size_over_lifetime_interpolation.scaling_interpolate,
         );
-        ps.enableSizeOverLifeTime = true;
+        ps.enable_size_over_life_time = true;
     }
-    if let Some(sizeBySpeed) = &(config.sizeBySpeed) {
+    if let Some(size_by_speed) = &(config.size_by_speed) {
         ScalingInterpolate::format(
-            &ParamInfo::OneParamInfo(sizeBySpeed.0.clone()),
-            &mut ps.sizeBySpeedInterpolation.scalingInterpolate,
+            &ParamInfo::OneParamInfo(size_by_speed.0.clone()),
+            &mut ps.size_by_speed_interpolation.scaling_interpolate,
         );
-        ps.sizeBySpeedInterpolation.set_rangeX(sizeBySpeed.1);
-        ps.sizeBySpeedInterpolation.set_rangeY(sizeBySpeed.2);
-        ps.enableSizeBySpeed = true;
+        ps.size_by_speed_interpolation.set_range_x(size_by_speed.1);
+        ps.size_by_speed_interpolation.set_range_y(size_by_speed.2);
+        ps.enable_size_by_speed = true;
     }
 
     // rotationOverLifetime
-    if let Some(rotationOverLifetime) = &(config.rotationOverLifetime) {
+    if let Some(rotation_over_lifetime) = &(config.rotation_over_lifetime) {
         RotationInterpolate::format(
-            &rotationOverLifetime,
-            &mut ps.rotationOverLifetimeInterpolation.rotationInterpolate,
+            &rotation_over_lifetime,
+            &mut ps.rotation_over_lifetime_interpolation.rotation_interpolate,
         );
-        ps.enableRotationOverLifeTime = true;
+        ps.enable_rotation_over_life_time = true;
     }
-    if let Some(rotationBySpeed) = &(config.rotationBySpeed) {
+    if let Some(rotation_by_speed) = &(config.rotation_by_speed) {
         RotationInterpolate::format(
-            &ParamInfo::OneParamInfo(rotationBySpeed.0.clone()),
-            &mut ps.rotationBySpeedInterpolation.rotationInterpolate,
+            &ParamInfo::OneParamInfo(rotation_by_speed.0.clone()),
+            &mut ps.rotation_by_speed_interpolation.rotation_interpolate,
         );
 
-        ps.rotationBySpeedInterpolation
-            .set_rangeX(rotationBySpeed.1);
-        ps.rotationBySpeedInterpolation
-            .set_rangeY(rotationBySpeed.2);
-        ps.enableRotationBySpeed = true;
+        ps.rotation_by_speed_interpolation
+            .set_range_x(rotation_by_speed.1);
+        ps.rotation_by_speed_interpolation
+            .set_range_y(rotation_by_speed.2);
+        ps.enable_rotation_by_speed = true;
     }
 
     if let Some(custom1) = &(config.custom1) {
-        parseFloatInterpolation(
-            &mut ps.customDataForMainUV.uScale,
+        parse_float_interpolation(
+            &mut ps.custom_data_for_main_uv.u_scale,
             &Some(custom1[0].clone()),
             TParamType::TParamStartLifetime,
             1.0,
         );
-        parseFloatInterpolation(
-            &mut ps.customDataForMainUV.vScale,
+        parse_float_interpolation(
+            &mut ps.custom_data_for_main_uv.v_scale,
             &Some(custom1[1].clone()),
             TParamType::TParamStartLifetime,
             1.0,
         );
-        parseFloatInterpolation(
-            &mut ps.customDataForMainUV.uOffset,
+        parse_float_interpolation(
+            &mut ps.custom_data_for_main_uv.u_offset,
             &Some(custom1[2].clone()),
             TParamType::TParamStartLifetime,
             1.0,
         );
-        parseFloatInterpolation(
-            &mut ps.customDataForMainUV.vOffset,
+        parse_float_interpolation(
+            &mut ps.custom_data_for_main_uv.v_offset,
             &Some(custom1[3].clone()),
             TParamType::TParamStartLifetime,
             1.0,
         );
-        ps.enableCustomDataForMainUV = true;
+        ps.enable_custom_data_for_main_uv = true;
     }
 
-    /**
-     * 导出时 有 textureSheet 必然对应 导出材质名称 为 SHADER_PI_SHADER_PS
-     */
-    if let Some(textureSheet) = &(config.textureSheet) {
-        let tSheet = &mut ps.textureSheetInterpolation;
-        parseFloatInterpolation(
-            &mut tSheet.frameOverTime,
-            &Some(textureSheet.frameOverTime.clone()),
+    //导出时 有 textureSheet 必然对应 导出材质名称 为 SHADER_PI_SHADER_PS
+
+    if let Some(texture_sheet) = &(config.texture_sheet) {
+        let t_sheet = &mut ps.texture_sheet_interpolation;
+        parse_float_interpolation(
+            &mut t_sheet.frame_over_time,
+            &Some(texture_sheet.frame_over_time.clone()),
             TParamType::TParamTextureSheet,
             1.0,
         );
-        tSheet.animMode = textureSheet.animMode.clone();
-        tSheet.customRow = textureSheet.customRow;
-        tSheet.cycles = textureSheet.cycles;
-        tSheet.rowMode = textureSheet.rowMode.clone();
-        parseFloatInterpolation(
-            &mut tSheet.startFrame,
-            &Some(textureSheet.startFrame.clone()),
+        t_sheet.anim_mode = texture_sheet.anim_mode.clone();
+        t_sheet.custom_row = texture_sheet.custom_row;
+        t_sheet.cycles = texture_sheet.cycles;
+        t_sheet.row_mode = texture_sheet.row_mode.clone();
+        parse_float_interpolation(
+            &mut t_sheet.start_frame,
+            &Some(texture_sheet.start_frame.clone()),
             TParamType::TParamTextureSheet,
             1.0,
         );
-        tSheet.set_tilesX(textureSheet.tilesX);
-        tSheet.set_tilesY(textureSheet.tilesY);
-        tSheet.timeMode = textureSheet.timeMode.clone();
-        ps.enableTextureSheet = true;
+        t_sheet.set_tiles_x(texture_sheet.tiles_x);
+        t_sheet.set_tiles_y(texture_sheet.tiles_y);
+        t_sheet.time_mode = texture_sheet.time_mode.clone();
+        ps.enable_texture_sheet = true;
     }
 
     if let Some(trail) = &(config.trail) {
-        ps.set_enableTrail(true);
+        ps.set_enable_trail(true);
         let ps_trail = ps.trail.as_mut().unwrap();
         ps_trail.set_mode(trail.mode);
         ps_trail.ratio = trail.ratio;
-        parseFloatInterpolation(
+        parse_float_interpolation(
             &mut ps_trail.lifetime,
             &Some(trail.lifetime.clone()),
             TParamType::None,
             1.0,
         );
-        ps_trail.ribbonCount = trail.ribbonCount;
-        ps_trail.attachRibbonsToTransfoem = trail.attachRTT == 1;
-        ps_trail.minimunVertexDistance = trail.minDist;
-        ps_trail.set_worldSpace(trail.worldSpace == 1);
-        ps_trail.dieWithParticle = trail.dieWith == 1;
-        ps_trail.sizeAffectsWidth = trail.sizeAWidth == 1;
-        ps_trail.set_textureMode(trail.texMode);
-        ps_trail.sizeAffectsLifetime = trail.sizeALifetime == 1;
-        ps_trail.inheritParticleColor = trail.inheritColor == 1;
-        parseColor4Gradient(
-            &mut ps_trail.colorOverLifetime.color4Interpolate.gradient,
-            Some(&trail.colorOverLife),
+        ps_trail.ribbon_count = trail.ribbon_count;
+        ps_trail.attach_ribbons_to_transfoem = trail.attach_rtt == 1;
+        ps_trail.minimun_vertex_distance = trail.min_dist;
+        ps_trail.set_world_space(trail.world_space == 1);
+        ps_trail.die_with_particle = trail.die_with == 1;
+        ps_trail.size_affects_width = trail.size_awidth == 1;
+        ps_trail.set_texture_mode(trail.tex_mode);
+        ps_trail.size_affects_lifetime = trail.size_alifetime == 1;
+        ps_trail.inherit_particle_color = trail.inherit_color == 1;
+        parse_color4_gradient(
+            &mut ps_trail.color_over_lifetime.color4_interpolate.gradient,
+            Some(&trail.color_over_life),
             TParamType::None,
         );
-        parseFloatInterpolation(
-            &mut ps_trail.widthOverTrail,
-            &Some(trail.widthOverTrail.clone()),
+        parse_float_interpolation(
+            &mut ps_trail.width_over_trail,
+            &Some(trail.width_over_trail.clone()),
             TParamType::None,
             1.0,
         );
-        parseColor4Gradient(
-            &mut ps_trail.colorOverTrail.color4Interpolate.gradient,
-            Some(&trail.colorOverTrail),
+        parse_color4_gradient(
+            &mut ps_trail.color_over_trail.color4_interpolate.gradient,
+            Some(&trail.color_over_trail),
             TParamType::None,
         );
     }
 
-    if let Some(renderPivot) = (config.renderPivot) {
-        ps.renderPivot = Vector3::new(renderPivot[0], renderPivot[1], renderPivot[2]);
+    if let Some(render_pivot) = config.render_pivot {
+        ps.render_pivot = Vector3::new(render_pivot[0], render_pivot[1], render_pivot[2]);
     }
 }
 /**
@@ -679,32 +674,32 @@ pub fn formatMeshParticle(config: &mut IParticleSystemConfig, mp: &mut MeshParti
  * @param shape 形状发射器json描述
  * @returns
  */
-fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
+fn format_shape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
     if let Some(shape) = &shape {
-        let mut pos = None;
-        let mut rotation = None;
-        let mut scale = None;
-        let mut randomize = None;
-        let mut alignDir = 0;
-        let mut shapeEmitter: Box<dyn IShapeEmitterType> = match shape {
+        let mut _pos = None;
+        let mut _rotation = None;
+        let mut _scale = None;
+        let mut _randomize = None;
+        let mut _align_dir = 0;
+        let mut shape_emitter: Box<dyn IShapeEmitterType> = match shape {
             // 2
             IShape::ShapeBox(shape) => {
                 let mut temp = BoxShapeEmitter::new();
-                temp.emit_mode = if let Some(mode) = &shape.boxEmitMode {
+                temp.emit_mode = if let Some(mode) = &shape.box_emit_mode {
                     *mode
                 } else {
                     EBoxShapeMode::Volume
                 };
-                pos = shape.position.clone();
-                rotation = shape.rotation.clone();
-                scale = shape.scale.clone();
-                randomize = shape.randomize.clone();
-                alignDir = shape.alignDir;
+                _pos = shape.position.clone();
+                _rotation = shape.rotation.clone();
+                _scale = shape.scale.clone();
+                _randomize = shape.randomize.clone();
+                _align_dir = shape.align_dir;
                 Box::new(temp)
             }
             // 3
             IShape::ShapeCircle(shape) => {
-                let mut temp = CircleShapeEmitter::new(shape.radius, shape.radiusThickness);
+                let mut temp = CircleShapeEmitter::new(shape.radius, shape.radius_thickness);
                 let (mode, value, spread, speed) = match &shape.arc {
                     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
                         (v.mode, v.value, v.spread, v.speed)
@@ -724,20 +719,20 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                 temp.arc_spread = spread;
                 temp.arc_speed = speed;
 
-                pos = shape.position.clone();
-                rotation = shape.rotation.clone();
-                scale = shape.scale.clone();
-                randomize = shape.randomize.clone();
-                alignDir = shape.alignDir;
+                _pos = shape.position.clone();
+                _rotation = shape.rotation.clone();
+                _scale = shape.scale.clone();
+                _randomize = shape.randomize.clone();
+                _align_dir = shape.align_dir;
                 Box::new(temp)
             }
             // 0
             IShape::ShapeCone(shape) => {
                 let mut temp =
                     ConeShapeEmitter::new(shape.radius, shape.angle * std::f32::consts::PI / 180.);
-                temp.radius_range = shape.radiusThickness;
+                temp.radius_range = shape.radius_thickness;
                 temp.set_height(shape.height);
-                temp.height_range = if shape.emitAsVolume { 1.0 } else { 0.0 };
+                temp.height_range = if shape.emit_as_volume { 1.0 } else { 0.0 };
                 let (mode, value, spread, speed) = match &shape.arc {
                     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
                         (v.mode, v.value, v.spread, v.speed)
@@ -758,11 +753,11 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                 temp.arc_spread = spread;
                 temp.arc_speed = speed;
 
-                pos = shape.position.clone();
-                rotation = shape.rotation.clone();
-                scale = shape.scale.clone();
-                randomize = shape.randomize.clone();
-                alignDir = shape.alignDir;
+                _pos = shape.position.clone();
+                _rotation = shape.rotation.clone();
+                _scale = shape.scale.clone();
+                _randomize = shape.randomize.clone();
+                _align_dir = shape.align_dir;
                 Box::new(temp)
             }
             //5
@@ -783,22 +778,22 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                         (v.mode, v.value, v.spread, v.speed)
                     }
                 };
-                temp.arcMode = mode;
-                temp.arcValue = value * std::f32::consts::PI / 180.;
-                temp.arcSpread = spread;
-                temp.arcSpeed = speed;
+                temp.arc_mode = mode;
+                temp.arc_value = value * std::f32::consts::PI / 180.;
+                temp.arc_spread = spread;
+                temp.arc_speed = speed;
 
-                pos = shape.position.clone();
-                rotation = shape.rotation.clone();
-                scale = shape.scale.clone();
-                randomize = shape.randomize.clone();
-                alignDir = shape.alignDir;
+                _pos = shape.position.clone();
+                _rotation = shape.rotation.clone();
+                _scale = shape.scale.clone();
+                _randomize = shape.randomize.clone();
+                _align_dir = shape.align_dir;
 
                 Box::new(temp)
             }
             //4
             IShape::ShapeHemisphere(shape) => {
-                let mut temp = HemisphereShapeEmitter::new(shape.radius, shape.radiusThickness);
+                let mut temp = HemisphereShapeEmitter::new(shape.radius, shape.radius_thickness);
                 let (mode, value, spread, speed) = match &shape.arc {
                     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
                         (v.mode, v.value, v.spread, v.speed)
@@ -813,34 +808,34 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                         (v.mode, v.value, v.spread, v.speed)
                     }
                 };
-                temp.arcMode = mode;
-                temp.arcValue = value * std::f32::consts::PI / 180.;
-                temp.arcSpread = spread;
-                temp.arcSpeed = speed;
+                temp.arc_mode = mode;
+                temp.arc_value = value * std::f32::consts::PI / 180.;
+                temp.arc_spread = spread;
+                temp.arc_speed = speed;
 
-                pos = shape.position.clone();
-                rotation = shape.rotation.clone();
-                scale = shape.scale.clone();
-                randomize = shape.randomize.clone();
-                alignDir = shape.alignDir;
+                _pos = shape.position.clone();
+                _rotation = shape.rotation.clone();
+                _scale = shape.scale.clone();
+                _randomize = shape.randomize.clone();
+                _align_dir = shape.align_dir;
 
                 Box::new(temp)
             }
             // 6
             IShape::ShapeRectangle(shape) => {
-                let mut temp = RectangleShapeEmitter::new();
+                let temp = RectangleShapeEmitter::new();
 
-                pos = shape.position.clone();
-                rotation = shape.rotation.clone();
-                scale = shape.scale.clone();
-                randomize = shape.randomize.clone();
-                alignDir = shape.alignDir;
+                _pos = shape.position.clone();
+                _rotation = shape.rotation.clone();
+                _scale = shape.scale.clone();
+                _randomize = shape.randomize.clone();
+                _align_dir = shape.align_dir;
 
                 Box::new(temp)
             }
             // 1
             IShape::ShapeSphere(shape) => {
-                let mut temp = SphereShapeEmitter::new(shape.radius, shape.radiusThickness);
+                let mut temp = SphereShapeEmitter::new(shape.radius, shape.radius_thickness);
                 let (mode, value, spread, speed) = match &shape.arc {
                     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
                         (v.mode, v.value, v.spread, v.speed)
@@ -856,45 +851,45 @@ fn formatShape(shape: Option<&IShape>) -> Box<dyn IShapeEmitterType> {
                     }
                 };
 
-                temp.arcMode = mode;
-                temp.arcValue = value * std::f32::consts::PI / 180.;
-                temp.arcSpread = spread;
-                temp.arcSpeed = speed;
+                temp.arc_mode = mode;
+                temp.arc_value = value * std::f32::consts::PI / 180.;
+                temp.arc_spread = spread;
+                temp.arc_speed = speed;
 
-                pos = shape.position.clone();
-                rotation = shape.rotation.clone();
-                scale = shape.scale.clone();
-                randomize = shape.randomize.clone();
-                alignDir = shape.alignDir;
+                _pos = shape.position.clone();
+                _rotation = shape.rotation.clone();
+                _scale = shape.scale.clone();
+                _randomize = shape.randomize.clone();
+                _align_dir = shape.align_dir;
 
                 Box::new(temp)
             }
         };
 
-        if let (Some(pos), Some(rotation), Some(scale)) = (pos, rotation, scale) {
-            shapeEmitter.set_postion(Vector3::new(pos[0], pos[1], pos[2]));
-            shapeEmitter.set_rotation(Vector3::new(rotation[0], rotation[1], rotation[2]));
-            shapeEmitter.set_scaling(Vector3::new(scale[0], scale[1], scale[2]));
+        if let (Some(pos), Some(rotation), Some(scale)) = (_pos, _rotation, _scale) {
+            shape_emitter.set_postion(Vector3::new(pos[0], pos[1], pos[2]));
+            shape_emitter.set_rotation(Vector3::new(rotation[0], rotation[1], rotation[2]));
+            shape_emitter.set_scaling(Vector3::new(scale[0], scale[1], scale[2]));
 
-            let mat = Matrix::new_nonuniform_scaling(&shapeEmitter.get_scaling())
+            let mat = Matrix::new_nonuniform_scaling(&shape_emitter.get_scaling())
                 * Matrix::from_euler_angles(
-                    shapeEmitter.get_rotation()[0],
-                    shapeEmitter.get_rotation()[1],
-                    shapeEmitter.get_rotation()[2],
+                    shape_emitter.get_rotation()[0],
+                    shape_emitter.get_rotation()[1],
+                    shape_emitter.get_rotation()[2],
                 )
-                * Matrix::new_translation(&shapeEmitter.get_postion());
-            shapeEmitter.set_localMatrix(mat);
+                * Matrix::new_translation(&shape_emitter.get_postion());
+            shape_emitter.set_local_matrix(mat);
         }
 
-        shapeEmitter.set_alignDirection(alignDir != 0);
+        shape_emitter.set_align_direction(_align_dir != 0);
 
-        if let Some(randomize) = &randomize {
-            shapeEmitter.set_randomizeDirection(randomize[0]);
-            shapeEmitter.set_spherizeDirection(randomize[1]);
-            shapeEmitter.set_randomizePosition(randomize[2]);
+        if let Some(randomize) = &_randomize {
+            shape_emitter.set_randomize_direction(randomize[0]);
+            shape_emitter.set_spherize_direction(randomize[1]);
+            shape_emitter.set_randomize_position(randomize[2]);
         }
 
-        return shapeEmitter;
+        return shape_emitter;
     } else {
         return Box::new(PointShapeEmitter::new());
     }

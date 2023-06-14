@@ -3,18 +3,18 @@ use rand::Rng;
 
 use super::{
     ishape_emitter_type::{EShapeEmitterDirectionMode, IShapeEmitterType},
-    serializationObject,
+    SerializationObject,
 };
 
 /**
  * 点发射器
  */
 pub struct PointShapeEmitter {
-    MAX_Z: f32,
+    _max_z: f32,
     /**
      * 创建模式
      */
-    directionMode: EShapeEmitterDirectionMode,
+    _direction_mode: EShapeEmitterDirectionMode,
     /**
      * 第一发射方向
      */
@@ -27,11 +27,11 @@ pub struct PointShapeEmitter {
     pub position: Vector3,
     pub scaling: Vector3,
 
-    localMatrix: Matrix,
-    alignDirection: bool,
-    randomizeDirection: f32,
-    spherizeDirection: f32,
-    randomizePosition: f32,
+    local_matrix: Matrix,
+    align_direction: bool,
+    randomize_direction: f32,
+    spherize_direction: f32,
+    randomize_position: f32,
 }
 
 impl PointShapeEmitter {
@@ -39,15 +39,15 @@ impl PointShapeEmitter {
      * Serializes the particle system to a JSON object.
      * @returns the JSON object
      */
-    pub fn serialize(&self) -> serializationObject {
-        serializationObject {
+    pub fn serialize(&self) -> SerializationObject {
+        SerializationObject {
             _type: Some(PointShapeEmitter::get_class_name()),
             radius: None,
             angle: None,
-            directionRandomizer: None,
-            radiusRange: None,
-            heightRange: None,
-            emitFromSpawnPointOnly: None,
+            direction_randomizer: None,
+            radius_range: None,
+            height_range: None,
+            emit_from_spawn_point_only: None,
             size: None,
             direction1: Some(self.direction1),
             direction2: Some(self.direction2),
@@ -59,25 +59,25 @@ impl PointShapeEmitter {
      * Parse properties from a JSON object
      * @param serializationObject defines the JSON object
      */
-    pub fn parse(&mut self, arg: serializationObject) {
+    pub fn parse(&mut self, arg: SerializationObject) {
         self.direction1 = arg.direction1.as_ref().unwrap().clone();
         self.direction2 = arg.direction2.as_ref().unwrap().clone();
     }
 
     pub fn new() -> Self{
         Self{
-            MAX_Z: 999999999.,
-            directionMode: EShapeEmitterDirectionMode::Unity,
+            _max_z: 999999999.,
+            _direction_mode: EShapeEmitterDirectionMode::Unity,
             direction1: Vector3::new(0.,0.,1.),
             direction2: Vector3::new(0.,0.,1.),
             rotation: Vector3::new(0., 0., 0.),
             position: Vector3::new(0., 0., 0.),
             scaling: Vector3::new(1., 1., 1.),
-            localMatrix: Matrix::identity(),
-            alignDirection: false,
-            randomizeDirection: 0.,
-            spherizeDirection: 0.,
-            randomizePosition: 0.,
+            local_matrix: Matrix::identity(),
+            align_direction: false,
+            randomize_direction: 0.,
+            spherize_direction: 0.,
+            randomize_position: 0.,
         }
     }
 }
@@ -87,21 +87,21 @@ impl IShapeEmitterType for PointShapeEmitter {
         &self,
         world_matrix: pi_scene_math::Matrix,
         direction_to_update: &mut Vector3,
-        position: Vector3,
-        local_position: Vector3,
+        _position: Vector3,
+        _local_position: Vector3,
         is_local: bool,
     ) {
         let mut rng = rand::thread_rng();
 
-        let randX = rng.gen::<f32>() * (self.direction2[0] - self.direction1[0]) + self.direction1[0];
-        let randZ = rng.gen::<f32>() * (self.direction2[1] - self.direction1[1]) + self.direction1[0];
-        let randY = rng.gen::<f32>() * (self.direction2[2] - self.direction1[2]) + self.direction1[0];
+        let rand_x = rng.gen::<f32>() * (self.direction2[0] - self.direction1[0]) + self.direction1[0];
+        let rand_z = rng.gen::<f32>() * (self.direction2[1] - self.direction1[1]) + self.direction1[0];
+        let rand_y = rng.gen::<f32>() * (self.direction2[2] - self.direction1[2]) + self.direction1[0];
 
         if is_local {
-            *direction_to_update = Vector3::new(randX, randY, randZ);
+            *direction_to_update = Vector3::new(rand_x, rand_y, rand_z);
         } else {
             *direction_to_update =
-                world_matrix.transform_vector(&Vector3::new(randX, randY, randZ));
+                world_matrix.transform_vector(&Vector3::new(rand_x, rand_y, rand_z));
         }
     }
 
@@ -109,13 +109,13 @@ impl IShapeEmitterType for PointShapeEmitter {
         &self,
         world_matrix: pi_scene_math::Matrix,
         position_to_update: &mut Vector3,
-        emission_loop: f32,
-        emission_progress: f32,
-        emission_index: f32,
-        emission_total: f32,
+        _emission_loop: f32,
+        _emission_progress: f32,
+        _emission_index: f32,
+        _emission_total: f32,
         is_local: bool,
     ) {
-        if (is_local) {
+        if is_local {
             *position_to_update = Vector3::new(0., 0., 0.);
         } else {
             *position_to_update = world_matrix.transform_vector(&Vector3::new(0., 0., 0.));
@@ -158,45 +158,45 @@ impl IShapeEmitterType for PointShapeEmitter {
         self.scaling.clone()
     }
 
-    fn set_localMatrix(&mut self, localMatrix: Matrix) {
-        self.localMatrix = localMatrix;
+    fn set_local_matrix(&mut self, local_matrix: Matrix) {
+        self.local_matrix = local_matrix;
     }
 
-    fn set_alignDirection(&mut self, alignDirection: bool) {
-        self.alignDirection = alignDirection;
+    fn set_align_direction(&mut self, align_direction: bool) {
+        self.align_direction = align_direction;
     }
     
 
-    fn set_randomizeDirection(&mut self, randomizeDirection: f32) {
-        self.randomizeDirection = randomizeDirection;
+    fn set_randomize_direction(&mut self, randomize_direction: f32) {
+        self.randomize_direction = randomize_direction;
     }
 
-    fn set_spherizeDirection(&mut self, spherizeDirection: f32) {
-        self.spherizeDirection = spherizeDirection;
+    fn set_spherize_direction(&mut self, spherize_direction: f32) {
+        self.spherize_direction = spherize_direction;
     }
 
-    fn set_randomizePosition(&mut self, randomizePosition: f32) {
-        self.randomizePosition = randomizePosition;
+    fn set_randomize_position(&mut self, randomize_position: f32) {
+        self.randomize_position = randomize_position;
     }
 
-    fn get_localMatrix(&mut self) -> Matrix {
-        self.localMatrix.clone()
+    fn get_local_matrix(&mut self) -> Matrix {
+        self.local_matrix.clone()
     }
 
-    fn get_alignDirection(&mut self) -> bool {
-        self.alignDirection.clone()
+    fn get_align_direction(&mut self) -> bool {
+        self.align_direction.clone()
     }
 
-    fn get_randomizeDirection(&mut self, ) -> f32 {
-        self.randomizeDirection.clone()
+    fn get_randomize_direction(&mut self, ) -> f32 {
+        self.randomize_direction.clone()
     }
 
-    fn get_spherizeDirection(&mut self) -> f32 {
-        self.spherizeDirection.clone()
+    fn get_spherize_direction(&mut self) -> f32 {
+        self.spherize_direction.clone()
     }
 
-    fn get_randomizePosition(&mut self) -> f32 {
-        self.randomizePosition.clone()
+    fn get_randomize_position(&mut self) -> f32 {
+        self.randomize_position.clone()
     }
 }
 

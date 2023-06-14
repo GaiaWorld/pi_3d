@@ -1,57 +1,57 @@
 use std::sync::Arc;
 
-use pi_scene_math::{Matrix, Vector3};
-
 use crate::particle::Particle;
 
 use super::base::{
-    transformVectorAsLocalSpace, transformVectorAsWorldSpace, Color4Interpolate, TempVector3A,
-    TranslationInterpolate, IParticleModifier,
+    transform_vector_as_local_space, transform_vector_as_world_space, IParticleModifier,
+    TranslationInterpolate, TEMP_VECTOR3_A,
 };
 
 #[derive(Clone)]
 pub struct ForceOverLifetime {
-    _isLocalSpace: bool,
-    pub translationInterpolate: TranslationInterpolate,
+    _is_local_space: bool,
+    pub translation_interpolate: TranslationInterpolate,
     // transformForce: Box<dyn Fn(&Vector3, Matrix, &mut Vector3)>,
 }
 
 impl ForceOverLifetime {
-    pub fn set_isLocalSpace(&mut self, value: bool) {
-        if (self._isLocalSpace != value) {
-            self._isLocalSpace = value;
-            if (value) {
-                self.translationInterpolate.transformForce = Arc::new(transformVectorAsLocalSpace);
+    pub fn set_is_local_space(&mut self, value: bool) {
+        if self._is_local_space != value {
+            self._is_local_space = value;
+            if value {
+                self.translation_interpolate.transform_force =
+                    Arc::new(transform_vector_as_local_space);
             } else {
-                self.translationInterpolate.transformForce = Arc::new(transformVectorAsWorldSpace);
+                self.translation_interpolate.transform_force =
+                    Arc::new(transform_vector_as_world_space);
             }
         }
     }
-    pub fn get_isLocalSpace(&self) -> bool {
-        return self._isLocalSpace;
+    pub fn get_is_local_space(&self) -> bool {
+        return self._is_local_space;
     }
 
-    pub fn new(translationInterpolate: TranslationInterpolate) -> Self {
+    pub fn new(translation_interpolate: TranslationInterpolate) -> Self {
         Self {
-            _isLocalSpace: true,
-            translationInterpolate,
+            _is_local_space: true,
+            translation_interpolate,
         }
     }
 }
 
-impl IParticleModifier for ForceOverLifetime{
-    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, deltaSeconds: f32) {
-        let mut localForce = TempVector3A;
+impl IParticleModifier for ForceOverLifetime {
+    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, delta_seconds: f32) {
+        let mut local_force = TEMP_VECTOR3_A;
 
-        self.translationInterpolate.compute(
+        self.translation_interpolate.compute(
             *amount,
             particle.base_random,
             particle.start_world_matrix_invert,
-            &mut localForce,
+            &mut local_force,
         );
 
-        localForce = localForce * deltaSeconds;
-        
-        particle.direction = particle.direction + localForce;
+        local_force = local_force * delta_seconds;
+
+        particle.direction = particle.direction + local_force;
     }
 }

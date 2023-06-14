@@ -21,14 +21,14 @@ impl LimitVelocityOverLifetime {
 }
 
 impl IParticleModifier for LimitVelocityOverLifetime {
-    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, deltaSeconds: f32) {
-        let localResult = self.interpolation.interpolate(*amount, particle.base_random);
+    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, _delta_seconds: f32) {
+        let local_result = self.interpolation.interpolate(*amount, particle.base_random);
 
-        let currLength = particle.direction_length;
-        if (currLength > localResult) {
-            println!("LimitVelocityOverLifetime particle.direction: {:?}",  particle.direction);
+        let curr_length = particle.direction_length;
+        if curr_length > local_result {
+            // println!("LimitVelocityOverLifetime particle.direction: {:?}",  particle.direction);
             particle.direction = particle.direction
-                * (1.0 - self.dampen * (currLength - localResult) / currLength * (0.66));
+                * (1.0 - self.dampen * (curr_length - local_result) / curr_length * (0.66));
         }
     }
 }

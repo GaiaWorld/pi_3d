@@ -6,7 +6,7 @@ use super::base::{RotationInterpolate, IParticleModifier};
 
 #[derive(Clone)]
 pub struct RotationOverLifetime {
-    pub rotationInterpolate: RotationInterpolate,
+    pub rotation_interpolate: RotationInterpolate,
 }
 
 impl RotationOverLifetime {
@@ -14,20 +14,20 @@ impl RotationOverLifetime {
 
     pub fn new(x: FloatInterpolation, y: FloatInterpolation, z: FloatInterpolation) -> Self {
         Self {
-            rotationInterpolate: RotationInterpolate::new(x, y, z),
+            rotation_interpolate: RotationInterpolate::new(x, y, z),
         }
     }
 }
 
 impl IParticleModifier for RotationOverLifetime{
-    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, deltaSeconds: f32) {
-        let mut localResult = Vector3::zeros();
+    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, delta_seconds: f32) {
+        let mut local_result = Vector3::zeros();
 
-        self.rotationInterpolate
-            .compute(*amount, particle.base_random, &mut localResult);
+        self.rotation_interpolate
+            .compute(*amount, particle.base_random, &mut local_result);
 
-        localResult = localResult * deltaSeconds;
+        local_result = local_result * delta_seconds;
 
-        particle.rotation = particle.rotation + localResult;
+        particle.rotation = particle.rotation + local_result;
     }
 }

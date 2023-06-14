@@ -11,107 +11,107 @@ use crate::{
     particle::Particle,
 };
 
-pub const TempVector3A: Vector3 = Vector3::new(0., 0., 0.);
-pub const TempVector3B: Vector3 = Vector3::new(0., 0., 0.);
-pub const TempVector3C: Vector3 = Vector3::new(0., 0., 0.);
-pub const TempVector3D: Vector3 = Vector3::new(0., 0., 0.);
-pub const TempVector3E: Vector3 = Vector3::new(0., 0., 0.);
+pub const TEMP_VECTOR3_A: Vector3 = Vector3::new(0., 0., 0.);
+pub const TEMP_VECTOR3_B: Vector3 = Vector3::new(0., 0., 0.);
+pub const TEMP_VECTOR3_C: Vector3 = Vector3::new(0., 0., 0.);
+pub const TEMP_VECTOR3_D: Vector3 = Vector3::new(0., 0., 0.);
+pub const TEMP_VECTOR3_E: Vector3 = Vector3::new(0., 0., 0.);
 
-pub const TempColor4A: Color4 = Color4::new(1., 1., 1., 1.);
-pub const TempColor4B: Color4 = Color4::new(1., 1., 1., 1.);
-pub const TempColor4C: Color4 = Color4::new(1., 1., 1., 1.);
+pub const TEMP_COLOR4_A: Color4 = Color4::new(1., 1., 1., 1.);
+pub const TEMP_COLOR4_B: Color4 = Color4::new(1., 1., 1., 1.);
+pub const TEMP_COLOR4_C: Color4 = Color4::new(1., 1., 1., 1.);
 
 lazy_static! {
-    pub static ref TempQuaternionA: Quaternion = Quaternion::default();
-    pub static ref TempQuaternionB: Quaternion = Quaternion::default();
-    pub static ref TempQuaternionC: Quaternion = Quaternion::default();
-    pub static ref TempMatrixA: Matrix = Matrix::identity();
-    pub static ref TempMatrixB: Matrix = Matrix::identity();
-    pub static ref TempMatrixC: Matrix = Matrix::identity();
+    pub static ref TEMP_QUATERNION_A: Quaternion = Quaternion::default();
+    pub static ref TEMP_QUATERNION_B: Quaternion = Quaternion::default();
+    pub static ref TEMP_QUATERNION_C: Quaternion = Quaternion::default();
+    pub static ref TEMP_MATRIX_A: Matrix = Matrix::identity();
+    pub static ref TEMP_MATRIX_B: Matrix = Matrix::identity();
+    pub static ref TEMP_MATRIX_C: Matrix = Matrix::identity();
 }
 
 pub trait IParticleModifier {
-    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, deltaSeconds: f32);
+    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, delta_seconds: f32);
 }
 
-pub fn transformVectorAsLocalSpace(
-    source: &Vector3,
-    transformInvert: Matrix,
-    result: &mut Vector3,
+pub fn transform_vector_as_local_space(
+    _source: &Vector3,
+    _transform_invert: Matrix,
+    _result: &mut Vector3,
 ) {
     // no thing
 }
 
-pub fn transformVectorAsWorldSpace(
+pub fn transform_vector_as_world_space(
     source: &Vector3,
-    transformInvert: Matrix,
+    transform_invert: Matrix,
     result: &mut Vector3,
 ) {
-    *result = transformInvert.transform_vector(source);
+    *result = transform_invert.transform_vector(source);
 }
 
-pub fn interpolateThree(
-    forceInterpolationX: &FloatInterpolation,
-    forceInterpolationY: &FloatInterpolation,
-    forceInterpolationZ: &FloatInterpolation,
+pub fn interpolate_three(
+    force_interpolation_x: &FloatInterpolation,
+    force_interpolation_y: &FloatInterpolation,
+    force_interpolation_z: &FloatInterpolation,
     amount: f32,
     random: f32,
     result: &mut Vector3,
 ) {
-    let x = forceInterpolationX.interpolate(amount, random);
-    let y = forceInterpolationY.interpolate(amount, random);
-    let z = forceInterpolationZ.interpolate(amount, random);
+    let x = force_interpolation_x.interpolate(amount, random);
+    let y = force_interpolation_y.interpolate(amount, random);
+    let z = force_interpolation_z.interpolate(amount, random);
     *result = Vector3::new(x, y, z);
 }
 
-pub fn interpolateTranslationNoAxis(
-    forceInterpolationX: &FloatInterpolation,
-    forceInterpolationY: &FloatInterpolation,
-    forceInterpolationZ: &FloatInterpolation,
+pub fn interpolate_translation_no_axis(
+    force_interpolation_x: &FloatInterpolation,
+    _force_interpolation_y: &FloatInterpolation,
+    _force_interpolation_z: &FloatInterpolation,
     amount: f32,
     random: f32,
     result: &mut Vector3,
 ) {
-    let x = forceInterpolationX.interpolate(amount, random);
+    let x = force_interpolation_x.interpolate(amount, random);
     *result = Vector3::new(x, x, x);
 }
 
-pub fn interpolateRotationNoAxis(
-    forceInterpolationX: &FloatInterpolation,
-    forceInterpolationY: &FloatInterpolation,
-    forceInterpolationZ: &FloatInterpolation,
+pub fn interpolate_rotation_no_axis(
+    force_interpolation_x: &FloatInterpolation,
+    _force_interpolation_y: &FloatInterpolation,
+    _force_interpolation_z: &FloatInterpolation,
     amount: f32,
     random: f32,
     result: &mut Vector3,
 ) {
-    let z = forceInterpolationX.interpolate(amount, random);
+    let z = force_interpolation_x.interpolate(amount, random);
     *result = Vector3::new(0., 0., z);
 }
 
-pub fn interpolateScalingNoAxis(
-    forceInterpolationX: &FloatInterpolation,
-    forceInterpolationY: &FloatInterpolation,
-    forceInterpolationZ: &FloatInterpolation,
+pub fn interpolate_scaling_no_axis(
+    force_interpolation_x: &FloatInterpolation,
+    _force_interpolation_y: &FloatInterpolation,
+    _force_interpolation_z: &FloatInterpolation,
     amount: f32,
     random: f32,
     result: &mut Vector3,
 ) {
-    let x = forceInterpolationX.interpolate(amount, random);
+    let x = force_interpolation_x.interpolate(amount, random);
     *result = Vector3::new(x, x, x);
 }
 
-pub fn interpolateFour(
-    forceInterpolationX: &FloatInterpolation,
-    forceInterpolationY: &FloatInterpolation,
-    forceInterpolationZ: &FloatInterpolation,
+pub fn interpolate_four(
+    force_interpolation_x: &FloatInterpolation,
+    force_interpolation_y: &FloatInterpolation,
+    force_interpolation_z: &FloatInterpolation,
     amount: f32,
     random: f32,
     result: &mut Color4,
 ) {
-    let r = forceInterpolationX.interpolate(amount, random);
-    let g = forceInterpolationY.interpolate(amount, random);
-    let b = forceInterpolationZ.interpolate(amount, random);
-    let a = forceInterpolationZ.interpolate(amount, random);
+    let r = force_interpolation_x.interpolate(amount, random);
+    let g = force_interpolation_y.interpolate(amount, random);
+    let b = force_interpolation_z.interpolate(amount, random);
+    let a = force_interpolation_z.interpolate(amount, random);
     *result = Color4::new(r, g, b, a);
 }
 
@@ -138,13 +138,13 @@ impl Default for Vector3Interpolate {
     }
 }
 
-pub fn applyVector3Interpolation(config: &ParamInfo, target: &mut Vector3Interpolate) {
-    applyFloatInterpolationFromMulti(config, 0, &mut target.x);
-    applyFloatInterpolationFromMulti(config, 1, &mut target.y);
-    applyFloatInterpolationFromMulti(config, 2, &mut target.z);
+pub fn apply_vector3_interpolation(config: &ParamInfo, target: &mut Vector3Interpolate) {
+    apply_float_interpolation_from_multi(config, 0, &mut target.x);
+    apply_float_interpolation_from_multi(config, 1, &mut target.y);
+    apply_float_interpolation_from_multi(config, 2, &mut target.z);
 }
 
-pub fn applyFloatInterpolationFromMulti(
+pub fn apply_float_interpolation_from_multi(
     config: &ParamInfo,
     index: usize,
     target: &mut FloatInterpolation,
@@ -152,14 +152,14 @@ pub fn applyFloatInterpolationFromMulti(
     // let temp = target;
 
     match config {
-        ParamInfo::OneParamInfo(info) => applyFloatInterpolationFromOneParamInfo(info, target),
+        ParamInfo::OneParamInfo(info) => apply_float_interpolation_from_one_param_info(info, target),
         ParamInfo::ThreeParamInfo(info) => {
-            applyFloatInterpolationFromThreeParamInfo(info, index, target)
+            apply_float_interpolation_from_three_param_info(info, index, target)
         }
     }
 }
 
-pub fn applyFloatInterpolationFromOneParamInfo(
+pub fn apply_float_interpolation_from_one_param_info(
     config: &OneParamInfo,
     target: &mut FloatInterpolation,
 ) {
@@ -176,18 +176,18 @@ pub fn applyFloatInterpolationFromOneParamInfo(
         }
         OneParamInfo::TInterpolateCurve(one_param_curve) => {
             target.mode = EInterpolationCurveMode::Curve;
-            target.minCurve = Some(one_param_curve.clone());
-            target.maxCurve = Some(one_param_curve.clone());
+            target.min_curve = Some(one_param_curve.clone());
+            target.max_curve = Some(one_param_curve.clone());
         }
         OneParamInfo::TInterpolateTwoCurves(one_param_curve1, one_param_curve2) => {
             target.mode = EInterpolationCurveMode::Curve;
-            target.minCurve = Some(one_param_curve1.clone());
-            target.maxCurve = Some(one_param_curve2.clone());
+            target.min_curve = Some(one_param_curve1.clone());
+            target.max_curve = Some(one_param_curve2.clone());
         }
     }
 }
 
-pub fn applyFloatInterpolationFromThreeParamInfo(
+pub fn apply_float_interpolation_from_three_param_info(
     config: &ThreeParamInfo,
     index: usize,
     target: &mut FloatInterpolation,
@@ -205,21 +205,21 @@ pub fn applyFloatInterpolationFromThreeParamInfo(
         }
         ThreeParamInfo::TInterpolateCurve(three_param) => {
             target.mode = EInterpolationCurveMode::Curve;
-            target.minCurve = Some(three_param[index].clone());
-            target.maxCurve = Some(three_param[index].clone());
+            target.min_curve = Some(three_param[index].clone());
+            target.max_curve = Some(three_param[index].clone());
         }
         ThreeParamInfo::TInterpolateTwoCurves(three_param1, three_param2) => {
             target.mode = EInterpolationCurveMode::Curve;
-            target.minCurve = Some(three_param1[index].clone());
-            target.maxCurve = Some(three_param2[index].clone());
+            target.min_curve = Some(three_param1[index].clone());
+            target.max_curve = Some(three_param2[index].clone());
         }
     }
 }
 
 #[derive(Clone)]
 pub struct TranslationInterpolate {
-    pub _isAxis: bool,
-    vector3Interpolate: Vector3Interpolate,
+    pub _is_axis: bool,
+    vector3_interpolate: Vector3Interpolate,
     interpolate: Arc<
         dyn Fn(
             &FloatInterpolation,
@@ -230,58 +230,58 @@ pub struct TranslationInterpolate {
             &mut Vector3,
         ),
     >,
-    pub transformForce: Arc<dyn Fn(&Vector3, Matrix, &mut Vector3)>,
+    pub transform_force: Arc<dyn Fn(&Vector3, Matrix, &mut Vector3)>,
 }
 
 impl TranslationInterpolate {
-    pub fn set_isAxis(&mut self, value: bool) {
-        if (self._isAxis != value) {
-            self._isAxis = value;
-            if (value) {
-                self.interpolate = Arc::new(interpolateThree);
+    pub fn set_is_axis(&mut self, value: bool) {
+        if self._is_axis != value {
+            self._is_axis = value;
+            if value {
+                self.interpolate = Arc::new(interpolate_three);
             } else {
-                self.interpolate = Arc::new(interpolateTranslationNoAxis);
+                self.interpolate = Arc::new(interpolate_translation_no_axis);
             }
         }
     }
-    pub fn get_isAxis(&self) -> bool {
-        return self._isAxis;
+    pub fn get_is_axis(&self) -> bool {
+        return self._is_axis;
     }
 
     pub fn new(x: FloatInterpolation, y: FloatInterpolation, z: FloatInterpolation) -> Self {
         Self {
-            _isAxis: false,
-            vector3Interpolate: Vector3Interpolate { x, y, z },
-            interpolate: Arc::new(interpolateTranslationNoAxis),
-            transformForce: Arc::new(transformVectorAsLocalSpace),
+            _is_axis: false,
+            vector3_interpolate: Vector3Interpolate { x, y, z },
+            interpolate: Arc::new(interpolate_translation_no_axis),
+            transform_force: Arc::new(transform_vector_as_local_space),
         }
     }
 
-    pub fn compute(&self, amount: f32, random: f32, transformInvert: Matrix, result: &mut Vector3) {
+    pub fn compute(&self, amount: f32, random: f32, transform_invert: Matrix, result: &mut Vector3) {
         (self.interpolate)(
-            &self.vector3Interpolate.x,
-            &self.vector3Interpolate.y,
-            &self.vector3Interpolate.z,
+            &self.vector3_interpolate.x,
+            &self.vector3_interpolate.y,
+            &self.vector3_interpolate.z,
             amount,
             random,
             result,
         );
-        (self.transformForce)(&result.clone(), transformInvert, result);
+        (self.transform_force)(&result.clone(), transform_invert, result);
     }
 
     pub fn format(config: &ParamInfo, target: &mut TranslationInterpolate) {
-        if let ParamInfo::OneParamInfo(info) = &config {
-            target._isAxis = true;
+        if let ParamInfo::OneParamInfo(_info) = &config {
+            target._is_axis = true;
         }
 
-        applyVector3Interpolation(config, &mut target.vector3Interpolate);
+        apply_vector3_interpolation(config, &mut target.vector3_interpolate);
     }
 }
 
 #[derive(Clone)]
 pub struct RotationInterpolate {
-    _isAxis: bool,
-    vector3Interpolate: Vector3Interpolate,
+    _is_axis: bool,
+    vector3_interpolate: Vector3Interpolate,
     interpolate: Arc<
         dyn Fn(
             &FloatInterpolation,
@@ -301,34 +301,34 @@ pub struct RotationInterpolate {
 // }
 
 impl RotationInterpolate {
-    pub fn set_isAxis(&mut self, value: bool) {
-        if (self._isAxis != value) {
-            self._isAxis = value;
-            if (value) {
-                self.interpolate = Arc::new(interpolateThree);
+    pub fn set_is_axis(&mut self, value: bool) {
+        if self._is_axis != value {
+            self._is_axis = value;
+            if value {
+                self.interpolate = Arc::new(interpolate_three);
             } else {
-                self.interpolate = Arc::new(interpolateRotationNoAxis);
+                self.interpolate = Arc::new(interpolate_rotation_no_axis);
             }
         }
     }
 
-    pub fn get_isAxis(&mut self) -> bool {
-        return self._isAxis;
+    pub fn get_is_axis(&mut self) -> bool {
+        return self._is_axis;
     }
 
     pub fn new(x: FloatInterpolation, y: FloatInterpolation, z: FloatInterpolation) -> Self {
         Self {
-            _isAxis: false,
-            vector3Interpolate: Vector3Interpolate { x, y, z },
-            interpolate: Arc::new(interpolateRotationNoAxis),
+            _is_axis: false,
+            vector3_interpolate: Vector3Interpolate { x, y, z },
+            interpolate: Arc::new(interpolate_rotation_no_axis),
         }
     }
 
     pub fn compute(&self, amount: f32, random: f32, result: &mut Vector3) {
         (self.interpolate)(
-            &self.vector3Interpolate.x,
-            &self.vector3Interpolate.y,
-            &self.vector3Interpolate.z,
+            &self.vector3_interpolate.x,
+            &self.vector3_interpolate.y,
+            &self.vector3_interpolate.z,
             amount,
             random,
             result,
@@ -337,17 +337,17 @@ impl RotationInterpolate {
 
     pub fn format(config: &ParamInfo, target: &mut RotationInterpolate) {
         if let ParamInfo::OneParamInfo(_) = &config {
-            target._isAxis = true;
+            target._is_axis = true;
         }
 
-        applyVector3Interpolation(config, &mut target.vector3Interpolate);
+        apply_vector3_interpolation(config, &mut target.vector3_interpolate);
     }
 }
 
 #[derive(Clone)]
 pub struct ScalingInterpolate {
-    _isAxis: bool,
-    vector3Interpolate: Vector3Interpolate,
+    _is_axis: bool,
+    vector3_interpolate: Vector3Interpolate,
     interpolate: Arc<
         dyn Fn(
             &FloatInterpolation,
@@ -363,41 +363,41 @@ pub struct ScalingInterpolate {
 impl Default for ScalingInterpolate {
     fn default() -> Self {
         Self {
-            _isAxis: false,
-            vector3Interpolate: Vector3Interpolate::default(),
-            interpolate: Arc::new(interpolateScalingNoAxis),
+            _is_axis: false,
+            vector3_interpolate: Vector3Interpolate::default(),
+            interpolate: Arc::new(interpolate_scaling_no_axis),
         }
     }
 }
 
 impl ScalingInterpolate {
-    pub fn set_isAxis(&mut self, value: bool) {
-        if (self._isAxis != value) {
-            self._isAxis = value;
-            if (value) {
-                self.interpolate = Arc::new(interpolateThree);
+    pub fn set_is_axis(&mut self, value: bool) {
+        if self._is_axis != value {
+            self._is_axis = value;
+            if value {
+                self.interpolate = Arc::new(interpolate_three);
             } else {
-                self.interpolate = Arc::new(interpolateScalingNoAxis);
+                self.interpolate = Arc::new(interpolate_scaling_no_axis);
             }
         }
     }
-    pub fn get_isAxis(&self) -> bool {
-        return self._isAxis;
+    pub fn get_is_axis(&self) -> bool {
+        return self._is_axis;
     }
 
     pub fn new(x: FloatInterpolation, y: FloatInterpolation, z: FloatInterpolation) -> Self {
         Self {
-            _isAxis: false,
-            vector3Interpolate: Vector3Interpolate { x, y, z },
-            interpolate: Arc::new(interpolateScalingNoAxis),
+            _is_axis: false,
+            vector3_interpolate: Vector3Interpolate { x, y, z },
+            interpolate: Arc::new(interpolate_scaling_no_axis),
         }
     }
 
     pub fn compute(&self, amount: f32, random: f32, result: &mut Vector3) {
         (self.interpolate)(
-            &self.vector3Interpolate.x,
-            &self.vector3Interpolate.y,
-            &self.vector3Interpolate.z,
+            &self.vector3_interpolate.x,
+            &self.vector3_interpolate.y,
+            &self.vector3_interpolate.z,
             amount,
             random,
             result,
@@ -406,28 +406,28 @@ impl ScalingInterpolate {
 
     pub fn format(config: &ParamInfo, target: &mut ScalingInterpolate) {
         if let ParamInfo::OneParamInfo(_) = &config {
-            target._isAxis = true;
+            target._is_axis = true;
         }
 
-        applyVector3Interpolation(config, &mut target.vector3Interpolate);
+        apply_vector3_interpolation(config, &mut target.vector3_interpolate);
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct Color4Interpolate {
-    pub tempResult: [f32; 4],
+    pub temp_result: [f32; 4],
     pub gradient: Color4Gradient,
 }
 impl Color4Interpolate {
-    pub fn compute(&mut self, amount: f32, result: &mut Color4, startAmount: f32) {
+    pub fn compute(&mut self, amount: f32, result: &mut Color4, start_amount: f32) {
         self.gradient
-            .interpolate(amount, &mut self.tempResult, startAmount);
+            .interpolate(amount, &mut self.temp_result, start_amount);
 
         *result = Color4::new(
-            self.tempResult[0],
-            self.tempResult[1],
-            self.tempResult[2],
-            self.tempResult[3],
+            self.temp_result[0],
+            self.temp_result[1],
+            self.temp_result[2],
+            self.temp_result[3],
         )
     }
 
@@ -451,20 +451,20 @@ impl Color4Interpolate {
             }
             FourGradientInfo::TInterpolateGradient(gradient) => {
                 target.gradient.mode = EInterpolationGradienMode::Gradient;
-                target.gradient.minGradients = Some(gradient.clone());
-                target.gradient.maxGradients = Some(gradient.clone());
+                target.gradient.min_gradients = Some(gradient.clone());
+                target.gradient.max_gradients = Some(gradient.clone());
             }
             FourGradientInfo::TInterpolateTwoGradients(gradient1, gradient2) => {
                 target.gradient.mode = EInterpolationGradienMode::TwoGradients;
-                target.gradient.minGradients = Some(gradient1.clone());
-                target.gradient.maxGradients = Some(gradient2.clone());
+                target.gradient.min_gradients = Some(gradient1.clone());
+                target.gradient.max_gradients = Some(gradient2.clone());
             }
         }
     }
 
     pub fn new(gradient: Color4Gradient) -> Self {
         Self {
-            tempResult: [1.; 4],
+            temp_result: [1.; 4],
             gradient,
         }
     }

@@ -1,10 +1,10 @@
-use nalgebra::AbstractRotation;
 use pi_scene_math::Vector3;
 
 use crate::{
     interpolation::{Color4Gradient, FloatInterpolation, IInterpolation},
     iparticle_system_config::EInterpolationCurveMode,
-    particle::Particle, normalize,
+    normalize,
+    particle::Particle,
 };
 
 use super::{
@@ -24,6 +24,7 @@ pub enum ETrailTextureMode {
     DistributePerSegment = 2,
     RepeatPerSegment = 3,
 }
+
 pub struct TrailModifier {
     pub _mode: ETrailMode,
 
@@ -40,62 +41,62 @@ pub struct TrailModifier {
     /**
      * ribbon 模式 间隔多少个粒子进行连接
      */
-    pub ribbonCount: f32,
+    pub ribbon_count: f32,
 
     /**
      * ribbon 末尾是否连接到粒子系统的位置
      */
-    pub attachRibbonsToTransfoem: bool,
+    pub attach_ribbons_to_transfoem: bool,
 
     /**
      * 新路径点与作为轨迹用的最后一个点之间距离超过多少，才将新作为轨迹用的点
      */
-    pub minimunVertexDistance: f32,
+    pub minimun_vertex_distance: f32,
 
-    _useWorldSpace: bool,
+    _use_world_space: bool,
 
     /**
      * 粒子的Size是否实时影响拖尾宽度
      */
-    pub sizeAffectsWidth: bool,
+    pub size_affects_width: bool,
     /**
      * 粒子的Size是否影响拖尾的 Lifetime 参数
      */
-    pub sizeAffectsLifetime: bool,
+    pub size_affects_lifetime: bool,
     /**
      * 粒子的实时颜色是否影响拖尾颜色的整体变化
      */
-    pub inheritParticleColor: bool,
+    pub inherit_particle_color: bool,
     /**
      * 拖尾的颜色随生命增长的整体变化
      */
-    pub colorOverLifetime: ColorOverLifetime,
+    pub color_over_lifetime: ColorOverLifetime,
     /**
      * 拖尾的初始宽度
      */
-    pub widthOverTrail: FloatInterpolation,
+    pub width_over_trail: FloatInterpolation,
     /**
      * 拖尾颜色在路径线上的分布情况
      */
-    pub colorOverTrail: ColorOverLifetime,
+    pub color_over_trail: ColorOverLifetime,
 
     positions: Vec<f32>,
     indices: Vec<f32>,
     colors: Vec<f32>,
     uvs: Vec<f32>,
 
-    geometry: Vec<f32>,
+    _geometry: Vec<f32>,
     pub mesh: Vec<f32>,
 
-    maxKeyPoint: f32,
-    modifyCall: Box<dyn Fn(Vector3, &mut Vec<Particle>, &mut TrailModifier)>,
+    max_key_point: f32,
+    modify_call: Box<dyn Fn(Vector3, &mut Vec<Particle>, &mut TrailModifier)>,
 
     /**
      * 拖尾是否在粒子死亡时即死亡
      */
-    pub dieWithParticle: bool,
+    pub die_with_particle: bool,
 
-    pub _textureMode: ETrailTextureMode,
+    pub _texture_mode: ETrailTextureMode,
     pub _enabled: bool,
 }
 
@@ -116,7 +117,7 @@ impl TrailModifier {
      */
     pub fn set_mode(&mut self, value: ETrailMode) {
         self._mode = value;
-        self.updateModify();
+        self.update_modify();
     }
 
     pub fn get_mode(&self) -> ETrailMode {
@@ -124,22 +125,22 @@ impl TrailModifier {
     }
 
     /// 生成轨迹点的坐标是否使用其当时的世界坐标
-    pub fn set_worldSpace(&mut self, value: bool) {
-        self._useWorldSpace = value;
-        self.updateModify();
+    pub fn set_world_space(&mut self, value: bool) {
+        self._use_world_space = value;
+        self.update_modify();
     }
-    pub fn get_worldSpace(&self) -> bool {
-        return self._useWorldSpace;
+    pub fn get_world_space(&self) -> bool {
+        return self._use_world_space;
     }
 
     /**
      * 拖尾的纹理平铺方式
      */
-    pub fn set_textureMode(&mut self, value: ETrailTextureMode) {
-        self._textureMode = value;
+    pub fn set_texture_mode(&mut self, value: ETrailTextureMode) {
+        self._texture_mode = value;
     }
-    pub fn get_TextureMode(&self) -> ETrailTextureMode {
-        return self._textureMode;
+    pub fn get_texture_mode(&self) -> ETrailTextureMode {
+        return self._texture_mode;
     }
 
     pub fn new() -> Self {
@@ -147,30 +148,30 @@ impl TrailModifier {
             _mode: ETrailMode::Particles,
             ratio: 1.,
             lifetime: FloatInterpolation::new(),
-            ribbonCount: 1.,
-            attachRibbonsToTransfoem: false,
-            minimunVertexDistance: 1.,
-            _useWorldSpace: false,
-            sizeAffectsWidth: false,
-            sizeAffectsLifetime: false,
-            inheritParticleColor: false,
-            colorOverLifetime: ColorOverLifetime::new(Color4Interpolate::new(
+            ribbon_count: 1.,
+            attach_ribbons_to_transfoem: false,
+            minimun_vertex_distance: 1.,
+            _use_world_space: false,
+            size_affects_width: false,
+            size_affects_lifetime: false,
+            inherit_particle_color: false,
+            color_over_lifetime: ColorOverLifetime::new(Color4Interpolate::new(
                 Color4Gradient::default(),
             )),
-            widthOverTrail: FloatInterpolation::new(),
-            colorOverTrail: ColorOverLifetime::new(Color4Interpolate::new(
+            width_over_trail: FloatInterpolation::new(),
+            color_over_trail: ColorOverLifetime::new(Color4Interpolate::new(
                 Color4Gradient::default(),
             )),
             positions: vec![],
             indices: vec![],
             colors: vec![],
             uvs: vec![],
-            geometry: vec![],
+            _geometry: vec![],
             mesh: vec![],
-            maxKeyPoint: 65000. / 2.,
-            modifyCall: Box::new(TrailModifier::forParticlesLocalSpace),
-            dieWithParticle: true,
-            _textureMode: ETrailTextureMode::Stretch,
+            max_key_point: 65000. / 2.,
+            modify_call: Box::new(TrailModifier::for_particles_local_space),
+            die_with_particle: true,
+            _texture_mode: ETrailTextureMode::Stretch,
             _enabled: false,
         }
         // let id = TrailModifier.counter++;
@@ -192,7 +193,7 @@ impl TrailModifier {
 
     pub fn set_enable(&mut self, value: bool) {
         self._enabled = value;
-        if (!value) {
+        if !value {
             // self.mesh.setEnabled(value);
         }
     }
@@ -202,230 +203,231 @@ impl TrailModifier {
         // self.geometry.dispose();
     }
 
-    pub fn modify(&mut self, cameraGlobalPos: Vector3, particles: &Vec<&mut Particle>) {
+    pub fn modify(&mut self, _camera_global_pos: Vector3, _particles: &Vec<&mut Particle>) {
         // (self.modifyCall)(cameraGlobalPos, particles, self);
     }
 
-    pub fn updateModify(&mut self) {
-        match (self._mode) {
+    #[allow(unreachable_patterns)]
+    pub fn update_modify(&mut self) {
+        match self._mode {
             ETrailMode::Particles => {
-                if (self._useWorldSpace) {
-                    self.modifyCall = Box::new(TrailModifier::forParticlesWorldSpace);
+                if self._use_world_space {
+                    self.modify_call = Box::new(TrailModifier::for_particles_world_space);
                 } else {
-                    self.modifyCall = Box::new(TrailModifier::forParticlesLocalSpace);
+                    self.modify_call = Box::new(TrailModifier::for_particles_local_space);
                 }
             }
             _ => {
-                if (self._useWorldSpace) {
-                    self.modifyCall = Box::new(TrailModifier::forRibbonWorldSpace);
+                if self._use_world_space {
+                    self.modify_call = Box::new(TrailModifier::for_ribbon_world_space);
                 } else {
-                    self.modifyCall = Box::new(TrailModifier::forRibbonLocalSpace);
+                    self.modify_call = Box::new(TrailModifier::for_ribbon_local_space);
                 }
             }
         }
     }
 
-    pub fn forParticlesWorldSpace(
-        cameraGlobalPos: Vector3,
+    pub fn for_particles_world_space(
+        camera_global_pos: Vector3,
         particles: &mut Vec<Particle>,
         modifier: &mut TrailModifier,
     ) {
         let count = particles.len();
-        let mut pointCount = 0;
+        let mut point_count = 0;
         for i in 0..count {
             let particle = &mut particles[i];
-            if (particle.trial_lifetime == 0.0) {
+            if particle.trial_lifetime == 0.0 {
                 continue;
             }
-            let maxAgeAmount = particle.age / particle.lifetime;
-            let pointLenght = particle.global_record_list.len();
-            if (pointLenght == 0) {
-                let tempPoint = particle.direction;
-                let tempPoint = normalize(&tempPoint);
-                let tempPoint = tempPoint * (0.01);
+            let max_age_amount = particle.age / particle.lifetime;
+            let point_lenght = particle.global_record_list.len();
+            if point_lenght == 0 {
+                let temp_point = particle.direction;
+                let temp_point = normalize(&temp_point);
+                let temp_point = temp_point * (0.01);
                 // particle.position.subtractToRef(TrailModifier.tempPoint, TrailModifier.tempPoint);
-                let tempPoint = particle.position - tempPoint;
+                let temp_point = particle.position - temp_point;
                 // Vector3.TransformCoordinatesFromFloatsToRef(TrailModifier.tempPoint.x, TrailModifier.tempPoint.y, TrailModifier.tempPoint.z, particle.startWorldMatrix, TrailModifier.tempPoint);
-                let tempPoint = particle.start_world_matrix.transform_vector(&tempPoint);
+                let temp_point = particle.start_world_matrix.transform_vector(&temp_point);
                 particle
                     .global_record_list
-                    .push([0., tempPoint[0], tempPoint[1], tempPoint[2]]);
+                    .push([0., temp_point[0], temp_point[1], temp_point[2]]);
             }
 
             // Vector3.TransformCoordinatesFromFloatsToRef(particle.position.x, particle.position.y, particle.position.z, particle.startWorldMatrix, TrailModifier.tempPoint);
-            let tempPoint = particle
+            let temp_point = particle
                 .start_world_matrix
                 .transform_vector(&particle.position);
             particle.global_record_list.push([
-                maxAgeAmount,
-                tempPoint[0],
-                tempPoint[1],
-                tempPoint[2],
+                max_age_amount,
+                temp_point[0],
+                temp_point[1],
+                temp_point[2],
             ]);
             // maxAgeAmount = Math.min(1.0, maxAgeAmount);
 
-            let recordLength = particle.global_record_list.len();
-            let mut tempRecordList = vec![];
-            let mut lastRecord = particle.global_record_list[recordLength - 1];
+            let record_length = particle.global_record_list.len();
+            let mut temp_record_list = vec![];
+            let mut last_record = particle.global_record_list[record_length - 1];
 
-            tempRecordList.push([lastRecord[1], lastRecord[2], lastRecord[3]]);
-            let mut lastDistanceAboutIndex = recordLength - 1;
-            let mut lastRatioAboutIndex = recordLength - 1;
-            let waitTimeRatio = particle.trial_lifetime / particle.lifetime;
-            for j in (0..=(recordLength - 2)).rev() {
-                let currRecord = particle.global_record_list[j];
-                let deltaRatio = maxAgeAmount - currRecord[0];
-                if (0. <= deltaRatio && deltaRatio <= waitTimeRatio) {
-                    let ax = lastRecord[1];
-                    let ay = lastRecord[2];
-                    let az = lastRecord[3];
-                    let bx = currRecord[1];
-                    let by = currRecord[2];
-                    let bz = currRecord[3];
+            temp_record_list.push([last_record[1], last_record[2], last_record[3]]);
+            let mut last_distance_about_index = record_length as i32 - 1;
+            let mut last_ratio_about_index = record_length as i32- 1;
+            let wait_time_ratio = particle.trial_lifetime / particle.lifetime;
+            for j in (0..=(record_length - 2)).rev() {
+                let curr_record = particle.global_record_list[j];
+                let delta_ratio = max_age_amount - curr_record[0];
+                if 0. <= delta_ratio && delta_ratio <= wait_time_ratio {
+                    let ax = last_record[1];
+                    let ay = last_record[2];
+                    let az = last_record[3];
+                    let bx = curr_record[1];
+                    let by = curr_record[2];
+                    let bz = curr_record[3];
 
                     let dx = ax - bx;
                     let dy = ay - by;
                     let dz = az - bz;
                     let len = (dx * dx + dy * dy + dz * dz).sqrt();
-                    if (len >= modifier.minimunVertexDistance || currRecord[0] == 0.) {
-                        lastRecord = currRecord;
-                        lastDistanceAboutIndex = j;
-                        tempRecordList.push([lastRecord[1], lastRecord[2], lastRecord[3]]);
+                    if len >= modifier.minimun_vertex_distance || curr_record[0] == 0. {
+                        last_record = curr_record;
+                        last_distance_about_index = j as i32;
+                        temp_record_list.push([last_record[1], last_record[2], last_record[3]]);
                     }
-                    lastRatioAboutIndex = j;
+                    last_ratio_about_index = j as i32;
                 }
             }
-            if (tempRecordList.len() == 1) {
-                lastRecord = particle.global_record_list[0];
-                lastDistanceAboutIndex = 0;
-                lastRatioAboutIndex = 0;
-                tempRecordList.push([lastRecord[1], lastRecord[2], lastRecord[3]]);
+            if temp_record_list.len() == 1 {
+                last_record = particle.global_record_list[0];
+                last_distance_about_index = 0;
+                last_ratio_about_index = 0;
+                temp_record_list.push([last_record[1], last_record[2], last_record[3]]);
             }
 
-            if (lastDistanceAboutIndex != lastRatioAboutIndex) {
-                lastRecord = particle.global_record_list[lastRatioAboutIndex];
-                tempRecordList.push([lastRecord[1], lastRecord[2], lastRecord[3]]);
+            if last_distance_about_index != last_ratio_about_index {
+                last_record = particle.global_record_list[last_ratio_about_index as usize];
+                temp_record_list.push([last_record[1], last_record[2], last_record[3]]);
             }
-            lastRatioAboutIndex = lastRatioAboutIndex - 1;
-            if (lastRatioAboutIndex >= 0) {
-                lastRecord = particle.global_record_list[lastRatioAboutIndex];
-                tempRecordList.push([lastRecord[1], lastRecord[2], lastRecord[3]]);
+            last_ratio_about_index = last_ratio_about_index - 1;
+            if last_ratio_about_index >= 0 {
+                last_record = particle.global_record_list[last_ratio_about_index as usize];
+                temp_record_list.push([last_record[1], last_record[2], last_record[3]]);
             }
 
-            let keyPointCount = tempRecordList.len() - 1;
+            let key_point_count = temp_record_list.len() - 1;
             let mut width = particle.trial_width * 0.5;
-            if (modifier.sizeAffectsWidth) {
+            if modifier.size_affects_width {
                 width *= (particle.scaling[0] * particle.scaling[1]
                     + particle.scaling[1] * particle.scaling[1])
                     .sqrt();
             }
 
-            for j in 0..keyPointCount {
-                if (pointCount < modifier.maxKeyPoint as usize) {
-                    let trailAmount = j / keyPointCount;
+            for j in 0..key_point_count {
+                if point_count < modifier.max_key_point as usize {
+                    let trail_amount = j / key_point_count;
 
-                    let tempPoint = Vector3::new(
-                        tempRecordList[j][0],
-                        tempRecordList[j][1],
-                        tempRecordList[j][2],
+                    let temp_point = Vector3::new(
+                        temp_record_list[j][0],
+                        temp_record_list[j][1],
+                        temp_record_list[j][2],
                     );
 
-                    let tempDirection = Vector3::new(
-                        tempRecordList[j + 1][0],
-                        tempRecordList[j + 1][1],
-                        tempRecordList[j + 1][2],
+                    let temp_direction = Vector3::new(
+                        temp_record_list[j + 1][0],
+                        temp_record_list[j + 1][1],
+                        temp_record_list[j + 1][2],
                     );
-                    let tempDirection = tempDirection - tempPoint;
-                    let tempDirection = normalize(&tempDirection);
+                    let temp_direction = temp_direction - temp_point;
+                    let temp_direction = normalize(&temp_direction);
 
-                    let tempView = cameraGlobalPos - tempPoint;
-                    let tempView = normalize(&tempView);
+                    let temp_view = camera_global_pos - temp_point;
+                    let temp_view = normalize(&temp_view);
 
                     // Vector3.CrossToRef(TrailModifier.tempDirection, TrailModifier.tempView, TrailModifier.tempExtend);
-                    let mut tempExtend = tempDirection.cross(&tempView);
-                    let xSquareLength = tempExtend.magnitude_squared();
-                    if (xSquareLength == 0.) {
-                        tempExtend = Vector3::new(0., 1., 0.);
+                    let mut temp_extend = temp_direction.cross(&temp_view);
+                    let x_square_length = temp_extend.magnitude_squared();
+                    if x_square_length == 0. {
+                        temp_extend = Vector3::new(0., 1., 0.);
                     } else {
                         // TrailModifier.tempExtend.normalizeFromLength(Math.sqrt(xSquareLength));
                     }
 
-                    match modifier.widthOverTrail.mode {
+                    match modifier.width_over_trail.mode {
                         EInterpolationCurveMode::Curve | EInterpolationCurveMode::TwoCurves => {
                             width *= modifier
-                                .widthOverTrail
-                                .interpolate(trailAmount as f32, particle.base_random);
+                                .width_over_trail
+                                .interpolate(trail_amount as f32, particle.base_random);
                         }
                         _ => {}
                     }
 
-                    let tempExtend = tempExtend * width;
+                    let temp_extend = temp_extend * width;
 
-                    TrailGeometryModifier::modifyPosition(
-                        tempRecordList[j][0],
-                        tempRecordList[j][1],
-                        tempRecordList[j][2],
-                        tempExtend[0],
-                        tempExtend[1],
-                        tempExtend[2],
+                    TrailGeometryModifier::modify_position(
+                        temp_record_list[j][0],
+                        temp_record_list[j][1],
+                        temp_record_list[j][2],
+                        temp_extend[0],
+                        temp_extend[1],
+                        temp_extend[2],
                         &mut modifier.positions,
-                        pointCount,
+                        point_count,
                     );
 
-                    TrailGeometryModifier::modifyUV(
-                        trailAmount as f32,
+                    TrailGeometryModifier::modify_uv(
+                        trail_amount as f32,
                         &mut modifier.uvs,
-                        pointCount,
+                        point_count,
                     );
-                    let mut tempColor4A = [0.; 4];
-                    let mut tempColor4B = [0.; 4];
+                    let mut temp_color4_a = [0.; 4];
+                    let mut temp_color4_b = [0.; 4];
 
                     modifier
-                        .colorOverLifetime
-                        .color4Interpolate
+                        .color_over_lifetime
+                        .color4_interpolate
                         .gradient
                         .interpolate(
-                            maxAgeAmount,
-                            &mut tempColor4A,
+                            max_age_amount,
+                            &mut temp_color4_a,
                             particle.color_over_lifetime_amount,
                         );
                     modifier
-                        .colorOverTrail
-                        .color4Interpolate
+                        .color_over_trail
+                        .color4_interpolate
                         .gradient
                         .interpolate(
-                            trailAmount as f32,
-                            &mut tempColor4B,
+                            trail_amount as f32,
+                            &mut temp_color4_b,
                             particle.color_over_lifetime_amount,
                         );
-                    tempColor4A[0] *= tempColor4B[0];
-                    tempColor4A[1] *= tempColor4B[1];
-                    tempColor4A[2] *= tempColor4B[2];
-                    tempColor4A[3] *= tempColor4B[3];
-                    if (modifier.inheritParticleColor) {
-                        tempColor4A[0] *= particle.color[0];
-                        tempColor4A[1] *= particle.color[1];
-                        tempColor4A[2] *= particle.color[2];
-                        tempColor4A[3] *= particle.color[3];
+                    temp_color4_a[0] *= temp_color4_b[0];
+                    temp_color4_a[1] *= temp_color4_b[1];
+                    temp_color4_a[2] *= temp_color4_b[2];
+                    temp_color4_a[3] *= temp_color4_b[3];
+                    if modifier.inherit_particle_color {
+                        temp_color4_a[0] *= particle.color[0];
+                        temp_color4_a[1] *= particle.color[1];
+                        temp_color4_a[2] *= particle.color[2];
+                        temp_color4_a[3] *= particle.color[3];
                     }
-                    TrailGeometryModifier::modifyColor(
-                        tempColor4A[0],
-                        tempColor4A[1],
-                        tempColor4A[2],
-                        tempColor4A[3],
+                    TrailGeometryModifier::modify_color(
+                        temp_color4_a[0],
+                        temp_color4_a[1],
+                        temp_color4_a[2],
+                        temp_color4_a[3],
                         &mut modifier.colors,
-                        pointCount,
+                        point_count,
                     );
 
-                    if (j > 0) {
-                        TrailGeometryModifier::modifyIndices(&mut modifier.indices, pointCount);
+                    if j > 0 {
+                        TrailGeometryModifier::modify_indices(&mut modifier.indices, point_count);
                     }
 
-                    pointCount += 1;
+                    point_count += 1;
                 }
             }
 
-            tempRecordList.clear();
+            temp_record_list.clear();
         }
 
         // modifier.geometry.setVerticesData("position", new Float32Array(modifier.positions), true);
@@ -439,7 +441,7 @@ impl TrailModifier {
         // modifier.indices.length = 0;
         // modifier.uvs.length = 0;
     }
-    pub fn forParticlesLocalSpace(
+    pub fn for_particles_local_space(
         camera_global_pos: Vector3,
         particles: &mut Vec<Particle>,
         modifier: &mut TrailModifier,
@@ -468,121 +470,121 @@ impl TrailModifier {
             // maxAgeAmount = Math.min(1.0, maxAgeAmount);
 
             let record_length = particle.local_record_list.len();
-            let mut tempRecordList = vec![];
-            let mut lastRecord = particle.local_record_list[record_length - 1];
+            let mut temp_record_list = vec![];
+            let mut last_record = particle.local_record_list[record_length - 1];
 
-            let mut tempPoint = particle.start_world_matrix.transform_vector(&Vector3::new(
-                lastRecord[1],
-                lastRecord[2],
-                lastRecord[3],
+            let mut temp_point = particle.start_world_matrix.transform_vector(&Vector3::new(
+                last_record[1],
+                last_record[2],
+                last_record[3],
             ));
-            tempRecordList.push([tempPoint[0], tempPoint[1], tempPoint[2]]);
-            let mut lastDistanceAboutIndex = record_length - 1;
-            let mut lastRatioAboutIndex = record_length - 1;
-            let waitTimeRatio = particle.trial_lifetime / particle.lifetime;
+            temp_record_list.push([temp_point[0], temp_point[1], temp_point[2]]);
+            let mut last_distance_about_index = record_length as i32 - 1;
+            let mut last_ratio_about_index = record_length as i32 - 1;
+            let wait_time_ratio = particle.trial_lifetime / particle.lifetime;
             for j in (0..=(record_length - 2)).rev() {
-                let currRecord = particle.local_record_list[j];
-                let deltaRatio = max_age_amount - currRecord[0];
-                if (deltaRatio <= waitTimeRatio) {
-                    let ax = lastRecord[1];
-                    let ay = lastRecord[2];
-                    let az = lastRecord[3];
-                    let bx = currRecord[1];
-                    let by = currRecord[2];
-                    let bz = currRecord[3];
+                let curr_record = particle.local_record_list[j];
+                let delta_ratio = max_age_amount - curr_record[0];
+                if delta_ratio <= wait_time_ratio {
+                    let ax = last_record[1];
+                    let ay = last_record[2];
+                    let az = last_record[3];
+                    let bx = curr_record[1];
+                    let by = curr_record[2];
+                    let bz = curr_record[3];
 
                     let dx = ax - bx;
                     let dy = ay - by;
                     let dz = az - bz;
                     let len = (dx * dx + dy * dy + dz * dz).sqrt();
-                    if (len >= modifier.minimunVertexDistance || currRecord[0] == 0.) {
-                        lastRecord = currRecord;
-                        lastDistanceAboutIndex = j;
-                        tempPoint = particle.start_world_matrix.transform_vector(&Vector3::new(
-                            lastRecord[1],
-                            lastRecord[2],
-                            lastRecord[3],
+                    if len >= modifier.minimun_vertex_distance || curr_record[0] == 0. {
+                        last_record = curr_record;
+                        last_distance_about_index = j as i32;
+                        temp_point = particle.start_world_matrix.transform_vector(&Vector3::new(
+                            last_record[1],
+                            last_record[2],
+                            last_record[3],
                         ));
-                        tempRecordList.push([tempPoint[0], tempPoint[1], tempPoint[2]]);
+                        temp_record_list.push([temp_point[0], temp_point[1], temp_point[2]]);
                     }
-                    lastRatioAboutIndex = j;
+                    last_ratio_about_index = j as i32;
                 }
             }
-            if (tempRecordList.len() == 1) {
-                lastRecord = particle.local_record_list[0];
-                lastDistanceAboutIndex = 0;
-                lastRatioAboutIndex = 0;
-                tempPoint = particle.start_world_matrix.transform_vector(&Vector3::new(
-                    lastRecord[1],
-                    lastRecord[2],
-                    lastRecord[3],
+            if temp_record_list.len() == 1 {
+                last_record = particle.local_record_list[0];
+                last_distance_about_index = 0;
+                last_ratio_about_index = 0;
+                temp_point = particle.start_world_matrix.transform_vector(&Vector3::new(
+                    last_record[1],
+                    last_record[2],
+                    last_record[3],
                 ));
-                tempRecordList.push([tempPoint[0], tempPoint[1], tempPoint[2]]);
+                temp_record_list.push([temp_point[0], temp_point[1], temp_point[2]]);
             }
 
-            if (lastDistanceAboutIndex != lastRatioAboutIndex) {
-                lastRecord = particle.local_record_list[lastRatioAboutIndex];
+            if last_distance_about_index != last_ratio_about_index{
+                last_record = particle.local_record_list[last_ratio_about_index as usize];
                 // Vector3.TransformCoordinatesFromFloatsToRef(lastRecord[1], lastRecord[2], lastRecord[3], particle.startWorldMatrix, TrailModifier.tempPoint);
-                tempPoint = particle.start_world_matrix.transform_vector(&Vector3::new(
-                    lastRecord[1],
-                    lastRecord[2],
-                    lastRecord[3],
+                temp_point = particle.start_world_matrix.transform_vector(&Vector3::new(
+                    last_record[1],
+                    last_record[2],
+                    last_record[3],
                 ));
-                tempRecordList.push([tempPoint[0], tempPoint[1], tempPoint[2]]);
+                temp_record_list.push([temp_point[0], temp_point[1], temp_point[2]]);
             }
-            lastRatioAboutIndex = lastRatioAboutIndex - 1;
-            if (lastRatioAboutIndex >= 0) {
-                lastRecord = particle.local_record_list[lastRatioAboutIndex];
-                tempPoint = particle.start_world_matrix.transform_vector(&Vector3::new(
-                    lastRecord[1],
-                    lastRecord[2],
-                    lastRecord[3],
+            last_ratio_about_index = last_ratio_about_index - 1;
+            if last_ratio_about_index >= 0 {
+                last_record = particle.local_record_list[last_ratio_about_index as usize];
+                temp_point = particle.start_world_matrix.transform_vector(&Vector3::new(
+                    last_record[1],
+                    last_record[2],
+                    last_record[3],
                 ));
-                tempRecordList.push([tempPoint[0], tempPoint[1], tempPoint[2]]);
+                temp_record_list.push([temp_point[0], temp_point[1], temp_point[2]]);
             }
 
-            let keyPointCount = tempRecordList.len() - 1;
+            let key_point_count = temp_record_list.len() - 1;
             let mut width = particle.trial_width * 0.5;
-            if (modifier.sizeAffectsWidth) {
+            if modifier.size_affects_width {
                 width *= (particle.scaling[0] * particle.scaling[0]
                     + particle.scaling[1] * particle.scaling[1])
                     .sqrt();
             }
 
-            for j in 0..keyPointCount {
-                if (point_count < modifier.maxKeyPoint as usize) {
-                    let trailAmount = j / keyPointCount;
+            for j in 0..key_point_count {
+                if point_count < modifier.max_key_point as usize {
+                    let trail_amount = j / key_point_count;
 
-                    tempPoint = Vector3::new(
-                        tempRecordList[j][0],
-                        tempRecordList[j][1],
-                        tempRecordList[j][2],
+                    temp_point = Vector3::new(
+                        temp_record_list[j][0],
+                        temp_record_list[j][1],
+                        temp_record_list[j][2],
                     );
 
                     let temp_direction = Vector3::new(
-                        tempRecordList[j + 1][0],
-                        tempRecordList[j + 1][1],
-                        tempRecordList[j + 1][2],
+                        temp_record_list[j + 1][0],
+                        temp_record_list[j + 1][1],
+                        temp_record_list[j + 1][2],
                     );
-                    let temp_direction = temp_direction - tempPoint;
+                    let temp_direction = temp_direction - temp_point;
                     let temp_direction = normalize(&temp_direction);
 
-                    let tempView = camera_global_pos - tempPoint;
-                    let tempView = normalize(&tempView);
+                    let temp_view = camera_global_pos - temp_point;
+                    let temp_view = normalize(&temp_view);
 
-                    let mut tempExtend = temp_direction - tempView;
-                    let xSquareLength = tempExtend.magnitude_squared();
-                    if (xSquareLength == 0.) {
-                        tempExtend = Vector3::new(0., 1., 0.);
+                    let mut temp_extend = temp_direction - temp_view;
+                    let x_square_length = temp_extend.magnitude_squared();
+                    if x_square_length == 0. {
+                        temp_extend = Vector3::new(0., 1., 0.);
                     } else {
                         // TrailModifier.tempExtend.normalizeFromLength(Math.sqrt(xSquareLength));
                     }
 
-                    match modifier.widthOverTrail.mode {
+                    match modifier.width_over_trail.mode {
                         EInterpolationCurveMode::Curve | EInterpolationCurveMode::TwoCurves => {
                             width *= modifier
-                                .widthOverTrail
-                                .interpolate(trailAmount as f32, particle.base_random);
+                                .width_over_trail
+                                .interpolate(trail_amount as f32, particle.base_random);
                         }
                         _ => {}
                     }
@@ -590,73 +592,73 @@ impl TrailModifier {
                     // if (modifier.widthOverTrail.mode == EInterpolationCurveMode.Curve || modifier.widthOverTrail.mode == EInterpolationCurveMode.TwoCurves) {
                     //     width *= modifier.widthOverTrail.interpolate(trailAmount, particle.baseRandom);
                     // }
-                    let tempExtend = tempExtend * width;
+                    let temp_extend = temp_extend * width;
 
-                    TrailGeometryModifier::modifyPosition(
-                        tempRecordList[j][0],
-                        tempRecordList[j][1],
-                        tempRecordList[j][2],
-                        tempExtend[0],
-                        tempExtend[1],
-                        tempExtend[2],
+                    TrailGeometryModifier::modify_position(
+                        temp_record_list[j][0],
+                        temp_record_list[j][1],
+                        temp_record_list[j][2],
+                        temp_extend[0],
+                        temp_extend[1],
+                        temp_extend[2],
                         &mut modifier.positions,
                         point_count,
                     );
 
-                    TrailGeometryModifier::modifyUV(
-                        trailAmount as f32,
+                    TrailGeometryModifier::modify_uv(
+                        trail_amount as f32,
                         &mut modifier.uvs,
                         point_count,
                     );
 
-                    let mut tempColor4A = [0.; 4];
-                    let mut tempColor4B = [0.; 4];
+                    let mut temp_color4_a = [0.; 4];
+                    let mut temp_color4_b = [0.; 4];
                     modifier
-                        .colorOverLifetime
-                        .color4Interpolate
+                        .color_over_lifetime
+                        .color4_interpolate
                         .gradient
                         .interpolate(
                             max_age_amount,
-                            &mut tempColor4A,
+                            &mut temp_color4_a,
                             particle.color_over_lifetime_amount,
                         );
                     modifier
-                        .colorOverTrail
-                        .color4Interpolate
+                        .color_over_trail
+                        .color4_interpolate
                         .gradient
                         .interpolate(
-                            trailAmount as f32,
-                            &mut tempColor4B,
+                            trail_amount as f32,
+                            &mut temp_color4_b,
                             particle.color_over_lifetime_amount,
                         );
-                    tempColor4A[0] *= tempColor4B[0];
-                    tempColor4A[1] *= tempColor4B[1];
-                    tempColor4A[2] *= tempColor4B[2];
-                    tempColor4A[3] *= tempColor4B[3];
-                    if (modifier.inheritParticleColor) {
-                        tempColor4A[0] *= particle.color[0];
-                        tempColor4A[1] *= particle.color[1];
-                        tempColor4A[2] *= particle.color[2];
-                        tempColor4A[3] *= particle.color[3];
+                    temp_color4_a[0] *= temp_color4_b[0];
+                    temp_color4_a[1] *= temp_color4_b[1];
+                    temp_color4_a[2] *= temp_color4_b[2];
+                    temp_color4_a[3] *= temp_color4_b[3];
+                    if modifier.inherit_particle_color {
+                        temp_color4_a[0] *= particle.color[0];
+                        temp_color4_a[1] *= particle.color[1];
+                        temp_color4_a[2] *= particle.color[2];
+                        temp_color4_a[3] *= particle.color[3];
                     }
-                    TrailGeometryModifier::modifyColor(
-                        tempColor4A[0],
-                        tempColor4A[1],
-                        tempColor4A[2],
-                        tempColor4A[3],
+                    TrailGeometryModifier::modify_color(
+                        temp_color4_a[0],
+                        temp_color4_a[1],
+                        temp_color4_a[2],
+                        temp_color4_a[3],
                         &mut modifier.colors,
                         point_count,
                     );
 
-                    if (j > 0) {
-                        TrailGeometryModifier::modifyIndices(&mut modifier.indices, point_count);
+                    if j > 0 {
+                        TrailGeometryModifier::modify_indices(&mut modifier.indices, point_count);
                     }
 
                     point_count += 1;
                 }
             }
 
-            tempRecordList.clear();
+            temp_record_list.clear();
         }
 
         // modifier.geometry.setVerticesData("position", new Float32Array(modifier.positions), true);
@@ -671,28 +673,28 @@ impl TrailModifier {
         // modifier.uvs.length = 0;
     }
 
-    pub fn forRibbonWorldSpace(
-        cameraGlobalPos: Vector3,
-        particles: &mut Vec<Particle>,
-        modifier: &mut TrailModifier,
+    pub fn for_ribbon_world_space(
+        _camera_global_pos: Vector3,
+        _particles: &mut Vec<Particle>,
+        _modifier: &mut TrailModifier,
     ) {
     }
-    pub fn forRibbonLocalSpace(
-        cameraGlobalPos: Vector3,
-        particles: &mut Vec<Particle>,
-        modifier: &mut TrailModifier,
+    pub fn for_ribbon_local_space(
+        _camera_global_pos: Vector3,
+        _particles: &mut Vec<Particle>,
+        _modifier: &mut TrailModifier,
     ) {
     }
 
-    pub fn modifyGeometry(
-        ax: f32,
-        ay: f32,
-        az: f32,
-        bx: f32,
-        by: f32,
-        bz: f32,
-        data: Vec<f32>,
-        offset: f32,
+    pub fn modify_geometry(
+        _ax: f32,
+        _ay: f32,
+        _az: f32,
+        _bx: f32,
+        _by: f32,
+        _bz: f32,
+        _data: Vec<f32>,
+        _offset: f32,
     ) {
     }
 }

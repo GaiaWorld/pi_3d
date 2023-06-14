@@ -10,14 +10,14 @@ pub mod point_shape_emitter;
 pub mod rectangle_shape_emitter;
 pub mod sphere_shape_emitter;
 
-pub struct serializationObject {
+pub struct SerializationObject {
     pub _type: Option<String> ,
     pub radius: Option<f32>,
     pub angle: Option<f32>,
-    pub directionRandomizer: Option<f32>,
-    pub radiusRange: Option<f32>,
-    pub heightRange: Option<f32>,
-    pub emitFromSpawnPointOnly: Option<bool>,
+    pub direction_randomizer: Option<f32>,
+    pub radius_range: Option<f32>,
+    pub height_range: Option<f32>,
+    pub emit_from_spawn_point_only: Option<bool>,
     pub size: Option<f32>,
     pub direction1: Option<Vector3>,
     pub direction2: Option<Vector3>

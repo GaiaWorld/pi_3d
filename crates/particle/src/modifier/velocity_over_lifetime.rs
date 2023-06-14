@@ -1,63 +1,63 @@
 use std::sync::Arc;
 
-use pi_scene_math::{Matrix, Vector3};
+use pi_scene_math::Vector3;
 
 use crate::{interpolation::FloatInterpolation, particle::Particle, iparticle_system_config::ParamInfo};
 
 use super::base::{
-    transformVectorAsLocalSpace, transformVectorAsWorldSpace, IParticleModifier,
-    TranslationInterpolate, Vector3Interpolate,
+    transform_vector_as_local_space, transform_vector_as_world_space, IParticleModifier,
+    TranslationInterpolate,
 };
 
 #[derive(Clone)]
 pub struct VelocityOverLifetime {
-    _isLocalSpace: bool,
-    pub translationInterpolate: TranslationInterpolate,
+    _is_local_space: bool,
+    pub translation_interpolate: TranslationInterpolate,
 }
 
 impl VelocityOverLifetime {
-    pub fn set_isLocalSpace(&mut self, value: bool) {
-        if (self._isLocalSpace != value) {
-            self._isLocalSpace = value;
-            if (value) {
-                self.translationInterpolate.transformForce = Arc::new(transformVectorAsLocalSpace);
+    pub fn set_is_local_space(&mut self, value: bool) {
+        if self._is_local_space != value {
+            self._is_local_space = value;
+            if value {
+                self.translation_interpolate.transform_force = Arc::new(transform_vector_as_local_space);
             } else {
-                self.translationInterpolate.transformForce = Arc::new(transformVectorAsWorldSpace);
+                self.translation_interpolate.transform_force = Arc::new(transform_vector_as_world_space);
             }
         }
     }
-    pub fn get_isLocalSpace(&self) -> bool {
-        return self._isLocalSpace;
+    pub fn get_is_local_space(&self) -> bool {
+        return self._is_local_space;
     }
 
     pub fn new(x: FloatInterpolation, y: FloatInterpolation, z: FloatInterpolation) -> Self {
         let mut a = TranslationInterpolate::new(x, y, z);
-        a._isAxis = true;
+        a._is_axis = true;
 
         Self {
-            _isLocalSpace: true,
-            translationInterpolate: a,
+            _is_local_space: true,
+            translation_interpolate: a,
         }
     }
 
-    pub fn modify(&self, particle: &mut Particle, amount: f32, deltaSeconds: f32) {
-        let mut localResult = Vector3::zeros();
+    pub fn modify(&self, particle: &mut Particle, amount: f32, _delta_seconds: f32) {
+        let mut local_result = Vector3::zeros();
 
-        self.translationInterpolate.compute(
+        self.translation_interpolate.compute(
             amount,
             particle.base_random,
             particle.start_world_matrix_invert,
-            &mut localResult,
+            &mut local_result,
         );
 
-        let x = localResult[0];
-        let y = localResult[1];
-        let z = localResult[2];
-        localResult = localResult - (particle.velocity);
+        let x = local_result[0];
+        let y = local_result[1];
+        let z = local_result[2];
+        local_result = local_result - (particle.velocity);
 
         particle.velocity = Vector3::new(x, y, z);
        
-        particle.direction += localResult;
+        particle.direction += local_result;
     }
 
     pub fn format(config: &ParamInfo, target: &mut TranslationInterpolate){
@@ -66,23 +66,23 @@ impl VelocityOverLifetime {
 }
 
 impl IParticleModifier for VelocityOverLifetime {
-    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, deltaSeconds: f32) {
-        let mut localResult = Vector3::zeros();
+    fn modify(&mut self, particle: &mut Particle, amount: &mut f32, _delta_seconds: f32) {
+        let mut local_result = Vector3::zeros();
 
-        self.translationInterpolate.compute(
+        self.translation_interpolate.compute(
             *amount,
             particle.base_random,
             particle.start_world_matrix_invert,
-            &mut localResult,
+            &mut local_result,
         );
 
-        let x = localResult[0];
-        let y = localResult[1];
-        let z = localResult[2];
-        localResult = localResult - (particle.velocity);
+        let x = local_result[0];
+        let y = local_result[1];
+        let z = local_result[2];
+        local_result = local_result - (particle.velocity);
 
         particle.velocity = Vector3::new(x, y, z);
 
-        particle.direction += localResult;
+        particle.direction += local_result;
     }
 }

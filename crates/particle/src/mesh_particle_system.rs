@@ -5,10 +5,10 @@ use pi_scene_math::{Matrix, Vector3};
 use crate::particle_system_tool::ParticleSystemTool;
 
 pub struct MeshParticleSystem {
-    sqrt3: f32,
-    pub psTool: ParticleSystemTool,
-    _alwaysSelectAsActive: bool,
-    _isMPPlaying: bool,
+    _sqrt3: f32,
+    pub ps_tool: ParticleSystemTool,
+    _always_select_as_active: bool,
+    _is_mpplaying: bool,
     // source: BABYLON.Mesh;
 }
 
@@ -34,11 +34,11 @@ impl MeshParticleSystem {
     // private source: BABYLON.Mesh;
 
     // private _alwaysSelectAsActive: boolean = true;
-    pub fn get_alwaysSelectAsActive(&self) -> bool {
-        return self._alwaysSelectAsActive;
+    pub fn get_always_select_as_active(&self) -> bool {
+        return self._always_select_as_active;
     }
-    pub fn set_alwaysSelectAsActive(&mut self, v: bool) {
-        self._alwaysSelectAsActive = v;
+    pub fn set_always_select_as_active(&mut self, v: bool) {
+        self._always_select_as_active = v;
         // if self.source {
         //     self.source.alwaysSelectAsActiveMesh = v;
         // }
@@ -46,10 +46,10 @@ impl MeshParticleSystem {
 
     pub fn new() -> Self {
         Self {
-            sqrt3: 0.,
-            psTool: ParticleSystemTool::new(),
-            _alwaysSelectAsActive: false,
-            _isMPPlaying: false,
+            _sqrt3: 0.,
+            ps_tool: ParticleSystemTool::new(),
+            _always_select_as_active: false,
+            _is_mpplaying: false,
         }
 
         // if (self._scene.getEngine().getCaps().instancedArrays) {
@@ -86,7 +86,7 @@ impl MeshParticleSystem {
         // }
     }
 
-    pub fn setSourceMesh(&mut self) {
+    pub fn set_source_mesh(&mut self) {
         // self.source = mesh;
         // if (mesh) {
         //     if (!self.psTool) {
@@ -121,7 +121,7 @@ impl MeshParticleSystem {
     // }
 
     pub fn build(&mut self) {
-        self.psTool.build();
+        self.ps_tool.build();
 
         // if (self.source) {
         //     self.source.thinInstanceSetBuffer("matrix", self.psTool.mpMatrixList, 16, false);
@@ -136,20 +136,20 @@ impl MeshParticleSystem {
 
     // private _isMPPlaying: boolean = false;
     pub fn start(&mut self) {
-        if !self._isMPPlaying {
-            self.psTool.start();
+        if !self._is_mpplaying {
+            self.ps_tool.start();
 
             // MeshParticleSystem::registCompute(self._computeCall);
             // MeshParticleSystem::registRecycle(self._recycleCall);
             // self._scene.onBeforeRenderObservable.add(self._updateCall);
 
-            self._isMPPlaying = true;
+            self._is_mpplaying = true;
         }
     }
 
-    pub fn computeCall(&mut self, world_matrix: Matrix, local_matrix: Matrix) {
+    pub fn compute_call(&mut self, world_matrix: Matrix, local_matrix: Matrix) {
         // self.computeWorldMatrix();
-        self.psTool.varCompute(std::time::SystemTime::now()
+        self.ps_tool.var_compute(std::time::SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_millis() as u64, world_matrix, local_matrix);
@@ -159,7 +159,7 @@ impl MeshParticleSystem {
     }
 
     // private _mpDirty = true;
-    pub fn updateCall(
+    pub fn update_call(
         &mut self,
         world_matrix: Matrix,
         local_matrix: Matrix,
@@ -167,7 +167,7 @@ impl MeshParticleSystem {
         camera_rotation_matrix_invert: Matrix,
     ) {
         // if (self._mpDirty) {
-        let _ = self.psTool.mpUpdate(
+        let _ = self.ps_tool.mp_update(
             world_matrix,
             local_matrix,
             camera_pos,
@@ -193,14 +193,14 @@ impl MeshParticleSystem {
     // }
 
     pub fn stop(&mut self) {
-        if (self._isMPPlaying) {
-            self.psTool.stop();
+        if self._is_mpplaying {
+            self.ps_tool.stop();
 
             // MeshParticleSystem.unregistCompute(self._computeCall);
             // MeshParticleSystem.unregistRecycle(self._recycleCall);
             // self._scene.onBeforeRenderObservable.removeCallback(self._updateCall);
 
-            self._isMPPlaying = false;
+            self._is_mpplaying = false;
         }
     }
 

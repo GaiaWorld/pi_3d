@@ -12,11 +12,11 @@ use super::ishape_emitter_type::{
  * 球体发射器
  */
 pub struct SphereShapeEmitter {
-    pub MAX_Z: f32,
+    pub max_z: f32,
     /**
      * 创建模式
      */
-    pub directionMode: EShapeEmitterDirectionMode,
+    pub direction_mode: EShapeEmitterDirectionMode,
     /**
      * 半径
      */
@@ -24,58 +24,58 @@ pub struct SphereShapeEmitter {
     /**
      * 半径域
      */
-    pub radiusRange: f32,
+    pub radius_range: f32,
     /**
      * 弧形范围
      */
-    pub arcValue: f32,
+    pub arc_value: f32,
     /**
      * 弧形范围发射模式
      */
-    pub arcMode: EShapeEmitterArcMode,
+    pub arc_mode: EShapeEmitterArcMode,
     /**
      * 弧形周围可产生粒子的离散间隔 - 小于0.01 时, 不做间隔计算
      */
-    pub arcSpread: f32,
+    pub arc_spread: f32,
     /**
      * 弧形范围发射速度
      */
-    pub arcSpeed: f32,
+    pub arc_speed: f32,
     /**
      * 弧形范围精度
      */
-    pub arcSpreadLimit: f32,
+    pub arc_spread_limit: f32,
     pub rotation: Vector3,
     pub position: Vector3,
     pub scaling: Vector3,
 
-    localMatrix: Matrix,
-    alignDirection: bool,
-    randomizeDirection: f32,
-    spherizeDirection: f32,
-    randomizePosition: f32,
+    local_matrix: Matrix,
+    align_direction: bool,
+    randomize_direction: f32,
+    spherize_direction: f32,
+    randomize_position: f32,
 }
 
 impl SphereShapeEmitter {
-    pub fn new(radius: f32, radiusRange: f32) -> Self {
+    pub fn new(radius: f32, radius_range: f32) -> Self {
         Self {
-            MAX_Z: 9999999999.,
-            directionMode: EShapeEmitterDirectionMode::Unity,
+            max_z: 9999999999.,
+            direction_mode: EShapeEmitterDirectionMode::Unity,
             radius,
-            radiusRange,
-            arcValue: std::f32::consts::PI * 2.,
-            arcMode: EShapeEmitterArcMode::Random,
-            arcSpread: 0.,
-            arcSpeed: 1.,
-            arcSpreadLimit: 0.001,
+            radius_range,
+            arc_value: std::f32::consts::PI * 2.,
+            arc_mode: EShapeEmitterArcMode::Random,
+            arc_spread: 0.,
+            arc_speed: 1.,
+            arc_spread_limit: 0.001,
             rotation: Vector3::new(0., 0., 0.),
             position: Vector3::new(0., 0., 0.),
             scaling: Vector3::new(1., 1., 1.),
-            localMatrix: Matrix::identity(),
-            alignDirection: false,
-            randomizeDirection: 0.,
-            spherizeDirection: 0.,
-            randomizePosition: 0.,
+            local_matrix: Matrix::identity(),
+            align_direction: false,
+            randomize_direction: 0.,
+            spherize_direction: 0.,
+            randomize_position: 0.,
         }
     }
 }
@@ -89,7 +89,7 @@ impl IShapeEmitterType for SphereShapeEmitter {
         local_position: pi_scene_math::Vector3,
         is_local: bool,
     ) {
-        let mut direction = if (is_local) {
+        let mut direction = if is_local {
             normalize(&local_position)
         } else {
             normalize(
@@ -103,7 +103,7 @@ impl IShapeEmitterType for SphereShapeEmitter {
         direction[2] += rng.gen::<f32>() * Self::RANDOMIZE_DIRECTION;
 
         direction = normalize(&direction);
-        if (is_local) {
+        if is_local {
             *direction_to_update = direction;
         } else {
             *direction_to_update = normalize(&world_matrix.transform_vector(&direction));
@@ -126,31 +126,31 @@ impl IShapeEmitterType for SphereShapeEmitter {
             emission_index,
             emission_total,
             std::f32::consts::PI * 2.,
-            self.arcValue,
-            self.arcSpread,
-            self.arcSpeed,
-            self.arcMode,
+            self.arc_value,
+            self.arc_spread,
+            self.arc_speed,
+            self.arc_mode,
         );
 
         let mut rng = rand::thread_rng();
-        let range: f32 = rng.gen::<f32>() * (self.radiusRange);
-        let randRadius = self.radius - self.radius * range * range;
+        let range: f32 = rng.gen::<f32>() * (self.radius_range);
+        let rand_radius = self.radius - self.radius * range * range;
         let mut v: f32 = rng.gen_range(0.0..1.0);
         v = 2. * v - 1.;
         let phi = s;
         let theta = v.acos();
-        let mut randX = randRadius * phi.cos() * theta.sin();
-        let mut randZ = randRadius * v;
-        let mut randY = randRadius * phi.sin() * theta.sin();
+        let mut rand_x = rand_radius * phi.cos() * theta.sin();
+        let mut rand_z = rand_radius * v;
+        let mut rand_y = rand_radius * phi.sin() * theta.sin();
 
-        randX += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        randZ += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        randY += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        rand_x += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        rand_z += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        rand_y += (rng.gen::<f32>() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
 
-        if (is_local) {
-            *position_to_update = Vector3::new(randX, randY, randZ);
+        if is_local {
+            *position_to_update = Vector3::new(rand_x, rand_y, rand_z);
         } else {
-            *position_to_update = world_matrix.transform_vector(&Vector3::new(randX, randY, randZ));
+            *position_to_update = world_matrix.transform_vector(&Vector3::new(rand_x, rand_y, rand_z));
         }
     }
 
@@ -186,44 +186,44 @@ impl IShapeEmitterType for SphereShapeEmitter {
         self.scaling.clone()
     }
 
-    fn set_localMatrix(&mut self, localMatrix: Matrix) {
-        self.localMatrix = localMatrix;
+    fn set_local_matrix(&mut self, local_matrix: Matrix) {
+        self.local_matrix = local_matrix;
     }
 
-    fn set_alignDirection(&mut self, alignDirection: bool) {
-        self.alignDirection = alignDirection;
+    fn set_align_direction(&mut self, align_direction: bool) {
+        self.align_direction = align_direction;
     }
 
-    fn set_randomizeDirection(&mut self, randomizeDirection: f32) {
-        self.randomizeDirection = randomizeDirection;
+    fn set_randomize_direction(&mut self, randomize_direction: f32) {
+        self.randomize_direction = randomize_direction;
     }
 
-    fn set_spherizeDirection(&mut self, spherizeDirection: f32) {
-        self.spherizeDirection = spherizeDirection;
+    fn set_spherize_direction(&mut self, spherize_direction: f32) {
+        self.spherize_direction = spherize_direction;
     }
 
-    fn set_randomizePosition(&mut self, randomizePosition: f32) {
-        self.randomizePosition = randomizePosition;
+    fn set_randomize_position(&mut self, randomize_position: f32) {
+        self.randomize_position = randomize_position;
     }
 
-    fn get_localMatrix(&mut self) -> Matrix {
-        self.localMatrix.clone()
+    fn get_local_matrix(&mut self) -> Matrix {
+        self.local_matrix.clone()
     }
 
-    fn get_alignDirection(&mut self) -> bool {
-        self.alignDirection.clone()
+    fn get_align_direction(&mut self) -> bool {
+        self.align_direction.clone()
     }
 
-    fn get_randomizeDirection(&mut self) -> f32 {
-        self.randomizeDirection.clone()
+    fn get_randomize_direction(&mut self) -> f32 {
+        self.randomize_direction.clone()
     }
 
-    fn get_spherizeDirection(&mut self) -> f32 {
-        self.spherizeDirection.clone()
+    fn get_spherize_direction(&mut self) -> f32 {
+        self.spherize_direction.clone()
     }
 
-    fn get_randomizePosition(&mut self) -> f32 {
-        self.randomizePosition.clone()
+    fn get_randomize_position(&mut self) -> f32 {
+        self.randomize_position.clone()
     }
 }
 
