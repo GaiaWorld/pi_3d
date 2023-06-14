@@ -185,17 +185,17 @@ path = "examples/anime/performance.rs"
 # name = "lighting_01"
 # path = "examples/lighting/01.rs"
 # 
-[[example]]
-name = "particle01"
-path = "examples/particles/01.rs"
-
-[[example]]
-name = "particle02"
-path = "examples/particles/02.rs"
-
-[[example]]
-name = "particle03"
-path = "examples/particles/03.rs"
+# [[example]]
+# name = "particle01"
+# path = "examples/particles/01.rs"
+# 
+# [[example]]
+# name = "particle02"
+# path = "examples/particles/02.rs"
+# 
+# [[example]]
+# name = "particle03"
+# path = "examples/particles/03.rs"
 
 # [[example]]
 # name = "gltfskin"

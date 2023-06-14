@@ -43,4 +43,3 @@ pub struct ActionSetTransformNodeAnime<'w> {
     pub scaling: ActionSetLocalScalingAnime<'w>,
     pub euler: ActionSetLocalEulerAnime<'w>,
 }
-

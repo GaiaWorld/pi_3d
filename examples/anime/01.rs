@@ -44,6 +44,7 @@ fn setup(
     mut transformanime: ActionSetTransformNodeAnime,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
+    mut abstructmeshcms: ActionSetAbstructMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matuse: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
@@ -80,6 +81,7 @@ fn setup(
 
     let source = commands.spawn_empty().id();
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();

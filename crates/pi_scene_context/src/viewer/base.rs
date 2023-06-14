@@ -98,7 +98,9 @@ impl ViewerViewMatrix {
         result
     }
     pub fn update(&self, range: &BindBufferRange) {
-        range.write_data(ShaderBindSceneAboutBase::OFFSET_VIEW_MATRIX as usize, bytemuck::cast_slice(self.0.transpose().as_slice()));
+        let t = self.0.transpose();
+        range.write_data(ShaderBindSceneAboutBase::OFFSET_VIEW_MATRIX as usize, bytemuck::cast_slice(t.as_slice()));
+        range.write_data(ShaderBindSceneAboutBase::OFFSET_CAMERA_ROTATION as usize, bytemuck::cast_slice(self.get_rotation_matrix().transpose().as_slice()));
     }
 }
 

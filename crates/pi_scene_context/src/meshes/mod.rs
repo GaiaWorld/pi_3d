@@ -69,6 +69,9 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListMeshShadow::default());
         app.insert_resource(ActionListInstanceColor::default());
         app.insert_resource(ActionListInstanceTillOff::default());
+        app.insert_resource(ActionListMeshRenderAlignment::default());
+        app.insert_resource(ActionListAbstructMeshScalingMode::default());
+        app.insert_resource(ActionListAbstructMeshVelocity::default());
 
         app.add_system(
             sys_act_mesh_create.in_set(ERunStageChap::Initial)
@@ -79,12 +82,18 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(
             (
                 sys_act_mesh_modify,
+                sys_act_abstruct_mesh_render_alignment,
+                sys_act_abstruct_mesh_scaling_mode,
+                sys_act_abstruct_mesh_velocity,
                 sys_act_instance_color,
                 sys_act_instance_tilloff,
             ).in_set(ERunStageChap::Command)
         );
         app.add_system(
             sys_calc_render_matrix.in_set(ERunStageChap::CalcRenderMatrix)
+        );
+        app.add_system(
+            sys_calc_render_matrix_instance.after(sys_calc_render_matrix)
         );
         app.add_system(
             sys_render_matrix_for_uniform.in_set(ERunStageChap::Uniform)

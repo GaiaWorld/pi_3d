@@ -8,7 +8,7 @@ use crate::{
     cameras::prelude::*,
     scene::prelude::*,
     flags::*,
-    transforms::prelude::*,
+    transforms::prelude::*, prelude::RenderAlignment,
 };
 
 use super::{
@@ -59,9 +59,9 @@ use super::{
             (
                 ObjectID,
                 &GeometryID, 
-                &I,
+                &I, &RenderAlignment
             ),
-            Changed<GeometryID>,
+            Or<(Changed<GeometryID>, Changed<RenderAlignment>)>,
         >,
         geometrys: Query<(&EInstanceCodeComp, &VertexBufferLayoutsComp)>, 
         passes: Query<(&PassReady, &PassBindGroups, &PassShader), With<T>>,
@@ -73,7 +73,7 @@ use super::{
         let time1 = pi_time::Instant::now();
 
         models.iter().for_each(
-            |(id_model, id_geo, passid)| {
+            |(id_model, id_geo, passid, renderalignment)| {
                 // log::debug!("SysPassShaderRequestByModel: 0");
                 let id_pass = passid.id();
                 let (instance, vb) = if let Ok(val) = geometrys.get(id_geo.0) {
@@ -98,10 +98,19 @@ use super::{
                             key_attributes,
                             key_set_blocks,
                             defines: 0,
+                            renderalignment: renderalignment.0
                         };
 
                         let (set0, set1, set2) = (&bindgroups.scene, &bindgroups.model, bindgroups.textures.as_ref());
+                        let mut vs_defines = vec![];
+                        vs_defines.push(set0.vs_define_code());
+                        vs_defines.push(set1.vs_define_code());
+                        let mut fs_defines = vec![];
+                        fs_defines.push(set0.fs_define_code());
+                        fs_defines.push(set1.fs_define_code());
                         let set2 = if let Some(set2) = set2 {
+                            vs_defines.push(set2.vs_define_code());
+                            fs_defines.push(set2.fs_define_code());
                             Some(set2.as_ref())
                         } else { None };
                 
@@ -111,7 +120,22 @@ use super::{
                         } else {
                             // log::debug!("SysPassShaderRequestByModel: 5");
                             if !shader_center.check(&key_shader) {
-                                let shader = meta.build(&device, &key_shader.key_meta, &key_shader.key_attributes, &instance, set0.as_ref(), set1.as_ref(), set2, None);
+                                
+
+                                let shader = meta.build_2(
+                                    &device,
+                                    &key_meta,
+                                    &key_shader.key_attributes,
+                                    &instance,
+                                    &renderalignment,
+                                    &set1.key().key.skin,
+                                    &vs_defines,
+                                    &[], &[],
+                                    &fs_defines,
+                                    &[], &[],
+                                );
+
+                                // let shader = meta.build(&device, &key_shader.key_meta, &key_shader.key_attributes, &instance, set0.as_ref(), set1.as_ref(), set2, None);
                                 shader_center.add(&key_shader, shader, None);
                             }
                             shader_loader.request(id_pass, &key_shader);
@@ -133,7 +157,7 @@ use super::{
     pub fn sys_pass_shader_request_by_pass<T: TPass + Component, I: TPassID + Component>(
         models: Query<
             (
-                &GeometryID, &I,
+                &GeometryID, &I, &RenderAlignment
             ),
         >,
         geometrys: Query<(&EInstanceCodeComp, &VertexBufferLayoutsComp)>, 
@@ -152,7 +176,7 @@ use super::{
             // log::debug!("SysPassShaderRequestByPass: 0");
             if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
                 // log::debug!("SysPassShaderRequestByPass: 1");
-                if let Ok((id_geometry, passid)) = models.get(id_model.0) {
+                if let Ok((id_geometry, passid, renderalignment)) = models.get(id_model.0) {
                     // log::debug!("SysPassShaderRequestByPass: 2");
                     let (instance, vb) = if let Ok(val) = geometrys.get(id_geometry.0) {
                         val
@@ -171,10 +195,19 @@ use super::{
                         key_attributes,
                         key_set_blocks,
                         defines: 0,
+                        renderalignment: renderalignment.0
                     };
     
                     let (set0, set1, set2) = (&bindgroups.scene, &bindgroups.model, bindgroups.textures.as_ref());
+                    let mut vs_defines = vec![];
+                    vs_defines.push(set0.vs_define_code());
+                    vs_defines.push(set1.vs_define_code());
+                    let mut fs_defines = vec![];
+                    fs_defines.push(set0.fs_define_code());
+                    fs_defines.push(set1.fs_define_code());
                     let set2 = if let Some(set2) = set2 {
+                        vs_defines.push(set2.vs_define_code());
+                        fs_defines.push(set2.fs_define_code());
                         Some(set2.as_ref())
                     } else { None };
             
@@ -184,7 +217,20 @@ use super::{
                     } else {
                         // log::debug!("SysPassShaderRequestByPass: 4");
                         if !shader_center.check(&key_shader) {
-                            let shader = meta.build(&device, &key_shader.key_meta, &key_shader.key_attributes, &instance, set0.as_ref(), set1.as_ref(), set2, None);
+                            let shader = meta.build_2(
+                                &device,
+                                &key_meta,
+                                &key_shader.key_attributes,
+                                &instance,
+                                &renderalignment,
+                                &set1.key().key.skin,
+                                &vs_defines,
+                                &[], &[],
+                                &fs_defines,
+                                &[], &[],
+                            );
+
+                            // let shader = meta.build(&device, &key_shader.key_meta, &key_shader.key_attributes, &instance, set0.as_ref(), set1.as_ref(), set2, None);
                             shader_center.add(&key_shader, shader, None);
                         }
                         shader_loader.request(id_pass, &key_shader);

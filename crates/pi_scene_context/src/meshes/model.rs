@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 
 use pi_engine_shell::prelude::*;
-use pi_scene_math::Matrix;
+use pi_scene_math::{Matrix, Vector3};
 use pi_share::Share;
 
 use crate::{
@@ -10,6 +10,18 @@ use crate::{
 };
 
 use super::{abstract_mesh::AbstructMesh};
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum EScalingMode {
+    Hierarchy,
+    Local,
+    Shape,
+}
+impl Default for EScalingMode {
+    fn default() -> Self {
+        Self::Hierarchy
+    }
+}
 
 
 #[derive(Component)]
@@ -28,6 +40,24 @@ pub struct DirtyMeshRef;
 
 pub type MeshRefs = EntityRefInfo<DirtyMeshRef, MeshID>;
 
+#[derive(Debug, Clone, Component, Deref, DerefMut)]
+pub struct RenderAlignment(pub ERenderAlignment);
+impl Default for RenderAlignment {
+    fn default() -> Self {
+        Self(ERenderAlignment::Local)
+    }
+}
+
+#[derive(Debug, Clone, Default, Component, Deref, DerefMut)]
+pub struct ScalingMode(pub EScalingMode);
+
+#[derive(Debug, Clone, Component, Deref, DerefMut)]
+pub struct ModelVelocity(pub Vector3);
+impl Default for ModelVelocity {
+    fn default() -> Self {
+        Self(Vector3::new(0., 1., 0.))
+    }
+}
 
 #[derive(Component)]
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);

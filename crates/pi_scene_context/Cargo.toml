@@ -63,38 +63,6 @@ pi_postprocess      = { git = "https://github.com/GaiaWorld/pi_post_process.git"
 
 pi_engine_shell     = { path = "../pi_engine_shell" }
 
-
-[patch."https://github.com/GaiaWorld/pi_animation"]
-pi_animation = { path = "../../../pi_animation" }
-
-[patch."https://github.com/GaiaWorld/pi_curves"]
-pi_curves = { path = "../../../pi_curves" }
-
-[patch."https://github.com/GaiaWorld/pi_render"]
-pi_render = { path = "../../../pi_render" }
-render_utils = { path = "../../../pi_render/crates/render_utils" }
-render_derive = { path = "../../../pi_render/crates/render_derive" }
-
-[patch."https://github.com/GaiaWorld/pi_render_bevy"]
-pi_bevy_render_plugin = { path="../../../pi_render_bevy/crates/render" }
-pi_bevy_winit_window = { path="../../../pi_render_bevy/crates/winit_window" }
-pi_bevy_post_process = { path="../../../pi_render_bevy/crates/post_process" }
-pi_bevy_ecs_extend = { path="../../../pi_render_bevy/crates/ecs_extend" }
-pi_bevy_asset = { path="../../../pi_render_bevy/crates/asset" }
-
-[patch."https://github.com/GaiaWorld/pi_scene"]
-pi_scene = { path = "../../../pi_scene" }
-pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
-
-[patch."https://github.com/GaiaWorld/pi_ecs"]
-pi_ecs = { path = "../../../pi_ecs" }
-
-[patch."https://github.com/GaiaWorld/pi_hal"]
-pi_hal = { path = "../../../pi_hal" }
-
-[patch."http://ser.yinengyun.com:10082/tech/winit.git"]
-winit = { path = "../../../winit" }
-
 [net]
 git-fetch-with-cli = true
 offline = true
