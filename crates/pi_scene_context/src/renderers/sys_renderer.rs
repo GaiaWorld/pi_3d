@@ -39,6 +39,7 @@ use super::{
                             commands.entity(id_pass).insert(PassBindGroups::new(None));
                         }
                     } else {
+                        log::warn!("BindGroups Ok!!");
                         commands.entity(id_pass).insert(PassBindGroups::new(Some(
                             BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
                         )));
@@ -97,7 +98,7 @@ use super::{
                             key_meta: key_meta.clone(),
                             key_attributes,
                             key_set_blocks,
-                            defines: 0,
+                            defines: key_shader_defines,
                             renderalignment: renderalignment.0
                         };
 
@@ -505,9 +506,9 @@ use super::{
         let time1 = pi_time::Instant::now();
 
         pipeline_center.single_create().iter().for_each(|(key, value)| {
-            // log::debug!("SysPassPipeline: 0");
+            log::debug!("SysPassPipeline: 0");
             pipeline_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
-                // log::debug!("SysPassPipeline: 1");
+                log::debug!("SysPassPipeline: 1");
                 if let Ok(mut oldpipeline) = passes.get_mut(entity) {
                     *oldpipeline = PassPipeline::from(component);
                 }

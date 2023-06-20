@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     object::ObjectID,
     geometry::prelude::*,
-    renderers::prelude::*
+    renderers::prelude::*,
 };
 
 use self::{
@@ -72,6 +72,9 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListMeshRenderAlignment::default());
         app.insert_resource(ActionListAbstructMeshScalingMode::default());
         app.insert_resource(ActionListAbstructMeshVelocity::default());
+        app.insert_resource(ActionListInstanceColors::default());
+        app.insert_resource(ActionListInstanceTilloffs::default());
+        app.insert_resource(ActionListInstanceWorldMatrixs::default());
 
         app.add_system(
             sys_act_mesh_create.in_set(ERunStageChap::Initial)
@@ -90,20 +93,27 @@ impl crate::Plugin for PluginMesh {
             ).in_set(ERunStageChap::Command)
         );
         app.add_system(
-            sys_calc_render_matrix.in_set(ERunStageChap::CalcRenderMatrix)
+            sys_calc_render_matrix.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
         );
         app.add_system(
-            sys_calc_render_matrix_instance.after(sys_calc_render_matrix)
+            sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix)
         );
         app.add_system(
-            sys_render_matrix_for_uniform.in_set(ERunStageChap::Uniform)
+            sys_render_matrix_for_uniform.run_if(should_run).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
             (
-                sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>,
-                sys_tick_instance_buffer_update::<InstanceTillOff, InstanceBufferTillOff, InstanceTillOffDirty>,
-                sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>,
+                sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>.run_if(should_run),
+                sys_tick_instance_buffer_update::<InstanceTillOff, InstanceBufferTillOff, InstanceTillOffDirty>.run_if(should_run),
+                sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>.run_if(should_run),
             ).in_set(ERunStageChap::Uniform)
+        );
+        app.add_systems(
+            (
+                sys_act_geomettry_instance_world_matrix.run_if(should_run),
+                sys_act_geomettry_instance_color.run_if(should_run),
+                sys_act_geomettry_instance_tilloff.run_if(should_run),
+            ).before(sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>)
         );
     }
 }

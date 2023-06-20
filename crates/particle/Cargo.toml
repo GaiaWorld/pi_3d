@@ -26,9 +26,6 @@ lazy_static = "1.4"
 rand = "0.8"
 nalgebra = "0.32"
 
-pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
-pi_ecs_utils = { git = "https://github.com/GaiaWorld/pi_ecs_utils.git" }
-pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
 pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 
 

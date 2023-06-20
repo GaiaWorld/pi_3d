@@ -268,7 +268,7 @@ pub fn sys_act_material_texture(
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformTexture(entity, param, count)| {
         if let Ok(mut textureparams) = textureparams.get_mut(entity) {
-            log::warn!("EUniformCommand::Texture");
+            // log::warn!("EUniformCommand::Texture");
             textureparams.0.insert(param.slotname.clone(), Arc::new(param));
             return;
         }
@@ -287,12 +287,18 @@ impl ActionMaterial {
         key: KeyShaderMeta,
         meta: ShaderEffectMeta,
     ) {
+        // log::warn!("Regist ShaderName: {:?}", key);
         if !asset_mgr.contains_key(&key) {
             if let Ok(meta) = asset_mgr.insert(key.clone(), meta) {
                 // wait_list.1.push((key.clone(), meta));
+                // log::warn!("Regist ShaderName Success: {:?}", key);
+            } else {
+                // log::warn!("Regist ShaderName Insert Fail: {:?}", key);
             }
             // let meta = asset_mgr.insert(key.clone(), meta);
             // wait_list.1.push((key.clone(), meta));
+        } else {
+            // log::warn!("Regist ShaderName contains_key ??: {:?}", key);
         }
     }
     pub fn init(

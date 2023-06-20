@@ -119,7 +119,7 @@ impl Node for RenderNode {
             let clear_color_ops = if auto_clear_color.0 {
                 wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: true }
             } else {
-                wgpu::Operations { load: wgpu::LoadOp::Load, store: true }
+                wgpu::Operations { load: wgpu::LoadOp::Load, store: false }
             };
             let clear_depth_ops = if auto_clear_depth.0 {
                 Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: true, })
@@ -240,6 +240,7 @@ impl Node for RenderNode {
                 let currlist: Vec<ShareTargetView> = vec![];
                 let srt = if let Some(srt) = input.target.clone() {
                     if srt.target().depth.is_none() && need_depth {
+                        // log::warn!("Render Input Not Get Depth!");
                         None
                     } else {
                         Some(srt)
@@ -261,6 +262,8 @@ impl Node for RenderNode {
                             depth_descriptor: depth.desc()
                         }
                     );
+                    
+                    // log::warn!("Render Size: {:?}", (format.desc(), depth.desc()));
                     atlas_allocator.allocate(
                         width,
                         height,
@@ -307,6 +310,9 @@ impl Node for RenderNode {
                 } else {
                     (None, None)
                 };
+
+                // log::warn!("Render color: {:?}", srt.target().colors);
+                // log::warn!("Render depth: {:?}", srt.target().depth);
     
                 if auto_clear_color.0 || (auto_clear_depth.0 || auto_clear_stencil.0 && srt.target().depth.is_some()) {
                     let mut renderpass = commands.begin_render_pass(
@@ -352,7 +358,7 @@ impl Node for RenderNode {
     
                 renderpass.set_viewport(x, y, w, h, 0., max_depth);
                 renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                // log::warn!("Draws: {:?}", renderer.draws.list.len());
+                log::warn!("Draws: {:?}", renderer.draws.list.len());
                 DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
     
                 let time1 = pi_time::Instant::now();

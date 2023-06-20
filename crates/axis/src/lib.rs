@@ -28,7 +28,18 @@ fn setup(
 pub struct PluginAxis;
 impl Plugin for PluginAxis {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup);
+        // app.add_startup_system(setup);
+        let asset_mgr = app.world.get_resource::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
+        let mut data_map = app.world.get_resource_mut::<VertexBufferDataMap3D>().unwrap();
+        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION)) {
+            ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION), bytemuck::cast_slice(&AxisBuilder::position()).iter().map(|v| *v).collect::<Vec<u8>>());
+        }
+        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4)) {
+            ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4), bytemuck::cast_slice(&AxisBuilder::colors()).iter().map(|v| *v).collect::<Vec<u8>>());
+        }
+        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_INDICES)) {
+            ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&AxisBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        }
     }
     // fn init(
     //     &mut self,

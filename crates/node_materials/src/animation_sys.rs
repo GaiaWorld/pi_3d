@@ -74,6 +74,6 @@ impl<D: FrameDataValue + Component + TMaterialAnimeValue> Plugin for PluginMater
         // app.add_system(
         //     sys_listen_type_anime_ctx::<D>.in_set(ERunStageChap::Command)
         // );
-        app.add_system(sys_calc_type_anime::<D>.in_set(ERunStageChap::Anime));
+        app.add_system(sys_calc_type_anime::<D>.run_if(should_run).in_set(ERunStageChap::Anime));
     }
 }

@@ -11,13 +11,10 @@ pub mod interface;
 pub struct SingleIDBaseDefaultMaterial(pub Entity);
 
 fn setup(
-    mut commands: Commands,
     mut mat: ResMut<SingleIDBaseDefaultMaterial>,
     mut matcmds: ResMut<ActionListMaterialCreate>,
-    asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
-    mut wait_list: ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
+    // ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
 
     let entity = mat.0;
     matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY), EPassTag::Opaque));
@@ -51,6 +48,10 @@ impl Plugin for PluginDefaultMaterial {
         let entity = app.world.spawn_empty().id();
         // log::warn!("Default Maerial {:?}", scene);
         let single = SingleIDBaseDefaultMaterial(entity);
+        
+        let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
+        let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
+        ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
         
         app.insert_resource(single);
         app.add_startup_system(setup);

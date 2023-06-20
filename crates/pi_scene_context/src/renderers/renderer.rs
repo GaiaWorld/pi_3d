@@ -46,7 +46,7 @@ impl RenderColorFormat {
                 base_mip_level: 0,
                 base_array_layer: 0,
                 array_layer_count: None,
-                view_dimension: None,
+                view_dimension: Some(wgpu::TextureViewDimension::D2),
             }]
         )
     }
@@ -92,11 +92,11 @@ impl RenderDepthFormat {
                     sample_count: 1,
                     dimension: wgpu::TextureDimension::D2,
                     format: val,
-                    usage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
                     base_mip_level: 0,
                     base_array_layer: 0,
                     array_layer_count: None,
-                    view_dimension: None,
+                    view_dimension: Some(wgpu::TextureViewDimension::D2),
                 }
             )
         } else {
@@ -149,7 +149,7 @@ impl Default for RenderAutoClearStencil {
 pub struct RenderToFinalTarget(pub bool);
 impl Default for RenderToFinalTarget {
     fn default() -> Self {
-        Self(true)
+        Self(false)
     }
 }
 

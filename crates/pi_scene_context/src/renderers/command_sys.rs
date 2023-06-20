@@ -97,6 +97,7 @@ impl ActionRenderer {
         height: u32,
         color_format: ColorFormat,
         depth_format: DepthStencilFormat,
+        toscreen: bool,
     ) {
         commands_renderer
             .insert(GraphId(node))
@@ -112,7 +113,7 @@ impl ActionRenderer {
             .insert(RenderAutoClearColor::default())
             .insert(RenderAutoClearDepth::default())
             .insert(RenderAutoClearStencil::default())
-            .insert(RenderToFinalTarget(true))
+            .insert(RenderToFinalTarget(toscreen))
             .insert(ViewerID(id_viewer))
             .insert(Postprocess::default());
     }

@@ -1,7 +1,7 @@
 use pi_scene_math::*;
 use pi_engine_shell::prelude::*;
 
-use pi_scene_context::{prelude::*, animation::PluginTypeAnime};
+use pi_scene_context::{prelude::*};
 
 use crate::{
     main_tex::*,
@@ -495,7 +495,7 @@ impl TMaterialAnimeValue for Cutoff {
     fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
         if slots.cutoff < u8::MAX {
             bind.float(slots.cutoff as usize, self.0);
-            log::warn!("Anime: Cutoff {:?}", self.0);
+            // log::warn!("Anime: Cutoff {:?}", self.0);
         }
     }
 }

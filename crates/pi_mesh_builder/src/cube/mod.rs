@@ -185,6 +185,16 @@ impl Plugin for PluginCubeBuilder {
     // }
 
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup);
+        let asset_mgr = app.world.get_resource::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
+        let mut data_map = app.world.get_resource_mut::<VertexBufferDataMap3D>().unwrap();
+
+        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER)) {
+            ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        }
+        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES)) {
+            // log::warn!("CubeBuilder::KEY_BUFFER_INDICES");
+            ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        }
+        // app.add_startup_system(setup);
     }
 }

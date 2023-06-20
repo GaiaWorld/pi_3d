@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
     animation::prelude::*,
-    flags::SceneID, prelude::SceneMainCameraID,
+    prelude::SceneMainCameraID,
 };
 
 use super::{prelude::*};
@@ -83,7 +83,7 @@ impl ActionScene {
         tree: &mut ActionListTransformNodeParent,
         scene: Entity,
     ) {
-        tree.push(OpsTransformNodeParent::ops(commands.id(), scene));
+        // tree.push(OpsTransformNodeParent::ops(commands.id(), scene));
         commands
             .insert(SceneID(scene));
     }

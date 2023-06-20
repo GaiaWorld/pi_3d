@@ -66,3 +66,7 @@
 * FrontFace
   * 正面背面检测模式
   * 每个 Model 配置
+
+## Vertices
+
+* 

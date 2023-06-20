@@ -107,10 +107,10 @@ impl Plugin for PluginLighting {
         );
         app.add_systems(
             (
-                sys_update_viewer_uniform::<LightDirection, DirectionalShadowProjection>,
-                sys_update_viewer_model_list_by_viewer::<LightDirection, DirectionalShadowProjection>,
-                sys_update_viewer_model_list_by_model::<LightDirection, DirectionalShadowProjection>,
-                sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection>.after(sys_calc_render_matrix)
+                sys_update_viewer_uniform::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
+                sys_update_viewer_model_list_by_viewer::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
+                sys_update_viewer_model_list_by_model::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
+                sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection>.run_if(should_run).after(sys_calc_render_matrix)
             ).chain().in_set(ERunStageChap::Uniform)
         );
     }

@@ -57,6 +57,8 @@ render_utils            = { git = "https://github.com/GaiaWorld/pi_render", bran
 render_derive           = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 
 pi_scene_math           = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_animation            = { git = "https://github.com/GaiaWorld/pi_animation.git" }
+pi_curves               = { git = "https://github.com/GaiaWorld/pi_curves.git" }
 
 
 

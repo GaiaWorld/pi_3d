@@ -230,7 +230,7 @@ pub fn sys_camera_renderer_action(
                     let mut commands = commands.entity(id_renderer);
                     ActionRenderer::as_renderer(
                         &mut commands, node, id_viewer, graphic_desc, ViewerSize::DEFAULT_WIDTH, ViewerSize::DEFAULT_HEIGHT,
-                        color_format, depth_stencil_format
+                        color_format, depth_stencil_format, toscreen.0
                     );
                     log::warn!("Camera Renderer Init!!");
                 },

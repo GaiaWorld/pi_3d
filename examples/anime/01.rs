@@ -61,7 +61,7 @@ fn setup(
     animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id();
+    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 10., -40.));
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
@@ -79,7 +79,7 @@ fn setup(
     let id_renderer = commands.spawn_empty().id();
     cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-    let source = commands.spawn_empty().id();
+    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
     // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
@@ -103,7 +103,7 @@ fn setup(
                 
                 let cube: Entity = commands.spawn_empty().id();
                 instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
-                transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
+                transformcmds.tree.push(OpsTransformNodeParent::ops(cube, source));
 
                 let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32);
                 transformcmds.localpos.push(OpsTransformNodeLocalPosition(cube, pos));
@@ -180,11 +180,13 @@ pub fn main() {
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
+    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginCubeBuilder);
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
-    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginNodeMaterial);
+
+    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);

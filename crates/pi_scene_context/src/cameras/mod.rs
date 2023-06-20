@@ -114,17 +114,17 @@ impl Plugin for PluginCamera {
         // init_plugin_for_viewer::<TargetCameraParam, Fn, CameraParam, Fn>(app, sys_cmds_target_camera_modify, sys_world_matrix_calc)
         app.add_systems(
             (
-                sys_calc_view_matrix_by_viewer::<TargetCameraParam>,
-                sys_calc_proj_matrix::<CameraParam>,
-                sys_calc_transform_matrix::<TargetCameraParam, CameraParam>,
-                sys_update_viewer_uniform::<TargetCameraParam, CameraParam>,
+                sys_calc_view_matrix_by_viewer::<TargetCameraParam>.run_if(should_run),
+                sys_calc_proj_matrix::<CameraParam>.run_if(should_run),
+                sys_calc_transform_matrix::<TargetCameraParam, CameraParam>.run_if(should_run),
+                sys_update_viewer_uniform::<TargetCameraParam, CameraParam>.run_if(should_run),
             ).chain().in_set(ERunStageChap::DrawUniformToGPU)
         );
         app.add_systems(
             (
-                sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>,
-                sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>,
-                sys_tick_viewer_culling::<TargetCameraParam, CameraParam>
+                sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>.run_if(should_run),
+                sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>.run_if(should_run),
+                sys_tick_viewer_culling::<TargetCameraParam, CameraParam>.run_if(should_run)
             ).chain().in_set(ERunStageChap::DrawBinds)
         );
     }

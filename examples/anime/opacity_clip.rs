@@ -54,7 +54,7 @@ fn setup(
     ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
 
     let tes_size = 5;
-    fps.frame_ms = 10;
+    fps.frame_ms = 50;
 
     final_render.cleardepth = 0.0;
 
@@ -62,7 +62,7 @@ fn setup(
     animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id();
+    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
     cameracmds.active.push(OpsCameraActive::ops(camera01, true));
@@ -78,10 +78,19 @@ fn setup(
     let id_renderer = commands.spawn_empty().id();
     cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-    let source = commands.spawn_empty().id();
+    let root = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(root, scene));
+    transformcmds.create.push(OpsTransformNode::ops(scene, root, String::from("Root")));
+
+    let node = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node, scene));
+    transformcmds.create.push(OpsTransformNode::ops(scene, node, String::from("Node")));
+
+    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
     let mut blend = ModelBlend::default(); blend.combine();
     meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
+
+    transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
+    transformcmds.tree.push(OpsTransformNodeParent::ops(node, root));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
@@ -119,8 +128,8 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.global.record_group(source, &key_group, id_group);
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    // animegroupcmd.global.record_group(source, &key_group, id_group);
+    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(root, key_group.clone(), id_group));
     {
         let key_curve0 = pi_atom::Atom::from("cutoff");
         let curve = FrameCurve::<Cutoff>::curve_easing(Cutoff(0.0), Cutoff(1.0), 30, 30, EEasingMode::None);
@@ -139,14 +148,34 @@ fn setup(
         };
     
         let animation = matanime.cutoff.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, idmat, key_group.clone(), animation));
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(root, idmat, key_group.clone(), animation));
+    }
+    {
+        let key_curve0 = pi_atom::Atom::from("Pos");
+        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(2., 0., 0.)), 30, 30, EEasingMode::None);
+        
+        let asset_curve = if let Some(curve) = transformanime.position.curves.get(&key_curve0) {
+            curve
+        } else {
+            match transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => {
+                    value
+                },
+                Err(e) => {
+                    return;
+                },
+            }
+        };
+    
+        let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(root, root, key_group.clone(), animation));
     }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Positive(Some(5));
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), parma));
+    animegroupcmd.start.push(OpsAnimationGroupStart::ops(root, key_group.clone(), parma));
 
-    animegroupcmd.global.add_frame_event_listen(id_group);
-    animegroupcmd.global.add_frame_event(id_group, 0.5, 100);
+    // animegroupcmd.global.add_frame_event_listen(id_group);
+    // animegroupcmd.global.add_frame_event(id_group, 0.5, 100);
 }
 
 pub fn sys_anime_event(
@@ -205,13 +234,15 @@ pub fn main() {
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
+    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginCubeBuilder);
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
-    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugins(PluginGroupNodeMaterialAnime);
+
+    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);

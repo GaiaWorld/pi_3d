@@ -60,7 +60,7 @@ fn setup(
     animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id();
+    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
     cameracmds.active.push(OpsCameraActive::ops(camera01, true));
@@ -76,7 +76,7 @@ fn setup(
     let id_renderer = commands.spawn_empty().id();
     cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-    let source = commands.spawn_empty().id();
+    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
     transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     
@@ -84,29 +84,29 @@ fn setup(
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
     animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
     
-    let bone0 = commands.spawn_empty().id();
-    let bone1 = commands.spawn_empty().id();
+    let bone0 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone0, scene));
+    let bone1 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone1, scene));
     let key_curve0 = pi_atom::Atom::from((1).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone1, key_group.clone(), animation));
     }
-    let bone2 = commands.spawn_empty().id();
+    let bone2 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone2, scene));
     let key_curve0 = pi_atom::Atom::from((2).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone2, key_group.clone(), animation));
     }
-    let bone3 = commands.spawn_empty().id();
+    let bone3 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone3, scene));
     let key_curve0 = pi_atom::Atom::from((3).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone3, key_group.clone(), animation));
     }
-    let bone4 = commands.spawn_empty().id();
+    let bone4 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone4, scene));
     let key_curve0 = pi_atom::Atom::from((4).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
@@ -287,12 +287,14 @@ pub fn main() {
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
+    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginCubeBuilder);
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
-    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
+
+    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);

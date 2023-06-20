@@ -147,7 +147,7 @@ fn setup(
     let scene = commands.spawn_empty().id();
     scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id();
+    let camera01 = commands.spawn_empty().id(); treecmds.push(OpsTransformNodeParent::ops(camera01, scene));
     cameracmds.0.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
     cameracmds.4.push(OpsCameraActive::ops(camera01, true));
     cameracmds.7.push(OpsCameraOrthSize::ops(camera01, 4.));
@@ -162,7 +162,7 @@ fn setup(
     let id_renderer = commands.spawn_empty().id();
     cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-    let cube = commands.spawn_empty().id();
+    let cube = commands.spawn_empty().id(); treecmds.push(OpsTransformNodeParent::ops(cube, scene));
     meshcreate.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));
     
     let id_geo = commands.spawn_empty().id();
@@ -194,10 +194,12 @@ pub fn main() {
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
+    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginCubeBuilder);
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
-    app.add_plugins(PluginBundleDefault);
+
+    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);

@@ -75,7 +75,7 @@ fn setup(
         .create
         .push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id();
+    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
     cameracmds.create.push(OpsCameraCreation::ops(
         scene,
         camera01,
@@ -111,7 +111,7 @@ fn setup(
         DepthStencilFormat::None,
     ));
 
-    let source = commands.spawn_empty().id();
+    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(
         scene,
         source,

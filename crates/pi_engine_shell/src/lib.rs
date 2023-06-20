@@ -19,6 +19,7 @@ pub mod setup;
 pub mod assets;
 pub mod prelude;
 mod entity_ref;
+mod animation;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 

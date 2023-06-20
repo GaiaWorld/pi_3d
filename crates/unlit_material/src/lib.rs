@@ -24,7 +24,11 @@ impl Plugin for PluginUnlitMaterial {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListUnlitMaterial::default());
         app.add_system(sys_act_unlit_material.in_set(ERunStageChap::Command));
-        app.add_startup_system(setup);
+
+        let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
+        let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
+        ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(UnlitShader::KEY), UnlitShader::meta());
+        // app.add_startup_system(setup);
     }
     // fn init(
     //     &mut self,

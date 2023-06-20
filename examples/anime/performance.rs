@@ -202,12 +202,14 @@ pub fn main() {
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
+    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginCubeBuilder);
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
-    app.add_plugins(PluginBundleDefault);
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
+
+    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);

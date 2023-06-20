@@ -19,7 +19,7 @@ pub use pi_bevy_asset::{
 pub use pi_bevy_render_plugin::{
     PiRenderDevice, PiRenderQueue, PiRenderGraph, PiRenderWindow, PiRenderOptions, PiSafeAtlasAllocator, PiScreenTexture,
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
-    asset_config::*,
+    asset_config::*, should_run
 };
 pub use pi_window_renderer::*;
 pub use pi_render::{
@@ -75,6 +75,7 @@ pub use crate::effect_sampler2d::*;
 pub use crate::effect_texture2d::*;
 pub use crate::frame_time::SingleFrameTimeCommand;
 pub use crate::entity_ref::*;
+pub use crate::animation::*;
 
 ///
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Component)]
@@ -104,6 +105,7 @@ pub struct VertexBufferDataMap3D(pub SingleVertexBufferDataMap);
 #[derive(Debug, Component, Clone)]
 pub struct IndicesBufferDesc {
     pub format: wgpu::IndexFormat,
+    /// bytes 范围
     pub buffer_range: Option<Range<wgpu::BufferAddress>>,
     pub buffer: KeyVertexBuffer,
 }

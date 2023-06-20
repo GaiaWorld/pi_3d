@@ -7,7 +7,7 @@ use pi_scene_context::{
     cullings::{PluginCulling},
     cameras::PluginCamera,
     transforms::PluginGroupTransformNode,
-    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup, flags::PluginFlags, light::PluginLighting, skeleton::PluginSkeleton, animation::PluginAnimation, object::PluginDispose
+    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup, flags::PluginFlags, light::PluginLighting, skeleton::PluginSkeleton, object::PluginDispose, animation::PluginSceneAnimation
 };
 
 pub struct Limit(pub wgpu::Limits);
@@ -23,9 +23,10 @@ impl PluginGroup for PluginBundleDefault {
         let mut group = PluginGroupBuilder::start::<Self>();
         
         group = group.add(PluginRunstage);
+        group = group.add(PluginGlobalAnimation);
         group = group.add(PluginRenderBindGroup);
         group = group.add(PluginScene);
-        group = group.add(PluginAnimation);
+        group = group.add(PluginSceneAnimation);
         group = PluginGroupTransformNode::add(group);
         group = group.add(PluginCamera)
             .add(PluginMesh)

@@ -41,12 +41,6 @@ pub fn sys_scene_anime_ctx(
             ctx
         } else { return; };
 
-        let mut dispose_groups = replace(&mut ctx.1, vec![]);
-
-        dispose_groups.drain(..).for_each(|id_group| {
-            ctx.0.del_animation_group(id_group);
-        });
-
         // ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos);
         {
             let delta_ms = scene_time.delta_ms as KeyFrameCurveValue * ctx.0.time_scale as KeyFrameCurveValue;
@@ -93,52 +87,3 @@ pub fn sys_scene_anime_ctx(
     let time1 = pi_time::Instant::now();
     log::debug!("SysSceneAnime: {:?}", time1 - time0);
 }
-
-
-    pub fn sys_calc_type_anime<D: FrameDataValue + Component + Debug>(
-        type_ctx: Res<TypeAnimeContext<D>>,
-        runinfos: Res<GlobalAnimeAbout>,
-        mut items: Query<&mut D>,
-    ) {
-        let time0 = pi_time::Instant::now();
-
-        let ty = type_ctx.ctx.ty();
-        let curves = type_ctx.ctx.curves();
-        if let Some(list) = runinfos.runtimeinfos.list.get(ty) {
-            for info in list {
-                if let Ok(mut item) = items.get_mut(info.target) {
-                    if let Some(Some(curve)) = curves.get(info.curve_id) {
-                        // println!(">>>>>>>>>>>>>>>>>{}", info.amount_in_second);
-                        let value = curve.as_ref().interple(info.amount_in_second);
-                        // commands.entity(info.target).insert(value);
-                        *item = value;
-                    }
-                }
-            }
-        } else {
-            log::trace!("Not Found Anime Type: {}", ty);
-        }
-
-        let time1 = pi_time::Instant::now();
-        log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
-    }
-
-    pub(crate) fn sys_listen_type_anime_ctx<D: FrameDataValue + Component + Debug>(
-        // e: Event,
-        // items: Query<(&SceneID, &AnimationGroups)>,
-        // mut scenes: Query<&mut SceneAnimationContext>,
-        // mut type_ctx: ResMut<TypeAnimeContext<D>>,
-    ) {
-        // if let Some((id_scene, groups)) = items.get_by_entity(e.id) {
-        //     if let Some(ctx) = scenes.get_mut(id_scene.0) {
-        //         log::debug!("Obj Dispose > SysTypeAnimeDispose");
-        //         groups.map.iter().for_each(|(_, id_group)| {
-        //             if let Some(group) = ctx.0.animation_group(id_group.clone()) {
-        //                 group.animations().iter().for_each(|item| {
-        //                     type_ctx.ctx.remove_one(&item.animation);
-        //                 });
-        //             }
-        //         });
-        //     }
-        // }
-    }

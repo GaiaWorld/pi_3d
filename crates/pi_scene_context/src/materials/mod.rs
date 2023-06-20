@@ -146,17 +146,17 @@ impl Plugin for PluginMaterial {
         );
         app.add_systems(
             (
-                sys_texture_ready01,
-                sys_texture_ready02,
-                sys_texture_ready03,
-                sys_texture_ready04,
-                sys_texture_ready05,
-                sys_texture_ready06,
+                sys_texture_ready01.run_if(should_run),
+                sys_texture_ready02.run_if(should_run),
+                sys_texture_ready03.run_if(should_run),
+                sys_texture_ready04.run_if(should_run),
+                sys_texture_ready05.run_if(should_run),
+                sys_texture_ready06.run_if(should_run),
             ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
             (
-                sys_effect_bind_to_model_while_mat_modify, // ::<PassID01>,
+                sys_effect_bind_to_model_while_mat_modify.run_if(should_run), // ::<PassID01>,
                 // sys_effect_bind_to_model_while_mat_modify::<PassID02>,
                 // sys_effect_bind_to_model_while_mat_modify::<PassID03>,
                 // sys_effect_bind_to_model_while_mat_modify::<PassID04>,
@@ -168,7 +168,7 @@ impl Plugin for PluginMaterial {
         );
         app.add_systems(
             (
-                sys_effect_tex_to_model_while_mat_modify, //::<PassID01>,
+                sys_effect_tex_to_model_while_mat_modify.run_if(should_run), //::<PassID01>,
                 // sys_effect_tex_to_model_while_mat_modify::<PassID02>,
                 // sys_effect_tex_to_model_while_mat_modify::<PassID03>,
                 // sys_effect_tex_to_model_while_mat_modify::<PassID04>,
@@ -179,7 +179,7 @@ impl Plugin for PluginMaterial {
             ).in_set(ERunStageChap::DrawBinds)
         );
         app.add_system(
-            sys_material_uniform_apply.in_set(ERunStageChap::Uniform)
+            sys_material_uniform_apply.run_if(should_run).in_set(ERunStageChap::Uniform)
         );
 
         // PluginMaterialUniforms.build(app);

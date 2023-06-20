@@ -2,6 +2,8 @@ use std::mem::replace;
 
 use pi_engine_shell::prelude::*;
 
+use crate::prelude::geometry_update_instance_buffer;
+
 use super::{
     vertex_buffer_useinfo::*,
     base::*,
@@ -11,7 +13,7 @@ use super::{
 use super::command::*;
 
 
-pub fn sys_geometry_create(
+pub fn sys_act_geometry_create(
     mut cmds: ResMut<ActionListGeometryCreate>,
     mut commands: Commands,
     mut geoloader: ResMut<GeometryVBLoader>,
@@ -77,6 +79,57 @@ pub fn sys_geometry_create(
         } else {
             geocommands.remove::<IndicesBufferDesc>();
             geocommands.remove::<AssetResBufferIndices>();
+        }
+    });
+}
+
+pub fn sys_act_geomettry_instance_world_matrix(
+    mut cmds: ResMut<ActionListInstanceWorldMatrixs>,
+    mut geoloader: ResMut<GeometryVBLoader>,
+    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
+    mut geometrys: Query<&mut InstanceBufferWorldMatrix>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceWorldMatrixs(geo, data, count)| {
+        if let Ok(mut buffer) = geometrys.get_mut(geo) {
+            geometry_update_instance_buffer::<InstanceBufferWorldMatrix>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
+        } else {
+            if count < 1 {
+                cmds.push(OpsInstanceWorldMatrixs(geo, data, count + 1));
+            }
+        }
+    });
+}
+
+pub fn sys_act_geomettry_instance_color(
+    mut cmds: ResMut<ActionListInstanceColors>,
+    mut geoloader: ResMut<GeometryVBLoader>,
+    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
+    mut geometrys: Query<&mut InstanceBufferColor>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceColors(geo, data, count)| {
+        if let Ok(mut buffer) = geometrys.get_mut(geo) {
+            geometry_update_instance_buffer::<InstanceBufferColor>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
+        } else {
+            if count < 1 {
+                cmds.push(OpsInstanceColors(geo, data, count + 1));
+            }
+        }
+    });
+}
+
+pub fn sys_act_geomettry_instance_tilloff(
+    mut cmds: ResMut<ActionListInstanceTilloffs>,
+    mut geoloader: ResMut<GeometryVBLoader>,
+    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
+    mut geometrys: Query<&mut InstanceBufferTillOff>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceTilloffs(geo, data, count)| {
+        if let Ok(mut buffer) = geometrys.get_mut(geo) {
+            geometry_update_instance_buffer::<InstanceBufferTillOff>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
+        } else {
+            if count < 1 {
+                cmds.push(OpsInstanceTilloffs(geo, data, count + 1));
+            }
         }
     });
 }

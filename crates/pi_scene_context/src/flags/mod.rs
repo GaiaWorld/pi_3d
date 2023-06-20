@@ -23,8 +23,6 @@ pub struct CullingFlag(pub bool);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneMainCameraID(pub Option<Entity>);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
-pub struct SceneID(pub ObjectID);
 #[derive(Debug, Component)]
 pub struct CameraID(pub usize);
 #[derive(Component)]

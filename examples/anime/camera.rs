@@ -1,123 +1,147 @@
 #![feature(box_into_inner)]
 
 
-use default_render::interface::InterfaceDefaultMaterial;
+use default_render::SingleIDBaseDefaultMaterial;
 use pi_3d::PluginBundleDefault;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_frame_event::CurveFrameEvent, animation_listener::{AnimationListener, EAnimationEventResult}};
 use pi_atom::Atom;
+use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
+use pi_bevy_render_plugin::{PiRenderPlugin, PiRenderSystemSet};
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}, assets::local_load::PluginLocalLoad, setup::TSetup, object::InterfaceObject};
-use pi_render::{rhi::options::RenderOptions, renderer::vertex_buffer_desc::VertexBufferDesc};
-use pi_scene_context::{plugin::Plugin, object::ObjectID,
-    transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode, transform_node::{LocalPosition, LocalRotation, LocalEulerAngles}},
-    scene::{interface::InterfaceScene},
-    cameras::{interface::InterfaceCamera, camera::EFreeCameraMode},
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery}
-};
-use pi_ecs::{prelude::{ResMut, Setup}, storage::Local};
-use pi_ecs_macros::setup;
-use pi_scene_math::Vector3;
-use pi_mesh_builder::{cube::{InterfaceCube, PluginCubeBuilder, CubeBuilder}, ball::PluginBallBuilder};
+use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
+
+use pi_node_materials::{prelude::BlockEmissiveBase, PluginNodeMaterial};
+use pi_scene_context::prelude::*;
+use pi_scene_math::{Vector3, Vector4};
+use pi_mesh_builder::{cube::*, ball::*, quad::*};
 use unlit_material::PluginUnlitMaterial;
 
+use std::sync::Arc;
+use pi_async::rt::AsyncRuntime;
+use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
-
-#[derive(Debug)]
-pub struct PluginTest;
-impl Plugin for PluginTest {
-    fn init(
-        &mut self,
-        engine: &mut pi_scene_context::engine::Engine,
-        stages: &mut pi_scene_context::run_stage::RunStage,
-    ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-        PluginLocalLoad.init(engine, stages);
-        PluginBundleDefault.init(engine, stages);
-        PluginUnlitMaterial.init(engine, stages);
-
-        PluginCubeBuilder.init(engine, stages);
-
-        Ok(())
+pub struct PluginLocalLoad;
+impl Plugin for PluginLocalLoad {
+    fn build(&self, app: &mut App) {
+        
+        init_load_cb(Arc::new(|path: String| {
+            MULTI_MEDIA_RUNTIME
+                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                    log::debug!("Load {}", path);
+                    let r = std::fs::read(path.clone()).unwrap();
+                    on_load(&path, r);
+                })
+                .unwrap();
+        }));
     }
 }
 
-impl PluginTest {
-    fn setup(
-        engine: &pi_engine_shell::engine_shell::EnginShell,
-    ) {
+fn setup(
+    mut commands: Commands,
+    mut scenecmds: ActionSetScene,
+    mut cameracmds: ActionSetCamera,
+    mut transformcmds: ActionSetTransform,
+    mut transformanime: ActionSetTransformNodeAnime,
+    mut meshcmds: ActionSetMesh,
+    mut instancemeshcmds: ActionSetInstanceMesh,
+    mut abstructmeshcms: ActionSetAbstructMesh,
+    mut geometrycmd: ActionSetGeometry,
+    mut matuse: ActionSetMaterial,
+    mut animegroupcmd: ActionSetAnimationGroup,
+    mut fps: ResMut<SingleFrameTimeCommand>,
+    mut final_render: ResMut<WindowRenderer>,
+    defaultmat: Res<SingleIDBaseDefaultMaterial>,
+) {
+    let tes_size = 20;
+    fps.frame_ms = 100;
 
-        let tes_size = 2;
-        engine.frame_time(20);
+    final_render.cleardepth = 0.0;
 
-        // Test Code
-        let scene01 = engine.create_scene();
+    let scene = commands.spawn_empty().id();
+    animegroupcmd.scene_ctxs.init_scene(scene);
+    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-        let root = engine.create_transform_node(scene01);
+    let camera01 = commands.spawn_empty().id();
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 10., -40.));
+    cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
+    cameracmds.mode.push(OpsCameraMode::ops(camera01, false));
+    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 4.));
+    // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
+    let desc = RendererGraphicDesc {
+        pre: Some(Atom::from(WindowRenderer::CLEAR_KEY)),
+        curr: Atom::from("TestCamera"),
+        next: Some(Atom::from(WindowRenderer::KEY)),
+        passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
+    };
+    let id_renderer = commands.spawn_empty().id();
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-        let camera01 = engine.create_free_camera(scene01);
-        engine.free_camera_mode(camera01, EFreeCameraMode::Perspective);
-        engine.active_camera(camera01, true);
-        engine.layer_mask(camera01, LayerMask::default());
-        engine.transform_position(camera01, Vector3::new(0., 0., -10.));
-        engine.free_camera_orth_size(camera01, tes_size as f32);
-        engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque]) });
+    let source = commands.spawn_empty().id();
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
+    
+    let id_geo = commands.spawn_empty().id();
+    let mut attrs = CubeBuilder::attrs_meta();
+    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
-        engine.transform_parent(camera01, root);
+    let idmat = defaultmat.0;
+    matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
+    
+    let key_group = pi_atom::Atom::from("key_group");
+    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
 
-        let cube = engine.new_cube(scene01);
-        engine.use_default_material(cube);
-
-        let key_curve0 = pi_atom::Atom::from("key_curve0");
-        let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 0.)), LocalEulerAngles(Vector3::new(3.1415926 * 2., 0., 0.)), 30, 30, EEasingMode::None);
-        let asset_curve = if let Some(curve) = engine.check_anim_curve::<LocalEulerAngles>(&key_curve0) {
+    {
+        
+        let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
+        let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(1., 1., 1.)), LocalScaling(Vector3::new(0., 2. * (1.1 + (i as f32).sin()), 0.)), (60. * (1.1 + ((i * j) as f32).cos())) as u16, 30, EEasingMode::None);
+        
+        let asset_curve = if let Some(curve) = transformanime.scaling.curves.get(&key_curve0) {
             curve
         } else {
-            engine.creat_anim_curve::<LocalEulerAngles>(&key_curve0, curve)
+            match transformanime.scaling.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => {
+                    value
+                },
+                Err(_) => {
+                    break;
+                },
+            }
         };
 
-        let animation = engine.create_animation(asset_curve);
+        let animation = transformanime.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
+    }
 
-        let key_group = pi_atom::Atom::from("key_group");
-        engine.create_animation_group(root, &key_group)
-            .create_target_animation(root, root, &key_group, animation)
-            .start_animation_group(root, &key_group, 0.01, ELoopMode::Positive(None), 0., 1., 60, AnimationAmountCalc::default());
-            
-        // let source = engine.create_mesh(scene01);
-        // let mut attrs = CubeBuilder::attrs_meta();
-        // attrs.push(VertexBufferDesc::instance_world_matrix());
-        // engine.use_geometry(source, attrs);
-        // engine.use_indices(source, CubeBuilder::indices_meta());
-        // engine.use_default_material(source);
-        // engine.layer_mask(source, LayerMask::default());
-        // for i in 0..tes_size {
-        //     for j in 0..tes_size {
-        //         for k in 0..1 {
-        //             let cube = engine.create_instanced_mesh(scene01, source.clone());
-        //             let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32);
-        //             engine.transform_position(cube, pos.clone());
-        //         }
-        //     }
-        // }
+    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
+}
 
-        // // =========================================
-        // let cube = engine.new_cube(scene01);
-        // engine.use_default_material(cube).transform_position(cube, Vector3::new(0., 2., 0.));
+pub trait AddEvent {
+	// 添加事件， 该实现每帧清理一次
+	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
+}
 
-        // let key_curve0 = pi_atom::Atom::from("key_curve1");
-        // let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(-3., 2., 0.)), LocalPosition(Vector3::new(6., 0., 0.)), 30, 30, EEasingMode::ElasticInOut);
-        // let asset_curve = if let Some(curve) = engine.check_anim_curve::<LocalPosition>(&key_curve0) {
-        //     curve
-        // } else {
-        //     engine.creat_anim_curve::<LocalPosition>(&key_curve0, curve)
-        // };
-        // let animation = engine.create_animation(asset_curve);
-        // let key_group = pi_atom::Atom::from("key_group2");
-        // engine.create_animation_group(cube, &key_group)
-        //     .create_target_animation(cube, cube, &key_group, animation)
-        //     .start_animation_group(cube, &key_group, 1.0, ELoopMode::Positive(None), 0., 1., 200, AnimationAmountCalc::default());
-        
-            
-        // 创建帧事件
+impl AddEvent for App {
+	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
+		if !self.world.contains_resource::<Events<T>>() {
+			self.init_resource::<Events<T>>()
+				.add_system(Events::<T>::update_system);
+		}
+		self
+	}
+}
+
+pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
+
+pub struct PluginTest;
+impl Plugin for PluginTest {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(ActionListTestData::default());
+        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -125,15 +149,33 @@ impl PluginTest {
 pub fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
-    let mut shell = AppShell::new(
-        RenderOptions {
-            backends: wgpu::Backends::VULKAN,
-            power_preference: wgpu::PowerPreference::HighPerformance,
-            ..Default::default()
-        }
-    );
-    shell.add_plugin(PluginTest);
-    shell.ready();
-    shell.setup(&PluginTest::setup);
-    shell.run();
+    let mut app = App::default();
+
+	let mut window_plugin = WindowPlugin::default();
+    if let Some(primary_window) = &mut window_plugin.primary_window {
+        primary_window.resolution.set_physical_resolution(800, 600);
+    }
+
+    app.add_plugin(InputPlugin::default());
+    app.add_plugin(window_plugin);
+    app.add_plugin(AccessibilityPlugin);
+    app.add_plugin(bevy::winit::WinitPlugin::default());
+    // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(PiRenderPlugin::default());
+    app.add_plugin(PluginTest);
+    app.add_plugin(PluginFrameTime);
+    app.add_plugin(PluginWindowRender);
+    app.add_plugins(PluginBundleDefault);
+    app.add_plugin(PluginCubeBuilder);
+    app.add_plugin(PluginQuadBuilder);
+    app.add_plugin(PluginStateToFile);
+    app.add_plugin(PluginNodeMaterial);
+
+    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
+    
+    app.add_startup_system(setup);
+    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    
+    app.run()
+
 }

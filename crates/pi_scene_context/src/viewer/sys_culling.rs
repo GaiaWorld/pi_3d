@@ -3,7 +3,6 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    flags::SceneID,
     layer_mask::prelude::*,
     geometry::prelude::*,
     transforms::prelude::*,
@@ -32,11 +31,15 @@ use super::base::*;
             log::debug!("CameraModelListByViewer : 0");
             if vieweractive.0 {
                 // log::debug!("SysModelListUpdateByCamera: 0");
-                items.iter().for_each(|(obj, iscene, ilayer, _)| {
+                items.iter().for_each(|(id_obj, iscene, ilayer, _)| {
                     // log::debug!("SysModelListUpdateByCamera: 1");
                     if iscene == scene && layer.include(ilayer) {
                         log::debug!("SysModelListUpdateByCamera: 2");
-                        list_model.0.insert(obj.clone(), obj.clone());
+                        if list_model.0.contains_key(&id_obj) {
+                            // log::warn!("Has Include {:?}", id_obj);
+                        } else {
+                            list_model.0.insert(id_obj, id_obj);
+                        }
                     }
                 });
             }
@@ -66,7 +69,11 @@ use super::base::*;
                 log::debug!("CameraModelListByModel : 1");
                 if vieweractive.0 {
                     if iscene == scene && layer.include(ilayer) {
-                        list_model.0.insert(id_obj.clone(), id_obj);
+                        if list_model.0.contains_key(&id_obj) {
+                            // log::warn!("Has Include {:?}", id_obj);
+                        } else {
+                            list_model.0.insert(id_obj, id_obj);
+                        }
                     } else {
                         list_model.0.remove(&id_obj);
                     }
@@ -94,6 +101,7 @@ use super::base::*;
             // log::debug!("SysViewerCulling: {:?}", vieweractive);
             cullings.0.clear();
             if vieweractive.0 {
+                // log::warn!("ModelList: {:?}", liet_model.0.len());
                 liet_model.0.iter().for_each(|(objid, _)| {
                     // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
                     if let Ok((_, _, geo_enable)) = items.get(objid.clone()) {

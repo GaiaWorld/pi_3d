@@ -13,6 +13,7 @@ pub use super::instance::{
 pub use super::vertex_buffer_useinfo::*;
 pub use super::geometry::*;
 pub use super::command::*;
+pub use super::command_sys::*;
 pub use super::base::*;
 
 

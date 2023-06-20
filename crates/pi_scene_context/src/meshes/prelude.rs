@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{renderers::prelude::*, layer_mask::prelude::*};
+use crate::{renderers::prelude::*, layer_mask::prelude::*, geometry::command::*};
 
 pub use super::{
     model::*,
@@ -32,7 +32,6 @@ pub struct ActionSetMesh<'w> {
     pub stencil_read: ResMut<'w, ActionListStencilRead>,
     pub stencil_write: ResMut<'w, ActionListStencilWrite>,
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
-    pub layer_mask: ResMut<'w, ActionListLayerMask>,
     pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
 }
 
@@ -41,6 +40,9 @@ pub struct ActionSetInstanceMesh<'w> {
     pub create: ResMut<'w, ActionListInstanceMeshCreate>,
     pub color: ResMut<'w, ActionListInstanceColor>,
     pub tilloff: ResMut<'w, ActionListInstanceTillOff>,
+    pub ins_world_matrixs: ResMut<'w, ActionListInstanceWorldMatrixs>,
+    pub ins_colors: ResMut<'w, ActionListInstanceColors>,
+    pub ins_tilloffs: ResMut<'w, ActionListInstanceTilloffs>,
 }
 
 #[derive(SystemParam)]

@@ -86,7 +86,7 @@ impl Plugin for PluginGeometry {
 
         app.add_systems(
             (
-                sys_geometry_create.in_set(ERunStageChap::Initial),
+                sys_act_geometry_create.in_set(ERunStageChap::Initial),
                 sys_vertex_buffer_loaded.in_set(ERunStageChap::Command),
             )
         );

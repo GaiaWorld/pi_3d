@@ -13,7 +13,7 @@ use super::{abstract_mesh::AbstructMesh};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum EScalingMode {
-    Hierarchy,
+    Hierarchy = 0,
     Local,
     Shape,
 }
