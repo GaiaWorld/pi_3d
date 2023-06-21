@@ -1,8 +1,7 @@
-use std::vec::Drain;
 
-use bevy::prelude::{SystemSet, Plugin, IntoSystemSetConfig, apply_system_buffers, IntoSystemConfig, IntoSystemConfigs};
+
+use bevy::prelude::{SystemSet, Plugin, IntoSystemSetConfig, apply_system_buffers, IntoSystemConfig};
 use pi_bevy_render_plugin::PiRenderSystemSet;
-use pi_hash::XHashMap;
 
 // pub struct RunStage {
 //     list: Vec<StageBuilder>,

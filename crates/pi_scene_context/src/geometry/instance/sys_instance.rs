@@ -5,7 +5,7 @@ use crate::{
     geometry::{
         vertex_buffer_useinfo::*, 
         base::*, 
-    },
+    }, prelude::AbstructMesh,
 };
 
 use super::*;
@@ -31,6 +31,7 @@ use super::*;
         T: TInstanceBuffer + Component,
         F: TInstanceFlag + Component
     >(
+        actives: Query<&AbstructMesh>,
         instances: Query<&D>,
         mut sources: Query<
             (
@@ -57,8 +58,10 @@ use super::*;
                 log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.len());
                 let mut list = vec![];
                 inslist.iter().for_each(|insid| {
-                    if let Ok(instance) = instances.get(insid.clone()) {
-                        list.push(instance);
+                    if let (Ok(instance), Ok(abstructmesh)) = (instances.get(insid.clone()), actives.get(insid.clone())) {
+                        if abstructmesh.0 {
+                            list.push(instance);
+                        }
                     }
                 });
     

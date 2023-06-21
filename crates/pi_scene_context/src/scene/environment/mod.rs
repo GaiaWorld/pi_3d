@@ -10,7 +10,6 @@ pub mod sys;
 pub struct BindSceneEffect(pub Arc<ShaderBindSceneAboutEffect>);
 impl BindSceneEffect {
     pub fn new(
-        device: &RenderDevice,
         dynbuffer: &mut BindBufferAllocator,
     ) -> Option<Self> {
         if let Some(data) = ShaderBindSceneAboutEffect::new(dynbuffer) {

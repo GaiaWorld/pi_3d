@@ -6,6 +6,4 @@
     baseColor.rgb *= mainTextureColor.rgb * mainStrength() * mainColor();
     alpha *= mainTextureColor.a;
 
-    baseColor.rgb += emissive();
-
     gl_FragColor = vec4(baseColor.rgb, alpha);

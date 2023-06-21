@@ -7,7 +7,6 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    flags::*,
     transforms::prelude::*, prelude::RenderAlignment,
 };
 
@@ -39,7 +38,7 @@ use super::{
                             commands.entity(id_pass).insert(PassBindGroups::new(None));
                         }
                     } else {
-                        log::warn!("BindGroups Ok!!");
+                        // log::warn!("BindGroups Ok!!");
                         commands.entity(id_pass).insert(PassBindGroups::new(Some(
                             BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
                         )));

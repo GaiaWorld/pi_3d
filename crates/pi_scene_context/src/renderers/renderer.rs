@@ -1,7 +1,6 @@
 use std::{fmt::Debug};
 
 use pi_atom::Atom;
-use pi_bevy_render_plugin::NodeId;
 use pi_engine_shell::prelude::*;
 use pi_hash::{DefaultHasher, XHashMap};
 use smallvec::SmallVec;

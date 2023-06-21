@@ -1,10 +1,7 @@
 
-use std::mem::replace;
 
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Number;
-
-use pi_scene_context::prelude::*;
 
 
 pub enum DefaultMaterialCommand {

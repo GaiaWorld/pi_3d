@@ -1,7 +1,6 @@
 
 use std::ops::Mul;
 
-use approx::RelativeEq;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector4, Matrix, Number, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}, Rotation3, Vector3};
 
@@ -131,6 +130,22 @@ pub fn sys_act_mesh_modify(
         }
     });
 }
+
+pub fn sys_act_abstruct_mesh_enable(
+    mut cmds: ResMut<ActionListAbstructMeshEnable>,
+    mut abstructmeshes: Query<&mut AbstructMesh>,
+) {
+    cmds.drain().drain(..).for_each(|OpsAbstructMeshEnable(entity, val, count)| {
+        if let Ok(mut abstructmesh) = abstructmeshes.get_mut(entity) {
+            *abstructmesh = val;
+        } else {
+            if count < 2 {
+                cmds.push(OpsAbstructMeshEnable(entity, val, count + 1));
+            }
+        }
+    });
+}
+
 
 pub fn sys_act_instance_color(
     mut cmds: ResMut<ActionListInstanceColor>,

@@ -49,4 +49,5 @@ pub struct ActionSetInstanceMesh<'w> {
 pub struct ActionSetAbstructMesh<'w> {
     pub scaling_mode: ResMut<'w, ActionListAbstructMeshScalingMode>,
     pub velocity: ResMut<'w, ActionListAbstructMeshVelocity>,
+    pub enable: ResMut<'w, ActionListAbstructMeshEnable>,
 }

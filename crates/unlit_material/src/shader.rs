@@ -40,7 +40,6 @@ impl UnlitShader {
         );
 
         nodemat.apply::<BlockUVOffsetSpeed>();
-        nodemat.apply::<BlockEmissiveBase>();
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
 

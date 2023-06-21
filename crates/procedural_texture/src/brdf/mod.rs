@@ -1,4 +1,4 @@
-use pi_atom::Atom;
+
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 
@@ -8,8 +8,6 @@ pub mod shader;
 pub mod interface;
 
 fn setup(
-    mut commands: Commands,
-    mut matcmds: ResMut<ActionListMaterialCreate>,
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut wait_list: ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 ) {

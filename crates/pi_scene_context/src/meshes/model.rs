@@ -2,14 +2,7 @@ use std::{sync::Arc};
 
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3};
-use pi_share::Share;
 
-use crate::{
-    transforms::{transform_node::{WorldMatrix, WorldMatrixInv}},
-    geometry::instance::{InstanceSourceID, instance_world_matrix::InstanceWorldMatrixDirty, InstanceSourceRefs},
-};
-
-use super::{abstract_mesh::AbstructMesh};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum EScalingMode {

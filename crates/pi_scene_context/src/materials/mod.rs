@@ -1,8 +1,7 @@
 
 use pi_assets::asset::GarbageEmpty;
-use pi_engine_shell::{prelude::*, assets::sync_load::{sys_sync_load_create, sys_sync_load_check_await, AssetSyncWait}};
+use pi_engine_shell::{prelude::*, assets::sync_load::*};
 
-use crate::pass::*;
 
 use self::{
     command::*,

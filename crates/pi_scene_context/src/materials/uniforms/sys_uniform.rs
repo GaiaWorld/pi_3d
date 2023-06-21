@@ -4,12 +4,6 @@ use std::{sync::Arc};
 
 use pi_engine_shell::prelude::*;
 
-use crate::{
-    materials::{
-        shader_effect::{AssetKeyShaderEffect},
-    },
-    pass::*
-};
 
 
 use crate::materials::shader_effect::AssetResShaderEffectMeta;

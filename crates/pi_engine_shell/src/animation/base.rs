@@ -1,5 +1,10 @@
 
-use pi_animation::{type_animation_context::{TypeAnimationContext, AnimationContextAmount}, animation_group_manager::AnimationGroupManagerDefault, animation::AnimationInfo, animation_group::AnimationGroupID, animation_listener::EAnimationEvent, curve_frame_event::CurveFrameEvent};
+use pi_animation::{
+    type_animation_context::{TypeAnimationContext, AnimationContextAmount},
+    animation_group_manager::AnimationGroupManagerDefault,
+    animation_group::AnimationGroupID,
+    curve_frame_event::CurveFrameEvent
+};
 use pi_assets::{asset::{Handle}};
 use pi_atom::Atom;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FrameIndex};
@@ -7,15 +12,8 @@ use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
 
 use bevy::{
-    app::{ prelude::*, PluginGroupBuilder }, core::prelude::*, ecs::prelude::*, hierarchy::prelude::*, input::{prelude::*, InputPlugin},
-    log::prelude::*, math::prelude::*, reflect::prelude::*, time::prelude::*,
-    utils::prelude::*, window::{prelude::*},
-    ecs::system::{CommandQueue, EntityCommands, SystemState, SystemParam}, prelude::{Deref, DerefMut},
-    a11y::*,
-    // winit::*,
+    ecs::prelude::*, prelude::{Deref, DerefMut},
 };
-
-use crate::prelude::ERunStageChap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneID(pub Entity);
@@ -122,7 +120,7 @@ impl SceneAnimationContextMap {
         &mut self,
         id_scene: Entity,
     ) -> Option<DefaultKey> {
-        let id_group = if let Some(mut ctx) = self.0.get_mut(&id_scene) {
+        let id_group = if let Some(ctx) = self.0.get_mut(&id_scene) {
             ctx.0.create_animation_group()
         } else {
             return None;

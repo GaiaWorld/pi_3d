@@ -19,7 +19,7 @@ impl ActionUnlitMaterial {
         let entity = commands.spawn_empty().id();
         queue.apply(&mut app.world);
 
-        ActionMaterial::init(app, entity, KeyShaderMeta::from(UnlitShader::KEY), EPassTag::Opaque);
+        ActionMaterial::init(app, entity, KeyShaderMeta::from(UnlitShader::KEY), pass);
 
         entity
     }

@@ -1,12 +1,11 @@
 
-use bevy::prelude::{Deref, Component, Entity};
+use bevy::prelude::{Deref, Component};
 use pi_assets::asset::Handle;
 
 use pi_render::{
     renderer::{
         texture::*,
     },
-    rhi::{asset::TextureRes},
 };
 
 #[derive(Debug, Clone, Deref, Hash, PartialEq, Eq, Component)]

@@ -1,4 +1,4 @@
-use std::mem::replace;
+
 
 use pi_engine_shell::prelude::*;
 
@@ -16,7 +16,7 @@ impl Default for ModelBlend {
     fn default() -> Self {
         Self {
             enable: false,
-            src_color: BlendFactor::One,
+            src_color: BlendFactor::SrcAlpha,
             dst_color: BlendFactor::OneMinusSrcAlpha,
             src_alpha: BlendFactor::One,
             dst_alpha: BlendFactor::OneMinusSrcAlpha,

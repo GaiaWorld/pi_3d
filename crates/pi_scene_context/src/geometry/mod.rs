@@ -9,10 +9,8 @@ use pi_engine_shell::prelude::*;
 use crate::{object::ObjectID, plugin::Plugin};
 
 use self::{
-    vertex_buffer_useinfo::*,
     sys_vertex_buffer_use::*,
     load::sys_vertex_buffer_loaded,
-    instance::*,
     command::*,
     command_sys::*,
     base::*,

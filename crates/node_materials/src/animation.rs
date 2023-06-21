@@ -6,7 +6,8 @@ use pi_scene_context::{prelude::*};
 use crate::{
     main_tex::*,
     opacity::*,
-    mask_texture::*, prelude::BlockEmissiveBase, cutoff::BlockCutoff
+    mask_texture::*,
+    cutoff::BlockCutoff
 };
 
 #[derive(Debug, Component)]

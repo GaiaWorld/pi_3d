@@ -1,5 +1,4 @@
 use pi_engine_shell::prelude::*;
-use pi_hash::XHashMap;
 use pi_scene_math::*;
 
 use crate::flags::UniqueName;
@@ -29,10 +28,10 @@ pub fn sys_act_transform_parent(
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val)| {
         if tree.get_down(val).is_some() && tree.get_up(entity).is_some() {
-            log::warn!("Tree {:?}, Parent: {:?}", entity, val);
+            // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
             ActionTransformNode::tree_modify(&mut tree, entity, val);
         } else {
-            log::warn!("pUSH {:?}, Parent: {:?}", entity, val);
+            // log::warn!("pUSH {:?}, Parent: {:?}", entity, val);
             cmds.push(OpsTransformNodeParent(entity, val));
         }
     });

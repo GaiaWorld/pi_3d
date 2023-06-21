@@ -7,12 +7,9 @@ use pi_assets::{
 };
 use pi_async::prelude::AsyncRuntime;
 use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
-use pi_atom::Atom;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_render::rhi::{
     asset::{ImageTextureDesc, TextureRes},
-    device::RenderDevice,
-    RenderQueue,
 };
 use pi_share::{Share, ThreadSync};
 use crate::prelude::*;
@@ -51,7 +48,7 @@ fn image_change<
     image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
     texture_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
     textureres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
-    mut image_await: ResMut<ImageAwait<K>>,
+    image_await: ResMut<ImageAwait<K>>,
     queue: Res<PiRenderQueue>,
     device: Res<PiRenderDevice>,
 ) {
@@ -59,14 +56,14 @@ fn image_change<
     query.iter().for_each(|(obj, vkey)| {
         match vkey.deref() {
             EKeyTexture::Tex(key) => {
-                log::warn!("image_loaded: {:?}", key.as_str());
+                // log::warn!("image_loaded: {:?}", key.as_str());
                 if let Some(texture_view) = textureres_assets_mgr.get(&key.asset_u64()) {
                     image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Tex(texture_view)) );
                 } else {
                     let result = AssetMgr::load(&textureres_assets_mgr, &key.asset_u64());
                     match result {
                         LoadResult::Ok(r) => {
-                            log::warn!("image_loaded: {:?}", key.as_str());
+                            // log::warn!("image_loaded: {:?}", key.as_str());
                             image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Tex(r)) );
                         }
                         ,
@@ -184,12 +181,12 @@ pub fn check_await_texture<
                     },
                     EKeyTexture::Image(key) => {
                         if let Some(texture_view) = texture_assets_mgr.get(&key.asset_u64()) {
-                            log::warn!("image_loaded: {:?}", key.url().as_str());
+                            // log::warn!("image_loaded: {:?}", key.url().as_str());
                             texture_view
                         } else {
                             let texture_view = ImageTextureView::new(&key, texture);
                             if let Ok(texture_view) = texture_assets_mgr.insert(key.asset_u64(), texture_view) {
-                                log::warn!("image_loaded: {:?}", key.url().as_str());
+                                // log::warn!("image_loaded: {:?}", key.url().as_str());
                                 texture_view
                             } else {
                                 log::error!("image_texture_view_load fail 2, while insert: {:?}", key.url().as_str());
@@ -219,11 +216,11 @@ pub fn check_await_texture<
                 if **img != key {
                     continue;
                 }
-                match key {
-                    EKeyTexture::Tex(key) => log::warn!("image_loaded: {:?}", key.as_str()),
-                    EKeyTexture::Image(key) => log::warn!("image_loaded: {:?}", key.url().as_str()),
-                    EKeyTexture::SRT(key) => log::warn!("image_loaded: {:?}", key.to_string()),
-                }
+                // match key {
+                //     EKeyTexture::Tex(key) => log::warn!("image_loaded: {:?}", key.as_str()),
+                //     EKeyTexture::Image(key) => log::warn!("image_loaded: {:?}", key.url().as_str()),
+                //     EKeyTexture::SRT(key) => log::warn!("image_loaded: {:?}", key.to_string()),
+                // }
                 image_cmd.entity(id).insert(D::from(texture));
             }
             // 节点已经销毁，或image已经被删除，不需要设置texture

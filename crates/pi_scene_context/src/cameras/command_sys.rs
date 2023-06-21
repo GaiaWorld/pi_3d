@@ -62,13 +62,13 @@ pub fn sys_camera_active(
     mut scenes: Query<&mut SceneMainCameraID>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraActive(entity, mode)| {
-        log::warn!("CameraActive ");
+        // log::warn!("CameraActive ");
         if let Ok((idscene, mut camera, mut viewer)) = cameras.get_mut(entity) {
-            log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
+            // log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
             if camera.0 != mode {
                 *camera = Camera(mode);
                 *viewer = ViewerActive(mode);
-                log::warn!("CameraActive Ok");
+                // log::warn!("CameraActive Ok");
             }
             if mode {
                 if let Ok(mut maincamera) = scenes.get_mut(idscene.0) {

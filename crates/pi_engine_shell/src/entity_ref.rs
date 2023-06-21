@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, collections::hash_set::Iter};
 
-use bevy::prelude::{Entity, Component, Commands, Query, Changed, ResMut, Events, Added};
-use pi_hash::{XHashMap, XHashSet};
+use bevy::prelude::{Entity, Component};
+use pi_hash::{XHashSet};
 
 pub trait TEntityRef {
     fn id(&self) -> Entity;

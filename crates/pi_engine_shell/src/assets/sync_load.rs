@@ -1,13 +1,12 @@
 use std::{marker::PhantomData, ops::Deref, fmt::Debug, hash::Hash};
 
-use pi_assets::{asset::{Handle, Asset, Garbageer, GarbageEmpty}, mgr::{AssetMgr, LoadResult}};
-use pi_atom::Atom;
+use pi_assets::{asset::{Handle, Asset, GarbageEmpty}, mgr::{AssetMgr, LoadResult}};
+
 use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::XHashMap;
-use pi_render::rhi::{RenderQueue, device::RenderDevice};
-use pi_share::{ThreadSync, Share};
+use pi_share::{ThreadSync};
 
-use crate::{run_stage::{TSystemStageInfo, ERunStageChap}, plugin::{ErrorPlugin, Plugin}, object::{GameObject, ObjectID}, engine_shell::EnginShell};
+use crate::{run_stage::{TSystemStageInfo, ERunStageChap}, plugin::{Plugin}, object::{ObjectID}};
 
 use crate::prelude::*;
 

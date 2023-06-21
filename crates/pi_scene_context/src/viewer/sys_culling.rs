@@ -5,7 +5,6 @@ use pi_engine_shell::prelude::*;
 use crate::{
     layer_mask::prelude::*,
     geometry::prelude::*,
-    transforms::prelude::*,
     meshes::prelude::*
 };
 
@@ -92,7 +91,7 @@ use super::base::*;
             (With<T>, With<T2>)
         >,
         items: Query<
-            (ObjectID, &RenderWorldMatrix, &RenderGeometryEable)
+            (ObjectID, &AbstructMesh, &RenderWorldMatrix, &RenderGeometryEable)
         >,
     ) {
         let time1 = pi_time::Instant::now();
@@ -104,10 +103,10 @@ use super::base::*;
                 // log::warn!("ModelList: {:?}", liet_model.0.len());
                 liet_model.0.iter().for_each(|(objid, _)| {
                     // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
-                    if let Ok((_, _, geo_enable)) = items.get(objid.clone()) {
+                    if let Ok((_, mesh, _, geo_enable)) = items.get(objid.clone()) {
                         // log::warn!("Moldellist Geo: {:?}, ", geo_enable.0);
                         // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
-                        if geo_enable.0 {
+                        if mesh.0 && geo_enable.0 {
                             cullings.0.push(objid.clone());
                         }
                     }

@@ -6,7 +6,7 @@ use pi_scene_context::prelude::*;
 
 use crate::shader::DefaultShader;
 
-use super::{command::{SingeDefaultMaterialCommandList, DefaultMaterialCommand}, SingleIDBaseDefaultMaterial};
+use super::{SingleIDBaseDefaultMaterial};
 
 pub struct ActionDefaultMaterial;
 impl ActionDefaultMaterial {

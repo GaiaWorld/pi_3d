@@ -11,7 +11,7 @@ pub mod interface;
 pub struct SingleIDBaseDefaultMaterial(pub Entity);
 
 fn setup(
-    mut mat: ResMut<SingleIDBaseDefaultMaterial>,
+    mat: Res<SingleIDBaseDefaultMaterial>,
     mut matcmds: ResMut<ActionListMaterialCreate>,
 ) {
     // ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());

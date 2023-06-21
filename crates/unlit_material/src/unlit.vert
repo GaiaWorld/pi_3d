@@ -6,6 +6,7 @@
     // vec4 worldPos =  position;
 
     gl_Position = PI_MATRIX_VP * worldPos;
+    gl_Position.z = gl_Position.z * 0.5 + 0.5;
     // gl_Position = position;
 
     v_pos = worldPos.xyz;

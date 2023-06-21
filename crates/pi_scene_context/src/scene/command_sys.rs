@@ -2,7 +2,6 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
-    animation::prelude::*,
     prelude::SceneMainCameraID,
 };
 
@@ -17,7 +16,7 @@ pub fn sys_act_scene_create(
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, cfg)| {
         ActionScene::init(&mut commands, entity, cfg);
         ActionTransformNode::init_for_tree(&mut commands.entity(entity));
-        if let Some(bindeffect) = BindSceneEffect::new(&device, &mut dynbuffer) {
+        if let Some(bindeffect) = BindSceneEffect::new( &mut dynbuffer) {
             commands.entity(entity).insert(bindeffect);
         }
     });

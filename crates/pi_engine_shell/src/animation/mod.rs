@@ -62,7 +62,7 @@ impl<D: FrameDataValue + Component + Debug> Plugin for PluginTypeAnime<D> {
     fn build(&self, app: &mut App) {
         
         let ty = app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().ty_alloc.alloc().expect("");
-        log::warn!("AnimeType {:?}", ty);
+        // log::warn!("AnimeType {:?}", ty);
         
         // 创建 动画曲线 资产表
         app.world.insert_resource(ShareAssetMgr::<TypeFrameCurve<D>>::new(GarbageEmpty(), self.0, self.1, self.2));

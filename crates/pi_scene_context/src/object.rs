@@ -21,17 +21,16 @@ pub type ActionListDispose = ActionList<OpsDispose>;
 pub(crate) fn sys_dispose(
     mut cmds: ResMut<ActionListDispose>,
     mut commands: Commands,
-    mut instancemeshes: Query<&InstanceSourceID>,
+    instancemeshes: Query<&InstanceSourceID>,
     mut instancesources: Query<&mut InstanceSourceRefs>,
-    mut meshes: Query<(&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08, &GeometryID, &SkeletonID)>,
+    meshes: Query<(&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08, &GeometryID, &SkeletonID)>,
     mut geometries: Query<&mut GeometryRefs>,
     mut skeletons: Query<(&mut SkeletonRefs, &Skeleton)>,
-    mut passes: Query<&MaterialID>,
+    passes: Query<&MaterialID>,
     mut materials: Query<&mut MaterialRefs>,
     mut viewers: Query<(&ViewerRenderersInfo)>,
-    mut scenes: Query<&SceneID>,
-    mut groupmaps: Query<&AnimationGroups>,
-    mut anime_scene_ctxs: ResMut<SceneAnimationContextMap>,
+    scenes: Query<&SceneID>,
+    groupmaps: Query<&AnimationGroups>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
 ) {
     cmds.drain().drain(..).for_each(|OpsDispose(entity)| {
@@ -152,10 +151,36 @@ fn sys_pass_dispose(
     commands.entity(entity).despawn();
 }
 
+pub struct OpsSceneDispose(Entity);
+impl OpsSceneDispose {
+    pub fn ops(entity: Entity) -> OpsSceneDispose {
+        OpsSceneDispose(entity)
+    }
+}
+pub type ActionListSceneDispose = ActionList<OpsSceneDispose>;
+pub fn sys_act_scene_dispose(
+    mut cmds: ResMut<ActionListSceneDispose>,
+    mut cmds2: ResMut<ActionListDispose>,
+    items: Query<(ObjectID, &SceneID)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsSceneDispose(idscene)| {
+        items.iter().for_each(|(entity, sceneid)| {
+            if sceneid.0 == idscene {
+                cmds2.push(OpsDispose::ops(entity));
+            }
+        });
+        
+        cmds2.push(OpsDispose::ops(idscene));
+    });
+}
+
+
 pub struct PluginDispose;
 impl Plugin for PluginDispose {
     fn build(&self, app: &mut App) {
+        app.insert_resource(ActionListSceneDispose::default());
         app.insert_resource(ActionListDispose::default());
-        app.add_system(sys_dispose.in_set(ERunStageChap::Draw));
+        app.add_system(sys_act_scene_dispose.in_set(ERunStageChap::Draw));
+        app.add_system(sys_dispose.after(sys_act_scene_dispose).in_set(ERunStageChap::Draw));
     }
 }

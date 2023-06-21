@@ -1,15 +1,9 @@
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
-use pi_render::{
-    render_3d::shader::*,
-    renderer::shader::KeyShaderMeta
-};
 use crate::{
     materials::prelude::*,
-    pass::EPassTag
 };
 
-use self::system::*;
 
 pub mod base;
 pub mod system;

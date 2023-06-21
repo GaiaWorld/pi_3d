@@ -4,7 +4,6 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     pass::*,
-    animation::prelude::*
 };
 
 use super::{
@@ -13,7 +12,6 @@ use super::{
     uniforms::{
         texture::{UniformTextureWithSamplerParams},
         uniform::*,
-        sys_uniform::*,
     },
     command::*,
 };

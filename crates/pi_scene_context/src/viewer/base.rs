@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::{ sync::Arc};
 
 use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
@@ -6,7 +6,6 @@ use pi_scene_math::{Vector3, Matrix, coordiante_system::CoordinateSytem3, Number
 
 use crate::{
     transforms::prelude::*,
-    meshes::prelude::*
 };
 
 #[derive(Debug, Clone, Copy)]

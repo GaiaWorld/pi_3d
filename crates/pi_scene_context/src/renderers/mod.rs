@@ -2,9 +2,7 @@
 use std::mem::size_of;
 
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr};
-use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
-use pi_hash::XHashMap;
 
 
 use crate::pass::*;
@@ -13,8 +11,6 @@ use self::{
     // render_item_info::{RendererItemsModifyByMaterialChange, RendererItemsReset, RendererItemsModifyByModelChange},
     // renderer_binds_sys::{SysSceneBindUpdate,},
     renderer::*,
-    graphic::RendererGraphicDesc,
-    render_object::RendererID,
     sys_renderer_pre::*,
     sys_renderer::*,
     pass::*,

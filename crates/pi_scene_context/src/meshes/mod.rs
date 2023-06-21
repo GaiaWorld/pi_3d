@@ -2,16 +2,13 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    object::ObjectID,
     geometry::prelude::*,
-    renderers::prelude::*,
 };
 
 use self::{
     command::*, 
     command_sys::*, 
     model::*,
-    instance::*,
 };
 
 mod model;
@@ -75,6 +72,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceColors::default());
         app.insert_resource(ActionListInstanceTilloffs::default());
         app.insert_resource(ActionListInstanceWorldMatrixs::default());
+        app.insert_resource(ActionListAbstructMeshEnable::default());
 
         app.add_system(
             sys_act_mesh_create.in_set(ERunStageChap::Initial)
@@ -85,6 +83,7 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(
             (
                 sys_act_mesh_modify,
+                sys_act_abstruct_mesh_enable,
                 sys_act_abstruct_mesh_render_alignment,
                 sys_act_abstruct_mesh_scaling_mode,
                 sys_act_abstruct_mesh_velocity,

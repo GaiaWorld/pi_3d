@@ -1,4 +1,4 @@
-use crate::{base::TNodeMaterialBlock, common::BlockTextureChannel};
+use crate::{base::TNodeMaterialBlock};
 use pi_engine_shell::prelude::*;
 
 pub struct BlockMixTexture;

@@ -14,7 +14,6 @@ use pi_node_materials::{prelude::BlockEmissiveBase, PluginNodeMaterial};
 use pi_scene_context::prelude::*;
 use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::*};
-use unlit_material::PluginUnlitMaterial;
 
 use std::sync::Arc;
 use pi_async::rt::AsyncRuntime;

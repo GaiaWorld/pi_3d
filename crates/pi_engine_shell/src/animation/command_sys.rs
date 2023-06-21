@@ -1,18 +1,13 @@
 
 
 use bevy::{
-    app::{ prelude::*, PluginGroupBuilder }, core::prelude::*, ecs::prelude::*, hierarchy::prelude::*, input::{prelude::*, InputPlugin},
-    log::prelude::*, math::prelude::*, reflect::prelude::*, time::prelude::*,
-    utils::prelude::*, window::{prelude::*},
-    ecs::system::{CommandQueue, EntityCommands, SystemState, SystemParam}, prelude::{Deref, DerefMut},
-    a11y::*,
-    // winit::*,
+    app::{ prelude::* }, ecs::prelude::*,
+    ecs::system::{EntityCommands}, 
 };
 use pi_animation::animation::AnimationInfo;
 use pi_atom::Atom;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_curves::curve::{frame::FrameDataValue, frame_curve::FrameCurve};
-use pi_slotmap::DefaultKey;
 use core::fmt::Debug;
 
 
@@ -102,48 +97,6 @@ impl ActionAnime {
     ) {
         commands.insert(AnimationGroups::default());
     }
-    pub fn create_animation_group(
-        app: &mut App,
-        id_scene: Entity,
-        id_obj: Entity,
-        key_group: &Atom,
-        id_group: DefaultKey,
-    ) {
-        if let Some(id_group) = app.world.get_resource_mut::<SceneAnimationContextMap>().unwrap().create_group(id_scene) {
-            app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().record_group(id_obj, key_group, id_group);
-            let mut cmds = app.world.get_resource_mut::<ActionListAnimeGroupCreate>().unwrap();
-            cmds.push(OpsAnimationGroupCreation(id_obj, key_group.clone(), id_group));
-        }
-
-    }
-    pub fn pause_animation_group(
-        app: &mut App,
-        id_obj: Entity,
-        key_group: &Atom,
-    ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListAnimeGroupPause>().unwrap();
-        cmds.push(OpsAnimationGroupPause(id_obj, key_group.clone()));
-    }
-    pub fn start_animation_group_percent(
-        app: &mut App,
-        id_obj: Entity,
-        key_group: Atom,
-        param: AnimationGroupParam,
-    ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListAnimeGroupStart>().unwrap();
-        cmds.push(OpsAnimationGroupStart(id_obj, key_group.clone(), param));
-    }
-    pub fn add_target_animation(
-        app: &mut App,
-        group_where: Entity,
-        id_target: Entity,
-        key_group: Atom,
-        animation: AnimationInfo
-    ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListAddTargetAnime>().unwrap();
-        cmds.push(OpsAddTargetAnimation(group_where, id_target, key_group, animation));
-    }
-
     pub fn create_animation<D: FrameDataValue + Component + Debug>(
         app: &mut App,
         curve: AssetTypeFrameCurve<D>,

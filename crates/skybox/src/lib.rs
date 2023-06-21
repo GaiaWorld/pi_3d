@@ -45,8 +45,6 @@ impl InterfaceSkybox {
 // }
 
 fn setup(
-    mut commands: Commands,
-    mut matcmds: ResMut<ActionListMaterialCreate>,
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut wait_list: ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 ) {
