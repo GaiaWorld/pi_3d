@@ -25,9 +25,9 @@ impl Default for RendererGraphicParam {
 
 #[derive(Debug, Clone)]
 pub struct RendererGraphicDesc {
-    pub pre: Option<Atom>,
-    pub curr: Atom,
-    pub next: Option<Atom>,
+    pub pre: Option<Entity>,
+    pub curr: String,
+    pub next: Option<Entity>,
     pub passorders: PassTagOrders,
 }
 
@@ -173,51 +173,53 @@ impl Node for RenderNode {
                         renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                     }
     
-                    let mut color_attachments = vec![];
-                    color_attachments.push(
-                        Some(
-                            wgpu::RenderPassColorAttachment {
-                                resolve_target: None,
-                                ops: wgpu::Operations {
-                                    load: wgpu::LoadOp::Load,
-                                    store: true,
-                                },
-                                view: view,
-                            }
-                        )
-                    );
-        
-                    let mut renderpass = commands.begin_render_pass(
-                        &wgpu::RenderPassDescriptor {
-                            label: Some("RenderNode"),
-                            color_attachments: color_attachments.as_slice(),
-                            depth_stencil_attachment: Some(
-                                wgpu::RenderPassDepthStencilAttachment {
-                                    view: final_render_target.depth_view().unwrap(),
-                                    depth_ops: Some(
-                                        wgpu::Operations {
-                                            load: wgpu::LoadOp::Load,
-                                            store: true,
-                                        }
-                                    ),
-                                    stencil_ops: Some(
-                                        wgpu::Operations {
-                                            load: wgpu::LoadOp::Load,
-                                            store: true,
-                                        }
-                                    ),
+                    if renderer.draws.list.len() > 0 {
+                        let mut color_attachments = vec![];
+                        color_attachments.push(
+                            Some(
+                                wgpu::RenderPassColorAttachment {
+                                    resolve_target: None,
+                                    ops: wgpu::Operations {
+                                        load: wgpu::LoadOp::Load,
+                                        store: true,
+                                    },
+                                    view: view,
                                 }
-                            ),
-                        }
-                    );
+                            )
+                        );
+            
+                        let mut renderpass = commands.begin_render_pass(
+                            &wgpu::RenderPassDescriptor {
+                                label: Some("RenderNode"),
+                                color_attachments: color_attachments.as_slice(),
+                                depth_stencil_attachment: Some(
+                                    wgpu::RenderPassDepthStencilAttachment {
+                                        view: final_render_target.depth_view().unwrap(),
+                                        depth_ops: Some(
+                                            wgpu::Operations {
+                                                load: wgpu::LoadOp::Load,
+                                                store: true,
+                                            }
+                                        ),
+                                        stencil_ops: Some(
+                                            wgpu::Operations {
+                                                load: wgpu::LoadOp::Load,
+                                                store: true,
+                                            }
+                                        ),
+                                    }
+                                ),
+                            }
+                        );
+            
+                        renderpass.set_viewport(x, y, w, h, 0., max_depth);
+                        renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
+                        // log::warn!("Draws: {:?}", renderer.draws.list.len());
+                        DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
-                    renderpass.set_viewport(x, y, w, h, 0., max_depth);
-                    renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                    log::warn!("Draws: {:?}", renderer.draws.list.len());
-                    DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
-    
-                    let time1 = pi_time::Instant::now();
-                    log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                        let time1 = pi_time::Instant::now();
+                        log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                    }
             
                     Box::pin(
                         async move {
@@ -279,7 +281,10 @@ impl Node for RenderNode {
                 h = vh as f32 * h;
                 // log::warn!("Render Size: {:?}", (x, y, w, h));
     
-                let (depth_stencil_attachment, clear_depth) = if let Some(depth) = &srt.target().depth {
+                let (
+                    depth_stencil_attachment,
+                    clear_depth
+                ) = if let Some(depth) = &srt.target().depth {
                     let depth_stencil_attachment = Some(
                         wgpu::RenderPassDepthStencilAttachment {
                             view: depth.0.as_ref(),
@@ -332,35 +337,37 @@ impl Node for RenderNode {
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                 }
                 
-                let mut color_attachments = vec![];
-                color_attachments.push(
-                    Some(
-                        wgpu::RenderPassColorAttachment {
-                            resolve_target: None,
-                            ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Load,
-                                store: true,
-                            },
-                            view: srt.target().colors[0].0.as_ref(),
+                if renderer.draws.list.len() > 0 {
+                    let mut color_attachments = vec![];
+                    color_attachments.push(
+                        Some(
+                            wgpu::RenderPassColorAttachment {
+                                resolve_target: None,
+                                ops: wgpu::Operations {
+                                    load: wgpu::LoadOp::Load,
+                                    store: true,
+                                },
+                                view: srt.target().colors[0].0.as_ref(),
+                            }
+                        )
+                    );
+        
+                    let mut renderpass = commands.begin_render_pass(
+                        &wgpu::RenderPassDescriptor {
+                            label: Some("RenderNode"),
+                            color_attachments: color_attachments.as_slice(),
+                            depth_stencil_attachment: depth_stencil_attachment,
                         }
-                    )
-                );
-    
-                let mut renderpass = commands.begin_render_pass(
-                    &wgpu::RenderPassDescriptor {
-                        label: Some("RenderNode"),
-                        color_attachments: color_attachments.as_slice(),
-                        depth_stencil_attachment: depth_stencil_attachment,
-                    }
-                );
-    
-                renderpass.set_viewport(x, y, w, h, 0., max_depth);
-                renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                log::warn!("Draws: {:?}", renderer.draws.list.len());
-                DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
-    
-                let time1 = pi_time::Instant::now();
-                log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                    );
+        
+                    renderpass.set_viewport(x, y, w, h, 0., max_depth);
+                    renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
+                    // log::warn!("Draws: {:?}", renderer.draws.list.len());
+                    DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
+        
+                    let time1 = pi_time::Instant::now();
+                    log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                }
     
                 output.target = Some(srt.clone());
         

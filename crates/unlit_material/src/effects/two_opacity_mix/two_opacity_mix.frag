@@ -35,7 +35,8 @@
     float mixFactor 	    = smoothstep(mixValue - uTwoOpacityMixControl * 0.5, mixValue, uTwoOpacityMixControl);
     alpha 					= mix(1.0, mixValue * sqrt(alpha * staticOpacity), mixFactor);
 
-    vec3 emissiveColor      = emissive();
+    vec3 emissiveColor      = emissiveColor();
+    emissiveColor           *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
     emissiveColor           = emissiveFresnel(absNdV, emissiveColor);
 
     alpha 					+= opacityFresnel(absNdV);

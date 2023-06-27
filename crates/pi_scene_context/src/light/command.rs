@@ -29,7 +29,14 @@ use super::{
     }
 };
 
-pub type ActionListLightCreate = ActionList<(Entity, Entity, String)>;
+pub struct OpsLightCreate(pub(crate) Entity, pub(crate) Entity, pub(crate) String);
+impl OpsLightCreate {
+    pub fn ops(scene: Entity, light: Entity, name: String) -> Self {
+        OpsLightCreate(scene, light, name)
+    }
+}
+
+pub type ActionListLightCreate = ActionList<OpsLightCreate>;
 pub fn sys_act_light_create(
     mut cmds: ResMut<ActionListLightCreate>,
     mut tree: ResMut<ActionListTransformNodeParent>,
@@ -41,7 +48,7 @@ pub fn sys_act_light_create(
     empty: Res<SingleEmptyEntity>,
     mut renderercmds: ResMut<ActionListRendererModify>,
 ) {
-    cmds.drain().drain(..).for_each(|(scene, entity, name)| {
+    cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity, name)| {
         let mat = commands.spawn_empty().id();
         matcreatecmds.push(OpsMaterialCreate(mat, Atom::from(ShaderShadowGenerator::KEY), EPassTag::ShadowCast));
         matusecmds.push(OpsMaterialUse::ops(entity, mat));
@@ -65,20 +72,26 @@ pub fn sys_act_light_create(
         
         let id_viewer = entity;
 
-        let graphic_desc = RendererGraphicDesc {
-            pre: Some(Atom::from("Clear")),
-            curr: Atom::from(name.clone()),
-            next: None,
-            passorders: PassTagOrders::new(vec![EPassTag::ShadowCast]),
-        };
+        // let graphic_desc = RendererGraphicDesc {
+        //     pre: Some(final_render.clear_entity),
+        //     curr: name.clone(),
+        //     next: None,
+        //     passorders: PassTagOrders::new(vec![EPassTag::ShadowCast]),
+        // };
+        let passorders = PassTagOrders::new(vec![EPassTag::ShadowCast]);
 
-        match ActionRenderer::create_graphic_node(&mut render_graphic, name.clone(), id_viewer, RendererID(id_renderer), &graphic_desc) {
-            Ok(node) => {
-                viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), RendererID(id_renderer)));
+        let render_node = RenderNode::new(id_renderer);
+        match render_graphic.add_node(name.clone(), render_node) {
+            Ok(nodeid) => {
+                commands.entity(id_renderer).insert(GraphId(nodeid));
+
+                // ActionRenderer::init_graphic_node(&mut render_graphic, RendererID(id_renderer), nodeid, Some(final_render.clear_node), None);
+
+                viewer_renderers.map.insert(name.clone(), (passorders.clone(), RendererID(id_renderer)));
                 
                 let mut commands = commands.entity(id_renderer);
                 ActionRenderer::as_renderer(
-                    &mut commands, node, id_viewer, graphic_desc, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT,
+                    &mut commands, id_viewer, passorders, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT,
                     ColorFormat::Rgba32Float, DepthStencilFormat::Depth24PlusStencil8, false
                 );
 
@@ -172,7 +185,7 @@ impl ActionLight {
         queue.apply(&mut app.world);
 
         let mut cmds = app.world.get_resource_mut::<ActionListLightCreate>().unwrap();
-        cmds.push((scene, entity, name));
+        cmds.push(OpsLightCreate(scene, entity, name));
 
         entity
     }

@@ -83,3 +83,27 @@ impl From<Handle<ImageTextureView>> for EffectBindTexture2D06Comp {
 impl EffectBindTexture2D06Comp {
     pub fn data(&self) -> &BindDataTexture2D { &self.0 }
 }
+
+#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq, Component)]
+pub struct EffectBindTexture2D07Comp(pub pi_render::render_3d::binds::effect_texture2d::EffectBindTexture2D07);
+impl From<ETextureViewUsage> for EffectBindTexture2D07Comp {
+    fn from(value: ETextureViewUsage) -> Self { Self( pi_render::render_3d::binds::effect_texture2d::EffectBindTexture2D07::from(value) ) }
+}
+impl From<Handle<ImageTextureView>> for EffectBindTexture2D07Comp {
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( pi_render::render_3d::binds::effect_texture2d::EffectBindTexture2D07::from(value) ) }
+}
+impl EffectBindTexture2D07Comp {
+    pub fn data(&self) -> &BindDataTexture2D { &self.0 }
+}
+
+#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq, Component)]
+pub struct EffectBindTexture2D08Comp(pub pi_render::render_3d::binds::effect_texture2d::EffectBindTexture2D08);
+impl From<ETextureViewUsage> for EffectBindTexture2D08Comp {
+    fn from(value: ETextureViewUsage) -> Self { Self( pi_render::render_3d::binds::effect_texture2d::EffectBindTexture2D08::from(value) ) }
+}
+impl From<Handle<ImageTextureView>> for EffectBindTexture2D08Comp {
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( pi_render::render_3d::binds::effect_texture2d::EffectBindTexture2D08::from(value) ) }
+}
+impl EffectBindTexture2D08Comp {
+    pub fn data(&self) -> &BindDataTexture2D { &self.0 }
+}

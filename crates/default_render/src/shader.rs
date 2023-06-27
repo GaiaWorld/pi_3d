@@ -30,8 +30,6 @@ impl DefaultShader {
             ]
         );
 
-        nodemat.apply::<BlockEmissiveBase>();
-
         nodemat.meta()
 
     //     ShaderEffectMeta::new(

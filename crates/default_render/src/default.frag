@@ -16,6 +16,4 @@ if (debug_normal > 0) {
 
 baseColor.rgb = max(vec3(0.008, 0.008, 0.008), baseColor.rgb);
 
-baseColor.rgb += emissive();
-
 gl_FragColor = vec4(baseColor.rgb, alpha);

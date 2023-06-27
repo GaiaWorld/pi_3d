@@ -1,4 +1,7 @@
 
+use std::f32::consts::E;
+
+use pi_bevy_render_plugin::component::GraphId;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Number, Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
@@ -197,47 +200,35 @@ pub fn sys_camera_renderer_action(
     mut commands: Commands,
     mut viewers: Query<
         (
-            &Camera, &mut ViewerRenderersInfo, &UniqueName, &CameraToScreen
+            &mut ViewerRenderersInfo, &UniqueName, &CameraToScreen
         )
     >,
-    mut render_graphic: ResMut<PiRenderGraph> ,
-    mut renderercmds: ResMut<ActionListRendererModify>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, id_renderer, graphic_desc, color_format, depth_stencil_format)| {
-        
-        if let Ok((enable, mut viewer_renderers, name, toscreen)) = viewers.get_mut(id_viewer) {
+    cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count)| {
+        // log::warn!("OpsCameraRenderer: {:?}", graphic_desc.curr);
 
-            if let Some((desc, id_render)) = viewer_renderers.map.get(&graphic_desc.curr) {
-                // viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), RendererID(id_render.0)));
+        if let Ok((mut viewer_renderers, name, toscreen)) = viewers.get_mut(id_viewer) {
+            // log::warn!("OpsCameraRenderer: {:?} Camera {:?}", graphic_desc.curr, &name.0);
+
+            if let Some((_, id_render)) = viewer_renderers.map.get(&rendername) {
                 let mut commands = commands.entity(id_render.0);
-                // ActionRenderer::modify(&mut commands, ERendererCommand::Active(enable.0));
-                // ActionRenderer::modify(&mut commands, ERendererCommand::ColorFormat(RenderColorFormat(color_format)));
-                // ActionRenderer::modify(&mut commands, ERendererCommand::DepthFormat(RenderDepthFormat(depth_stencil_format)));
                 commands.despawn();
             }
 
-            match ActionRenderer::create_graphic_node(&mut render_graphic, name.0.to_string(), id_viewer, RendererID(id_renderer), &graphic_desc) {
-                Ok(node) => {
-                    log::warn!("CameraRenderer: {:?}", toscreen.0);
-                    if toscreen.0 {
-                        render_graphic.add_depend(WindowRenderer::CLEAR_KEY, name.0.to_string());
-                        render_graphic.add_depend(name.0.to_string(), WindowRenderer::KEY);
-                    }
-                    commands.entity(id_viewer).insert(DirtyViewerRenderersInfo);
+            log::warn!("Camera Renderer Init!! {:?}", &rendername);
 
-                    viewer_renderers.map.insert(graphic_desc.curr.clone(), (graphic_desc.clone(), RendererID(id_renderer)));
-                    
-                    let mut commands = commands.entity(id_renderer);
-                    ActionRenderer::as_renderer(
-                        &mut commands, node, id_viewer, graphic_desc, ViewerSize::DEFAULT_WIDTH, ViewerSize::DEFAULT_HEIGHT,
-                        color_format, depth_stencil_format, toscreen.0
-                    );
-                    log::warn!("Camera Renderer Init!!");
-                },
-                Err(_) => {},
-            }
+            commands.entity(id_viewer).insert(DirtyViewerRenderersInfo);
+
+            viewer_renderers.map.insert(rendername.clone(), (passorders.clone(), RendererID(id_renderer)));
+
+            let mut commands = commands.entity(id_renderer);
+            ActionRenderer::as_renderer(
+                &mut commands, id_viewer, passorders, ViewerSize::DEFAULT_WIDTH, ViewerSize::DEFAULT_HEIGHT,
+                color_format, depth_stencil_format, toscreen.0
+            );
+
         } else {
-            cmds.push(OpsCameraRendererInit(id_viewer, id_renderer, graphic_desc, color_format, depth_stencil_format));
+            cmds.push(OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count + 1));
         }
     });
 }

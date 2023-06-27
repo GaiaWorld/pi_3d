@@ -5,7 +5,7 @@ use pi_engine_shell::prelude::*;
 use pi_hash::{DefaultHasher, XHashMap};
 use smallvec::SmallVec;
 
-use crate::{viewer::prelude::*};
+use crate::{viewer::prelude::*, prelude::PassTagOrders};
 
 use super::{graphic::{RenderNode, RendererGraphicDesc}, base::DrawList3D, render_object::RendererID};
 
@@ -178,8 +178,11 @@ impl Renderer {
 
 #[derive(Debug, Clone, Default, Component)]
 pub struct ViewerRenderersInfo {
-    pub map: XHashMap<Atom, (RendererGraphicDesc, RendererID)>,
+    pub map: XHashMap<String, (PassTagOrders, RendererID)>,
 }
 
 #[derive(Component)]
 pub struct DirtyViewerRenderersInfo;
+
+#[derive(Default, Resource)]
+pub struct RendererDrawCallRecord(pub XHashMap<Entity, u32>);

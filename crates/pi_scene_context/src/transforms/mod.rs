@@ -30,6 +30,7 @@ impl Plugin for PluginTransformNode {
             .insert_resource(ActionListTransformNodeLocalPosition::default())
             .insert_resource(ActionListTransformNodeLocalScaling::default())
             .insert_resource(ActionListTransformNodeParent::default())
+            .insert_resource(TransformRecord::default())
             ;
 
         app.add_system(

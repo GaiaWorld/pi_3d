@@ -38,8 +38,10 @@ impl EmissiveFresnelShader {
 
         nodemat.apply::<BlockFloat>();
         nodemat.apply::<BlockFresnel>();
+        nodemat.apply::<BlockUVOffsetSpeed>();
         nodemat.apply::<BlockViewDirection>();
-        nodemat.apply::<BlockEmissiveBase>();
+        nodemat.apply::<BlockEmissiveTexture>();
+        nodemat.apply::<BlockEmissiveTextureUVOffsetSpeed>();
         nodemat.apply::<BlockEmissiveFresnel>();
 
         nodemat.meta()

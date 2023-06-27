@@ -111,32 +111,42 @@ impl Plugin for PluginRenderer {
         app.insert_resource(ActionListStencilRead::default());
         app.insert_resource(ActionListStencilWrite::default());
         app.insert_resource(ActionListRenderQueue::default());
+        app.insert_resource(ActionListRendererCreate::default());
+        app.insert_resource(ActionListRendererConnect::default());
         app.insert_resource(ActionListRendererModify::default());
+        app.insert_resource(RendererDrawCallRecord::default());
+        app.add_system(
+            sys_act_renderer_create.in_set(ERunStageChap::Initial)
+        );
+
         app.add_systems(
             (
-                sys_act_model_blend,
-                sys_act_mesh_cull_mode,
-                sys_act_mesh_polygon_mode,
-                sys_act_mesh_frontface,
-                sys_act_mesh_topolygon,
-                sys_act_mesh_unclip_depth,
+                sys_act_model_blend.run_if(should_run),
+                sys_act_mesh_cull_mode.run_if(should_run),
+                sys_act_mesh_polygon_mode.run_if(should_run),
+                sys_act_mesh_frontface.run_if(should_run),
+                sys_act_mesh_topolygon.run_if(should_run),
+                sys_act_mesh_unclip_depth.run_if(should_run),
                 
-                sys_act_depth_write,
-                sys_act_depth_compare,
-                sys_act_depth_bias,
-                sys_act_stencil_front,
-                sys_act_stencil_back,
-                sys_act_stencil_read,
-                sys_act_stencil_write,
+                sys_act_depth_write.run_if(should_run),
+                sys_act_depth_compare.run_if(should_run),
+                sys_act_depth_bias.run_if(should_run),
+                sys_act_stencil_front.run_if(should_run),
+                sys_act_stencil_back.run_if(should_run),
+                sys_act_stencil_read.run_if(should_run),
+                sys_act_stencil_write.run_if(should_run),
                 
-                sys_act_render_queue,
+                sys_act_render_queue.run_if(should_run),
             ).in_set(ERunStageChap::SecondInitial)
         );
         // app.add_system(
         //     sys_render_primitive_modify.in_set(ERunStageChap::Command)
         // );
         app.add_system(
-            sys_renderer_modify.in_set(ERunStageChap::Command)
+            sys_act_renderer_connect.run_if(should_run).in_set(ERunStageChap::Command)
+        );
+        app.add_system(
+            sys_renderer_modify.run_if(should_run).in_set(ERunStageChap::Command)
         );
 
 

@@ -63,8 +63,11 @@ impl TwoOpacityMixShader {
         nodemat.include(BlockMixTexture::KEY, infos);
         nodemat.include(BlockMixTextureUVOffsetSpeed::KEY, infos);
         nodemat.include(BlockOpacityFresnel::KEY, infos);
-        nodemat.include(BlockEmissiveBase::KEY, infos);
+        nodemat.include(BlockEmissiveTexture::KEY, infos);
+        nodemat.include(BlockEmissiveTextureUVOffsetSpeed::KEY, infos);
         nodemat.include(BlockEmissiveFresnel::KEY, infos);
+        nodemat.include(BlockMaskTexture::KEY, infos);
+        nodemat.include(BlockMaskTextureUVOffsetSpeed::KEY, infos);
         
         nodemat.meta()
     }

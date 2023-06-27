@@ -1,4 +1,6 @@
 
+use pi_engine_shell::prelude::*;
+
 pub use super::renderer::*;
 pub use super::command::*;
 pub use super::opaque::*;
@@ -12,3 +14,9 @@ pub use super::render_object::*;
 pub use super::graphic::*;
 pub use super::pass::*;
 
+#[derive(SystemParam)]
+pub struct ActionSetRenderer<'w> {
+    pub create: ResMut<'w, ActionListRendererCreate>,
+    pub connect: ResMut<'w, ActionListRendererConnect>,
+    pub modify: ResMut<'w, ActionListRendererModify>,
+}

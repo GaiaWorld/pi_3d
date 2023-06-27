@@ -12,7 +12,27 @@ impl MainOpacityShader {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from("\r\nlayout(location = 0) out vec4 gl_FragColor; \r\n");
 
-        nodemat.vs = String::from(include_str!("../base.vert"));
+        nodemat.vs = String::from("
+    mat4 finalWorld = PI_ObjectToWorld;
+
+    vec4 position =  vec4(A_POSITION, 1.);
+    vec4 worldPos =  finalWorld * position;
+    // vec4 worldPos =  position;
+
+    gl_Position = PI_MATRIX_VP * worldPos;
+    gl_Position.z = gl_Position.z * 0.5 + 0.5;
+    // gl_Position = position;
+
+    v_pos = worldPos.xyz;
+
+    mat3 normalWorld = mat3(finalWorld);
+    v_normal = A_NORMAL;
+    
+    v_uv = A_UV;
+    v_uv2 = A_UV;
+    v_uv3 = A_UV;
+    v_color = A_COLOR4;
+        ");
         nodemat.fs = String::from(include_str!("./main_opacity.frag"));
 
         nodemat.varyings = Varyings(
@@ -29,6 +49,14 @@ impl MainOpacityShader {
                     format: Atom::from("vec2"),
                     name: Atom::from("v_uv"),
                 },
+                Varying {
+                    format: Atom::from("vec2"),
+                    name: Atom::from("v_uv2"),
+                },
+                Varying {
+                    format: Atom::from("vec2"),
+                    name: Atom::from("v_uv3"),
+                },
                 Varying { 
                     format: Atom::from("vec4"),
                     name: Atom::from("v_color"),
@@ -39,12 +67,14 @@ impl MainOpacityShader {
         nodemat.apply::<BlockColorGray>();
         nodemat.apply::<BlockTextureChannel>();
         nodemat.apply::<BlockUVOffsetSpeed>();
+        nodemat.apply::<BlockCutoff>();
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
         nodemat.apply::<BlockOpacity>();
         nodemat.apply::<BlockOpacityTexture>();
         nodemat.apply::<BlockOpacityTextureUVOffsetSpeed>();
-        nodemat.apply::<BlockEmissiveBase>();
+        nodemat.apply::<BlockEmissiveTexture>();
+        nodemat.apply::<BlockEmissiveTextureUVOffsetSpeed>();
 
         nodemat.meta()
     }

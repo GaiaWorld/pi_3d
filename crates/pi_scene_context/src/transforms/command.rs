@@ -1,5 +1,6 @@
 
 use pi_engine_shell::prelude::*;
+use pi_hash::XHashMap;
 use pi_scene_math::{Vector3};
 
 use crate::{flags::UniqueName};
@@ -57,3 +58,9 @@ pub struct BundleTransformNode(
     WorldMatrix,
     GlobalTransform,
 );
+
+#[derive(Default, Resource)]
+pub struct TransformRecord {
+    pub wmcompute: XHashMap<Entity, u32>,
+    pub all_wmcompute: u32,
+}

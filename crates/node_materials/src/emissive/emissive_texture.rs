@@ -28,7 +28,7 @@ impl TNodeMaterialBlock for BlockEmissiveTexture {
                 wgpu::TextureSampleType::Float { filterable: true },
                 false,
                 EShaderStage::FRAGMENT,
-                EDefaultTexture::Black
+                EDefaultTexture::White
             )
         ]
     }

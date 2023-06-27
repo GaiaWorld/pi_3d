@@ -7,7 +7,7 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    transforms::prelude::*, prelude::RenderAlignment,
+    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord},
 };
 
 use super::{
@@ -613,7 +613,8 @@ use super::{
         >,
         passes: Query<
             &PassDraw
-        >
+        >,
+        mut record: ResMut<RendererDrawCallRecord>,
     ) {
         let time1 = pi_time::Instant::now();
 
@@ -749,6 +750,8 @@ use super::{
                             renderer.draws.list.push(draw.clone());
                         }
                     });
+
+                    record.0.insert(id, renderer.draws.list.len() as u32);
                     // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
                 }
             }

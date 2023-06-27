@@ -49,6 +49,7 @@ fn setup(
     mut final_render: ResMut<WindowRenderer>,
     nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    mut renderercmds: ActionSetRenderer,
 ) {
     ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(StripesVirtualShader::KEY), StripesVirtualShader::create(&nodematblocks));
 
@@ -68,13 +69,15 @@ fn setup(
     // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
     let desc = RendererGraphicDesc {
-        pre: Some(Atom::from(WindowRenderer::CLEAR_KEY)),
-        curr: Atom::from("TestCamera"),
-        next: Some(Atom::from(WindowRenderer::KEY)),
+        pre: Some(final_render.clear_entity),
+        curr: String::from("TestCamera"),
+        next: Some(final_render.render_entity),
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
-    let id_renderer = commands.spawn_empty().id();
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
+    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
+    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));

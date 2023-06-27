@@ -10,7 +10,7 @@ use crate::materials::shader_effect::AssetResShaderEffectMeta;
 
 use super::{
     uniform::*,
-    texture::{UniformTextureWithSamplerParams, TextureSlot01, TextureSlot02, TextureSlot03, TextureSlot04},
+    texture::*,
 };
 
 
@@ -213,6 +213,16 @@ use super::{
                     entitycmd.insert(TextureSlot04(param.clone()));
                     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
                         entitycmd.insert(EffectBindSampler2D04Comp(EffectBindSampler2D04(samp)));
+                    }
+                } else if index == 4 {
+                    entitycmd.insert(TextureSlot05(param.clone()));
+                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                        entitycmd.insert(EffectBindSampler2D05Comp(EffectBindSampler2D05(samp)));
+                    }
+                } else if index == 5 {
+                    entitycmd.insert(TextureSlot06(param.clone()));
+                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                        entitycmd.insert(EffectBindSampler2D06Comp(EffectBindSampler2D06(samp)));
                     }
                 }
             }

@@ -41,17 +41,19 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                     EffectTextureSamplers {
                         textures: (
                             Some(tex01.0.clone()), None, None,
-                            None, None, None
+                            None, None, None,
+                            None, None
                         ),
                         samplers: (
                             Some(sampl01.0.clone()), None, None,
-                            None, None, None
+                            None, None, None,
+                            None, None
                         ),
                         binding_count: 2
                     }
                 );
 
-                log::warn!("SysTextureResReady1 >>");
+                // log::warn!("SysTextureResReady1 >>");
                 // let mut list = vec![];
                 // list.push(slot01.param());
 
@@ -88,11 +90,13 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                     EffectTextureSamplers {
                         textures: (
                             Some(tex01.0.clone()), Some(tex02.0.clone()), None,
-                            None, None, None
+                            None, None, None,
+                            None, None
                         ),
                         samplers: (
                             Some(sampl01.0.clone()), Some(sampl02.0.clone()), None,
-                            None, None, None
+                            None, None, None,
+                            None, None
                         ),
                         binding_count: 4
                     }
@@ -131,11 +135,13 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                     EffectTextureSamplers {
                         textures: (
                             Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
-                            None, None, None
+                            None, None, None,
+                            None, None
                         ),
                         samplers: (
                             Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
-                            None, None, None
+                            None, None, None,
+                            None, None
                         ),
                         binding_count: 6
                     }
@@ -176,11 +182,13 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                     EffectTextureSamplers {
                         textures: (
                             Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
-                            Some(tex04.0.clone()), None, None
+                            Some(tex04.0.clone()), None, None,
+                            None, None
                         ),
                         samplers: (
                             Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
-                            Some(sampl04.0.clone()), None, None
+                            Some(sampl04.0.clone()), None, None,
+                            None, None
                         ),
                         binding_count: 8
                     }
@@ -219,16 +227,18 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
             , (tex04, slot04, sampl04)
             , (tex05, slot05, sampl05)
         )| {
-            if binddesc.textures.len() == 4 {
+            if binddesc.textures.len() == 5 {
                 let value = EffectTextureSamplersComp(
                     EffectTextureSamplers {
                         textures: (
                             Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
-                            Some(tex04.0.clone()), Some(tex05.0.clone()), None
+                            Some(tex04.0.clone()), Some(tex05.0.clone()), None,
+                            None, None
                         ),
                         samplers: (
                             Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
-                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), None
+                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), None,
+                            None, None
                         ),
                         binding_count: 10
                     }
@@ -270,18 +280,135 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
             , (tex05, slot05, sampl05)
             , (tex06, slot06, sampl06)
         )| {
-            if binddesc.textures.len() == 4 {
+            if binddesc.textures.len() == 6 {
                 let value = EffectTextureSamplersComp(
                     EffectTextureSamplers {
                         textures: (
                             Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
-                            Some(tex04.0.clone()), Some(tex05.0.clone()), Some(tex06.0.clone())
+                            Some(tex04.0.clone()), Some(tex05.0.clone()), Some(tex06.0.clone()),
+                            None, None
                         ),
                         samplers: (
                             Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
-                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), Some(sampl06.0.clone())
+                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), Some(sampl06.0.clone()),
+                            None, None
                         ),
                         binding_count: 12
+                    }
+                );
+                commands.entity(id_obj).insert(value);
+            }
+        });
+    }
+    
+    pub fn sys_texture_ready07(
+        items: Query<
+            (
+                ObjectID,
+                &AssetResShaderEffectMeta
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
+                , (&EffectBindTexture2D06Comp, &TextureSlot06, &EffectBindSampler2D06Comp)
+                , (&EffectBindTexture2D07Comp, &TextureSlot07, &EffectBindSampler2D07Comp)
+            ),
+            Or<(
+                Changed<EffectBindTexture2D01Comp>
+                , Changed<EffectBindTexture2D02Comp>
+                , Changed<EffectBindTexture2D03Comp>
+                , Changed<EffectBindTexture2D04Comp>
+                , Changed<EffectBindTexture2D05Comp>
+                , Changed<EffectBindTexture2D06Comp>
+                , Changed<EffectBindTexture2D07Comp>
+            )>
+        >,
+        mut commands: Commands,
+    ) {
+        items.iter().for_each(|(
+            id_obj, binddesc
+            , (tex01, slot01, sampl01)
+            , (tex02, slot02, sampl02)
+            , (tex03, slot03, sampl03)
+            , (tex04, slot04, sampl04)
+            , (tex05, slot05, sampl05)
+            , (tex06, slot06, sampl06)
+            , (tex07, slot07, sampl07)
+        )| {
+            if binddesc.textures.len() == 7 {
+                let value = EffectTextureSamplersComp(
+                    EffectTextureSamplers {
+                        textures: (
+                            Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
+                            Some(tex04.0.clone()), Some(tex05.0.clone()), Some(tex06.0.clone()),
+                            Some(tex07.0.clone()), None
+                        ),
+                        samplers: (
+                            Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
+                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), Some(sampl06.0.clone()),
+                            Some(sampl07.0.clone()), None
+                        ),
+                        binding_count: 14
+                    }
+                );
+                commands.entity(id_obj).insert(value);
+            }
+        });
+    }
+    
+    pub fn sys_texture_ready08(
+        items: Query<
+            (
+                ObjectID,
+                &AssetResShaderEffectMeta
+                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
+                , (&EffectBindTexture2D06Comp, &TextureSlot06, &EffectBindSampler2D06Comp)
+                , (&EffectBindTexture2D07Comp, &TextureSlot07, &EffectBindSampler2D07Comp)
+                , (&EffectBindTexture2D08Comp, &TextureSlot08, &EffectBindSampler2D08Comp)
+            ),
+            Or<(
+                Changed<EffectBindTexture2D01Comp>
+                , Changed<EffectBindTexture2D02Comp>
+                , Changed<EffectBindTexture2D03Comp>
+                , Changed<EffectBindTexture2D04Comp>
+                , Changed<EffectBindTexture2D05Comp>
+                , Changed<EffectBindTexture2D06Comp>
+                , Changed<EffectBindTexture2D07Comp>
+                , Changed<EffectBindTexture2D08Comp>
+            )>
+        >,
+        mut commands: Commands,
+    ) {
+        items.iter().for_each(|(
+            id_obj, binddesc
+            , (tex01, slot01, sampl01)
+            , (tex02, slot02, sampl02)
+            , (tex03, slot03, sampl03)
+            , (tex04, slot04, sampl04)
+            , (tex05, slot05, sampl05)
+            , (tex06, slot06, sampl06)
+            , (tex07, slot07, sampl07)
+            , (tex08, slot08, sampl08)
+        )| {
+            if binddesc.textures.len() == 8 {
+                let value = EffectTextureSamplersComp(
+                    EffectTextureSamplers {
+                        textures: (
+                            Some(tex01.0.clone()), Some(tex02.0.clone()), Some(tex03.0.clone()),
+                            Some(tex04.0.clone()), Some(tex05.0.clone()), Some(tex06.0.clone()),
+                            Some(tex07.0.clone()), Some(tex08.0.clone())
+                        ),
+                        samplers: (
+                            Some(sampl01.0.clone()), Some(sampl02.0.clone()), Some(sampl03.0.clone()),
+                            Some(sampl04.0.clone()), Some(sampl05.0.clone()), Some(sampl06.0.clone()),
+                            Some(sampl07.0.clone()), Some(sampl08.0.clone())
+                        ),
+                        binding_count: 16
                     }
                 );
                 commands.entity(id_obj).insert(value);

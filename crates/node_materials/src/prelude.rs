@@ -15,7 +15,6 @@ pub use crate::fresnel:: {
 };
 pub use crate::base::*;
 pub use crate::emissive::{
-    emissive_base::*,
     emissive_texture::*,
     emissive_texture_uv_offset_speed::*,
 };

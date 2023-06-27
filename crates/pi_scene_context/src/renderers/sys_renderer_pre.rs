@@ -67,8 +67,8 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 if let Ok(bind_base_effect) = scenes.get(id_scene.0) {
                     // log::info!("Set0ByViewer : 0");
                     let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()), &mut binds_recorder);
-                    list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
-                        let pass_tags = &desc.passorders;
+                    list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+                        let pass_tags = passorders;
                         
                         // log::info!("Set0ByViewer : 1");
                         list_model.0.iter().for_each(|(id_obj, _)| {
@@ -119,9 +119,9 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 if active.0 && id_scene_obj == id_scene.0 {
                     // log::info!("Set0ByScene : 0");
                     let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()), &mut binds_recorder);
-                    list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
+                    list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
                         // log::info!("Set0ByScene : 1");
-                        let pass_tags = &desc.passorders;
+                        let pass_tags = passorders;
                         list_model.0.iter().for_each(|(id_obj, _)| {
                             // log::info!("Set0ByScene : 2");
                             if let Ok(passid) = models.get(id_obj.clone()) {
@@ -173,9 +173,9 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             }
             // log::info!("SysSet1ModifyByRendererID: {:?}", list_model.0.len());
             
-            list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
+            list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
                 // log::info!("SysSet1ModifyByRendererID: 1111111111111111");
-                let pass_tags = &desc.passorders;
+                        let pass_tags = passorders;
                 // log::info!("SysSet1ModifyByRendererID: 2222222222222222");
                 list_model.0.iter().for_each(|(id_obj, _)| {
                     if let Ok(
@@ -241,8 +241,8 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 return;
             }
             // log::info!("SysSet1ModifyByModel: {:?}", list_model.0.len());
-            list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
-                let pass_tags = &desc.passorders;
+            list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+                let pass_tags = passorders;
                 // log::info!("SysSet1ModifyByModel: 1111111111111111111111");
                 list_model.0.iter().for_each(|(id_obj, _)| {
                     // log::info!("SysSet1ModifyByModel: 111111111");
@@ -308,8 +308,8 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                     return;
                 }
                 // log::info!("SysSet1ModifyByPass: {:?}", list_model.0.len());
-                list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
-                    let pass_tags = &desc.passorders;
+                list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+                    let pass_tags = passorders;
                     if list_model.0.contains_key(&id_model.0) {
                         // log::info!("SysSet1ModifyByPass: 111111111");
                         if let Ok(
@@ -370,8 +370,8 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             if active.0 == false {
                 return;
             }
-            list_renderer.map.iter().for_each(|(_, (desc, id_renderer))| {
-                let pass_tags = &desc.passorders;
+            list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+                let pass_tags = passorders;
                 list_model.0.iter().for_each(|(id_obj, _)| {
                     if let Ok(passid) = models.get(id_obj.clone()) {
                         if pass_tags.1 &  I::TAG == I::TAG {

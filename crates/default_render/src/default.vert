@@ -14,6 +14,6 @@ gl_Position.z = gl_Position.z * 0.5 + 0.5;
 v_pos = worldPos.xyz;
 
 mat3 normalWorld = mat3(finalWorld);
-v_normal = normal; //normalize(vec3(finalWorld * vec4(normal, 1.0)));
+v_normal = normalize(vec3(finalWorld * vec4(normal, 1.0)));
 
 v_color = A_COLOR4;

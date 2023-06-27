@@ -7,7 +7,7 @@ use crate::{
     renderers::{
         prelude::*
     }, 
-    layer_mask::prelude::*,
+    layer_mask::prelude::*, prelude::PassTagOrders,
 };
 
 use super::{
@@ -112,16 +112,17 @@ impl OpsCameraTarget {
 }
 pub type ActionListCameraTarget = ActionList<OpsCameraTarget>;
 
-pub struct OpsCameraRendererInit(pub(crate) Entity, pub(crate) Entity, pub(crate) RendererGraphicDesc, pub(crate) ColorFormat, pub(crate) DepthStencilFormat);
+pub struct OpsCameraRendererInit(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub(crate) PassTagOrders, pub(crate) ColorFormat, pub(crate) DepthStencilFormat, pub(crate) u8);
 impl OpsCameraRendererInit {
     pub fn ops(
         camera: Entity,
         renderer: Entity,
-        render_desc: RendererGraphicDesc,
+        name: String,
+        orders: PassTagOrders,
         render_target_color_format: ColorFormat,
         render_target_depth_stencil_format: DepthStencilFormat,
     ) -> Self {
-        Self(camera, renderer, render_desc, render_target_color_format, render_target_depth_stencil_format)
+        Self(camera, renderer, name, orders, render_target_color_format, render_target_depth_stencil_format, 0)
     }
 }
 pub type ActionListCameraRenderer = ActionList<OpsCameraRendererInit>;

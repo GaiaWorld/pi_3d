@@ -121,17 +121,7 @@ fn setup(
     mut testdata: ResMut<ActionListTestData>,
     mut scenecmds: ResMut<ActionListSceneCreate>,
     mut treecmds: ResMut<ActionListTransformNodeParent>,
-    mut cameracmds: (
-        ResMut<ActionListCameraCreate>,
-        ResMut<ActionListCameraTarget>,
-        ResMut<ActionListCameraMode>,
-        ResMut<ActionListCameraRenderer>,
-        ResMut<ActionListCameraActive>,
-        ResMut<ActionListCameraFixedMode>,
-        ResMut<ActionListCameraFov>,
-        ResMut<ActionListCameraOrthSize>,
-        ResMut<ActionListCameraNearFar>,
-    ),
+    mut cameracmds: ActionSetCamera,
     mut localpositioncmds: ResMut<ActionListTransformNodeLocalPosition>,
     mut meshcreate: ResMut<ActionListMeshCreate>,
     mut geometrycreate: ResMut<ActionListGeometryCreate>,
@@ -139,6 +129,7 @@ fn setup(
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    mut renderercmds: ActionSetRenderer,
 ) {
     fps.frame_ms = 200;
 
@@ -148,19 +139,21 @@ fn setup(
     scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id(); treecmds.push(OpsTransformNodeParent::ops(camera01, scene));
-    cameracmds.0.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    cameracmds.4.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.7.push(OpsCameraOrthSize::ops(camera01, 4.));
+    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 4.));
     localpositioncmds.push(OpsTransformNodeLocalPosition(camera01, Vector3::new(0., 0., -10.)));
 
     let desc = RendererGraphicDesc {
-        pre: Some(Atom::from(WindowRenderer::CLEAR_KEY)),
-        curr: Atom::from("TestCamera"),
-        next: Some(Atom::from(WindowRenderer::KEY)),
+        pre: Some(final_render.clear_entity),
+        curr: String::from("TestCamera"),
+        next: Some(final_render.render_entity),
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
-    let id_renderer = commands.spawn_empty().id();
-    cameracmds.3.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
+    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
+    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let cube = commands.spawn_empty().id(); treecmds.push(OpsTransformNodeParent::ops(cube, scene));
     meshcreate.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));

@@ -1,8 +1,9 @@
 
+use bevy::ecs::entity;
 use pi_bevy_render_plugin::component::GraphId;
 use pi_engine_shell::prelude::*;
 
-use crate::{viewer::prelude::*, postprocess::Postprocess};
+use crate::{viewer::prelude::*, postprocess::Postprocess, prelude::PassTagOrders};
 
 use super::{
     renderer::*,
@@ -10,6 +11,22 @@ use super::{
     graphic::{RendererGraphicDesc, RenderNode},
     command::*
 };
+
+pub fn sys_act_renderer_create(
+    mut cmds: ResMut<ActionListRendererCreate>,
+    mut graphic: ResMut<PiRenderGraph>,
+    mut commands: Commands,
+) {
+    cmds.drain().drain(..).for_each(|OpsRendererCreate(entity, name)| {
+        let render_node = RenderNode::new(entity);
+        match graphic.add_node(name, render_node) {
+            Ok(nodeid) => {
+                commands.entity(entity).insert(GraphId(nodeid));
+            },
+            Err(e) => log::error!("Renderer Error: {:?}", e),
+        }
+    });
+}
 
 pub fn sys_renderer_modify(
     mut cmds: ResMut<ActionListRendererModify>,
@@ -86,13 +103,30 @@ pub fn sys_renderer_modify(
     });
 }
 
+pub fn sys_act_renderer_connect(
+    mut cmds: ResMut<ActionListRendererConnect>,
+    mut render_graphic: ResMut<PiRenderGraph>,
+    renderers: Query<&GraphId>,
+) {
+    cmds.drain().drain(..).for_each(|OpsRendererConnect(before, after, count)| {
+        if let (Ok(before), Ok(after)) = (renderers.get(before), renderers.get(after)) {
+            if let Err(e) = render_graphic.add_depend(before.0, after.0) {
+                log::error!("{:?}", e);
+            }
+        } else {
+            if count < 4 {
+                cmds.push(OpsRendererConnect(before, after, count + 1))
+            }
+        }
+    });
+}
+
 pub struct ActionRenderer;
 impl ActionRenderer {
     pub(crate) fn as_renderer(
         commands_renderer: &mut EntityCommands,
-        node: NodeId,
         id_viewer: Entity,
-        graphic_desc: RendererGraphicDesc,
+        passorders: PassTagOrders,
         width: u32,
         height: u32,
         color_format: ColorFormat,
@@ -100,8 +134,7 @@ impl ActionRenderer {
         toscreen: bool,
     ) {
         commands_renderer
-            .insert(GraphId(node))
-            .insert(graphic_desc.passorders.clone())
+            .insert(passorders)
             .insert(Renderer::new())
             .insert(RenderSize::new(width, height))
             .insert(RendererEnable(true))
@@ -118,31 +151,52 @@ impl ActionRenderer {
             .insert(Postprocess::default());
     }
     pub fn create_graphic_node(
+        commands: &mut Commands,
         render_graphic: &mut PiRenderGraph,
         name: String,
-        id_viewer: Entity,
-        id_renderer: RendererID,
-        graphic_desc: &RendererGraphicDesc,
-    ) -> Result<NodeId, GraphError> {
-        let entity = id_renderer.0;
+    ) -> Entity {
+        let entity = commands.spawn_empty().id();
         let render_node = RenderNode::new(entity);
-
-        match render_graphic.add_node(String::from(name.as_str()), render_node) {
+        match render_graphic.add_node(name, render_node) {
             Ok(nodeid) => {
-                if let Some(key_pre) = &graphic_desc.pre {
-                    log::debug!("Add Node {:?} > {:?}", key_pre.to_string(), graphic_desc.curr.to_string());
-                    render_graphic.add_depend(key_pre.to_string(), graphic_desc.curr.to_string());
-                }
-                if let Some(key_next) = &graphic_desc.next {
-                    log::debug!("Add Node {:?} > {:?}", graphic_desc.curr.to_string(), key_next.to_string());
-                    render_graphic.add_depend(graphic_desc.curr.to_string(), key_next.to_string());
-                } else {
-                    render_graphic.set_finish(graphic_desc.curr.to_string(), true);
-                }
-                render_graphic.dump_graphviz();
-                Ok(nodeid)
+                commands.entity(entity).insert(GraphId(nodeid));  
             },
-            Err(e) => Err(e),
+            Err(e) => {
+                log::error!("{:?}", e)
+            },
         }
+
+        entity
+    }
+    pub fn apply_graph_id(
+        entitycmd: &mut EntityCommands,
+        node: NodeId,
+    ) {
+        entitycmd.insert(GraphId(node));
+    }
+    pub fn init_graphic_node(
+        render_graphic: &mut PiRenderGraph,
+        id_renderer: RendererID,
+        nodeid: NodeId,
+        pre: Option<NodeId>,
+        next: Option<NodeId>,
+    ) {
+        if let Some(key_pre) = pre {
+            // log::warn!("Add Node {:?} > {:?}", key_pre, nodeid);
+            if let Err(e) = render_graphic.add_depend(key_pre, nodeid) {
+                log::error!("{:?}", e);
+            }
+        }
+        if let Some(key_next) = next {
+            // log::warn!("Add Node {:?} > {:?}", nodeid, key_next);
+            if let Err(e) = render_graphic.add_depend(nodeid, key_next) {
+                log::error!("{:?}", e);
+            }
+        } else {
+            // if let Err(e) = render_graphic.set_finish(nodeid, true) {
+            //     log::error!("{:?}", e);
+            // }
+        }
+        render_graphic.dump_graphviz();
     }
 }

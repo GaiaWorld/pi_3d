@@ -67,3 +67,21 @@ impl From<Handle<SamplerRes>> for EffectBindSampler2D06Comp {
 impl EffectBindSampler2D06Comp {
     pub fn data(&self) -> &BindDataSampler { &self.0 }
 }
+
+#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq, Component)]
+pub struct EffectBindSampler2D07Comp(pub pi_render::render_3d::binds::effect_sampler2d::EffectBindSampler2D07);
+impl From<Handle<SamplerRes>> for EffectBindSampler2D07Comp {
+    fn from(value: Handle<SamplerRes>) -> Self { Self( pi_render::render_3d::binds::effect_sampler2d::EffectBindSampler2D07(BindDataSampler(value)) ) }
+}
+impl EffectBindSampler2D07Comp {
+    pub fn data(&self) -> &BindDataSampler { &self.0 }
+}
+
+#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq, Component)]
+pub struct EffectBindSampler2D08Comp(pub pi_render::render_3d::binds::effect_sampler2d::EffectBindSampler2D08);
+impl From<Handle<SamplerRes>> for EffectBindSampler2D08Comp {
+    fn from(value: Handle<SamplerRes>) -> Self { Self( pi_render::render_3d::binds::effect_sampler2d::EffectBindSampler2D08(BindDataSampler(value)) ) }
+}
+impl EffectBindSampler2D08Comp {
+    pub fn data(&self) -> &BindDataSampler { &self.0 }
+}

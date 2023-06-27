@@ -27,10 +27,14 @@
     vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS));
     alpha                   *= opacityChannel(opacityData);
 
-    vec3 emissiveColor      = emissive();
-    emissiveColor           = emissiveFresnel(absNdV, emissiveColor);
+    vec3 emissiveColor = emissiveColor();
+    emissiveColor *= emissiveTexture(v_uv3, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
 
     alpha 					+= opacityFresnel(absNdV);
+
+    if (cutoff(alpha)) {
+        discard;
+    }
 
 	vec3 finalSpecular 		= specularBase * specularColor;
     vec3 finalDiffuse       = (diffuseBase * diffuseColor + emissiveColor + PI_Ambient.rgb) * baseColor.rgb;

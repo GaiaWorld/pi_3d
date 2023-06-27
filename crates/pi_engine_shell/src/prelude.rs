@@ -19,7 +19,7 @@ pub use pi_bevy_asset::{
 pub use pi_bevy_render_plugin::{
     PiRenderDevice, PiRenderQueue, PiRenderGraph, PiRenderWindow, PiRenderOptions, PiSafeAtlasAllocator, PiScreenTexture,
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
-    asset_config::*, should_run
+    asset_config::*, should_run, component::GraphId
 };
 pub use pi_window_renderer::*;
 pub use pi_render::{

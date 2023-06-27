@@ -47,7 +47,7 @@ impl MainOpacityFresnelShader {
         nodemat.include(BlockOpacityTexture::KEY, infos);
         nodemat.include(BlockOpacityTextureUVOffsetSpeed::KEY, infos);
         nodemat.include(BlockOpacityFresnel::KEY, infos);
-        nodemat.include(BlockEmissiveBase::KEY, infos);
+        nodemat.include(BlockEmissiveTexture::KEY, infos);
         nodemat.include(BlockEmissiveFresnel::KEY, infos);
 
         log::warn!("MainOpacityFresnelShader Create");
@@ -89,12 +89,13 @@ impl MainOpacityFresnelShader {
         nodemat.apply::<BlockFresnel>();
         nodemat.apply::<BlockViewDirection>();
         nodemat.apply::<BlockUVOffsetSpeed>();
+        nodemat.apply::<BlockCutoff>();
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
         nodemat.apply::<BlockOpacityTexture>();
         nodemat.apply::<BlockOpacityTextureUVOffsetSpeed>();
         nodemat.apply::<BlockOpacityFresnel>();
-        nodemat.apply::<BlockEmissiveBase>();
+        nodemat.apply::<BlockEmissiveTexture>();
         nodemat.apply::<BlockEmissiveFresnel>();
 
         nodemat.meta()

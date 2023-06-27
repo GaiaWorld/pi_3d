@@ -23,10 +23,11 @@
         discard;
     }
 
-    vec3 emissiveColor      = emissive();
+    vec3 emissiveColor = emissiveColor();
+    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
 
 	vec3 finalSpecular 		= specularBase * specularColor;
-    vec3 finalDiffuse       = (diffuseBase * diffuseColor + emissiveColor + PI_Ambient.rgb) * baseColor.rgb;
+    vec3 finalDiffuse       = (diffuseBase * diffuseColor + emissiveColor) * baseColor.rgb;
 
     vec4 finalColor 		= vec4(
                                 finalDiffuse * baseAmbientColor

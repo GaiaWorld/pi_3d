@@ -45,7 +45,8 @@ impl OpacityClipShader {
         nodemat.include(BlockOpacity::KEY, infos);
         nodemat.include(BlockOpacityTexture::KEY, infos);
         nodemat.include(BlockOpacityTextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockEmissiveBase::KEY, infos);
+        nodemat.include(BlockEmissiveTexture::KEY, infos);
+        nodemat.include(BlockEmissiveTextureUVOffsetSpeed::KEY, infos);
 
         nodemat.meta()
     }

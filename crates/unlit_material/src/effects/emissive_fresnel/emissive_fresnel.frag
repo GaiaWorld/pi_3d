@@ -20,7 +20,8 @@
 	vec3 diffuseBase 					= vec3(0., 0., 0.);
 	vec3 specularBase 					= vec3(0., 0., 0.);
 
-    vec3 emissiveColor = emissive();
+    vec3 emissiveColor = emissiveColor();
+    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
     emissiveColor = emissiveFresnel(absNdV, emissiveColor);
 
 	vec3 finalSpecular 		= specularBase * specularColor;

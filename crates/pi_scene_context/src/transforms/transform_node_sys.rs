@@ -4,7 +4,7 @@ use pi_bevy_ecs_extend::prelude::EntityTree;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix}, Matrix, Rotation3, Quaternion};
 
-use crate::{scene::coordinate_system::SceneCoordinateSytem3D};
+use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::TransformRecord};
 
 use super::{
     transform_node::*,
@@ -109,13 +109,14 @@ use super::{
         mut globaltransforms: Query<(&mut LocalMatrix, &GlobalTransform)>,
         mut commands: Commands,
         tree: EntityTree,
+        mut record: ResMut<TransformRecord>,
     ) {
         let time = pi_time::Instant::now();
 
         // log::debug!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
             let mut temp_ids: Vec<(ObjectID, bool, Matrix)> = vec![];
-            let mut idflag: usize = 0;
+            // let mut idflag: usize = 0;
             // log::warn!("World Matrix Calc: 0");
             tree.iter(root).for_each(|entity| {
                 let (p_id, p_dirty, p_m) = calc_world_root(
@@ -129,8 +130,8 @@ use super::{
                         // log::warn!("World Matrix Calc: 2");
                         let node_children_head = node_children_head.head.0;
                         tree.iter(node_children_head).for_each(|entity| {
-                            idflag += 1;
-                            if idflag % 2 == 0 {
+                            // idflag += 1;
+                            // if idflag % 2 == 0 {
                                 // log::warn!("Calc WM: {:?}", entity);
                                 calc_world_one(
                                     &mut globaltransforms,
@@ -140,8 +141,7 @@ use super::{
                                     p_dirty,
                                     &p_m
                                 );
-                            }
-
+                            // }
                         });
                     },
                     None => {
@@ -155,9 +155,12 @@ use super::{
                 & tree,
                 temp_ids
             );
+
         }
 
         let time1 = pi_time::Instant::now();
+
+        record.all_wmcompute = (time1 - time).as_millis() as u32;
         log::debug!("World Matrix Calc: {:?}", time1 - time);
     }
 // }
@@ -178,6 +181,7 @@ use super::{
         mut globaltransforms: Query<(&mut LocalMatrix, &GlobalTransform)>,
         mut commands: Commands,
         tree: EntityTree,
+        mut record: ResMut<TransformRecord>,
     ) {
         let time = pi_time::Instant::now();
 

@@ -80,11 +80,12 @@ impl Plugin for PluginMaterial {
             );
         };
 
-        set_up_uniforms(
+        let defaulttextures = set_up_uniforms(
             &app.world.get_resource::<ShareAssetMgr<TextureRes>>().unwrap(),
             &app.world.get_resource::<PiRenderDevice>().unwrap(),
             &app.world.get_resource::<PiRenderQueue>().unwrap(),
         );
+        app.insert_resource(defaulttextures);
 
         let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgShaderMeta3D>() {
             cfg
@@ -111,28 +112,28 @@ impl Plugin for PluginMaterial {
 
         app.add_systems(
             (
-                sys_act_material_create,
+                sys_act_material_create.run_if(should_run),
                 // sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
                 // sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
             ).chain().in_set(ERunStageChap::Initial)
         );
         
         app.add_system(
-            sys_act_material_use.in_set(ERunStageChap::SecondInitial)
+            sys_act_material_use.run_if(should_run).in_set(ERunStageChap::SecondInitial)
         );
 
         app.add_systems(
             (
                 // sys_act_uniform,
                 // sys_act_uniform_by_name,
-                sys_act_material_mat4,
-                sys_act_material_mat2,
-                sys_act_material_vec4,
-                sys_act_material_vec2,
-                sys_act_material_float,
-                sys_act_material_int,
-                sys_act_material_uint,
-                sys_act_material_texture,
+                sys_act_material_mat4.run_if(should_run),
+                sys_act_material_mat2.run_if(should_run),
+                sys_act_material_vec4.run_if(should_run),
+                sys_act_material_vec2.run_if(should_run),
+                sys_act_material_float.run_if(should_run),
+                sys_act_material_int.run_if(should_run),
+                sys_act_material_uint.run_if(should_run),
+                sys_act_material_texture.run_if(should_run),
             ).in_set(ERunStageChap::SecondInitial)
             // .after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
@@ -151,6 +152,8 @@ impl Plugin for PluginMaterial {
                 sys_texture_ready04.run_if(should_run),
                 sys_texture_ready05.run_if(should_run),
                 sys_texture_ready06.run_if(should_run),
+                sys_texture_ready07.run_if(should_run),
+                sys_texture_ready08.run_if(should_run),
             ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(

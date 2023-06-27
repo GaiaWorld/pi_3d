@@ -1,7 +1,7 @@
 use animation_sys::sys_material_anime_init;
 use base::{NodeMaterialBlockInfo, TNodeMaterialBlock};
 use common::*;
-use emissive::{emissive_base::BlockEmissiveBase, emissive_texture::BlockEmissiveTexture};
+use emissive::{emissive_texture::BlockEmissiveTexture};
 use fresnel::{opacity_fresnel::BlockOpacityFresnel, emissive_fresnel::BlockEmissiveFresnel};
 use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
@@ -63,8 +63,8 @@ impl Plugin for PluginNodeMaterial {
         blocks.regist::<BlockOpacity2Texture>();
         blocks.regist::<BlockOpacity2TextureUVOffsetSpeed>();
 
-        blocks.regist::<BlockEmissiveBase>();
         blocks.regist::<BlockEmissiveTexture>();
+        blocks.regist::<BlockEmissiveTextureUVOffsetSpeed>();
         
         blocks.regist::<BlockMixTexture>();
         blocks.regist::<BlockMixTextureUVOffsetSpeed>();
