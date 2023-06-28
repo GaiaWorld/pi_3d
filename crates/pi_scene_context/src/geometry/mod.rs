@@ -79,7 +79,7 @@ impl Plugin for PluginGeometry {
             app.world.get_resource::<AssetCfgVertexBuffer3D>().unwrap()
         };
         app.insert_resource(VertexBufferAllocator3D(VertexBufferAllocator::new(cfg.0.min, cfg.0.timeout)));
-        app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
+        app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 10 * 1024, 10 * 1000));
         app.insert_resource(GeometryVBLoader::default());
 
         app.add_systems(
