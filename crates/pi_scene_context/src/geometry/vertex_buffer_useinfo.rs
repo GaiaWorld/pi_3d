@@ -1,5 +1,6 @@
-use std::ops::Range;
+use std::{ops::Range, sync::Arc};
 
+use lazy_static::__Deref;
 use pi_engine_shell::prelude::*;
 use pi_render::renderer::{vertex_buffer::{EVertexBufferRange, KeyVertexBuffer}, vertex_buffer_desc::VertexBufferDesc, vertices::EVerticesBufferUsage};
 
@@ -20,6 +21,29 @@ pub trait TVertexBufferUseInfo: From<VertexBufferDesc> {
 
 pub trait TAssetResVertexBuffer {
     fn buffer(&self) -> EVerticesBufferUsage;
+}
+pub trait TAssetResVertexBufferForInstance: From<EVerticesBufferUsage> + TAssetResVertexBuffer {
+    fn instance_update(&self, device: &RenderDevice, queue: &RenderQueue, allocator: &mut VertexBufferAllocator, data: &[u8]) -> Option<Self> {
+        match self.buffer() {
+            EVerticesBufferUsage::GUI(_)        => None,
+            EVerticesBufferUsage::Part(_)       => None,
+            EVerticesBufferUsage::Other(_)      => None,
+            EVerticesBufferUsage::EVBRange(buffer)   => {
+                let val = match buffer.deref() {
+                    EVertexBufferRange::Updatable(_, _, _) => None,
+                    EVertexBufferRange::NotUpdatable(buffer) => {
+                        if let Some(buffer) = allocator.create_not_updatable_buffer(device, queue, data, Some(&buffer)) {
+                            Some(Self::from(EVerticesBufferUsage::EVBRange(Arc::new(buffer))))
+                        } else {
+                            None
+                        }
+                    },
+                };
+                val
+            },
+            EVerticesBufferUsage::Temp(_)       => None,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -62,6 +86,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot01 {
 impl TAssetResVertexBuffer for AssetResVBSlot01 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot01 {}
 
 // ============== 2
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -87,6 +112,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot02 {
 impl TAssetResVertexBuffer for AssetResVBSlot02 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot02 {}
 
 // ============== 3
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -112,6 +138,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot03 {
 impl TAssetResVertexBuffer for AssetResVBSlot03 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot03 {}
 
 // ============== 4
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -137,6 +164,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot04 {
 impl TAssetResVertexBuffer for AssetResVBSlot04 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot04 {}
 
 // ============== 5
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -162,6 +190,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot05 {
 impl TAssetResVertexBuffer for AssetResVBSlot05 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot05 {}
 
 // ============== 6
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -187,6 +216,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot06 {
 impl TAssetResVertexBuffer for AssetResVBSlot06 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot06 {}
 
 // ============== 7
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -213,6 +243,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot07 {
 impl TAssetResVertexBuffer for AssetResVBSlot07 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot07 {}
 
 // ============== 8
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -238,6 +269,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot08 {
 impl TAssetResVertexBuffer for AssetResVBSlot08 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot08 {}
 
 // ============== 9
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -263,6 +295,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot09 {
 impl TAssetResVertexBuffer for AssetResVBSlot09 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot09 {}
 
 // ============== 10
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -288,6 +321,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot10 {
 impl TAssetResVertexBuffer for AssetResVBSlot10 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot10 {}
 
 // ============== 11
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -313,6 +347,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot11 {
 impl TAssetResVertexBuffer for AssetResVBSlot11 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot11 {}
 
 // ============== 12
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
@@ -338,6 +373,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot12 {
 impl TAssetResVertexBuffer for AssetResVBSlot12 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot12 {}
 
 
 // ============== 13
@@ -364,6 +400,7 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot13 {
 impl TAssetResVertexBuffer for AssetResVBSlot13 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
+impl TAssetResVertexBufferForInstance for AssetResVBSlot13 {}
 
 
 // ============== 14
@@ -391,6 +428,7 @@ impl TAssetResVertexBuffer for AssetResVBSlot14 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
+impl TAssetResVertexBufferForInstance for AssetResVBSlot14 {}
 
 
 // ============== 15
@@ -418,6 +456,7 @@ impl TAssetResVertexBuffer for AssetResVBSlot15 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
+impl TAssetResVertexBufferForInstance for AssetResVBSlot15 {}
 
 
 // ============== 16
@@ -445,3 +484,4 @@ impl TAssetResVertexBuffer for AssetResVBSlot16 {
     fn buffer(&self) -> EVerticesBufferUsage { self.0.clone() }
 }
 
+impl TAssetResVertexBufferForInstance for AssetResVBSlot16 {}

@@ -59,14 +59,22 @@ impl Plugin for PluginTransformNode {
     }
 }
 
+#[derive(Resource, Default)]
+pub struct AssetCapacityAnimeTransformNode(pub AssetCapacity);
+impl AsRef<AssetCapacity> for AssetCapacityAnimeTransformNode {
+    fn as_ref(&self) -> &AssetCapacity {
+        &self.0
+    }
+}
+
 pub struct PluginGroupTransformNode;
 impl PluginGroupTransformNode {
     pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {
         group
             .add(PluginTransformNode)
-            .add(PluginAnimeLocalPosition::new(false, 2 * 1024 * 1024, 1000))
-            .add(PluginAnimeLocalEuler::new(false, 2 * 1024 * 1024, 1000))
-            .add(PluginAnimeLocalQuaternion::new(false, 2 * 1024 * 1024, 1000))
-            .add(PluginAnimeLocalScaling::new(false, 2 * 1024 * 1024, 1000))
+            .add(PluginAnimeLocalPosition::new())
+            .add(PluginAnimeLocalEuler::new())
+            .add(PluginAnimeLocalQuaternion::new())
+            .add(PluginAnimeLocalScaling::new())
     }
 }

@@ -230,6 +230,7 @@ pub fn main() {
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugin(PluginNodeMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
     app.add_plugin(PluginTest);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;

@@ -66,7 +66,7 @@ pub use pi_assets::{asset::GarbageEmpty};
 
 pub use crate::run_stage::ERunStageChap;
 pub use crate::object::ObjectID;
-pub use crate::engine_shell::EnginShell;
+pub use crate::engine_shell::*;
 pub use crate::assets::{
     sync_load::*,
     image_texture_load::*

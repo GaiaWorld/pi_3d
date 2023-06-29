@@ -1,7 +1,7 @@
 #![feature(box_into_inner)]
 
 use default_render::SingleIDBaseDefaultMaterial;
-use pi_3d::PluginBundleDefault;
+use pi_3d::{PluginBundleDefault};
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
@@ -194,6 +194,7 @@ pub fn main() {
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugins(PluginGroupNodeMaterialAnime);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

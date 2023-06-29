@@ -2,7 +2,7 @@ use std::mem::replace;
 
 use pi_engine_shell::prelude::*;
 
-use crate::prelude::geometry_update_instance_buffer;
+use crate::prelude::instance_buffer_update;
 
 use super::{
     vertex_buffer_useinfo::*,
@@ -88,10 +88,32 @@ pub fn sys_act_geomettry_instance_world_matrix(
     mut geoloader: ResMut<GeometryVBLoader>,
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     mut geometrys: Query<&mut InstanceBufferWorldMatrix>,
+    mut slots: (
+        Query<&mut AssetResVBSlot01>,
+        Query<&mut AssetResVBSlot02>,
+        Query<&mut AssetResVBSlot03>,
+        Query<&mut AssetResVBSlot04>,
+        Query<&mut AssetResVBSlot05>,
+        Query<&mut AssetResVBSlot06>,
+        Query<&mut AssetResVBSlot07>,
+        Query<&mut AssetResVBSlot08>,
+        Query<&mut AssetResVBSlot09>,
+        Query<&mut AssetResVBSlot10>,
+        Query<&mut AssetResVBSlot11>,
+        Query<&mut AssetResVBSlot12>,
+        Query<&mut AssetResVBSlot13>,
+        Query<&mut AssetResVBSlot14>,
+        Query<&mut AssetResVBSlot15>,
+        Query<&mut AssetResVBSlot16>,
+    ),
+    mut allocator: ResMut<VertexBufferAllocator3D>,
+    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+    device: Res<PiRenderDevice>,
+    queue: Res<PiRenderQueue>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceWorldMatrixs(geo, data, count)| {
         if let Ok(mut buffer) = geometrys.get_mut(geo) {
-            geometry_update_instance_buffer::<InstanceBufferWorldMatrix>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
+            instance_buffer_update::<InstanceBufferWorldMatrix>(data, geo, &mut buffer, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
         } else {
             if count < 1 {
                 cmds.push(OpsInstanceWorldMatrixs(geo, data, count + 1));
@@ -105,10 +127,33 @@ pub fn sys_act_geomettry_instance_color(
     mut geoloader: ResMut<GeometryVBLoader>,
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     mut geometrys: Query<&mut InstanceBufferColor>,
+    mut slots: (
+        Query<&mut AssetResVBSlot01>,
+        Query<&mut AssetResVBSlot02>,
+        Query<&mut AssetResVBSlot03>,
+        Query<&mut AssetResVBSlot04>,
+        Query<&mut AssetResVBSlot05>,
+        Query<&mut AssetResVBSlot06>,
+        Query<&mut AssetResVBSlot07>,
+        Query<&mut AssetResVBSlot08>,
+        Query<&mut AssetResVBSlot09>,
+        Query<&mut AssetResVBSlot10>,
+        Query<&mut AssetResVBSlot11>,
+        Query<&mut AssetResVBSlot12>,
+        Query<&mut AssetResVBSlot13>,
+        Query<&mut AssetResVBSlot14>,
+        Query<&mut AssetResVBSlot15>,
+        Query<&mut AssetResVBSlot16>,
+    ),
+    mut allocator: ResMut<VertexBufferAllocator3D>,
+    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+    device: Res<PiRenderDevice>,
+    queue: Res<PiRenderQueue>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceColors(geo, data, count)| {
         if let Ok(mut buffer) = geometrys.get_mut(geo) {
-            geometry_update_instance_buffer::<InstanceBufferColor>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
+            instance_buffer_update::<InstanceBufferColor>(data, geo, &mut buffer, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
+            // geometry_update_instance_buffer::<InstanceBufferColor>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
         } else {
             if count < 1 {
                 cmds.push(OpsInstanceColors(geo, data, count + 1));
@@ -122,10 +167,33 @@ pub fn sys_act_geomettry_instance_tilloff(
     mut geoloader: ResMut<GeometryVBLoader>,
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     mut geometrys: Query<&mut InstanceBufferTillOff>,
+    mut slots: (
+        Query<&mut AssetResVBSlot01>,
+        Query<&mut AssetResVBSlot02>,
+        Query<&mut AssetResVBSlot03>,
+        Query<&mut AssetResVBSlot04>,
+        Query<&mut AssetResVBSlot05>,
+        Query<&mut AssetResVBSlot06>,
+        Query<&mut AssetResVBSlot07>,
+        Query<&mut AssetResVBSlot08>,
+        Query<&mut AssetResVBSlot09>,
+        Query<&mut AssetResVBSlot10>,
+        Query<&mut AssetResVBSlot11>,
+        Query<&mut AssetResVBSlot12>,
+        Query<&mut AssetResVBSlot13>,
+        Query<&mut AssetResVBSlot14>,
+        Query<&mut AssetResVBSlot15>,
+        Query<&mut AssetResVBSlot16>,
+    ),
+    mut allocator: ResMut<VertexBufferAllocator3D>,
+    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+    device: Res<PiRenderDevice>,
+    queue: Res<PiRenderQueue>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceTilloffs(geo, data, count)| {
         if let Ok(mut buffer) = geometrys.get_mut(geo) {
-            geometry_update_instance_buffer::<InstanceBufferTillOff>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
+            instance_buffer_update::<InstanceBufferTillOff>(data, geo, &mut buffer, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
+            // geometry_update_instance_buffer::<InstanceBufferTillOff>(Some(data), geo, &mut buffer, &mut geoloader, &mut vb_data_map);
         } else {
             if count < 1 {
                 cmds.push(OpsInstanceTilloffs(geo, data, count + 1));

@@ -31,14 +31,6 @@ impl OpsMeshCreation {
 }
 pub type ActionListMeshCreate = ActionList<OpsMeshCreation>;
 
-pub struct OpsAbstructMeshEnable(pub(crate) Entity, pub(crate) AbstructMesh, pub u8);
-impl OpsAbstructMeshEnable {
-    pub fn ops(entity: Entity, val: bool) -> Self {
-        Self(entity, AbstructMesh(val), 0)
-    }
-}
-pub type ActionListAbstructMeshEnable = ActionList<OpsAbstructMeshEnable>;
-
 pub struct OpsInstanceMeshCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub u8);
 impl OpsInstanceMeshCreation {
     pub fn ops(source: Entity, instance: Entity, name: String) -> Self {

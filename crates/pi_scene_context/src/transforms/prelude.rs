@@ -2,6 +2,8 @@
 use pi_engine_shell::prelude::*;
 
 
+use crate::prelude::ActionListNodeEnable;
+
 pub use super::transform_node::*;
 pub use super::command::*;
 pub use super::tree_left_right::*;
@@ -14,6 +16,7 @@ pub struct ActionSetTransform<'w> {
     pub localscl: ResMut<'w, ActionListTransformNodeLocalScaling>,
     pub localrot: ResMut<'w, ActionListTransformNodeLocalEuler>,
     pub tree: ResMut<'w, ActionListTransformNodeParent>,
+    pub enable: ResMut<'w, ActionListNodeEnable>,
 }
 
 #[derive(SystemParam)]

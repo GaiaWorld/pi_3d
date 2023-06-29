@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
 use pi_scene_math::{Vector3};
 
-use crate::{flags::UniqueName};
+use crate::{flags::UniqueName, prelude::{Enable, GlobalEnable}};
 
 use super::{transform_node::*};
 
@@ -49,6 +49,8 @@ pub type ActionListTransformNodeLocalScaling = ActionList<OpsTransformNodeLocalS
 
 pub struct BundleTransformNode(
     UniqueName,
+    Enable,
+    GlobalEnable,
     LocalPosition,
     LocalScaling,
     LocalRotation,

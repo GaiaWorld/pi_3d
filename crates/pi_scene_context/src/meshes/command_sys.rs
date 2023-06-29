@@ -131,22 +131,6 @@ pub fn sys_act_mesh_modify(
     });
 }
 
-pub fn sys_act_abstruct_mesh_enable(
-    mut cmds: ResMut<ActionListAbstructMeshEnable>,
-    mut abstructmeshes: Query<&mut AbstructMesh>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAbstructMeshEnable(entity, val, count)| {
-        if let Ok(mut abstructmesh) = abstructmeshes.get_mut(entity) {
-            *abstructmesh = val;
-        } else {
-            if count < 2 {
-                cmds.push(OpsAbstructMeshEnable(entity, val, count + 1));
-            }
-        }
-    });
-}
-
-
 pub fn sys_act_instance_color(
     mut cmds: ResMut<ActionListInstanceColor>,
     entities: Query<Entity>,
@@ -250,7 +234,7 @@ impl ActionMesh {
         }
 
         commands
-            .insert(AbstructMesh(true))
+            .insert(AbstructMesh)
             .insert(Mesh)
             .insert(RenderWorldMatrix(Matrix::identity()))
             .insert(RenderWorldMatrixInv(Matrix::identity()))
@@ -352,7 +336,7 @@ impl ActionInstanceMesh {
         commands: &mut EntityCommands,
         source: Entity,
     ) {
-        commands.insert(AbstructMesh(true));
+        commands.insert(AbstructMesh);
         commands.insert(InstanceSourceID(source));
         commands.insert(InstanceColor(Vector4::new(1., 1., 1., 1.)));
         commands.insert(InstanceTillOff(Vector4::new(1., 1., 0., 0.)));

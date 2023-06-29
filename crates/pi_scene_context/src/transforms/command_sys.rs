@@ -2,6 +2,8 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::*;
 
 use crate::flags::UniqueName;
+use crate::prelude::Enable;
+use crate::prelude::GlobalEnable;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
@@ -100,7 +102,10 @@ impl ActionTransformNode {
     ) {
         commands.insert(Down::default())
             .insert(Up::default())
-            .insert(Layer::default());
+            .insert(Layer::default())
+            .insert(Enable(1.))
+            .insert(GlobalEnable(true))
+            ;
     }
 
     pub(crate) fn tree_modify(

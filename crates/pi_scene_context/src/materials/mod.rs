@@ -1,6 +1,6 @@
 
 use pi_assets::asset::GarbageEmpty;
-use pi_engine_shell::{prelude::*, assets::sync_load::*};
+use pi_engine_shell::{prelude::*};
 
 
 use self::{
@@ -36,47 +36,27 @@ struct PluginMaterial;
 impl Plugin for PluginMaterial {
     fn build(&self, app: &mut bevy::prelude::App) {
         if app.world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgSamplerRes>() {
-                cfg.clone()
-            } else {
-                app.insert_resource(AssetCfgSamplerRes::default());
-                app.world.get_resource::<AssetCfgSamplerRes>().unwrap().clone()
-            };
+            let cfg = asset_capacity::<AssetCfgSamplerRes>(app);
             app.insert_resource(
-                ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
+                ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
         if app.world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgTextureRes>() {
-                cfg.clone()
-            } else {
-                app.insert_resource(AssetCfgTextureRes::default());
-                app.world.get_resource::<AssetCfgTextureRes>().unwrap().clone()
-            };
+            let cfg = asset_capacity::<AssetCfgTextureRes>(app);
             app.insert_resource(
-                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
+                ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
         if app.world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgImageTexture>() {
-                cfg.clone()
-            } else {
-                app.insert_resource(AssetCfgImageTexture::default());
-                app.world.get_resource::<AssetCfgImageTexture>().unwrap().clone()
-            };
+            let cfg = asset_capacity::<AssetCfgImageTexture>(app);
             app.insert_resource(
-                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
+                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
         if app.world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgImageTextureView>() {
-                cfg.clone()
-            } else {
-                app.insert_resource(AssetCfgImageTextureView::default());
-                app.world.get_resource::<AssetCfgImageTextureView>().unwrap().clone()
-            };
+            let cfg = asset_capacity::<AssetCfgImageTextureView>(app);
             app.insert_resource(
-                ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout)
+                ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
 
@@ -87,13 +67,8 @@ impl Plugin for PluginMaterial {
         );
         app.insert_resource(defaulttextures);
 
-        let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgShaderMeta3D>() {
-            cfg
-        } else {
-            app.insert_resource(AssetCfgShaderMeta3D::default());
-            app.world.get_resource::<AssetCfgShaderMeta3D>().unwrap()
-        };
-        app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), false, cfg.0.min, cfg.0.timeout));
+        let cfg = asset_capacity::<AssetCfgShaderMeta3D>(app);
+        app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
 
         app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
 

@@ -191,6 +191,7 @@ pub fn main() {
     app.add_plugin(PluginCubeBuilder);
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

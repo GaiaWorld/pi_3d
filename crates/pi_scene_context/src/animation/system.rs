@@ -4,7 +4,7 @@ use pi_animation::{animation_group_manager::AnimationGroupManager};
 use pi_curves::curve::{frame::{KeyFrameCurveValue}};
 use pi_engine_shell::prelude::*;
 
-use crate::{scene::environment::scene_time::SceneTime};
+use crate::{scene::environment::scene_time::SceneTime, prelude::SceneAnimationEnable};
 
 use super::{base::*};
 
@@ -28,7 +28,7 @@ pub fn sys_listen_scene_anime_ctx(
 }
 // #[system]
 pub fn sys_scene_anime_ctx(
-    mut scenes: Query<(Entity, &SceneTime)>,
+    mut scenes: Query<(Entity, &SceneTime, &SceneAnimationEnable)>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
     mut scenectxs: ResMut<SceneAnimationContextMap>,
     mut animeevents: ResMut<GlobalAnimeEvents>,
@@ -36,10 +36,14 @@ pub fn sys_scene_anime_ctx(
     let time0 = pi_time::Instant::now();
 
     animeglobal.runtimeinfos.reset();
-    scenes.iter_mut().for_each(|(id_scene, scene_time)| {
+    scenes.iter_mut().for_each(|(id_scene, scene_time, enable)| {
         let ctx = if let Some(ctx) = scenectxs.get_mut(&id_scene) {
             ctx
         } else { return; };
+
+        if enable.0 == false {
+            return;
+        }
 
         // ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos);
         {

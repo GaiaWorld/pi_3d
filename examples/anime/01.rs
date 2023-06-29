@@ -2,7 +2,7 @@
 
 
 use default_render::SingleIDBaseDefaultMaterial;
-use pi_3d::PluginBundleDefault;
+use pi_3d::{PluginBundleDefault, PluginSceneTimeFromPluginFrame};
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_frame_event::CurveFrameEvent, animation_listener::{AnimationListener, EAnimationEventResult}};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
@@ -53,7 +53,7 @@ fn setup(
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
     let tes_size = 20;
-    fps.frame_ms = 100;
+    fps.frame_ms = 16;
 
     final_render.cleardepth = 0.0;
 
@@ -187,6 +187,7 @@ pub fn main() {
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginNodeMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

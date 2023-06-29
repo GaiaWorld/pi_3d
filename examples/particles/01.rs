@@ -434,6 +434,7 @@ pub fn main() {
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugin(PluginNodeMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.add_system(sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix));
 

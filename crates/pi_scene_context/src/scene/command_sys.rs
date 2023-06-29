@@ -2,7 +2,7 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
-    prelude::SceneMainCameraID,
+    prelude::{SceneMainCameraID, Enable, GlobalEnable},
 };
 
 use super::{prelude::*};
@@ -11,13 +11,34 @@ pub fn sys_act_scene_create(
     mut cmds: ResMut<ActionListSceneCreate>,
     mut commands: Commands,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
-    device: Res<PiRenderDevice>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, cfg)| {
         ActionScene::init(&mut commands, entity, cfg);
         ActionTransformNode::init_for_tree(&mut commands.entity(entity));
         if let Some(bindeffect) = BindSceneEffect::new( &mut dynbuffer) {
             commands.entity(entity).insert(bindeffect);
+        }
+    });
+}
+
+pub fn sys_act_scene_deltatime(
+    mut cmds: ResMut<ActionListSceneDeltaTime>,
+    mut scenes: Query<&mut SceneTime>,
+) {
+    cmds.drain().drain(..).for_each(|OpsSceneDeltaTime(entity, val)| {
+        if let Ok(mut comp) = scenes.get_mut(entity) {
+            comp.reset(val as u64);
+        }
+    });
+}
+
+pub fn sys_act_scene_animation_enable(
+    mut cmds: ResMut<ActionListSceneAnimationEnable>,
+    mut scenes: Query<&mut SceneAnimationEnable>,
+) {
+    cmds.drain().drain(..).for_each(|OpsSceneAnimationEnable(entity, val)| {
+        if let Ok(mut comp) = scenes.get_mut(entity) {
+            *comp = SceneAnimationEnable(val);
         }
     });
 }
@@ -47,6 +68,9 @@ impl ActionScene {
             .insert(TreeRightRoot::new(id_right))
             .insert(AnimationGroups::default())
             .insert(SceneMainCameraID(None))
+            .insert(SceneAnimationEnable::default())
+            .insert(Enable(1.))
+            .insert(GlobalEnable(true))
         ;
 
         let entity = entitycmds.id();
@@ -74,6 +98,7 @@ impl ActionScene {
             .insert(TreeRightRoot::new(id_right))
             .insert(AnimationGroups::default())
             .insert(SceneMainCameraID(None))
+            .insert(SceneAnimationEnable::default())
             ;
     }
 

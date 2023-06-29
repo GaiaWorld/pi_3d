@@ -180,10 +180,13 @@ path = "examples/anime/01.rs"
 name = "anime_performance"
 path = "examples/anime/performance.rs"
 # 
-# 
 # [[example]]
 # name = "lighting_01"
 # path = "examples/lighting/01.rs"
+# 
+[[example]]
+name = "particle00"
+path = "examples/particles/00.rs"
 # 
 # [[example]]
 # name = "particle01"

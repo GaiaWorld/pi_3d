@@ -1,9 +1,9 @@
 
 use pi_engine_shell::prelude::*;
 
-use super::transform_node::{LocalPosition, LocalEulerAngles, LocalRotationQuaternion, LocalScaling};
+use super::{transform_node::{LocalPosition, LocalEulerAngles, LocalRotationQuaternion, LocalScaling}, AssetCapacityAnimeTransformNode};
 
-pub type PluginAnimeLocalPosition   = PluginTypeAnime<LocalPosition>;
-pub type PluginAnimeLocalEuler      = PluginTypeAnime<LocalEulerAngles>;
-pub type PluginAnimeLocalQuaternion = PluginTypeAnime<LocalRotationQuaternion>;
-pub type PluginAnimeLocalScaling    = PluginTypeAnime<LocalScaling>;
+pub type PluginAnimeLocalPosition   = PluginTypeAnime<LocalPosition, AssetCapacityAnimeTransformNode>;
+pub type PluginAnimeLocalEuler      = PluginTypeAnime<LocalEulerAngles, AssetCapacityAnimeTransformNode>;
+pub type PluginAnimeLocalQuaternion = PluginTypeAnime<LocalRotationQuaternion, AssetCapacityAnimeTransformNode>;
+pub type PluginAnimeLocalScaling    = PluginTypeAnime<LocalScaling, AssetCapacityAnimeTransformNode>;

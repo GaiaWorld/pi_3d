@@ -7,7 +7,7 @@ use pi_scene_context::{
     cullings::{PluginCulling},
     cameras::PluginCamera,
     transforms::PluginGroupTransformNode,
-    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup, flags::PluginFlags, light::PluginLighting, skeleton::PluginSkeleton, object::PluginDispose, animation::PluginSceneAnimation
+    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup, flags::PluginFlags, light::PluginLighting, skeleton::PluginSkeleton, object::PluginDispose, animation::PluginSceneAnimation, prelude::SceneTime
 };
 
 pub struct Limit(pub wgpu::Limits);
@@ -16,6 +16,24 @@ pub struct Limit(pub wgpu::Limits);
 //         500 * 1024 * 1024
 //     }
 // }
+
+pub fn sys_scene_time_from_frame(
+    mut scenes: Query<&mut SceneTime>,
+    frame: Res<SingleFrameTimeCommand>,
+) {
+    scenes.iter_mut().for_each(|mut comp| {
+        comp.reset(frame.frame_ms);
+    });
+}
+
+pub struct PluginSceneTimeFromPluginFrame;
+impl Plugin for PluginSceneTimeFromPluginFrame {
+    fn build(&self, app: &mut App) {
+        app.add_system(
+            sys_scene_time_from_frame.in_set(ERunStageChap::Command)
+        );
+    }
+}
 
 pub struct PluginBundleDefault;
 impl PluginGroup for PluginBundleDefault {
@@ -27,6 +45,7 @@ impl PluginGroup for PluginBundleDefault {
         group = group.add(PluginRenderBindGroup);
         group = group.add(PluginScene);
         group = group.add(PluginSceneAnimation);
+        group = group.add(PluginFlags);
         group = PluginGroupTransformNode::add(group);
         group = group.add(PluginCamera)
             .add(PluginMesh)

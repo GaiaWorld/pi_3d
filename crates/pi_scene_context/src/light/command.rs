@@ -14,10 +14,9 @@ use crate::{
         command_sys::*
     },
     pass::{EPassTag, PassTagOrders},
-    flags::{Enable},
     scene::command_sys::ActionScene,
     transforms::{command_sys::*, prelude::*},
-    animation::command_sys::*,
+    animation::command_sys::*, prelude::GlobalEnable,
 };
 
 use super::{
@@ -166,7 +165,7 @@ impl ActionLight {
             .insert(ShadowAngle::default())
             .insert(ShadowEnable(false))
             .insert(ShadowAtlasSize::default())
-            .insert(Enable(true));
+            ;
 
         ActionTransformNode::as_transform_node(commands, name);
         ActionViewer::as_viewer(commands);
@@ -339,9 +338,9 @@ pub enum ELightModifyCommand {
     pub fn sys_light_render_modify(
         lights: Query<
             (
-                ObjectID, &Light, &ShadowEnable, &Enable, &ViewerRenderersInfo, &ShadowAtlasSize,
+                ObjectID, &Light, &ShadowEnable, &GlobalEnable, &ViewerRenderersInfo, &ShadowAtlasSize,
             ),
-            Or<(Changed<Light>, Changed<ShadowEnable>, &Enable, Changed<ShadowAtlasSize>, )>
+            Or<(Changed<Light>, Changed<ShadowEnable>, &GlobalEnable, Changed<ShadowAtlasSize>, )>
         >,
         // mut render_cmds: ResMut<SingleRendererCommandList>,
         mut commands: Commands,
