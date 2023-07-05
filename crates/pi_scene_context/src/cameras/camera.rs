@@ -60,9 +60,65 @@ pub struct CameraOrthograhicParam {
 
 #[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraFov(pub Number);
+impl pi_curves::curve::frame::FrameDataValue for CameraFov {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 * (1.0 - amount) + rhs.0 * amount)
+    }
+
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let _1 = 1.;
+        let _2 = 2.;
+        let _3 = 3.;
+
+        let squared = amount * amount;
+        let cubed = amount * squared;
+        let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
+        let part2 = (-_2 * cubed) + (_3 * squared);
+        let part3 = (cubed - (_2 * squared)) + amount;
+        let part4 = cubed - squared;
+
+        let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
+        return Self(result);
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 + rhs.0 * amount)
+    }
+    fn size() -> usize {
+        1 * 4
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraOrthSize(pub Number);
+impl pi_curves::curve::frame::FrameDataValue for CameraOrthSize {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 * (1.0 - amount) + rhs.0 * amount)
+    }
+
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        let _1 = 1.;
+        let _2 = 2.;
+        let _3 = 3.;
+
+        let squared = amount * amount;
+        let cubed = amount * squared;
+        let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
+        let part2 = (-_2 * cubed) + (_3 * squared);
+        let part3 = (cubed - (_2 * squared)) + amount;
+        let part4 = cubed - squared;
+
+        let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
+        return Self(result);
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        Self(self.0 + rhs.0 * amount)
+    }
+    fn size() -> usize {
+        1 * 4
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraToScreen(pub bool);

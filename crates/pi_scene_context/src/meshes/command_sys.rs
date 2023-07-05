@@ -19,7 +19,7 @@ use crate::{
     transforms::{command_sys::ActionTransformNode, prelude::*},
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::{RenderAlignment, ModelVelocity, ScalingMode},
+    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange},
 };
 
 use super::{
@@ -27,7 +27,7 @@ use super::{
     model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel},
     abstract_mesh::AbstructMesh,
     Mesh,
-    lighting::{MeshCastShadow, MeshReceiveShadow}
+    lighting::{MeshCastShadow, MeshReceiveShadow},
 };
 
 
@@ -221,6 +221,21 @@ pub fn sys_act_abstruct_mesh_velocity(
     });
 }
 
+pub fn sys_act_mesh_render_indice(
+    mut cmds: ResMut<ActionListMeshRenderIndiceRange>,
+    mut items: Query<&mut IndiceRenderRange>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = IndiceRenderRange(val);
+        } else {
+            if count < 2 {
+                cmds.push(OpsMeshRenderIndiceRange(entity, val, count + 1));
+            }
+        }
+    });
+}
+
 pub struct ActionMesh;
 impl ActionMesh {
     pub(crate) fn as_mesh(
@@ -265,6 +280,7 @@ impl ActionMesh {
             .insert(ModelVelocity::default())
             .insert(RenderAlignment::default())
             .insert(ScalingMode::default())
+            .insert(IndiceRenderRange(None))
             ;
     }
     pub fn create(

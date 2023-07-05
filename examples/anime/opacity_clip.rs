@@ -2,7 +2,7 @@
 
 use default_render::SingleIDBaseDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
+use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_group::AnimationGroupID};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
@@ -131,8 +131,9 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    // animegroupcmd.global.record_group(source, &key_group, id_group);
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(root, key_group.clone(), id_group));
+    animegroupcmd.global.record_group(source, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+
     {
         let key_curve0 = pi_atom::Atom::from("cutoff");
         let curve = FrameCurve::<Cutoff>::curve_easing(Cutoff(0.0), Cutoff(1.0), 30, 30, EEasingMode::None);
@@ -151,7 +152,7 @@ fn setup(
         };
     
         let animation = matanime.cutoff.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(root, idmat, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, idmat, id_group, animation);
     }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
@@ -171,11 +172,11 @@ fn setup(
         };
     
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(root, root, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group, animation);
     }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Positive(Some(5));
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(root, key_group.clone(), parma));
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma);
 
     // animegroupcmd.global.add_frame_event_listen(id_group);
     // animegroupcmd.global.add_frame_event(id_group, 0.5, 100);
@@ -184,7 +185,7 @@ fn setup(
 pub fn sys_anime_event(
     mut events: ResMut<GlobalAnimeEvents>,
 ) {
-    let mut list: Vec<(Entity, usize, u8, u32)> = replace(&mut events, vec![]);
+    let mut list: Vec<(Entity, AnimationGroupID, u8, u32)> = replace(&mut events, vec![]);
     list.drain(..).for_each(|item| {
         log::warn!("Event {:?}", item);
     });

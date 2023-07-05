@@ -85,7 +85,8 @@ fn image_change<
                                             view_await.push((id, EKeyTexture::Tex(key), ETextureViewUsage::Tex(r)));
                                         }
                                         Err(e) => {
-                                            log::error!("load image fail, {:?}", e);
+                                            // log::error!("load image fail, {:?}", e);
+                                            log::error!("load image fail");
                                         }
                                     };
                                 })
@@ -100,7 +101,8 @@ fn image_change<
                 } else {
                     match key.url() {
                         KeyImageTexture::Data(url, _) => {
-                            log::error!("image_texture_view_load fail, Not Found DateTexture: {:?}", url);
+                            // log::error!("image_texture_view_load fail, Not Found DateTexture: {:?}", url);
+                            log::error!("image_texture_view_load fail, Not Found DateTexture:");
                         },
                         KeyImageTexture::File(url, _) => {
                             let imageresult = AssetMgr::load(&image_assets_mgr, key.url());
@@ -112,7 +114,8 @@ fn image_change<
                                             image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Image(texture_view)) );
                                         },
                                         Err(e) => {
-                                            log::error!("image_texture_view_load fail, while insert: {:?}", key.url().as_str());
+                                            // log::error!("image_texture_view_load fail, while insert: {:?}", key.url().as_str());
+                                            log::error!("image_texture_view_load fail, while insert:");
                                         },
                                     }
                                 },
@@ -134,7 +137,8 @@ fn image_change<
                                                     image_wait.push((id, EKeyTexture::Image(key.clone()), texture));
                                                 },
                                                 Err(e) => {
-                                                    log::error!("load image fail, {:?}", e);
+                                                    // log::error!("load image fail, {:?}", e);
+                                                    log::error!("load image fail,");
                                                 }
                                             }
         
@@ -189,7 +193,8 @@ pub fn check_await_texture<
                                 // log::warn!("image_loaded: {:?}", key.url().as_str());
                                 texture_view
                             } else {
-                                log::error!("image_texture_view_load fail 2, while insert: {:?}", key.url().as_str());
+                                // log::error!("image_texture_view_load fail 2, while insert: {:?}", key.url().as_str());
+                                log::error!("image_texture_view_load fail 2, while insert:");
                                 break;
                             }
                         }

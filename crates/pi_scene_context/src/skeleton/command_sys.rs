@@ -49,12 +49,15 @@ pub fn sys_act_skin_use(
     mut cmds: ResMut<ActionListSkinUse>,
     mut skins: Query<(&mut Skeleton, &mut SkeletonRefs, &mut DirtySkeletonRefs)>,
     mut meshes: Query<&mut BindSkinValue>,
+    mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|ops| {
         match ops {
             OpsSkinUse::Use(entity, skin) => {
                 if let (Ok(mut bind), Ok((mut skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
                     *bind = BindSkinValue(Some(skeleton.bind.clone()));
+                    commands.entity(entity).insert(SkeletonID(skin));
+                    // log::warn!("Skinn OKKKKKKKKKKKK");
                     if skeletonrefs.insert(entity) {
                         *flag = DirtySkeletonRefs::default();
                     }

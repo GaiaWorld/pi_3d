@@ -95,7 +95,8 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    animegroupcmd.global.record_group(source, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     let cell_col = 4.;
     let cell_row = 4.;
@@ -127,13 +128,13 @@ fn setup(
                 };
 
                 let animation = transformanime.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
+                animegroupcmd.scene_ctxs.add_target_anime(scene, cube, id_group.clone(), animation);
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
     }
 
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

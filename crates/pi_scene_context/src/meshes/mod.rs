@@ -72,6 +72,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceColors::default());
         app.insert_resource(ActionListInstanceTilloffs::default());
         app.insert_resource(ActionListInstanceWorldMatrixs::default());
+        app.insert_resource(ActionListMeshRenderIndiceRange::default());
 
         app.add_system(
             sys_act_mesh_create.in_set(ERunStageChap::Initial)
@@ -87,6 +88,7 @@ impl crate::Plugin for PluginMesh {
                 sys_act_abstruct_mesh_velocity,
                 sys_act_instance_color,
                 sys_act_instance_tilloff,
+                sys_act_mesh_render_indice,
             ).in_set(ERunStageChap::Command)
         );
         app.add_system(

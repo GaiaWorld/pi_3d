@@ -23,7 +23,7 @@ pub struct PluginScene;
 impl Plugin for PluginScene {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListSceneCreate::default());
-        app.insert_resource(ActionListSceneDeltaTime::default());
+        app.insert_resource(ActionListSceneTime::default());
         app.insert_resource(ActionListSceneAnimationEnable::default());
 
         app.add_system(
@@ -32,7 +32,7 @@ impl Plugin for PluginScene {
         
         app.add_systems(
             (
-                sys_act_scene_deltatime,
+                sys_act_scene_time,
                 sys_act_scene_animation_enable,
             ).in_set(ERunStageChap::Command)
         );

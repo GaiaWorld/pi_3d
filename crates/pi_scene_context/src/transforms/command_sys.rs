@@ -93,6 +93,7 @@ impl ActionTransformNode {
             .insert(LocalEulerAngles(Vector3::new(0., 0., 0.)))
             .insert(LocalMatrix::new(Matrix::identity()))
             .insert(WorldMatrix::new(Matrix::identity()))
+            .insert(WorldMatrixInv::new(Matrix::identity()))
             .insert(GlobalTransform::default())
             ;
     }

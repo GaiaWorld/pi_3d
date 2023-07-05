@@ -13,13 +13,13 @@ impl OpsSceneCreation {
 }
 pub type ActionListSceneCreate = ActionList<OpsSceneCreation>;
 
-pub struct OpsSceneDeltaTime(pub(crate) Entity, pub(crate) f32);
-impl OpsSceneDeltaTime {
-    pub fn ops(scene: Entity, val: f32) -> Self {
+pub struct OpsSceneTime(pub(crate) Entity, pub(crate) u64);
+impl OpsSceneTime {
+    pub fn ops(scene: Entity, val: u64) -> Self {
         Self(scene, val)
     }
 }
-pub type ActionListSceneDeltaTime = ActionList<OpsSceneDeltaTime>;
+pub type ActionListSceneTime = ActionList<OpsSceneTime>;
 
 pub struct OpsSceneAnimationEnable(pub(crate) Entity, pub(crate) bool);
 impl OpsSceneAnimationEnable {

@@ -215,7 +215,7 @@ pub fn sys_camera_renderer_action(
                 commands.despawn();
             }
 
-            log::warn!("Camera Renderer Init!! {:?}", &rendername);
+            // log::warn!("Camera Renderer Init!! {:?}", &rendername);
 
             commands.entity(id_viewer).insert(DirtyViewerRenderersInfo);
 

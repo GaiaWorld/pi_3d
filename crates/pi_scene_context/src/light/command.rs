@@ -352,7 +352,7 @@ pub enum ELightModifyCommand {
 
                 let enable = shadowenable.0 && enable.0;
 
-                log::warn!(">>>>>>>> {:?}", enable);
+                // log::warn!(">>>>>>>> {:?}", enable);
 
                 let mut lightcmd = commands.entity(id_light);
                 lightcmd.insert(ViewerActive(enable));

@@ -69,6 +69,11 @@ impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
 
 #[derive(Debug, Clone, Component)]
 pub struct LocalRotationQuaternion(pub Quaternion);
+impl LocalRotationQuaternion {
+    pub fn create(x: Number, y: Number, z: Number, w: Number) -> Self {
+        Self(Quaternion::from_quaternion(pi_scene_math::SQuaternion::new(w, x, y, z)))
+    }
+}
 impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         let temp = self.0.slerp(&rhs.0, amount);

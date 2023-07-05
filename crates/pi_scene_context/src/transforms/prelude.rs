@@ -38,8 +38,15 @@ pub struct ActionSetLocalEulerAnime<'w> {
 }
 
 #[derive(SystemParam)]
+pub struct ActionSetLocalQuaternion<'w> {
+    pub ctx: ResMut<'w, TypeAnimeContext<LocalRotationQuaternion>>,
+    pub curves: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalRotationQuaternion>>>,
+}
+
+#[derive(SystemParam)]
 pub struct ActionSetTransformNodeAnime<'w> {
     pub position: ActionSetLocalPositionAnime<'w>,
     pub scaling: ActionSetLocalScalingAnime<'w>,
     pub euler: ActionSetLocalEulerAnime<'w>,
+    pub quaternion: ActionSetLocalQuaternion<'w>,
 }

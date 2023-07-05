@@ -32,7 +32,7 @@ pub fn sys_calc_type_anime<D: FrameDataValue + Component + TMaterialAnimeValue>(
     if let Some(list) = runinfos.runtimeinfos.list.get(ty) {
         for info in list {
             if let Some(Some(curve)) = curves.get(info.curve_id) {
-                // println!(">>>>>>>>>>>>>>>>>{}", info.amount_in_second);
+                // log::warn!(">>>>>>>>>>>>>>>>> {}", info.amount_in_second);
                 let value = curve.as_ref().interple(info.amount_in_second);
                 if let Ok((slots, bindeffect, mut dirty)) = materials.get_mut(info.target) {
                     value.apply(slots, &bindeffect.0);
@@ -41,27 +41,28 @@ pub fn sys_calc_type_anime<D: FrameDataValue + Component + TMaterialAnimeValue>(
             }
         }
     } else {
-        log::trace!("Not Found Anime Type: {}", ty);
+        // log::trace!("Not Found Anime Type: {}", ty);
     }
 
     // let time1 = pi_time::Instant::now();
     // log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
 }
 
-pub struct PluginMaterialAnime<D: FrameDataValue + Component + TMaterialAnimeValue>(bool, usize, usize, PhantomData<D>);
-impl<D: FrameDataValue + Component + TMaterialAnimeValue> PluginMaterialAnime<D> {
-    pub fn new(ref_garbage: bool, capacity: usize, timeout: usize) -> Self {
-        Self(ref_garbage, capacity, timeout, PhantomData::default())
+pub struct PluginMaterialAnime<D: FrameDataValue + Component + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default>(PhantomData<(D, C)>);
+impl<D: FrameDataValue + Component + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default> PluginMaterialAnime<D, C> {
+    pub fn new() -> Self {
+        Self(PhantomData::default())
     }
 }
-impl<D: FrameDataValue + Component + TMaterialAnimeValue> Plugin for PluginMaterialAnime<D> {
+impl<D: FrameDataValue + Component + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default> Plugin for PluginMaterialAnime<D, C> {
 
     fn build(&self, app: &mut bevy::prelude::App) {
         
         let ty = app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().ty_alloc.alloc().expect("");
         
+        let cfg = asset_capacity::<C>(app);
         // 创建 动画曲线 资产表
-        app.world.insert_resource(ShareAssetMgr::<TypeFrameCurve<D>>::new(GarbageEmpty(), self.0, self.1, self.2));
+        app.world.insert_resource(ShareAssetMgr::<TypeFrameCurve<D>>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
 
         let mut runtime_info_map = &mut app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().runtimeinfos;
 

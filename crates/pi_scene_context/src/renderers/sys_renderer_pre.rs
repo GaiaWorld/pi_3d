@@ -320,11 +320,14 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                         ) = models.get(id_model.0.clone()) {
                             // let bind_skl: &BindSkinValue = None;
                             // let id_skl: Option<&SkeletonID> = None;
-                            // log::info!("SysSet1ModifyByPass: 22222222222222222222222222");
+                            // log::warn!("SysSet1ModifyByPass: 22222222222222222222222222");
                             let bind_skin = match (&bind_skl.0, id_skl) {
                                 (None, None) => { None },
                                 (Some(bind_skin), Some(_)) => { Some(bind_skin.clone()) },
-                                _ => { return; }
+                                _ => { 
+                                    log::warn!("Skinnnnnnn");
+                                    return;
+                                }
                             };
                             if pass_tags.1 & I::TAG == I::TAG {
                                 if ready.val().is_some() {

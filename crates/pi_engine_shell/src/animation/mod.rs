@@ -21,17 +21,19 @@ use crate::{prelude::ERunStageChap, engine_shell::asset_capacity};
 pub struct PluginGlobalAnimation;
 impl Plugin for PluginGlobalAnimation {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListAnimeGroupCreate::default());
-        app.insert_resource(ActionListAnimeGroupPause::default());
-        app.insert_resource(ActionListAnimeGroupStart::default());
-        app.insert_resource(ActionListAddTargetAnime::default());
+        app.insert_resource(ActionListAnimeGroupAttach::default());
+        // app.insert_resource(ActionListAnimeGroupCreate::default());
+        // app.insert_resource(ActionListAnimeGroupPause::default());
+        // app.insert_resource(ActionListAnimeGroupStart::default());
+        // app.insert_resource(ActionListAddTargetAnime::default());
 
         app.add_systems(
             (
-                sys_anime_group_create.run_if(should_run),
-                sys_anime_add_target_anime.run_if(should_run),
-                sys_anime_start.run_if(should_run),
-                sys_anime_pause.run_if(should_run),
+                sys_anime_group_attach.run_if(should_run),
+                // sys_anime_group_create.run_if(should_run),
+                // sys_anime_add_target_anime.run_if(should_run),
+                // sys_anime_start.run_if(should_run),
+                // sys_anime_pause.run_if(should_run),
             ).chain().in_set(ERunStageChap::Command)
         );
         

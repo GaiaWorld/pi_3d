@@ -1,14 +1,6 @@
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
-use pi_scene_context::{
-    renderers::PluginRenderer,
-    meshes::{PluginMesh,},
-    layer_mask::PluginLayerMask, materials::PluginGroupMaterial,
-    cullings::{PluginCulling},
-    cameras::PluginCamera,
-    transforms::PluginGroupTransformNode,
-    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup, flags::PluginFlags, light::PluginLighting, skeleton::PluginSkeleton, object::PluginDispose, animation::PluginSceneAnimation, prelude::SceneTime
-};
+use pi_scene_context::{prelude::*, scene::PluginScene, animation::PluginSceneAnimation, transforms::PluginGroupTransformNode, cameras::PluginCamera, meshes::PluginMesh, geometry::PluginGeometry, light::PluginLighting, layer_mask::PluginLayerMask, materials::PluginGroupMaterial, renderers::PluginRenderer, skeleton::PluginSkeleton};
 
 pub struct Limit(pub wgpu::Limits);
 // impl TMemoryAllocatorLimit for Limit {
@@ -22,7 +14,8 @@ pub fn sys_scene_time_from_frame(
     frame: Res<SingleFrameTimeCommand>,
 ) {
     scenes.iter_mut().for_each(|mut comp| {
-        comp.reset(frame.frame_ms);
+        let time = comp.last_time_ms + frame.frame_ms;
+        comp.reset(time);
     });
 }
 
@@ -46,8 +39,11 @@ impl PluginGroup for PluginBundleDefault {
         group = group.add(PluginScene);
         group = group.add(PluginSceneAnimation);
         group = group.add(PluginFlags);
+        group = group.add(PluginAnimeNodeEnable::new());
         group = PluginGroupTransformNode::add(group);
         group = group.add(PluginCamera)
+            .add(PluginAnimeCameraFOV::new())
+            .add(PluginAnimeCameraSize::new())
             .add(PluginMesh)
             .add(PluginGeometry)
             .add(PluginLighting)

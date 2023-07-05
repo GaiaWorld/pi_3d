@@ -50,7 +50,7 @@ impl MainOpacityFresnelShader {
         nodemat.include(BlockEmissiveTexture::KEY, infos);
         nodemat.include(BlockEmissiveFresnel::KEY, infos);
 
-        log::warn!("MainOpacityFresnelShader Create");
+        // log::warn!("MainOpacityFresnelShader Create");
         
         nodemat.meta()
     }

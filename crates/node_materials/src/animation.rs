@@ -437,6 +437,7 @@ pub struct Alpha(pub f32);
 impl Default for Alpha { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for Alpha {
     fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+        // log::warn!("Material Anime Apply Slot {}", slots.alpha);
         if slots.alpha < u8::MAX {
             bind.float(slots.alpha as usize, self.0);
         }

@@ -25,26 +25,39 @@ pub use crate::mix_texture::*;
 pub use crate::mask_texture::*;
 pub use crate::{PluginNodeMaterial, PluginGroupNodeMaterialAnime};
 
-pub type PluginAnimeMainTexUScale       = PluginMaterialAnime<MainTexUScale>;
-pub type PluginAnimeMainTexVScale       = PluginMaterialAnime<MainTexVScale>;
-pub type PluginAnimeMainTexUOffset      = PluginMaterialAnime<MainTexUOffset>;
-pub type PluginAnimeMainTexVOffset      = PluginMaterialAnime<MainTexVOffset>;
+#[derive(Resource)]
+pub struct AssetCfgMaterialAnime(pub AssetCapacity);
+impl Default for AssetCfgMaterialAnime {
+    fn default() -> Self {
+        Self(AssetCapacity { flag: false, min: 1024, max: 10 * 1024, timeout: 10 * 1000 })
+    }
+}
+impl AsRef<AssetCapacity> for AssetCfgMaterialAnime {
+    fn as_ref(&self) -> &AssetCapacity {
+        &self.0
+    }
+}
 
-pub type PluginAnimeOpacityTexUScale    = PluginMaterialAnime<OpacityTexUScale>;
-pub type PluginAnimeOpacityTexVScale    = PluginMaterialAnime<OpacityTexVScale>;
-pub type PluginAnimeOpacityTexUOffset   = PluginMaterialAnime<OpacityTexUOffset>;
-pub type PluginAnimeOpacityTexVOffset   = PluginMaterialAnime<OpacityTexVOffset>;
+pub type PluginAnimeMainTexUScale       = PluginMaterialAnime<MainTexUScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMainTexVScale       = PluginMaterialAnime<MainTexVScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMainTexUOffset      = PluginMaterialAnime<MainTexUOffset, AssetCfgMaterialAnime>;
+pub type PluginAnimeMainTexVOffset      = PluginMaterialAnime<MainTexVOffset, AssetCfgMaterialAnime>;
 
-pub type PluginAnimeMaskTexUScale       = PluginMaterialAnime<MaskTexUScale>;
-pub type PluginAnimeMaskTexVScale       = PluginMaterialAnime<MaskTexVScale>;
-pub type PluginAnimeMaskTexUOffset      = PluginMaterialAnime<MaskTexUOffset>;
-pub type PluginAnimeMaskTexVOffset      = PluginMaterialAnime<MaskTexVOffset>;
+pub type PluginAnimeOpacityTexUScale    = PluginMaterialAnime<OpacityTexUScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeOpacityTexVScale    = PluginMaterialAnime<OpacityTexVScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeOpacityTexUOffset   = PluginMaterialAnime<OpacityTexUOffset, AssetCfgMaterialAnime>;
+pub type PluginAnimeOpacityTexVOffset   = PluginMaterialAnime<OpacityTexVOffset, AssetCfgMaterialAnime>;
 
-pub type PluginAnimeMainColor           = PluginMaterialAnime<MainColor>;
-pub type PluginAnimeAlpha               = PluginMaterialAnime<Alpha>;
-pub type PluginAnimeCutoff              = PluginMaterialAnime<Cutoff>;
-pub type PluginAnimeMaskCutoff          = PluginMaterialAnime<MaskCutoff>;
-pub type PluginAnimeLightDiffuse        = PluginMaterialAnime<LightDiffuse>;
+pub type PluginAnimeMaskTexUScale       = PluginMaterialAnime<MaskTexUScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskTexVScale       = PluginMaterialAnime<MaskTexVScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskTexUOffset      = PluginMaterialAnime<MaskTexUOffset, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskTexVOffset      = PluginMaterialAnime<MaskTexVOffset, AssetCfgMaterialAnime>;
+
+pub type PluginAnimeMainColor           = PluginMaterialAnime<MainColor, AssetCfgMaterialAnime>;
+pub type PluginAnimeAlpha               = PluginMaterialAnime<Alpha, AssetCfgMaterialAnime>;
+pub type PluginAnimeCutoff              = PluginMaterialAnime<Cutoff, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskCutoff          = PluginMaterialAnime<MaskCutoff, AssetCfgMaterialAnime>;
+pub type PluginAnimeLightDiffuse        = PluginMaterialAnime<LightDiffuse, AssetCfgMaterialAnime>;
 
 #[derive(SystemParam)]
 pub struct ActionSetMaterialAnime<'w> {

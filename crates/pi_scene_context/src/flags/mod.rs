@@ -28,7 +28,7 @@ pub struct CameraID(pub usize);
 #[derive(Component)]
 pub struct UniqueName(pub Atom);
 
-#[derive(Component, Clone)]
+#[derive(Debug, Component, Clone)]
 pub struct Enable(pub f32);
 impl Enable {
     pub fn bool(&self) -> bool {

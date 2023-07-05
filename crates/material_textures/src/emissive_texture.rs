@@ -79,7 +79,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(EmissiveTextureSampler(samplerpool.get(key).unwrap()));
-                        log::debug!("EmissiveTextureSampler Write");
+                        // log::debug!("EmissiveTextureSampler Write");
                     }
                 },
             }

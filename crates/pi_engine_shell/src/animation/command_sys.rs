@@ -14,81 +14,102 @@ use core::fmt::Debug;
 use super::base::*;
 use super::command::*;
 
-pub fn sys_anime_group_create(
-    mut cmds: ResMut<ActionListAnimeGroupCreate>,
+pub fn sys_anime_group_attach(
+    mut cmds: ResMut<ActionListAnimeGroupAttach>,
     mut obj: Query<&mut AnimationGroups>,
+    mut global: ResMut<SceneAnimationContextMap>,
 ) {
     // let mut list = 
-    cmds.drain().drain(..).for_each(|OpsAnimationGroupCreation(id_obj, key_group, id_group)| {
+    cmds.drain().drain(..).for_each(|OpsAnimationGroupAttach(scene, id_obj, id_group, count)| {
         if let Ok(mut groups) = obj.get_mut(id_obj) {
-            if groups.map.contains_key(&key_group) == false {
-                groups.map.insert(key_group, id_group);
+            if groups.map.contains_key(&id_group) == false {
+                groups.map.insert(id_group.clone(), id_group);
             }
         } else {
-            cmds.push(OpsAnimationGroupCreation(id_obj, key_group, id_group))
+            if count < 4 {
+                cmds.push(OpsAnimationGroupAttach(scene, id_obj, id_group, count + 1))
+            } else {
+                global.delete_group(&scene, id_group);
+            }
         }
     });
 }
 
-pub fn sys_anime_pause(
-    mut cmds: ResMut<ActionListAnimeGroupPause>,
-    obj: Query<(&SceneID, &AnimationGroups)>,
-    mut scenectxs: ResMut<SceneAnimationContextMap>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAnimationGroupPause(id_obj, key_group)| {
-        if let Ok((id_scene, groups)) = obj.get(id_obj) {
-            if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
-                if let Some(id_group) = groups.map.get(&key_group) {
-                    ctx.0.pause(id_group.clone());
-                }
-            }
-        } else {
-            cmds.push(OpsAnimationGroupPause(id_obj, key_group))
-        }
-    });
-}
+// pub fn sys_anime_group_create(
+//     mut cmds: ResMut<ActionListAnimeGroupCreate>,
+//     mut obj: Query<&mut AnimationGroups>,
+// ) {
+//     // let mut list = 
+//     cmds.drain().drain(..).for_each(|OpsAnimationGroupCreation(id_obj, key_group, id_group)| {
+//         if let Ok(mut groups) = obj.get_mut(id_obj) {
+//             if groups.map.contains_key(&id_group) == false {
+//                 groups.map.insert(id_group.clone(), id_group);
+//             }
+//         } else {
+//             cmds.push(OpsAnimationGroupCreation(id_obj, key_group, id_group))
+//         }
+//     });
+// }
+
+// pub fn sys_anime_pause(
+//     mut cmds: ResMut<ActionListAnimeGroupPause>,
+//     obj: Query<(&SceneID, &AnimationGroups)>,
+//     mut scenectxs: ResMut<SceneAnimationContextMap>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsAnimationGroupPause(id_obj, key_group)| {
+//         if let Ok((id_scene, groups)) = obj.get(id_obj) {
+//             if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
+//                 if let Some(id_group) = groups.map.get(&key_group) {
+//                     ctx.0.pause(id_group.clone());
+//                 }
+//             }
+//         } else {
+//             cmds.push(OpsAnimationGroupPause(id_obj, key_group))
+//         }
+//     });
+// }
 
 
-pub fn sys_anime_start(
-    mut cmds: ResMut<ActionListAnimeGroupStart>,
-    obj: Query<(&SceneID, & AnimationGroups)>,
-    mut scenectxs: ResMut<SceneAnimationContextMap>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAnimationGroupStart(id_obj, key_group, param)| {
-        if let Ok((id_scene, groups)) = obj.get(id_obj) {
-            if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
-                if let Some(id_group) = groups.map.get(&key_group) {
-                    ctx.0.start_with_progress(id_group.clone(), param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc);
-                }
-            }
-        } else {
-            cmds.push(OpsAnimationGroupStart(id_obj, key_group, param))
-        }
-    });
-}
+// pub fn sys_anime_start(
+//     mut cmds: ResMut<ActionListAnimeGroupStart>,
+//     obj: Query<(&SceneID, & AnimationGroups)>,
+//     mut scenectxs: ResMut<SceneAnimationContextMap>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsAnimationGroupStart(id_obj, key_group, param)| {
+//         if let Ok((id_scene, groups)) = obj.get(id_obj) {
+//             if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
+//                 if let Some(id_group) = groups.map.get(&key_group) {
+//                     ctx.0.start_with_progress(id_group.clone(), param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc);
+//                 }
+//             }
+//         } else {
+//             cmds.push(OpsAnimationGroupStart(id_obj, key_group, param))
+//         }
+//     });
+// }
 
-pub fn sys_anime_add_target_anime(
-    mut cmds: ResMut<ActionListAddTargetAnime>,
-    obj: Query<(&SceneID, & AnimationGroups)>,
-    mut scenectxs: ResMut<SceneAnimationContextMap>,
-) {
-    // log::warn!("AddTargetAnime");
-    cmds.drain().drain(..).for_each(|OpsAddTargetAnimation(id_obj, id_target, key_group, animation)| {
-        // log::warn!("AddTargetAnime 0");
-        if let Ok((id_scene, groups)) = obj.get(id_obj) {
-            // log::warn!("AddTargetAnime 1");
-            if let Some(id_group) = groups.map.get(&key_group) {
-                // log::warn!("AddTargetAnime 2");
-                if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
-                    // log::warn!("AddTargetAnime Ok");
-                    ctx.0.add_target_animation_notype(animation, id_group.clone(), id_target);
-                }
-            }
-        } else {
-            cmds.push(OpsAddTargetAnimation(id_obj, id_target, key_group, animation))
-        }
-    });
-}
+// pub fn sys_anime_add_target_anime(
+//     mut cmds: ResMut<ActionListAddTargetAnime>,
+//     obj: Query<(&SceneID, & AnimationGroups)>,
+//     mut scenectxs: ResMut<SceneAnimationContextMap>,
+// ) {
+//     // log::warn!("AddTargetAnime");
+//     cmds.drain().drain(..).for_each(|OpsAddTargetAnimation(id_obj, id_target, key_group, animation)| {
+//         // log::warn!("AddTargetAnime 0");
+//         if let Ok((id_scene, groups)) = obj.get(id_obj) {
+//             // log::warn!("AddTargetAnime 1");
+//             if let Some(id_group) = groups.map.get(&key_group) {
+//                 // log::warn!("AddTargetAnime 2");
+//                 if let Some(ctx) = scenectxs.get_mut(&id_scene.0) {
+//                     // log::warn!("AddTargetAnime Ok");
+//                     ctx.0.add_target_animation_notype(animation, id_group.clone(), id_target);
+//                 }
+//             }
+//         } else {
+//             cmds.push(OpsAddTargetAnimation(id_obj, id_target, key_group, animation))
+//         }
+//     });
+// }
 
 pub struct ActionAnime;
 impl ActionAnime {
@@ -155,7 +176,7 @@ pub fn sys_calc_type_anime<D: FrameDataValue + Component + Debug>(
                 if let Some(Some(curve)) = curves.get(info.curve_id) {
                     // println!(">>>>>>>>>>>>>>>>>{}", info.amount_in_second);
                     let value = curve.as_ref().interple(info.amount_in_second);
-                    // log::warn!("Anime Result {:?}", value);
+                    // log::warn!("Anime Amount: {:?}, Result {:?}", info.amount_in_second, value);
                     // commands.entity(info.target).insert(value);
                     *item = value;
                 }

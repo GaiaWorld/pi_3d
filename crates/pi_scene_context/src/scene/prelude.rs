@@ -15,7 +15,7 @@ pub use super::environment::{
 #[derive(SystemParam)]
 pub struct ActionSetScene<'w> {
     pub create: ResMut<'w, ActionListSceneCreate>,
-    pub deltatime: ResMut<'w, ActionListSceneDeltaTime>,
+    pub time: ResMut<'w, ActionListSceneTime>,
     pub animeenable: ResMut<'w, ActionListSceneAnimationEnable>,
 }
 

@@ -21,11 +21,11 @@ pub fn sys_act_scene_create(
     });
 }
 
-pub fn sys_act_scene_deltatime(
-    mut cmds: ResMut<ActionListSceneDeltaTime>,
+pub fn sys_act_scene_time(
+    mut cmds: ResMut<ActionListSceneTime>,
     mut scenes: Query<&mut SceneTime>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSceneDeltaTime(entity, val)| {
+    cmds.drain().drain(..).for_each(|OpsSceneTime(entity, val)| {
         if let Ok(mut comp) = scenes.get_mut(entity) {
             comp.reset(val as u64);
         }
@@ -66,7 +66,7 @@ impl ActionScene {
             .insert(AmbientLight::new())
             .insert(TreeLeftRoot::new(id_left))
             .insert(TreeRightRoot::new(id_right))
-            .insert(AnimationGroups::default())
+            // .insert(AnimationGroups::default())
             .insert(SceneMainCameraID(None))
             .insert(SceneAnimationEnable::default())
             .insert(Enable(1.))
@@ -96,7 +96,7 @@ impl ActionScene {
             .insert(AmbientLight::new())
             .insert(TreeLeftRoot::new(id_left))
             .insert(TreeRightRoot::new(id_right))
-            .insert(AnimationGroups::default())
+            // .insert(AnimationGroups::default())
             .insert(SceneMainCameraID(None))
             .insert(SceneAnimationEnable::default())
             ;

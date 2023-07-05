@@ -12,6 +12,7 @@ use self::{
     target_camera::TargetCameraParam, camera::CameraParam
 };
 
+mod animation;
 mod camera;
 mod free_camera;
 mod arc_rotate_camera;
@@ -21,6 +22,14 @@ mod command;
 pub mod command_sys;
 mod interface;
 pub mod prelude;
+
+#[derive(Resource, Default)]
+pub struct AssetCapacityAnimeCamera(pub AssetCapacity);
+impl AsRef<AssetCapacity> for AssetCapacityAnimeCamera {
+    fn as_ref(&self) -> &AssetCapacity {
+        &self.0
+    }
+}
 
 // pub type SysViewerUpdatedForCamera = SysViewerTransformUpdated<TargetCameraParam, SysTargetCameraCommand, CameraParam, SysWorldMatrixCalc>;
 
