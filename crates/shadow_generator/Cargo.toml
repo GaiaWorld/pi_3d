@@ -22,7 +22,7 @@ pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_slotmap = "0.1"
 pi_hash = "0.1"
 pi_share = "0.4"
-pi_assets = "0.11"
+pi_assets = "0.12"
 pi_atom = { version="0.2", features = ["serde"] }
 
 pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }

@@ -22,7 +22,9 @@ pub struct SceneID(pub Entity);
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Asset for TypeFrameCurve<F> {
     type Key = Atom;
+}
 
+impl<F: FrameDataValue+ 'static> pi_assets::asset::Size for TypeFrameCurve<F> {
     fn size(&self) -> usize {
         F::size() * self.0.values.len() + 2 * self.0.frames.len() + self.0.size()
     }
