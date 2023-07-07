@@ -7,13 +7,13 @@ use super::BindSceneEffect;
 
 #[derive(Debug, Clone, Copy)]
 pub struct FogLinearParam {
-    start: f32,
-    end: f32,
+    pub start: f32,
+    pub end: f32,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct FogExpParam {
-    density_fallof: f32,
+    pub density_fallof: f32,
 }
 impl Default for FogExpParam {
     fn default() -> Self {
@@ -23,7 +23,7 @@ impl Default for FogExpParam {
 
 #[derive(Debug, Clone, Copy)]
 pub struct FogExp2Param {
-    density_fallof: f32,
+    pub density_fallof: f32,
 }
 impl Default for FogExp2Param {
     fn default() -> Self {
@@ -33,9 +33,9 @@ impl Default for FogExp2Param {
 
 #[derive(Debug, Clone, Copy)]
 pub struct FogAltitudeBaseParam {
-    h_while_max_density: f32,
-    density_fallof: f32,
-    density: f32,
+    pub h_while_max_density: f32,
+    pub density_fallof: f32,
+    pub density: f32,
 }
 impl Default for FogAltitudeBaseParam {
     fn default() -> Self {
