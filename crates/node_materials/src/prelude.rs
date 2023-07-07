@@ -23,6 +23,7 @@ pub use crate::opacity::*;
 pub use crate::fog::*;
 pub use crate::mix_texture::*;
 pub use crate::mask_texture::*;
+pub use crate::premultiply::*;
 pub use crate::{PluginNodeMaterial, PluginGroupNodeMaterialAnime};
 
 #[derive(Resource)]
