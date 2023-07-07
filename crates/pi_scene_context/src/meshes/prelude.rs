@@ -33,6 +33,7 @@ pub struct ActionSetMesh<'w> {
     pub stencil_write: ResMut<'w, ActionListStencilWrite>,
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
     pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
+    pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
 }
 
 #[derive(SystemParam)]
