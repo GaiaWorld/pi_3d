@@ -136,7 +136,9 @@ fn setup(
 
     {
         let key_curve0 = pi_atom::Atom::from("cutoff");
-        let curve = FrameCurve::<Cutoff>::curve_easing(Cutoff(0.0), Cutoff(1.0), 30, 30, EEasingMode::None);
+        let mut curve = FrameCurve::<Cutoff>::curve_frame_values(10000);
+        curve.curve_frame_values_frame(0, Cutoff(0.));
+        curve.curve_frame_values_frame(10000, Cutoff(1.));
         
         let asset_curve = if let Some(curve) = matanime.cutoff.1.get(&key_curve0) {
             curve
@@ -156,7 +158,9 @@ fn setup(
     }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
-        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(2., 0., 0.)), 30, 30, EEasingMode::None);
+        let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
+        curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
+        curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(2., 0., 0.)));
         
         let asset_curve = if let Some(curve) = transformanime.position.curves.get(&key_curve0) {
             curve
@@ -175,11 +179,14 @@ fn setup(
         animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group, animation);
     }
     let mut parma = AnimationGroupParam::default();
-    parma.loop_mode = ELoopMode::Positive(Some(5));
+    parma.loop_mode = ELoopMode::Not;
+    parma.speed = 0.1;
     animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma);
 
     // animegroupcmd.global.add_frame_event_listen(id_group);
     // animegroupcmd.global.add_frame_event(id_group, 0.5, 100);
+    animegroupcmd.global.add_start_listen(id_group);
+    animegroupcmd.global.add_end_listen(id_group);
 }
 
 pub fn sys_anime_event(
@@ -233,6 +240,7 @@ pub fn main() {
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);

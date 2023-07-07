@@ -134,7 +134,15 @@ pub struct BundleMesh(
     RenderAlignment,
     ScalingMode,
     ModelVelocity,
-    IndiceRenderRange
+    IndiceRenderRange,
+    PassID01,
+    PassID02,
+    PassID03,
+    PassID04,
+    PassID05,
+    PassID06,
+    PassID07,
+    PassID08,
 );
 
 pub struct BundleInstanceMesh(

@@ -368,7 +368,7 @@ impl ActionInstanceMesh {
 fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
     model: Entity,
     commands: &mut Commands,
-    empty: &SingleEmptyEntity,
+    mat: &SingleEmptyEntity,
 ) -> ObjectID {
     let id = commands.spawn_empty().id();
 
@@ -376,17 +376,7 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
 
     commands.entity(id).insert(T::new())
         .insert(PassSource(model))
-        .insert(PassBindEffectValue(None))
-        .insert(PassBindEffectTextures(None))
-        .insert(PassBindGroupScene(None))
-        .insert(PassBindGroupModel(None))
-        .insert(PassBindGroupTextureSamplers(None))
-        .insert(PassBindGroups(None))
-        .insert(PassReady(None))
-        .insert(PassShader(None))
-        .insert(PassPipeline(None))
-        .insert(PassDraw(None))
-        .insert(MaterialID(empty.id()))
+        .insert(MaterialID(mat.id()))
         ;
 
     id

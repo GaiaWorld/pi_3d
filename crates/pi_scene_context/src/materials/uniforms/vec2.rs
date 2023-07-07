@@ -8,11 +8,11 @@ use crate::{materials::{value::{FromValueUniformStatistics}}};
 
 use super::{ update_data};
 
-const MAX: u8 = 64;
-/// 最多 32 个 vec2 - 共 256 byte
+const MAX: u8 = 128;
+/// 最多 64 个 vec2 - 共 512 byte
 pub struct Vec2Uniform {
     slot: u8,
-    data: [Number; MAX as usize],
+    data: [Number; 128], // MAX as usize],
     begin: u32,
 }
 impl FromValueUniformStatistics for Vec2Uniform {

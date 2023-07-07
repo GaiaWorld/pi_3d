@@ -13,17 +13,17 @@ pub fn sys_bind_update_scene_time(
 }
 
 pub fn sys_bind_update_scene_ambient(
-    mut scenes: Query<(&AmbientLight, &mut BindSceneEffect), Or<(Changed<AmbientLight>, Changed<BindSceneEffect>)>>,
+    mut scenes: Query<(&AmbientColor, &AmbientIntensity, &mut BindSceneEffect), Or<(Changed<AmbientColor>, Changed<AmbientIntensity>)>>,
 ) {
-    scenes.iter_mut().for_each(|(item, mut bind)| {
-        item.update(&mut bind);
+    scenes.iter_mut().for_each(|(color, intensity, mut bind)| {
+        update_ambient_uniform(color, intensity, &mut bind);
     });
 }
 
 pub fn sys_bind_update_scene_fog(
-    mut scenes: Query<(&SceneFog, &mut BindSceneEffect), Or<(Changed<SceneFog>, Changed<BindSceneEffect>)>>,
+    mut scenes: Query<(&SceneFogColor, &SceneFogParam, &mut BindSceneEffect), Or<(Changed<SceneFogColor>, Changed<SceneFogParam>)>>,
 ) {
-    scenes.iter_mut().for_each(|(item, mut bind)| {
-        item.update(&mut bind);
+    scenes.iter_mut().for_each(|(color, param, mut bind)| {
+        update_scenefog_uniform(color, param, &mut bind);
     });
 }

@@ -16,6 +16,10 @@ pub use super::environment::{
 pub struct ActionSetScene<'w> {
     pub create: ResMut<'w, ActionListSceneCreate>,
     pub time: ResMut<'w, ActionListSceneTime>,
+    pub fogcolor: ResMut<'w, ActionListSceneFogColor>,
+    pub fogparam: ResMut<'w, ActionListSceneFogParam>,
+    pub ambientcolor: ResMut<'w, ActionListSceneAmbientColor>,
+    pub ambientintensity: ResMut<'w, ActionListSceneAmbientIntensity>,
     pub animeenable: ResMut<'w, ActionListSceneAnimationEnable>,
 }
 

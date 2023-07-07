@@ -9,6 +9,7 @@ use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::sys_act_material_create;
 use prelude::*;
+use premultiply::*;
 
 mod cutoff;
 mod common;
@@ -24,6 +25,7 @@ mod mask_texture;
 mod opacity;
 mod fog;
 mod animation;
+mod premultiply;
 pub mod prelude;
 pub mod animation_sys;
 
@@ -75,6 +77,8 @@ impl Plugin for PluginNodeMaterial {
         blocks.regist::<BlockFresnel>();
         blocks.regist::<BlockEmissiveFresnel>();
         blocks.regist::<BlockOpacityFresnel>();
+
+        blocks.regist::<BlockPremultiplyResult>();
 
         app.insert_resource(blocks);
 

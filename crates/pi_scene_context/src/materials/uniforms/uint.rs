@@ -10,7 +10,7 @@ const MAX: u8 = 64;
 /// 最多 64 个 i32 - 共 256 byte
 pub struct UintUniform {
     slot: u8,
-    data: [u32; MAX as usize],
+    data: [u32; 64], // MAX as usize],
     begin: u32,
 }
 impl FromValueUniformStatistics for UintUniform {

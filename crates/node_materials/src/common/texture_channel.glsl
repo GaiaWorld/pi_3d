@@ -1,10 +1,10 @@
-const int CHANNEL_R = 1;
-const int CHANNEL_G = 2;
-const int CHANNEL_B = 4;
-const int CHANNEL_A = 8;
-const int CHANNEL_GRAY = 0;
+const uint CHANNEL_R = 1;
+const uint CHANNEL_G = 2;
+const uint CHANNEL_B = 4;
+const uint CHANNEL_A = 8;
+const uint CHANNEL_GRAY = 0;
 
-float valueByChannel(vec4 rgba, int channel) {
+float valueByChannel(vec4 rgba, uint channel) {
     if (channel == CHANNEL_R) {
         return rgba.r;
     }

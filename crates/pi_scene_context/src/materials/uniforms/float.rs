@@ -9,7 +9,7 @@ const MAX: u8 = 64;
 /// 最多 64 个 f32 - 共 256 byte
 pub struct FloatUniform {
     slot: u8,
-    data: [Number; MAX as usize],
+    data: [Number; 64], // MAX as usize],
     begin: u32,
 }
 impl FromValueUniformStatistics for FloatUniform {

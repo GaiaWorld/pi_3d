@@ -5,106 +5,76 @@ use pi_engine_shell::prelude::*;
 
 use super::BindSceneEffect;
 
+#[derive(Debug, Clone, Copy)]
+pub struct FogLinearParam {
+    start: f32,
+    end: f32,
+}
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum EFogMode {
+#[derive(Debug, Clone, Copy)]
+pub struct FogExpParam {
+    density_fallof: f32,
+}
+impl Default for FogExpParam {
+    fn default() -> Self {
+        Self { density_fallof: 0.1 }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct FogExp2Param {
+    density_fallof: f32,
+}
+impl Default for FogExp2Param {
+    fn default() -> Self {
+        Self { density_fallof: 0.1 }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct FogAltitudeBaseParam {
+    h_while_max_density: f32,
+    density_fallof: f32,
+    density: f32,
+}
+impl Default for FogAltitudeBaseParam {
+    fn default() -> Self {
+        Self { h_while_max_density: 0., density_fallof: 0.2, density: 1. }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum FogParam {
     None,
-    Linear,
-    Exp,
-    Exp2,
-    AltitudeBase,
+    Linear(FogLinearParam),
+    Exp(FogExpParam),
+    Exp2(FogExp2Param),
+    AltitudeBase(FogAltitudeBaseParam),
+}
+impl FogParam {
+    pub const NONE: u8 = 0;
+    pub const LINEAR: u8 = 3;
+    pub const EXP: u8 = 1;
+    pub const EXP2: u8 = 2;
+    pub const ALTITUDE_BASE: u8 = 4;
+    pub fn as_array(&self) -> [f32;4] {
+        match self {
+            FogParam::None => [FogParam::NONE as f32, 0., 0., 0.],
+            FogParam::Exp(val) => [FogParam::EXP as f32, 0., 0., val.density_fallof],
+            FogParam::Exp2(val) => [FogParam::EXP2 as f32, 0., 0., val.density_fallof],
+            FogParam::Linear(val) => [FogParam::LINEAR as f32, val.start, val.end, 0.],
+            FogParam::AltitudeBase(val) => [FogParam::ALTITUDE_BASE as f32, val.h_while_max_density, val.density, val.density_fallof],
+        }
+    }
 }
 
 #[derive(Component)]
-pub struct SceneFog {
-    mode: EFogMode,
-    color: (f32, f32, f32),
-    start: f32,
-    end: f32,
-    intensity: f32,
-    pub dirty: bool,
-}
-impl SceneFog {
-    pub const FOG_PARAM: usize = 4;
-    pub const FOG_COLOR: usize = 4;
+pub struct SceneFogColor(pub f32, pub f32, pub f32);
 
-    pub const FOG_PARAM_OFFSIZE: usize = 0 * 4;
-    pub const FOG_COLOR_OFFSIZE: usize = Self::FOG_PARAM_OFFSIZE + Self::FOG_PARAM_OFFSIZE * 4;
+#[derive(Component)]
+pub struct SceneFogParam(pub FogParam);
 
-    pub fn new(
-    ) -> Self {
-        Self {
-            mode: EFogMode::Linear,
-            color: (0.1, 0.5, 0.1),
-            start: 10.,
-            end: 100.,
-            intensity: 1.0,
-            dirty: true,
-        }
-    }
-
-    pub fn mode(&mut self, mode: EFogMode) {
-        if self.mode == mode {
-
-        } else {
-            self.dirty = true;
-            self.mode = mode;
-        }
-    }
-    pub fn color(&mut self, value: (f32, f32, f32)) {
-        if self.color.0 != value.0 || self.color.1 != value.1 || self.color.2 != value.2 {
-            self.dirty = true;
-            self.color = value;
-        }
-    }
-    pub fn start(&mut self, value: f32) {
-        if self.start != value {
-            self.dirty = true;
-            self.start = value;
-        }
-    }
-    pub fn end(&mut self, value: f32) {
-        if self.end != value {
-            self.dirty = true;
-            self.end = value;
-        }
-    }
-    pub fn intensity(&mut self, value: f32) {
-        if self.intensity != value {
-            self.dirty = true;
-            self.intensity = value;
-        }
-    }
-    pub fn data(&self, data: &mut Vec<f32>) {
-        let mode: f32 = match self.mode {
-            EFogMode::None => 0.,
-            EFogMode::Linear => 1.,
-            EFogMode::Exp => 2.,
-            EFogMode::Exp2 => 3.,
-            EFogMode::AltitudeBase => 4.,
-        };
-
-        let temp = [
-            self.color.0, self.color.1, self.color.2, 1.,
-            mode, self.start, self.end, self.intensity
-        ];
-        
-        temp.iter().for_each(|v| {
-            data.push(*v);
-        });
-    }
-    pub fn update(&self, bind: &BindSceneEffect) {
-        let mode: f32 = match self.mode {
-            EFogMode::None => 0.,
-            EFogMode::Linear => 1.,
-            EFogMode::Exp => 2.,
-            EFogMode::Exp2 => 3.,
-            EFogMode::AltitudeBase => 4.,
-        };
-        let values = vec![
-            self.color.0, self.color.1, self.color.2, 1.
-            ,mode, self.start, self.end, self.intensity
-        ];
-        bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_INFO as usize, bytemuck::cast_slice(&values));
-    }
+pub fn update_scenefog_uniform(color: &SceneFogColor, param: &SceneFogParam, bind: &mut BindSceneEffect) {
+    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_INFO as usize, bytemuck::cast_slice(&[color.0, color.1, color.2]));
+    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_PARAM as usize, bytemuck::cast_slice(&param.0.as_array()));
 }

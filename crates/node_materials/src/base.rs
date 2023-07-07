@@ -5,12 +5,12 @@ pub trait TNodeMaterialBlock {
     const KEY: &'static str;
     const FS_DEFINED: &'static str;
     const VS_DEFINED: &'static str;
-    fn mat4() -> Vec<UniformPropertyMat4> { vec![] }
-    fn mat2() -> Vec<UniformPropertyMat2> { vec![] }
+    // fn mat4() -> Vec<UniformPropertyMat4> { vec![] }
+    // fn mat2() -> Vec<UniformPropertyMat2> { vec![] }
     fn vec4() -> Vec<UniformPropertyVec4> { vec![] }
     fn vec2() -> Vec<UniformPropertyVec2> { vec![] }
     fn float() -> Vec<UniformPropertyFloat> { vec![] }
-    fn int() -> Vec<UniformPropertyInt> { vec![] }
+    // fn int() -> Vec<UniformPropertyInt> { vec![] }
     fn uint() -> Vec<UniformPropertyUint> { vec![] }
     fn textures() -> Vec<UniformTexture2DDesc> { vec![] }
     fn varyings() -> Vec<Varying> { vec![] }
@@ -19,12 +19,12 @@ pub trait TNodeMaterialBlock {
         NodeMaterialBlockInfo {
             fs: Self::FS_DEFINED,
             vs: Self::VS_DEFINED,
-            mat4: Self::mat4(),
-            mat2: Self::mat2(),
+            // mat4: Self::mat4(),
+            // mat2: Self::mat2(),
             vec4: Self::vec4(),
             vec2: Self::vec2(),
             float: Self::float(),
-            int: Self::int(),
+            // int: Self::int(),
             uint: Self::uint(),
             textures: Self::textures(),
             varyings: Self::varyings(),
@@ -36,12 +36,12 @@ pub trait TNodeMaterialBlock {
 pub struct NodeMaterialBlockInfo {
     pub fs: &'static str,
     pub vs: &'static str,
-    pub mat4: Vec<UniformPropertyMat4>,
-    pub mat2: Vec<UniformPropertyMat2>,
+    // pub mat4: Vec<UniformPropertyMat4>,
+    // pub mat2: Vec<UniformPropertyMat2>,
     pub vec4: Vec<UniformPropertyVec4>,
     pub vec2: Vec<UniformPropertyVec2>,
     pub float: Vec<UniformPropertyFloat>,
-    pub int: Vec<UniformPropertyInt>,
+    // pub int: Vec<UniformPropertyInt>,
     pub uint: Vec<UniformPropertyUint>,
     pub textures: Vec<UniformTexture2DDesc>,
     pub varyings: Vec<Varying>,
@@ -102,12 +102,12 @@ impl NodeMaterialBuilder {
     
                     self.blocks.insert(key);
     
-                    info.mat4.iter().for_each(|v| {
-                        self.values.mat4_list.push(v.clone());
-                    });
-                    info.mat2.iter().for_each(|v| {
-                        self.values.mat2_list.push(v.clone());
-                    });
+                    // info.mat4.iter().for_each(|v| {
+                    //     self.values.mat4_list.push(v.clone());
+                    // });
+                    // info.mat2.iter().for_each(|v| {
+                    //     self.values.mat2_list.push(v.clone());
+                    // });
                     info.vec4.iter().for_each(|v| {
                         self.values.vec4_list.push(v.clone());
                     });
@@ -117,9 +117,9 @@ impl NodeMaterialBuilder {
                     info.float.iter().for_each(|v| {
                         self.values.float_list.push(v.clone());
                     });
-                    info.int.iter().for_each(|v| {
-                        self.values.int_list.push(v.clone());
-                    });
+                    // info.int.iter().for_each(|v| {
+                    //     self.values.int_list.push(v.clone());
+                    // });
                     info.uint.iter().for_each(|v| {
                         self.values.uint_list.push(v.clone());
                     });
@@ -142,12 +142,12 @@ impl NodeMaterialBuilder {
         if !self.blocks.contains(T::KEY) {
             self.blocks.insert(T::KEY);
 
-            T::mat4().drain(..).for_each(|v| {
-                self.values.mat4_list.push(v);
-            });
-            T::mat2().drain(..).for_each(|v| {
-                self.values.mat2_list.push(v);
-            });
+            // T::mat4().drain(..).for_each(|v| {
+            //     self.values.mat4_list.push(v);
+            // });
+            // T::mat2().drain(..).for_each(|v| {
+            //     self.values.mat2_list.push(v);
+            // });
             T::vec4().drain(..).for_each(|v| {
                 self.values.vec4_list.push(v);
             });
@@ -157,9 +157,9 @@ impl NodeMaterialBuilder {
             T::float().drain(..).for_each(|v| {
                 self.values.float_list.push(v);
             });
-            T::int().drain(..).for_each(|v| {
-                self.values.int_list.push(v);
-            });
+            // T::int().drain(..).for_each(|v| {
+            //     self.values.int_list.push(v);
+            // });
             T::uint().drain(..).for_each(|v| {
                 self.values.uint_list.push(v);
             });

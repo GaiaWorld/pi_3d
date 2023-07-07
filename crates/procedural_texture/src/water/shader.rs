@@ -13,8 +13,8 @@ impl WaterShader {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                mat4_list: vec![],
-                mat2_list: vec![],
+                // mat4_list: vec![],
+                // mat2_list: vec![],
                 vec4_list: vec![
                     UniformPropertyVec4(Atom::from("sea_base"), [0.0, 0.09, 0.18, 1.]),
                     UniformPropertyVec4(
@@ -29,7 +29,7 @@ impl WaterShader {
                     UniformPropertyFloat(Atom::from("iTime"), 0.2),
                     UniformPropertyFloat(Atom::from("phantom_data"), 0.),
                 ],
-                int_list: vec![],
+                // int_list: vec![],
                 uint_list: vec![],
             },
             vec![],

@@ -1,7 +1,13 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{pass::EPassTag, };
+use crate::{pass::EPassTag };
+use super::material::*;
+use super::shader_effect::*;
+use super::uniforms::{
+    float::*, int::*, mat2::*, mat4::*, texture_uniform::*, texture::*, uint::*,
+    vec2::*, vec4::*, value_uniform::*, uniform::*,
+};
 
 pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta, pub EPassTag);
 impl OpsMaterialCreate {
@@ -90,3 +96,14 @@ impl OpsUniformTexture {
     }
 }
 pub type ActionListUniformTexture = ActionList<OpsUniformTexture>;
+
+pub struct BundleMaterial (
+    BindEffect,
+    AssetKeyShaderEffect,
+    AssetResShaderEffectMeta,
+    MaterialRefs,
+    BindEffectValueDirty,
+    EPassTag ,
+    UniformTextureWithSamplerParams,
+    DirtyMaterialRefs,
+);
