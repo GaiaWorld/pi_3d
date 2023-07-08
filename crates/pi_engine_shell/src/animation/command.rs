@@ -50,13 +50,13 @@ pub type ActionListAnimeGroupAttach = ActionList<OpsAnimationGroupAttach>;
 // }
 // pub type ActionListAnimeGroupPause = ActionList<OpsAnimationGroupPause>;
 
-// pub struct OpsAnimationGroupStart(pub(crate) Entity, pub(crate) DefaultKey, pub(crate) AnimationGroupParam);
-// impl OpsAnimationGroupStart {
-//     pub fn ops(group_target: Entity, group_key: DefaultKey, param: AnimationGroupParam) -> Self {
-//         Self(group_target, group_key, param)
-//     }
-// }
-// pub type ActionListAnimeGroupStart = ActionList<OpsAnimationGroupStart>;
+pub struct OpsAnimationGroupStartReset(pub(crate) Entity, pub(crate) DefaultKey);
+impl OpsAnimationGroupStartReset {
+    pub fn ops(group_target: Entity, group_key: DefaultKey) -> Self {
+        Self(group_target, group_key)
+    }
+}
+pub type ActionListAnimeGroupStartReset = ActionList<OpsAnimationGroupStartReset>;
 
 // pub struct OpsAddTargetAnimation(pub(crate) Entity, pub(crate) Entity, pub(crate) DefaultKey, pub(crate) AnimationInfo);
 // impl OpsAddTargetAnimation {
@@ -124,4 +124,5 @@ pub struct ActionSetAnimationGroup<'w> {
     pub scene_ctxs: ResMut<'w, SceneAnimationContextMap>,
     pub global: ResMut<'w, GlobalAnimeAbout>,
     pub events: ResMut<'w, GlobalAnimeEvents>,
+    pub reset_while_start: ResMut<'w, ActionListAnimeGroupStartReset>,
 }

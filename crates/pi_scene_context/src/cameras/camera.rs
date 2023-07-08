@@ -58,6 +58,14 @@ pub struct CameraOrthograhicParam {
     pub bottom: Number,
 }
 
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordCameraFov(pub CameraFov);
+impl TAnimatableCompRecord<CameraFov> for RecordCameraFov {
+    fn comp(&self) -> CameraFov {
+        self.0.clone()
+    }
+}
+
 #[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraFov(pub Number);
 impl pi_curves::curve::frame::FrameDataValue for CameraFov {
@@ -86,6 +94,21 @@ impl pi_curves::curve::frame::FrameDataValue for CameraFov {
     }
     fn size() -> usize {
         1 * 4
+    }
+}
+impl Default for CameraFov {
+    fn default() -> Self {
+        Self(0.7)
+    }
+}
+impl TAnimatableComp for CameraFov {}
+
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordCameraOrthSize(pub CameraOrthSize);
+impl TAnimatableCompRecord<CameraOrthSize> for RecordCameraOrthSize {
+    fn comp(&self) -> CameraOrthSize {
+        self.0.clone()
     }
 }
 
@@ -119,6 +142,12 @@ impl pi_curves::curve::frame::FrameDataValue for CameraOrthSize {
         1 * 4
     }
 }
+impl Default for CameraOrthSize {
+    fn default() -> Self {
+        Self(4.)
+    }
+}
+impl TAnimatableComp for CameraOrthSize {}
 
 #[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraToScreen(pub bool);

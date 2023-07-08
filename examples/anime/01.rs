@@ -108,8 +108,7 @@ fn setup(
                 instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
                 transformcmds.tree.push(OpsTransformNodeParent::ops(cube, source));
 
-                let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32);
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition(cube, pos));
+                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
                 let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(1., 1., 1.)), LocalScaling(Vector3::new(0., 2. * (1.1 + (i as f32).sin()), 0.)), (60. * (1.1 + ((i * j) as f32).cos())) as u16, 30, EEasingMode::None);

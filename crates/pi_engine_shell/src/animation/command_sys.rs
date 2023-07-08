@@ -118,7 +118,7 @@ impl ActionAnime {
     ) {
         commands.insert(AnimationGroups::default());
     }
-    pub fn create_animation<D: FrameDataValue + Component + Debug>(
+    pub fn create_animation<D: TAnimatableComp>(
         app: &mut App,
         curve: AssetTypeFrameCurve<D>,
     ) -> AnimationInfo {
@@ -126,7 +126,7 @@ impl ActionAnime {
         type_ctx.ctx.create_animation(0, curve)
     }
     
-    pub fn check_anim_curve<D: FrameDataValue + Component + Debug>(
+    pub fn check_anim_curve<D: TAnimatableComp>(
         app: &mut App,
         key: &Atom,
     ) -> Option<AssetTypeFrameCurve<D>> {
@@ -139,7 +139,7 @@ impl ActionAnime {
         }
     }
 
-    pub fn creat_anim_curve<D: FrameDataValue + Component + Debug>(
+    pub fn creat_anim_curve<D: TAnimatableComp>(
         app: &mut App,
         key: &Atom,
         curve: FrameCurve<D>,
@@ -155,8 +155,35 @@ impl ActionAnime {
 
 }
 
+pub fn sys_calc_reset_while_animationgroup_start(
+    mut cmds: ResMut<ActionListAnimeGroupStartReset>,
+    scenes: Res<SceneAnimationContextMap>,
+    mut items: Query<&mut FlagAnimationStartResetComp>,
+) {
+    cmds.drain().drain(..).for_each(|OpsAnimationGroupStartReset(idscene, idgroup)| {
+        if let Some(animations) = scenes.query_group_animations(idscene, idgroup) {
+            animations.iter().for_each(|v| {
+                if let Ok(mut flag) = items.get_mut(v.target) {
+                    *flag = FlagAnimationStartResetComp;
+                }
+            });
+        }
+    });
+}
 
-pub fn sys_calc_type_anime<D: FrameDataValue + Component + Debug>(
+pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecord<D>>(
+    mut items: Query<(&mut D, Option<&R>), Changed<FlagAnimationStartResetComp>>,
+) {
+    items.iter_mut().for_each(|(mut comp, record)| {
+        if let Some(record) = record {
+            *comp = record.comp();
+        } else {
+            *comp = D::default();
+        }
+    });
+}
+
+pub fn sys_calc_type_anime<D: TAnimatableComp>(
     type_ctx: Res<TypeAnimeContext<D>>,
     runinfos: Res<GlobalAnimeAbout>,
     mut items: Query<&mut D>,
@@ -190,7 +217,7 @@ pub fn sys_calc_type_anime<D: FrameDataValue + Component + Debug>(
     log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
 }
 
-pub(crate) fn sys_apply_removed_data<D: FrameDataValue + Component + Debug>(
+pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(
     mut type_ctx: ResMut<TypeAnimeContext<D>>,
     scenes: Res<SceneAnimationContextMap>,
 ) {

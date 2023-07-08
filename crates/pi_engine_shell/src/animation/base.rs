@@ -3,7 +3,7 @@ use pi_animation::{
     type_animation_context::{TypeAnimationContext, AnimationContextAmount},
     animation_group_manager::AnimationGroupManagerDefault,
     animation_group::AnimationGroupID,
-    curve_frame_event::CurveFrameEvent, animation::AnimationInfo
+    curve_frame_event::CurveFrameEvent, animation::AnimationInfo, target_animation::TargetAnimation
 };
 use pi_assets::{asset::{Handle}};
 use pi_atom::Atom;
@@ -16,6 +16,10 @@ use bevy::{
 };
 
 use super::AnimationGroupParam;
+
+#[derive(Clone, Copy, Component)]
+/// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
+pub struct FlagAnimationStartResetComp;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneID(pub Entity);
@@ -43,8 +47,16 @@ impl<F: FrameDataValue+ 'static> AsRef<FrameCurve<F>> for AssetTypeFrameCurve<F>
 }
 
 #[derive(Resource, Deref, DerefMut)]
-pub struct TypeAnimeContext<D: FrameDataValue + 'static> {
+pub struct TypeAnimeContext<D: TAnimatableComp> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
+}
+
+
+pub trait TAnimatableComp: Default + FrameDataValue + Component + std::fmt::Debug {
+
+}
+pub trait TAnimatableCompRecord<T: TAnimatableComp>: Component {
+    fn comp(&self) -> T;
 }
 
 #[derive(Debug, Default, Component)]
@@ -118,6 +130,18 @@ impl SceneAnimationContextMap {
     }
     pub fn remove_scene(&mut self, idscene: &Entity) -> Option<SceneAnimationContext> {
         self.0.remove(idscene)
+    }
+    pub fn query_group_animations(
+        &self,
+        idscene: Entity,
+        idgroup: DefaultKey,
+    ) -> Option<&Vec<TargetAnimation<Entity>>> {
+        if let Some(ctx) = self.0.get(&idscene) {
+            if let Some(group) = ctx.0.animation_group(idgroup) {
+                return Some(group.animations());
+            }
+        }
+        None
     }
     /// 动画组创建 为 立即执行
     pub fn create_group(

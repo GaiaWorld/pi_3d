@@ -118,13 +118,12 @@ fn setup(
                 let cube: Entity = commands.spawn_empty().id();
                 instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
 
-                let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32);
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition(cube, pos.clone()));
+                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
 
                 instancemeshcmds.tilloff.push(OpsInstanceTillOff::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
-                let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(pos), LocalEulerAngles(Vector3::new(10., 10., 10.)), 30, 30, EEasingMode::None);
+                let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(i as f32, j as f32, k as f32)), LocalEulerAngles(Vector3::new(10., 10., 10.)), 30, 30, EEasingMode::None);
                 
                 let asset_curve = if let Some(curve) = transformanime.euler.curves.get(&key_curve0) {
                     curve

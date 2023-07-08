@@ -97,13 +97,14 @@ impl OpsUniformTexture {
 }
 pub type ActionListUniformTexture = ActionList<OpsUniformTexture>;
 
+/// size 1608 + 4 + 4 + 4
 pub struct BundleMaterial (
     BindEffect,
     AssetKeyShaderEffect,
     AssetResShaderEffectMeta,
-    MaterialRefs,
     BindEffectValueDirty,
     EPassTag ,
-    UniformTextureWithSamplerParams,
     DirtyMaterialRefs,
+    MaterialRefs,
+    UniformTextureWithSamplerParams,
 );

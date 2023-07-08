@@ -7,9 +7,11 @@ use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
 use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::sys_act_material_create;
+use pi_scene_context::prelude::{sys_act_material_create, sys_material_uniform_apply};
 use prelude::*;
 use premultiply::*;
+use command::*;
+use command_sys::*;
 
 mod cutoff;
 mod common;
@@ -26,6 +28,8 @@ mod opacity;
 mod fog;
 mod animation;
 mod premultiply;
+mod command;
+mod command_sys;
 pub mod prelude;
 pub mod animation_sys;
 
@@ -81,6 +85,30 @@ impl Plugin for PluginNodeMaterial {
         blocks.regist::<BlockPremultiplyResult>();
 
         app.insert_resource(blocks);
+
+        app.insert_resource(ActionListAlpha::default());
+        app.insert_resource(ActionListAlphaCutoff::default());
+        app.insert_resource(ActionListLightDiffuse::default());
+        app.insert_resource(ActionListMainColor::default());
+        app.insert_resource(ActionListMainTexTilloff::default());
+        app.insert_resource(ActionListMaskCutoff::default());
+        app.insert_resource(ActionListMaskTexTilloff::default());
+        app.insert_resource(ActionListOpacityTexTilloff::default());
+        
+        app.add_systems(
+            (
+                sys_act_alpha,
+                sys_act_alphacutoff,
+                sys_act_lightdiffuse,
+                sys_act_maincolor,
+                sys_act_maintex_tilloff,
+                sys_act_maskcutoff,
+                sys_act_masktex_tilloff,
+                sys_act_opacitytex_tilloff,
+            ).in_set(ERunStageChap::Command)
+        );
+
+        app.add_system(sys_node_material_uniform_update.before(sys_material_uniform_apply));
 
         app.add_system(sys_material_anime_init.after(sys_act_material_create));
     }

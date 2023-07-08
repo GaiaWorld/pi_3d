@@ -40,6 +40,7 @@ pub fn sys_act_material_create(
             .insert(BindEffectValueDirty(false))
             .insert(passtag)
             .insert(UniformTextureWithSamplerParams::default())
+            .insert(FlagAnimationStartResetComp)
             .insert(DirtyMaterialRefs::default());
     });
 }

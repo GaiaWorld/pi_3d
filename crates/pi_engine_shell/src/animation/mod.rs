@@ -22,6 +22,7 @@ pub struct PluginGlobalAnimation;
 impl Plugin for PluginGlobalAnimation {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListAnimeGroupAttach::default());
+        app.insert_resource(ActionListAnimeGroupStartReset::default());
         // app.insert_resource(ActionListAnimeGroupCreate::default());
         // app.insert_resource(ActionListAnimeGroupPause::default());
         // app.insert_resource(ActionListAnimeGroupStart::default());
@@ -30,6 +31,7 @@ impl Plugin for PluginGlobalAnimation {
         app.add_systems(
             (
                 sys_anime_group_attach.run_if(should_run),
+                sys_calc_reset_while_animationgroup_start.run_if(should_run),
                 // sys_anime_group_create.run_if(should_run),
                 // sys_anime_add_target_anime.run_if(should_run),
                 // sys_anime_start.run_if(should_run),
@@ -53,13 +55,13 @@ impl Plugin for PluginGlobalAnimation {
     }
 }
 
-pub struct PluginTypeAnime<D: FrameDataValue + Component + Debug, C: AsRef<AssetCapacity> + Resource + Default>(PhantomData<(D, C)>);
-impl<D: FrameDataValue + Component + Debug, C: AsRef<AssetCapacity> + Resource + Default> PluginTypeAnime<D, C> {
+pub struct PluginTypeAnime<D: TAnimatableComp, R: TAnimatableCompRecord<D>, C: AsRef<AssetCapacity> + Resource + Default>(PhantomData<(D, R, C)>);
+impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>, C: AsRef<AssetCapacity> + Resource + Default> PluginTypeAnime<D, R, C> {
     pub fn new() -> Self {
         Self(PhantomData::default())
     }
 }
-impl<D: FrameDataValue + Component + Debug, C: AsRef<AssetCapacity> + Resource + Default> Plugin for PluginTypeAnime<D, C> {
+impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>, C: AsRef<AssetCapacity> + Resource + Default> Plugin for PluginTypeAnime<D, R, C> {
 
     fn build(&self, app: &mut App) {
         
@@ -82,7 +84,12 @@ impl<D: FrameDataValue + Component + Debug, C: AsRef<AssetCapacity> + Resource +
         app.add_system(
             sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear)
         );
-        app.add_system(sys_calc_type_anime::<D>.run_if(should_run).in_set(ERunStageChap::Anime));
+        app.add_systems(
+            (
+                sys_calc_reset_animatablecomp::<D, R>.run_if(should_run),
+                sys_calc_type_anime::<D>.run_if(should_run)
+            ).chain().in_set(ERunStageChap::Anime)
+        );
         
         // app.add_system(sys_calc_type_anime::<D>.in_set(ERunStageChap::Anime));
 
