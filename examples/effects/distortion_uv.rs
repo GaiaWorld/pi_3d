@@ -21,11 +21,10 @@ use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 pub struct PluginLocalLoad;
 impl Plugin for PluginLocalLoad {
     fn build(&self, app: &mut App) {
-        
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                    log::debug!("Load {}", path);
+                    log::warn!("Load {}", path);
                     let r = std::fs::read(path.clone()).unwrap();
                     on_load(&path, r);
                 })
@@ -97,19 +96,19 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+        url: EKeyTexture::from("assets/images/fractal.png"),
     }));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
+        url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
     }));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMaskTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_uv_lf_002.png"),
+        url: EKeyTexture::from("assets/images/eff_uv_lf_002.png"),
     }));
     matcmds.vec2.push(OpsUniformVec2::ops(idmat, Atom::from(BlockMaskTextureUVOffsetSpeed::KEY_PARAM), 1., 1.));
 

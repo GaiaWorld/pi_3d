@@ -206,23 +206,23 @@ impl IShapeEmitterType for SphereShapeEmitter {
         self.randomize_position = randomize_position;
     }
 
-    fn get_local_matrix(&mut self) -> Matrix {
+    fn get_local_matrix(& self) -> Matrix {
         self.local_matrix.clone()
     }
 
-    fn get_align_direction(&mut self) -> bool {
+    fn get_align_direction(& self) -> bool {
         self.align_direction.clone()
     }
 
-    fn get_randomize_direction(&mut self) -> f32 {
+    fn get_randomize_direction(& self) -> f32 {
         self.randomize_direction.clone()
     }
 
-    fn get_spherize_direction(&mut self) -> f32 {
+    fn get_spherize_direction(& self) -> f32 {
         self.spherize_direction.clone()
     }
 
-    fn get_randomize_position(&mut self) -> f32 {
+    fn get_randomize_position(& self) -> f32 {
         self.randomize_position.clone()
     }
 }

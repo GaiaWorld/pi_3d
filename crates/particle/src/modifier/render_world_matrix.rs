@@ -42,21 +42,16 @@ impl StretchedBillboard {
         stretched_length_scale: f32,
         stretched_velocity_scale: f32,
     ) {
-        let _temp_vector3_translation = parent_world_matrix.transform_vector(&position);
+        let temp_vector3_translation = parent_world_matrix.transform_vector(&position);
 
         real_start_matrix[3] = 0.;
         real_start_matrix[7] = 0.;
         real_start_matrix[11] = 0.;
 
-        let mut temp_vector3_scaling = Vector3::new(1., 1., 1.);
-        CoordinateSytem3::matrix4_decompose_rotation(
-            real_start_matrix,
-            Some(&mut temp_vector3_scaling),
-            None,
-            None,
-        );
-
+        let mut speed_direction = Vector3::identity();
+        let mut x_axis = Vector3::identity();
         let mut view_direction = Vector3::new(0., 0., 1.);
+
         view_direction = camera_rotation_matrix.transform_vector(&view_direction);
 
         let mut speed_direction = *direction;
@@ -68,63 +63,47 @@ impl StretchedBillboard {
         speed_direction = normalize(&speed_direction);
         let mut z_axis = view_direction;
         let mut y_axis = speed_direction;
-        let mut x_axis = multiply(&speed_direction, &z_axis);
+        let mut x_axis = speed_direction.cross(&z_axis);
         // Vector3.CrossToRef(speedDirection, zAxis, xAxis);
         let x_square_length = x_axis.magnitude_squared();
         if x_square_length == 0. {
             x_axis[0] = 1.0;
         } else {
-            normalize(&x_axis);
-            x_axis *= x_square_length.sqrt();
+            x_axis = normalize(&x_axis);
+            // x_axis *= x_square_length.sqrt();
         }
 
         z_axis = x_axis.cross(&y_axis);
         y_axis = normalize(&y_axis);
+        CoordinateSytem3::matrix4_from_xyz_axes(&x_axis, &y_axis, &z_axis, real_start_matrix);
+        real_start_matrix.m14 = temp_vector3_translation.x;
+        real_start_matrix.m24 = temp_vector3_translation.y;
+        real_start_matrix.m34 = temp_vector3_translation.z;
 
-        *real_start_matrix = Matrix::new(
-            x_axis[0],
-            y_axis[0],
-            z_axis[0],
-            temp_vector3_scaling[0],
-            x_axis[1],
-            y_axis[1],
-            z_axis[1],
-            temp_vector3_scaling[1],
-            x_axis[2],
-            y_axis[2],
-            z_axis[2],
-            temp_vector3_scaling[2],
-            0.,
-            0.,
-            0.,
-            1.,
+        let mut temp_vector3_scaling = scaling;
+        temp_vector3_scaling.y *= stretched_length_scale;
+        temp_vector3_scaling.y += stretched_velocity_scale * speed_direction_length;
+        speed_direction = Vector3::new(0., -(temp_vector3_scaling.y) / 2., 0.);
+
+        let temp_quaternion_0 = Quaternion::identity();
+        CoordinateSytem3::matrix4_compose(
+            &temp_vector3_scaling,
+            &temp_quaternion_0,
+            &speed_direction,
+            result_matrix,
         );
 
-        temp_vector3_scaling = scaling;
-        temp_vector3_scaling[1] *= stretched_length_scale;
-        temp_vector3_scaling[1] += stretched_velocity_scale * speed_direction_length;
-        speed_direction = Vector3::new(0., -(temp_vector3_scaling[1]) / 2., 0.);
+        *result_matrix = (*real_start_matrix) * (*result_matrix);
 
-        let mut temp_quaternion_0 =
-            Quaternion::from_quaternion(nalgebra::Quaternion::new(0., 0., 0., 1.));
-        let euler_angles = temp_quaternion_0.euler_angles();
-        *result_matrix = Matrix::new_nonuniform_scaling(&temp_vector3_scaling)
-            * Matrix::from_euler_angles(euler_angles.0, euler_angles.1, euler_angles.2)
-            * Matrix::new_translation(&speed_direction);
-
-        *result_matrix = result_matrix.cross(&real_start_matrix);
-
-        temp_quaternion_0 = Quaternion::from_euler_angles(
-            STRETCHED_BILLBOARD_ROT[0],
-            STRETCHED_BILLBOARD_ROT[1],
-            STRETCHED_BILLBOARD_ROT[2],
-        );
         // // Matrix.ComposeToRef(TempVector3One, TempQuaternion_0, TempVector3Zero, TempMatrix_1);
-        let euler_angles = temp_quaternion_0.euler_angles();
-        let temp_matrix_1 =
-            Matrix::from_euler_angles(euler_angles.0, euler_angles.1, euler_angles.2);
+        // let euler_angles = temp_quaternion_0.m();
+        let temp_matrix_1 = Matrix::from_euler_angles(
+            STRETCHED_BILLBOARD_ROT.x,
+            STRETCHED_BILLBOARD_ROT.y,
+            STRETCHED_BILLBOARD_ROT.z,
+        );
 
-        *result_matrix = temp_matrix_1.cross(&result_matrix);
+        *result_matrix = temp_matrix_1 * (*result_matrix);
     }
 }
 
@@ -150,11 +129,16 @@ impl HorizontalBillboard {
         real_start_matrix[7] = 0.;
         real_start_matrix[11] = 0.;
 
-        *real_start_matrix = Matrix::new_nonuniform_scaling(&scaling)
-            * Matrix::from_euler_angles(rotation[2], rotation[1], rotation[0])
-            * (*real_start_matrix);
+        let mut temp_matrix_1 = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &scaling,
+            &rotation,
+            &Vector3::zeros(),
+            &mut temp_matrix_1,
+        );
+        *real_start_matrix = temp_matrix_1 * (*real_start_matrix);
 
-        let mut temp_vector3_scaling = Vector3::new(1., 1., 1.);
+        let mut temp_vector3_scaling = Vector3::zeros();
         CoordinateSytem3::matrix4_decompose_rotation(
             real_start_matrix,
             Some(&mut temp_vector3_scaling),
@@ -162,9 +146,12 @@ impl HorizontalBillboard {
             None,
         );
 
-        *result_matrix = Matrix::new_nonuniform_scaling(&temp_vector3_scaling)
-            * Matrix::from_euler_angles(std::f32::consts::PI / 2., 0., 0.)
-            * Matrix::new_translation(&temp_vector3_translation);
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &temp_vector3_scaling,
+            &Vector3::new(std::f32::consts::PI / 2., 0., 0.),
+            &temp_vector3_translation,
+            result_matrix,
+        );
     }
 }
 
@@ -190,11 +177,16 @@ impl VerticalBillboard {
         real_start_matrix[7] = 0.;
         real_start_matrix[11] = 0.;
 
-        *real_start_matrix = Matrix::new_nonuniform_scaling(&scaling)
-            * Matrix::from_euler_angles(rotation[2], rotation[1], rotation[0])
-            * (*real_start_matrix);
+        let mut temp_matrix_1 = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &scaling,
+            &rotation,
+            &Vector3::zeros(),
+            &mut temp_matrix_1,
+        );
+        *real_start_matrix = temp_matrix_1 * (*real_start_matrix);
 
-        let mut temp_vector3_scaling = Vector3::new(1., 1., 1.);
+        let mut temp_vector3_scaling = Vector3::zeros();
         CoordinateSytem3::matrix4_decompose_rotation(
             real_start_matrix,
             Some(&mut temp_vector3_scaling),
@@ -202,28 +194,29 @@ impl VerticalBillboard {
             None,
         );
 
-        let mut temp_vector3_a = TEMP_VECTOR3_TRANSLATION - camra_global_pos;
-        temp_vector3_a[1] = 0.;
-        temp_vector3_a[2] = 0.;
-        if temp_vector3_a[0] == 0. && temp_vector3_a[2] == 0. {
-            temp_vector3_a[1] = 1.;
+        let mut temp_vector3_a = temp_vector3_translation - camra_global_pos;
+        temp_vector3_a.y = 0.;
+        temp_vector3_a.z = 0.;
+        if temp_vector3_a.x == 0. && temp_vector3_a.z == 0. {
+            temp_vector3_a.y = 1.;
         }
         temp_vector3_a = normalize(&temp_vector3_a);
         // Vector3.NormalizeToRef(TempVector3A, TempVector3A);
         let mut temp_quaternion_0 = Vector4::identity();
         direction_to_quaternion(temp_vector3_a, &mut temp_quaternion_0);
-
         let rotation = Quaternion::from_quaternion(nalgebra::Quaternion::new(
             temp_quaternion_0[0],
             temp_quaternion_0[1],
             temp_quaternion_0[2],
             temp_quaternion_0[2],
-        ))
-        .euler_angles();
+        ));
 
-        *result_matrix = Matrix::new_nonuniform_scaling(&scaling)
-            * Matrix::from_euler_angles(rotation.0, rotation.1, rotation.2)
-            * Matrix::new_translation(&temp_vector3_translation);
+        CoordinateSytem3::matrix4_compose(
+            &temp_vector3_scaling,
+            &rotation,
+            &temp_vector3_translation,
+            result_matrix,
+        );
     }
 }
 
@@ -251,9 +244,14 @@ impl RenderAlignmentView {
         real_start_matrix[11] = 0.;
 
         // 自身旋转
-        *real_start_matrix = Matrix::new_nonuniform_scaling(&scaling)
-            * Matrix::from_euler_angles(rotation[2], rotation[1], rotation[0])
-            * (*real_start_matrix);
+        let mut temp_matrix_1 = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &scaling,
+            &rotation,
+            &Vector3::zeros(),
+            &mut temp_matrix_1,
+        );
+        *real_start_matrix = temp_matrix_1 * (*real_start_matrix);
 
         let mut temp_vector3_scaling = Vector3::new(1., 1., 1.);
         CoordinateSytem3::matrix4_decompose_rotation(
@@ -264,8 +262,8 @@ impl RenderAlignmentView {
         );
 
         // 相机方向
-        let mut temp_quaternion_0 = Rotation3::identity();
-        CoordinateSytem3::matrix4_decompose_rotation(
+        let mut temp_quaternion_0 = Quaternion::identity();
+        CoordinateSytem3::matrix4_decompose(
             &camera_rotation_matrix,
             None,
             Some(&mut temp_quaternion_0),
@@ -273,14 +271,17 @@ impl RenderAlignmentView {
         );
         // 叠加自身旋转
         let temp_quaternion_0 = temp_quaternion_0.rotation_to(&temp_quaternion_0);
+        let temp_quaternion_0 = Quaternion::from_quaternion(temp_quaternion_0.normalize());
         // let mut tempQuaternion_0 =
         //     Vector3::new(tempQuaternion_0.0, tempQuaternion_0.1, tempQuaternion_0.2)
         //         .cross(&rotation);
         // let tempQuaternion_0 = tempQuaternion_0.matrix();
-        let temp_quaternion_0 = temp_quaternion_0.euler_angles();
-        *result_matrix = Matrix::new_nonuniform_scaling(&temp_vector3_scaling)
-            * Matrix::from_euler_angles(temp_quaternion_0.0, temp_quaternion_0.1, temp_quaternion_0.2)
-            * Matrix::new_translation(&temp_vector3_translation);
+        CoordinateSytem3::matrix4_compose(
+            &temp_vector3_scaling,
+            &temp_quaternion_0,
+            &temp_vector3_translation,
+            result_matrix,
+        );
     }
 }
 
@@ -313,19 +314,30 @@ impl RenderAlignmentWorld {
             * Matrix::from_euler_angles(rotation[0], rotation[1], rotation[2])
             * (*real_start_matrix);
 
-        let mut temp_vector3_scaling = Vector3::new(1., 1., 1.);
+        let mut temp_matrix_1 = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &scaling,
+            &rotation,
+            &Vector3::zeros(),
+            &mut temp_matrix_1,
+        );
+
+        *real_start_matrix = temp_matrix_1 * (*real_start_matrix);
+
+        let mut temp_vector3_scaling = Vector3::zeros();
         CoordinateSytem3::matrix4_decompose_rotation(
             real_start_matrix,
             Some(&mut temp_vector3_scaling),
             None,
             None,
         );
-        let temp_quaternion_0 =
-            Quaternion::from_quaternion(nalgebra::Quaternion::new(0., 0., 0., 1.)).euler_angles();
 
-        *result_matrix = Matrix::new_nonuniform_scaling(&temp_vector3_scaling)
-            * Matrix::from_euler_angles(temp_quaternion_0.0, temp_quaternion_0.1, temp_quaternion_0.2)
-            * Matrix::new_translation(&temp_vector3_translation);
+        CoordinateSytem3::matrix4_compose(
+            &temp_vector3_scaling,
+            &Quaternion::identity(),
+            &temp_vector3_translation,
+            result_matrix,
+        );
     }
 }
 
@@ -334,6 +346,8 @@ pub struct RenderAlignmentFacing {
 }
 
 impl RenderAlignmentFacing {
+    pub const use_right_handed_system: bool = false;
+
     pub fn compute(
         parent_world_matrix: Matrix,
         real_start_matrix: &mut Matrix,
@@ -354,13 +368,16 @@ impl RenderAlignmentFacing {
         real_start_matrix[7] = 0.;
         real_start_matrix[11] = 0.;
 
-        // Local - Scaling - Rotation
-        // 自身旋转
-        *real_start_matrix = Matrix::new_nonuniform_scaling(&scaling)
-            * Matrix::from_euler_angles(rotation[0], rotation[1], rotation[2])
-            * (*real_start_matrix);
+        let mut temp_matrix_1 = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &scaling,
+            &rotation,
+            &Vector3::zeros(),
+            &mut temp_matrix_1,
+        );
+        *real_start_matrix = temp_matrix_1 * (*real_start_matrix);
 
-        let mut temp_vector3_scaling = Vector3::new(1., 1., 1.);
+        let mut temp_vector3_scaling = Vector3::zeros();
         CoordinateSytem3::matrix4_decompose_rotation(
             real_start_matrix,
             Some(&mut temp_vector3_scaling),
@@ -368,37 +385,61 @@ impl RenderAlignmentFacing {
             None,
         );
 
-        // 相机方向
-        // TempVector3Translation.subtractFromFloatsToRef(camraGlobalPos.x, camraGlobalPos.y, camraGlobalPos.z, TempVector3A);
-        // if (RenderAlignmentFacing.useRightHandedSystem) {
-        //     Matrix.LookAtRHToRef(Vector3.ZeroReadOnly, TempVector3A, Vector3.UpReadOnly, TempMatrix_View);
-        // } else {
-        //     Matrix.LookAtLHToRef(Vector3.ZeroReadOnly, TempVector3A, Vector3.UpReadOnly, TempMatrix_View);
-        // }
-
-        // let TempMatrix_View = Isometry3::look_at_lh(
-        //     &Point3::new(camraGlobalPos[0], camraGlobalPos[1], camraGlobalPos[2]),
-        //     &Point3::new(TempVector3Translation[0], TempVector3Translation[1], TempVector3Translation[2]),
-        //     &Vector3::new(0., 1., 0.),
-        // );
-        // Matrix.LookAtRHToRef(camraGlobalPos, TempVector3Translation, Vector3.UpReadOnly, TempMatrix_View);
-
-        // let TempMatrix_View = TempMatrix_View.rotation;
-
-        // TempQuaternion_0.fromRotationMatrix(cameraRotationMatrix);
-
-        // 叠加自身旋转
-        let temp_quaternion_0 =
-            camera_rotation_matrix * Matrix::from_euler_angles(rotation[0], rotation[1], rotation[2]);
-        let temp_quaternion_0 = temp_quaternion_0.normalize();
-
-        *result_matrix = Matrix::new_nonuniform_scaling(&temp_vector3_scaling)
-            * Matrix::from_euler_angles(
-                temp_quaternion_0[0],
-                temp_quaternion_0[1],
-                temp_quaternion_0[2],
+        let mut temp_matrix_view = if Self::use_right_handed_system {
+            Matrix::look_at_rh(
+                &Point3::new(
+                    _camra_global_pos.x,
+                    _camra_global_pos.y,
+                    _camra_global_pos.z,
+                ),
+                &Point3::new(
+                    temp_vector3_translation.x,
+                    temp_vector3_translation.y,
+                    temp_vector3_translation.z,
+                ),
+                &Vector3::new(0., 1., 0.),
             )
-            * Matrix::new_translation(&temp_vector3_translation);
+        } else {
+            Matrix::look_at_lh(
+                &Point3::new(
+                    _camra_global_pos.x,
+                    _camra_global_pos.y,
+                    _camra_global_pos.z,
+                ),
+                &Point3::new(
+                    temp_vector3_translation.x,
+                    temp_vector3_translation.y,
+                    temp_vector3_translation.z,
+                ),
+                &Vector3::new(0., 1., 0.),
+            )
+        };
+
+        let mut quaternion = Quaternion::identity();
+        CoordinateSytem3::matrix4_decompose(&temp_matrix_view, None, Some(&mut quaternion), None);
+        CoordinateSytem3::matrix4_compose(
+            &Vector3::new(1., 1., 1.),
+            &quaternion,
+            &Vector3::zeros(),
+            &mut temp_matrix_view,
+        );
+
+        let mut temp_quaternion_0 = Quaternion::identity();
+        CoordinateSytem3::matrix4_decompose(
+            &camera_rotation_matrix,
+            None,
+            Some(&mut temp_quaternion_0),
+            None,
+        );
+        temp_quaternion_0 = temp_quaternion_0.rotation_to(&Quaternion::from_euler_angles(rotation.x, rotation.y, rotation.z));
+        temp_quaternion_0 = Quaternion::from_quaternion(temp_quaternion_0.normalize());
+
+        CoordinateSytem3::matrix4_compose(
+            &temp_vector3_scaling,
+            &temp_quaternion_0,
+            &temp_vector3_translation,
+            result_matrix,
+        )
     }
 }
 
@@ -424,35 +465,29 @@ impl RenderAlignmentVelocity {
         real_start_matrix[7] = 0.;
         real_start_matrix[11] = 0.;
 
-        let rotation = Rotation3::from_euler_angles(rotation[0], rotation[1], rotation[2]);
-        // Local - Scaling - Rotation
-        // 自身旋转
-        let temp_matrix_1 = Matrix::new_nonuniform_scaling(&scaling) * rotation.to_homogeneous();
+        let mut temp_matrix_1 = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &scaling,
+            &rotation,
+            &Vector3::zeros(),
+            &mut temp_matrix_1,
+        );
 
-        // let direction = direction * 1.;
-        let temp_vector3_a = real_start_matrix.transform_vector(direction);
-        // Vector3.TransformCoordinatesToRef(TempVector3A, realStartMatrix, TempVector3A);
-        let temp_vector3_a = normalize(&temp_vector3_a);
-        // Vector3.NormalizeToRef(TempVector3A, TempVector3A);
-        // 如何旋转以`看向`速度方向
-        let temp_matrix_view = Isometry3::look_at_lh(
+        let mut temp_vector3_a = *direction;
+        temp_vector3_a = real_start_matrix.transform_vector(&temp_vector3_a);
+        temp_vector3_a = temp_vector3_a.normalize();
+
+        let mut temp_matrix_view = Matrix::look_at_lh(
             &Point3::new(0., 0., 0.),
-            &Point3::new(temp_vector3_a[0], temp_vector3_a[1], temp_vector3_a[2]),
+            &Point3::new(temp_vector3_a.x, temp_vector3_a.y, temp_vector3_a.z),
             &Vector3::new(0., 1., 0.),
         );
-        let temp_quaternion_0 = temp_matrix_view.rotation.euler_angles();
-        let temp_quaternion_0 = Rotation3::from_euler_angles(
-            temp_quaternion_0.0,
-            temp_quaternion_0.1,
-            temp_quaternion_0.2,
-        );
-        // let tempQuaternion_0 =
-        //     Vector3::new(tempQuaternion_0.0, tempQuaternion_0.1, tempQuaternion_0.2);
-        // TempMatrix_View.getRotationMatrixToRef(TempMatrix_View);
-        // TempQuaternion_0.fromRotationMatrix(TempMatrix_View);
-        // 叠加自身旋转
-        let temp_quaternion_0 = temp_quaternion_0.rotation_to(&rotation);
-        let temp_quaternion_0 = temp_quaternion_0;
+
+        let mut temp_quaternion_0 = Quaternion::identity();
+        CoordinateSytem3::matrix4_decompose(&temp_matrix_view, None, Some(&mut temp_quaternion_0), None);
+
+        temp_quaternion_0 = temp_quaternion_0.rotation_to(&Quaternion::from_euler_angles(rotation.x, rotation.y, rotation.z));
+        temp_quaternion_0 = Quaternion::from_quaternion(temp_quaternion_0.normalize());
 
         *real_start_matrix = temp_matrix_1 * (*real_start_matrix);
         // realStartMatrix.decompose(TempVector3Scaling, undefined, undefined);
@@ -464,9 +499,12 @@ impl RenderAlignmentVelocity {
             None,
         );
 
-        *result_matrix = Matrix::new_nonuniform_scaling(&temp_vector3_scaling)
-            * temp_quaternion_0.to_homogeneous()
-            * Matrix::new_translation(&temp_vector3_translation);
+        CoordinateSytem3::matrix4_compose(
+            &temp_vector3_scaling,
+            &temp_quaternion_0,
+            &temp_vector3_translation,
+            result_matrix,
+        )
     }
 }
 
@@ -495,9 +533,14 @@ impl RenderAlignmentLocal {
         real_start_matrix[7] = 0.;
         real_start_matrix[11] = 0.;
 
-        let temp_matrix_1 = Matrix::new_nonuniform_scaling(&scaling)
-            * Matrix::from_euler_angles(rotation[0], rotation[1], rotation[2])
-            * (*real_start_matrix);
+        let mut temp_matrix_1 = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_euler_angle(
+            &scaling,
+            &rotation,
+            &Vector3::zeros(),
+            &mut temp_matrix_1,
+        );
+
         *result_matrix = temp_matrix_1 * (*real_start_matrix);
 
         // resultMatrix(TempVector3Translation);

@@ -1,0 +1,960 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'axis'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=axis"
+                ],
+                "filter": {
+                    "name": "axis",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pi_engine_shell'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pi_engine_shell"
+                ],
+                "filter": {
+                    "name": "pi_engine_shell",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pi_node_materials'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pi_node_materials"
+                ],
+                "filter": {
+                    "name": "pi_node_materials",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pi_scene_context'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pi_scene_context"
+                ],
+                "filter": {
+                    "name": "pi_scene_context",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'default_render'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=default_render"
+                ],
+                "filter": {
+                    "name": "default_render",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'material_textures'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=material_textures"
+                ],
+                "filter": {
+                    "name": "material_textures",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'particle'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=particle"
+                ],
+                "filter": {
+                    "name": "particle",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pi_particle_system'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pi_particle_system"
+                ],
+                "filter": {
+                    "name": "pi_particle_system",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pi_mesh_builder'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pi_mesh_builder"
+                ],
+                "filter": {
+                    "name": "pi_mesh_builder",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pi_skeleton'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pi_skeleton"
+                ],
+                "filter": {
+                    "name": "pi_skeleton",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'procedural_texture'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=procedural_texture"
+                ],
+                "filter": {
+                    "name": "procedural_texture",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'shadow_generator'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=shadow_generator"
+                ],
+                "filter": {
+                    "name": "shadow_generator",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'skeletons'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=skeletons"
+                ],
+                "filter": {
+                    "name": "skeletons",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'skybox'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=skybox"
+                ],
+                "filter": {
+                    "name": "skybox",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'standard_material'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=standard_material"
+                ],
+                "filter": {
+                    "name": "standard_material",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'unlit_material'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=unlit_material"
+                ],
+                "filter": {
+                    "name": "unlit_material",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'pi_3d'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "pi_3d",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'cube'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=cube",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "cube",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'cube'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=cube",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "cube",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'unlit_cube'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=unlit_cube",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "unlit_cube",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'unlit_cube'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=unlit_cube",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "unlit_cube",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'skin_simple'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=skin_simple",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "skin_simple",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'skin_simple'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=skin_simple",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "skin_simple",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'anime_01'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=anime_01",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_01",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'anime_01'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=anime_01",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_01",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'anime_performance'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=anime_performance",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_performance",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'anime_performance'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=anime_performance",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_performance",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'particle01'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=particle01",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "particle01",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'particle01'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=particle01",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "particle01",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'gltfskin'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=gltfskin",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "gltfskin",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'gltfskin'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=gltfskin",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "gltfskin",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'custom_extras'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=custom_extras",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "custom_extras",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'custom_extras'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=custom_extras",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "custom_extras",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'main_opacity'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=main_opacity",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "main_opacity",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'main_opacity'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=main_opacity",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "main_opacity",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'opacity_clip'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=opacity_clip",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "opacity_clip",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'opacity_clip'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=opacity_clip",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "opacity_clip",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'emissive_fresnel'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=emissive_fresnel",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "emissive_fresnel",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'emissive_fresnel'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=emissive_fresnel",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "emissive_fresnel",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'main_opacity_fresnel'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=main_opacity_fresnel",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "main_opacity_fresnel",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'main_opacity_fresnel'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=main_opacity_fresnel",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "main_opacity_fresnel",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'two_opacity_mix'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=two_opacity_mix",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "two_opacity_mix",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'two_opacity_mix'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=two_opacity_mix",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "two_opacity_mix",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'stripes_virtual'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=stripes_virtual",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "stripes_virtual",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'stripes_virtual'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=stripes_virtual",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "stripes_virtual",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'distortion_uv'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=distortion_uv",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "distortion_uv",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'distortion_uv'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=distortion_uv",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "distortion_uv",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'anime_opacity_clip'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=anime_opacity_clip",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_opacity_clip",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'anime_opacity_clip'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=anime_opacity_clip",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_opacity_clip",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'anime_main_opacity'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=anime_main_opacity",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_main_opacity",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'anime_main_opacity'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=anime_main_opacity",
+                    "--package=pi_3d"
+                ],
+                "filter": {
+                    "name": "anime_main_opacity",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
