@@ -32,11 +32,13 @@ pub(crate) fn sys_dispose(
     scenes: Query<&SceneID>,
     groupmaps: Query<&AnimationGroups>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
+    mut scenectxs: ResMut<SceneAnimationContextMap>,
 ) {
     cmds.drain().drain(..).for_each(|OpsDispose(entity)| {
-        if let Ok(groupmap) = groupmaps.get(entity) {
+        if let (Ok(scene), Ok(groupmap)) = (scenes.get(entity), groupmaps.get(entity)) {
             groupmap.map.iter().for_each(|(k, id_group)| {
-                animeglobal.remove(id_group)
+                scenectxs.delete_group(&scene.0, *id_group);
+                animeglobal.remove(id_group);
             });
         }
 
@@ -63,9 +65,10 @@ pub(crate) fn sys_dispose(
 
             // Instance
             refs.iter().for_each(|entity| {
-                if let Ok(groupmap) = groupmaps.get(*entity) {
+                if let (Ok(scene), Ok(groupmap)) = (scenes.get(*entity), groupmaps.get(*entity)) {
                     groupmap.map.iter().for_each(|(k, id_group)| {
-                        animeglobal.remove(id_group)
+                        scenectxs.delete_group(&scene.0, *id_group);
+                        animeglobal.remove(id_group);
                     });
                 }
                 commands.entity(*entity).despawn();
@@ -82,9 +85,10 @@ pub(crate) fn sys_dispose(
                 refs.remove(&entity);
                 if refs.len() == 0 && refs.request_dispose {
                     skin.bones.iter().for_each(|entity| {
-                        if let Ok(groupmap) = groupmaps.get(*entity) {
+                        if let (Ok(scene), Ok(groupmap)) = (scenes.get(*entity), groupmaps.get(*entity)) {
                             groupmap.map.iter().for_each(|(k, id_group)| {
-                                animeglobal.remove(id_group)
+                                scenectxs.delete_group(&scene.0, *id_group);
+                                animeglobal.remove(id_group);
                             });
                         }
                         commands.entity(*entity).despawn();
@@ -112,9 +116,10 @@ pub(crate) fn sys_dispose(
             refs.request_dispose = true;
             if refs.len() == 0 && refs.request_dispose {
                 skin.bones.iter().for_each(|entity| {
-                    if let Ok(groupmap) = groupmaps.get(*entity) {
+                    if let (Ok(scene), Ok(groupmap)) = (scenes.get(*entity), groupmaps.get(*entity)) {
                         groupmap.map.iter().for_each(|(k, id_group)| {
-                            animeglobal.remove(id_group)
+                            scenectxs.delete_group(&scene.0, *id_group);
+                            animeglobal.remove(id_group);
                         });
                     }
                     commands.entity(*entity).despawn();

@@ -1,7 +1,7 @@
 #![feature(box_into_inner)]
 
 use default_render::SingleIDBaseDefaultMaterial;
-use pi_3d::PluginBundleDefault;
+use pi_3d::{PluginBundleDefault};
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
@@ -115,7 +115,8 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    animegroupcmd.global.record_group(source, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     {
         let key_curve0 = pi_atom::Atom::from("color");
         let curve = FrameCurve::<MainColor>::curve_easing(MainColor(Vector3::new(0.5, 0.5, 0.5)), MainColor(Vector3::new(1.0, 1., 1.)), 30, 30, EEasingMode::None);
@@ -124,7 +125,7 @@ fn setup(
             Err(_) => { return; },
         };
         let animation = matanime.main_color.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, idmat, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
     }
     {
         let key_curve0 = pi_atom::Atom::from("mainuo");
@@ -134,11 +135,11 @@ fn setup(
             Err(_) => { return; },
         };
         let animation = matanime.opacity_tex_uoffset.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, idmat, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
     }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Positive(Some(5));
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), parma));
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma);
 }
 
 pub trait AddEvent {
@@ -182,6 +183,7 @@ pub fn main() {
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);
@@ -194,6 +196,7 @@ pub fn main() {
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugins(PluginGroupNodeMaterialAnime);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

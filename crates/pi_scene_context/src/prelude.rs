@@ -1,4 +1,5 @@
 pub use crate::{
+    bindgroup::*,
     transforms::{prelude::*},
     scene::{prelude::*},
     cameras::{prelude::*},
@@ -20,4 +21,5 @@ pub use crate::{
     },
     flags::*,
     object::*,
+    viewer::prelude::*,
 };

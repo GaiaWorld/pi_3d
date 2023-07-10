@@ -19,7 +19,7 @@ use crate::{
     transforms::{command_sys::ActionTransformNode, prelude::*},
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::{RenderAlignment, ModelVelocity, ScalingMode},
+    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange},
 };
 
 use super::{
@@ -27,7 +27,7 @@ use super::{
     model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel},
     abstract_mesh::AbstructMesh,
     Mesh,
-    lighting::{MeshCastShadow, MeshReceiveShadow}
+    lighting::{MeshCastShadow, MeshReceiveShadow},
 };
 
 
@@ -131,22 +131,6 @@ pub fn sys_act_mesh_modify(
     });
 }
 
-pub fn sys_act_abstruct_mesh_enable(
-    mut cmds: ResMut<ActionListAbstructMeshEnable>,
-    mut abstructmeshes: Query<&mut AbstructMesh>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAbstructMeshEnable(entity, val, count)| {
-        if let Ok(mut abstructmesh) = abstructmeshes.get_mut(entity) {
-            *abstructmesh = val;
-        } else {
-            if count < 2 {
-                cmds.push(OpsAbstructMeshEnable(entity, val, count + 1));
-            }
-        }
-    });
-}
-
-
 pub fn sys_act_instance_color(
     mut cmds: ResMut<ActionListInstanceColor>,
     entities: Query<Entity>,
@@ -237,6 +221,21 @@ pub fn sys_act_abstruct_mesh_velocity(
     });
 }
 
+pub fn sys_act_mesh_render_indice(
+    mut cmds: ResMut<ActionListMeshRenderIndiceRange>,
+    mut items: Query<&mut IndiceRenderRange>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = IndiceRenderRange(val);
+        } else {
+            if count < 2 {
+                cmds.push(OpsMeshRenderIndiceRange(entity, val, count + 1));
+            }
+        }
+    });
+}
+
 pub struct ActionMesh;
 impl ActionMesh {
     pub(crate) fn as_mesh(
@@ -250,7 +249,7 @@ impl ActionMesh {
         }
 
         commands
-            .insert(AbstructMesh(true))
+            .insert(AbstructMesh)
             .insert(Mesh)
             .insert(RenderWorldMatrix(Matrix::identity()))
             .insert(RenderWorldMatrixInv(Matrix::identity()))
@@ -281,6 +280,7 @@ impl ActionMesh {
             .insert(ModelVelocity::default())
             .insert(RenderAlignment::default())
             .insert(ScalingMode::default())
+            .insert(IndiceRenderRange(None))
             ;
     }
     pub fn create(
@@ -352,7 +352,7 @@ impl ActionInstanceMesh {
         commands: &mut EntityCommands,
         source: Entity,
     ) {
-        commands.insert(AbstructMesh(true));
+        commands.insert(AbstructMesh);
         commands.insert(InstanceSourceID(source));
         commands.insert(InstanceColor(Vector4::new(1., 1., 1., 1.)));
         commands.insert(InstanceTillOff(Vector4::new(1., 1., 0., 0.)));
@@ -368,7 +368,7 @@ impl ActionInstanceMesh {
 fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
     model: Entity,
     commands: &mut Commands,
-    empty: &SingleEmptyEntity,
+    mat: &SingleEmptyEntity,
 ) -> ObjectID {
     let id = commands.spawn_empty().id();
 
@@ -376,17 +376,7 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
 
     commands.entity(id).insert(T::new())
         .insert(PassSource(model))
-        .insert(PassBindEffectValue(None))
-        .insert(PassBindEffectTextures(None))
-        .insert(PassBindGroupScene(None))
-        .insert(PassBindGroupModel(None))
-        .insert(PassBindGroupTextureSamplers(None))
-        .insert(PassBindGroups(None))
-        .insert(PassReady(None))
-        .insert(PassShader(None))
-        .insert(PassPipeline(None))
-        .insert(PassDraw(None))
-        .insert(MaterialID(empty.id()))
+        .insert(MaterialID(mat.id()))
         ;
 
     id

@@ -66,3 +66,9 @@ pub struct ShadowEnable(pub bool);
 
 #[derive(Deref, Component)]
 pub struct ShadowGeneratorID(pub ObjectID);
+
+pub const KEY_SHADOW_DEPTH_BIAS: &'static str = "uShadowDepthBias";
+pub const KEY_SHADOW_NORMAL_BIAS: &'static str = "uShadowNormalBias";
+pub const KEY_SHADOW_DEPTH_SCALE: &'static str = "uShadowDepthScale";
+pub const KEY_SHADOW_MINZ: &'static str = "uShadowMinZ";
+pub const KEY_SHADOW_MAXZ: &'static str = "uShadowMaxZ";

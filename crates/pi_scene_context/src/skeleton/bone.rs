@@ -55,7 +55,7 @@ impl ActionBone {
             .insert(BoneDifferenceMatrix(Matrix::identity()))
             .insert(BoneMatrix(Matrix::identity()))
             .insert(BoneBaseMatrix(Matrix::identity()))
-            .insert(SkeletonID(empty.id()))
+            // .insert(SkeletonID(empty.id()))
         ;
     }
     pub fn modify_pose(

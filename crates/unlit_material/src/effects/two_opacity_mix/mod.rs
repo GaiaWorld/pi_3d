@@ -43,8 +43,8 @@ impl TwoOpacityMixShader {
             UniformPropertyFloat(Atom::from(Self::KEY_MIX_CONTROL), 0.5)  
         );
 
-        nodemat.values.int_list.push(
-            UniformPropertyInt(Atom::from(Self::KEY_MIX_CHANNEL), BlockTextureChannel::CHANNEL_A)  
+        nodemat.values.uint_list.push(
+            UniformPropertyUint(Atom::from(Self::KEY_MIX_CHANNEL), BlockTextureChannel::CHANNEL_A)  
         );
 
         nodemat.include(BlockFloat::KEY, infos);

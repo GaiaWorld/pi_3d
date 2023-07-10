@@ -4,7 +4,7 @@ use pi_animation::{animation_group_manager::AnimationGroupManager};
 use pi_curves::curve::{frame::{KeyFrameCurveValue}};
 use pi_engine_shell::prelude::*;
 
-use crate::{scene::environment::scene_time::SceneTime};
+use crate::{scene::environment::scene_time::SceneTime, prelude::SceneAnimationEnable};
 
 use super::{base::*};
 
@@ -28,7 +28,7 @@ pub fn sys_listen_scene_anime_ctx(
 }
 // #[system]
 pub fn sys_scene_anime_ctx(
-    mut scenes: Query<(Entity, &SceneTime)>,
+    mut scenes: Query<(Entity, &SceneTime, &SceneAnimationEnable)>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
     mut scenectxs: ResMut<SceneAnimationContextMap>,
     mut animeevents: ResMut<GlobalAnimeEvents>,
@@ -36,16 +36,21 @@ pub fn sys_scene_anime_ctx(
     let time0 = pi_time::Instant::now();
 
     animeglobal.runtimeinfos.reset();
-    scenes.iter_mut().for_each(|(id_scene, scene_time)| {
+    scenes.iter_mut().for_each(|(id_scene, scene_time, enable)| {
         let ctx = if let Some(ctx) = scenectxs.get_mut(&id_scene) {
             ctx
         } else { return; };
 
+        if enable.0 == false {
+            return;
+        }
+
         // ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos);
         {
-            let delta_ms = scene_time.delta_ms as KeyFrameCurveValue * ctx.0.time_scale as KeyFrameCurveValue;
+            let delta_ms = scene_time.delta_ms() as KeyFrameCurveValue * ctx.0.time_scale as KeyFrameCurveValue;
+            // log::warn!("Scene Anime Deltatime {:?}", delta_ms);
             let ctx = &mut ctx.0;
-            for (i, group_info) in ctx.group_infos.iter_mut() {
+            for (id_group, group_info) in ctx.group_infos.iter_mut() {
                 group_info.start_event = false;
                 group_info.end_event = false;
                 group_info.loop_event = false;
@@ -53,30 +58,30 @@ pub fn sys_scene_anime_ctx(
 
                 if group_info.is_playing == true {
                     let group_mgr = &mut ctx.group_mgr;
-                    let group = group_mgr.get_mut(i).unwrap();
+                    let group = group_mgr.get_mut(id_group).unwrap();
                     group.anime(&mut animeglobal.runtimeinfos, delta_ms, group_info);
                 }
 
-                if let Some((idobj, name, frameevents, listen)) = animeglobal.group_records.get(&i) {
-                    log::warn!("Group : {:?}", listen);
+                if let Some((idobj, frameevents, listen)) = animeglobal.group_records.get(&id_group) {
+                    // log::warn!("Group : {:?}", listen);
                     if group_info.start_event && (listen & TagGroupListen::START) == TagGroupListen::START {
-                        animeevents.push((*idobj, name.get_hash(), TagGroupListen::START, 0));
+                        animeevents.push((*idobj, id_group, TagGroupListen::START, 0));
                     }
     
                     if (listen & TagGroupListen::FRAME) == TagGroupListen::FRAME {
                         if let Some(data) = frameevents.query(group_info.last_amount_in_second, group_info.amount_in_second) {
                             data.iter().for_each(|v| {
-                                animeevents.push((*idobj, name.get_hash(), TagGroupListen::FRAME, *v));
+                                animeevents.push((*idobj, id_group, TagGroupListen::FRAME, *v));
                             });
                         }
                     }
 
                     if group_info.loop_event && (listen & TagGroupListen::LOOP) == TagGroupListen::LOOP {
-                        animeevents.push((*idobj, name.get_hash(), TagGroupListen::LOOP, group_info.looped_count as u32));
+                        animeevents.push((*idobj, id_group, TagGroupListen::LOOP, group_info.looped_count as u32));
                     }
 
                     if group_info.end_event && (listen & TagGroupListen::END) == TagGroupListen::END {
-                        animeevents.push((*idobj, name.get_hash(), TagGroupListen::END, 0));
+                        animeevents.push((*idobj, id_group, TagGroupListen::END, 0));
                     }
                 };
             }

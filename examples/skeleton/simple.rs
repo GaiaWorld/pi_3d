@@ -85,7 +85,8 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    animegroupcmd.global.record_group(source, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     
     let bone0 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone0, scene));
     let bone1 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone1, scene));
@@ -93,30 +94,30 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone1, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, bone1, id_group.clone(), animation);
     }
     let bone2 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone2, scene));
     let key_curve0 = pi_atom::Atom::from((2).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone2, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, bone2, id_group.clone(), animation);
     }
     let bone3 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone3, scene));
     let key_curve0 = pi_atom::Atom::from((3).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone3, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, bone3, id_group.clone(), animation);
     }
     let bone4 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone4, scene));
     let key_curve0 = pi_atom::Atom::from((4).to_string());
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, bone4, key_group.clone(), animation));
+        animegroupcmd.scene_ctxs.add_target_anime(scene, bone4, id_group.clone(), animation);
     }
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
 
     skincmds.bone_create.push(OpsBoneCreation::ops(bone0, scene, scene, String::from("Bone00")));
     skincmds.bone_create.push(OpsBoneCreation::ops(bone1, bone0, scene, String::from("Bone01")));
@@ -285,6 +286,7 @@ pub fn main() {
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);
@@ -296,6 +298,7 @@ pub fn main() {
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

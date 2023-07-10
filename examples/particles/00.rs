@@ -220,6 +220,7 @@ pub fn main() {
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginFrameTime);
@@ -230,6 +231,7 @@ pub fn main() {
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugin(PluginNodeMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
     app.add_plugin(PluginTest);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;

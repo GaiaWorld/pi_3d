@@ -3,7 +3,7 @@ use std::{mem::replace, sync::Arc};
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    pass::*,
+    pass::*, renderers::prelude::*,
 };
 
 use super::{
@@ -40,6 +40,7 @@ pub fn sys_act_material_create(
             .insert(BindEffectValueDirty(false))
             .insert(passtag)
             .insert(UniformTextureWithSamplerParams::default())
+            .insert(FlagAnimationStartResetComp)
             .insert(DirtyMaterialRefs::default());
     });
 }
@@ -47,9 +48,10 @@ pub fn sys_act_material_create(
 pub fn sys_act_material_use(
     mut cmds: ResMut<ActionListMaterialUse>,
     mut materials: Query<(&mut MaterialRefs, &mut DirtyMaterialRefs, &EPassTag)>,
-    meshes: Query<(&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08)>,
+    meshes: Query<(&mut PassID01, &mut PassID02, &mut PassID03, &mut PassID04, &mut PassID05, &mut PassID06, &mut PassID07, &mut PassID08)>,
     mut targets: Query<&mut MaterialID>,
     empty: Res<SingleEmptyEntity>,
+    mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
@@ -73,7 +75,7 @@ pub fn sys_act_material_use(
                         }
                     } else if let Ok(passid) = meshes.get(id_mesh) {
                         let pass = pass.as_pass();
-                        let id_mesh = if pass == EPassTag::PASS_TAG_01 { passid.0.0 }
+                        let id_pass = if pass == EPassTag::PASS_TAG_01 { passid.0.0 }
                         else if pass == EPassTag::PASS_TAG_02 { passid.1.0 }
                         else if pass == EPassTag::PASS_TAG_03 { passid.2.0 }
                         else if pass == EPassTag::PASS_TAG_04 { passid.3.0 }
@@ -81,24 +83,27 @@ pub fn sys_act_material_use(
                         else if pass == EPassTag::PASS_TAG_06 { passid.5.0 }
                         else if pass == EPassTag::PASS_TAG_07 { passid.6.0 }
                         else { passid.7.0 };
-                        if let Ok(mut matid) = targets.get_mut(id_mesh) {
+
+                        if let Ok(mut matid) = targets.get_mut(id_pass) {
                             if matid.0 != id_mat {
                                 let old = matid.0;
                                 // use
-                                if materialrefs.insert(id_mesh) {
+                                if materialrefs.insert(id_pass) {
                                     *flag = DirtyMaterialRefs::default();
                                 }
-                                *matid = MaterialID(id_mat);
                                 
                                 // unuse
                                 if let Ok((mut materialrefs, mut flag, pass)) = materials.get_mut(old) {
-                                    if materialrefs.remove(&id_mesh) {
+                                    if materialrefs.remove(&id_pass) {
                                         *flag = DirtyMaterialRefs::default();
                                     }
                                 }
+                                
+                                *matid = MaterialID(id_mat);
+                                reset_passobj(id_pass, id_mat, &mut commands);
                             }
                         } else {
-                            cmds.push(OpsMaterialUse::Use(id_mesh, id_mat));
+                            cmds.push(OpsMaterialUse::Use(id_pass, id_mat));
                         }
                     } else {
                         cmds.push(OpsMaterialUse::Use(id_mesh, id_mat));
@@ -127,43 +132,62 @@ pub fn sys_act_material_use(
     });
 }
 
-pub fn sys_act_material_mat4(
-    mut cmds: ResMut<ActionListUniformMat4>,
-    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
+fn reset_passobj(
+    idpass: Entity,
+    idmat: Entity,
+    commands: &mut Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value, count)| {
-        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(slot) = bindvalues.slot(&slot) {
-                bindvalues.mat4(slot, &value);
-                *flag = BindEffectValueDirty(true);
-            }
-            return;
-        }
-
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            OpsUniformMat4(entity, slot, value, count + 1);
-        }
-    });
+    commands.entity(idpass)
+        .insert(PassBindEffectValue(None))
+        .insert(PassBindEffectTextures(None))
+        .insert(PassBindGroupScene(None))
+        .insert(PassBindGroupModel(None))
+        .insert(PassBindGroupTextureSamplers(None))
+        .insert(PassBindGroups(None))
+        .insert(PassReady(None))
+        .insert(PassShader(None))
+        .insert(PassPipeline(None))
+        .insert(PassDraw(None))
+        ;
 }
 
-pub fn sys_act_material_mat2(
-    mut cmds: ResMut<ActionListUniformMat2>,
-    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsUniformMat2(entity, slot, value, count)| {
-        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(slot) = bindvalues.slot(&slot) {
-                bindvalues.mat2(slot, &value);
-                *flag = BindEffectValueDirty(true);
-            }
-            return;
-        }
+// pub fn sys_act_material_mat4(
+//     mut cmds: ResMut<ActionListUniformMat4>,
+//     mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value, count)| {
+//         if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+//             if let Some(slot) = bindvalues.slot(&slot) {
+//                 bindvalues.mat4(slot, &value);
+//                 *flag = BindEffectValueDirty(true);
+//             }
+//             return;
+//         }
 
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            OpsUniformMat2(entity, slot, value, count + 1);
-        }
-    });
-}
+//         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
+//             OpsUniformMat4(entity, slot, value, count + 1);
+//         }
+//     });
+// }
+
+// pub fn sys_act_material_mat2(
+//     mut cmds: ResMut<ActionListUniformMat2>,
+//     mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsUniformMat2(entity, slot, value, count)| {
+//         if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+//             if let Some(slot) = bindvalues.slot(&slot) {
+//                 bindvalues.mat2(slot, &value);
+//                 *flag = BindEffectValueDirty(true);
+//             }
+//             return;
+//         }
+
+//         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
+//             OpsUniformMat2(entity, slot, value, count + 1);
+//         }
+//     });
+// }
 
 pub fn sys_act_material_vec4(
     mut cmds: ResMut<ActionListUniformVec4>,
@@ -222,24 +246,24 @@ pub fn sys_act_material_float(
     });
 }
 
-pub fn sys_act_material_int(
-    mut cmds: ResMut<ActionListUniformInt>,
-    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsUniformInt(entity, slot, value, count)| {
-        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            if let Some(slot) = bindvalues.slot(&slot) {
-                bindvalues.int(slot, value);
-                *flag = BindEffectValueDirty(true);
-            }
-            return;
-        }
+// pub fn sys_act_material_int(
+//     mut cmds: ResMut<ActionListUniformInt>,
+//     mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsUniformInt(entity, slot, value, count)| {
+//         if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+//             if let Some(slot) = bindvalues.slot(&slot) {
+//                 bindvalues.int(slot, value);
+//                 *flag = BindEffectValueDirty(true);
+//             }
+//             return;
+//         }
 
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            OpsUniformInt(entity, slot, value, count + 1);
-        }
-    });
-}
+//         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
+//             OpsUniformInt(entity, slot, value, count + 1);
+//         }
+//     });
+// }
 
 pub fn sys_act_material_uint(
     mut cmds: ResMut<ActionListUniformUint>,

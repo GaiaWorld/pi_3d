@@ -2,7 +2,7 @@
 use std::mem::size_of;
 
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr};
-use pi_engine_shell::prelude::*;
+use pi_engine_shell::{prelude::*, engine_shell::asset_capacity};
 
 
 use crate::pass::*;
@@ -47,48 +47,27 @@ impl Plugin for PluginRenderer {
 
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         if app.world.get_resource::<PiSafeAtlasAllocator>().is_none() {
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgRenderResTextureView>() { cfg } else {
-                app.insert_resource(AssetCfgRenderResTextureView::default());
-                app.world.get_resource::<AssetCfgRenderResTextureView>().unwrap()
-            };
+            let cfg = asset_capacity::<AssetCfgRenderResTextureView>(app);
             let texture_assets_mgr = if let Some(texture_assets_mgr) = app.world.get_resource::<ShareAssetMgr<RenderRes<wgpu::TextureView>>>() {
                 texture_assets_mgr.0.clone()
             } else {
-                let texture_assets_mgr = AssetMgr::<RenderRes<wgpu::TextureView>>::new(
-                    GarbageEmpty(), 
-                    false,
-                    cfg.0.min, cfg.0.timeout
-                );
+                let texture_assets_mgr = AssetMgr::<RenderRes<wgpu::TextureView>>::new(GarbageEmpty(),  cfg.flag, cfg.min, cfg.timeout);
                 app.insert_resource(ShareAssetMgr(texture_assets_mgr.clone()));
                 texture_assets_mgr
             };
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgRenderResUnuseTexture>() { cfg } else {
-                app.insert_resource(AssetCfgRenderResUnuseTexture::default());
-                app.world.get_resource::<AssetCfgRenderResUnuseTexture>().unwrap()
-            };
-            let unusetexture_assets_mgr = HomogeneousMgr::<RenderRes<UnuseTexture>>::new(
-                pi_assets::homogeneous::GarbageEmpty(), 
-                cfg.0.min, size_of::<UnuseTexture>(), cfg.0.timeout
-            );
+            let cfg = asset_capacity::<AssetCfgRenderResUnuseTexture>(app);
+            let unusetexture_assets_mgr = HomogeneousMgr::<RenderRes<UnuseTexture>>::new(pi_assets::homogeneous::GarbageEmpty(), cfg.min, cfg.timeout);
             let atlas = SafeAtlasAllocator::new(device, texture_assets_mgr, unusetexture_assets_mgr);
             app.insert_resource(PiSafeAtlasAllocator(atlas));
         }
         
         if app.world.get_resource::<AssetDataCenterShader3D>().is_none() {
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgShader3D>() { cfg } else {
-                app.insert_resource(AssetCfgShader3D::default());
-                app.world.get_resource::<AssetCfgShader3D>().unwrap()
-            };
-            app.insert_resource(AssetDataCenterShader3D::new(false, cfg.0.min, cfg.0.timeout));
+            let cfg = asset_capacity::<AssetCfgShader3D>(app);
+            app.insert_resource(AssetDataCenterShader3D::new(cfg.flag, cfg.min, cfg.timeout));
         }
         if app.world.get_resource::<AssetDataCenterPipeline3D>().is_none() {
-            let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgRenderPipeline>() {
-                cfg
-            } else {
-                app.insert_resource(AssetCfgRenderPipeline::default());
-                app.world.get_resource::<AssetCfgRenderPipeline>().unwrap()
-            };
-            app.insert_resource(AssetDataCenterPipeline3D::new(false, cfg.0.min, cfg.0.timeout));
+            let cfg = asset_capacity::<AssetCfgRenderPipeline>(app);
+            app.insert_resource(AssetDataCenterPipeline3D::new(cfg.flag, cfg.min, cfg.timeout));
         }
         if app.world.get_resource::<AssetLoaderShader3D>().is_none() {
             app.insert_resource(AssetLoaderShader3D::default());

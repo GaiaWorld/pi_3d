@@ -7,7 +7,7 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord},
+    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord, IndiceRenderRange},
 };
 
 use super::{
@@ -560,14 +560,14 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &I), Changed<RenderGeometryEable>>,
+        models: Query<(&GeometryID, &I, &IndiceRenderRange), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>)>>,
         geometrys: Query<&RenderGeometry>,
         mut passes: Query<(&PassSource, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
         let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(id_geo, id_pass)| {
+        models.iter().for_each(|(id_geo, id_pass, renderindices)| {
             if let Ok((id_model, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
@@ -577,7 +577,7 @@ use super::{
                                 vertices: rendergeo.vertices(),
                                 instances: rendergeo.instances(),
                                 vertex: rendergeo.vertex_range(),
-                                indices: rendergeo.indices.clone(),
+                                indices: renderindices.apply(rendergeo),
                             };
                             *old_draw = PassDraw(Some(Arc::new(draw)));
                             // log::warn!("PassDraw: {:?}", id_pass.id());

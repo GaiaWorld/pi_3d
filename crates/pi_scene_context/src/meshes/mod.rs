@@ -72,7 +72,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceColors::default());
         app.insert_resource(ActionListInstanceTilloffs::default());
         app.insert_resource(ActionListInstanceWorldMatrixs::default());
-        app.insert_resource(ActionListAbstructMeshEnable::default());
+        app.insert_resource(ActionListMeshRenderIndiceRange::default());
 
         app.add_system(
             sys_act_mesh_create.in_set(ERunStageChap::Initial)
@@ -83,12 +83,12 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(
             (
                 sys_act_mesh_modify,
-                sys_act_abstruct_mesh_enable,
                 sys_act_abstruct_mesh_render_alignment,
                 sys_act_abstruct_mesh_scaling_mode,
                 sys_act_abstruct_mesh_velocity,
                 sys_act_instance_color,
                 sys_act_instance_tilloff,
+                sys_act_mesh_render_indice,
             ).in_set(ERunStageChap::Command)
         );
         app.add_system(
@@ -105,14 +105,14 @@ impl crate::Plugin for PluginMesh {
                 sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>.run_if(should_run),
                 sys_tick_instance_buffer_update::<InstanceTillOff, InstanceBufferTillOff, InstanceTillOffDirty>.run_if(should_run),
                 sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>.run_if(should_run),
-            ).in_set(ERunStageChap::Uniform)
+            ).chain().in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
             (
                 sys_act_geomettry_instance_world_matrix.run_if(should_run),
                 sys_act_geomettry_instance_color.run_if(should_run),
                 sys_act_geomettry_instance_tilloff.run_if(should_run),
-            ).before(sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>)
+            ).chain().before(sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>)
         );
     }
 }

@@ -4,6 +4,8 @@ use crate::{
     materials::prelude::*,
 };
 
+use self::base::*;
+
 
 pub mod base;
 pub mod system;
@@ -46,12 +48,18 @@ impl ShaderShadowGenerator {
         ShaderEffectMeta::new(
             ShaderEffectValueUniformDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                mat4_list: vec![],
-                mat2_list: vec![],
-                vec4_list: vec![UniformPropertyVec4(Atom::from("biasAndScaleSM"), [0.0000, 0., 50., 0.])],
-                vec2_list: vec![UniformPropertyVec2(Atom::from("depthValuesSM"), [1., 1001.])],
-                float_list: vec![],
-                int_list: vec![],
+                // mat4_list: vec![],
+                // mat2_list: vec![],
+                vec4_list: vec![],
+                vec2_list: vec![],
+                float_list: vec![
+                    UniformPropertyFloat(Atom::from(KEY_SHADOW_DEPTH_BIAS), 0.),
+                    UniformPropertyFloat(Atom::from(KEY_SHADOW_NORMAL_BIAS), 0.),
+                    UniformPropertyFloat(Atom::from(KEY_SHADOW_DEPTH_SCALE), 50.),
+                    UniformPropertyFloat(Atom::from(KEY_SHADOW_MINZ), 1.),
+                    UniformPropertyFloat(Atom::from(KEY_SHADOW_MAXZ), 1001.),
+                ],
+                // int_list: vec![],
                 uint_list: vec![],
             },
             vec![],
@@ -72,7 +80,7 @@ impl ShaderShadowGenerator {
                     vec3 positionUpdated = position;
                     vec4 worldPos = finalWorld*vec4(positionUpdated, 1.0);
                     gl_Position = PI_MATRIX_VP*worldPos;
-                    vDepthMetricSM = (gl_Position.z+depthValuesSM.x)/depthValuesSM.y+biasAndScaleSM.x;
+                    vDepthMetricSM = (gl_Position.z+uShadowMinZ)/uShadowMaxZ + uShadowDepthBias;
                 ")
             },
             BlockCodeAtom { 

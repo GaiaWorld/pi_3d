@@ -7,6 +7,7 @@ pub use super::{
     target_camera::*,
     camera::*,
     command::*,
+    animation::*,
 };
 
 

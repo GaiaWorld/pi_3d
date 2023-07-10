@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 
 pub use crate::animation::*;
-use crate::animation_sys::PluginMaterialAnime;
+// use crate::animation_sys::PluginMaterialAnime;
 pub use crate::cutoff::*;
 pub use crate::common::*;
 pub use crate::math::*;
@@ -23,28 +23,42 @@ pub use crate::opacity::*;
 pub use crate::fog::*;
 pub use crate::mix_texture::*;
 pub use crate::mask_texture::*;
+pub use crate::premultiply::*;
 pub use crate::{PluginNodeMaterial, PluginGroupNodeMaterialAnime};
 
-pub type PluginAnimeMainTexUScale       = PluginMaterialAnime<MainTexUScale>;
-pub type PluginAnimeMainTexVScale       = PluginMaterialAnime<MainTexVScale>;
-pub type PluginAnimeMainTexUOffset      = PluginMaterialAnime<MainTexUOffset>;
-pub type PluginAnimeMainTexVOffset      = PluginMaterialAnime<MainTexVOffset>;
+#[derive(Resource)]
+pub struct AssetCfgMaterialAnime(pub AssetCapacity);
+impl Default for AssetCfgMaterialAnime {
+    fn default() -> Self {
+        Self(AssetCapacity { flag: false, min: 1024, max: 10 * 1024, timeout: 10 * 1000 })
+    }
+}
+impl AsRef<AssetCapacity> for AssetCfgMaterialAnime {
+    fn as_ref(&self) -> &AssetCapacity {
+        &self.0
+    }
+}
 
-pub type PluginAnimeOpacityTexUScale    = PluginMaterialAnime<OpacityTexUScale>;
-pub type PluginAnimeOpacityTexVScale    = PluginMaterialAnime<OpacityTexVScale>;
-pub type PluginAnimeOpacityTexUOffset   = PluginMaterialAnime<OpacityTexUOffset>;
-pub type PluginAnimeOpacityTexVOffset   = PluginMaterialAnime<OpacityTexVOffset>;
+pub type PluginAnimeMainTexUScale       = PluginTypeAnime<MainTexUScale,        RecordMainTexUScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMainTexVScale       = PluginTypeAnime<MainTexVScale,        RecordMainTexVScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMainTexUOffset      = PluginTypeAnime<MainTexUOffset,       RecordMainTexUOffset, AssetCfgMaterialAnime>;
+pub type PluginAnimeMainTexVOffset      = PluginTypeAnime<MainTexVOffset,       RecordMainTexVOffset, AssetCfgMaterialAnime>;
 
-pub type PluginAnimeMaskTexUScale       = PluginMaterialAnime<MaskTexUScale>;
-pub type PluginAnimeMaskTexVScale       = PluginMaterialAnime<MaskTexVScale>;
-pub type PluginAnimeMaskTexUOffset      = PluginMaterialAnime<MaskTexUOffset>;
-pub type PluginAnimeMaskTexVOffset      = PluginMaterialAnime<MaskTexVOffset>;
+pub type PluginAnimeOpacityTexUScale    = PluginTypeAnime<OpacityTexUScale,     RecordOpacityTexUScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeOpacityTexVScale    = PluginTypeAnime<OpacityTexVScale,     RecordOpacityTexVScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeOpacityTexUOffset   = PluginTypeAnime<OpacityTexUOffset,    RecordOpacityTexUOffset, AssetCfgMaterialAnime>;
+pub type PluginAnimeOpacityTexVOffset   = PluginTypeAnime<OpacityTexVOffset,    RecordOpacityTexVOffset, AssetCfgMaterialAnime>;
 
-pub type PluginAnimeMainColor           = PluginMaterialAnime<MainColor>;
-pub type PluginAnimeAlpha               = PluginMaterialAnime<Alpha>;
-pub type PluginAnimeCutoff              = PluginMaterialAnime<Cutoff>;
-pub type PluginAnimeMaskCutoff          = PluginMaterialAnime<MaskCutoff>;
-pub type PluginAnimeLightDiffuse        = PluginMaterialAnime<LightDiffuse>;
+pub type PluginAnimeMaskTexUScale       = PluginTypeAnime<MaskTexUScale,        RecordMaskTexUScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskTexVScale       = PluginTypeAnime<MaskTexVScale,        RecordMaskTexVScale, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskTexUOffset      = PluginTypeAnime<MaskTexUOffset,       RecordMaskTexUOffset, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskTexVOffset      = PluginTypeAnime<MaskTexVOffset,       RecordMaskTexVOffset, AssetCfgMaterialAnime>;
+
+pub type PluginAnimeMainColor           = PluginTypeAnime<MainColor,    RecordMainColor, AssetCfgMaterialAnime>;
+pub type PluginAnimeAlpha               = PluginTypeAnime<Alpha,        RecordAlpha, AssetCfgMaterialAnime>;
+pub type PluginAnimeCutoff              = PluginTypeAnime<Cutoff,       RecordCutoff, AssetCfgMaterialAnime>;
+pub type PluginAnimeMaskCutoff          = PluginTypeAnime<MaskCutoff,   RecordMaskCutoff, AssetCfgMaterialAnime>;
+pub type PluginAnimeLightDiffuse        = PluginTypeAnime<LightDiffuse, RecordLightDiffuse, AssetCfgMaterialAnime>;
 
 #[derive(SystemParam)]
 pub struct ActionSetMaterialAnime<'w> {

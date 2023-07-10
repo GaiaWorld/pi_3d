@@ -1,4 +1,6 @@
 
+use std::ops::Range;
+
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector4, Matrix, Number, Vector3};
 
@@ -13,7 +15,7 @@ use crate::{
     },
     layer_mask::prelude::*,
     skeleton::prelude::*,
-    materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode},
+    materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode, IndiceRenderRange},
 };
 
 use super::{
@@ -30,14 +32,6 @@ impl OpsMeshCreation {
     }
 }
 pub type ActionListMeshCreate = ActionList<OpsMeshCreation>;
-
-pub struct OpsAbstructMeshEnable(pub(crate) Entity, pub(crate) AbstructMesh, pub u8);
-impl OpsAbstructMeshEnable {
-    pub fn ops(entity: Entity, val: bool) -> Self {
-        Self(entity, AbstructMesh(val), 0)
-    }
-}
-pub type ActionListAbstructMeshEnable = ActionList<OpsAbstructMeshEnable>;
 
 pub struct OpsInstanceMeshCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub u8);
 impl OpsInstanceMeshCreation {
@@ -86,6 +80,18 @@ impl OpsAbstructMeshScalingMode {
 }
 pub type ActionListAbstructMeshScalingMode = ActionList<OpsAbstructMeshScalingMode>;
 
+pub struct OpsMeshRenderIndiceRange(pub(crate) Entity, pub(crate) Option<Range<u32>>, pub u8);
+impl OpsMeshRenderIndiceRange {
+    pub fn ops(entity: Entity, start: Option<u32>, end: Option<u32>) -> Self {
+        if let (Some(start), Some(end)) = (start, end) {
+            Self(entity, Some(Range{ start, end }), 0)
+        } else {
+            Self(entity, None, 0)
+        }
+    }
+}
+pub type ActionListMeshRenderIndiceRange = ActionList<OpsMeshRenderIndiceRange>;
+
 pub struct OpsAbstructMeshVelocity(pub(crate) Entity, pub(crate) ModelVelocity, pub u8);
 impl OpsAbstructMeshVelocity {
     pub fn ops(entity: Entity, x: Number, y: Number, z: Number) -> Self {
@@ -128,6 +134,15 @@ pub struct BundleMesh(
     RenderAlignment,
     ScalingMode,
     ModelVelocity,
+    IndiceRenderRange,
+    PassID01,
+    PassID02,
+    PassID03,
+    PassID04,
+    PassID05,
+    PassID06,
+    PassID07,
+    PassID08,
 );
 
 pub struct BundleInstanceMesh(

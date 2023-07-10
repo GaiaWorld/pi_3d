@@ -3,7 +3,7 @@ use pi_animation::{
     type_animation_context::{TypeAnimationContext, AnimationContextAmount},
     animation_group_manager::AnimationGroupManagerDefault,
     animation_group::AnimationGroupID,
-    curve_frame_event::CurveFrameEvent
+    curve_frame_event::CurveFrameEvent, animation::AnimationInfo, target_animation::TargetAnimation
 };
 use pi_assets::{asset::{Handle}};
 use pi_atom::Atom;
@@ -15,12 +15,20 @@ use bevy::{
     ecs::prelude::*, prelude::{Deref, DerefMut},
 };
 
+use super::AnimationGroupParam;
+
+#[derive(Clone, Copy, Component)]
+/// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
+pub struct FlagAnimationStartResetComp;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneID(pub Entity);
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Asset for TypeFrameCurve<F> {
     type Key = Atom;
+}
 
+impl<F: FrameDataValue+ 'static> pi_assets::asset::Size for TypeFrameCurve<F> {
     fn size(&self) -> usize {
         F::size() * self.0.values.len() + 2 * self.0.frames.len() + self.0.size()
     }
@@ -39,13 +47,21 @@ impl<F: FrameDataValue+ 'static> AsRef<FrameCurve<F>> for AssetTypeFrameCurve<F>
 }
 
 #[derive(Resource, Deref, DerefMut)]
-pub struct TypeAnimeContext<D: FrameDataValue + 'static> {
+pub struct TypeAnimeContext<D: TAnimatableComp> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
+}
+
+
+pub trait TAnimatableComp: Default + FrameDataValue + Component + std::fmt::Debug {
+
+}
+pub trait TAnimatableCompRecord<T: TAnimatableComp>: Component {
+    fn comp(&self) -> T;
 }
 
 #[derive(Debug, Default, Component)]
 pub struct AnimationGroups {
-    pub map: XHashMap<Atom, AnimationGroupID>,
+    pub map: XHashMap<AnimationGroupID, AnimationGroupID>,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -65,36 +81,36 @@ pub struct GlobalAnimeAbout {
     pub ty_alloc: KeyFrameDataTypeAllocator,
     pub runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap<Entity>,
     pub dispose_animationgroups: Vec<(Entity, AnimationGroupID)>,
-    pub group_records: XHashMap<DefaultKey, (Entity, Atom, CurveFrameEvent<AnimeFrameEventData>, u8)>,
+    pub group_records: XHashMap<DefaultKey, (Entity, CurveFrameEvent<AnimeFrameEventData>, u8)>,
 }
 impl GlobalAnimeAbout {
     pub const CURVE_FRAME_EVENT_FRAMES: u16 = 60000;
-    pub fn record_group(&mut self,  id_obj: Entity, key_group: &Atom, id_group: DefaultKey) {
-        self.group_records.insert(id_group, (id_obj, key_group.clone(), CurveFrameEvent::new(Self::CURVE_FRAME_EVENT_FRAMES as KeyFrameCurveValue), 0));
+    pub fn record_group(&mut self,  id_obj: Entity, id_group: DefaultKey) {
+        self.group_records.insert(id_group, (id_obj, CurveFrameEvent::new(Self::CURVE_FRAME_EVENT_FRAMES as KeyFrameCurveValue), 0));
     }
     pub fn add_frame_event(&mut self,  id_group: DefaultKey, percent: f32, data: AnimeFrameEventData) {
         if let Some(record) = self.group_records.get_mut(&id_group) {
-            record.2.add((percent as KeyFrameCurveValue * Self::CURVE_FRAME_EVENT_FRAMES as KeyFrameCurveValue) as FrameIndex, data);
+            record.1.add((percent as KeyFrameCurveValue * Self::CURVE_FRAME_EVENT_FRAMES as KeyFrameCurveValue) as FrameIndex, data);
         }
     }
     pub fn add_frame_event_listen(&mut self,  id_group: DefaultKey) {
         if let Some(listen) = self.group_records.get_mut(&id_group) {
-            listen.3 = listen.3 | TagGroupListen::FRAME;
+            listen.2 = listen.2 | TagGroupListen::FRAME;
         }
     }
     pub fn add_start_listen(&mut self,  id_group: DefaultKey) {
         if let Some(listen) = self.group_records.get_mut(&id_group) {
-            listen.3 = listen.3 | TagGroupListen::START;
+            listen.2 = listen.2 | TagGroupListen::START;
         }
     }
     pub fn add_end_listen(&mut self,  id_group: DefaultKey) {
         if let Some(listen) = self.group_records.get_mut(&id_group) {
-            listen.3 = listen.3 | TagGroupListen::END;
+            listen.2 = listen.2 | TagGroupListen::END;
         }
     }
     pub fn add_loop_listen(&mut self,  id_group: DefaultKey) {
         if let Some(listen) = self.group_records.get_mut(&id_group) {
-            listen.3 = listen.3 | TagGroupListen::LOOP;
+            listen.2 = listen.2 | TagGroupListen::LOOP;
         }
     }
     pub fn remove(&mut self, id_group: &DefaultKey) {
@@ -103,7 +119,7 @@ impl GlobalAnimeAbout {
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-pub struct GlobalAnimeEvents(pub Vec<(Entity, usize, u8, u32)>);
+pub struct GlobalAnimeEvents(pub Vec<(Entity, AnimationGroupID, u8, u32)>);
 
 
 #[derive(Resource, Deref, DerefMut, Default)]
@@ -114,6 +130,18 @@ impl SceneAnimationContextMap {
     }
     pub fn remove_scene(&mut self, idscene: &Entity) -> Option<SceneAnimationContext> {
         self.0.remove(idscene)
+    }
+    pub fn query_group_animations(
+        &self,
+        idscene: Entity,
+        idgroup: DefaultKey,
+    ) -> Option<&Vec<TargetAnimation<Entity>>> {
+        if let Some(ctx) = self.0.get(&idscene) {
+            if let Some(group) = ctx.0.animation_group(idgroup) {
+                return Some(group.animations());
+            }
+        }
+        None
     }
     /// 动画组创建 为 立即执行
     pub fn create_group(
@@ -145,6 +173,57 @@ impl SceneAnimationContextMap {
         self.0.iter_mut().for_each(|ctx| {
             ctx.1.0.clear_removed_animations();
         });
+    }
+    
+    ///
+    pub fn start_with_progress(
+        &mut self,
+        id_scene: Entity,
+        group: DefaultKey,
+        param: AnimationGroupParam,
+    )  {
+        if let Some(ctx) = self.0.get_mut(&id_scene) {
+            match ctx.0.start_with_progress(group, param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc) {
+                Ok(_) => {
+                    // log::warn!("Start Anime Ok!");
+                },
+                Err(e) => {
+                    // log::warn!("Start Anime faile! {:?}", e);
+                },
+            }
+        }
+    }
+    ///
+    pub fn pause(
+        &mut self,
+        id_scene: Entity,
+        group: DefaultKey,
+    )  {
+        if let Some(ctx) = self.0.get_mut(&id_scene) {
+            ctx.0.pause(group);
+        }
+    }
+    ///
+    pub fn stop(
+        &mut self,
+        id_scene: Entity,
+        group: DefaultKey,
+    )  {
+        if let Some(ctx) = self.0.get_mut(&id_scene) {
+            ctx.0.stop(group);
+        }
+    }
+    pub fn add_target_anime(
+        &mut self,
+        id_scene: Entity,
+        target: Entity,
+        group: DefaultKey,
+        animation: AnimationInfo,
+    )  {
+        if let Some(ctx) = self.0.get_mut(&id_scene) {
+            // log::warn!("add_target_anime Ok!");
+            ctx.0.add_target_animation_notype(animation, group, target);
+        }
     }
 }
 

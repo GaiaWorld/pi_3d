@@ -2,7 +2,7 @@
 
 
 use default_render::SingleIDBaseDefaultMaterial;
-use pi_3d::PluginBundleDefault;
+use pi_3d::{PluginBundleDefault, PluginSceneTimeFromPluginFrame};
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_frame_event::CurveFrameEvent, animation_listener::{AnimationListener, EAnimationEventResult}};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
@@ -53,7 +53,7 @@ fn setup(
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
     let tes_size = 20;
-    fps.frame_ms = 100;
+    fps.frame_ms = 16;
 
     final_render.cleardepth = 0.0;
 
@@ -95,7 +95,8 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    animegroupcmd.global.record_group(source, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     let cell_col = 4.;
     let cell_row = 4.;
@@ -107,8 +108,7 @@ fn setup(
                 instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
                 transformcmds.tree.push(OpsTransformNodeParent::ops(cube, source));
 
-                let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32);
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition(cube, pos));
+                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
                 let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(1., 1., 1.)), LocalScaling(Vector3::new(0., 2. * (1.1 + (i as f32).sin()), 0.)), (60. * (1.1 + ((i * j) as f32).cos())) as u16, 30, EEasingMode::None);
@@ -127,13 +127,13 @@ fn setup(
                 };
 
                 let animation = transformanime.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
+                animegroupcmd.scene_ctxs.add_target_anime(scene, cube, id_group.clone(), animation);
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
     }
 
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 
@@ -178,6 +178,7 @@ pub fn main() {
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
@@ -187,6 +188,7 @@ pub fn main() {
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginNodeMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

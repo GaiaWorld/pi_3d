@@ -1,14 +1,6 @@
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
-use pi_scene_context::{
-    renderers::PluginRenderer,
-    meshes::{PluginMesh,},
-    layer_mask::PluginLayerMask, materials::PluginGroupMaterial,
-    cullings::{PluginCulling},
-    cameras::PluginCamera,
-    transforms::PluginGroupTransformNode,
-    scene::PluginScene, geometry::{PluginGeometry}, bindgroup::PluginRenderBindGroup, flags::PluginFlags, light::PluginLighting, skeleton::PluginSkeleton, object::PluginDispose, animation::PluginSceneAnimation
-};
+use pi_scene_context::{prelude::*, scene::PluginScene, animation::PluginSceneAnimation, transforms::PluginGroupTransformNode, cameras::PluginCamera, meshes::PluginMesh, geometry::PluginGeometry, light::PluginLighting, layer_mask::PluginLayerMask, materials::PluginGroupMaterial, renderers::PluginRenderer, skeleton::PluginSkeleton};
 
 pub struct Limit(pub wgpu::Limits);
 // impl TMemoryAllocatorLimit for Limit {
@@ -16,6 +8,25 @@ pub struct Limit(pub wgpu::Limits);
 //         500 * 1024 * 1024
 //     }
 // }
+
+pub fn sys_scene_time_from_frame(
+    mut scenes: Query<&mut SceneTime>,
+    frame: Res<SingleFrameTimeCommand>,
+) {
+    scenes.iter_mut().for_each(|mut comp| {
+        let time = comp.last_time_ms + frame.frame_ms;
+        comp.reset(time);
+    });
+}
+
+pub struct PluginSceneTimeFromPluginFrame;
+impl Plugin for PluginSceneTimeFromPluginFrame {
+    fn build(&self, app: &mut App) {
+        app.add_system(
+            sys_scene_time_from_frame.in_set(ERunStageChap::Command)
+        );
+    }
+}
 
 pub struct PluginBundleDefault;
 impl PluginGroup for PluginBundleDefault {
@@ -27,8 +38,12 @@ impl PluginGroup for PluginBundleDefault {
         group = group.add(PluginRenderBindGroup);
         group = group.add(PluginScene);
         group = group.add(PluginSceneAnimation);
+        group = group.add(PluginFlags);
+        group = group.add(PluginAnimeNodeEnable::new());
         group = PluginGroupTransformNode::add(group);
         group = group.add(PluginCamera)
+            .add(PluginAnimeCameraFOV::new())
+            .add(PluginAnimeCameraSize::new())
             .add(PluginMesh)
             .add(PluginGeometry)
             .add(PluginLighting)

@@ -3,7 +3,7 @@
 
 use default_render::SingleIDBaseDefaultMaterial;
 use pi_3d::PluginBundleDefault;
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
+use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_group::AnimationGroupID};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
@@ -106,7 +106,8 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    animegroupcmd.global.record_group(source, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     let cell_col = 4.;
     let cell_row = 4.;
@@ -117,13 +118,12 @@ fn setup(
                 let cube: Entity = commands.spawn_empty().id();
                 instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube, String::from("a")));
 
-                let pos = Vector3::new(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32);
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition(cube, pos.clone()));
+                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
 
                 instancemeshcmds.tilloff.push(OpsInstanceTillOff::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
-                let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(pos), LocalEulerAngles(Vector3::new(10., 10., 10.)), 30, 30, EEasingMode::None);
+                let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(i as f32, j as f32, k as f32)), LocalEulerAngles(Vector3::new(10., 10., 10.)), 30, 30, EEasingMode::None);
                 
                 let asset_curve = if let Some(curve) = transformanime.euler.curves.get(&key_curve0) {
                     curve
@@ -139,13 +139,14 @@ fn setup(
                 };
 
                 let animation = transformanime.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
+                animegroupcmd.scene_ctxs.add_target_anime(scene, cube, id_group, animation);
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
     }
 
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    let parma = AnimationGroupParam::default();
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
 }
@@ -178,7 +179,7 @@ impl Plugin for PluginTest {
 pub fn sys_anime_event(
     mut events: ResMut<GlobalAnimeEvents>,
 ) {
-    let mut list: Vec<(Entity, usize, u8, u32)> = replace(events.deref_mut(), vec![]);
+    let mut list: Vec<(Entity, AnimationGroupID, u8, u32)> = replace(events.deref_mut(), vec![]);
     list.drain(..).for_each(|item| {
         log::warn!("Event {:?}", item);
     });
@@ -200,6 +201,7 @@ pub fn main() {
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);
@@ -211,6 +213,7 @@ pub fn main() {
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

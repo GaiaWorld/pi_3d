@@ -31,11 +31,11 @@ impl TNodeMaterialBlock for BlockColorHSV {
 
 pub struct BlockTextureChannel;
 impl BlockTextureChannel {
-    pub const CHANNEL_R: i32 = 1;
-    pub const CHANNEL_G: i32 = 2;
-    pub const CHANNEL_B: i32 = 4;
-    pub const CHANNEL_A: i32 = 8;
-    pub const CHANNEL_GRAY: i32 = 0;
+    pub const CHANNEL_R: u32 = 1;
+    pub const CHANNEL_G: u32 = 2;
+    pub const CHANNEL_B: u32 = 4;
+    pub const CHANNEL_A: u32 = 8;
+    pub const CHANNEL_GRAY: u32 = 0;
 }
 impl TNodeMaterialBlock for BlockTextureChannel {
     const KEY: &'static str = "TEXTURE_CHANNEL";

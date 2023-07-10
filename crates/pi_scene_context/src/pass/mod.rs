@@ -201,72 +201,72 @@ impl TPass for Pass08 {
 
 pub trait TPassID {
     const TAG: PassTag;
-    fn new(id: ObjectID) -> Self;
-    fn id(&self) -> ObjectID;
+    fn new(id: Entity) -> Self;
+    fn id(&self) -> Entity;
 }
 
 #[derive(Component)]
-pub struct PassID01(pub ObjectID);
+pub struct PassID01(pub Entity);
 impl TPassID for PassID01 {
     const TAG: PassTag = EPassTag::PASS_TAG_01;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Component)]
-pub struct PassID02(pub ObjectID);
+pub struct PassID02(pub Entity);
 impl TPassID for PassID02 {
     const TAG: PassTag = EPassTag::PASS_TAG_02;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Component)]
-pub struct PassID03(pub ObjectID);
+pub struct PassID03(pub Entity);
 impl TPassID for PassID03 {
     const TAG: PassTag = EPassTag::PASS_TAG_03;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Component)]
-pub struct PassID04(pub ObjectID);
+pub struct PassID04(pub Entity);
 impl TPassID for PassID04 {
     const TAG: PassTag = EPassTag::PASS_TAG_04;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Component)]
-pub struct PassID05(pub ObjectID);
+pub struct PassID05(pub Entity);
 impl TPassID for PassID05 {
     const TAG: PassTag = EPassTag::PASS_TAG_05;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Component)]
-pub struct PassID06(pub ObjectID);
+pub struct PassID06(pub Entity);
 impl TPassID for PassID06 {
     const TAG: PassTag = EPassTag::PASS_TAG_06;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Component)]
-pub struct PassID07(pub ObjectID);
+pub struct PassID07(pub Entity);
 impl TPassID for PassID07 {
     const TAG: PassTag = EPassTag::PASS_TAG_07;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Component)]
-pub struct PassID08(pub ObjectID);
+pub struct PassID08(pub Entity);
 impl TPassID for PassID08 {
     const TAG: PassTag = EPassTag::PASS_TAG_08;
-    fn new(id: ObjectID) -> Self { Self(id) }
-    fn id(&self) -> ObjectID { self.0.clone() }
+    fn new(id: Entity) -> Self { Self(id) }
+    fn id(&self) -> Entity { self.0.clone() }
 }
 
 #[derive(Default, Clone, Component)]

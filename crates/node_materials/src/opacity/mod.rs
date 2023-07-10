@@ -49,9 +49,9 @@ impl TNodeMaterialBlock for BlockOpacityTexture {
         ]
     }
 
-    fn int() -> Vec<UniformPropertyInt> {
+    fn uint() -> Vec<UniformPropertyUint> {
         vec![
-            UniformPropertyInt(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A)
+            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A)
         ]
     }
 
@@ -113,9 +113,9 @@ impl TNodeMaterialBlock for BlockOpacity2Texture {
         ]
     }
 
-    fn int() -> Vec<UniformPropertyInt> {
+    fn uint() -> Vec<UniformPropertyUint> {
         vec![
-            UniformPropertyInt(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A)
+            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A)
         ]
     }
 

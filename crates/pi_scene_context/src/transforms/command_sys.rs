@@ -1,7 +1,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::*;
 
-use crate::flags::UniqueName;
+use crate::flags::*;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
@@ -26,52 +26,79 @@ pub fn sys_act_transform_parent(
     // mut commands: Commands,
     mut tree: EntityTreeMut,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val)| {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val, count)| {
         if tree.get_down(val).is_some() && tree.get_up(entity).is_some() {
             // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
             ActionTransformNode::tree_modify(&mut tree, entity, val);
         } else {
-            // log::warn!("pUSH {:?}, Parent: {:?}", entity, val);
-            cmds.push(OpsTransformNodeParent(entity, val));
+            if count < 2 {
+                cmds.push(OpsTransformNodeParent(entity, val, count + 1));
+            }
+        }
+    });
+}
+
+pub fn sys_act_local_rotation(
+    mut cmds: ResMut<ActionListTransformNodeLocalRotationQuaternion>,
+    mut nodes: Query<(&mut LocalRotationQuaternion, &mut RecordLocalRotationQuaternion)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w, count)| {
+        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+            let data = LocalRotationQuaternion::create(x, y, z, w);
+            record.0 = data.clone();
+            *node = data;
+        } else {
+            if count < 2 {
+                cmds.push(OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w, count + 1));
+            }
         }
     });
 }
 
 pub fn sys_act_local_position(
     mut cmds: ResMut<ActionListTransformNodeLocalPosition>,
-    mut nodes: Query<&mut LocalPosition>,
+    mut nodes: Query<(&mut LocalPosition, &mut RecordLocalPosition)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalPosition(entity, val)| {
-        if let Ok(mut node) = nodes.get_mut(entity) {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalPosition(entity, val, count)| {
+        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+            record.0 = LocalPosition(val);
             *node = LocalPosition(val);
         } else {
-            cmds.push(OpsTransformNodeLocalPosition(entity, val));
+            if count < 2 {
+                cmds.push(OpsTransformNodeLocalPosition(entity, val, count + 1));
+            }
         }
     });
 }
 
 pub fn sys_act_local_euler(
     mut cmds: ResMut<ActionListTransformNodeLocalEuler>,
-    mut nodes: Query<&mut LocalEulerAngles>,
+    mut nodes: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalEuler(entity, val)| {
-        if let Ok(mut node) = nodes.get_mut(entity) {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalEuler(entity, val, count)| {
+        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+            record.0 = LocalEulerAngles(val);
             *node = LocalEulerAngles(val);
         } else {
-            cmds.push(OpsTransformNodeLocalEuler(entity, val));
+            if count < 2 {
+                cmds.push(OpsTransformNodeLocalEuler(entity, val, count + 1));
+            }
         }
     });
 }
 
 pub fn sys_act_local_scaling(
     mut cmds: ResMut<ActionListTransformNodeLocalScaling>,
-    mut nodes: Query<&mut LocalScaling>,
+    mut nodes: Query<(&mut LocalScaling, &mut RecordLocalScaling)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalScaling(entity, val)| {
-        if let Ok(mut node) = nodes.get_mut(entity) {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalScaling(entity, val, count)| {
+        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+            record.0 = LocalScaling(val);
             *node = LocalScaling(val);
         } else {
-            cmds.push(OpsTransformNodeLocalScaling(entity, val));
+            if count < 2 {
+                cmds.push(OpsTransformNodeLocalScaling(entity, val, count + 1));
+            }
         }
     });
 }
@@ -84,14 +111,20 @@ impl ActionTransformNode {
     ) {
         commands
             .insert(UniqueName(Atom::from(name)))
-            .insert(LocalPosition(Vector3::new(0., 0., 0.)))
-            .insert(LocalScaling(Vector3::new(1., 1., 1.)))
+            .insert(LocalPosition::default())
+            .insert(LocalScaling::default())
+            .insert(LocalRotationQuaternion::default())
+            .insert(LocalEulerAngles::default())
+            .insert(RecordLocalPosition::default())
+            .insert(RecordLocalScaling::default())
+            .insert(RecordLocalRotationQuaternion::default())
+            .insert(RecordLocalEulerAngles::default())
             .insert(LocalRotation(Rotation3::identity()))
-            .insert(LocalRotationQuaternion(Quaternion::identity()))
-            .insert(LocalEulerAngles(Vector3::new(0., 0., 0.)))
             .insert(LocalMatrix::new(Matrix::identity()))
             .insert(WorldMatrix::new(Matrix::identity()))
+            .insert(WorldMatrixInv::new(Matrix::identity()))
             .insert(GlobalTransform::default())
+            .insert(FlagAnimationStartResetComp)
             ;
     }
 
@@ -100,7 +133,11 @@ impl ActionTransformNode {
     ) {
         commands.insert(Down::default())
             .insert(Up::default())
-            .insert(Layer::default());
+            .insert(Layer::default())
+            .insert(Enable::default())
+            .insert(RecordEnable::default())
+            .insert(GlobalEnable(true))
+            ;
     }
 
     pub(crate) fn tree_modify(

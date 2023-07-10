@@ -114,10 +114,11 @@ pub fn sys_camera_nearfar(
 
 pub fn sys_camera_fov(
     mut cmds: ResMut<ActionListCameraFov>,
-    mut cameras: Query<&mut CameraFov>,
+    mut cameras: Query<(&mut CameraFov, &mut RecordCameraFov)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraFov(entity, mode)| {
-        if let Ok(mut camera) = cameras.get_mut(entity) {
+        if let Ok((mut camera, mut record)) = cameras.get_mut(entity) {
+            record.0 = mode.clone();
             *camera = mode;
         } else {
             cmds.push(OpsCameraFov(entity, mode))
@@ -127,10 +128,11 @@ pub fn sys_camera_fov(
 
 pub fn sys_camera_orth_size(
     mut cmds: ResMut<ActionListCameraOrthSize>,
-    mut cameras: Query<&mut CameraOrthSize>,
+    mut cameras: Query<(&mut CameraOrthSize, &mut RecordCameraOrthSize)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraOrthSize(entity, mode)| {
-        if let Ok(mut camera) = cameras.get_mut(entity) {
+        if let Ok((mut camera, mut record)) = cameras.get_mut(entity) {
+            record.0 = mode.clone();
             *camera = mode;
         } else {
             cmds.push(OpsCameraOrthSize(entity, mode))
@@ -215,7 +217,7 @@ pub fn sys_camera_renderer_action(
                 commands.despawn();
             }
 
-            log::warn!("Camera Renderer Init!! {:?}", &rendername);
+            // log::warn!("Camera Renderer Init!! {:?}", &rendername);
 
             commands.entity(id_viewer).insert(DirtyViewerRenderersInfo);
 
@@ -242,9 +244,11 @@ impl ActionCamera {
         commands.insert(Camera(false))
             .insert(EFreeCameraMode::Orthograhic)
             .insert(EFixedMode::HorizontalFixed)
-            .insert(CameraFov(0.75))
+            .insert(CameraFov::default())
+            .insert(CameraOrthSize::default())
+            .insert(RecordCameraFov::default())
+            .insert(RecordCameraOrthSize::default()) 
             .insert(CameraNearFar(0.1, 1000.0))
-            .insert(CameraOrthSize(4.))
             .insert(CameraToScreen(toscreen))
             .insert(CameraViewport::default())
             .insert(LayerMask::default())

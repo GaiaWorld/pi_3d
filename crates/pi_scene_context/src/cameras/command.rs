@@ -7,7 +7,7 @@ use crate::{
     renderers::{
         prelude::*
     }, 
-    layer_mask::prelude::*, prelude::PassTagOrders,
+    layer_mask::prelude::*, prelude::{PassTagOrders, BundleTransformNode},
 };
 
 use super::{
@@ -130,11 +130,15 @@ pub type ActionListCameraRenderer = ActionList<OpsCameraRendererInit>;
 // pub struct OpsCameraRendererModify(Entity, String, )
 
 pub struct BundleCamera(
+    BundleTransformNode,
     Camera,
     EFreeCameraMode,
     EFixedMode,
     CameraNearFar,
+    CameraFov,
     CameraOrthSize,
+    RecordCameraFov,
+    RecordCameraOrthSize,
     CameraViewport,
     LayerMask,
     CameraUp,

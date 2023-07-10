@@ -13,14 +13,14 @@ impl SkyboxShader {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                mat4_list: vec![],
-                mat2_list: vec![],
+                // mat4_list: vec![],
+                // mat2_list: vec![],
                 vec4_list: vec![
                     UniformPropertyVec4(Atom::from("emissive"), [1., 1., 1., 0.5]),
                 ],
                 vec2_list: vec![],
                 float_list: vec![],
-                int_list: vec![],
+                // int_list: vec![],
                 uint_list: vec![],
             },
             vec![],

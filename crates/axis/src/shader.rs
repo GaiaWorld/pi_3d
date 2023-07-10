@@ -13,20 +13,20 @@ impl AxisShader {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                mat4_list: vec![
-                    UniformPropertyMat4(
-                        Atom::from("u_jointMat0"),
-                        [
-                            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-                            0.0, 1.0,
-                        ],
-                    ),
-                ],
-                mat2_list: vec![],
+                // mat4_list: vec![
+                //     UniformPropertyMat4(
+                //         Atom::from("u_jointMat0"),
+                //         [
+                //             1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+                //             0.0, 1.0,
+                //         ],
+                //     ),
+                // ],
+                // mat2_list: vec![],
                 vec4_list: vec![],
                 vec2_list: vec![],
                 float_list: vec![],
-                int_list: vec![],
+                // int_list: vec![],
                 uint_list: vec![],
             },
             vec![],

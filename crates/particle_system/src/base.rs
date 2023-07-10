@@ -1,5 +1,5 @@
 
-use pi_assets::asset::Asset;
+use pi_assets::asset::{Asset, Size};
 use pi_engine_shell::prelude::*;
 use pi_scene_math::*;
 
@@ -62,6 +62,8 @@ impl Drop for ParticleSystemCalculatorID {
 }
 impl Asset for ParticleSystemCalculatorID {
     type Key = u64;
+}
+impl Size for ParticleSystemCalculatorID {
     fn size(&self) -> usize {
         self.1
     }

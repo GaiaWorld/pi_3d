@@ -33,6 +33,7 @@ pub struct ActionSetMesh<'w> {
     pub stencil_write: ResMut<'w, ActionListStencilWrite>,
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
     pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
+    pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
 }
 
 #[derive(SystemParam)]
@@ -49,5 +50,4 @@ pub struct ActionSetInstanceMesh<'w> {
 pub struct ActionSetAbstructMesh<'w> {
     pub scaling_mode: ResMut<'w, ActionListAbstructMeshScalingMode>,
     pub velocity: ResMut<'w, ActionListAbstructMeshVelocity>,
-    pub enable: ResMut<'w, ActionListAbstructMeshEnable>,
 }
