@@ -79,7 +79,7 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>, C: AsRef<AssetCapacity> + 
             ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, &mut runtime_info_map),
         };
 
-        app.world.insert_resource(type_ctx);
+        app.insert_resource(type_ctx);
 
         app.add_system(
             sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear)

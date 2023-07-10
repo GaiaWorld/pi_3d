@@ -143,6 +143,16 @@ impl SceneAnimationContextMap {
         }
         None
     }
+    pub fn group_weight(
+        &mut self,
+        idscene: Entity,
+        idgroup: DefaultKey,
+        weight: f32,
+    ) {
+        if let Some(ctx) = self.0.get_mut(&idscene) {
+            ctx.0.animation_group_weight(idgroup, weight);
+        }
+    }
     /// 动画组创建 为 立即执行
     pub fn create_group(
         &mut self,
