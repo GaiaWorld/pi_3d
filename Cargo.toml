@@ -12,7 +12,6 @@ keywords = ["3d scene"]
 members = ["crates/*"]
 
 [dependencies]
-pi_3d_loader = {path = "../pi_3d_loader"}
 pi_scene_context        = { path = "crates/pi_scene_context" }
 pi_engine_shell         = { path = "crates/pi_engine_shell" }
 pi_mesh_builder         = { path = "crates/pi_mesh_builder" }
@@ -62,6 +61,8 @@ crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
 
+[dev-dependencies]
+pi_3d_loader = {path = "../pi_3d_loader"}
 
 [patch."https://github.com/GaiaWorld/pi_hal"]
 pi_hal = { path = "../pi_hal" }
