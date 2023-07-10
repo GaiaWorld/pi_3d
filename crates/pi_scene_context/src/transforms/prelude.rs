@@ -15,6 +15,7 @@ pub struct ActionSetTransform<'w> {
     pub localpos: ResMut<'w, ActionListTransformNodeLocalPosition>,
     pub localscl: ResMut<'w, ActionListTransformNodeLocalScaling>,
     pub localrot: ResMut<'w, ActionListTransformNodeLocalEuler>,
+    pub localrotq: ResMut<'w, ActionListTransformNodeLocalRotationQuaternion>,
     pub tree: ResMut<'w, ActionListTransformNodeParent>,
     pub enable: ResMut<'w, ActionListNodeEnable>,
 }

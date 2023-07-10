@@ -47,7 +47,6 @@ pi_atom                 = { version="0.2", features = ["serde"] }
 pi_hal                  = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 pi_assets               = "0.12"
 pi_async                = "0.5"
-nalgebra                = "0.32"
 
 wgpu                = "0.15"
 bevy                = { version="0.10", default-features = false, features=["bevy_winit"] }
@@ -60,9 +59,6 @@ smallvec            = "1.9"
 crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
-
-[dev-dependencies]
-pi_3d_loader = {path = "../pi_3d_loader"}
 
 [patch."https://github.com/GaiaWorld/pi_hal"]
 pi_hal = { path = "../pi_hal" }
@@ -203,14 +199,6 @@ path = "examples/particles/00.rs"
 # [[example]]
 # name = "particle03"
 # path = "examples/particles/03.rs"
-
-[[example]]
-name = "gltfskin"
-path = "examples/gltf/simple_skin.rs"
-
-[[example]]
-name = "custom_extras"
-path = "examples/gltf/custom_extras.rs"
 
 [[example]]
 name = "main_opacity"

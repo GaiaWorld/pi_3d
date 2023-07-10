@@ -28,6 +28,7 @@ impl Plugin for PluginTransformNode {
         app.insert_resource(ActionListTransformNodeCreate::default())
             .insert_resource(ActionListTransformNodeLocalEuler::default())
             .insert_resource(ActionListTransformNodeLocalPosition::default())
+            .insert_resource(ActionListTransformNodeLocalRotationQuaternion::default())
             .insert_resource(ActionListTransformNodeLocalScaling::default())
             .insert_resource(ActionListTransformNodeParent::default())
             .insert_resource(TransformRecord::default())
