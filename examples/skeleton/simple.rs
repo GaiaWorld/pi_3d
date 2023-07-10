@@ -157,7 +157,7 @@ fn setup(
         slotname: Atom::from("_MainTex"),
         filter: true,
         sample: KeySampler::default(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
+        url: EKeyTexture::from("assets/images/bubbles.png"),
     }));
     
     let skeleton = commands.spawn_empty().id();

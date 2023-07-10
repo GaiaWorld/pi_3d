@@ -238,11 +238,8 @@ fn setup(
     };
     let mut mp = MeshParticleSystem::new();
     format_mesh_particle(&mut config, &mut mp);
-    let a  =    Vector3::new(1., 1., 2.);
-    let b  =    Vector3::new(0.25, 0.5, 0.4);
 
-    let c = a.ad_mul(&b);
-    println!("============= IParticleSystemConfig End: {:?}", c);
+    // println!("============= IParticleSystemConfig End: {:?}", c);
     mp.build();
     mp.start();
     commands.entity(source).insert(Particle(mp));
@@ -272,7 +269,6 @@ fn sys_demo_particle(
     mut geoloader: ResMut<GeometryVBLoader>,
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
 ) {
-    // println!("============= buffermatrix:");
     particles.iter_mut().for_each(
         |(idscene, idgeo, mut particle, world_matrix, local_matrix)| {
 
@@ -285,7 +281,7 @@ fn sys_demo_particle(
                         camerapos = viewpos.0;
                         camera_rotation_matrix = wiewmat.get_rotation_matrix();
                         if let Some(inverse) = camera_rotation_matrix.try_inverse(){
-                            println!("相机旋转矩阵有逆");
+                            // println!("相机旋转矩阵有逆");
                             camera_rotation_matrix = inverse;
                         }
                     };
@@ -298,19 +294,20 @@ fn sys_demo_particle(
                 mut uv, // mut uv
             )) = geometrys.get_mut(idgeo.0)
             {
+                println!("============= 1111111111111");
                 particle.as_mut().0.compute_call(world_matrix.0, local_matrix.0);
                 particle.as_mut().0.update_call(world_matrix.0, local_matrix.0, camerapos, camera_rotation_matrix);
 
-                let buffercolor = particle.0.ps_tool.color_data.as_ref().unwrap();
-                let bufferuv = particle.0.ps_tool.uv_data.as_ref().unwrap();
+                let buffercolor = particle.0.ps_tool.get_mp_color_data().unwrap();
+                let bufferuv = particle.0.ps_tool.get_mp_uvdata().unwrap();
                 let buffermatrix = particle.0.ps_tool.get_mp_matrix_list().unwrap();
 
                 println!("============= buffercolor: {:?}", buffercolor);
                 println!("============= buffermatrix: {:?}", buffermatrix);
                 println!("============= uvdata: {:?}", bufferuv);
 
-                let colordata: Vec<u8> = bytemuck::cast_slice(buffercolor).to_vec();
-                let uvdata: Vec<u8> = bytemuck::cast_slice(bufferuv).to_vec();
+                let colordata: Vec<u8> = bytemuck::cast_slice(&buffercolor).to_vec();
+                let uvdata: Vec<u8> = bytemuck::cast_slice(&bufferuv).to_vec();
                 let wmdata: Vec<u8> = bytemuck::cast_slice(&buffermatrix).to_vec();
 
                 // let mut buffermatrix = vec![];

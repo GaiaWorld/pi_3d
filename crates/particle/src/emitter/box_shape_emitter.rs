@@ -73,7 +73,7 @@ impl IShapeEmitterType for BoxShapeEmitter {
         } else {
             *direction_to_update = world_matrix.transform_vector(&direction);
         }
-        *direction_to_update =  normalize(direction_to_update);
+        *direction_to_update = normalize(direction_to_update);
     }
 
     fn start_position_function(
@@ -138,7 +138,8 @@ impl IShapeEmitterType for BoxShapeEmitter {
         if is_local {
             *position_to_update = Vector3::new(rand_x, rand_y, rand_z);
         } else {
-            *position_to_update = world_matrix.transform_vector(&Vector3::new(rand_x, rand_y, rand_z));
+            *position_to_update =
+                world_matrix.transform_vector(&Vector3::new(rand_x, rand_y, rand_z));
         }
     }
 
@@ -186,23 +187,23 @@ impl IShapeEmitterType for BoxShapeEmitter {
         self.randomize_position = randomize_position;
     }
 
-    fn get_local_matrix(&mut self) -> Matrix {
+    fn get_local_matrix(&self) -> Matrix {
         self.local_matrix.clone()
     }
 
-    fn get_align_direction(&mut self) -> bool {
+    fn get_align_direction(&self) -> bool {
         self.align_direction.clone()
     }
 
-    fn get_randomize_direction(&mut self) -> f32 {
+    fn get_randomize_direction(&self) -> f32 {
         self.randomize_direction.clone()
     }
 
-    fn get_spherize_direction(&mut self) -> f32 {
+    fn get_spherize_direction(&self) -> f32 {
         self.spherize_direction.clone()
     }
 
-    fn get_randomize_position(&mut self) -> f32 {
+    fn get_randomize_position(&self) -> f32 {
         self.randomize_position.clone()
     }
 }

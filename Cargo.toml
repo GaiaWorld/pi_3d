@@ -12,6 +12,7 @@ keywords = ["3d scene"]
 members = ["crates/*"]
 
 [dependencies]
+pi_3d_loader = {path = "../pi_3d_loader"}
 pi_scene_context        = { path = "crates/pi_scene_context" }
 pi_engine_shell         = { path = "crates/pi_engine_shell" }
 pi_mesh_builder         = { path = "crates/pi_mesh_builder" }
@@ -47,6 +48,7 @@ pi_atom                 = { version="0.2", features = ["serde"] }
 pi_hal                  = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 pi_assets               = "0.12"
 pi_async                = "0.5"
+nalgebra                = "0.32"
 
 wgpu                = "0.15"
 bevy                = { version="0.10", default-features = false, features=["bevy_winit"] }
@@ -182,6 +184,9 @@ path = "examples/anime/performance.rs"
 # name = "lighting_01"
 # path = "examples/lighting/01.rs"
 # 
+# [[example]]
+# name = "particle01"
+# path = "examples/particles/01.rs"
 [[example]]
 name = "particle00"
 path = "examples/particles/00.rs"
@@ -198,9 +203,13 @@ path = "examples/particles/00.rs"
 # name = "particle03"
 # path = "examples/particles/03.rs"
 
-# [[example]]
-# name = "gltfskin"
-# path = "examples/gltf/simple_skin.rs"
+[[example]]
+name = "gltfskin"
+path = "examples/gltf/simple_skin.rs"
+
+[[example]]
+name = "custom_extras"
+path = "examples/gltf/custom_extras.rs"
 
 [[example]]
 name = "main_opacity"

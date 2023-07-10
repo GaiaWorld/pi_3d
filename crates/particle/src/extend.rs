@@ -376,8 +376,9 @@ use crate::{
  * @param config josn描述
  * @param mp 目标粒子系统
  */
-pub fn format_mesh_particle(config: &mut IParticleSystemConfig, mp: &mut MeshParticleSystem) {
+pub fn format_mesh_particle(config: &IParticleSystemConfig, mp: &mut MeshParticleSystem) {
     let ps = &mut mp.ps_tool;
+    ps.name = config.name.clone();
 
     ps.looping = config.looping == 1;
     ps.duration = config.duration as u64 * 1000;
