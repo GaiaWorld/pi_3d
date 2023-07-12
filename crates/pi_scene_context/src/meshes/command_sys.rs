@@ -19,7 +19,7 @@ use crate::{
     transforms::{command_sys::ActionTransformNode, prelude::*},
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange},
+    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange, ModelSkinBoneOffset},
 };
 
 use super::{
@@ -278,6 +278,7 @@ impl ActionMesh {
             .insert(ModelBlend::default())
             .insert(BindSkinValue(None))
             .insert(ModelVelocity::default())
+            .insert(ModelSkinBoneOffset::default())
             .insert(RenderAlignment::default())
             .insert(ScalingMode::default())
             .insert(IndiceRenderRange(None))
@@ -717,14 +718,30 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
     }
 
     pub fn sys_render_matrix_for_uniform(
-        mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &ModelVelocity, &BindModel), Or<(Changed<RenderWorldMatrix>, Changed<ModelVelocity>)>>,
+        mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), Changed<RenderWorldMatrix>>,
     ) {
-        meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, velocity, bind_model)| {
+        meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, bind_model)| {
             // log::debug!("SysModelUniformUpdate:");
 
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
+        });
+    }
+
+    pub fn sys_velocity_for_uniform(
+        mut meshes: Query<(&ModelVelocity, &BindModel), Changed<ModelVelocity>>,
+    ) {
+        meshes.iter_mut().for_each(|(velocity, bind_model)| {
             let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
+        });
+    }
+
+    pub fn sys_skinoffset_for_uniform(
+        mut meshes: Query<(&ModelSkinBoneOffset, &BindModel), Changed<ModelSkinBoneOffset>>,
+    ) {
+        meshes.iter_mut().for_each(|(skinoffset, bind_model)| {
+            // log::debug!("SysModelUniformUpdate:");
+            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[skinoffset.0]));
         });
     }

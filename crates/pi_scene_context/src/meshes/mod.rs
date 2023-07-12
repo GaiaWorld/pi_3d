@@ -97,8 +97,12 @@ impl crate::Plugin for PluginMesh {
         app.add_system(
             sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix)
         );
-        app.add_system(
-            sys_render_matrix_for_uniform.run_if(should_run).in_set(ERunStageChap::Uniform)
+        app.add_systems(
+            (
+                sys_render_matrix_for_uniform.run_if(should_run),
+                sys_velocity_for_uniform.run_if(should_run),
+                sys_skinoffset_for_uniform.run_if(should_run),
+            ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
             (

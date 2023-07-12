@@ -15,7 +15,7 @@ use crate::{
     },
     layer_mask::prelude::*,
     skeleton::prelude::*,
-    materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode, IndiceRenderRange},
+    materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode, IndiceRenderRange, ModelSkinBoneOffset},
 };
 
 use super::{
@@ -134,6 +134,7 @@ pub struct BundleMesh(
     RenderAlignment,
     ScalingMode,
     ModelVelocity,
+    ModelSkinBoneOffset,
     IndiceRenderRange,
     PassID01,
     PassID02,

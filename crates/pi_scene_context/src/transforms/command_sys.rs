@@ -125,6 +125,7 @@ impl ActionTransformNode {
             .insert(WorldMatrixInv::new(Matrix::identity()))
             .insert(GlobalTransform::default())
             .insert(FlagAnimationStartResetComp)
+            .insert(CullingFlag(true))
             ;
     }
 
