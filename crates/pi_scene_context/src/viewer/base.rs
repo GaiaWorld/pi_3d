@@ -8,7 +8,7 @@ use crate::{
     transforms::prelude::*,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy,Component)]
 pub struct Viewport {
     pub x: Number,
     pub y: Number,
