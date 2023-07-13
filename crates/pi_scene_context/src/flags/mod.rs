@@ -18,6 +18,7 @@ pub struct SceneCameraID04;
 pub struct SceneCameraID05;
 pub struct SceneCameraID06;
 
+#[derive(Debug, Component)]
 pub struct CullingFlag(pub bool);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]

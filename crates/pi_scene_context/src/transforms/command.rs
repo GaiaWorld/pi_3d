@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
 use pi_scene_math::{Vector3};
 
-use crate::{flags::UniqueName, prelude::{Enable, GlobalEnable}};
+use crate::{flags::UniqueName, prelude::{Enable, GlobalEnable, CullingFlag}};
 
 use super::{transform_node::*};
 
@@ -71,6 +71,7 @@ pub struct BundleTransformNode(
     LocalMatrix,
     WorldMatrix,
     GlobalTransform,
+    CullingFlag,
 );
 
 #[derive(Default, Resource)]

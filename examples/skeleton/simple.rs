@@ -161,7 +161,7 @@ fn setup(
     }));
     
     let skeleton = commands.spawn_empty().id();
-    skincmds.skin_create.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, bone0, &vec![bone0, bone1, bone2, bone3, bone4]));
+    skincmds.skin_create.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, bone0, &vec![bone0, bone1, bone2, bone3, bone4], 1, None));
     skincmds.skin_use.push(OpsSkinUse::ops(source, skeleton));
 
     transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(source, 1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2));

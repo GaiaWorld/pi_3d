@@ -55,18 +55,20 @@ use super::{skeleton::*, bone::*};
             if skindirty.0 {
                 match skel.mode {
                     ESkinCode::None => {},
-                    ESkinCode::UBO(_, _) => {
-                        let mut data = vec![];
-                        skel.bones.iter().for_each(|bone| {
-                            if let Ok((matrix, absinv)) = bones.get(bone.clone()) {
-                                let matrix = matrix.0 * absinv.0;
-                                matrix.as_slice().iter().for_each(|v| {
-                                    data.push(*v);
-                                });
-                            }
-                        });
-                        // log::warn!("skin_buffer_update");
-                        skel.bind.data().write_data(0, bytemuck::cast_slice(&data));
+                    ESkinCode::UBO(_, _, cache) => {
+                        if cache > 1 {
+                            let mut data = vec![];
+                            skel.bones.iter().for_each(|bone| {
+                                if let Ok((matrix, absinv)) = bones.get(bone.clone()) {
+                                    let matrix = matrix.0 * absinv.0;
+                                    matrix.as_slice().iter().for_each(|v| {
+                                        data.push(*v);
+                                    });
+                                }
+                            });
+                            // log::warn!("skin_buffer_update");
+                            skel.bind.data().write_data(0, bytemuck::cast_slice(&data));
+                        }
                     },
                     ESkinCode::RowTexture(_) => {
                         // if let Some(tex) = tex {

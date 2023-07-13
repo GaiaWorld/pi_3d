@@ -55,6 +55,14 @@ impl Default for ModelVelocity {
     }
 }
 
+#[derive(Debug, Clone, Component, Deref, DerefMut)]
+pub struct ModelSkinBoneOffset(pub u32);
+impl Default for ModelSkinBoneOffset {
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
 #[derive(Component)]
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
 impl BindModel {

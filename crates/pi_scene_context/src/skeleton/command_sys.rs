@@ -19,10 +19,10 @@ pub fn sys_act_skin_create(
     device: Res<PiRenderDevice>,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones))| {
+    cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
         let bone_count = bones.len();
         let bonecount = EBoneCount::new(bone_count as u8 + 1);
-        let mode = ESkinCode::UBO(bonemode, bonecount);
+        let mode = ESkinCode::UBO(bonemode, bonecount, cache_frames);
                 
         bones.iter().for_each(|id_bone| {
             ActionBone::modify_skin(&mut commands.entity(id_bone.clone()), id_skin);
@@ -30,6 +30,9 @@ pub fn sys_act_skin_create(
 
         match Skeleton::new(root, bones, mode, &device, &mut dynbuffer ) {
             Some(skeleton) => {
+                if let Some(data) = cachedata {
+                    skeleton.bind.data().write_data(0, bytemuck::cast_slice(&data));
+                }
                 commands.entity(id_skin)
                     .insert(skeleton)
                     .insert(SkeletonInitBaseMatrix)
