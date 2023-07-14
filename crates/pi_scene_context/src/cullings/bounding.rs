@@ -19,7 +19,11 @@ pub struct BoundingInfo {
     direction2: Vector3,
     pub culling_strategy: ECullingStrategy,
 }
-
+impl Default for BoundingInfo {
+    fn default() -> Self {
+        Self::new(Vector3::new(-1., -1., -1.), Vector3::new(1., 1., 1.))
+    }
+}
 impl BoundingInfo {
     pub fn new(minimum: Vector3, maximum: Vector3) -> Self {
         let world: Matrix = Matrix::identity();

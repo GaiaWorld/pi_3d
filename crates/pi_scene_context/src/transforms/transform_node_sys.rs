@@ -28,7 +28,7 @@ use super::{
             if let Ok((mut loacl_quaternion, mut local_rotation)) = loacl_quaternions.get_mut(entity) {
                 let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
                 let quaternion = Quaternion::from_rotation_matrix(&rotation);
-                *loacl_quaternion = LocalRotationQuaternion(quaternion);
+                *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone());
                 *local_rotation = LocalRotation(rotation);
             }
         });
@@ -48,11 +48,12 @@ use super::{
 //     #[system]
     pub fn sys_local_quaternion_calc_rotation(
         localmatrixs: Query<(ObjectID, &LocalRotationQuaternion), Changed<LocalRotationQuaternion>>,
-        mut loacl_eulers: Query<(&mut LocalEulerAngles, &mut LocalRotation)>,
+        mut loacl_eulers: Query<&mut LocalRotation>,
     ) {
         localmatrixs.iter().for_each(|(entity, quat)| {
-            if let Ok((mut loacl_euler, mut local_rotation)) = loacl_eulers.get_mut(entity) {
-                let rotation = quat.0.to_rotation_matrix();
+            if let Ok(mut local_rotation) = loacl_eulers.get_mut(entity) {
+                // log::warn!("Quaternion: {:?}", quat);
+                let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
                 // let (z, x, y) = rotation.euler_angles();
                 // *loacl_quaternion = LocalRotationQuaternion(quaternion);
                 *local_rotation = LocalRotation(rotation);
@@ -88,7 +89,7 @@ use super::{
             *localmatrix = LocalMatrix(matrix, true);
         });
         let time1 = pi_time::Instant::now();
-        log::debug!("Local Matrix Calc: {:?}", time1 - time);
+        // log::debug!("Local Matrix Calc: {:?}", time1 - time);
     }
 // }
 
@@ -162,7 +163,7 @@ use super::{
         let time1 = pi_time::Instant::now();
 
         record.all_wmcompute = (time1 - time).as_millis() as u32;
-        log::debug!("World Matrix Calc: {:?}", time1 - time);
+        // log::debug!("World Matrix Calc: {:?}", time1 - time);
     }
 // }
 
@@ -230,7 +231,7 @@ use super::{
         }
 
         let time1 = pi_time::Instant::now();
-        log::debug!("World Matrix Calc2: {:?}", time1 - time);
+        // log::debug!("World Matrix Calc2: {:?}", time1 - time);
     }
 // }
 
@@ -299,7 +300,11 @@ fn calc_world_one(
                 temp_list.push((entity, true, matrix.clone(), globalenable.0));
 
                 *wmatrix = WorldMatrix::new(transform.matrix.clone());
-                *wmatrixinv = WorldMatrixInv::new(transform.matrix_inv.clone());
+                
+                match transform.matrix.try_inverse() {
+                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
+                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
+                };
                 *gtransform = transform;
             } else {
                 temp_list.push((entity, false, gtransform.matrix.clone(), globalenable.0));
@@ -328,7 +333,10 @@ fn calc_world_root(
                 // let matrix = lmatrix.0.clone();
 
                 *wmatrix = WorldMatrix::new(transform.matrix.clone());
-                *wmatrixinv = WorldMatrixInv::new(transform.matrix_inv.clone());
+                match transform.matrix.try_inverse() {
+                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
+                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
+                };
                 *gtransform = transform;
 
                 (entity, true, matrix, globalenable.0)

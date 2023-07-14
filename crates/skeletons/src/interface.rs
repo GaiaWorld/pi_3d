@@ -12,7 +12,7 @@ pub trait InterfaceSkinMaterial {
 
 impl InterfaceSkinMaterial for engine_shell::EnginShell {
     fn create_skin_material(&self) -> ObjectID {
-        log::debug!("create_default_material");
+        // log::debug!("create_default_material");
         let entity = self.new_object();
         self.as_material(entity, KeyShaderEffect(Atom::from(SkinShader::KEY)));
 

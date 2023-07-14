@@ -119,6 +119,7 @@ fn setup(
     animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     {
         let key_curve0 = pi_atom::Atom::from("color");
+        let key_curve0 = matanime.main_color.2.uniqueid();
         let curve = FrameCurve::<MainColor>::curve_easing(MainColor(Vector3::new(0.5, 0.5, 0.5)), MainColor(Vector3::new(1.0, 1., 1.)), 30, 30, EEasingMode::None);
         let asset_curve = match matanime.main_color.1.insert(key_curve0, TypeFrameCurve(curve)) {
             Ok(value) => { value },
@@ -129,6 +130,7 @@ fn setup(
     }
     {
         let key_curve0 = pi_atom::Atom::from("mainuo");
+        let key_curve0 = matanime.opacity_tex_uoffset.2.uniqueid();
         let curve = FrameCurve::<OpacityTexUOffset>::curve_easing(OpacityTexUOffset(0.), OpacityTexUOffset(1.0), 30, 30, EEasingMode::None);
         let asset_curve = match matanime.opacity_tex_uoffset.1.insert(key_curve0, TypeFrameCurve(curve)) {
             Ok(value) => { value },
@@ -178,6 +180,7 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);

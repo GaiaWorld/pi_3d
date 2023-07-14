@@ -56,7 +56,7 @@ use super::{skeleton::*, bone::*};
                 match skel.mode {
                     ESkinCode::None => {},
                     ESkinCode::UBO(_, _, cache) => {
-                        if cache > 1 {
+                        if cache == 1 {
                             let mut data = vec![];
                             skel.bones.iter().for_each(|bone| {
                                 if let Ok((matrix, absinv)) = bones.get(bone.clone()) {

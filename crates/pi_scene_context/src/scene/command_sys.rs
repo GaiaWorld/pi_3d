@@ -14,9 +14,15 @@ pub fn sys_act_scene_create(
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, cfg)| {
         ActionScene::init(&mut commands, entity, cfg);
-        ActionTransformNode::init_for_tree(&mut commands.entity(entity));
+        let mut entitycmds = if let Some(cmd) = commands.get_entity(entity) {
+            cmd
+        } else {
+            return;
+        };
+
+        ActionTransformNode::init_for_tree(&mut entitycmds);
         if let Some(bindeffect) = BindSceneEffect::new( &mut dynbuffer) {
-            commands.entity(entity).insert(bindeffect);
+            entitycmds.insert(bindeffect);
         }
     });
 }
@@ -144,7 +150,11 @@ impl ActionScene {
         let id_left = commands.spawn_empty().id();
         let id_right = commands.spawn_empty().id();
 
-        let mut entitycmds = commands.entity(scene);
+        let mut entitycmds = if let Some(mut cmd) = commands.get_entity(scene) {
+            cmd
+        } else {
+            return;
+        };
 
         entitycmds
             .insert(passcfg)

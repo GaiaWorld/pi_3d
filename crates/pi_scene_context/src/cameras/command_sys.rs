@@ -28,16 +28,17 @@ pub fn sys_camera_create(
     mut dynallocator: ResMut<ResBindBufferAllocator>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity, name, toscreen)| {
-        let mut commands = commands.entity(entity);
+        if let Some(mut commands) = commands.get_entity(entity) {
 
-        ActionScene::add_to_scene(&mut commands, &mut tree, scene);
-        ActionTransformNode::init_for_tree(&mut commands);
-        ActionTransformNode::as_transform_node(&mut commands, name);
-        ActionCamera::as_camera(&mut commands, toscreen);
-        ActionAnime::as_anime_group_target(&mut commands);
+            ActionScene::add_to_scene(&mut commands, &mut tree, scene);
+            ActionTransformNode::init_for_tree(&mut commands);
+            ActionTransformNode::as_transform_node(&mut commands, name);
+            ActionCamera::as_camera(&mut commands, toscreen);
+            ActionAnime::as_anime_group_target(&mut commands);
 
-        if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
-            commands.insert(bindviewer);
+            if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
+                commands.insert(bindviewer);
+            }
         }
     })
 }
@@ -213,21 +214,25 @@ pub fn sys_camera_renderer_action(
             // log::warn!("OpsCameraRenderer: {:?} Camera {:?}", graphic_desc.curr, &name.0);
 
             if let Some((_, id_render)) = viewer_renderers.map.get(&rendername) {
-                let mut commands = commands.entity(id_render.0);
-                commands.despawn();
+                if let Some(mut cmd) = commands.get_entity(id_render.0) {
+                    cmd.despawn();
+                }
             }
 
             // log::warn!("Camera Renderer Init!! {:?}", &rendername);
 
-            commands.entity(id_viewer).insert(DirtyViewerRenderersInfo);
+            if let Some(mut cmd) = commands.get_entity(id_viewer) {
+                cmd.insert(DirtyViewerRenderersInfo);
+            }
 
             viewer_renderers.map.insert(rendername.clone(), (passorders.clone(), RendererID(id_renderer)));
 
-            let mut commands = commands.entity(id_renderer);
-            ActionRenderer::as_renderer(
-                &mut commands, id_viewer, passorders, ViewerSize::DEFAULT_WIDTH, ViewerSize::DEFAULT_HEIGHT,
-                color_format, depth_stencil_format, toscreen.0
-            );
+            if let Some(mut cmd) = commands.get_entity(id_renderer) {
+                ActionRenderer::as_renderer(
+                    &mut cmd, id_viewer, passorders, ViewerSize::DEFAULT_WIDTH, ViewerSize::DEFAULT_HEIGHT,
+                    color_format, depth_stencil_format, toscreen.0
+                );
+            }
 
         } else {
             cmds.push(OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count + 1));
@@ -290,10 +295,12 @@ impl ActionCamera {
         mut commands: Commands,
     ) {
         cameras.iter().for_each(|(entity, up, target)| {
-            log::debug!("TargetCameraParam : 0");
-            commands.entity(entity).insert(
-                TargetCameraParam::create(up.0.clone(), target.0.clone())
-            );
+            // log::debug!("TargetCameraParam : 0");
+            if let Some(mut cmd) = commands.get_entity(entity) {
+                cmd.insert(
+                    TargetCameraParam::create(up.0.clone(), target.0.clone())
+                );
+            }
         });
     }
 

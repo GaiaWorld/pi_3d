@@ -14,7 +14,8 @@ pub fn sys_material_anime_init(
 ) {
     materials.iter().for_each(|(entity, bindeffect)| {
         let info = MaterialAnimeSlots::new(&bindeffect.0);
-        commands.entity(entity)
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            cmd
             .insert(info)
             .insert(Alpha::default())
             .insert(Cutoff::default())
@@ -32,6 +33,8 @@ pub fn sys_material_anime_init(
             .insert(OpacityTexVOffset::default())
             .insert(OpacityTexVScale::default())
             ;
+        }
+        
     });
 }
 

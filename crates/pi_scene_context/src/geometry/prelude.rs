@@ -4,6 +4,7 @@ use pi_engine_shell::prelude::*;
 pub use super::instance::{
     instance_color::*,
     instance_tilloff::*,
+    instance_boneoffset::*,
     instance_world_matrix::*,
     sys_instance::*,
     InstanceSourceID,

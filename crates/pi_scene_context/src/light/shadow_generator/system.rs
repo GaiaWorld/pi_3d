@@ -121,9 +121,12 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
                 if P::TAG == pass.as_pass() && enable.0 {
                     modelist.0.iter().for_each(|(id_model, _)| {
                         if let Ok(pass) = meshes.get(*id_model) {
-                            commands.entity(pass.id()).insert(id_mat.clone());
-                            materialrefs.insert(pass.id());
-                            *flag = DirtyMaterialRefs(true);
+                            
+                            if let Some(mut cmd) = commands.get_entity(pass.id()) {
+                                cmd.insert(id_mat.clone());
+                                materialrefs.insert(pass.id());
+                                *flag = DirtyMaterialRefs(true);
+                            }
                         }
                     });
                 }

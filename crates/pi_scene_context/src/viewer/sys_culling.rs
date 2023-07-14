@@ -23,17 +23,17 @@ use super::base::*;
     ) {
         let time1 = pi_time::Instant::now();
 
-        log::debug!("CameraModelListByViewer :");
+        // log::debug!("CameraModelListByViewer :");
         // log::debug!("SysModelListUpdateByCamera: ");
         viewers.iter_mut().for_each(|(camera, vieweractive, scene, layer, mut list_model, _, _)| {
             list_model.0.clear();
-            log::debug!("CameraModelListByViewer : 0");
+            // log::debug!("CameraModelListByViewer : 0");
             if vieweractive.0 {
                 // log::debug!("SysModelListUpdateByCamera: 0");
                 items.iter().for_each(|(id_obj, iscene, ilayer, _)| {
                     // log::debug!("SysModelListUpdateByCamera: 1");
                     if iscene == scene && layer.include(ilayer) {
-                        log::debug!("SysModelListUpdateByCamera: 2");
+                        // log::debug!("SysModelListUpdateByCamera: 2");
                         if list_model.0.contains_key(&id_obj) {
                             // log::warn!("Has Include {:?}", id_obj);
                         } else {
@@ -46,7 +46,7 @@ use super::base::*;
             commands.entity(camera).insert(FlagModelList(true));
         });
 
-        log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
+        // log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
@@ -60,12 +60,12 @@ use super::base::*;
         mut commands: Commands,
     ) {
         let time1 = pi_time::Instant::now();
-        log::debug!("CameraModelListByModel :");
+        // log::debug!("CameraModelListByModel :");
 
         items.iter().for_each(|(id_obj, iscene, ilayer, _)| {
-            log::debug!("CameraModelListByModel : 0");
+            // log::debug!("CameraModelListByModel : 0");
             viewers.iter_mut().for_each(|(id_viewer, vieweractive, scene, layer, mut list_model, _, _)| {
-                log::debug!("CameraModelListByModel : 1");
+                // log::debug!("CameraModelListByModel : 1");
                 if vieweractive.0 {
                     if iscene == scene && layer.include(ilayer) {
                         if list_model.0.contains_key(&id_obj) {
@@ -82,7 +82,7 @@ use super::base::*;
             });
         });
 
-        log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
+        // log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
@@ -116,5 +116,5 @@ use super::base::*;
             // log::warn!("Moldellist: {:?}, {:?}, {:?}", vieweractive.0, liet_model.0.len(), cullings.0.len());
         });
         
-        log::debug!("SysModelListAfterCullingTick: {:?}", pi_time::Instant::now() - time1);
+        // log::debug!("SysModelListAfterCullingTick: {:?}", pi_time::Instant::now() - time1);
     }

@@ -55,13 +55,13 @@ impl Default for ModelVelocity {
     }
 }
 
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct ModelSkinBoneOffset(pub u32);
-impl Default for ModelSkinBoneOffset {
-    fn default() -> Self {
-        Self(0)
-    }
-}
+// #[derive(Debug, Clone, Component, Deref, DerefMut)]
+// pub struct ModelSkinBoneOffset(pub u32);
+// impl Default for ModelSkinBoneOffset {
+//     fn default() -> Self {
+//         Self(0)
+//     }
+// }
 
 #[derive(Component)]
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
@@ -79,7 +79,15 @@ impl BindModel {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Component, Clone, Default)]
+pub struct RecordIndiceRenderRange(pub IndiceRenderRange);
+impl TAnimatableCompRecord<IndiceRenderRange> for RecordIndiceRenderRange {
+    fn comp(&self) -> IndiceRenderRange {
+        self.0.clone()
+    }
+}
+
+#[derive(Debug, Component, Clone)]
 pub struct IndiceRenderRange(pub Option<Range<u32>>);
 impl IndiceRenderRange {
     pub fn apply(&self, geo: &RenderGeometry) -> Option<RenderIndices> {
@@ -108,6 +116,48 @@ impl IndiceRenderRange {
             None
         }
     }
+}
+impl Default for IndiceRenderRange {
+    fn default() -> Self {
+        Self(None)
+    }
+}
+impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        if amount < 0.5 {
+            self.clone()
+        } else {
+            rhs.clone()
+        }
+    }
+
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        if amount < 0.5 {
+            value1.clone()
+        } else {
+            value2.clone()
+        }
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        if amount < 0.5 {
+            self.clone()
+        } else {
+            rhs.clone()
+        }
+    }
+    fn size() -> usize {
+        2 * 4
+    }
+}
+impl TAssetCapacity for IndiceRenderRange {
+    const ASSET_TYPE: &'static str = "AnimeCurveIndiceRenderRange";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for IndiceRenderRange {
+
 }
 
 #[derive(Component)]

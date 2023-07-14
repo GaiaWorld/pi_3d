@@ -32,11 +32,13 @@ use super::{camera::*, target_camera::*};
         >,
         mut commands: Commands,
     ) {
-        log::debug!("CameraParam :");
+        // log::debug!("CameraParam :");
         cameras.iter().for_each(|(id_camera, mode, fov, nearfar, size, fixmode, viewport)| {
-            log::debug!("CameraParam : 0");
+            // log::debug!("CameraParam : 0");
             let param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
-            commands.entity(id_camera).insert(param);
+            if let Some(mut cmd) = commands.get_entity(id_camera) {
+                cmd.insert(param);
+            }
         });
     }
 

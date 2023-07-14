@@ -24,7 +24,11 @@ pub fn sys_act_material_create(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, passtag)| {
-        let mut matcmds = commands.entity(entity);
+        let mut matcmds = if let Some(mut cmd) = commands.get_entity(entity) { 
+            cmd
+        } else {
+            return;
+        };
 
         if let Some(meta) = asset_shader.get(&key_shader) {
 
@@ -137,7 +141,8 @@ fn reset_passobj(
     idmat: Entity,
     commands: &mut Commands,
 ) {
-    commands.entity(idpass)
+    if let Some(mut cmd) = commands.get_entity(idpass) { 
+        cmd
         .insert(PassBindEffectValue(None))
         .insert(PassBindEffectTextures(None))
         .insert(PassBindGroupScene(None))
@@ -149,6 +154,7 @@ fn reset_passobj(
         .insert(PassPipeline(None))
         .insert(PassDraw(None))
         ;
+    }
 }
 
 // pub fn sys_act_material_mat4(

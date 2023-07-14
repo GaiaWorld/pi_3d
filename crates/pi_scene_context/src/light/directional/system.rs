@@ -20,7 +20,10 @@ use super::DirectionalShadowProjection;
         lights.iter().for_each(|(id_light, light, minz, maxz, size)| {
             match light {
                 Light::Directional => {
-                    commands.entity(id_light).insert(DirectionalShadowProjection { minz: minz.0, maxz: maxz.0, frustum_size: size.0 });
+                    
+                    if let Some(mut cmd) = commands.get_entity(id_light) {
+                        cmd.insert(DirectionalShadowProjection { minz: minz.0, maxz: maxz.0, frustum_size: size.0 });
+                    }
                 },
                 Light::Point => {},
                 Light::Spot => {},

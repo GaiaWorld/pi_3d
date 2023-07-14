@@ -142,7 +142,7 @@ fn setup(
         id_geo,
         vec![
             VertexBufferDesc::vertices(
-                KeyVertexBuffer::from("BallPos#20#20"),
+                KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallPos#20#20")),
                 None,
                 vec![VertexAttribute {
                     kind: EVertexDataKind::Position,
@@ -150,7 +150,7 @@ fn setup(
                 }],
             ),
             VertexBufferDesc::vertices(
-                KeyVertexBuffer::from("BallNor#20#20"),
+                KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallNor#20#20")),
                 None,
                 vec![VertexAttribute {
                     kind: EVertexDataKind::Normal,
@@ -158,7 +158,7 @@ fn setup(
                 }],
             ),
             VertexBufferDesc::vertices(
-                KeyVertexBuffer::from("BallUV#20#20"),
+                KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallUV#20#20")),
                 None,
                 vec![VertexAttribute {
                     kind: EVertexDataKind::UV,
@@ -169,7 +169,7 @@ fn setup(
         Some(IndicesBufferDesc {
             format: wgpu::IndexFormat::Uint16,
             buffer_range: None,
-            buffer: KeyVertexBuffer::from("BallInd#20#20"),
+            buffer: KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallInd#20#20")),
         }),
     ));
 
@@ -206,33 +206,37 @@ fn sys_setup_ball(
     };
 
     let (positions, normals, indices, uvs) = generate_sphere(&param);
+    let id = data_map.id("BallPos#20#20");
     ActionVertexBuffer::create(
         &mut data_map,
-        KeyVertexBuffer::from("BallPos#20#20"),
+        KeyVertexBuffer::from(id),
         bytemuck::cast_slice(&positions)
             .iter()
             .map(|v| *v)
             .collect::<Vec<u8>>(),
     );
+    let id = data_map.id("BallNor#20#20");
     ActionVertexBuffer::create(
         &mut data_map,
-        KeyVertexBuffer::from("BallNor#20#20"),
+        KeyVertexBuffer::from(id),
         bytemuck::cast_slice(&normals)
             .iter()
             .map(|v| *v)
             .collect::<Vec<u8>>(),
     );
+    let id = data_map.id("BallUV#20#20");
     ActionVertexBuffer::create(
         &mut data_map,
-        KeyVertexBuffer::from("BallUV#20#20"),
+        KeyVertexBuffer::from(id),
         bytemuck::cast_slice(&uvs)
             .iter()
             .map(|v| *v)
             .collect::<Vec<u8>>(),
     );
+    let id = data_map.id("BallInd#20#20");
     ActionVertexBuffer::create_indices(
         &mut data_map,
-        KeyVertexBuffer::from("BallInd#20#20"),
+        KeyVertexBuffer::from(id),
         bytemuck::cast_slice(&indices)
             .iter()
             .map(|v| *v)
@@ -275,6 +279,7 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);

@@ -28,7 +28,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         allocator.write_buffer(&device, &queue);
         vb_allocator.update_buffer(&device, &queue);
 
-        log::debug!("SysDynBufferAllocatorUpdate: {:?}", pi_time::Instant::now() - time1);
+        // log::debug!("SysDynBufferAllocatorUpdate: {:?}", pi_time::Instant::now() - time1);
     }
 
 /// * 视口的数据变化时, 重新创建列表内物体相关Pass 的 Set0 数据
@@ -382,8 +382,10 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                                 if let Some(effect_texture_samplers) = effect_texture_samplers.val() {
                                     let key = KeyBindGroupTextureSamplers::new(KeyShaderSetTextureSamplers::default(), effect_texture_samplers.clone(), meta1.0.as_ref().unwrap().1.clone(), &mut binds_recorder);
                                     texturesamplers_wait.add(&key, passid.id());
-                                } else { 
-                                    commands.entity(passid.id()).insert(PassBindGroupTextureSamplers(None));
+                                } else {
+                                    if let Some(mut cmd) = commands.get_entity(passid.id()) {
+                                        cmd.insert(PassBindGroupTextureSamplers(None));
+                                    }
                                 };
                             }
                         }
@@ -413,8 +415,11 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             if let Some(effect_texture_samplers) = effect_texture_samplers.val() {
                 let key = KeyBindGroupTextureSamplers::new(KeyShaderSetTextureSamplers::default(), effect_texture_samplers.clone(), meta1.0.as_ref().unwrap().1.clone(), &mut binds_recorder);
                 texturesamplers_wait.add(&key, id_pass);
-            } else { 
-                commands.entity(id_pass).insert(PassBindGroupTextureSamplers(None));
+            } else {
+                
+                if let Some(mut cmd) = commands.get_entity(id_pass) {
+                    cmd.insert(PassBindGroupTextureSamplers(None));
+                }
             };
         });
 
@@ -437,11 +442,15 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 let data = BindGroupScene::new(BindGroupUsage::new(0, key_bind_group, bind_group), key);
                 let data = Arc::new(data);
                 v.iter().for_each(|id| {
-                    commands.entity(id.clone()).insert(PassBindGroupScene(Some(data.clone())));
+                    if let Some(mut cmd) = commands.get_entity(*id) {
+                        cmd.insert(PassBindGroupScene(Some(data.clone())));
+                    }
                 });
             } else {
                 v.iter().for_each(|id| {
-                    commands.entity(id.clone()).insert(PassBindGroupScene(None));
+                    if let Some(mut cmd) = commands.get_entity(*id) {
+                        cmd.insert(PassBindGroupScene(None));
+                    }
                 });
             }
         });
@@ -451,11 +460,15 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 let data = BindGroupModel::new(BindGroupUsage::new(1, key_bind_group, bind_group), key);
                 let data = Arc::new(data);
                 v.iter().for_each(|id| {
-                    commands.entity(id.clone()).insert(PassBindGroupModel(Some(data.clone())));
+                    if let Some(mut cmd) = commands.get_entity(*id) {
+                        cmd.insert(PassBindGroupModel(Some(data.clone())));
+                    }
                 });
             } else {
                 v.iter().for_each(|id| {
-                    commands.entity(id.clone()).insert(PassBindGroupModel(None));
+                    if let Some(mut cmd) = commands.get_entity(*id) {
+                        cmd.insert(PassBindGroupModel(None));
+                    }
                 });
             }
         });
@@ -466,16 +479,22 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                     let data = BindGroupTextureSamplers::new(key, BindGroupUsage::new(2, key_bind_group, bind_group));
                     let data = Arc::new(data);
                     v.iter().for_each(|id| {
-                        commands.entity(id.clone()).insert(PassBindGroupTextureSamplers(Some(data.clone())));
+                        if let Some(mut cmd) = commands.get_entity(*id) {
+                            cmd.insert(PassBindGroupTextureSamplers(Some(data.clone())));
+                        }
                     });
                 } else {
                     v.iter().for_each(|id| {
-                        commands.entity(id.clone()).insert(PassBindGroupTextureSamplers(None));
+                        if let Some(mut cmd) = commands.get_entity(*id) {
+                            cmd.insert(PassBindGroupTextureSamplers(None));
+                        }
                     });
                 }
             } else {
                 v.iter().for_each(|id| {
-                    commands.entity(id.clone()).insert(PassBindGroupTextureSamplers(None));
+                    if let Some(mut cmd) = commands.get_entity(*id) {
+                        cmd.insert(PassBindGroupTextureSamplers(None));
+                    }
                 });
             }
         });

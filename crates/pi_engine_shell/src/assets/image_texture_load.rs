@@ -52,19 +52,25 @@ fn image_change<
     queue: Res<PiRenderQueue>,
     device: Res<PiRenderDevice>,
 ) {
-    log::debug!("image_change: ");
+    // log::debug!("image_change: ");
     query.iter().for_each(|(obj, vkey)| {
         match vkey.deref() {
             EKeyTexture::Tex(key) => {
                 // log::warn!("image_loaded: {:?}", key.as_str());
                 if let Some(texture_view) = textureres_assets_mgr.get(&key.asset_u64()) {
-                    image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Tex(texture_view)) );
+                    if let Some(mut cmd) = image_cmd.get_entity(obj) {
+                        cmd
+                        .insert( D::from(ETextureViewUsage::Tex(texture_view)) );
+                    }
                 } else {
                     let result = AssetMgr::load(&textureres_assets_mgr, &key.asset_u64());
                     match result {
                         LoadResult::Ok(r) => {
                             // log::warn!("image_loaded: {:?}", key.as_str());
-                            image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Tex(r)) );
+                            if let Some(mut cmd) = image_cmd.get_entity(obj) {
+                                cmd
+                                .insert( D::from(ETextureViewUsage::Tex(r)) );
+                            }
                         }
                         ,
                         _ => {
@@ -97,7 +103,9 @@ fn image_change<
             },
             EKeyTexture::Image(key) => {
                 if let Some(texture_view) = texture_assets_mgr.get(&key.asset_u64()) {
-                    image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Image(texture_view)) );
+                    if let Some(mut cmd) = image_cmd.get_entity(obj) {
+                        cmd.insert( D::from(ETextureViewUsage::Image(texture_view)) );
+                    }
                 } else {
                     match key.url() {
                         KeyImageTexture::Data(url, _) => {
@@ -111,7 +119,9 @@ fn image_change<
                                     let texture_view = ImageTextureView::new(key, texture);
                                     match texture_assets_mgr.insert(key.asset_u64(), texture_view) {
                                         Ok(texture_view) => {
-                                            image_cmd.entity(obj).insert( D::from(ETextureViewUsage::Image(texture_view)) );
+                                            if let Some(mut cmd) = image_cmd.get_entity(obj) {
+                                                cmd.insert( D::from(ETextureViewUsage::Image(texture_view)) );
+                                            }
                                         },
                                         Err(e) => {
                                             // log::error!("image_texture_view_load fail, while insert: {:?}", key.url().as_str());
@@ -203,12 +213,14 @@ pub fn check_await_texture<
                         break;
                     },
                 };
-                image_cmd.entity(id).insert(D::from(ETextureViewUsage::Image(texture)));
+                if let Some(mut cmd) = image_cmd.get_entity(id) {
+                    cmd.insert(D::from(ETextureViewUsage::Image(texture)));
+                }
             }
             // 节点已经销毁，或image已经被删除，不需要设置texture
             _ => continue,
         };
-        log::debug!("Write texture_item $$$");
+        // log::debug!("Write texture_item $$$");
     }
 
     let mut r = image_await.0.pop();
@@ -226,12 +238,14 @@ pub fn check_await_texture<
                 //     EKeyTexture::Image(key) => log::warn!("image_loaded: {:?}", key.url().as_str()),
                 //     EKeyTexture::SRT(key) => log::warn!("image_loaded: {:?}", key.to_string()),
                 // }
-                image_cmd.entity(id).insert(D::from(texture));
+                if let Some(mut cmd) = image_cmd.get_entity(id) {
+                    cmd.insert(D::from(texture));
+                }
             }
             // 节点已经销毁，或image已经被删除，不需要设置texture
             _ => continue,
         };
-        log::debug!("Write texture_item $$$");
+        // log::debug!("Write texture_item $$$");
     }
 }
 

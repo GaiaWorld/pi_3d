@@ -76,6 +76,26 @@ impl Default for ViewerAspect {
 }
 
 #[derive(Component)]
+pub struct ViewerCullFilter {
+    test: Vec<Entity>
+}
+impl Default for ViewerCullFilter {
+    fn default() -> Self {
+        Self {
+            test: vec![]
+        }
+    }
+}
+impl ViewerCullFilter {
+    pub fn add(&mut self, entity: Entity) {
+
+    }
+    pub fn remove(&mut self, entity: Entity) {
+
+    }
+}
+
+#[derive(Component)]
 pub struct ViewerRenderTargetFormatOption {
     pub color: wgpu::TextureFormat,
     pub depth_stencil: wgpu::TextureFormat,

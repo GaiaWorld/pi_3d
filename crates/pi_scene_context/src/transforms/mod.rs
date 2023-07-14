@@ -60,14 +60,6 @@ impl Plugin for PluginTransformNode {
     }
 }
 
-#[derive(Resource, Default)]
-pub struct AssetCapacityAnimeTransformNode(pub AssetCapacity);
-impl AsRef<AssetCapacity> for AssetCapacityAnimeTransformNode {
-    fn as_ref(&self) -> &AssetCapacity {
-        &self.0
-    }
-}
-
 pub struct PluginGroupTransformNode;
 impl PluginGroupTransformNode {
     pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {

@@ -13,7 +13,11 @@ pub fn sys_act_transform_node_create(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity, name)| {
-        let mut transformnode = commands.entity(entity);
+        let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
+            cmd
+        } else {
+            return;
+        };
         ActionScene::add_to_scene(&mut transformnode, &mut tree, scene);
         ActionTransformNode::init_for_tree(&mut transformnode);
         ActionTransformNode::as_transform_node(&mut transformnode, name);
@@ -28,6 +32,7 @@ pub fn sys_act_transform_parent(
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val, count)| {
         if tree.get_down(val).is_some() && tree.get_up(entity).is_some() {
+            // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
             // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
             ActionTransformNode::tree_modify(&mut tree, entity, val);
         } else {
@@ -61,6 +66,7 @@ pub fn sys_act_local_position(
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNodeLocalPosition(entity, val, count)| {
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+            // log::warn!("transform_Position {:?} Val: {:?}", entity, val);
             record.0 = LocalPosition(val);
             *node = LocalPosition(val);
         } else {
@@ -147,7 +153,9 @@ impl ActionTransformNode {
         parent: Entity,
     ) {
         // log::warn!("InsertChild");
+        // log::warn!("Tree Remove {:?}", child);
         tree.remove(child);
+        // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
         tree.insert_child(child, parent, 0);
     }
 }

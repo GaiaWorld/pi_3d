@@ -91,6 +91,7 @@ fn setup(
     let bone0 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone0, scene));
     let bone1 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone1, scene));
     let key_curve0 = pi_atom::Atom::from((1).to_string());
+    let key_curve0 = transformanime.position.counter.uniqueid();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
@@ -98,6 +99,7 @@ fn setup(
     }
     let bone2 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone2, scene));
     let key_curve0 = pi_atom::Atom::from((2).to_string());
+    let key_curve0 = transformanime.position.counter.uniqueid();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
@@ -105,6 +107,7 @@ fn setup(
     }
     let bone3 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone3, scene));
     let key_curve0 = pi_atom::Atom::from((3).to_string());
+    let key_curve0 = transformanime.position.counter.uniqueid();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
@@ -112,6 +115,7 @@ fn setup(
     }
     let bone4 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(bone4, scene));
     let key_curve0 = pi_atom::Atom::from((4).to_string());
+    let key_curve0 = transformanime.position.counter.uniqueid();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
@@ -139,7 +143,7 @@ fn setup(
         4, 4, 4, 4, 4, 4, 4, 4
     ];
     // normals
-    let jointkey = KeyVertexBuffer::from("TestJoint");
+    let jointkey = KeyVertexBuffer::from(geometrycmd.vb_wait.id("TestJoint"));
     geometrycmd.vb_wait.add(&jointkey, bytemuck::cast_slice(&data).iter().map(|v| *v).collect::<Vec<u8>>());
 
     let format = wgpu::VertexFormat::Uint16x2;
@@ -281,6 +285,7 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);

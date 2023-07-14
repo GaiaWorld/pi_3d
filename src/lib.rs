@@ -45,6 +45,8 @@ impl PluginGroup for PluginBundleDefault {
             .add(PluginAnimeCameraFOV::new())
             .add(PluginAnimeCameraSize::new())
             .add(PluginMesh)
+            .add(PluginAnimeBoneOffset::new())
+            .add(PluginAnimeRenderIndiceRange::new())
             .add(PluginGeometry)
             .add(PluginLighting)
             .add(PluginLayerMask);

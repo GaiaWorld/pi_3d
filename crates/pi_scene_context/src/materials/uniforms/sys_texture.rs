@@ -60,7 +60,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                 // let useinfo = binddesc.textures.use_info(list);
                 // let bind = EffectTextureAndSamplerBinds::new(&useinfo);
 
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }
@@ -101,7 +103,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                         binding_count: 4
                     }
                 );
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }
@@ -146,7 +150,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                         binding_count: 6
                     }
                 );
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }
@@ -193,7 +199,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                         binding_count: 8
                     }
                 );
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }
@@ -243,7 +251,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                         binding_count: 10
                     }
                 );
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }
@@ -296,7 +306,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                         binding_count: 12
                     }
                 );
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }
@@ -352,7 +364,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                         binding_count: 14
                     }
                 );
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }
@@ -411,7 +425,9 @@ pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindText
                         binding_count: 16
                     }
                 );
-                commands.entity(id_obj).insert(value);
+                if let Some(mut cmd) = commands.get_entity(id_obj) {
+                    cmd.insert(value);
+                }
             }
         });
     }

@@ -1,12 +1,15 @@
 
+use std::marker::PhantomData;
+
 use pi_animation::{
     type_animation_context::{TypeAnimationContext, AnimationContextAmount},
     animation_group_manager::AnimationGroupManagerDefault,
     animation_group::AnimationGroupID,
-    curve_frame_event::CurveFrameEvent, animation::AnimationInfo, target_animation::TargetAnimation
+    curve_frame_event::CurveFrameEvent, animation::AnimationInfo, target_animation::TargetAnimation, runtime_info::RuntimeInfoMap
 };
 use pi_assets::{asset::{Handle}};
 use pi_atom::Atom;
+use pi_bevy_asset::TAssetCapacity;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FrameIndex};
 use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
@@ -21,13 +24,14 @@ use super::AnimationGroupParam;
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
 pub struct FlagAnimationStartResetComp;
 
+pub type IDAssetTypeFrameCurve = i64;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneID(pub Entity);
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Asset for TypeFrameCurve<F> {
-    type Key = Atom;
+    type Key = IDAssetTypeFrameCurve;
 }
-
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Size for TypeFrameCurve<F> {
     fn size(&self) -> usize {
         F::size() * self.0.values.len() + 2 * self.0.frames.len() + self.0.size()
@@ -50,9 +54,28 @@ impl<F: FrameDataValue+ 'static> AsRef<FrameCurve<F>> for AssetTypeFrameCurve<F>
 pub struct TypeAnimeContext<D: TAnimatableComp> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
 }
+impl<D: TAnimatableComp> TypeAnimeContext<D> {
+    pub fn new<T: Clone + PartialEq + Eq + PartialOrd + Ord>(ty: usize, runtime_info_map: &mut RuntimeInfoMap<T>) -> Self {
+        Self { ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, runtime_info_map) }
+    }
+}
+
+#[derive(Resource)]
+pub struct TypeAnimeContextCounter<D: TAnimatableComp>(PhantomData<D>, IDAssetTypeFrameCurve);
+impl<D: TAnimatableComp> Default for TypeAnimeContextCounter<D> {
+    fn default() -> Self {
+        Self(PhantomData, -1)
+    }
+}
+impl<D: TAnimatableComp> TypeAnimeContextCounter<D> {
+    pub fn uniqueid(&mut self) -> IDAssetTypeFrameCurve {
+        self.1 -= 1;
+        self.1
+    }
+} 
 
 
-pub trait TAnimatableComp: Default + FrameDataValue + Component + std::fmt::Debug {
+pub trait TAnimatableComp: Default + FrameDataValue + Component + std::fmt::Debug + TAssetCapacity {
 
 }
 pub trait TAnimatableCompRecord<T: TAnimatableComp>: Component {

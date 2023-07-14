@@ -151,7 +151,7 @@ use super::{
         >,
         mut commands: Commands,
     ) {
-        log::debug!("SysGeometryVBLoaded 1: ");
+        // log::debug!("SysGeometryVBLoaded 1: ");
         items.iter().for_each(|(
             id_geo
             , id_mesh
@@ -161,12 +161,16 @@ use super::{
         )| {
             if desc.slot_count() == 1 {
                 let id_mesh = id_mesh.0.clone();
-                log::debug!("SysGeometryVBLoaded 1: 0");
+                // log::debug!("SysGeometryVBLoaded 1: 0");
                 let values = vec![
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                 ];
-                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
-                commands.entity(id_mesh).insert(RenderGeometryEable(true));
+                if let Some(mut cmd) = commands.get_entity(id_geo) {
+                    cmd.insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                }
+                if let Some(mut cmd) = commands.get_entity(id_mesh) {
+                    cmd.insert(RenderGeometryEable(true));
+                }
             }
         });
     }
@@ -211,8 +215,12 @@ use super::{
                     (key1.desc().step_mode(), RenderVertices::create(key1, res1)),
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
                 ];
-                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
-                commands.entity(id_mesh).insert(RenderGeometryEable(true));
+                if let Some(mut cmd) = commands.get_entity(id_geo) {
+                    cmd.insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                }
+                if let Some(mut cmd) = commands.get_entity(id_mesh) {
+                    cmd.insert(RenderGeometryEable(true));
+                }
             }
         });
     }
@@ -261,8 +269,12 @@ use super::{
                     (key2.desc().step_mode(), RenderVertices::create(key2, res2)),
                     (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
                 ];
-                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
-                commands.entity(id_mesh).insert(RenderGeometryEable(true));
+                if let Some(mut cmd) = commands.get_entity(id_geo) {
+                    cmd.insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                }
+                if let Some(mut cmd) = commands.get_entity(id_mesh) {
+                    cmd.insert(RenderGeometryEable(true));
+                }
             }
         });
     }
@@ -316,8 +328,12 @@ use super::{
                     (key3.desc().step_mode(), RenderVertices::create(key3, res3)),
                     (key4.desc().step_mode(), RenderVertices::create(key4, res4)),
                 ];
-                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
-                commands.entity(id_mesh).insert(RenderGeometryEable(true));
+                if let Some(mut cmd) = commands.get_entity(id_geo) {
+                    cmd.insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                }
+                if let Some(mut cmd) = commands.get_entity(id_mesh) {
+                    cmd.insert(RenderGeometryEable(true));
+                }
             }
         });
     }
@@ -376,8 +392,12 @@ use super::{
                     (key4.desc().step_mode(), RenderVertices::create(key4, res4)),
                     (key5.desc().step_mode(), RenderVertices::create(key5, res5)),
                 ];
-                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
-                commands.entity(id_mesh).insert(RenderGeometryEable(true));
+                if let Some(mut cmd) = commands.get_entity(id_geo) {
+                    cmd.insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                }
+                if let Some(mut cmd) = commands.get_entity(id_mesh) {
+                    cmd.insert(RenderGeometryEable(true));
+                }
             }
         });
     }
@@ -441,8 +461,12 @@ use super::{
                     (key5.desc().step_mode(), RenderVertices::create(key5, res5)),
                     (key6.desc().step_mode(), RenderVertices::create(key6, res6)),
                 ];
-                commands.entity(id_geo).insert(RenderGeometry::create(values, (indicesdesc , indices)));
-                commands.entity(id_mesh).insert(RenderGeometryEable(true));
+                if let Some(mut cmd) = commands.get_entity(id_geo) {
+                    cmd.insert(RenderGeometry::create(values, (indicesdesc , indices)));
+                }
+                if let Some(mut cmd) = commands.get_entity(id_mesh) {
+                    cmd.insert(RenderGeometryEable(true));
+                }
             }
         });
     }

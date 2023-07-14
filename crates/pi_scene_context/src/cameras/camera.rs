@@ -1,3 +1,4 @@
+use pi_bevy_asset::TAssetCapacity;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
 
@@ -101,6 +102,12 @@ impl Default for CameraFov {
         Self(0.7)
     }
 }
+impl TAssetCapacity for CameraFov {
+    const ASSET_TYPE: &'static str = "AnimeCurveCameraFov";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for CameraFov {}
 
 
@@ -145,6 +152,12 @@ impl pi_curves::curve::frame::FrameDataValue for CameraOrthSize {
 impl Default for CameraOrthSize {
     fn default() -> Self {
         Self(4.)
+    }
+}
+impl TAssetCapacity for CameraOrthSize {
+    const ASSET_TYPE: &'static str = "AnimeCurveCameraOrthSize";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for CameraOrthSize {}

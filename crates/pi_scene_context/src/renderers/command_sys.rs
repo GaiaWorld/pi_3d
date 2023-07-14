@@ -21,7 +21,9 @@ pub fn sys_act_renderer_create(
         let render_node = RenderNode::new(entity);
         match graphic.add_node(name, render_node) {
             Ok(nodeid) => {
-                commands.entity(entity).insert(GraphId(nodeid));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(GraphId(nodeid));
+                }
             },
             Err(e) => {
                 // log::error!("Renderer Error: {:?}", e);
@@ -163,7 +165,9 @@ impl ActionRenderer {
         let render_node = RenderNode::new(entity);
         match render_graphic.add_node(name, render_node) {
             Ok(nodeid) => {
-                commands.entity(entity).insert(GraphId(nodeid));  
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(GraphId(nodeid));  
+                }
             },
             Err(e) => {
                 // log::error!("{:?}", e);

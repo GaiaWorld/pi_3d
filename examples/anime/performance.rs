@@ -123,6 +123,7 @@ fn setup(
                 instancemeshcmds.tilloff.push(OpsInstanceTillOff::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
+                let key_curve0 = transformanime.euler.counter.uniqueid();
                 let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(i as f32, j as f32, k as f32)), LocalEulerAngles(Vector3::new(10., 10., 10.)), 30, 30, EEasingMode::None);
                 
                 let asset_curve = if let Some(curve) = transformanime.euler.curves.get(&key_curve0) {
@@ -196,6 +197,7 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);

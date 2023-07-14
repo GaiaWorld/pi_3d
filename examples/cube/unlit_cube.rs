@@ -189,11 +189,13 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);

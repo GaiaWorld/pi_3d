@@ -141,12 +141,14 @@ pub fn sys_act_maintex_tilloff(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsMainTexTilloff(idmat, uscale, vscale, uoffset, voffset)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(MainTexUScale(uscale)).insert(RecordMainTexUScale(MainTexUScale(uscale)))
             .insert(MainTexVScale(vscale)).insert(RecordMainTexVScale(MainTexVScale(vscale)))
             .insert(MainTexUOffset(uoffset)).insert(RecordMainTexUOffset(MainTexUOffset(uoffset)))
             .insert(MainTexVOffset(voffset)).insert(RecordMainTexVOffset(MainTexVOffset(voffset)))
             ;
+        }
     });
 }
 
@@ -155,12 +157,14 @@ pub fn sys_act_masktex_tilloff(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaskTexTilloff(idmat, uscale, vscale, uoffset, voffset)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(MaskTexUScale(uscale)).insert(RecordMaskTexUScale(MaskTexUScale(uscale)))
             .insert(MaskTexVScale(vscale)).insert(RecordMaskTexVScale(MaskTexVScale(vscale)))
             .insert(MaskTexUOffset(uoffset)).insert(RecordMaskTexUOffset(MaskTexUOffset(uoffset)))
             .insert(MaskTexVOffset(voffset)).insert(RecordMaskTexVOffset(MaskTexVOffset(voffset)))
             ;
+        }
     });
 }
 
@@ -169,12 +173,14 @@ pub fn sys_act_opacitytex_tilloff(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsOpacityTexTilloff(idmat, uscale, vscale, uoffset, voffset)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(OpacityTexUScale(uscale)).insert(RecordOpacityTexUScale(OpacityTexUScale(uscale)))
             .insert(OpacityTexVScale(vscale)).insert(RecordOpacityTexVScale(OpacityTexVScale(vscale)))
             .insert(OpacityTexUOffset(uoffset)).insert(RecordOpacityTexUOffset(OpacityTexUOffset(uoffset)))
             .insert(OpacityTexVOffset(voffset)).insert(RecordOpacityTexVOffset(OpacityTexVOffset(voffset)))
             ;
+        }
     });
 }
 
@@ -183,9 +189,11 @@ pub fn sys_act_maincolor(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsMainColor(idmat, r, g, b)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(MainColor(Vector3::new(r, g, b))).insert(RecordMainColor(MainColor(Vector3::new(r, g, b))))
             ;
+        }
     });
 }
 
@@ -194,9 +202,11 @@ pub fn sys_act_lightdiffuse(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsLightDiffuse(idmat, r, g, b)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(LightDiffuse(Vector3::new(r, g, b))).insert(RecordLightDiffuse(LightDiffuse(Vector3::new(r, g, b))))
             ;
+        }
     });
 }
 
@@ -205,9 +215,11 @@ pub fn sys_act_alpha(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsAlpha(idmat, val)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(Alpha(val)).insert(RecordAlpha(Alpha(val)))
             ;
+        }
     });
 }
 
@@ -216,9 +228,11 @@ pub fn sys_act_alphacutoff(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsAlphaCutoff(idmat, val)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(Cutoff(val)).insert(RecordCutoff(Cutoff(val)))
             ;
+        }
     });
 }
 
@@ -227,8 +241,10 @@ pub fn sys_act_maskcutoff(
     mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaskCutoff(idmat, val)| {
-        commands.entity(idmat)
+        if let Some(mut cmd) = commands.get_entity(idmat) {
+            cmd
             .insert(MaskCutoff(val)).insert(RecordMaskCutoff(MaskCutoff(val)))
             ;
+        }
     });
 }

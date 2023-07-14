@@ -12,9 +12,10 @@ pub use pi_atom::Atom;
 pub use pi_bevy_winit_window::*;
 pub use pi_bevy_ecs_extend::prelude::*;
 pub use pi_bevy_asset::{
-    // AssetMgrConfigs,
+    AssetMgrConfigs,
     AssetCapacity,
-    ShareAssetMgr
+    ShareAssetMgr,
+    TAssetCapacity,
 };
 pub use pi_bevy_render_plugin::{
     PiRenderDevice, PiRenderQueue, PiRenderGraph, PiRenderWindow, PiRenderOptions, PiSafeAtlasAllocator, PiScreenTexture,

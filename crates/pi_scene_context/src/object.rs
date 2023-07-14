@@ -33,6 +33,7 @@ pub(crate) fn sys_dispose(
     groupmaps: Query<&AnimationGroups>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
     mut scenectxs: ResMut<SceneAnimationContextMap>,
+    mut tree: EntityTreeMut,
 ) {
     cmds.drain().drain(..).for_each(|OpsDispose(entity)| {
         if let (Ok(scene), Ok(groupmap)) = (scenes.get(entity), groupmaps.get(entity)) {
@@ -71,19 +72,26 @@ pub(crate) fn sys_dispose(
                         animeglobal.remove(id_group);
                     });
                 }
-                commands.entity(*entity).despawn();
+                if let Some(mut cmd) = commands.get_entity(*entity) {
+                    tree.remove(*entity);
+                    cmd.despawn();
+                }
             });
 
             if let Ok(mut refs) = geometries.get_mut(idgeo.0) {
                 refs.remove(&entity);
                 if refs.len() == 0 && refs.request_dispose {
-                    commands.entity(idgeo.0).despawn();
+                    if let Some(mut cmd) = commands.get_entity(idgeo.0) {
+                        cmd.despawn();
+                    }
                 }
             }
             
+            // skeleton
             if let Ok((mut refs, skin)) = skeletons.get_mut(idskin.0) {
                 refs.remove(&entity);
                 if refs.len() == 0 && refs.request_dispose {
+                    // bone
                     skin.bones.iter().for_each(|entity| {
                         if let (Ok(scene), Ok(groupmap)) = (scenes.get(*entity), groupmaps.get(*entity)) {
                             groupmap.map.iter().for_each(|(k, id_group)| {
@@ -91,24 +99,34 @@ pub(crate) fn sys_dispose(
                                 animeglobal.remove(id_group);
                             });
                         }
-                        commands.entity(*entity).despawn();
+                        if let Some(mut cmd) = commands.get_entity(*entity) {
+                            tree.remove(*entity);
+                            cmd.despawn();
+                        }
                     });
 
-                    commands.entity(idskin.0).despawn();
+                    if let Some(mut cmd) = commands.get_entity(idskin.0) {
+                        tree.remove(idskin.0);
+                        cmd.despawn();
+                    }
                 }
             }
         } else if let Ok(mut refs) = geometries.get_mut(entity) {
             //
             refs.request_dispose = true;
             if refs.len() == 0 && refs.request_dispose {
-                commands.entity(entity).despawn();
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.despawn();
+                }
             }
             return;
         } else if let Ok(mut refs) = materials.get_mut(entity) {
             // refs.
             refs.request_dispose = true;
             if refs.len() == 0 && refs.request_dispose {
-                commands.entity(entity).despawn();
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.despawn();
+                }
             }
             return;
         } else if let Ok((mut refs, skin)) = skeletons.get_mut(entity) {
@@ -122,21 +140,32 @@ pub(crate) fn sys_dispose(
                             animeglobal.remove(id_group);
                         });
                     }
-                    commands.entity(*entity).despawn();
+                    if let Some(mut cmd) = commands.get_entity(*entity) {
+                        tree.remove(*entity);
+                        cmd.despawn();
+                    }
                 });
 
-                commands.entity(entity).despawn();
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    tree.remove(entity);
+                    cmd.despawn();
+                }
             }
             return;
         } else if let Ok(renderers) = viewers.get_mut(entity) {
             renderers.map.iter().for_each(|(vk, (v0, v1))| {
-                commands.entity(v1.0).despawn();
+                if let Some(mut cmd) = commands.get_entity(v1.0) {
+                    cmd.despawn();
+                }
             });
         } else if let Ok(scene) = scenes.get(entity) {
 
         }
 
-        commands.entity(entity).despawn();
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            tree.remove(entity);
+            cmd.despawn();
+        }
     });
 }
 fn sys_pass_dispose(
@@ -149,11 +178,15 @@ fn sys_pass_dispose(
         if let Ok(mut refs) = materials.get_mut(idmat.0) {
             refs.remove(&entity);
             if refs.len() == 0 && refs.request_dispose {
-                commands.entity(idmat.0).despawn();
+                if let Some(mut cmd) = commands.get_entity(idmat.0) {
+                    cmd.despawn();
+                }
             }
         }
     }
-    commands.entity(entity).despawn();
+    if let Some(mut cmd) = commands.get_entity(entity) {
+        cmd.despawn();
+    }
 }
 
 pub struct OpsSceneDispose(Entity);

@@ -37,8 +37,7 @@ impl TInstanceData for InstanceTillOff {
 #[derive(Component)]
 pub struct InstanceBufferTillOff {
     pub slot: usize,
-    pub id: String,
-    pub index: usize,
+    pub index: IDAssetVertexBuffer,
     // buffer: Handle<EVertexBufferRange>,
 }
 impl TInstanceBuffer for InstanceBufferTillOff {
@@ -51,13 +50,19 @@ impl TInstanceBuffer for InstanceBufferTillOff {
     }
 
     fn id(&mut self) -> KeyVertexBuffer {
-        self.index += 1;
-        KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
+        // self.index += 1;
+        // KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
+        KeyVertexBuffer::from(self.index)
     }
 }
 
 #[derive(Component)]
 pub struct InstanceTillOffDirty(pub bool);
+impl Default for InstanceTillOffDirty {
+    fn default() -> Self {
+        Self(false)
+    }
+}
 impl TInstanceFlag for InstanceTillOffDirty {
     fn dirty(&self) -> bool {
         self.0

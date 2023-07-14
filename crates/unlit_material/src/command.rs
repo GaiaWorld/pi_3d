@@ -50,7 +50,7 @@ pub fn sys_act_unlit_material(
                 }
             },
             EUnlitMaterialCommand::EmissiveTexture(entity, imagepath) => {
-                commands.entity(entity).insert(TextureSlot01(Arc::new(imagepath)));
+                // commands.entity(entity).insert(TextureSlot01(Arc::new(imagepath)));
             },
         }
     });

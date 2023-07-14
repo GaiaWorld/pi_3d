@@ -103,7 +103,9 @@ pub struct DirtyMeshStates;
                     if !states.0.contains(&state) {
                         states.0.push(state);
                     }
-                    commands.entity(id_model.0).insert(DirtyMeshStates);
+                    if let Some(mut cmd) = commands.get_entity(id_model.0) {
+                        cmd.insert(DirtyMeshStates);
+                    }
                 }
             }
         });
@@ -130,7 +132,9 @@ pub struct DirtyMeshStates;
             if !states.0.contains(&state) {
                 states.0.push(state);
             }
-            commands.entity(id_model).insert(DirtyMeshStates);
+            if let Some(mut cmd) = commands.get_entity(id_model) {
+                cmd.insert(DirtyMeshStates);
+            }
         });
     }
 // }
@@ -155,7 +159,9 @@ pub struct DirtyMeshStates;
             if !states.0.contains(&state) {
                 states.0.push(state);
             }
-            commands.entity(id_model).insert(DirtyMeshStates);
+            if let Some(mut cmd) = commands.get_entity(id_model) {
+                cmd.insert(DirtyMeshStates);
+            }
         });
     }
 // }

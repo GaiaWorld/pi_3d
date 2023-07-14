@@ -135,7 +135,8 @@ fn setup(
     animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     {
-        let key_curve0 = pi_atom::Atom::from("cutoff");
+        // let key_curve0 = pi_atom::Atom::from("cutoff");
+        let key_curve0 = matanime.cutoff.2.uniqueid();
         let mut curve = FrameCurve::<Cutoff>::curve_frame_values(10000);
         curve.curve_frame_values_frame(0, Cutoff(0.));
         curve.curve_frame_values_frame(10000, Cutoff(1.));
@@ -153,11 +154,12 @@ fn setup(
             }
         };
     
-        let animation = matanime.cutoff.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        let animation = matanime.cutoff.0.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.scene_ctxs.add_target_anime(scene, idmat, id_group, animation);
     }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
+        let key_curve0 = transformanime.position.counter.uniqueid();
         let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
         curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
         curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(2., 0., 0.)));
@@ -235,6 +237,7 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);

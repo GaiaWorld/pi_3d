@@ -6,8 +6,7 @@ use crate::{geometry::vertex_buffer_useinfo};
 #[derive(Component)]
 pub struct InstanceBufferWorldMatrix {
     pub slot: usize,
-    pub id: String,
-    pub index: usize,
+    pub index: IDAssetVertexBuffer,
 }
 impl TInstanceBuffer for InstanceBufferWorldMatrix {
     fn display_name() -> String {
@@ -19,13 +18,19 @@ impl TInstanceBuffer for InstanceBufferWorldMatrix {
     }
 
     fn id(&mut self) -> KeyVertexBuffer {
-        self.index += 1;
-        KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
+        // self.index += 1;
+        // KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
+        KeyVertexBuffer::from(self.index)
     }
 }
 
 #[derive(Component)]
 pub struct InstanceWorldMatrixDirty(pub bool);
+impl Default for InstanceWorldMatrixDirty {
+    fn default() -> Self {
+        Self(false)
+    }
+}
 impl TInstanceFlag for InstanceWorldMatrixDirty {
     fn dirty(&self) -> bool {
         self.0

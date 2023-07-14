@@ -107,6 +107,12 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexUScale {
         4
     }
 }
+impl TAssetCapacity for MainTexUScale {
+    const ASSET_TYPE: &'static str = "AnimeMainTexUScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for MainTexUScale {}
 
 
@@ -145,6 +151,12 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexVScale {
         4
     }
 }
+impl TAssetCapacity for MainTexVScale {
+    const ASSET_TYPE: &'static str = "AnimeMainTexVScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for MainTexVScale {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -181,6 +193,12 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexUOffset {
         4
     }
 }
+impl TAssetCapacity for MainTexUOffset {
+    const ASSET_TYPE: &'static str = "AnimeMainTexUOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for MainTexUOffset {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -215,6 +233,12 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexVOffset {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MainTexVOffset {
+    const ASSET_TYPE: &'static str = "AnimeMainTexVOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for MainTexVOffset {}
@@ -254,6 +278,12 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexUScale {
         4
     }
 }
+impl TAssetCapacity for OpacityTexUScale {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexUScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for OpacityTexUScale {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -289,6 +319,12 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexVScale {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for OpacityTexVScale {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexVScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for OpacityTexVScale {}
@@ -327,6 +363,12 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexUOffset {
         4
     }
 }
+impl TAssetCapacity for OpacityTexUOffset {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexUOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for OpacityTexUOffset {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -361,6 +403,12 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexVOffset {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for OpacityTexVOffset {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexVOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for OpacityTexVOffset {}
@@ -400,6 +448,12 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexUScale {
         4
     }
 }
+impl TAssetCapacity for MaskTexUScale {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexUScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for MaskTexUScale {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -435,6 +489,12 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexVScale {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MaskTexVScale {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexVScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for MaskTexVScale {}
@@ -473,6 +533,12 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexUOffset {
         4
     }
 }
+impl TAssetCapacity for MaskTexUOffset {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexUOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for MaskTexUOffset {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -507,6 +573,12 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexVOffset {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MaskTexVOffset {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexVOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for MaskTexVOffset {}
@@ -548,6 +620,12 @@ impl pi_curves::curve::frame::FrameDataValue for MainColor {
         4
     }
 }
+impl TAssetCapacity for MainColor {
+    const ASSET_TYPE: &'static str = "AnimeMainColor";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for MainColor {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -584,6 +662,12 @@ impl pi_curves::curve::frame::FrameDataValue for Alpha {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for Alpha {
+    const ASSET_TYPE: &'static str = "AnimeAlpha";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for Alpha {}
@@ -625,6 +709,12 @@ impl pi_curves::curve::frame::FrameDataValue for LightDiffuse {
         4
     }
 }
+impl TAssetCapacity for LightDiffuse {
+    const ASSET_TYPE: &'static str = "AnimeLightDiffuse";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for LightDiffuse {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -662,6 +752,12 @@ impl pi_curves::curve::frame::FrameDataValue for Cutoff {
         4
     }
 }
+impl TAssetCapacity for Cutoff {
+    const ASSET_TYPE: &'static str = "AnimeCutoff";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for Cutoff {}
 
 #[derive(Clone, Copy, Component, Default)]
@@ -696,6 +792,12 @@ impl pi_curves::curve::frame::FrameDataValue for MaskCutoff {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MaskCutoff {
+    const ASSET_TYPE: &'static str = "AnimeMaskCutoff";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for MaskCutoff {}

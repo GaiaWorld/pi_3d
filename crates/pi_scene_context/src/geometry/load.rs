@@ -30,58 +30,91 @@ use super::{vertex_buffer_useinfo::*, base::*};
         data0.drain().for_each(|(key, range)| {
             geoloader.loader_01.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::debug!("SysVertexBufferLoad 01");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_02.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::debug!("SysVertexBufferLoad 02");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_03.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::debug!("SysVertexBufferLoad 03");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_04.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::debug!("SysVertexBufferLoad 04");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_05.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::debug!("SysVertexBufferLoad 05");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_06.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::debug!("SysVertexBufferLoad 06");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_07.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::debug!("SysVertexBufferLoad 07");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_08.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_09.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_10.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_11.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_12.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_13.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_14.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_15.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
             geoloader.loader_16.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
         });
         
@@ -91,7 +124,9 @@ use super::{vertex_buffer_useinfo::*, base::*};
             // log::warn!("SysVertexBufferLoad {:?}", key);
             geoloader.loader_indices.loaded(&key, &range).drain(..).for_each(|(id, data)| {
                 // log::warn!("SysVertexBufferLoad Idx");
-                commands.entity(id).insert(data);
+                if let Some(mut cmd) = commands.get_entity(id) {
+                    cmd.insert(data);
+                }
             });
         });
     }

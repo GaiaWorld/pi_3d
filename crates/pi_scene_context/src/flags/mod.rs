@@ -1,8 +1,6 @@
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 
-use crate::{object::ObjectID, transforms::AssetCapacityAnimeTransformNode};
-
 pub mod enable;
 
 
@@ -77,9 +75,15 @@ impl Default for Enable {
         Self(1.)
     }
 }
+impl TAssetCapacity for Enable {
+    const ASSET_TYPE: &'static str = "AnimeCurveEnable";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
 impl TAnimatableComp for Enable {}
 
-pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, RecordEnable, AssetCapacityAnimeTransformNode>;
+pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, RecordEnable>;
 
 #[derive(Component)]
 pub struct GlobalEnable(pub bool);

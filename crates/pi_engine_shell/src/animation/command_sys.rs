@@ -130,7 +130,7 @@ impl ActionAnime {
     
     pub fn check_anim_curve<D: TAnimatableComp>(
         app: &mut App,
-        key: &Atom,
+        key: &IDAssetTypeFrameCurve,
     ) -> Option<AssetTypeFrameCurve<D>> {
         if let Some(value) = app.world.get_resource::<ShareAssetMgr<TypeFrameCurve<D>>>().unwrap().get(key) {
             Some(
@@ -143,7 +143,7 @@ impl ActionAnime {
 
     pub fn creat_anim_curve<D: TAnimatableComp>(
         app: &mut App,
-        key: &Atom,
+        key: &IDAssetTypeFrameCurve,
         curve: FrameCurve<D>,
     ) -> Result<AssetTypeFrameCurve<D>, TypeFrameCurve<D>> {
         match app.world.get_resource_mut::<ShareAssetMgr<TypeFrameCurve<D>>>().unwrap().insert(key.clone(), TypeFrameCurve(curve)) {
@@ -233,7 +233,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     }
 
     let time1 = pi_time::Instant::now();
-    log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
+    // log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
 }
 
 pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(
