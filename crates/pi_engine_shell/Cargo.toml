@@ -35,7 +35,7 @@ pi_slotmap          = "0.1"
 pi_hash             = "0.1"
 pi_share            = "0.4"
 pi_graph            = "0.1"
-pi_time             = "0.2.6"
+pi_time             = "0.3"
 
 
 pi_atom             = { version="0.2", features = ["serde"] }
