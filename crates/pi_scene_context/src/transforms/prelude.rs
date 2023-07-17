@@ -15,6 +15,7 @@ pub struct ActionSetTransform<'w> {
     pub localpos: ResMut<'w, ActionListTransformNodeLocalPosition>,
     pub localscl: ResMut<'w, ActionListTransformNodeLocalScaling>,
     pub localrot: ResMut<'w, ActionListTransformNodeLocalEuler>,
+    pub localrotq: ResMut<'w, ActionListTransformNodeLocalRotationQuaternion>,
     pub tree: ResMut<'w, ActionListTransformNodeParent>,
     pub enable: ResMut<'w, ActionListNodeEnable>,
 }
@@ -23,18 +24,28 @@ pub struct ActionSetTransform<'w> {
 pub struct ActionSetLocalPositionAnime<'w> {
     pub ctx: ResMut<'w, TypeAnimeContext<LocalPosition>>,
     pub curves: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalPosition>>>,
+    pub counter: ResMut<'w, TypeAnimeContextCounter<LocalPosition>>,
 }
 
 #[derive(SystemParam)]
 pub struct ActionSetLocalScalingAnime<'w> {
     pub ctx: ResMut<'w, TypeAnimeContext<LocalScaling>>,
     pub curves: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalScaling>>>,
+    pub counter: ResMut<'w, TypeAnimeContextCounter<LocalScaling>>,
 }
 
 #[derive(SystemParam)]
 pub struct ActionSetLocalEulerAnime<'w> {
     pub ctx: ResMut<'w, TypeAnimeContext<LocalEulerAngles>>,
     pub curves: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalEulerAngles>>>,
+    pub counter: ResMut<'w, TypeAnimeContextCounter<LocalEulerAngles>>,
+}
+
+#[derive(SystemParam)]
+pub struct ActionSetLocalQuaternion<'w> {
+    pub ctx: ResMut<'w, TypeAnimeContext<LocalRotationQuaternion>>,
+    pub curves: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalRotationQuaternion>>>,
+    pub counter: ResMut<'w, TypeAnimeContextCounter<LocalRotationQuaternion>>,
 }
 
 #[derive(SystemParam)]
@@ -42,4 +53,5 @@ pub struct ActionSetTransformNodeAnime<'w> {
     pub position: ActionSetLocalPositionAnime<'w>,
     pub scaling: ActionSetLocalScalingAnime<'w>,
     pub euler: ActionSetLocalEulerAnime<'w>,
+    pub quaternion: ActionSetLocalQuaternion<'w>,
 }

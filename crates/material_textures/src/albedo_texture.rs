@@ -78,7 +78,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(AlbedoTextureSampler(samplerpool.get(key).unwrap()));
-                        log::debug!("AlbedoTextureSampler Write");
+                        // log::debug!("AlbedoTextureSampler Write");
                     }
                 },
             }

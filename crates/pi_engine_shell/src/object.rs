@@ -75,7 +75,10 @@ pub fn sys_object(
 
         loop {
             if let Some(id) = temp.pop() {
-                delete.entity(id).despawn();
+                if let Some(mut cmd) = delete.get_entity(id) {
+                    cmd
+                    .despawn();
+                }
             } else {
                 break;
             }

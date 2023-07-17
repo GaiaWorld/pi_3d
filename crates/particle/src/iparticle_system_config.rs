@@ -84,6 +84,11 @@ pub enum IShapeArc {
     IShapeArcBurstSpread(IShapeArcBurstSpread),
 }
 
+impl Default for IShapeArc {
+    fn default() -> Self {
+        IShapeArc::IShapeArcRandom(IShapeArcRandom::default())
+    }
+}
 /**
  * 曲线插值模式
  */
@@ -150,6 +155,7 @@ impl Default for EInterpolationGradienMode {
 /**
  * 弧度范围发射信息描述 - Random 模式
  */
+#[derive(Default, Clone)]
 pub struct IShapeArcRandom {
     /**
      * 模式 - EShapeEmitterArcMode.Random
@@ -223,6 +229,7 @@ pub struct IShapeArcBurstSpread {
 /**
  * Cone 形状发射器描述
  */
+#[derive(Default)]
 pub struct IShapeCone {
     /**
      * 类型标识
@@ -259,7 +266,7 @@ pub struct IShapeCone {
  * Sphere 形状发射器描述
  */
 pub struct IShapeSphere {
-    _type: u32,
+    pub _type: u32,
     pub radius: f32,
     pub radius_thickness: f32,
     pub arc: IShapeArc,
@@ -272,8 +279,9 @@ pub struct IShapeSphere {
 /**
  * Box 形状发射器描述
  */
+#[derive(Clone,Default)]
 pub struct IShapeBox {
-    _type: u32,
+    pub _type: u32,
     pub is_volume: u32,
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
@@ -286,7 +294,7 @@ pub struct IShapeBox {
  * Hemisphere 形状发射器描述
  */
 pub struct IShapeHemisphere {
-    _type: u32,
+    pub _type: u32,
     pub radius: f32,
     pub radius_thickness: f32,
     pub arc: IShapeArc,
@@ -300,7 +308,7 @@ pub struct IShapeHemisphere {
  * Circle 形状发射器描述
  */
 pub struct IShapeCircle {
-    _type: u32,
+    pub _type: u32,
     pub radius: f32,
     pub radius_thickness: f32,
     pub arc: IShapeArc,
@@ -314,7 +322,7 @@ pub struct IShapeCircle {
  * Edge 形状发射器描述
  */
 pub struct IShapeEdge {
-    _type: u32,
+    pub _type: u32,
     pub radius: f32,
     pub arc: IShapeArc,
     pub scale: Option<[f32; 3]>,
@@ -327,7 +335,7 @@ pub struct IShapeEdge {
  * Rectangle 形状发射器描述
  */
 pub struct IShapeRectangle {
-    _type: u32,
+    pub _type: u32,
     pub scale: Option<[f32; 3]>,
     pub position: Option<[f32; 3]>,
     pub rotation: Option<[f32; 3]>,
@@ -348,6 +356,12 @@ pub enum IShape {
     ShapeSphere(IShapeSphere),
 }
 
+impl Default for IShape{
+    fn default() -> Self {
+        IShape::ShapeBox(IShapeBox::default())
+    }
+}
+
 type OneParam = f32;
 type ThreeParam = [f32; 3];
 type FourParam = [f32; 4];
@@ -360,6 +374,13 @@ pub enum ParamInfo {
     OneParamInfo(OneParamInfo),
     ThreeParamInfo(ThreeParamInfo),
 }
+
+impl Default for ParamInfo {
+    fn default() -> Self {
+        ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(0.0))
+    }
+}
+
 #[derive(Clone)]
 pub enum OneParamInfo {
     TInterpolateConstant(OneParam),
@@ -367,6 +388,13 @@ pub enum OneParamInfo {
     TInterpolateCurve(OneParamCurve),
     TInterpolateTwoCurves(OneParamCurve, OneParamCurve),
 }
+
+impl Default for OneParamInfo {
+    fn default() -> Self {
+        OneParamInfo::TInterpolateConstant(0.0)
+    }
+}
+    
 pub enum ThreeParamInfo {
     TInterpolateConstant(ThreeParam),
     TInterpolateTwoConstants(ThreeParam, ThreeParam),
@@ -381,8 +409,9 @@ pub enum FourParamInfo {
     TInterpolateTwoCurves(FourParamCurve, FourParamCurve),
 }
 
+#[derive(Clone, Default)]
 pub enum FourGradientInfo {
-    TInterpolateRandom,
+    #[default] TInterpolateRandom,
     TInterpolateColor(FourParam),
     TInterpolateTwoColors(FourParam, FourParam),
     TInterpolateGradient(FourGradient),
@@ -424,6 +453,7 @@ pub struct ITrail {
  * 粒子系统JSON描述
  */
 
+#[derive(Default)]
 pub struct IParticleSystemConfig {
     pub name: String,
     pub duration: f32,
@@ -468,3 +498,5 @@ pub struct IParticleSystemConfig {
     pub render_pivot: Option<[f32; 3]>,
     pub custom1: Option<[OneParamInfo; 4]>,
 }
+
+

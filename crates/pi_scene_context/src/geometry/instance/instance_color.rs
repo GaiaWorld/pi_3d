@@ -1,6 +1,12 @@
 
-use pi_scene_math::Vector4;
+use pi_scene_math::{Vector4, Number};
 use pi_engine_shell::prelude::*;
+
+#[derive(Component)]
+pub struct InstanceRGB(pub Number, pub Number, pub Number);
+
+#[derive(Component)]
+pub struct InstanceAlpha(pub Number);
 
 #[derive(Component)]
 pub struct InstanceColor(pub Vector4);
@@ -37,8 +43,7 @@ impl TInstanceData for InstanceColor {
 #[derive(Component)]
 pub struct InstanceBufferColor {
     pub slot: usize,
-    pub id: String,
-    pub index: usize,
+    pub index: IDAssetVertexBuffer,
     // buffer: Handle<EVertexBufferRange>,
 }
 impl TInstanceBuffer for InstanceBufferColor {
@@ -51,14 +56,20 @@ impl TInstanceBuffer for InstanceBufferColor {
     }
 
     fn id(&mut self) -> KeyVertexBuffer {
-        self.index += 1;
-        KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
+        // self.index += 1;
+        // KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
+        KeyVertexBuffer::from(self.index)
     }
 }
 
 
 #[derive(Component)]
 pub struct InstanceColorDirty(pub bool);
+impl Default for InstanceColorDirty {
+    fn default() -> Self {
+        Self(false)
+    }
+}
 impl TInstanceFlag for InstanceColorDirty {
     fn dirty(&self) -> bool {
         self.0

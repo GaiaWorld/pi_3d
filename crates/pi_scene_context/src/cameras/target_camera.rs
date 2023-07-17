@@ -101,8 +101,8 @@ impl TViewerViewMatrix for TargetCameraParam {
 
                     let mut eye = local_pos.0.clone();
                     CoordinateSytem3::transform_coordinates(&local_pos.0, &parent.matrix, &mut eye);
-                    log::warn!("local_pos: {:?}", local_pos);
-                    log::warn!("eye: {:?}", eye);
+                    // log::warn!("local_pos: {:?}", local_pos);
+                    // log::warn!("eye: {:?}", eye);
 
                     // let trans = Translation3::new(eye.x, eye.y, eye.z);
                     // iso.translation.clone_from(&trans);

@@ -87,12 +87,12 @@ fn setup(
     let id_geo = commands.spawn_empty().id();
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, 
         vec![
-            VertexBufferDesc::vertices(KeyVertexBuffer::from("BallPos#20#20"), None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
-            VertexBufferDesc::vertices(KeyVertexBuffer::from("BallNor#20#20"), None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
-            VertexBufferDesc::vertices(KeyVertexBuffer::from("BallUV#20#20"), None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
+            VertexBufferDesc::vertices(KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallPos#20#20")), None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
+            VertexBufferDesc::vertices(KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallNor#20#20")), None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
+            VertexBufferDesc::vertices(KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallUV#20#20")), None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
         ],
         Some(
-            IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: KeyVertexBuffer::from("BallInd#20#20") }
+            IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: KeyVertexBuffer::from(geometrycmd.vb_wait.id("BallInd#20#20")) }
         )
     ));
 
@@ -148,10 +148,14 @@ fn sys_setup_ball(
     let param = BallParam { sectors: 20, stacks: 20 };
 
     let (positions, normals, indices, uvs) = generate_sphere(&param);
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallPos#20#20"), bytemuck::cast_slice(&positions).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallNor#20#20"), bytemuck::cast_slice(&normals).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallUV#20#20"), bytemuck::cast_slice(&uvs).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from("BallInd#20#20"), bytemuck::cast_slice(&indices).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallPos#20#20");
+    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&positions).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallNor#20#20");
+    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&normals).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallUV#20#20");
+    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&uvs).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallInd#20#20");
+    ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&indices).iter().map(|v| *v).collect::<Vec<u8>>());
 }
 
 pub trait AddEvent {
@@ -190,11 +194,13 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);

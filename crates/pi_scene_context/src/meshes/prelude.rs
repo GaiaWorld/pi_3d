@@ -11,6 +11,7 @@ pub use super::{
     abstract_mesh::*,
     skeleton::*,
     lighting::*,
+    animation::*,
 };
 
 
@@ -33,12 +34,14 @@ pub struct ActionSetMesh<'w> {
     pub stencil_write: ResMut<'w, ActionListStencilWrite>,
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
     pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
+    pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
 }
 
 #[derive(SystemParam)]
 pub struct ActionSetInstanceMesh<'w> {
     pub create: ResMut<'w, ActionListInstanceMeshCreate>,
     pub color: ResMut<'w, ActionListInstanceColor>,
+    pub alpha: ResMut<'w, ActionListInstanceAlpha>,
     pub tilloff: ResMut<'w, ActionListInstanceTillOff>,
     pub ins_world_matrixs: ResMut<'w, ActionListInstanceWorldMatrixs>,
     pub ins_colors: ResMut<'w, ActionListInstanceColors>,
@@ -49,4 +52,5 @@ pub struct ActionSetInstanceMesh<'w> {
 pub struct ActionSetAbstructMesh<'w> {
     pub scaling_mode: ResMut<'w, ActionListAbstructMeshScalingMode>,
     pub velocity: ResMut<'w, ActionListAbstructMeshVelocity>,
+    pub boneoffset: ResMut<'w, ActionListBoneOffset>,
 }

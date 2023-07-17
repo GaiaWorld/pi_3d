@@ -28,6 +28,7 @@ impl Plugin for PluginTransformNode {
         app.insert_resource(ActionListTransformNodeCreate::default())
             .insert_resource(ActionListTransformNodeLocalEuler::default())
             .insert_resource(ActionListTransformNodeLocalPosition::default())
+            .insert_resource(ActionListTransformNodeLocalRotationQuaternion::default())
             .insert_resource(ActionListTransformNodeLocalScaling::default())
             .insert_resource(ActionListTransformNodeParent::default())
             .insert_resource(TransformRecord::default())
@@ -56,14 +57,6 @@ impl Plugin for PluginTransformNode {
             ).chain().in_set(ERunStageChap::CalcWorldMatrix)
         );
 
-    }
-}
-
-#[derive(Resource, Default)]
-pub struct AssetCapacityAnimeTransformNode(pub AssetCapacity);
-impl AsRef<AssetCapacity> for AssetCapacityAnimeTransformNode {
-    fn as_ref(&self) -> &AssetCapacity {
-        &self.0
     }
 }
 

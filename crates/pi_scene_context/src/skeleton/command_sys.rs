@@ -19,24 +19,32 @@ pub fn sys_act_skin_create(
     device: Res<PiRenderDevice>,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones))| {
+    cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
         let bone_count = bones.len();
         let bonecount = EBoneCount::new(bone_count as u8 + 1);
-        let mode = ESkinCode::UBO(bonemode, bonecount);
-                
+        let mode = ESkinCode::UBO(bonemode, bonecount, cache_frames);
+        
         bones.iter().for_each(|id_bone| {
-            ActionBone::modify_skin(&mut commands.entity(id_bone.clone()), id_skin);
+            if let Some(mut cmd) = commands.get_entity(id_bone.clone()) {
+                ActionBone::modify_skin(&mut cmd, id_skin);
+            }
         });
 
         match Skeleton::new(root, bones, mode, &device, &mut dynbuffer ) {
             Some(skeleton) => {
-                commands.entity(id_skin)
-                    .insert(skeleton)
-                    .insert(SkeletonInitBaseMatrix)
-                    .insert(SkeletonBonesDirty(true))
-                    .insert(SkeletonRefs::default())
-                    .insert(DirtySkeletonRefs(false))
-                    ;
+                
+                if let Some(mut cmd) = commands.get_entity(id_skin) {
+                    if let Some(data) = cachedata {
+                        skeleton.bind.data().write_data(0, bytemuck::cast_slice(&data));
+                    }
+                    cmd
+                        .insert(skeleton)
+                        .insert(SkeletonInitBaseMatrix)
+                        .insert(SkeletonBonesDirty(true))
+                        .insert(SkeletonRefs::default())
+                        .insert(DirtySkeletonRefs(false))
+                        ;
+                }
             },
             None => {
 
@@ -49,12 +57,15 @@ pub fn sys_act_skin_use(
     mut cmds: ResMut<ActionListSkinUse>,
     mut skins: Query<(&mut Skeleton, &mut SkeletonRefs, &mut DirtySkeletonRefs)>,
     mut meshes: Query<&mut BindSkinValue>,
+    mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|ops| {
         match ops {
             OpsSkinUse::Use(entity, skin) => {
                 if let (Ok(mut bind), Ok((mut skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
                     *bind = BindSkinValue(Some(skeleton.bind.clone()));
+                    commands.entity(entity).insert(SkeletonID(skin));
+                    // log::warn!("Skinn OKKKKKKKKKKKK");
                     if skeletonrefs.insert(entity) {
                         *flag = DirtySkeletonRefs::default();
                     }
@@ -82,7 +93,11 @@ pub fn sys_act_bone_create(
     empty: Res<SingleEmptyEntity>,
 ) {
     cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene, name)| {
-        let mut bonecmd = commands.entity(bone);
+        let mut bonecmd = if let Some(cmd) = commands.get_entity(bone) {
+            cmd
+        } else {
+            return;
+        };
         ActionScene::add_to_scene(&mut bonecmd, &mut tree, scene);
         ActionTransformNode::init_for_tree(&mut bonecmd);
         ActionTransformNode::as_transform_node(&mut bonecmd, name);

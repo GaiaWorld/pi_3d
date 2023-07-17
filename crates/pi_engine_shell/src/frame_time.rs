@@ -58,7 +58,7 @@ pub fn sys_frame_time(
 
     frame.last = pi_time::Instant::now();
     
-    log::debug!("Frame Time: {:?}", frame.last - last);
+    // log::debug!("Frame Time: {:?}", frame.last - last);
 }
 
 

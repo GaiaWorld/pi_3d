@@ -18,7 +18,7 @@ use super::base::*;
         //  log::debug!("View Matrix Calc:");
         let coordsys = CoordinateSytem3::left();
         for (entity, viewcalc, l_position) in query_cameras.iter_mut() {
-            log::debug!("ViewMatrix {:?}", l_position.0);
+            // log::debug!("ViewMatrix {:?}", l_position.0);
             // panic!("LocalPosition");
             match idtree.get_up(entity) {
                 Some(level) => {
@@ -116,7 +116,7 @@ use super::base::*;
                 bind,
                 viewmatrix, projmatrix, transmatrix, position, direction
             )| {
-                log::debug!("SysViewerUpdated: {:?}, {:?}", bind.0.data().offset(), bind.0.data().size());
+                // log::debug!("SysViewerUpdated: {:?}, {:?}", bind.0.data().offset(), bind.0.data().size());
 
                 viewmatrix.update(bind.0.data());
                 projmatrix.update(bind.0.data());

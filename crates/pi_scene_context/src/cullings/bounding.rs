@@ -1,8 +1,6 @@
-
-
-use pi_engine_shell::prelude::*;
 use parry3d::shape::ConvexPolyhedron;
-use pi_scene_math::{Vector3, Matrix, frustum::FrustumPlanes};
+use pi_engine_shell::prelude::*;
+use pi_scene_math::{frustum::FrustumPlanes, Matrix, Vector3};
 
 use crate::object::ObjectID;
 
@@ -19,7 +17,11 @@ pub struct BoundingInfo {
     direction2: Vector3,
     pub culling_strategy: ECullingStrategy,
 }
-
+impl Default for BoundingInfo {
+    fn default() -> Self {
+        Self::new(Vector3::new(-1., -1., -1.), Vector3::new(1., 1., 1.))
+    }
+}
 impl BoundingInfo {
     pub fn new(minimum: Vector3, maximum: Vector3) -> Self {
         let world: Matrix = Matrix::identity();
@@ -70,10 +72,7 @@ impl BoundingInfo {
     }
 }
 
-pub fn check_boundings(
-    boundings: &[BoundingInfo],
-    frustum_planes: &FrustumPlanes,
-) -> Vec<bool> {
+pub fn check_boundings(boundings: &[BoundingInfo], frustum_planes: &FrustumPlanes) -> Vec<bool> {
     let len = boundings.len();
     let mut res_vec = Vec::with_capacity(len);
     boundings.iter().for_each(|b| {
@@ -82,7 +81,7 @@ pub fn check_boundings(
     res_vec
 }
 
-#[derive(Debug, Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub struct BoundingKey(pub ObjectID);
 impl Default for BoundingKey {
     fn default() -> Self {
@@ -104,15 +103,11 @@ unsafe impl pi_slotmap::Key for BoundingKey {
 pub trait TBoundingInfoCalc {
     fn add(&mut self, key: BoundingKey, info: BoundingInfo);
     fn remove(&mut self, key: BoundingKey);
-    fn check_boundings(
-        &self,
-        frustum_planes: &FrustumPlanes,
-        result: &mut Vec<BoundingKey>
-    );
+    fn check_boundings(&self, frustum_planes: &FrustumPlanes, result: &mut Vec<BoundingKey>);
     fn check_boundings_of_tree(
         &self,
         frustum_planes: &ConvexPolyhedron,
-        result: &mut Vec<BoundingKey>
+        result: &mut Vec<BoundingKey>,
     );
 }
 
@@ -138,28 +133,24 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             Some(index) => {
                 self.list[index] = info;
                 self.record[index] = key;
-            },
+            }
             None => {
                 self.list.push(info);
                 self.record.push(key);
-            },
-        } 
+            }
+        }
     }
 
     fn remove(&mut self, key: BoundingKey) {
         match self.record.binary_search(&key) {
             Ok(index) => {
                 self.recycle.push(index);
-            },
-            Err(_) => {},
+            }
+            Err(_) => {}
         }
     }
 
-    fn check_boundings(
-        &self, 
-        frustum_planes: &FrustumPlanes,
-        result: &mut Vec<BoundingKey>
-    ) {
+    fn check_boundings(&self, frustum_planes: &FrustumPlanes, result: &mut Vec<BoundingKey>) {
         let len = self.list.len();
         let mut res_vec = Vec::with_capacity(len);
         for index in 0..len {
@@ -175,12 +166,11 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
     fn check_boundings_of_tree(
         &self,
         _frustum_planes: &ConvexPolyhedron,
-        _result: &mut Vec<BoundingKey>
-    ){
+        _result: &mut Vec<BoundingKey>,
+    ) {
         todo!()
     }
 }
-
 
 /// aabb的查询函数的参数
 pub struct AbQueryArgs {

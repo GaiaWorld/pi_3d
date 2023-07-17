@@ -7,7 +7,7 @@ impl DefaultShader {
     pub const KEY: &'static str = "Default";
     pub fn res() -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.values.int_list.push(UniformPropertyInt(Atom::from("debug_normal"), 0));
+        nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0));
         nodemat.fs_define = String::from(include_str!("./default_define.frag"));
 
         nodemat.vs = String::from(include_str!("./default.vert"));

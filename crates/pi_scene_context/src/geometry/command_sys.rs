@@ -21,9 +21,16 @@ pub fn sys_act_geometry_create(
     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
 ) {
     cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, vertex_desc, indices_desc)| {
-        commands.entity(id_mesh).insert(GeometryID(entity));
+        if let Some(mut cmd) = commands.get_entity(id_mesh) {
+            cmd.insert(GeometryID(entity));
+        }
 
-        let mut geocommands = commands.entity(entity);
+        
+        let mut geocommands = if let Some(cmd) = commands.get_entity(entity) {
+            cmd
+        } else {
+            return;
+        };
         geocommands
             .insert(VertexBufferLayoutsComp(VertexBufferLayouts::from(&vertex_desc)))
             .insert(MeshID(id_mesh));
@@ -274,18 +281,18 @@ fn init_slot<
     
                 match instance_kind {
                     EInstanceKind::WorldMatrix => {
-                        let buff = InstanceBufferWorldMatrix { slot: slot_index, id: String::from(buff_id + "WorldMatrix"), index: 0 };
+                        let buff = InstanceBufferWorldMatrix { slot: slot_index, index: vb_data_map.id(&String::from(buff_id + "WorldMatrix")) };
                         commands.insert(buff);
                         instance_code.0 = instance_code.0 | EInstanceCode::BASE;
                     },
                     EInstanceKind::Color => {
-                        let buff = InstanceBufferColor { slot: slot_index, id: String::from(buff_id + "Color"), index: 0 };
+                        let buff = InstanceBufferColor { slot: slot_index, index: vb_data_map.id(&String::from(buff_id + "Color")) };
                         commands.insert(buff);
                         // log::debug!("Instance Color");
                         instance_code.0 = instance_code.0 | EInstanceCode::COLOR;
                     },
                     EInstanceKind::TillOffset => {
-                        let buff = InstanceBufferTillOff { slot: slot_index, id: String::from(buff_id + "TillOff"), index: 0 };
+                        let buff = InstanceBufferTillOff { slot: slot_index, index: vb_data_map.id(&String::from(buff_id + "TillOff")) };
                         commands.insert(buff);
                         // log::debug!("Instance TillOffset");
                         instance_code.0 = instance_code.0 | EInstanceCode::TILL_OFF_1;

@@ -6,12 +6,18 @@ use pi_scene_context::prelude::*;
 
 pub struct QuadBuilder;
 impl QuadBuilder {
-    const KEY_BUFFER_COLOR4:    &'static str = "QuadColor4";
-    const KEY_BUFFER_POSITION:  &'static str = "QuadPosition";
-    const KEY_BUFFER_NORMAL:    &'static str = "QuadNormal";
-    const KEY_BUFFER_UV:        &'static str = "QuadUV";
-    const KEY_BUFFER_INDICES:   &'static str = "QuadIndices";
-    const KEY_BUFFER:           &'static str = "CubeBuildin";
+    // const KEY_BUFFER_COLOR4:    &'static str = "QuadColor4";
+    // const KEY_BUFFER_POSITION:  &'static str = "QuadPosition";
+    // const KEY_BUFFER_NORMAL:    &'static str = "QuadNormal";
+    // const KEY_BUFFER_UV:        &'static str = "QuadUV";
+    // const KEY_BUFFER_INDICES:   &'static str = "QuadIndices";
+    // const KEY_BUFFER:           &'static str = "CubeBuildin";
+    const KEY_BUFFER_COLOR4:    IDAssetVertexBuffer = -2005;
+    const KEY_BUFFER_POSITION:  IDAssetVertexBuffer = -2004;
+    const KEY_BUFFER_NORMAL:    IDAssetVertexBuffer = -2003;
+    const KEY_BUFFER_UV:        IDAssetVertexBuffer = -2002;
+    const KEY_BUFFER_INDICES:   IDAssetVertexBuffer = -2001;
+    const KEY_BUFFER:           IDAssetVertexBuffer = -2000;
     pub fn attrs_meta() -> Vec<VertexBufferDesc> {
         let keypos = KeyVertexBuffer::from(Self::KEY_BUFFER);
         vec![

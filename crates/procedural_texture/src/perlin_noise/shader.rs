@@ -13,8 +13,8 @@ impl PerlinNoiseShader {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                mat4_list: vec![],
-                mat2_list: vec![],
+                // mat4_list: vec![],
+                // mat2_list: vec![],
                 vec4_list: vec![],
                 vec2_list: vec![],
                 float_list: vec![
@@ -22,7 +22,7 @@ impl PerlinNoiseShader {
                     UniformPropertyFloat(Atom::from("width"), 1.),
                     UniformPropertyFloat(Atom::from("height"), 1.),
                 ],
-                int_list: vec![],
+                // int_list: vec![],
                 uint_list: vec![],
             },
             vec![],

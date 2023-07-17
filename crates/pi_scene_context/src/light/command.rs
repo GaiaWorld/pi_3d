@@ -55,7 +55,12 @@ pub fn sys_act_light_create(
         let id_renderer = commands.spawn_empty().id();
 
         let mut viewer_renderers = ViewerRenderersInfo::default();
-        let mut lightcmd = commands.entity(entity);
+        
+        let mut lightcmd = if let Some(cmd) = commands.get_entity(entity) {
+            cmd
+        } else {
+            return;
+        };
 
         ActionScene::add_to_scene(&mut lightcmd, &mut tree, scene);
         ActionTransformNode::init_for_tree(&mut lightcmd);
@@ -82,21 +87,22 @@ pub fn sys_act_light_create(
         let render_node = RenderNode::new(id_renderer);
         match render_graphic.add_node(name.clone(), render_node) {
             Ok(nodeid) => {
-                commands.entity(id_renderer).insert(GraphId(nodeid));
+                if let Some(mut cmd) = commands.get_entity(id_renderer) {
+                    cmd.insert(GraphId(nodeid));
 
-                // ActionRenderer::init_graphic_node(&mut render_graphic, RendererID(id_renderer), nodeid, Some(final_render.clear_node), None);
+                    // ActionRenderer::init_graphic_node(&mut render_graphic, RendererID(id_renderer), nodeid, Some(final_render.clear_node), None);
 
-                viewer_renderers.map.insert(name.clone(), (passorders.clone(), RendererID(id_renderer)));
-                
-                let mut commands = commands.entity(id_renderer);
-                ActionRenderer::as_renderer(
-                    &mut commands, id_viewer, passorders, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT,
-                    ColorFormat::Rgba32Float, DepthStencilFormat::Depth24PlusStencil8, false
-                );
+                    viewer_renderers.map.insert(name.clone(), (passorders.clone(), RendererID(id_renderer)));
+                    
+                    ActionRenderer::as_renderer(
+                        &mut cmd, id_viewer, passorders, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT,
+                        ColorFormat::Rgba32Float, DepthStencilFormat::Depth24PlusStencil8, false
+                    );
 
-                renderercmds.push(OpsRendererCommand::AutoClearColor(id_renderer, true));
-                renderercmds.push(OpsRendererCommand::AutoClearDepth(id_renderer, true));
-                renderercmds.push(OpsRendererCommand::AutoClearStencil(id_renderer, true));
+                    renderercmds.push(OpsRendererCommand::AutoClearColor(id_renderer, true));
+                    renderercmds.push(OpsRendererCommand::AutoClearDepth(id_renderer, true));
+                    renderercmds.push(OpsRendererCommand::AutoClearStencil(id_renderer, true));
+                }
             },
             Err(_) => {},
         }
@@ -111,38 +117,59 @@ pub fn sys_act_light_param(
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             ELightModifyCommand::ShadowMinz(entity, val) => {
-                commands.entity(entity).insert(ShadowMinZ(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowMinZ(val));
+                }
             },
             ELightModifyCommand::ShadowMaxz(entity, val) => {
-                commands.entity(entity).insert(ShadowMaxZ(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowMaxZ(val));
+                }
             },
             ELightModifyCommand::ShadowFrustumSize(entity, val) => {
-                commands.entity(entity).insert(ShadowFrustumSize(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowFrustumSize(val));
+                }
             },
             ELightModifyCommand::Directional(entity, val) => {
-                commands.entity(entity).insert(LightDirection(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(LightDirection(val));
+                }
             },
             ELightModifyCommand::Bias(entity, val) => {
-                commands.entity(entity).insert(ShadowBias(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowBias(val));
+                }
             },
             ELightModifyCommand::NormalBias(entity, val) => {
-                commands.entity(entity).insert(ShadowNormalBias(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowNormalBias(val));
+                }
             },
             ELightModifyCommand::DepthScale(entity, val) => {
-                commands.entity(entity).insert(ShadowDepthScale(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowDepthScale(val));
+                }
             },
             ELightModifyCommand::AtlasSize(entity, val) => {
-                commands.entity(entity).insert(ShadowAtlasSize(val));
-                commands.entity(entity).insert(ViewerSize(val, val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowAtlasSize(val)).insert(ViewerSize(val, val));
+                }
             },
             ELightModifyCommand::LightType(entity, val) => {
-                commands.entity(entity).insert(val);
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(val);
+                }
             },
             ELightModifyCommand::LightingType(entity, val) => {
-                commands.entity(entity).insert(val);
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(val);
+                }
             },
             ELightModifyCommand::ShadowEnable(entity, val) => {
-                commands.entity(entity).insert(ShadowEnable(val));
+                if let Some(mut cmd) = commands.get_entity(entity) {
+                    cmd.insert(ShadowEnable(val));
+                }
             },
         }
     });
@@ -352,10 +379,11 @@ pub enum ELightModifyCommand {
 
                 let enable = shadowenable.0 && enable.0;
 
-                log::warn!(">>>>>>>> {:?}", enable);
+                // log::warn!(">>>>>>>> {:?}", enable);
 
-                let mut lightcmd = commands.entity(id_light);
-                lightcmd.insert(ViewerActive(enable));
+                if let Some(mut cmd) = commands.get_entity(id_light) {
+                    cmd.insert(ViewerActive(enable));
+                }
 
                 renderercmds.push(OpsRendererCommand::Active(id_render, enable));
             });

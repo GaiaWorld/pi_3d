@@ -51,7 +51,7 @@ pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
             let z = z0 * 3.1415926 * 2.;
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 3., 0., 0.)));
             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
-            transform_commands.push(OpsTransformNodeLocalEuler(item.0, Vector3::new(x, y, z)));
+            transform_commands.push(OpsTransformNodeLocalEuler::ops(item.0, x, y, z));
 
             list.push(item);
         });
@@ -142,7 +142,7 @@ fn setup(
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
     cameracmds.active.push(OpsCameraActive::ops(camera01, true));
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 4.));
-    localpositioncmds.push(OpsTransformNodeLocalPosition(camera01, Vector3::new(0., 0., -10.)));
+    localpositioncmds.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
 
     let desc = RendererGraphicDesc {
         pre: Some(final_render.clear_entity),
@@ -178,11 +178,13 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);

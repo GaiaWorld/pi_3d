@@ -82,7 +82,7 @@ pub fn set_up_uniforms(
     let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D3);
     let texture = texture.create_view(&desc);
     let black3 = asset_tex.insert(Atom::from(DefaultTexture::BLACK_3D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true, wgpu::TextureFormat::Rgba8Unorm)).unwrap();
-    log::warn!("DefaultTexture OK!");
+    // log::warn!("DefaultTexture OK!");
 
     ResourceDefaultTextures {
         white1,

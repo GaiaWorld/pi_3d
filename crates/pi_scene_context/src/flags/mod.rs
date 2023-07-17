@@ -1,8 +1,6 @@
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 
-use crate::{object::ObjectID, transforms::AssetCapacityAnimeTransformNode};
-
 pub mod enable;
 
 
@@ -18,6 +16,7 @@ pub struct SceneCameraID04;
 pub struct SceneCameraID05;
 pub struct SceneCameraID06;
 
+#[derive(Debug, Component)]
 pub struct CullingFlag(pub bool);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
@@ -28,7 +27,15 @@ pub struct CameraID(pub usize);
 #[derive(Component)]
 pub struct UniqueName(pub Atom);
 
-#[derive(Component, Clone)]
+#[derive(Debug, Component, Default)]
+pub struct RecordEnable(pub Enable);
+impl TAnimatableCompRecord<Enable> for RecordEnable {
+    fn comp(&self) -> Enable {
+        self.0.clone()
+    }
+}
+
+#[derive(Debug, Component, Clone)]
 pub struct Enable(pub f32);
 impl Enable {
     pub fn bool(&self) -> bool {
@@ -63,8 +70,20 @@ impl pi_curves::curve::frame::FrameDataValue for Enable {
         3 * 4
     }
 }
+impl Default for Enable {
+    fn default() -> Self {
+        Self(1.)
+    }
+}
+impl TAssetCapacity for Enable {
+    const ASSET_TYPE: &'static str = "AnimeCurveEnable";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for Enable {}
 
-pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, AssetCapacityAnimeTransformNode>;
+pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, RecordEnable>;
 
 #[derive(Component)]
 pub struct GlobalEnable(pub bool);
@@ -84,10 +103,11 @@ pub type ActionListNodeEnable = ActionList<OpsNodeEnable>;
 
 pub fn sys_act_node_enable(
     mut cmds: ResMut<ActionListNodeEnable>,
-    mut items: Query<&mut Enable>,
+    mut items: Query<(&mut Enable, &mut RecordEnable)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsNodeEnable(entity, val, count)| {
-        if let Ok(mut node) = items.get_mut(entity) {
+        if let Ok((mut node, mut record)) = items.get_mut(entity) {
+            record.0 = val.clone();
             *node = val;
         } else {
             if count < 2 {

@@ -7,11 +7,13 @@ use crate::transforms::{transform_node::*};
 use super::{skeleton::*, bone::*};
 
     pub fn sys_skin_dirty_by_bone(
-        mut commands: Commands,
+        mut skins: Query<&mut SkeletonBonesDirty>,
         bones: Query<&SkeletonID, Changed<WorldMatrix>>,
     ) {
-        bones.iter().for_each(|bone| {
-            commands.entity(bone.0.clone()).insert(SkeletonBonesDirty(true));
+        bones.iter().for_each(|skin| {
+            if let Ok(mut item) = skins.get_mut(skin.0) {
+                *item = SkeletonBonesDirty(true);
+            }
         });
     }
 
@@ -50,44 +52,48 @@ use super::{skeleton::*, bone::*};
         bones: Query<(&WorldMatrix, &BoneAbsoluteInv)>,
     ) {
         items.iter_mut().for_each(|(skel, mut skindirty)| {
-            match skel.mode {
-                ESkinCode::None => {},
-                ESkinCode::UBO(_, _) => {
-                    let mut data = vec![];
-                    skel.bones.iter().for_each(|bone| {
-                        if let Ok((matrix, absinv)) = bones.get(bone.clone()) {
-                            let matrix = matrix.0 * absinv.0;
-                            matrix.as_slice().iter().for_each(|v| {
-                                data.push(*v);
+            if skindirty.0 {
+                match skel.mode {
+                    ESkinCode::None => {},
+                    ESkinCode::UBO(_, _, cache) => {
+                        if cache == 1 {
+                            let mut data = vec![];
+                            skel.bones.iter().for_each(|bone| {
+                                if let Ok((matrix, absinv)) = bones.get(bone.clone()) {
+                                    let matrix = matrix.0 * absinv.0;
+                                    matrix.as_slice().iter().for_each(|v| {
+                                        data.push(*v);
+                                    });
+                                }
                             });
+                            // log::warn!("skin_buffer_update");
+                            skel.bind.data().write_data(0, bytemuck::cast_slice(&data));
                         }
-                    });
-                    // log::warn!("skin_buffer_update");
-                    skel.bind.data().write_data(0, bytemuck::cast_slice(&data));
-                },
-                ESkinCode::RowTexture(_) => {
-                    // if let Some(tex) = tex {
-                    //     let mut data = vec![];
-                    //     skel.bones.iter().for_each(|bone| {
-                    //         if let Some(matrix) = bones.get(bone.clone()) {
-                    //             matrix.0.as_slice().iter().for_each(|v| {
-                    //                 data.push(*v);
-                    //             });
-                    //         }
-                    //     });
-    
-                    //     let mut buff_data = tex.tex.create_data();
-    
-                    //     log::debug!("Skeleton Tex: {:?}, {:?}", tex.tex.size(), buff_data.len());
-            
-                    //     tex.tex.update_row(0, bytemuck::cast_slice(data.as_slice()), &mut buff_data);
-    
-                    //     tex.tex.update_texture(&queue, buff_data.as_slice());
-                    // }
-                },
-                ESkinCode::FramesTexture(_) => {},
+                    },
+                    ESkinCode::RowTexture(_) => {
+                        // if let Some(tex) = tex {
+                        //     let mut data = vec![];
+                        //     skel.bones.iter().for_each(|bone| {
+                        //         if let Some(matrix) = bones.get(bone.clone()) {
+                        //             matrix.0.as_slice().iter().for_each(|v| {
+                        //                 data.push(*v);
+                        //             });
+                        //         }
+                        //     });
+        
+                        //     let mut buff_data = tex.tex.create_data();
+        
+                        //     log::debug!("Skeleton Tex: {:?}, {:?}", tex.tex.size(), buff_data.len());
+                
+                        //     tex.tex.update_row(0, bytemuck::cast_slice(data.as_slice()), &mut buff_data);
+        
+                        //     tex.tex.update_texture(&queue, buff_data.as_slice());
+                        // }
+                    },
+                    ESkinCode::FramesTexture(_) => {},
+                }
+                
             }
-            
 
             skindirty.0 = false;
         });

@@ -60,7 +60,6 @@ crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
 
-
 [patch."https://github.com/GaiaWorld/pi_hal"]
 pi_hal = { path = "../pi_hal" }
 
@@ -182,6 +181,9 @@ path = "examples/anime/performance.rs"
 # name = "lighting_01"
 # path = "examples/lighting/01.rs"
 # 
+# [[example]]
+# name = "particle01"
+# path = "examples/particles/01.rs"
 [[example]]
 name = "particle00"
 path = "examples/particles/00.rs"
@@ -197,10 +199,6 @@ path = "examples/particles/00.rs"
 # [[example]]
 # name = "particle03"
 # path = "examples/particles/03.rs"
-
-# [[example]]
-# name = "gltfskin"
-# path = "examples/gltf/simple_skin.rs"
 
 [[example]]
 name = "main_opacity"

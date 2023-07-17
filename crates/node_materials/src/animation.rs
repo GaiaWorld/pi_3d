@@ -72,6 +72,14 @@ pub trait TMaterialAnimeValue {
     fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues);
 }
 
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMainTexUScale(pub MainTexUScale);
+impl TAnimatableCompRecord<MainTexUScale> for RecordMainTexUScale{
+    fn comp(&self) -> MainTexUScale {
+        self.0.clone()
+    }
+}
+
 #[derive(Debug, Clone, Copy, Component)]
 pub struct MainTexUScale(pub f32);
 impl Default for MainTexUScale { fn default() -> Self { Self(1.) } }
@@ -97,6 +105,22 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexUScale {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MainTexUScale {
+    const ASSET_TYPE: &'static str = "AnimeMainTexUScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MainTexUScale {}
+
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMainTexVScale(pub MainTexVScale);
+impl TAnimatableCompRecord<MainTexVScale> for RecordMainTexVScale{
+    fn comp(&self) -> MainTexVScale {
+        self.0.clone()
     }
 }
 
@@ -127,6 +151,21 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexVScale {
         4
     }
 }
+impl TAssetCapacity for MainTexVScale {
+    const ASSET_TYPE: &'static str = "AnimeMainTexVScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MainTexVScale {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMainTexUOffset(pub MainTexUOffset);
+impl TAnimatableCompRecord<MainTexUOffset> for RecordMainTexUOffset{
+    fn comp(&self) -> MainTexUOffset {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MainTexUOffset(pub f32);
@@ -154,6 +193,21 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexUOffset {
         4
     }
 }
+impl TAssetCapacity for MainTexUOffset {
+    const ASSET_TYPE: &'static str = "AnimeMainTexUOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MainTexUOffset {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMainTexVOffset(pub MainTexVOffset);
+impl TAnimatableCompRecord<MainTexVOffset> for RecordMainTexVOffset {
+    fn comp(&self) -> MainTexVOffset {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MainTexVOffset(pub f32);
@@ -179,6 +233,21 @@ impl pi_curves::curve::frame::FrameDataValue for MainTexVOffset {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MainTexVOffset {
+    const ASSET_TYPE: &'static str = "AnimeMainTexVOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MainTexVOffset {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordOpacityTexUScale(pub OpacityTexUScale);
+impl TAnimatableCompRecord<OpacityTexUScale> for RecordOpacityTexUScale {
+    fn comp(&self) -> OpacityTexUScale {
+        self.0.clone()
     }
 }
 
@@ -209,6 +278,21 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexUScale {
         4
     }
 }
+impl TAssetCapacity for OpacityTexUScale {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexUScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for OpacityTexUScale {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordOpacityTexVScale(pub OpacityTexVScale);
+impl TAnimatableCompRecord<OpacityTexVScale> for RecordOpacityTexVScale {
+    fn comp(&self) -> OpacityTexVScale {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct OpacityTexVScale(pub f32);
@@ -235,6 +319,21 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexVScale {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for OpacityTexVScale {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexVScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for OpacityTexVScale {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordOpacityTexUOffset(pub OpacityTexUOffset);
+impl TAnimatableCompRecord<OpacityTexUOffset> for RecordOpacityTexUOffset {
+    fn comp(&self) -> OpacityTexUOffset {
+        self.0.clone()
     }
 }
 
@@ -264,6 +363,21 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexUOffset {
         4
     }
 }
+impl TAssetCapacity for OpacityTexUOffset {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexUOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for OpacityTexUOffset {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordOpacityTexVOffset(pub OpacityTexVOffset);
+impl TAnimatableCompRecord<OpacityTexVOffset> for RecordOpacityTexVOffset {
+    fn comp(&self) -> OpacityTexVOffset {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct OpacityTexVOffset(pub f32);
@@ -289,6 +403,21 @@ impl pi_curves::curve::frame::FrameDataValue for OpacityTexVOffset {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for OpacityTexVOffset {
+    const ASSET_TYPE: &'static str = "AnimeOpacityTexVOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for OpacityTexVOffset {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMaskTexUScale(pub MaskTexUScale);
+impl TAnimatableCompRecord<MaskTexUScale> for RecordMaskTexUScale {
+    fn comp(&self) -> MaskTexUScale {
+        self.0.clone()
     }
 }
 
@@ -319,6 +448,21 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexUScale {
         4
     }
 }
+impl TAssetCapacity for MaskTexUScale {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexUScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MaskTexUScale {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMaskTexVScale(pub MaskTexVScale);
+impl TAnimatableCompRecord<MaskTexVScale> for RecordMaskTexVScale {
+    fn comp(&self) -> MaskTexVScale {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct MaskTexVScale(pub f32);
@@ -345,6 +489,21 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexVScale {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MaskTexVScale {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexVScale";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MaskTexVScale {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMaskTexUOffset(pub MaskTexUOffset);
+impl TAnimatableCompRecord<MaskTexUOffset> for RecordMaskTexUOffset {
+    fn comp(&self) -> MaskTexUOffset {
+        self.0.clone()
     }
 }
 
@@ -374,6 +533,21 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexUOffset {
         4
     }
 }
+impl TAssetCapacity for MaskTexUOffset {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexUOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MaskTexUOffset {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMaskTexVOffset(pub MaskTexVOffset);
+impl TAnimatableCompRecord<MaskTexVOffset> for RecordMaskTexVOffset {
+    fn comp(&self) -> MaskTexVOffset {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MaskTexVOffset(pub f32);
@@ -399,6 +573,21 @@ impl pi_curves::curve::frame::FrameDataValue for MaskTexVOffset {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for MaskTexVOffset {
+    const ASSET_TYPE: &'static str = "AnimeMaskTexVOffset";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MaskTexVOffset {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMainColor(pub MainColor);
+impl TAnimatableCompRecord<MainColor> for RecordMainColor {
+    fn comp(&self) -> MainColor {
+        self.0.clone()
     }
 }
 
@@ -431,12 +620,28 @@ impl pi_curves::curve::frame::FrameDataValue for MainColor {
         4
     }
 }
+impl TAssetCapacity for MainColor {
+    const ASSET_TYPE: &'static str = "AnimeMainColor";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MainColor {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordAlpha(pub Alpha);
+impl TAnimatableCompRecord<Alpha> for RecordAlpha {
+    fn comp(&self) -> Alpha {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct Alpha(pub f32);
 impl Default for Alpha { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for Alpha {
     fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+        // log::warn!("Material Anime Apply Slot {}", slots.alpha);
         if slots.alpha < u8::MAX {
             bind.float(slots.alpha as usize, self.0);
         }
@@ -457,6 +662,21 @@ impl pi_curves::curve::frame::FrameDataValue for Alpha {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for Alpha {
+    const ASSET_TYPE: &'static str = "AnimeAlpha";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for Alpha {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordLightDiffuse(pub LightDiffuse);
+impl TAnimatableCompRecord<LightDiffuse> for RecordLightDiffuse {
+    fn comp(&self) -> LightDiffuse {
+        self.0.clone()
     }
 }
 
@@ -489,6 +709,21 @@ impl pi_curves::curve::frame::FrameDataValue for LightDiffuse {
         4
     }
 }
+impl TAssetCapacity for LightDiffuse {
+    const ASSET_TYPE: &'static str = "AnimeLightDiffuse";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for LightDiffuse {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordCutoff(pub Cutoff);
+impl TAnimatableCompRecord<Cutoff> for RecordCutoff {
+    fn comp(&self) -> Cutoff {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct Cutoff(pub f32);
@@ -515,6 +750,21 @@ impl pi_curves::curve::frame::FrameDataValue for Cutoff {
     }
     fn size() -> usize {
         4
+    }
+}
+impl TAssetCapacity for Cutoff {
+    const ASSET_TYPE: &'static str = "AnimeCutoff";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for Cutoff {}
+
+#[derive(Clone, Copy, Component, Default)]
+pub struct RecordMaskCutoff(pub MaskCutoff);
+impl TAnimatableCompRecord<MaskCutoff> for RecordMaskCutoff {
+    fn comp(&self) -> MaskCutoff {
+        self.0.clone()
     }
 }
 
@@ -544,6 +794,13 @@ impl pi_curves::curve::frame::FrameDataValue for MaskCutoff {
         4
     }
 }
+impl TAssetCapacity for MaskCutoff {
+    const ASSET_TYPE: &'static str = "AnimeMaskCutoff";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for MaskCutoff {}
 
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct CellId(pub f32);

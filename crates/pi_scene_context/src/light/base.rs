@@ -80,7 +80,7 @@ impl TViewerViewMatrix for LightDirection {
 
                 // iso.translation.clone_from(&Translation3::new(local_pos.0.x, local_pos.0.y, local_pos.0.z));
                 
-                log::warn!("iso: {:?}", iso);
+                // log::warn!("iso: {:?}", iso);
                 (ViewerViewMatrix(iso.to_matrix()), ViewerGlobalPosition(eye))
             },
         }

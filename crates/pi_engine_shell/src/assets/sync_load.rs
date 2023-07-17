@@ -103,7 +103,9 @@ impl<
             match result {
                 LoadResult::Ok(r) => {
                     // log::debug!("AssetSyncLoad: Loaded {:?}", key.deref());
-                    data_cmd.entity(entity).insert(R::from(r));
+                    if let Some(mut cmd) = data_cmd.get_entity(entity) {
+                        cmd.insert(R::from(r));
+                    }
                 },
                 _ => {
                     let list = if let Some(list) = list_await.0.get_mut(key) {

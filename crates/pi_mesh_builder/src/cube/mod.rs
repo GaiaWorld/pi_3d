@@ -8,12 +8,18 @@ use pi_scene_context::prelude::*;
 
 pub struct CubeBuilder;
 impl CubeBuilder {
-    const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";
-    const KEY_BUFFER_POSITION:  &'static str = "CubePosition";
-    const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
-    const KEY_BUFFER_UV:        &'static str = "CubeUV";
-    const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
-    const KEY_BUFFER:           &'static str = "CubeBuildin";
+    // const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";
+    // const KEY_BUFFER_POSITION:  &'static str = "CubePosition";
+    // const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
+    // const KEY_BUFFER_UV:        &'static str = "CubeUV";
+    // const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
+    // const KEY_BUFFER:           &'static str = "CubeBuildin";
+    const KEY_BUFFER_COLOR4:    IDAssetVertexBuffer = -1005;
+    const KEY_BUFFER_POSITION:  IDAssetVertexBuffer = -1004;
+    const KEY_BUFFER_NORMAL:    IDAssetVertexBuffer = -1003;
+    const KEY_BUFFER_UV:        IDAssetVertexBuffer = -1002;
+    const KEY_BUFFER_INDICES:   IDAssetVertexBuffer = -1001;
+    const KEY_BUFFER:           IDAssetVertexBuffer = -1000;
     const VERTEX_COUNT:         usize = 24;
     const POSITION_OFFSET:      usize = 0;
     const POSITION_SIZE:        usize = 72 * 4;

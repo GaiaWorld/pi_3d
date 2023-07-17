@@ -21,11 +21,10 @@ use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 pub struct PluginLocalLoad;
 impl Plugin for PluginLocalLoad {
     fn build(&self, app: &mut App) {
-        
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
                 .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
-                    log::debug!("Load {}", path);
+                    log::warn!("Load {}", path);
                     let r = std::fs::read(path.clone()).unwrap();
                     on_load(&path, r);
                 })
@@ -97,19 +96,19 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+        url: EKeyTexture::from("assets/images/fractal.png"),
     }));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
+        url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
     }));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMaskTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_uv_lf_002.png"),
+        url: EKeyTexture::from("assets/images/eff_uv_lf_002.png"),
     }));
     matcmds.vec2.push(OpsUniformVec2::ops(idmat, Atom::from(BlockMaskTextureUVOffsetSpeed::KEY_PARAM), 1., 1.));
 
@@ -122,10 +121,14 @@ fn sys_setup_ball(
     let param = BallParam { sectors: 20, stacks: 20 };
 
     let (positions, normals, indices, uvs) = generate_sphere(&param);
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallPos#20#20"), bytemuck::cast_slice(&positions).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallNor#20#20"), bytemuck::cast_slice(&normals).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from("BallUV#20#20"), bytemuck::cast_slice(&uvs).iter().map(|v| *v).collect::<Vec<u8>>());
-    ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from("BallInd#20#20"), bytemuck::cast_slice(&indices).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallPos#20#20");
+    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&positions).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallNor#20#20");
+    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&normals).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallUV#20#20");
+    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&uvs).iter().map(|v| *v).collect::<Vec<u8>>());
+    let id = data_map.id("BallInd#20#20");
+    ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&indices).iter().map(|v| *v).collect::<Vec<u8>>());
 }
 
 pub trait AddEvent {
@@ -164,11 +167,13 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);

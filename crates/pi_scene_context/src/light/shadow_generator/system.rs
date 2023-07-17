@@ -11,7 +11,7 @@ use crate::{
     pass::*
 };
 
-use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormalBias, ShadowDepthScale};
+use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormalBias, ShadowDepthScale, KEY_SHADOW_DEPTH_BIAS, KEY_SHADOW_DEPTH_SCALE, KEY_SHADOW_NORMAL_BIAS, KEY_SHADOW_MINZ, KEY_SHADOW_MAXZ};
 
 
 // pub struct SysShadowParamUpdateWhileMatCreate;
@@ -71,8 +71,21 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
         shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if enable.0 {
                 if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
-                    bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
-                    bind.vec2(0, &[**minz, **minz + **maxz]);
+                    if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_DEPTH_BIAS)) {
+                        bind.float(slot, **bias);
+                    }
+                    if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_DEPTH_SCALE)) {
+                        bind.float(slot, **depth_scale);
+                    }
+                    if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_NORMAL_BIAS)) {
+                        bind.float(slot, **normal_bias);
+                    }
+                    if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_MINZ)) {
+                        bind.float(slot, **minz);
+                    }
+                    if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_MAXZ)) {
+                        bind.float(slot, **maxz + **minz);
+                    }
                     *flag = BindEffectValueDirty(true);
                 }
             }
@@ -108,9 +121,12 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
                 if P::TAG == pass.as_pass() && enable.0 {
                     modelist.0.iter().for_each(|(id_model, _)| {
                         if let Ok(pass) = meshes.get(*id_model) {
-                            commands.entity(pass.id()).insert(id_mat.clone());
-                            materialrefs.insert(pass.id());
-                            *flag = DirtyMaterialRefs(true);
+                            
+                            if let Some(mut cmd) = commands.get_entity(pass.id()) {
+                                cmd.insert(id_mat.clone());
+                                materialrefs.insert(pass.id());
+                                *flag = DirtyMaterialRefs(true);
+                            }
                         }
                     });
                 }

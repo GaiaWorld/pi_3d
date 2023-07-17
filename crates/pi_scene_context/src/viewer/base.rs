@@ -8,7 +8,7 @@ use crate::{
     transforms::prelude::*,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy,Component)]
 pub struct Viewport {
     pub x: Number,
     pub y: Number,
@@ -72,6 +72,26 @@ pub enum ViewerAspect {
 impl Default for ViewerAspect {
     fn default() -> Self {
         Self::Auto
+    }
+}
+
+#[derive(Component)]
+pub struct ViewerCullFilter {
+    test: Vec<Entity>
+}
+impl Default for ViewerCullFilter {
+    fn default() -> Self {
+        Self {
+            test: vec![]
+        }
+    }
+}
+impl ViewerCullFilter {
+    pub fn add(&mut self, entity: Entity) {
+
+    }
+    pub fn remove(&mut self, entity: Entity) {
+
     }
 }
 

@@ -78,7 +78,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(BumpTextureSampler(samplerpool.get(key).unwrap()));
-                        log::debug!("BumpTextureSampler Write");
+                        // log::debug!("BumpTextureSampler Write");
                     }
                 },
             }

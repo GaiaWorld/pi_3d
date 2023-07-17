@@ -23,6 +23,7 @@ mod skeleton;
 mod shader_about;
 mod bind_group;
 mod lighting;
+mod animation;
 pub mod prelude;
 
 pub struct PluginMesh;
@@ -65,6 +66,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceMeshCreate::default());
         app.insert_resource(ActionListMeshShadow::default());
         app.insert_resource(ActionListInstanceColor::default());
+        app.insert_resource(ActionListInstanceAlpha::default());
         app.insert_resource(ActionListInstanceTillOff::default());
         app.insert_resource(ActionListMeshRenderAlignment::default());
         app.insert_resource(ActionListAbstructMeshScalingMode::default());
@@ -72,6 +74,8 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceColors::default());
         app.insert_resource(ActionListInstanceTilloffs::default());
         app.insert_resource(ActionListInstanceWorldMatrixs::default());
+        app.insert_resource(ActionListMeshRenderIndiceRange::default());
+        app.insert_resource(ActionListBoneOffset::default());
 
         app.add_system(
             sys_act_mesh_create.in_set(ERunStageChap::Initial)
@@ -79,15 +83,21 @@ impl crate::Plugin for PluginMesh {
         app.add_system(
             sys_act_instanced_mesh_create.in_set(ERunStageChap::Initial)
         );
+        app.add_system(
+            sys_instance_color.in_set(ERunStageChap::Command)
+        );
         app.add_systems(
             (
+                sys_act_bone_offset,
                 sys_act_mesh_modify,
                 sys_act_abstruct_mesh_render_alignment,
                 sys_act_abstruct_mesh_scaling_mode,
                 sys_act_abstruct_mesh_velocity,
                 sys_act_instance_color,
+                sys_act_instance_alpha,
                 sys_act_instance_tilloff,
-            ).in_set(ERunStageChap::Command)
+                sys_act_mesh_render_indice,
+            ).before(sys_instance_color).in_set(ERunStageChap::Command)
         );
         app.add_system(
             sys_calc_render_matrix.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
@@ -95,8 +105,12 @@ impl crate::Plugin for PluginMesh {
         app.add_system(
             sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix)
         );
-        app.add_system(
-            sys_render_matrix_for_uniform.run_if(should_run).in_set(ERunStageChap::Uniform)
+        app.add_systems(
+            (
+                sys_render_matrix_for_uniform.run_if(should_run),
+                sys_velocity_for_uniform.run_if(should_run),
+                sys_skinoffset_for_uniform.run_if(should_run),
+            ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
             (

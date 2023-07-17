@@ -7,7 +7,7 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord},
+    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord, IndiceRenderRange},
 };
 
 use super::{
@@ -35,20 +35,26 @@ use super::{
                 if let (Some(set0), Some(set1)) = (set0.val(), set1.val()) {
                     if meta.textures.len() > 0 && set2.val().is_none() {
                         if old.val().is_some() {
-                            commands.entity(id_pass).insert(PassBindGroups::new(None));
+                            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                                cmd.insert(PassBindGroups::new(None));
+                            }
                         }
                     } else {
                         // log::warn!("BindGroups Ok!!");
-                        commands.entity(id_pass).insert(PassBindGroups::new(Some(
-                            BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
-                        )));
+                        if let Some(mut cmd) = commands.get_entity(id_pass) {
+                            cmd.insert(PassBindGroups::new(Some(
+                                BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
+                            )));
+                        }
                     }
                     return;
                 }
             }
             
             if old.val().is_some() {
-                commands.entity(id_pass).insert(PassBindGroups::new(None));
+                if let Some(mut cmd) = commands.get_entity(id_pass) {
+                    cmd.insert(PassBindGroups::new(None));
+                }
             }
         });
     }
@@ -80,7 +86,9 @@ use super::{
                     val
                 } else {
                     // log::debug!("SysPassShaderRequestByModel: 11");
-                    commands.entity(id_pass).insert(PassShader(None));
+                            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                                cmd.insert(PassShader(None));
+                            }
                     return;
                 };
                 if let Ok((ready, bindgroups, old_shader)) = passes.get(id_pass.clone()) {
@@ -116,7 +124,9 @@ use super::{
                 
                         if let Some(shader) = shader_center.get(&key_shader) {
                             // log::debug!("SysPassShaderRequestByModel: 4");
-                            commands.entity(id_pass).insert(PassShader::from((shader, None)));
+                            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                                cmd.insert(PassShader::from((shader, None)));
+                            }
                         } else {
                             // log::debug!("SysPassShaderRequestByModel: 5");
                             if !shader_center.check(&key_shader) {
@@ -143,14 +153,16 @@ use super::{
                     } else {
                         if old_shader.val().is_some() {
                             // log::debug!("SysPassShaderRequestByModel: No Ready");
-                            commands.entity(id_pass).insert(PassShader(None));
+                            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                                cmd.insert(PassShader(None));
+                            }
                         }
                     }
                 }
             }
         );
 
-        log::debug!("SysPassShaderRequestByModel: {:?}", pi_time::Instant::now() - time1);
+        // log::debug!("SysPassShaderRequestByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
 /// 渲染器搜集渲染
@@ -181,7 +193,9 @@ use super::{
                     let (instance, vb) = if let Ok(val) = geometrys.get(id_geometry.0) {
                         val
                     } else {
-                        commands.entity(id_pass).insert(PassShader(None));
+                        if let Some(mut cmd) = commands.get_entity(id_pass) {
+                            cmd.insert(PassShader(None));
+                        }
                         // log::debug!("SysPassShaderRequestByPass: 11");
                         return;
                     };
@@ -213,7 +227,9 @@ use super::{
             
                     if let Some(shader) = shader_center.get(&key_shader) {
                         // log::debug!("SysPassShaderRequestByPass: 3");
-                        commands.entity(id_pass).insert(PassShader::from((shader, None)));
+                            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                                cmd.insert(PassShader::from((shader, None)));
+                            }
                     } else {
                         // log::debug!("SysPassShaderRequestByPass: 4");
                         if !shader_center.check(&key_shader) {
@@ -238,18 +254,22 @@ use super::{
                 } else {
                     if old_shader.val().is_some() {
                         // log::debug!("SysPassShaderRequestByPass: No Geo");
-                        commands.entity(id_pass).insert(PassShader(None));
+                            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                                cmd.insert(PassShader(None));
+                            }
                     }
                 }
             } else {
                 if old_shader.val().is_some() {
                     // log::debug!("SysPassShaderRequestByPass: No Ready");
-                    commands.entity(id_pass).insert(PassShader(None));
+                            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                                cmd.insert(PassShader(None));
+                            }
                 }
             }
         });
 
-        log::debug!("SysPassShaderRequestByPass: {:?}", pi_time::Instant::now() - time1);
+        // log::debug!("SysPassShaderRequestByPass: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_shader_loaded(
@@ -262,11 +282,13 @@ use super::{
             // log::debug!("PassShaderLoaded: 0");
             shader_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
                 // log::debug!("PassShaderLoaded: 1");
-                commands.entity(entity).insert(PassShader::from(component));
+                            if let Some(mut cmd) = commands.get_entity(entity) {
+                                cmd.insert(PassShader::from(component));
+                            }
             })
         });
 
-        log::trace!("SysPassShaderLoad: {:?}", pi_time::Instant::now() - time1);
+        // log::trace!("SysPassShaderLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_pipeline_request_by_model<T: TPass + Component, I: TPassID + Component>(
@@ -374,14 +396,14 @@ use super::{
                 } else {
                     if old_draw.val().is_some() {
                         // *oldpipeline = PassPipeline::new(None);
-                        log::trace!("SysPassPipelineRequest: No Shader");
+                        // log::trace!("SysPassPipelineRequest: No Shader");
                         // commands.entity(id_pass).insert(PassPipeline::new(None));
                     }
                 }
             }
         });
 
-        log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
+        // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_pipeline_request_by_pass<T: TPass + Component, I: TPassID + Component>(
@@ -492,7 +514,7 @@ use super::{
             }
         });
 
-        log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
+        // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_pipeline_loaded(
@@ -505,9 +527,9 @@ use super::{
         let time1 = pi_time::Instant::now();
 
         pipeline_center.single_create().iter().for_each(|(key, value)| {
-            log::debug!("SysPassPipeline: 0");
+            // log::debug!("SysPassPipeline: 0");
             pipeline_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
-                log::debug!("SysPassPipeline: 1");
+                // log::debug!("SysPassPipeline: 1");
                 if let Ok(mut oldpipeline) = passes.get_mut(entity) {
                     *oldpipeline = PassPipeline::from(component);
                 }
@@ -515,7 +537,7 @@ use super::{
             })
         });
 
-        log::trace!("SysPassPipeline: {:?}", pi_time::Instant::now() - time1);
+        // log::trace!("SysPassPipeline: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
@@ -556,18 +578,18 @@ use super::{
             }
         });
 
-        log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
+        // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &I), Changed<RenderGeometryEable>>,
+        models: Query<(&GeometryID, &I, &IndiceRenderRange), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>)>>,
         geometrys: Query<&RenderGeometry>,
         mut passes: Query<(&PassSource, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
         let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(id_geo, id_pass)| {
+        models.iter().for_each(|(id_geo, id_pass, renderindices)| {
             if let Ok((id_model, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
@@ -577,7 +599,7 @@ use super::{
                                 vertices: rendergeo.vertices(),
                                 instances: rendergeo.instances(),
                                 vertex: rendergeo.vertex_range(),
-                                indices: rendergeo.indices.clone(),
+                                indices: renderindices.apply(rendergeo),
                             };
                             *old_draw = PassDraw(Some(Arc::new(draw)));
                             // log::warn!("PassDraw: {:?}", id_pass.id());
@@ -592,7 +614,7 @@ use super::{
             }
         });
 
-        log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
+        // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_renderer_draws_modify(
@@ -757,6 +779,6 @@ use super::{
             }
         });
 
-        log::trace!("SysRendererDraws: {:?}", pi_time::Instant::now() - time1);
+        // log::trace!("SysRendererDraws: {:?}", pi_time::Instant::now() - time1);
     }
 

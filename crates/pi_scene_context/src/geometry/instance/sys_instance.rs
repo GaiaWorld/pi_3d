@@ -1,11 +1,12 @@
 
 use pi_engine_shell::prelude::*;
+use pi_scene_math::Vector4;
 
 use crate::{
     geometry::{
         vertex_buffer_useinfo::*, 
         base::*, 
-    }, prelude::{AbstructMesh, GlobalEnable},
+    }, prelude::{AbstructMesh, GlobalEnable, InstanceRGB, InstanceAlpha, InstanceColor, InstanceColorDirty},
 };
 
 use super::*;
@@ -26,6 +27,19 @@ use super::*;
 // #[setup]
 // impl<D: TInstanceData + Component, T: TInstanceBuffer + Component, F: TInstanceFlag + Component, S: TSystemStageInfo + 'static> SysInstanceBufferUpdateFunc<D, T, F, S> {
 //     #[system]
+
+    pub fn sys_instance_color(
+        mut items: Query<(&InstanceSourceID, &InstanceRGB, &InstanceAlpha, &mut InstanceColor), Or<(Changed<InstanceRGB>, Changed<InstanceAlpha>)>>,
+        mut sources: Query<&mut InstanceColorDirty>
+    ) {
+        items.iter_mut().for_each(|(source, rgb, alpha, mut color)| {
+            *color = InstanceColor(Vector4::new(rgb.0, rgb.1, rgb.2, alpha.0));
+            if let Ok(mut flag) = sources.get_mut(source.0) {
+                *flag = InstanceColorDirty(true);
+            }
+        });
+    }
+
     pub fn sys_tick_instance_buffer_update<
         D: TInstanceData + Component,
         T: TInstanceBuffer + Component,
@@ -77,7 +91,7 @@ use super::*;
             }
             let id_geo = id_geo.0.clone();
             if let Ok(mut buffer) = geometrys.get_mut(id_geo.clone()) {
-                log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.len());
+                // log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.len());
                 let mut list = vec![];
                 inslist.iter().for_each(|insid| {
                     if let (Ok(instance), Ok(abstructmesh)) = (instances.get(insid.clone()), actives.get(insid.clone())) {
@@ -93,14 +107,14 @@ use super::*;
                     flag.reset();
     
                     let data = D::collect(&list);
-                    log::debug!("InstanceDataLen: {:?}", data.len());
+                    // log::debug!("InstanceDataLen: {:?}", data.len());
                     let data = if data.len() > 0 {
                         data
                     } else {
                         return;
                     };
     
-                    log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
+                    // log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
                     instance_buffer_update::<T>(
                         data,
                         id_geo,
@@ -115,7 +129,7 @@ use super::*;
         });
         
         let time1 = pi_time::Instant::now();
-        log::debug!("SysInstanceBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
+        // log::debug!("SysInstanceBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
     }
 // }
 

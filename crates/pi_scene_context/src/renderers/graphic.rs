@@ -218,7 +218,7 @@ impl Node for RenderNode {
                         DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
                         let time1 = pi_time::Instant::now();
-                        log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                        // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
                     }
             
                     Box::pin(
@@ -228,7 +228,7 @@ impl Node for RenderNode {
                     )
                 } else {
                     let time1 = pi_time::Instant::now();
-                    log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                    // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
             
                     Box::pin(
                         async move {
@@ -366,7 +366,7 @@ impl Node for RenderNode {
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
                     let time1 = pi_time::Instant::now();
-                    log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                    // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
                 }
     
                 output.target = Some(srt.clone());

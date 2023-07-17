@@ -5,6 +5,7 @@ use pi_engine_shell::prelude::*;
 pub mod instance_world_matrix;
 pub mod instance_color;
 pub mod instance_tilloff;
+pub mod instance_boneoffset;
 pub mod sys_instance;
 
 #[derive(Debug, Clone, Component)]

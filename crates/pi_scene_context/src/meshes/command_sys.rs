@@ -1,5 +1,5 @@
 
-use std::ops::Mul;
+use std::{ops::Mul, f32::consts::E};
 
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector4, Matrix, Number, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}, Rotation3, Vector3};
@@ -7,7 +7,7 @@ use pi_scene_math::{Vector4, Matrix, Number, coordiante_system::CoordinateSytem3
 use crate::{
     geometry::{
         prelude::*,
-        command_sys::*
+        command_sys::*, instance::instance_boneoffset::{InstanceBoneOffsetDirty, InstanceBoneoffset, RecordInstanceBoneoffset}
     },
     pass::*,
     renderers::{
@@ -19,7 +19,7 @@ use crate::{
     transforms::{command_sys::ActionTransformNode, prelude::*},
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::{RenderAlignment, ModelVelocity, ScalingMode},
+    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange, RecordIndiceRenderRange},
 };
 
 use super::{
@@ -27,7 +27,7 @@ use super::{
     model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel},
     abstract_mesh::AbstructMesh,
     Mesh,
-    lighting::{MeshCastShadow, MeshReceiveShadow}
+    lighting::{MeshCastShadow, MeshReceiveShadow},
 };
 
 
@@ -40,19 +40,18 @@ pub fn sys_act_mesh_create(
     empty: Res<SingleEmptyEntity>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, name, count)| {
-        let mut entitycmd = commands.entity(entity);
+        let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
+            cmd
+        } else {
+            return;
+        };
         
         ActionScene::add_to_scene(&mut entitycmd, &mut tree, scene);
         ActionTransformNode::init_for_tree(&mut entitycmd);
         ActionTransformNode::as_transform_node(&mut entitycmd, name);
         ActionAnime::as_anime_group_target(&mut entitycmd);
         ActionMesh::as_mesh(&mut entitycmd);
-
-        entitycmd.insert(InstanceSourceRefs::default());
-        entitycmd.insert(DirtyInstanceSourceRefs::default());
-        entitycmd.insert(InstanceWorldMatrixDirty(true));
-        entitycmd.insert(InstanceColorDirty(true));
-        entitycmd.insert(InstanceTillOffDirty(true));
+        ActionMesh::as_instance_source(&mut entitycmd);
 
         if let Some(bind) = BindModel::new(&device, &mut allocator) {
             log::info!("BindModel New");
@@ -81,13 +80,24 @@ pub fn sys_act_instanced_mesh_create(
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, name, count)| {
         if let Ok((id_scene, mut instancelist, mut flag)) = meshes.get_mut(source) {
-            commands.entity(source)
+            
+            let mut entitycmd = if let Some(cmd) = commands.get_entity(source) {
+                cmd
+            } else {
+                return;
+            };
+
+            entitycmd
                 .insert(InstanceColorDirty(true))
                 .insert(InstanceTillOffDirty(true))
                 .insert(InstanceWorldMatrixDirty(true))
                 ;
 
-            let mut ins_cmds = commands.entity(instance);
+            let mut ins_cmds = if let Some(cmd) = commands.get_entity(instance) {
+                cmd
+            } else {
+                return;
+            };
             // 
             ActionScene::add_to_scene(&mut ins_cmds, &mut tree, id_scene.0);
             ActionTransformNode::init_for_tree(&mut ins_cmds);
@@ -134,25 +144,38 @@ pub fn sys_act_mesh_modify(
 pub fn sys_act_instance_color(
     mut cmds: ResMut<ActionListInstanceColor>,
     entities: Query<Entity>,
-    mut instances: Query<(&InstanceSourceID, &mut InstanceColor)>,
-    mut source_colors: Query<&mut InstanceColorDirty>,
+    mut instances: Query<(&InstanceSourceID, &mut InstanceRGB)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsInstanceColor(instance, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsInstanceColor(instance, r, g, b, count)| {
         if entities.contains(instance) {
             if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
-                *instance_data = InstanceColor(val);
-                if let Ok(mut flag) = source_colors.get_mut(source.0) {
-                    *flag = InstanceColorDirty(true);
-                }
+                *instance_data = InstanceRGB(r, g, b);
             } else {
                 if count < 2 {
-                    cmds.push(OpsInstanceColor(instance, val, count + 1));
+                    cmds.push(OpsInstanceColor(instance, r, g, b, count + 1));
                 }
             }
         }
     });
 }
 
+pub fn sys_act_instance_alpha(
+    mut cmds: ResMut<ActionListInstanceAlpha>,
+    entities: Query<Entity>,
+    mut instances: Query<(&InstanceSourceID, &mut InstanceAlpha)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceAlpha(instance, val, count)| {
+        if entities.contains(instance) {
+            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
+                *instance_data = InstanceAlpha(val);
+            } else {
+                if count < 2 {
+                    cmds.push(OpsInstanceAlpha(instance, val, count + 1));
+                }
+            }
+        }
+    });
+}
 
 pub fn sys_act_instance_tilloff(
     mut cmds: ResMut<ActionListInstanceTillOff>,
@@ -172,6 +195,20 @@ pub fn sys_act_instance_tilloff(
                     cmds.push(OpsInstanceTillOff(instance, val, count + 1));
                 }
             }
+        }
+    });
+}
+
+pub fn sys_act_bone_offset(
+    mut cmds: ResMut<ActionListBoneOffset>,
+    mut instances: Query<(&mut InstanceBoneoffset, &mut RecordInstanceBoneoffset)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsBoneOffset(entity, val, count)| {
+        if let Ok((mut instance, mut record)) = instances.get_mut(entity) {
+            *record = RecordInstanceBoneoffset(InstanceBoneoffset(val));
+            *instance = InstanceBoneoffset(val);
+        } else if count < 2 {
+            cmds.push(OpsBoneOffset(entity, val, count + 1))
         }
     });
 }
@@ -221,6 +258,24 @@ pub fn sys_act_abstruct_mesh_velocity(
     });
 }
 
+pub fn sys_act_mesh_render_indice(
+    mut cmds: ResMut<ActionListMeshRenderIndiceRange>,
+    mut items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val, count)| {
+        if let Ok((mut item, mut record)) = items.get_mut(entity) {
+            *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+            *item = IndiceRenderRange(val);
+        } else {
+            if count < 2 {
+                cmds.push(OpsMeshRenderIndiceRange(entity, val, count + 1));
+            }
+        }
+    });
+}
+
+
+
 pub struct ActionMesh;
 impl ActionMesh {
     pub(crate) fn as_mesh(
@@ -265,6 +320,10 @@ impl ActionMesh {
             .insert(ModelVelocity::default())
             .insert(RenderAlignment::default())
             .insert(ScalingMode::default())
+            .insert(InstanceBoneoffset::default())
+            .insert(IndiceRenderRange::default())
+            .insert(RecordInstanceBoneoffset::default())
+            .insert(RecordIndiceRenderRange::default())
             ;
     }
     pub fn create(
@@ -306,6 +365,19 @@ impl ActionMesh {
         let mut cmds = app.world.get_resource_mut::<ActionListMeshShadow>().unwrap();
         cmds.push(cmd);
     }
+
+    pub fn as_instance_source(
+        commands: &mut EntityCommands,
+    ) {
+        commands
+            .insert(InstanceSourceRefs::default())
+            .insert(DirtyInstanceSourceRefs::default())
+            .insert(InstanceWorldMatrixDirty(false))
+            .insert(InstanceColorDirty(false))
+            .insert(InstanceTillOffDirty(false))
+            .insert(InstanceBoneOffsetDirty(false))
+            ;
+    }
 }
 pub struct ActionInstanceMesh;
 impl ActionInstanceMesh {
@@ -324,22 +396,18 @@ impl ActionInstanceMesh {
 
         entity
     }
-    pub fn color(
-        app: &mut App,
-        instance: Entity,
-        color: Vector4,
-    ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListInstanceColor>().unwrap();
-        cmds.push(OpsInstanceColor(instance, color, 0));
-    }
     pub(crate) fn as_instance(
         commands: &mut EntityCommands,
         source: Entity,
     ) {
         commands.insert(AbstructMesh);
         commands.insert(InstanceSourceID(source));
+        commands.insert(InstanceRGB(1., 1., 1.));
+        commands.insert(InstanceAlpha(1.));
         commands.insert(InstanceColor(Vector4::new(1., 1., 1., 1.)));
         commands.insert(InstanceTillOff(Vector4::new(1., 1., 0., 0.)));
+        commands.insert(InstanceBoneoffset::default());
+        commands.insert(RecordInstanceBoneoffset::default());
 
         commands.insert(RenderMatrixDirty(true));
         commands.insert(RenderWorldMatrix(Matrix::identity()));
@@ -352,7 +420,7 @@ impl ActionInstanceMesh {
 fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
     model: Entity,
     commands: &mut Commands,
-    empty: &SingleEmptyEntity,
+    mat: &SingleEmptyEntity,
 ) -> ObjectID {
     let id = commands.spawn_empty().id();
 
@@ -360,39 +428,37 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
 
     commands.entity(id).insert(T::new())
         .insert(PassSource(model))
-        .insert(PassBindEffectValue(None))
-        .insert(PassBindEffectTextures(None))
-        .insert(PassBindGroupScene(None))
-        .insert(PassBindGroupModel(None))
-        .insert(PassBindGroupTextureSamplers(None))
-        .insert(PassBindGroups(None))
-        .insert(PassReady(None))
-        .insert(PassShader(None))
-        .insert(PassPipeline(None))
-        .insert(PassDraw(None))
-        .insert(MaterialID(empty.id()))
+        .insert(MaterialID(mat.id()))
         ;
 
     id
 }
 
 
-    pub fn sys_instance_color_modify(
-        instances: Query<&InstanceSourceID, Changed<InstanceColor>>,
-        mut commands: Commands,
-    ) {
-        instances.iter().for_each(|source| {
-            commands.entity(source.0).insert(InstanceColorDirty(true));
-        });
-    }
-    pub fn sys_instance_tilloff_modify(
-        instances: Query<&InstanceSourceID, Changed<InstanceTillOff>>,
-        mut commands: Commands,
-    ) {
-        instances.iter().for_each(|source| {
-            commands.entity(source.0).insert(InstanceTillOffDirty(true));
-        });
-    }
+    // pub fn sys_instance_color_modify(
+    //     instances: Query<&InstanceSourceID, Changed<InstanceColor>>,
+    //     mut commands: Commands,
+    // ) {
+    //     instances.iter().for_each(|source| {
+    //         if let Some(mut cmd) = commands.get_entity(source.0) {
+    //             cmd.insert(InstanceColorDirty(true));
+    //         } else {
+    //             return;
+    //         };
+    //     });
+    // }
+    // pub fn sys_instance_tilloff_modify(
+    //     instances: Query<&InstanceSourceID, Changed<InstanceTillOff>>,
+    //     mut commands: Commands,
+    // ) {
+    //     instances.iter().for_each(|source| {
+    //         if let Some(mut cmd) = commands.get_entity(source.0) {
+    //             cmd.insert(InstanceTillOffDirty(true));
+    //         } else {
+    //             return;
+    //         };
+    //     });
+    // }
 
     
     pub fn sys_calc_render_matrix(
@@ -548,7 +614,7 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
         });
         
         let time1 = pi_time::Instant::now();
-        log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
+        // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
     }
     
     pub fn sys_calc_render_matrix_instance(
@@ -707,18 +773,34 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
         });
         
         let time1 = pi_time::Instant::now();
-        log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
+        // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
     }
 
     pub fn sys_render_matrix_for_uniform(
-        mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &ModelVelocity, &BindModel), Or<(Changed<RenderWorldMatrix>, Changed<ModelVelocity>)>>,
+        mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), Changed<RenderWorldMatrix>>,
     ) {
-        meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, velocity, bind_model)| {
+        meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, bind_model)| {
             // log::debug!("SysModelUniformUpdate:");
 
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
+        });
+    }
+
+    pub fn sys_velocity_for_uniform(
+        mut meshes: Query<(&ModelVelocity, &BindModel), Changed<ModelVelocity>>,
+    ) {
+        meshes.iter_mut().for_each(|(velocity, bind_model)| {
             let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
             bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
+        });
+    }
+
+    pub fn sys_skinoffset_for_uniform(
+        mut meshes: Query<(&InstanceBoneoffset, &BindModel), Changed<InstanceBoneoffset>>,
+    ) {
+        meshes.iter_mut().for_each(|(skinoffset, bind_model)| {
+            // log::debug!("SysModelUniformUpdate:");
+            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[skinoffset.0]));
         });
     }

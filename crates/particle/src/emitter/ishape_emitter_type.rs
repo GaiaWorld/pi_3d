@@ -1,5 +1,6 @@
 use crate::iparticle_system_config::{
-    TSHAPE_ARC_MODE_BURST_SPREAD, TSHAPE_ARC_MODE_LOOP, TSHAPE_ARC_MODE_PING_PONG, TSHAPE_ARC_MODE_RANDOM,
+    TSHAPE_ARC_MODE_BURST_SPREAD, TSHAPE_ARC_MODE_LOOP, TSHAPE_ARC_MODE_PING_PONG,
+    TSHAPE_ARC_MODE_RANDOM,
 };
 use pi_scene_math::{Matrix, Vector3};
 use rand::Rng;
@@ -76,11 +77,11 @@ pub trait IShapeEmitterType {
     fn get_postion(&self) -> Vector3;
     fn get_rotation(&self) -> Vector3;
     fn get_scaling(&self) -> Vector3;
-    fn get_local_matrix(&mut self) -> Matrix;
-    fn get_align_direction(&mut self) -> bool;
-    fn get_randomize_direction(&mut self, ) -> f32;
-    fn get_spherize_direction(&mut self) -> f32;
-    fn get_randomize_position(&mut self) -> f32;
+    fn get_local_matrix(&self) -> Matrix;
+    fn get_align_direction(&self) -> bool;
+    fn get_randomize_direction(&self) -> f32;
+    fn get_spherize_direction(&self) -> f32;
+    fn get_randomize_position(&self) -> f32;
 }
 
 #[derive(Clone, Copy)]
@@ -101,6 +102,12 @@ pub enum EShapeEmitterArcMode {
      * 在形状周围均匀分布粒子生成位置
      */
     BurstsSpread = TSHAPE_ARC_MODE_BURST_SPREAD,
+}
+
+impl Default for EShapeEmitterArcMode {
+    fn default() -> Self {
+        Self::Random
+    }
 }
 /**
  * 形状发射器创建模式

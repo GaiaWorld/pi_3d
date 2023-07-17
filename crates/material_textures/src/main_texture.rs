@@ -80,7 +80,7 @@ impl SingleCommands {
                         let key = SamplerPool::cacl_key(&samplerdesc);
                         samplerpool.create(&samplerdesc, &device);
                         sampler.write(MainTextureSampler(samplerpool.get(key).unwrap()));
-                        log::debug!("MainTextureSampler Write");
+                        // log::debug!("MainTextureSampler Write");
                     }
                 },
             }

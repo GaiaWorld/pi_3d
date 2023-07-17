@@ -1,7 +1,10 @@
-use std::{sync::Arc};
+use std::{sync::Arc, ops::Range};
 
 use pi_engine_shell::prelude::*;
+use pi_render::renderer::vertex_format::TVertexFormatByteSize;
 use pi_scene_math::{Matrix, Vector3};
+
+use crate::prelude::RenderGeometry;
 
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -52,6 +55,14 @@ impl Default for ModelVelocity {
     }
 }
 
+// #[derive(Debug, Clone, Component, Deref, DerefMut)]
+// pub struct ModelSkinBoneOffset(pub u32);
+// impl Default for ModelSkinBoneOffset {
+//     fn default() -> Self {
+//         Self(0)
+//     }
+// }
+
 #[derive(Component)]
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
 impl BindModel {
@@ -66,6 +77,87 @@ impl BindModel {
             None
         }
     }
+}
+
+#[derive(Debug, Component, Clone, Default)]
+pub struct RecordIndiceRenderRange(pub IndiceRenderRange);
+impl TAnimatableCompRecord<IndiceRenderRange> for RecordIndiceRenderRange {
+    fn comp(&self) -> IndiceRenderRange {
+        self.0.clone()
+    }
+}
+
+#[derive(Debug, Component, Clone)]
+pub struct IndiceRenderRange(pub Option<Range<u32>>);
+impl IndiceRenderRange {
+    pub fn apply(&self, geo: &RenderGeometry) -> Option<RenderIndices> {
+        if let Some(mut indices) = geo.indices.clone() {
+            if let Some(renderrange) = &self.0 {
+                let range0 = indices.buffer.range();
+                let mut start = renderrange.start as u64 * indices.format.use_bytes();
+                let mut end = renderrange.end as u64 * indices.format.use_bytes();
+
+                if let Some(range) = indices.buffer_range.as_ref() {
+                    start = u64::min(range.end, range.start + start);
+                    end = u64::min(range.end, range.start + end);
+                } else {
+                    let temp = range0.end - range0.start;
+                    start = u64::min(temp, 0 + start);
+                    end = u64::min(temp, 0 + end);
+                }
+
+                indices.buffer_range = Some(
+                    Range { start, end }
+                );
+            }
+            
+            Some(indices)
+        } else {
+            None
+        }
+    }
+}
+impl Default for IndiceRenderRange {
+    fn default() -> Self {
+        Self(None)
+    }
+}
+impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {
+    fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        if amount < 0.5 {
+            self.clone()
+        } else {
+            rhs.clone()
+        }
+    }
+
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        if amount < 0.5 {
+            value1.clone()
+        } else {
+            value2.clone()
+        }
+    }
+
+    fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        if amount < 0.5 {
+            self.clone()
+        } else {
+            rhs.clone()
+        }
+    }
+    fn size() -> usize {
+        2 * 4
+    }
+}
+impl TAssetCapacity for IndiceRenderRange {
+    const ASSET_TYPE: &'static str = "AnimeCurveIndiceRenderRange";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+    }
+}
+impl TAnimatableComp for IndiceRenderRange {
+
 }
 
 #[derive(Component)]

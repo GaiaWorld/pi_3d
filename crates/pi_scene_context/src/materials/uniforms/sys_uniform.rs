@@ -172,7 +172,11 @@ use super::{
             matid,
             effect, mut texparams
         )| {
-            let mut entitycmd = commands.entity(matid);
+            let mut entitycmd = if let Some(cmd) = commands.get_entity(matid) {
+                cmd
+            } else {
+                return;
+            };
 
             for index in 0..effect.textures.len() {
                 let item = effect.textures.get(index).unwrap();
