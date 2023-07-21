@@ -45,7 +45,7 @@ pi_postprocess          = { git = "https://github.com/GaiaWorld/pi_post_process.
 
 pi_atom                 = { version="0.2", features = ["serde"] }
 pi_hal                  = { git = "https://github.com/GaiaWorld/pi_hal.git" }
-pi_assets               = "0.12"
+pi_assets               = "0.13"
 pi-async-rt             = "0.1"
 
 wgpu                = "0.15"
@@ -60,8 +60,8 @@ crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
 
-[patch."https://github.com/GaiaWorld/pi_hal"]
-pi_hal = { path = "../pi_hal" }
+# [patch."https://github.com/GaiaWorld/pi_hal"]
+# pi_hal = { path = "../pi_hal" }
 
 [patch."https://github.com/GaiaWorld/pi_render"]
 pi_render = { path = "../pi_render" }
@@ -93,9 +93,9 @@ pi_postprocess = { path = "../pi_post_process" }
 [patch."http://ser.yinengyun.com:10082/tech/winit.git"]
 winit = { path = "../winit" }
 
-[patch.crates-io]
-pi_assets = {path = "../pi_assets"}
-pi_async_graph = {path = "../pi_async_graph"}
+# [patch.crates-io]
+# pi_assets = {path = "../pi_assets"}
+# pi_async_graph = {path = "../pi_async_graph"}
 
 [[example]]
 name = "cube"
