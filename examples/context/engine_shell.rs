@@ -24,7 +24,7 @@ use pi_3d::{
     PluginBundleDefault,
     plugin::Plugin,
 };
-use pi_async::{
+use pi_async_rt::{
     prelude::{Mutex, WorkerRuntime},
     rt::{AsyncRuntime, AsyncRuntimeBuilder},
 };

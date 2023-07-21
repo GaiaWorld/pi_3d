@@ -19,7 +19,7 @@ use unlit_material::{
     PluginUnlitMaterial,
 };
 
-use pi_async::rt::AsyncRuntime;
+use pi_async_rt::rt::AsyncRuntime;
 use pi_hal::{init_load_cb, on_load, runtime::MULTI_MEDIA_RUNTIME};
 use std::sync::Arc;
 

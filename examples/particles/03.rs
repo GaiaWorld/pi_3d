@@ -13,7 +13,7 @@ use particle::{
 };
 use pi_3d::PluginBundleDefault;
 use pi_animation::{amount::AnimationAmountCalc, loop_mode::ELoopMode};
-use pi_async::rt::AsyncRuntime;
+use pi_async_rt::rt::AsyncRuntime;
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;

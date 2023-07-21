@@ -3,8 +3,7 @@
 use std::{sync::Arc, };
 
 
-use pi_async::prelude::Mutex;
-use pi_share::{ShareMutex};
+use pi_share::ShareMutex;
 
 mod effect_sampler2d;
 mod effect_texture2d;
@@ -29,7 +28,7 @@ impl Default for DispatchEnd {
     }
 }
 
-pub struct PreFrameTime(pub Arc<Mutex< pi_time::Instant>>);
+pub struct PreFrameTime(pub Arc<ShareMutex< pi_time::Instant>>);
 pub struct FrameStartTime(pub  pi_time::Instant);
 impl Default for FrameStartTime {
     fn default() -> Self {
@@ -39,6 +38,6 @@ impl Default for FrameStartTime {
 
 impl Default for PreFrameTime {
     fn default() -> Self {
-        Self(Arc::new(Mutex::new( pi_time::Instant::now())))
+        Self(Arc::new(ShareMutex::new( pi_time::Instant::now())))
     }
 }

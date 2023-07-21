@@ -5,7 +5,7 @@ use pi_assets::{
     asset::Handle,
     mgr::{AssetMgr, LoadResult},
 };
-use pi_async::prelude::AsyncRuntime;
+use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
 use pi_bevy_asset::ShareAssetMgr;
 use pi_render::rhi::{
@@ -78,7 +78,7 @@ fn image_change<
                             let (id, key) = (obj, key.clone());
             
                             MULTI_MEDIA_RUNTIME
-                                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                                .spawn(async move {
                                     let desc = ImageTextureDesc {
                                         url: &key,
                                         device: &device,
@@ -134,7 +134,7 @@ fn image_change<
                                     let (id, imagekey) = (obj, key.url().clone());
                                     let key = key.clone();
                                     MULTI_MEDIA_RUNTIME
-                                        .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                                        .spawn(async move {
                                             let desc = ImageTexture2DDesc {
                                                 url: imagekey,
                                                 device: device,
