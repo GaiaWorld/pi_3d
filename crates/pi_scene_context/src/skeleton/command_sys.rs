@@ -23,20 +23,19 @@ pub fn sys_act_skin_create(
         let bone_count = bones.len();
         let bonecount = EBoneCount::new(bone_count as u8 + 1);
         let mode = ESkinCode::UBO(bonemode, bonecount, cache_frames);
-        
+
         bones.iter().for_each(|id_bone| {
             if let Some(mut cmd) = commands.get_entity(id_bone.clone()) {
                 ActionBone::modify_skin(&mut cmd, id_skin);
             }
         });
 
-        match Skeleton::new(root, bones, mode, &device, &mut dynbuffer ) {
+        match Skeleton::new(root, bones, mode, &device, &mut dynbuffer, cachedata) {
             Some(skeleton) => {
-                
                 if let Some(mut cmd) = commands.get_entity(id_skin) {
-                    if let Some(data) = cachedata {
-                        skeleton.bind.data().write_data(0, bytemuck::cast_slice(&data));
-                    }
+                    // if let Some(data) = cachedata {
+                    //     skeleton.bind.data().write_data(0, bytemuck::cast_slice(&data));
+                    // }
                     cmd
                         .insert(skeleton)
                         .insert(SkeletonInitBaseMatrix)

@@ -1,0 +1,47 @@
+[package]
+name = "pi_gltf2_load"
+version = "0.0.1"
+authors = ["baip0002 <2494156981@qq.com>"]
+edition = "2021"
+description = "GLTF2 Res Manager."
+repository = "https://github.com/GaiaWorld/pi_3d"
+license = "MIT OR Apache-2.0"
+keywords = ["GLTF2 Res"]
+
+[dependencies]
+pi_futures      = "0.1"
+pi_async        = "0.5"
+pi_share        = "0.4"
+pi_slotmap      = "0.1"
+pi_hash         = "0.1"
+pi_assets       = "0.12"
+pi_atom         = { version="0.2", features = ["serde"] }
+
+wgpu            = "0.15"
+naga            = { version = "0.10", features = [ "glsl-in", ] }
+bevy            = { version="0.10", default-features = false }
+bytemuck        = { version = "1.4", features = ["derive"] }
+
+log             = "0.4"
+env_logger      = "0.9"
+
+smallvec        = "1.9"
+crossbeam       = "0.8"
+futures         = "0.3"
+derive_deref    = "1.1"
+base64          = "0.20.0"
+
+pi_hal              = { git = "https://github.com/GaiaWorld/pi_hal.git" }
+
+pi_render           = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_utils        = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_derive       = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+
+pi_scene_math       = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_animation        = { git = "https://github.com/GaiaWorld/pi_animation.git" }
+pi_curves           = { git = "https://github.com/GaiaWorld/pi_curves.git" }
+pi_gltf             = { git = "https://github.com/GaiaWorld/pi_gltf.git", features = ["extras"] }
+
+pi_scene_context    = { path = "../pi_scene_context" }
+pi_engine_shell     = { path = "../pi_engine_shell" }
+pi_node_materials   = { path = "../node_materials" }

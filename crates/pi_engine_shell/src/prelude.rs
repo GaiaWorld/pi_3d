@@ -22,6 +22,7 @@ pub use pi_bevy_render_plugin::{
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
     asset_config::*, should_run, component::GraphId
 };
+use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}};
 pub use pi_window_renderer::*;
 pub use pi_render::{
     asset::*,
@@ -64,6 +65,7 @@ pub use pi_render::{
     },
 };
 pub use pi_assets::{asset::GarbageEmpty};
+pub use pi_curves::curve::{ FrameIndex, FramePerSecond };
 
 pub use crate::run_stage::ERunStageChap;
 pub use crate::object::ObjectID;
@@ -175,5 +177,98 @@ impl SingleEmptyEntity {
     }
     pub fn id(&self) -> Entity {
         self.0
+    }
+}
+
+pub trait TRenderAlignmentCalc {
+    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3;
+    fn calc_local(&self, g_velocity: &Vector3) -> Option<Matrix>;
+}
+impl TRenderAlignmentCalc for ERenderAlignment {
+    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3 {
+        let mut m = Rotation3::identity();
+        match self {
+            ERenderAlignment::View => {
+                let (_, _, z) =  g_rotation.euler_angles();
+                m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
+            },
+            ERenderAlignment::World => {
+                // m = Rotation3::identity();
+            },
+            ERenderAlignment::Local => {
+                m = g_rotation.clone();
+            },
+            ERenderAlignment::Facing => {
+                let (_, _, z) =  g_rotation.euler_angles();
+                m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
+            },
+            ERenderAlignment::Velocity => {
+                let vlen = CoordinateSytem3::length(g_velocity);
+                let z_axis = if vlen > 0.00000001 {
+                    g_velocity.normalize()
+                } else {
+                    Vector3::new(0., 0., 1.)
+                };
+
+                let mut y_axis = Vector3::new(0., 1., 0.);
+                let mut x_axis = y_axis.cross(&z_axis);
+                if CoordinateSytem3::length(&x_axis) > 0. {
+                    x_axis.normalize_mut();
+                    y_axis = z_axis.cross(&x_axis);
+                } else {
+                    y_axis = Vector3::new(1., 0., 0.);
+                    x_axis = y_axis.cross(&z_axis);
+                }
+                m = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
+            },
+            ERenderAlignment::StretchedBillboard => {
+                let vlen = CoordinateSytem3::length(g_velocity);
+                let x_axis = if vlen > 0.00000001 {
+                    g_velocity.normalize()
+                } else {
+                    Vector3::new(1., 0., 0.)
+                };
+
+                let mut y_axis = Vector3::new(0., 1., 0.);
+                let mut z_axis = x_axis.cross(&y_axis);
+                if CoordinateSytem3::length(&z_axis) > 0. {
+                    z_axis.normalize_mut();
+                    y_axis = z_axis.cross(&x_axis);
+                } else {
+                    y_axis = Vector3::new(0., 0., 1.);
+                    z_axis = x_axis.cross(&y_axis);
+                }
+                m = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
+
+            },
+            ERenderAlignment::HorizontalBillboard => {
+                let (_, _, z) =  g_rotation.euler_angles();
+                m = CoordinateSytem3::rotation_matrix_from_euler_angles((90_f32).to_radians(), 0., z);
+            },
+            ERenderAlignment::VerticalBillboard => {
+                let (_, _, z) =  g_rotation.euler_angles();
+                m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
+            },
+        }
+        m
+    }
+    fn calc_local(&self, g_velocity: &Vector3) -> Option<Matrix> {
+        match self {
+            ERenderAlignment::View => None,
+            ERenderAlignment::World => None,
+            ERenderAlignment::Local => None,
+            ERenderAlignment::Facing => None,
+            ERenderAlignment::Velocity => None,
+            ERenderAlignment::StretchedBillboard => {
+                let mut result = Matrix::identity();
+                let vlen = CoordinateSytem3::length(g_velocity);
+                let scaling = Vector3::new(vlen, 1., 1.);
+                let translation = Vector3::new(-0.5 * vlen, 0., 0.);
+                CoordinateSytem3::matrix4_compose_rotation(&scaling, &Rotation3::identity(), &translation, &mut result);
+                Some(result)
+            },
+            ERenderAlignment::HorizontalBillboard => None,
+            ERenderAlignment::VerticalBillboard => None,
+        }
     }
 }

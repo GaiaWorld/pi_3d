@@ -48,6 +48,14 @@ pub enum OpsMeshShadow {
 }
 pub type ActionListMeshShadow = ActionList<OpsMeshShadow>;
 
+pub struct OpsInstanceColorAlpha(pub(crate) Entity, pub(crate) Number, pub(crate) Number, pub(crate) Number, pub(crate) Number, pub u8);
+impl OpsInstanceColorAlpha {
+    pub fn ops(instance: Entity, r: Number, g: Number, b: Number, a: Number) -> Self {
+        Self(instance, r, g, b, a, 0)
+    }
+}
+pub type ActionListInstanceColorAlpha = ActionList<OpsInstanceColorAlpha>;
+
 pub struct OpsInstanceColor(pub(crate) Entity, pub(crate) Number, pub(crate) Number, pub(crate) Number, pub u8);
 impl OpsInstanceColor {
     pub fn ops(instance: Entity, r: Number, g: Number, b: Number) -> Self {

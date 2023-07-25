@@ -541,7 +541,7 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
-        models: Query<&GeometryID>,
+        models: Query<(&GeometryID, &IndiceRenderRange)>,
         geometrys: Query<&RenderGeometry>,
         mut passes: Query<(ObjectID, &PassSource, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
         // mut commands: Commands,
@@ -550,7 +550,7 @@ use super::{
 
         passes.iter_mut().for_each(|(id_pass, id_model, bindgroups, pipeline, mut old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                if let Ok(id_geo) = models.get(id_model.0) {
+                if let Ok((id_geo, renderindices)) = models.get(id_model.0) {
                     if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
                         let draw = DrawObj3D {
                             pipeline: Some(pipeline.clone()),
@@ -558,7 +558,7 @@ use super::{
                             vertices: rendergeo.vertices(),
                             instances: rendergeo.instances(),
                             vertex: rendergeo.vertex_range(),
-                            indices: rendergeo.indices.clone(),
+                            indices: renderindices.apply(rendergeo),
                         };
                         
                         *old_draw = PassDraw(Some(Arc::new(draw)));
@@ -634,7 +634,7 @@ use super::{
             )
         >,
         passes: Query<
-            &PassDraw
+            (&PassDraw, &PassPipeline)
         >,
         mut record: ResMut<RendererDrawCallRecord>,
     ) {
@@ -646,8 +646,8 @@ use super::{
             if enable.0 == false {
                 return;
             }
-            let mut list_sort_opaque: Vec<(Entity, f32, TransparentSortParam, u8)> = vec![];
-            let mut list_sort_blend: Vec<(Entity, f32, TransparentSortParam, u8)> = vec![];
+            let mut list_sort_opaque: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
+            let mut list_sort_blend: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
             if let Ok((idscene, list_model, viewersize, viewport, viewposition)) = viewers.get(id_viewer.0) {
                 if let Ok(passcfg) = scenes.get(idscene.0) {
                     *rendersize = RenderSize(viewersize.0, viewersize.1);
@@ -678,51 +678,51 @@ use super::{
                                 };
 
                                 if pass == EPassTag::PASS_TAG_01 {
-                                    if passes.contains(passrecord.0.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.0.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.0.0);
-                                        list.push((passrecord.0.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_02 {
-                                    if passes.contains(passrecord.1.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.1.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.1.0);
-                                        list.push((passrecord.1.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_03 {
-                                    if passes.contains(passrecord.2.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.2.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.2.0);
-                                        list.push((passrecord.2.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_04 {
-                                    if passes.contains(passrecord.3.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.3.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.3.0);
-                                        list.push((passrecord.3.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_05 {
-                                    if passes.contains(passrecord.4.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.4.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.4.0);
-                                        list.push((passrecord.4.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_06 {
-                                    if passes.contains(passrecord.5.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.5.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.5.0);
-                                        list.push((passrecord.5.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_07 {
-                                    if passes.contains(passrecord.6.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.6.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.6.0);
-                                        list.push((passrecord.6.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_08 {
-                                    if passes.contains(passrecord.7.0) {
+                                    if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.7.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.7.0);
-                                        list.push((passrecord.7.0, distance, rendersort.clone(), index));
+                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
                                     }
                                 }
     
@@ -738,7 +738,9 @@ use super::{
                             std::cmp::Ordering::Equal => {
                                 match a.1.partial_cmp(&b.1) {
                                     Some(ord) => ord,
-                                    None => std::cmp::Ordering::Less,
+                                    None => {
+                                        b.4.cmp(&a.4)
+                                    },
                                 }
                             }
                         }
@@ -754,7 +756,9 @@ use super::{
                                     std::cmp::Ordering::Equal => {
                                         match b.1.partial_cmp(&a.1) {
                                             Some(ord) => ord,
-                                            None => std::cmp::Ordering::Less,
+                                            None => {
+                                                b.4.cmp(&a.4)
+                                            },
                                         }
                                     }
                                 }
@@ -762,15 +766,11 @@ use super::{
                         }
                     });
     
-                    list_sort_opaque.iter().for_each(|(entity, _ , _ , _)| {
-                        if let Ok(PassDraw(Some(draw))) = passes.get(*entity) {
-                            renderer.draws.list.push(draw.clone());
-                        }
+                    list_sort_opaque.iter().for_each(|(entity, _ , _ , _, _)| {
+                        renderer.draws.list.push(entity.clone());
                     });
-                    list_sort_blend.iter().for_each(|(entity, _ , _ , _)| {
-                        if let Ok(PassDraw(Some(draw))) = passes.get(*entity) {
-                            renderer.draws.list.push(draw.clone());
-                        }
+                    list_sort_blend.iter().for_each(|(entity, _ , _ , _, _)| {
+                        renderer.draws.list.push(entity.clone());
                     });
 
                     record.0.insert(id, renderer.draws.list.len() as u32);

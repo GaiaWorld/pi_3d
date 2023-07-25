@@ -20,8 +20,9 @@ impl Skeleton {
         mode: ESkinCode,
         device: &RenderDevice,
         dynbuffer: &mut BindBufferAllocator,
+        cache: Option<BindBufferRange>,
     ) -> Option<Self> {
-        if let Some(bind) = ShaderBindModelAboutSkinValue::new(&mode, device, dynbuffer) {
+        if let Some(bind) = ShaderBindModelAboutSkinValue::new(&mode, device, dynbuffer, cache) {
             Some(Self {
                 root,
                 bones,

@@ -141,6 +141,24 @@ pub fn sys_act_mesh_modify(
     });
 }
 
+pub fn sys_act_instance_color_alpha(
+    mut cmds: ResMut<ActionListInstanceColorAlpha>,
+    entities: Query<Entity>,
+    mut instances: Query<(&InstanceSourceID, &mut InstanceColor)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceColorAlpha(instance, r, g, b, a, count)| {
+        if entities.contains(instance) {
+            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
+                *instance_data = InstanceColor(Vector4::new(r, g, b, a));
+            } else {
+                if count < 2 {
+                    cmds.push(OpsInstanceColorAlpha(instance, r, g, b, a, count + 1));
+                }
+            }
+        }
+    });
+}
+
 pub fn sys_act_instance_color(
     mut cmds: ResMut<ActionListInstanceColor>,
     entities: Query<Entity>,
@@ -263,6 +281,7 @@ pub fn sys_act_mesh_render_indice(
     mut items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val, count)| {
+        // log::warn!("Range: {:?}", val);
         if let Ok((mut item, mut record)) = items.get_mut(entity) {
             *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
             *item = IndiceRenderRange(val);
@@ -321,8 +340,8 @@ impl ActionMesh {
             .insert(RenderAlignment::default())
             .insert(ScalingMode::default())
             .insert(InstanceBoneoffset::default())
-            .insert(IndiceRenderRange::default())
             .insert(RecordInstanceBoneoffset::default())
+            .insert(IndiceRenderRange::default())
             .insert(RecordIndiceRenderRange::default())
             ;
     }
@@ -498,117 +517,16 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
                     },
                 }
 
-                match renderalignment.0 {
-                    ERenderAlignment::View => {
-                        // let rot = transform.rotation_quaternion();
-                        // let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        // rx = 0.;
-                        // ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(0., 0., localeuler.0.z), &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::World => {
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &Rotation3::identity(), &pos, &mut m);
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::Local => {
-                        let rot = transform.rotation_quaternion();
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &rot.to_rotation_matrix(), &pos, &mut m);
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::Facing => {
-                        // let rot = transform.rotation_quaternion();
-                        // let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        // rx = 0.;
-                        // ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(0., 0., localeuler.0.z), &pos, &mut m);
-                        // CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(rx, ry, rz), pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::Velocity => {
-                        let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-                        let z_axis = if len > 0.000000001 {
-                            velocity.normalize()
-                        } else {
-                            Vector3::new(0., 0., 1.)
-                        };
-                        let mut y_axis = Vector3::new(0., 1., 0.);
-                        let mut x_axis = y_axis.cross(&z_axis);
-                        x_axis.normalize_mut();
-                        y_axis = z_axis.cross(&x_axis);
-
-                        let rot = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &rot, &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::StretchedBillboard => {
-                        let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-                        let x_axis = if len > 0.000000001 {
-                            velocity.normalize()
-                        } else {
-                            Vector3::new(1., 0., 0.)
-                        };
-                        let y_axis = Vector3::new(0., 1., 0.);
-                        let mut z_axis = x_axis.cross(&y_axis);
-                        z_axis.normalize_mut();
-
-                        let rot = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &rot, &pos, &mut m);
-
-                        let mut local = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&Vector3::new(len, 1., 1.), &Rotation3::identity(), &Vector3::new(-0.5 * len, 0., 0.), &mut local);
-
-                        m = m * local;
-
-                        wm.0.clone_from(&m);
-
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::HorizontalBillboard => {
-                        let rot = transform.rotation_quaternion();
-                        let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        rx = (90_f32).to_radians();
-                        ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(rx, ry, rz), &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::VerticalBillboard => {
-                        let rot = transform.rotation_quaternion();
-                        let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        rx = 0.;
-                        ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(rx, ry, rz), &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
+                let mut m = Matrix::identity();
+                let rotation = renderalignment.0.calc_rotation(transform.rotation(), velocity);
+                CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
+                if let Some(local) = renderalignment.0.calc_local(velocity) {
+                    m = m * local;
                 }
+
+                wm.0.clone_from(&m);
+                m.try_inverse_mut();
+                wmi.0.clone_from(&m);
             }
 
         });
@@ -638,6 +556,8 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
                     *dirty = InstanceWorldMatrixDirty(true);
                 }
 
+                // let mut flag = true;
+
                 // log::warn!("calc_render_matrix:");
                 // render_wm.0.clone_from(&worldmatrix.0);
                 // render_wminv.0.clone_from(&worldmatrix_inv.0);
@@ -648,9 +568,11 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
                         if renderalignment.0 == ERenderAlignment::Local {
                             wm.0.clone_from(&worldmatrix.0);
                             wmi.0.clone_from(&worldmatrix_inv.0);
+                            // log::warn!("Normal Alignment");
                             return;
                         }
                         scl.clone_from(transform.scaling());
+                        // flag = false;
                     },
                     crate::prelude::EScalingMode::Local => {
                         scl.clone_from(&localscaling.0);
@@ -660,120 +582,22 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
                     },
                 }
 
-                match renderalignment.0 {
-                    ERenderAlignment::View => {
-                        // let rot = transform.rotation_quaternion();
-                        // let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        // rx = 0.;
-                        // ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(0., 0., localeuler.0.z), &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::World => {
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &Rotation3::identity(), &pos, &mut m);
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::Local => {
-                        let rot = transform.rotation_quaternion();
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &rot.to_rotation_matrix(), &pos, &mut m);
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::Facing => {
-                        // let rot = transform.rotation_quaternion();
-                        // let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        // rx = 0.;
-                        // ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(0., 0., localeuler.0.z), &pos, &mut m);
-                        // CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(rx, ry, rz), pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::Velocity => {
-                        let mut x_axis = if velocity.norm() > 0.000000001 {
-                            velocity.normalize()
-                        } else {
-                            Vector3::new(0., 0., 1.)
-                        };
-                        let mut y_axis = Vector3::new(0., 1., 0.);
-                        let mut z_axis = x_axis.cross(&y_axis);
-                        z_axis.normalize_mut();
-
-                        let rot = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &rot, &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::StretchedBillboard => {
-                        let mut x_axis = if velocity.norm() > 0.000000001 {
-                            velocity.normalize()
-                        } else {
-                            Vector3::new(0., 0., 1.)
-                        };
-                        let mut y_axis = Vector3::new(0., 1., 0.);
-                        let mut z_axis = x_axis.cross(&y_axis);
-                        z_axis.normalize_mut();
-
-                        let rot = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&scl, &rot, &pos, &mut m);
-
-                        let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-                        let mut local = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&Vector3::new(len, 1., 1.), &Rotation3::identity(), &Vector3::new(-0.5 * len, 0., 0.), &mut local);
-
-                        m = m.mul(local);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::HorizontalBillboard => {
-                        let rot = transform.rotation_quaternion();
-                        let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        rx = (90_f32).to_radians();
-                        ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(rx, ry, rz), &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
-                    ERenderAlignment::VerticalBillboard => {
-                        let rot = transform.rotation_quaternion();
-                        let (mut rx, mut ry, mut rz) = rot.euler_angles();
-                        rx = 0.;
-                        ry = 0.;
-                        let mut m = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scl, &Vector3::new(rx, ry, rz), &pos, &mut m);
-
-                        wm.0.clone_from(&m);
-                        m.try_inverse_mut();
-                        wmi.0.clone_from(&m);
-                    },
+                let mut m = Matrix::identity();
+                let rotation = renderalignment.0.calc_rotation(transform.rotation(), velocity);
+                CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
+                if let Some(local) = renderalignment.0.calc_local(velocity) {
+                    m = m * local;
                 }
+
+                wm.0.clone_from(&m);
+                m.try_inverse_mut();
+                wmi.0.clone_from(&m);
             }
 
         });
         
         let time1 = pi_time::Instant::now();
-        // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
+        log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
     }
 
     pub fn sys_render_matrix_for_uniform(

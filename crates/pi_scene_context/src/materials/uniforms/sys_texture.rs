@@ -10,12 +10,12 @@ use super::{
     texture::*,
 };
 
-pub type PluginTextureSlot01Load = PluginImageLoad<TextureSlot01, EffectBindTexture2D01Comp>;
-pub type PluginTextureSlot02Load = PluginImageLoad<TextureSlot02, EffectBindTexture2D02Comp>;
-pub type PluginTextureSlot03Load = PluginImageLoad<TextureSlot03, EffectBindTexture2D03Comp>;
-pub type PluginTextureSlot04Load = PluginImageLoad<TextureSlot04, EffectBindTexture2D04Comp>;
-pub type PluginTextureSlot05Load = PluginImageLoad<TextureSlot05, EffectBindTexture2D05Comp>;
-pub type PluginTextureSlot06Load = PluginImageLoad<TextureSlot06, EffectBindTexture2D06Comp>;
+pub type PluginTextureSlot01Load = PluginImageTextureViewLoad<TextureSlot01, EffectBindTexture2D01Comp>;
+pub type PluginTextureSlot02Load = PluginImageTextureViewLoad<TextureSlot02, EffectBindTexture2D02Comp>;
+pub type PluginTextureSlot03Load = PluginImageTextureViewLoad<TextureSlot03, EffectBindTexture2D03Comp>;
+pub type PluginTextureSlot04Load = PluginImageTextureViewLoad<TextureSlot04, EffectBindTexture2D04Comp>;
+pub type PluginTextureSlot05Load = PluginImageTextureViewLoad<TextureSlot05, EffectBindTexture2D05Comp>;
+pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, EffectBindTexture2D06Comp>;
 
     pub fn sys_texture_ready01(
         items: Query<

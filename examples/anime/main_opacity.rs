@@ -8,6 +8,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
+use pi_gltf2_load::*;
 use pi_node_materials::{prelude::*, PluginNodeMaterial, NodeMaterialBlocks};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
@@ -39,7 +40,6 @@ fn setup(
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
-    mut transformanime: ActionSetTransformNodeAnime,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
@@ -49,8 +49,9 @@ fn setup(
     mut final_render: ResMut<WindowRenderer>,
     nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
-    mut matanime: ActionSetMaterialAnime,
     mut renderercmds: ActionSetRenderer,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
 ) {
     ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta());
 
@@ -119,24 +120,24 @@ fn setup(
     animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     {
         let key_curve0 = pi_atom::Atom::from("color");
-        let key_curve0 = matanime.main_color.2.uniqueid();
+        let key_curve0 = key_curve0.asset_u64();
         let curve = FrameCurve::<MainColor>::curve_easing(MainColor(Vector3::new(0.5, 0.5, 0.5)), MainColor(Vector3::new(1.0, 1., 1.)), 30, 30, EEasingMode::None);
-        let asset_curve = match matanime.main_color.1.insert(key_curve0, TypeFrameCurve(curve)) {
+        let asset_curve = match anime_assets.maincolor_curves.insert(key_curve0, TypeFrameCurve(curve)) {
             Ok(value) => { value },
             Err(_) => { return; },
         };
-        let animation = matanime.main_color.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        let animation = anime_contexts.maincolor.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
     }
     {
         let key_curve0 = pi_atom::Atom::from("mainuo");
-        let key_curve0 = matanime.opacity_tex_uoffset.2.uniqueid();
+        let key_curve0 = key_curve0.asset_u64();
         let curve = FrameCurve::<OpacityTexUOffset>::curve_easing(OpacityTexUOffset(0.), OpacityTexUOffset(1.0), 30, 30, EEasingMode::None);
-        let asset_curve = match matanime.opacity_tex_uoffset.1.insert(key_curve0, TypeFrameCurve(curve)) {
+        let asset_curve = match anime_assets.opacityuoff_curves.insert(key_curve0, TypeFrameCurve(curve)) {
             Ok(value) => { value },
             Err(_) => { return; },
         };
-        let animation = matanime.opacity_tex_uoffset.0.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        let animation = anime_contexts.opacitytex_uoffset.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
     }
     let mut parma = AnimationGroupParam::default();
@@ -200,6 +201,7 @@ pub fn main() {
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugins(PluginGroupNodeMaterialAnime);
     app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
+    app.add_plugin(pi_gltf2_load::PluginGLTF2Res);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

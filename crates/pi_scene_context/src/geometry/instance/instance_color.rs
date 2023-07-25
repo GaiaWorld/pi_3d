@@ -43,7 +43,7 @@ impl TInstanceData for InstanceColor {
 #[derive(Component)]
 pub struct InstanceBufferColor {
     pub slot: usize,
-    pub index: IDAssetVertexBuffer,
+    pub index: KeyVertexBuffer,
     // buffer: Handle<EVertexBufferRange>,
 }
 impl TInstanceBuffer for InstanceBufferColor {
@@ -58,7 +58,8 @@ impl TInstanceBuffer for InstanceBufferColor {
     fn id(&mut self) -> KeyVertexBuffer {
         // self.index += 1;
         // KeyVertexBuffer::from(self.id.clone() + self.index.to_string().as_str())
-        KeyVertexBuffer::from(self.index)
+        // KeyVertexBuffer::from(self.index)
+        self.index.clone()
     }
 }
 

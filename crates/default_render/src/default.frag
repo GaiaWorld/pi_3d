@@ -14,6 +14,6 @@ if (debug_normal > 0) {
 
 // baseColor.rgb = v_normal;
 
-baseColor.rgb = max(vec3(0.008, 0.008, 0.008), baseColor.rgb);
+baseColor.rgb = max(vec3(0.02, 0.02, 0.02), baseColor.rgb);
 
 gl_FragColor = vec4(baseColor.rgb, alpha);

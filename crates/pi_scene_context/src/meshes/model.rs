@@ -2,7 +2,7 @@ use std::{sync::Arc, ops::Range};
 
 use pi_engine_shell::prelude::*;
 use pi_render::renderer::vertex_format::TVertexFormatByteSize;
-use pi_scene_math::{Matrix, Vector3};
+use pi_scene_math::{Matrix, Vector3, Rotation3};
 
 use crate::prelude::RenderGeometry;
 
@@ -110,9 +110,11 @@ impl IndiceRenderRange {
                     Range { start, end }
                 );
             }
+            // log::warn!("IndiceRenderRange: {:?} buffer_range: {:?}", self, indices.buffer_range);
             
             Some(indices)
         } else {
+            // log::warn!("IndiceRenderRange: {:?} buffer_range: None", self);
             None
         }
     }
@@ -216,4 +218,3 @@ impl RenderWorldMatrixInv {
         Self(m)
     }
 }
-

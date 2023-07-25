@@ -123,7 +123,7 @@ fn setup(
     mut treecmds: ResMut<ActionListTransformNodeParent>,
     mut cameracmds: ActionSetCamera,
     mut localpositioncmds: ResMut<ActionListTransformNodeLocalPosition>,
-    mut meshcreate: ResMut<ActionListMeshCreate>,
+    mut meshcmds: ActionSetMesh,
     mut geometrycreate: ResMut<ActionListGeometryCreate>,
     mut matuse: ResMut<ActionListMaterialUse>,
     mut fps: ResMut<SingleFrameTimeCommand>,
@@ -156,7 +156,9 @@ fn setup(
     cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let cube = commands.spawn_empty().id(); treecmds.push(OpsTransformNodeParent::ops(cube, scene));
-    meshcreate.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));
+    meshcmds.indexrange.push(OpsMeshRenderIndiceRange::ops(cube, Some(3), Some(12)));
+    meshcmds.cullmode.push(OpsCullMode::ops(cube, CullMode::Off));
     
     let id_geo = commands.spawn_empty().id();
     geometrycreate.push(OpsGeomeryCreate::ops(cube, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
@@ -169,7 +171,7 @@ fn setup(
 
 
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut app = App::default();
 

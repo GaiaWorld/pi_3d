@@ -3,9 +3,9 @@ use pi_scene_context::prelude::*;
 
 pub struct AxisBuilder;
 impl AxisBuilder {
-    pub(crate) const KEY_BUFFER_POSITION:   IDAssetVertexBuffer = -3002;
-    pub(crate) const KEY_BUFFER_COLOR4:     IDAssetVertexBuffer = -3001;
-    pub(crate) const KEY_BUFFER_INDICES:    IDAssetVertexBuffer = -3000;
+    pub(crate) const KEY_BUFFER_POSITION:   &'static str = "AxisPOSITION";
+    pub(crate) const KEY_BUFFER_COLOR4:     &'static str = "AxisCOLOR";
+    pub(crate) const KEY_BUFFER_INDICES:    &'static str = "AxisINDICES";
 
     pub fn position() -> Vec<f32> {
         let mut x_axis: Vec<f32> = vec![

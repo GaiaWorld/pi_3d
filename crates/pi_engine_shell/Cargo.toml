@@ -21,7 +21,7 @@ futures             = "0.3"
 parry3d             = "0.9"
 lazy_static         = "1.4"
 pi_spatial          = { git = "https://github.com/GaiaWorld/pi_spatial.git" }
-ncollide3d          = "0.33"
+# ncollide3d          = "0.33"
 
 approx              = "0.5"
 bytemuck            = { version = "1.4", features = ["derive"] }

@@ -21,7 +21,7 @@ serde_derive    = "1.0"
 parry3d         = "0.13"
 lazy_static     = "1.4"
 pi_spatial      = { git = "https://github.com/GaiaWorld/pi_spatial.git" }
-ncollide3d      = "0.33"
+# ncollide3d      = "0.33"
 
 approx          = "0.5"
 naga            = { version = "0.10", features = [ "glsl-in" ] }

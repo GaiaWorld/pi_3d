@@ -57,7 +57,6 @@ fn setup(
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
-    mut transformanime: ActionSetTransformNodeAnime,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,

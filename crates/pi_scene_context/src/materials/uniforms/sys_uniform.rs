@@ -198,22 +198,25 @@ use super::{
                 };
                 
                 if index == 0 {
-                    // log::warn!("TextureSlot01");
+                    log::warn!("Texture 0 {:?}", &param.url);
                     entitycmd.insert(TextureSlot01(param.clone()));
                     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
                         entitycmd.insert(EffectBindSampler2D01Comp(EffectBindSampler2D01(samp)));
                     }
                 } else if index == 1 {
+                    log::warn!("Texture 1 {:?}", &param.url);
                     entitycmd.insert(TextureSlot02(param.clone()));
                     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
                         entitycmd.insert(EffectBindSampler2D02Comp(EffectBindSampler2D02(samp)));
                     }
                 } else if index == 2 {
+                    log::warn!("Texture 2 {:?}", &param.url);
                     entitycmd.insert(TextureSlot03(param.clone()));
                     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
                         entitycmd.insert(EffectBindSampler2D03Comp(EffectBindSampler2D03(samp)));
                     }
                 } else if index == 3 {
+                    log::warn!("Texture 3 {:?}", &param.url);
                     entitycmd.insert(TextureSlot04(param.clone()));
                     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
                         entitycmd.insert(EffectBindSampler2D04Comp(EffectBindSampler2D04(samp)));

@@ -92,7 +92,7 @@ impl AnimationGroupParam {
         loop_mode: ELoopMode,
         from: f32,
         to: f32,
-        fps: u16,
+        fps: FramePerSecond,
         amountcalc: AnimationAmountCalc,
     ) -> Self {
         Self {

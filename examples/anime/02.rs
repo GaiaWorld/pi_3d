@@ -1,18 +1,20 @@
 #![feature(box_into_inner)]
 
+
 use default_render::SingleIDBaseDefaultMaterial;
-use pi_3d::PluginBundleDefault;
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
+use pi_3d::{PluginBundleDefault, PluginSceneTimeFromPluginFrame};
+use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_frame_event::CurveFrameEvent, animation_listener::{AnimationListener, EAnimationEventResult}};
 use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
+use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
+use pi_bevy_render_plugin::{PiRenderPlugin, PiRenderSystemSet};
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
-use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
+use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
+
+use pi_gltf2_load::*;
+use pi_node_materials::{PluginNodeMaterial};
 use pi_scene_context::prelude::*;
-use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::*, quad::{PluginQuadBuilder, QuadBuilder}};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, main_opacity_fresnel::MainOpacityFresnelShader, two_opacity_mix::TwoOpacityMixShader, stripes_virtual::StripesVirtualShader, distortion_uv::DistortionUVShader}};
+use pi_scene_math::{Vector3, Vector4};
+use pi_mesh_builder::{cube::*, ball::*, quad::*};
 
 use std::sync::Arc;
 use pi_async::rt::AsyncRuntime;
@@ -34,93 +36,42 @@ impl Plugin for PluginLocalLoad {
     }
 }
 
-// #[derive(Debug, Default)]
-// pub struct SingleTestData {
-//     pub transforms: Vec<(ObjectID, f32, f32, f32)>,
-// }
-
-// pub struct SysTest;
-// impl TSystemStageInfo for SysTest {}
-// #[setup]
-// impl SysTest {
-//     #[system]
-//     pub fn sys(
-//         mut list: ResMut<SingleTestData>,
-//         mut transform_commands: ResMut<SingleTransformNodeModifyCommandList>,
-//     ) {
-//         list.transforms.iter_mut().for_each(|mut item| {
-//             item.1 = item.1 + 16.0;
-//             item.2 = item.2 + 16.0;
-//             item.3 = item.3 + 16.0;
-//             let x0 = item.1 % 4000.0 / 4000.0;
-//             let x = x0 * 3.1415926 * 2.;
-//             let y0 = item.2 % 4000.0 / 4000.0;
-//             let y = y0 * 3.1415926 * 2.;
-//             let z0 = item.3 % 4000.0 / 4000.0;
-//             let z = z0 * 3.1415926 * 2.;
-//             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 3., 0., 0.)));
-//             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
-//             transform_commands.list.push(ETransformNodeModifyCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
-//         });
-//     }
-// }
-
-// #[derive(Debug)]
-// pub struct PluginTest;
-// impl Plugin for PluginTest {
-//     fn init(
-//         &mut self,
-//         engine: &mut pi_scene_context::engine::Engine,
-//         stages: &mut pi_scene_context::run_stage::RunStage,
-//     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-//         PluginLocalLoad.init(engine, stages);
-//         PluginBundleDefault.init(engine, stages);
-//         // PluginMaterialTextures.init(engine, stages);
-//         // PluginMainTexture.init(engine, stages);
-//         PluginUnlitMaterial.init(engine, stages);
-//         PluginCubeBuilder.init(engine, stages);
-
-//         let world = engine.world_mut();
-
-//         SysTest::setup(world, stages.query_stage::<SysTest>(ERunStageChap::Command));
-
-//         let testdata = SingleTestData::default();
-//         world.insert_resource(testdata);
-
-//         Ok(())
-//     }
-// }
-
 fn setup(
-    
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
+    mut abstructmeshcms: ActionSetAbstructMesh,
     mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
+    mut matuse: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
-    nodematblocks: Res<NodeMaterialBlocks>,
-    defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
+    defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
 ) {
     let tes_size = 20;
-    fps.frame_ms = 4;
+    fps.frame_ms = 16;
+
     final_render.cleardepth = 0.0;
 
     let scene = commands.spawn_empty().id();
+    animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
     let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -40.));
+    cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., 0., 1.));
+    cameracmds.mode.push(OpsCameraMode::ops(camera01, false));
     cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-    
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 10.));
+    // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
+
     let desc = RendererGraphicDesc {
         pre: Some(final_render.clear_entity),
         curr: String::from("TestCamera"),
@@ -132,26 +83,77 @@ fn setup(
     renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
     cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
-    let mut blend = ModelBlend::default(); blend.combine();
-    meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
+    meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
+    let mut attrs = CubeBuilder::attrs_meta();
+    attrs.push(VertexBufferDesc::instance_world_matrix());
+    attrs.push(VertexBufferDesc::instance_color());
+    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
-    let idmat = commands.spawn_empty().id();
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Transparent));
-    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
-        slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
-        sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/Q69L5MmgSNC2xbBiAwZcDw.png"),
-    }));
+    let idmat = defaultmat.0;
+    matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
+
+    let root = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(root, scene));
+    transformcmds.create.push(OpsTransformNode::ops(scene, root, "".to_string()));
     
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
+    let key_group = pi_atom::Atom::from("key_group");
+    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+    animegroupcmd.global.record_group(source, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    
+    let key_curve0 = pi_atom::Atom::from("test");
+    let key_curve0 = key_curve0.asset_u64();
+    let mut curve = FrameCurve::<LocalEulerAngles>::curve_frame_values(30);
+    curve.curve_frame_values_frame(1, LocalEulerAngles(Vector3::new(0., 0., 0.)));
+    curve.curve_frame_values_frame(120, LocalEulerAngles(Vector3::new(6.28, 6.28, 0.)));
+    let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) {
+        curve
+    } else {
+        match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
+            Ok(value) => {
+                value
+            },
+            Err(_) => {
+                return;
+            },
+        }
+    };
+    let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+    animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group.clone(), animation);
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
+
+    let temproot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(temproot, root));
+    transformcmds.create.push(OpsTransformNode::ops(scene, temproot, "".to_string()));
+    let cell_col = 4.;
+    let cell_row = 4.;
+    let size = 4;
+    for i in 0..size {
+        for j in 0..size {
+            for k in 0..size {
+                
+                let ins: Entity = commands.spawn_empty().id();
+                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, ins, String::from("a")));
+                transformcmds.tree.push(OpsTransformNodeParent::ops(ins, temproot));
+                
+                let r = (i as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
+                let g = (j as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
+                let b = (k as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
+                let a: f32 = (k as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
+
+                let x = (i as f32 - size as f32 / 2.) + 0.5;
+                let y = (j as f32 - size as f32 / 2.) + 0.5;
+                let z = (k as f32 - size as f32 / 2.) + 0.5;
+                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(ins, x, y, z));
+                transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(ins, r, g, b));
+                instancemeshcmds.color.push(OpsInstanceColor::ops(ins, r, g, b));
+            }
+        }
+    }
 }
+
 pub trait AddEvent {
 	// 添加事件， 该实现每帧清理一次
 	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
@@ -177,8 +179,8 @@ impl Plugin for PluginTest {
     }
 }
 
-pub fn main() {
 
+pub fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut app = App::default();
@@ -187,7 +189,6 @@ pub fn main() {
     if let Some(primary_window) = &mut window_plugin.primary_window {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
-
     app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
@@ -196,7 +197,6 @@ pub fn main() {
     // .add_plugin(WorldInspectorPlugin::new())
     app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
-    app.add_plugin(PluginLocalLoad);
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
     app.add_plugin(PluginWindowRender);
@@ -205,13 +205,13 @@ pub fn main() {
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginNodeMaterial);
-    app.add_plugin(PluginUnlitMaterial);
     app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
-    
+
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()
+
 }

@@ -28,7 +28,7 @@ use super::{
             if let Ok((mut loacl_quaternion, mut local_rotation)) = loacl_quaternions.get_mut(entity) {
                 let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
                 let quaternion = Quaternion::from_rotation_matrix(&rotation);
-                *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone());
+                *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone(), false);
                 *local_rotation = LocalRotation(rotation);
             }
         });
@@ -52,11 +52,13 @@ use super::{
     ) {
         localmatrixs.iter().for_each(|(entity, quat)| {
             if let Ok(mut local_rotation) = loacl_eulers.get_mut(entity) {
-                // log::warn!("Quaternion: {:?}", quat);
-                let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
-                // let (z, x, y) = rotation.euler_angles();
-                // *loacl_quaternion = LocalRotationQuaternion(quaternion);
-                *local_rotation = LocalRotation(rotation);
+                if quat.1 {
+                    // log::warn!("Quaternion: {:?}", quat);
+                    let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
+                    // let (z, x, y) = rotation.euler_angles();
+                    // *loacl_quaternion = LocalRotationQuaternion(quaternion);
+                    *local_rotation = LocalRotation(rotation);
+                }
             }
         });
     }

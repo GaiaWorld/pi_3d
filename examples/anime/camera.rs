@@ -10,7 +10,8 @@ use pi_bevy_render_plugin::{PiRenderPlugin, PiRenderSystemSet};
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
 
-use pi_node_materials::{prelude::BlockEmissiveBase, PluginNodeMaterial};
+use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_node_materials::{prelude::*};
 use pi_scene_context::prelude::*;
 use pi_scene_math::{Vector3, Vector4};
 use pi_mesh_builder::{cube::*, ball::*, quad::*};
@@ -41,7 +42,6 @@ fn setup(
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
-    mut transformanime: ActionSetTransformNodeAnime,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
     mut abstructmeshcms: ActionSetAbstructMesh,
@@ -50,10 +50,13 @@ fn setup(
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
+    mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
 ) {
     let tes_size = 20;
-    fps.frame_ms = 100;
+    fps.frame_ms = 30;
 
     final_render.cleardepth = 0.0;
 
@@ -61,26 +64,34 @@ fn setup(
     animegroupcmd.scene_ctxs.init_scene(scene);
     scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id();
+    let root = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(root, scene));
+    transformcmds.create.push(OpsTransformNode::ops(scene, root, "root".to_string()));
+    // transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(root, 0., 0., 0.));
+
+    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, root));
     cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 10., -40.));
-    cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -20.));
+    cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., 0., 1.));
     cameracmds.mode.push(OpsCameraMode::ops(camera01, false));
     cameracmds.active.push(OpsCameraActive::ops(camera01, true));
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 4.));
     // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
     let desc = RendererGraphicDesc {
-        pre: Some(Atom::from(WindowRenderer::CLEAR_KEY)),
-        curr: Atom::from("TestCamera"),
-        next: Some(Atom::from(WindowRenderer::KEY)),
+        pre: Some(final_render.clear_entity),
+        curr: String::from("TestCamera"),
+        next: Some(final_render.render_entity),
         passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
     };
-    let id_renderer = commands.spawn_empty().id();
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
+    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
+    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
+    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-    let source = commands.spawn_empty().id();
+
+    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::VerticalBillboard));
     // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
@@ -92,31 +103,53 @@ fn setup(
     
     let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.create.push(OpsAnimationGroupCreation::ops(source, key_group.clone(), id_group));
+    animegroupcmd.global.record_group(root, id_group);
+    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, root, id_group));
 
     {
+        let key_curve0 = pi_atom::Atom::from("test"); 
+        let key_curve0 = key_curve0.asset_u64();
+        let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(1., 1., 1.)), LocalScaling(Vector3::new(0., 4., 2.)), (60.) as FrameIndex, 30, EEasingMode::None);
         
-        let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
-        let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(1., 1., 1.)), LocalScaling(Vector3::new(0., 2. * (1.1 + (i as f32).sin()), 0.)), (60. * (1.1 + ((i * j) as f32).cos())) as u16, 30, EEasingMode::None);
-        
-        let asset_curve = if let Some(curve) = transformanime.scaling.curves.get(&key_curve0) {
+        let asset_curve = if let Some(curve) = anime_assets.scaling.get(&key_curve0) {
             curve
         } else {
-            match transformanime.scaling.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+            match anime_assets.scaling.insert(key_curve0, TypeFrameCurve(curve)) {
                 Ok(value) => {
                     value
                 },
                 Err(_) => {
-                    break;
+                    return;
                 },
             }
         };
 
-        let animation = transformanime.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.add_target_anime.push(OpsAddTargetAnimation::ops(source, cube, key_group.clone(), animation));
+        let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.scene_ctxs.add_target_anime(scene, source, id_group.clone(), animation);
+    }
+    {
+        let key_curve0 =  pi_atom::Atom::from("test2"); 
+        let key_curve0 = key_curve0.asset_u64();
+        let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 0.)), LocalEulerAngles(Vector3::new(3.1415926 * 2., 3.1415926 * 2., 3.1415926 * 2.)), (60.) as FrameIndex, 30, EEasingMode::None);
+        
+        let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) {
+            curve
+        } else {
+            match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => {
+                    value
+                },
+                Err(_) => {
+                    return;
+                },
+            }
+        };
+
+        let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group.clone(), animation);
     }
 
-    animegroupcmd.start.push(OpsAnimationGroupStart::ops(source, key_group.clone(), AnimationGroupParam::default()));
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 
@@ -156,11 +189,13 @@ pub fn main() {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
+    app.insert_resource(AssetMgrConfigs::default());
     app.add_plugin(InputPlugin::default());
     app.add_plugin(window_plugin);
     app.add_plugin(AccessibilityPlugin);
     app.add_plugin(bevy::winit::WinitPlugin::default());
     // .add_plugin(WorldInspectorPlugin::new())
+    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugin(PiRenderPlugin::default());
     app.add_plugin(PluginTest);
     app.add_plugin(PluginFrameTime);
@@ -170,6 +205,7 @@ pub fn main() {
     app.add_plugin(PluginQuadBuilder);
     app.add_plugin(PluginStateToFile);
     app.add_plugin(PluginNodeMaterial);
+    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

@@ -8,6 +8,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
+use pi_gltf2_load::*;
 use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
@@ -39,7 +40,6 @@ fn setup(
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
-    mut transformanime: ActionSetTransformNodeAnime,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
@@ -49,8 +49,9 @@ fn setup(
     mut final_render: ResMut<WindowRenderer>,
     nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
-    mut matanime: ActionSetMaterialAnime,
     mut renderercmds: ActionSetRenderer,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
 ) {
     ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
 
@@ -135,16 +136,16 @@ fn setup(
     animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     {
-        // let key_curve0 = pi_atom::Atom::from("cutoff");
-        let key_curve0 = matanime.cutoff.2.uniqueid();
+        let key_curve0 = pi_atom::Atom::from("cutoff");
+        let key_curve0 =key_curve0.asset_u64();
         let mut curve = FrameCurve::<Cutoff>::curve_frame_values(10000);
         curve.curve_frame_values_frame(0, Cutoff(0.));
         curve.curve_frame_values_frame(10000, Cutoff(1.));
         
-        let asset_curve = if let Some(curve) = matanime.cutoff.1.get(&key_curve0) {
+        let asset_curve = if let Some(curve) = anime_assets.alphacutoff.get(&key_curve0) {
             curve
         } else {
-            match matanime.cutoff.1.insert(key_curve0, TypeFrameCurve(curve)) {
+            match anime_assets.alphacutoff.insert(key_curve0, TypeFrameCurve(curve)) {
                 Ok(value) => {
                     value
                 },
@@ -154,20 +155,20 @@ fn setup(
             }
         };
     
-        let animation = matanime.cutoff.0.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        let animation = anime_contexts.alphacutoff.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.scene_ctxs.add_target_anime(scene, idmat, id_group, animation);
     }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
-        let key_curve0 = transformanime.position.counter.uniqueid();
+        let key_curve0 = key_curve0.asset_u64();
         let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
         curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
         curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(2., 0., 0.)));
         
-        let asset_curve = if let Some(curve) = transformanime.position.curves.get(&key_curve0) {
+        let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) {
             curve
         } else {
-            match transformanime.position.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+            match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
                 Ok(value) => {
                     value
                 },
@@ -177,7 +178,7 @@ fn setup(
             }
         };
     
-        let animation = transformanime.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group, animation);
     }
     let mut parma = AnimationGroupParam::default();

@@ -8,18 +8,18 @@ use pi_scene_context::prelude::*;
 
 pub struct CubeBuilder;
 impl CubeBuilder {
-    // const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";
-    // const KEY_BUFFER_POSITION:  &'static str = "CubePosition";
-    // const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
-    // const KEY_BUFFER_UV:        &'static str = "CubeUV";
-    // const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
-    // const KEY_BUFFER:           &'static str = "CubeBuildin";
-    const KEY_BUFFER_COLOR4:    IDAssetVertexBuffer = -1005;
-    const KEY_BUFFER_POSITION:  IDAssetVertexBuffer = -1004;
-    const KEY_BUFFER_NORMAL:    IDAssetVertexBuffer = -1003;
-    const KEY_BUFFER_UV:        IDAssetVertexBuffer = -1002;
-    const KEY_BUFFER_INDICES:   IDAssetVertexBuffer = -1001;
-    const KEY_BUFFER:           IDAssetVertexBuffer = -1000;
+    const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";
+    const KEY_BUFFER_POSITION:  &'static str = "CubePosition";
+    const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
+    const KEY_BUFFER_UV:        &'static str = "CubeUV";
+    const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
+    const KEY_BUFFER:           &'static str = "CubeBuildin";
+    // const KEY_BUFFER_COLOR4:    IDAssetVertexBuffer = -1005;
+    // const KEY_BUFFER_POSITION:  IDAssetVertexBuffer = -1004;
+    // const KEY_BUFFER_NORMAL:    IDAssetVertexBuffer = -1003;
+    // const KEY_BUFFER_UV:        IDAssetVertexBuffer = -1002;
+    // const KEY_BUFFER_INDICES:   IDAssetVertexBuffer = -1001;
+    // const KEY_BUFFER:           IDAssetVertexBuffer = -1000;
     const VERTEX_COUNT:         usize = 24;
     const POSITION_OFFSET:      usize = 0;
     const POSITION_SIZE:        usize = 72 * 4;
@@ -49,7 +49,7 @@ impl CubeBuilder {
         IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
     }
     pub fn position() -> [f32; 72] {
-        [
+        let mut temp = [
             // z = 1
             1., -1., 1., -1., -1., 1., -1., 1., 1., 1., 1., 1., 
             // z = -1
@@ -62,7 +62,11 @@ impl CubeBuilder {
             -1., 1., 1., -1., 1., -1., 1., 1., -1., 1., 1., 1., 
             // y = -1
             1., -1., 1., 1., -1., -1., -1., -1., -1., -1., -1., 1.
-        ]
+        ];
+        temp.iter_mut().for_each(|v| {
+            *v = *v * 0.5;
+        });
+        temp
     }
     pub fn normal() -> [f32; 72] {
         [
@@ -87,35 +91,35 @@ impl CubeBuilder {
     pub fn vertices() -> [f32; 192] {
         [
             // z = 1
-             1., -1.,  1.,       0.,  0.,  1.,      1., 0.,
-            -1., -1.,  1.,       0.,  0.,  1.,      0., 0.,
-            -1.,  1.,  1.,       0.,  0.,  1.,      0., 1.,
-             1.,  1.,  1.,       0.,  0.,  1.,      1., 1., 
+             0.5, -0.5,  0.5,       0.,  0.,  1.,      1., 0.,
+            -0.5, -0.5,  0.5,       0.,  0.,  1.,      0., 0.,
+            -0.5,  0.5,  0.5,       0.,  0.,  1.,      0., 1.,
+             0.5,  0.5,  0.5,       0.,  0.,  1.,      1., 1., 
             // z = -1
-             1.,  1., -1.,       0.,  0., -1.,      1., 1.,
-            -1.,  1., -1.,       0.,  0., -1.,      0., 1.,
-            -1., -1., -1.,       0.,  0., -1.,      0., 0.,
-             1., -1., -1.,       0.,  0., -1.,      1., 0., 
+             0.5,  0.5, -0.5,       0.,  0., -1.,      1., 1.,
+            -0.5,  0.5, -0.5,       0.,  0., -1.,      0., 1.,
+            -0.5, -0.5, -0.5,       0.,  0., -1.,      0., 0.,
+             0.5, -0.5, -0.5,       0.,  0., -1.,      1., 0., 
             // x = 1
-             1.,  1., -1.,       1.,  0.,  0.,      1., 0.,
-             1., -1., -1.,       1.,  0.,  0.,      0., 0.,
-             1., -1.,  1.,       1.,  0.,  0.,      0., 1.,
-             1.,  1.,  1.,       1.,  0.,  0.,      1., 1.,
+             0.5,  0.5, -0.5,       1.,  0.,  0.,      1., 0.,
+             0.5, -0.5, -0.5,       1.,  0.,  0.,      0., 0.,
+             0.5, -0.5,  0.5,       1.,  0.,  0.,      0., 1.,
+             0.5,  0.5,  0.5,       1.,  0.,  0.,      1., 1.,
             // x = -1
-            -1.,  1.,  1.,      -1.,  0.,  0.,      1., 1.,
-            -1., -1.,  1.,      -1.,  0.,  0.,      0., 1.,
-            -1., -1., -1.,      -1.,  0.,  0.,      0., 0.,
-            -1.,  1., -1.,      -1.,  0.,  0.,      1., 0.,
+            -0.5,  0.5,  0.5,      -1.,  0.,  0.,      1., 1.,
+            -0.5, -0.5,  0.5,      -1.,  0.,  0.,      0., 1.,
+            -0.5, -0.5, -0.5,      -1.,  0.,  0.,      0., 0.,
+            -0.5,  0.5, -0.5,      -1.,  0.,  0.,      1., 0.,
             // y = 1
-            -1.,  1.,  1.,       0.,  1.,  0.,      0., 1.,
-            -1.,  1., -1.,       0.,  1.,  0.,      0., 0.,
-             1.,  1., -1.,       0.,  1.,  0.,      1., 0.,
-             1.,  1.,  1.,       0.,  1.,  0.,      1., 1.,
+            -0.5,  0.5,  0.5,       0.,  1.,  0.,      0., 1.,
+            -0.5,  0.5, -0.5,       0.,  1.,  0.,      0., 0.,
+             0.5,  0.5, -0.5,       0.,  1.,  0.,      1., 0.,
+             0.5,  0.5,  0.5,       0.,  1.,  0.,      1., 1.,
              // y = -1
-             1., -1.,  1.,       0., -1.,  0.,      1., 1.,
-             1., -1., -1.,       0., -1.,  0.,      1., 0.,
-            -1., -1., -1.,       0., -1.,  0.,      0., 0.,
-            -1., -1.,  1.,       0., -1.,  0.,      0., 1.
+             0.5, -0.5,  0.5,       0., -1.,  0.,      1., 1.,
+             0.5, -0.5, -0.5,       0., -1.,  0.,      1., 0.,
+            -0.5, -0.5, -0.5,       0., -1.,  0.,      0., 0.,
+            -0.5, -0.5,  0.5,       0., -1.,  0.,      0., 1.
         ]
     }
     pub fn indices() -> [u16; 36] {

@@ -50,6 +50,16 @@ impl From<(Pipeline3DUsage, Option<()>)> for PassPipeline {
         Self(Some(value.0))
     }
 }
+impl PassPipeline {
+    pub fn key(&self) -> u64 {
+        if let Some(val) = &self.0 {
+            let key = val.key();
+            *key
+        } else {
+            u64::MAX
+        }
+    }
+}
 #[derive(Component)]
 pub struct PassDraw(pub Option<Arc<DrawObj3D>>);
 impl TPassData<Option<Arc<DrawObj3D>>> for PassDraw {

@@ -38,7 +38,6 @@ fn setup(
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
-    mut transformanime: ActionSetTransformNodeAnime,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
@@ -121,13 +120,13 @@ fn sys_setup_ball(
     let param = BallParam { sectors: 20, stacks: 20 };
 
     let (positions, normals, indices, uvs) = generate_sphere(&param);
-    let id = data_map.id("BallPos#20#20");
+    let id = ("BallPos#20#20");
     ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&positions).iter().map(|v| *v).collect::<Vec<u8>>());
-    let id = data_map.id("BallNor#20#20");
+    let id = ("BallNor#20#20");
     ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&normals).iter().map(|v| *v).collect::<Vec<u8>>());
-    let id = data_map.id("BallUV#20#20");
+    let id = ("BallUV#20#20");
     ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&uvs).iter().map(|v| *v).collect::<Vec<u8>>());
-    let id = data_map.id("BallInd#20#20");
+    let id = ("BallInd#20#20");
     ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&indices).iter().map(|v| *v).collect::<Vec<u8>>());
 }
 

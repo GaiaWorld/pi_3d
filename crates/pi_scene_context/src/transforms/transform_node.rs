@@ -126,16 +126,16 @@ impl TAnimatableCompRecord<LocalRotationQuaternion> for RecordLocalRotationQuate
 }
 
 #[derive(Debug, Clone, Component)]
-pub struct LocalRotationQuaternion(pub SQuaternion<Number>);
+pub struct LocalRotationQuaternion(pub SQuaternion<Number>, pub bool);
 impl LocalRotationQuaternion {
     pub fn create(x: Number, y: Number, z: Number, w: Number) -> Self {
-        Self(SQuaternion::new(w, x, y, z))
+        Self(SQuaternion::new(w, x, y, z), true)
     }
 }
 impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         let temp = self.0.lerp(&rhs.0, amount);
-        Self(temp)
+        Self(temp, true)
     }
 
     fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -154,12 +154,12 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
 
         // log::warn!("Value1: {:?} Value2: {:?} Result: {:?}", value1, value2, result);
 
-        return Self(result);
+        return Self(result, true);
     }
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         log::warn!("LocalRotationQuaternion has not 'append' operation!");
-        Self(self.0 + rhs.0 * amount)
+        Self(self.0 + rhs.0 * amount, true)
     }
     fn size() -> usize {
         4 * 4
@@ -320,6 +320,10 @@ impl GlobalTransform {
     pub fn rotation_quaternion(&mut self) -> Quaternion {
         self.decompose();
         Quaternion::from_rotation_matrix(&self.rotation.unwrap())
+    }
+    pub fn rotation(&mut self) -> &Rotation3 {
+        self.decompose();
+        self.rotation.as_ref().unwrap()
     }
     pub fn position(&self) -> &Vector3 {
         &self.position

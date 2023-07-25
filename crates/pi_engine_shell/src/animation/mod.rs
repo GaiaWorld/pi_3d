@@ -75,7 +75,6 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
 
         let type_ctx = TypeAnimeContext::<D>::new(ty, &mut runtime_info_map);
         app.insert_resource(type_ctx);
-        app.insert_resource(TypeAnimeContextCounter::<D>::default());
 
         app.add_system(
             sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear)

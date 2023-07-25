@@ -9,6 +9,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
+use pi_gltf2_load::*;
 use pi_node_materials::prelude::*;
 use pi_scene_context::{prelude::*};
 use pi_scene_math::{Vector3, Vector4};
@@ -40,7 +41,6 @@ fn setup(
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
-    mut transformanime: ActionSetTransformNodeAnime,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
@@ -50,6 +50,8 @@ fn setup(
     mut final_render: ResMut<WindowRenderer>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
 ) {
     let tes_size = 100;
     fps.frame_ms = 4;
@@ -123,13 +125,13 @@ fn setup(
                 instancemeshcmds.tilloff.push(OpsInstanceTillOff::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
-                let key_curve0 = transformanime.euler.counter.uniqueid();
+                let key_curve0 = key_curve0.asset_u64();
                 let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(i as f32, j as f32, k as f32)), LocalEulerAngles(Vector3::new(10., 10., 10.)), 30, 30, EEasingMode::None);
                 
-                let asset_curve = if let Some(curve) = transformanime.euler.curves.get(&key_curve0) {
+                let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) {
                     curve
                 } else {
-                    match transformanime.euler.curves.insert(key_curve0, TypeFrameCurve(curve)) {
+                    match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
                         Ok(value) => {
                             value
                         },
@@ -139,7 +141,7 @@ fn setup(
                     }
                 };
 
-                let animation = transformanime.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+                let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
                 animegroupcmd.scene_ctxs.add_target_anime(scene, cube, id_group, animation);
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }

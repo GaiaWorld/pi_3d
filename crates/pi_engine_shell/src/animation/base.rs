@@ -24,7 +24,7 @@ use super::AnimationGroupParam;
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
 pub struct FlagAnimationStartResetComp;
 
-pub type IDAssetTypeFrameCurve = i64;
+pub type IDAssetTypeFrameCurve = u64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneID(pub Entity);
@@ -59,21 +59,6 @@ impl<D: TAnimatableComp> TypeAnimeContext<D> {
         Self { ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, runtime_info_map) }
     }
 }
-
-#[derive(Resource)]
-pub struct TypeAnimeContextCounter<D: TAnimatableComp>(PhantomData<D>, IDAssetTypeFrameCurve);
-impl<D: TAnimatableComp> Default for TypeAnimeContextCounter<D> {
-    fn default() -> Self {
-        Self(PhantomData, -1)
-    }
-}
-impl<D: TAnimatableComp> TypeAnimeContextCounter<D> {
-    pub fn uniqueid(&mut self) -> IDAssetTypeFrameCurve {
-        self.1 -= 1;
-        self.1
-    }
-} 
-
 
 pub trait TAnimatableComp: Default + FrameDataValue + Component + std::fmt::Debug + TAssetCapacity {
 

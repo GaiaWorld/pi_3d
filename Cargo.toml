@@ -21,7 +21,8 @@ skybox                  = { path = "crates/skybox" }
 procedural_texture      = { path = "crates/procedural_texture" }
 skeletons               = { path = "crates/skeletons" }
 axis                    = { path = "crates/axis" }
-particle                    = { path = "crates/particle" }
+particle                = { path = "crates/particle" }
+pi_gltf2_load           = { path = "crates/gltf2" }
 
 pi_node_materials       = { path = "crates/node_materials" }
 unlit_material          = { path = "crates/unlit_material" }
@@ -49,7 +50,7 @@ pi_assets               = "0.12"
 pi_async                = "0.5"
 
 wgpu                = "0.15"
-bevy                = { version="0.10", default-features = false, features=["bevy_winit"] }
+bevy                = { version="0.10", default-features = false }
 bevy_mod_debugdump  = { version="0.7" }
 
 log                 = "0.4"
@@ -59,6 +60,9 @@ smallvec            = "1.9"
 crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
+
+[dev-dependencies]
+bevy                = { version="0.10", default-features = false, features=["bevy_winit"] }
 
 [patch."https://github.com/GaiaWorld/pi_hal"]
 pi_hal = { path = "../pi_hal" }
@@ -89,6 +93,9 @@ pi_curves = { path = "../pi_curves" }
 
 [patch."https://github.com/GaiaWorld/pi_post_process.git"]
 pi_postprocess = { path = "../pi_post_process" }
+
+[patch."https://github.com/GaiaWorld/pi_gltf.git"]
+pi_gltf = { path = "../pi_gltf" }
 
 [patch."http://ser.yinengyun.com:10082/tech/winit.git"]
 winit = { path = "../winit" }
@@ -168,11 +175,15 @@ path = "examples/skeleton/simple.rs"
 [[example]]
 name = "anime_01"
 path = "examples/anime/01.rs"
-# 
-# [[example]]
-# name = "anime_camera"
-# path = "examples/anime/camera.rs"
-# 
+
+[[example]]
+name = "anime_rotation"
+path = "examples/anime/02.rs"
+
+[[example]]
+name = "anime_camera"
+path = "examples/anime/camera.rs"
+
 [[example]]
 name = "anime_performance"
 path = "examples/anime/performance.rs"
@@ -235,3 +246,7 @@ path = "examples/anime/opacity_clip.rs"
 [[example]]
 name = "anime_main_opacity"
 path = "examples/anime/main_opacity.rs"
+
+[[example]]
+name = "gltf_load"
+path = "examples/gltf/gltfload.rs"

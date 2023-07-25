@@ -10,9 +10,9 @@ pub enum ESkinCreateCommand {
     Frames(ObjectID, ESkinBonesPerVertex, (ObjectID, Vec<ObjectID>, Vec<Vec<u8>>)),
 }
 
-pub struct OpsSkinCreation(pub(crate) Entity, pub(crate) ESkinBonesPerVertex, pub(crate) (ObjectID, Vec<ObjectID>), pub(crate) u16, pub(crate) Option<Vec<f32>>);
+pub struct OpsSkinCreation(pub(crate) Entity, pub(crate) ESkinBonesPerVertex, pub(crate) (ObjectID, Vec<ObjectID>), pub(crate) u16, pub(crate) Option<BindBufferRange>);
 impl OpsSkinCreation {
-    pub fn ops(skin: Entity, state: ESkinBonesPerVertex, rootbone: Entity, bones: &[Entity], cache_frames: u16, cachedata: Option<Vec<f32>>) -> Self {
+    pub fn ops(skin: Entity, state: ESkinBonesPerVertex, rootbone: Entity, bones: &[Entity], cache_frames: u16, cachedata: Option<BindBufferRange>) -> Self {
         Self(skin, state, (rootbone, bones.to_vec()), cache_frames, cachedata)
     }
 }

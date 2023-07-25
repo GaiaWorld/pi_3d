@@ -76,7 +76,7 @@ pub fn sys_act_geometry_create(
         geocommands.insert(EInstanceCodeComp(instance_code));
         
         if let Some(indices_desc) = indices_desc {
-            if let Some(data) = asset_mgr.get(&indices_desc.buffer) {
+            if let Some(data) = asset_mgr.get(&indices_desc.buffer.asset_u64()) {
                 geocommands.insert(AssetResBufferIndices::from(EVerticesBufferUsage::Other(data)));
             } else {
                 geocommands.remove::<IndicesBufferDesc>();
@@ -215,7 +215,7 @@ impl ActionVertexBuffer {
         asset_mgr: &ShareAssetMgr<EVertexBufferRange>,
         key: KeyVertexBuffer,
     ) -> bool {
-        asset_mgr.contains_key(&key)
+        asset_mgr.contains_key(&key.asset_u64())
     }
     pub fn create(
         data_map: &mut SingleVertexBufferDataMap,
@@ -268,7 +268,7 @@ fn init_slot<
         let instance_kind = desc.instance_kind();
         match instance_kind {
             EInstanceKind::None => {
-                if let Some(data) = asset_mgr.get(&desc.key) {
+                if let Some(data) = asset_mgr.get(&desc.key.asset_u64()) {
                     commands.insert(D1::from(EVerticesBufferUsage::Other(data)));
                 } else {
                     commands.remove::<D1>();
@@ -281,18 +281,18 @@ fn init_slot<
     
                 match instance_kind {
                     EInstanceKind::WorldMatrix => {
-                        let buff = InstanceBufferWorldMatrix { slot: slot_index, index: vb_data_map.id(&String::from(buff_id + "WorldMatrix")) };
+                        let buff = InstanceBufferWorldMatrix { slot: slot_index, index: KeyVertexBuffer::from((buff_id + "WorldMatrix").as_str()) };
                         commands.insert(buff);
                         instance_code.0 = instance_code.0 | EInstanceCode::BASE;
                     },
                     EInstanceKind::Color => {
-                        let buff = InstanceBufferColor { slot: slot_index, index: vb_data_map.id(&String::from(buff_id + "Color")) };
+                        let buff = InstanceBufferColor { slot: slot_index, index: KeyVertexBuffer::from((buff_id + "Color").as_str()) };
                         commands.insert(buff);
                         // log::debug!("Instance Color");
                         instance_code.0 = instance_code.0 | EInstanceCode::COLOR;
                     },
                     EInstanceKind::TillOffset => {
-                        let buff = InstanceBufferTillOff { slot: slot_index, index: vb_data_map.id(&String::from(buff_id + "TillOff")) };
+                        let buff = InstanceBufferTillOff { slot: slot_index, index: KeyVertexBuffer::from((buff_id + "TillOff").as_str()) };
                         commands.insert(buff);
                         // log::debug!("Instance TillOffset");
                         instance_code.0 = instance_code.0 | EInstanceCode::TILL_OFF_1;
