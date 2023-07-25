@@ -10,7 +10,7 @@ use pi_scene_context::prelude::*;
 use pi_node_materials::prelude::*;
 use pi_render::rhi::RenderQueue;
 use pi_share::Share;
-use pi_async::prelude::AsyncRuntime;
+use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
 
 use crate::{TypeAnimeAssetMgrs, EAnimePropertyType, curve_gltf, p3d_anime_curve_query, interpolation_from_u8};
@@ -223,7 +223,7 @@ impl GLTFTempLoaded {
                         let errors = errorqueue.clone();
                         let path = relative_path(path, self.id.base_url.as_str());
                         MULTI_MEDIA_RUNTIME
-                        .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                        .spawn(async move {
                             let result = pi_hal::file::load_from_url(&Atom::from(path)).await;
                             match result {
                                 Ok(data) => {
@@ -265,7 +265,7 @@ impl GLTFTempLoaded {
                             let device = device.clone();
                             let queue = queue.clone();
                             MULTI_MEDIA_RUNTIME
-                                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                                .spawn(async move {
                                     let desc = ImageTexture2DDesc {
                                         url: key.clone(),
                                         device: device,
@@ -678,7 +678,7 @@ pub fn sys_gltf_base_loaded_launch(
             let errorqueue = loader.errorqueue.clone();
             let assets_mgr = base_assets_mgr.clone();
             MULTI_MEDIA_RUNTIME
-            .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+            .spawn(async move {
                 let result = pi_hal::file::load_from_url(&base_key).await;
                 match result {
                     Ok(data) => {

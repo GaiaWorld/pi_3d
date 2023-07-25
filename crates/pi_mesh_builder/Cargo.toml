@@ -12,7 +12,7 @@ keywords = ["3d scene"]
 pi_share        = "0.4"
 pi_slotmap      = "0.1"
 pi_hash         = "0.1"
-pi_assets       = "0.12"
+pi_assets       = "0.13"
 pi_atom         = { version="0.2", features = ["serde"] }
 
 wgpu            = "0.15"
@@ -50,9 +50,6 @@ render_derive = { path = "../../../pi_render/crates/render_derive" }
 [patch."https://github.com/GaiaWorld/pi_scene"]
 pi_scene = { path = "../../../pi_scene" }
 pi_scene_math = { path = "../../../pi_scene/crates/pi_scene_math" }
-
-[patch."https://github.com/GaiaWorld/pi_ecs"]
-pi_ecs = { path = "../../../pi_ecs" }
 
 [patch."https://github.com/GaiaWorld/pi_hal"]
 pi_hal = { path = "../../../pi_hal" }

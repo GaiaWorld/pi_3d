@@ -15,7 +15,7 @@ use pi_mesh_builder::{cube::*, ball::*, quad::{PluginQuadBuilder, QuadBuilder}};
 use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, main_opacity_fresnel::MainOpacityFresnelShader, two_opacity_mix::TwoOpacityMixShader, stripes_virtual::StripesVirtualShader}};
 
 use std::sync::Arc;
-use pi_async::rt::AsyncRuntime;
+use pi_async_rt::rt::AsyncRuntime;
 use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
 pub struct PluginLocalLoad;
@@ -24,7 +24,7 @@ impl Plugin for PluginLocalLoad {
         
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
-                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                .spawn(async move {
                     log::debug!("Load {}", path);
                     let r = std::fs::read(path.clone()).unwrap();
                     on_load(&path, r);

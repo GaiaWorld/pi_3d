@@ -5,7 +5,7 @@ use pi_assets::{
     asset::Handle,
     mgr::{AssetMgr, LoadResult},
 };
-use pi_async::prelude::AsyncRuntime;
+use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
 use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::{XHashMap, XHashSet};
@@ -75,7 +75,7 @@ impl ImageTextureLoader {
                         let (success, failquene, device, queue) = (self.success_imgtex.clone(), self.failed.clone(), (device).clone(), (queue).clone());
                         let key = key.clone();
                         MULTI_MEDIA_RUNTIME
-                            .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                            .spawn(async move {
                                 let desc = ImageTexture2DDesc {
                                     url: key.clone(),
                                     device: device,
@@ -132,7 +132,7 @@ pub fn sys_image_texture_load_launch(
                             let (success, failquene, device, queue) = (loader.success_imgtex.clone(), loader.failed.clone(), (device).clone(), (queue).clone());
                             let param = param.clone();
                             MULTI_MEDIA_RUNTIME
-                                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                                .spawn(async move {
                                     let desc = ImageTexture2DDesc {
                                         url: param.clone(),
                                         device: device,
@@ -223,7 +223,7 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
                             let key = param.clone();
                             let url = url.clone();
                             MULTI_MEDIA_RUNTIME
-                                .spawn(MULTI_MEDIA_RUNTIME.alloc(), async move {
+                                .spawn(async move {
                                     let desc = ImageTextureDesc { url: &url, device: &device, queue: &queue, };
                                     match TextureRes::async_load(desc, result).await {
                                         Ok(res) => {
