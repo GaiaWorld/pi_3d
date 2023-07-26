@@ -256,3 +256,7 @@ path = "examples/anime/main_opacity.rs"
 [[example]]
 name = "gltf_load"
 path = "examples/gltf/gltfload.rs"
+
+[[example]]
+name = "image_load"
+path = "examples/gltf/img_texture_load.rs"

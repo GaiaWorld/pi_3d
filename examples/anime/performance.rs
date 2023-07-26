@@ -149,7 +149,7 @@ fn setup(
     }
 
     let parma = AnimationGroupParam::default();
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma);
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
 }

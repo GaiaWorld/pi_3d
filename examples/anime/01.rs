@@ -139,7 +139,7 @@ fn setup(
     let q = LocalRotationQuaternion::create(0., -0.9, 0., 0.1);
     log::warn!("Q: {:?}", q.0 * 0.5);
 
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

@@ -142,7 +142,7 @@ fn setup(
     }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Positive(Some(5));
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma);
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);
 }
 
 pub trait AddEvent {

@@ -196,37 +196,27 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     let ty = type_ctx.ctx.ty();
     // log::warn!("Anime Run ");
     let curves = type_ctx.ctx.curves();
-    if let Some(list) = runinfos.runtimeinfos.list.get(ty) {
-        // log::warn!("Anime Run 1");
-            // log::warn!("Anime Run {:?}", list);
-        let mut last_target = empty.id();
-        let mut last_value: D = D::default();
-        let mut last_weight: f32 = 0.;
-        for info in list {
-            // log::warn!("Anime Run 1.5  {:?}", info.target);
-                // log::warn!("Anime Run 2");
-                if let Some(Some(curve)) = curves.get(info.curve_id) {
-                    // println!(">>>>>>>>>>>>>>>>>{}", info.amount_in_second);
-                    let value = curve.as_ref().interple(info.amount_in_second);
-                    // log::warn!("Anime Amount: {:?}, Result {:?}", info.amount_in_second, value);
-                    // commands.entity(info.target).insert(value);
-                    if last_target == info.target {
+    if let Some(map) = runinfos.runtimeinfos.get_type_list(ty) {
+
+        for (target, info) in map {
+            let mut last_value: D = D::default();
+            let mut last_weight: f32 = 0.;
+
+            if let Ok(mut item) = items.get_mut(*target) {
+                let mut enable = false;
+                info.iter().for_each(|info| {
+                    if let Some(Some(curve)) = curves.get(info.curve_id) {
+                        let value = curve.as_ref().interple(info.amount_in_second);
                         last_weight += info.group_weight;
-                        last_value = last_value.interpolate(&value, info.group_weight / last_weight);
-                    } else {
-                        if let Ok(mut item) = items.get_mut(last_target) {
-                            *item = last_value.clone();
-                        }
-
-                        last_weight = info.group_weight;
-                        last_value = value;
-                        last_target = info.target;
+                        last_value  = last_value.interpolate(&value, info.group_weight / last_weight);
                     }
-
+                    enable = true;
+                });
+                
+                if enable {
+                    *item = last_value;
                 }
-        }
-        if let Ok(mut item) = items.get_mut(last_target) {
-            *item = last_value;
+            }
         }
     } else {
         log::trace!("Not Found Anime Type: {}", ty);

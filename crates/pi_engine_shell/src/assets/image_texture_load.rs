@@ -15,26 +15,58 @@ use pi_render::rhi::{
 use pi_share::{Share, ThreadSync};
 use crate::prelude::*;
 
+pub type IDImageTextureLoad = u64;
+
+#[derive(Clone, Copy)]
+pub enum EErrorImageLoad {
+    LoadFail,
+    CacheFail,
+    CanntLoadDataTexture,
+}
+impl ToString for EErrorImageLoad {
+    fn to_string(&self) -> String {
+        match self {
+            Self::LoadFail => String::from("LoadFail, "),
+            Self::CacheFail => String::from("CacheFail, "),
+            Self::CanntLoadDataTexture => String::from("CanntLoadDataTexture, "),
+        }
+    }
+} 
+
 #[derive(Clone, Resource)]
 pub struct ImageTextureLoader {
-    pub wait: Share<SegQueue<KeyImageTexture>>,
-    pub success_imgtex: Share<SegQueue<(KeyImageTexture, Handle<ImageTexture>)>>,
-    pub failed: Share<SegQueue<KeyImageTexture>>,
-    pub fail: XHashSet<KeyImageTexture>,
-    pub success: XHashMap<KeyImageTexture, Handle<ImageTexture>>,
+    pub wait: Share<SegQueue<(IDImageTextureLoad, KeyImageTexture)>>,
+    pub success_load: Share<SegQueue<IDImageTextureLoad>>,
+    pub fails: Share<SegQueue<IDImageTextureLoad>>,
+    pub fail_reason: XHashMap<KeyImageTexture, EErrorImageLoad>,
+    pub fail_imgtex: Share<SegQueue<(KeyImageTexture, EErrorImageLoad)>>,
+    pub success: XHashMap<IDImageTextureLoad, Handle<ImageTexture>>,
+    pub failrecord: XHashMap<IDImageTextureLoad, EErrorImageLoad>,
+    pub query_counter: IDImageTextureLoad,
 }
 impl Default for ImageTextureLoader {
     fn default() -> Self {
         Self {
             wait: Share::new(SegQueue::new()),
-            success_imgtex: Share::new(SegQueue::new()),
-            failed: Share::new(SegQueue::new()),
-            fail: XHashSet::default(),
+            success_load: Share::new(SegQueue::new()),
+            fails: Share::new(SegQueue::new()),
+            fail_reason: XHashMap::default(),
+            fail_imgtex: Share::new(SegQueue::new()),
             success: XHashMap::default(),
+            failrecord: XHashMap::default(),
+            query_counter: 0,
         }
     }
 }
 impl ImageTextureLoader {
+    pub fn create_load(&mut self, key: KeyImageTexture) -> IDImageTextureLoad {
+        self.query_counter += 1;
+        let id = self.query_counter;
+
+        self.wait.push((id, key));
+
+        id
+    }
     ///
     /// 查询 Image 纹理状态, 
     /// 加载成功 返回资源引用
@@ -44,92 +76,61 @@ impl ImageTextureLoader {
         if let Some(res) = asset.get(key) {
             Ok(res)
         } else {
-            Err(self.fail.contains(key))
+            Err(self.fail_reason.contains_key(key))
         }
     }
-    pub fn query_failed(&self, key: &KeyImageTexture) -> bool {
-        self.fail.contains(key)
-    }
-    pub fn reset_failed(&mut self) {
-        self.fail.clear()
-    }
-    pub fn load_imgtex(&self,
-        key: &KeyImageTexture,
-        image_assets_mgr: &ShareAssetMgr<ImageTexture>,
-        queue: &RenderQueue,
-        device: &RenderDevice,
-    ) {
-        match key {
-            KeyImageTexture::Data(url, _) => {
-                // log::error!("image_texture_view_load fail, Not Found DateTexture: {:?}", url);
-                log::error!("image_texture_view_load fail, Not Found DateTexture:");
-                self.failed.push(key.clone());
-            },
-            KeyImageTexture::File(url, _) => {
-                let imageresult = AssetMgr::load(&image_assets_mgr, key);
-                match imageresult {
-                    LoadResult::Ok(res) => {
-                        //
-                    },
-                    _ => {
-                        let (success, failquene, device, queue) = (self.success_imgtex.clone(), self.failed.clone(), (device).clone(), (queue).clone());
-                        let key = key.clone();
-                        MULTI_MEDIA_RUNTIME
-                            .spawn(async move {
-                                let desc = ImageTexture2DDesc {
-                                    url: key.clone(),
-                                    device: device,
-                                    queue: queue,
-                                };
-        
-                                let result = ImageTexture::async_load(desc, imageresult).await;
-                                match result {
-                                    Ok(_) => {
-                                        //
-                                    },
-                                    Err(e) => {
-                                        // log::error!("load image fail, {:?}", e);
-                                        failquene.push(key.clone());
-                                        log::error!("load image fail,");
-                                    }
-                                }
-
-                            })
-                            .unwrap();
-                    }
-                }
-            },
+    pub fn query_failed_reason(&mut self, id: IDImageTextureLoad) -> Option<String> {
+        if let Some(key) = self.failrecord.remove(&id) {
+            Some(key.to_string())
+        } else {
+            None
         }
+    }
+    pub fn query_success(&mut self, id: IDImageTextureLoad) -> Option<Handle<ImageTexture>> {
+        self.success.remove(&id)
     }
 }
 
 pub fn sys_image_texture_load_launch(
-    loader: Res<ImageTextureLoader>,
+    mut loader: ResMut<ImageTextureLoader>,
     image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
     queue: Res<PiRenderQueue>,
     device: Res<PiRenderDevice>,
 ) {
+    let mut again = vec![];
     let mut item = loader.wait.pop();
-    while let Some(param) = item {
+    while let Some((id, param)) = item {
         item = loader.wait.pop();
 
         if let Some(res) = image_assets_mgr.get(&param) {
-            loader.success_imgtex.push((param, res));
+            if id > 0 {
+                loader.success_load.push(id);
+                loader.success.insert(id, res);
+            }
+        } else if let Some(err) = loader.fail_reason.get(&param) {
+            if id > 0 {
+                loader.fails.push(id);
+                let err = err.clone();
+                loader.failrecord.insert(id, err);
+            }
         } else {
+            if id > 0 {
+                again.push((id, param.clone()));
+            }
             match &param {
                 KeyImageTexture::Data(url, srgb) => {
                     // log::error!("image_texture_view_load fail, Not Found DateTexture: {:?}", url);
-                    log::error!("image_texture_view_load fail, Not Found DateTexture:");
-                    loader.failed.push(param.clone());
+                    // log::error!("image_texture_view_load fail, Not Found DateTexture:");
+                    loader.fail_imgtex.push((param, EErrorImageLoad::CanntLoadDataTexture));
                 },
                 KeyImageTexture::File(url, srgb) => {
                     let imageresult = AssetMgr::load(&image_assets_mgr, &param);
                     match imageresult {
                         LoadResult::Ok(res) => {
-                            loader.success_imgtex.push((param, res));
+                            // loader.success_imgtex.push((param, res));
                         },
                         _ => {
-                            let (success, failquene, device, queue) = (loader.success_imgtex.clone(), loader.failed.clone(), (device).clone(), (queue).clone());
+                            let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
                             let param = param.clone();
                             MULTI_MEDIA_RUNTIME
                                 .spawn(async move {
@@ -142,12 +143,12 @@ pub fn sys_image_texture_load_launch(
                                     let result = ImageTexture::async_load(desc, imageresult).await;
                                     match result {
                                         Ok(res) => {
-                                            success.push((param, res));
+                                            // success.push((param, res));
                                         },
                                         Err(e) => {
                                             // log::error!("load image fail, {:?}", e);
-                                            failquene.push(param.clone());
-                                            log::error!("load image fail,");
+                                            failquene.push((param.clone(), EErrorImageLoad::LoadFail));
+                                            // log::error!("load image fail,");
                                         }
                                     }
     
@@ -159,21 +160,17 @@ pub fn sys_image_texture_load_launch(
             }
         }
     }
+
+    again.drain(..).for_each(|item| { loader.wait.push(item); });
 }
 
 pub fn sys_image_texture_loaded(
     mut loader: ResMut<ImageTextureLoader>,
 ) {
-    let mut item = loader.success_imgtex.pop();
-    while let Some((param, res)) = item {
-        item = loader.success_imgtex.pop();
-        loader.success.insert(param, res);
-    }
-
-    let mut item = loader.failed.pop();
-    while let Some(param) = item {
-        item = loader.failed.pop();
-        loader.fail.insert(param);
+    let mut item = loader.fail_imgtex .pop();
+    while let Some((param, error)) = item {
+        item = loader.fail_imgtex.pop();
+        loader.fail_reason.insert(param, error);
     }
 }
 
@@ -259,7 +256,7 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
                             loader.fail.push((entity, param.clone()));
                         }
                     } else {
-                        image_loader.wait.push(key.url().clone());
+                        image_loader.wait.push((0, key.url().clone()));
                         loader.wait.push((entity, key.clone()));
                     }
                 }
@@ -295,7 +292,7 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
             } else {
                 loader.fail.push((entity, EKeyTexture::Image(key)));
             }
-        } else if image_loader.fail.contains(&key.url()) {
+        } else if image_loader.fail_reason.contains_key(&key.url()) {
             loader.fail.push((entity, EKeyTexture::Image(key)));
         } else {
             waitagain.push((entity, key));

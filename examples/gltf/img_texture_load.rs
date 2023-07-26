@@ -26,8 +26,13 @@ impl Plugin for PluginLocalLoad {
             MULTI_MEDIA_RUNTIME
                 .spawn(async move {
                     log::debug!("Load {}", path);
-                    let r = std::fs::read(path.clone()).unwrap();
-                    on_load(&path, r);
+                    let pathbuf = std::path::PathBuf::from(path.clone());
+                    if pathbuf.exists() {
+                        let r = std::fs::read(pathbuf.clone()).unwrap();
+                        on_load(&path, r);
+                    } else {
+                        
+                    }
                 })
                 .unwrap();
         }));
@@ -36,25 +41,25 @@ impl Plugin for PluginLocalLoad {
 
 fn setup(
     mut commands: Commands,
-    loader: Res<pi_gltf2_load::GLTFResLoader>,
+    mut loader: ResMut<ImageTextureLoader>,
 ) {
     let id = commands.spawn_empty().id();
-    loader.wait.push((id, pi_gltf2_load::KeyGLTF { base_url: Atom::from("E:/Rust/PI/pi_3d/assets/gltf/eff_ui_leijie/eff_ui_leijie.gltf"), dyn_desc: Atom::from("")  }))
+    loader.create_load(KeyImageTexture::File(Atom::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_0805.png"), true));
 }
 
 fn sys_load_check(
-    mut loader: ResMut<pi_gltf2_load::GLTFResLoader>,
+    mut loader: ResMut<ImageTextureLoader>,
 ) {
     let mut item = loader.fails.pop();
     while let Some(param) = item {
-        log::error!("Failed: {:?}, Error: {:?}", param, loader.get_fail_reason(param));
+        log::error!("Failed: {:?}, Error: {:?}", param, loader.query_failed_reason(param));
         item = loader.fails.pop();
     }
-    let mut item = loader.success.pop();
+    let mut item = loader.success_load.pop();
     while let Some(param) = item {
-        log::error!("Successed: {:?}, {:?}", param, loader.get_success(param).is_some());
+        log::error!("Successed: {:?}, {:?}", param, loader.query_success(param).is_some());
         // log::error!("Successed: {:?}", param.1.errors.len());
-        item = loader.success.pop();
+        item = loader.success_load.pop();
     }
 }
 

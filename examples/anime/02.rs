@@ -123,7 +123,7 @@ fn setup(
     };
     let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
     animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group.clone(), animation);
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
 
     let temproot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(temproot, root));
     transformcmds.create.push(OpsTransformNode::ops(scene, temproot, "".to_string()));

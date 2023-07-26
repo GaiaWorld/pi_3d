@@ -120,7 +120,7 @@ fn setup(
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         animegroupcmd.scene_ctxs.add_target_anime(scene, bone4, id_group.clone(), animation);
     }
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default());
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
 
     skincmds.bone_create.push(OpsBoneCreation::ops(bone0, scene, scene, String::from("Bone00")));
     skincmds.bone_create.push(OpsBoneCreation::ops(bone1, bone0, scene, String::from("Bone01")));

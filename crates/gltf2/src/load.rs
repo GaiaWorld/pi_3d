@@ -175,6 +175,20 @@ pub enum ErrorGLTF {
     ErrorVertexBuffer,
     ErrorAnimation,
 }
+impl ToString for ErrorGLTF {
+    fn to_string(&self) -> String {
+        match self {
+            Self::ErrorBuffer => String::from("ErrorBuffer, "),
+            Self::ErrorAccessor => String::from("ErrorAccessor, "),
+            Self::ErrorImage => String::from("ErrorImage, "),
+            Self::ErrorGLTFLoad => String::from("ErrorGLTFLoad, "),
+            Self::ErrorGLTFParse => String::from("ErrorGLTFParse, "),
+            Self::ErrorGLTFCache => String::from("ErrorGLTFCache, "),
+            Self::ErrorVertexBuffer => String::from("ErrorVertexBuffer, "),
+            Self::ErrorAnimation => String::from("ErrorAnimation, "),
+        }
+    }
+}
 
 pub struct GLTFTempLoaded {
     gltf: Handle<GLTFBase>,
@@ -596,15 +610,16 @@ pub struct GLTFResLoader {
     pub wait: Share<SegQueue<(QueryKey, KeyGLTF)>>,
     /// 需要加载 GLTF 基础文件
     pub waitbase: Share<SegQueue<KeyGLTF>>,
-    pub success: Share<SegQueue<(QueryKey, Handle<GLTF>)>>,
+    pub success: Share<SegQueue<QueryKey>>,
+    pub fails: Share<SegQueue<QueryKey>>,
     pub basesuccess: Share<SegQueue<GLTFTempLoaded>>,
     pub basefail: Share<SegQueue<KeyGLTF>>,
-    pub queue: Share<SegQueue<(KeyGLTF, Handle<GLTF>)>>,
     pub bufferqueue: Share<SegQueue<GLTFBuffer>>,
     pub imagequeue: Share<SegQueue<GLTFImage>>,
-    pub failqueue: Share<SegQueue<KeyGLTF>>,
     pub errorqueue: Share<SegQueue<(KeyGLTF, ErrorGLTF)>>,
-    pub fail: XHashSet<KeyGLTF>,
+    pub fail_reason: XHashMap<KeyGLTF, Vec<ErrorGLTF>>,
+    pub successed: XHashMap<QueryKey, Handle<GLTF>>,
+    pub failed: XHashMap<QueryKey, KeyGLTF>,
     pub temp: XHashMap<KeyGLTF, GLTFTempLoaded>,
 }
 impl GLTFResLoader {
@@ -614,15 +629,37 @@ impl GLTFResLoader {
             wait: Share::new(SegQueue::default()),
             waitbase: Share::new(SegQueue::default()),
             success: Share::new(SegQueue::default()),
+            fails: Share::new(SegQueue::default()),
             basesuccess: Share::new(SegQueue::default()),
             basefail: Share::new(SegQueue::default()),
-            queue: Share::new(SegQueue::default()),
             bufferqueue: Share::new(SegQueue::default()),
             imagequeue: Share::new(SegQueue::default()),
-            failqueue: Share::new(SegQueue::default()),
             errorqueue: Share::new(SegQueue::default()),
-            fail: XHashSet::default(),
+            fail_reason: XHashMap::default(),
             temp: XHashMap::default(),
+            successed: XHashMap::default(),
+            failed: XHashMap::default(),
+        }
+    }
+    pub fn create_load(&self, key: QueryKey, param: KeyGLTF) {
+        self.wait.push((key, param));
+    }
+    pub fn get_success(&mut self, key: QueryKey) -> Option<Handle<GLTF>> {
+        self.successed.remove(&key)
+    }
+    pub fn get_fail_reason(&mut self, key: QueryKey) -> Option<String> {
+        if let Some(key) = self.failed.remove(&key) {
+            if let Some(errors) = self.fail_reason.get(&key) {
+                let mut str = String::from("");
+                errors.iter().for_each(|err| {
+                    str += err.to_string().as_str();
+                });
+                Some(str)
+            } else {
+                Some(String::from("Unkown."))
+            }
+        } else {
+            None
         }
     }
 }
@@ -639,9 +676,12 @@ pub fn sys_load_gltf_launch(
 
         let key_u64 = param.asset_u64();
         if let Some(res) = assets_mgr.get(&key_u64) {
-            loader.success.push((id, res));
-        } else if loader.fail.contains(&param) {
-            log::error!("Failed: {:?}", id);
+            loader.success.push(id);
+            loader.successed.insert(id, res);
+        } else if loader.fail_reason.contains_key(&param) {
+            // log::error!("Failed: {:?}", id);
+            loader.fails.push(id);
+            loader.failed.insert(id, param);
         } else {
             waitagain.push((id, param.clone()));
             // 是否正在等待 buffer文件 、 图片
@@ -774,8 +814,14 @@ pub fn sys_gltf_analy(
     
     let mut item = loader.errorqueue.pop();
     while let Some(temp) = item {
-        log::error!("Error: {:?}", temp.1);
-        loader.fail.insert(temp.0);
+        // log::error!("Error: {:?}", temp.1);
+
+        if loader.fail_reason.get_mut(&temp.0).is_none() {
+            loader.fail_reason.insert(temp.0.clone(), vec![]);
+        }
+        let record = loader.fail_reason.get_mut(&temp.0).unwrap();
+        record.push(temp.1);
+
         item = loader.errorqueue.pop();
     }
 }

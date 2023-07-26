@@ -184,7 +184,7 @@ fn setup(
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Not;
     parma.speed = 0.1;
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma);
+    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);
 
     // animegroupcmd.global.add_frame_event_listen(id_group);
     // animegroupcmd.global.add_frame_event(id_group, 0.5, 100);

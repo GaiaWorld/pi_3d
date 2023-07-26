@@ -1,5 +1,5 @@
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, hash::Hash};
 
 use pi_animation::{
     type_animation_context::{TypeAnimationContext, AnimationContextAmount},
@@ -23,6 +23,8 @@ use super::AnimationGroupParam;
 #[derive(Clone, Copy, Component)]
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
 pub struct FlagAnimationStartResetComp;
+
+pub type KeyAnimeCurve = String;
 
 pub type IDAssetTypeFrameCurve = u64;
 
@@ -55,7 +57,7 @@ pub struct TypeAnimeContext<D: TAnimatableComp> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
 }
 impl<D: TAnimatableComp> TypeAnimeContext<D> {
-    pub fn new<T: Clone + PartialEq + Eq + PartialOrd + Ord>(ty: usize, runtime_info_map: &mut RuntimeInfoMap<T>) -> Self {
+    pub fn new<T: Clone + PartialEq + Eq + Hash>(ty: usize, runtime_info_map: &mut RuntimeInfoMap<T>) -> Self {
         Self { ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, runtime_info_map) }
     }
 }
@@ -199,9 +201,11 @@ impl SceneAnimationContextMap {
         id_scene: Entity,
         group: DefaultKey,
         param: AnimationGroupParam,
+        delay_ms: pi_animation::base::TimeMS,
+        fillmode: pi_animation::base::EFillMode,
     )  {
         if let Some(ctx) = self.0.get_mut(&id_scene) {
-            match ctx.0.start_with_progress(group, param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc) {
+            match ctx.0.start_with_progress(group, param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc, delay_ms, fillmode) {
                 Ok(_) => {
                     // log::warn!("Start Anime Ok!");
                 },
