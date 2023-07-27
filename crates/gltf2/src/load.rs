@@ -357,7 +357,7 @@ impl GLTFTempLoaded {
                         let start = view.offset() + accessor.offset();
                         let end = start + accessor.count() * accessor.size();
                         let data = &bufferdata[start..end];
-                        if let Some(buffer) = vballocator.create_not_updatable_buffer_for_index(device, queue, data) {
+                        if let Some(buffer) = vballocator.create_not_updatable_buffer(device, queue, data, None) {
                             if let Ok(buffer) = vb_assets_mgr.insert(indice_key_u64, buffer) {
                                 result.vbs.push(buffer);
                             }
@@ -368,12 +368,14 @@ impl GLTFTempLoaded {
         }
 
         // Animation Curve
+        let mut index_group = 0;
         for animation in self.gltf.0.animations() {
-            let mut group_key = basekey.clone() + animation.index().to_string().as_str();
+            let mut group_key = basekey.clone() + index_group.to_string().as_str();
             group_key += "#";
+            index_group += 1;
             let mut index_chanel = 0;
             for channel in animation.channels() {
-                let curve_key = KeyVertexBuffer::from((group_key.clone() + index_chanel.to_string().as_str()).as_str());
+                let curve_key = group_key.clone() + index_chanel.to_string().as_str();
                 index_chanel += 1;
                 let curve_key_u64 = curve_key.asset_u64();
 

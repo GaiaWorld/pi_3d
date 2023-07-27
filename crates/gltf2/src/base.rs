@@ -331,7 +331,7 @@ pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue + Debug>(
             curve
         },
         pi_gltf::animation::Interpolation::CubicSpline => {
-            let mut curve = FrameCurve::<T>::curve_frame_values(design_frame_per_second);
+            let mut curve = FrameCurve::<T>::curve_cubic_spline(design_frame_per_second);
             let step = vs3;
             for i in 0..frames {
                 let frame = (times[i] * (design_frame_per_second as f32)) as FrameIndex;
@@ -345,7 +345,7 @@ pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue + Debug>(
             curve
         },
         pi_gltf::animation::Interpolation::PICUBICSPLINE => {
-            let mut curve = FrameCurve::<T>::curve_frame_values(design_frame_per_second);
+            let mut curve = FrameCurve::<T>::curve_cubic_spline(design_frame_per_second);
             let step = vs2;
             for i in 0..frames {
                 let frame = (times[i] * (design_frame_per_second as f32)) as FrameIndex;

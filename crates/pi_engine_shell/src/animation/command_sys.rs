@@ -206,7 +206,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
                 let mut enable = false;
                 info.iter().for_each(|info| {
                     if let Some(Some(curve)) = curves.get(info.curve_id) {
-                        let value = curve.as_ref().interple(info.amount_in_second);
+                        let value = curve.as_ref().interple(info.amount_in_second, &info.amount_calc);
                         last_weight += info.group_weight;
                         last_value  = last_value.interpolate(&value, info.group_weight / last_weight);
                     }
