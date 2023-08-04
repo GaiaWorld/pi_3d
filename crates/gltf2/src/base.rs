@@ -7,7 +7,7 @@ use pi_scene_context::prelude::*;
 use pi_node_materials::prelude::*;
 use pi_scene_math::*;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum EAnimePropertyType {
     LocalPosition       =  0,
     LocalRotation       =  1,
@@ -313,8 +313,12 @@ pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue + Debug>(
             for i in 0..frames {
                 let frame = (times[i] * (design_frame_per_second as f32)) as FrameIndex;
                 let index = i * step;
+                let value = T::newn(values, index);
                 // log::warn!("Frame {:?}, data: {:?}", frame, T::newn(values, index));
-                curve.curve_frame_values_frame(frame, T::newn(values, index));
+                if step == 1 {
+                    log::warn!("Frame: {:?}, {:?}", frame, value);
+                }
+                curve.curve_frame_values_frame(frame, value);
             }
             curve
         },
@@ -354,6 +358,9 @@ pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue + Debug>(
                 let value = T::newn(values, index + vs);
                 let outtangent = intangent.clone();
                 // log::warn!("Frame {:?}, data: {:?}", frame, T::newn(data, index + 1));
+                if step == 8 {
+                    log::warn!("Frame: {:?}, {:?}, {:?}", frame, intangent, value);
+                }
                 curve.curve_cubic_splice_frame(frame, value, intangent, outtangent);
             }
             curve

@@ -39,7 +39,7 @@ fn setup(
     loader: Res<pi_gltf2_load::GLTFResLoader>,
 ) {
     let id = commands.spawn_empty().id();
-    loader.wait.push((id, pi_gltf2_load::KeyGLTF { base_url: Atom::from("E:/Rust/PI/pi_3d/assets/gltf/eff_ui_leijie/eff_ui_leijie.gltf"), dyn_desc: Atom::from("")  }))
+    loader.wait.push((id, pi_gltf2_load::KeyGLTF { base_url: Atom::from("E:/Rust/PI/pi_3d/assets/gltf/m_mine_20101_1/m_mine_20101_1.gltf"), dyn_desc: Atom::from("")  }))
 }
 
 fn sys_load_check(

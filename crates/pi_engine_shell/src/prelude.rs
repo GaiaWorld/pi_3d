@@ -22,7 +22,7 @@ pub use pi_bevy_render_plugin::{
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
     asset_config::*, should_run, component::GraphId
 };
-use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}};
+use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number};
 pub use pi_window_renderer::*;
 pub use pi_render::{
     asset::*,
@@ -181,15 +181,15 @@ impl SingleEmptyEntity {
 }
 
 pub trait TRenderAlignmentCalc {
-    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3;
+    fn calc_rotation(&self, g_rotation: &Rotation3, g_rotation_euler: (Number, Number, Number), g_velocity: &Vector3) -> Rotation3;
     fn calc_local(&self, g_velocity: &Vector3) -> Option<Matrix>;
 }
 impl TRenderAlignmentCalc for ERenderAlignment {
-    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3 {
+    fn calc_rotation(&self, g_rotation: &Rotation3, g_rotation_euler: (Number, Number, Number), g_velocity: &Vector3) -> Rotation3 {
         let mut m = Rotation3::identity();
         match self {
             ERenderAlignment::View => {
-                let (_, _, z) =  g_rotation.euler_angles();
+                let (_, _, z) =  g_rotation_euler;
                 m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
             },
             ERenderAlignment::World => {
@@ -199,7 +199,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
                 m = g_rotation.clone();
             },
             ERenderAlignment::Facing => {
-                let (_, _, z) =  g_rotation.euler_angles();
+                let (_, _, z) =  g_rotation_euler;
                 m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
             },
             ERenderAlignment::Velocity => {
@@ -242,11 +242,11 @@ impl TRenderAlignmentCalc for ERenderAlignment {
 
             },
             ERenderAlignment::HorizontalBillboard => {
-                let (_, _, z) =  g_rotation.euler_angles();
+                let (_, _, z) =  g_rotation_euler;
                 m = CoordinateSytem3::rotation_matrix_from_euler_angles((90_f32).to_radians(), 0., z);
             },
             ERenderAlignment::VerticalBillboard => {
-                let (_, _, z) =  g_rotation.euler_angles();
+                let (_, _, z) =  g_rotation_euler;
                 m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
             },
         }

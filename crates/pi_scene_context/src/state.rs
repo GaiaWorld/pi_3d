@@ -80,6 +80,11 @@ pub struct MeshStates(pub Vec<EMeshState>);
 #[derive(Component)]
 pub struct DirtyMeshStates;
 
+#[derive(Resource)]
+pub struct StateRecordCfg {
+    pub write_state: bool,
+}
+
 // pub struct SysMeshStatePass<T: TMeshStatePass + Component, P: TPass + Component>(PhantomData<(T, P)>);
 // impl<T: TMeshStatePass + Component, P: TPass + Component> TSystemStageInfo for SysMeshStatePass<T, P> {
 //     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
@@ -180,27 +185,30 @@ pub struct DirtyMeshStates;
     // #[system]
     fn sys_mesh_state_to_file(
         items: Query<(ObjectID, &MeshStates), Changed<DirtyMeshStates>>,
+        cfg: Res<StateRecordCfg>,
     ) {
-        let mut result = String::from("\r\nFrame:");
-        let mut flag = false;
-        let mut ids = XHashMap::default();
-        items.iter().for_each(|(id, item)| {
-            flag = true;
-            if !ids.contains_key(&id) {
-                ids.insert(id, id);
-                let mut item = item.0.clone();
-                item.sort();
-                result += format!("\r\n{:?}", item ).as_str();
-            }
-        });
-
-        if flag {
-            let root_dir = std::env::current_dir().unwrap();
-            let file_name = FILE_NAME;
-            let path = root_dir.join(file_name);
-            if let Ok(old) = std::fs::read_to_string(path) {
-                result = old + result.as_str();
-                std::fs::write(root_dir.join(file_name), result.as_str());
+        if cfg.write_state {
+            let mut result = String::from("\r\nFrame:");
+            let mut flag = false;
+            let mut ids = XHashMap::default();
+            items.iter().for_each(|(id, item)| {
+                flag = true;
+                if !ids.contains_key(&id) {
+                    ids.insert(id, id);
+                    let mut item = item.0.clone();
+                    item.sort();
+                    result += format!("\r\n{:?}", item ).as_str();
+                }
+            });
+    
+            if flag {
+                let root_dir = std::env::current_dir().unwrap();
+                let file_name = FILE_NAME;
+                let path = root_dir.join(file_name);
+                if let Ok(old) = std::fs::read_to_string(path) {
+                    result = old + result.as_str();
+                    std::fs::write(root_dir.join(file_name), result.as_str());
+                }
             }
         }
     }
@@ -316,6 +324,8 @@ impl Plugin for PluginStateToFile {
         let root_dir = std::env::current_dir().unwrap();
         let file_name = FILE_NAME;
         std::fs::write(root_dir.join(file_name), "");
+
+        app.insert_resource(StateRecordCfg { write_state: true });
         
         app.add_systems(
             (

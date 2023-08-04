@@ -518,7 +518,8 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
                 }
 
                 let mut m = Matrix::identity();
-                let rotation = renderalignment.0.calc_rotation(transform.rotation(), velocity);
+                let g_rotation = transform.rotation();
+                let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
                 CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
                 if let Some(local) = renderalignment.0.calc_local(velocity) {
                     m = m * local;
@@ -583,7 +584,8 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
                 }
 
                 let mut m = Matrix::identity();
-                let rotation = renderalignment.0.calc_rotation(transform.rotation(), velocity);
+                let g_rotation = transform.rotation();
+                let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
                 CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
                 if let Some(local) = renderalignment.0.calc_local(velocity) {
                     m = m * local;

@@ -150,11 +150,15 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
         let part3 = (cubed - (_2 * squared)) + amount;
         let part4 = cubed - squared;
 
-        let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
+        let i = (((value1.0.i * part1) + (value2.0.i * part2)) + (tangent1.0.i * part3)) + (tangent2.0.i * part4);
+        let j = (((value1.0.j * part1) + (value2.0.j * part2)) + (tangent1.0.j * part3)) + (tangent2.0.j * part4);
+        let k = (((value1.0.k * part1) + (value2.0.k * part2)) + (tangent1.0.k * part3)) + (tangent2.0.k * part4);
+        let w = (((value1.0.w * part1) + (value2.0.w * part2)) + (tangent1.0.w * part3)) + (tangent2.0.w * part4);
+        let result = Self::create(i, j, k, w);
 
         // log::warn!("Value1: {:?} Value2: {:?} Result: {:?}", value1, value2, result);
 
-        return Self(result, true);
+        return result;
     }
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {

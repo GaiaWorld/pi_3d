@@ -12,7 +12,7 @@ impl Default for SingleFrameTimeCommand {
     fn default() -> Self {
         Self {
             last: pi_time::Instant::now(),
-            frame_ms: 2,
+            frame_ms: 8,
         }
     }
 }

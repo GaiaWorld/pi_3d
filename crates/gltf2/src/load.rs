@@ -430,6 +430,8 @@ impl GLTFTempLoaded {
                         //     }
                         // }).read_outputs().map(|v| v.collect::<Vec<f32>>());
 
+                        // log::warn!("Curve: {:?}, {:?}, {:?}", curve_key, property_id, mode);
+
                         let design_frame_per_second = 100;
                         if let (Ok(times), Ok(values)) = (times, values) {
                             match property_id {

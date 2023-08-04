@@ -221,6 +221,7 @@ pub fn main() {
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
+    
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
 

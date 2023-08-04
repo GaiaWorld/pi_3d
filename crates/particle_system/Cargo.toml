@@ -13,21 +13,24 @@ pi_share        = "0.4"
 pi_slotmap      = "0.1"
 pi_hash         = "0.1"
 pi_assets       = "0.13"
-pi_atom         = { version="0.2", features = ["serde"] }
+pi_atom         = { version = "0.2", features = ["serde"] }
 
 wgpu            = "0.15"
-naga            = { version = "0.10", features = [ "glsl-in", ] }
-bevy            = { version="0.10", default-features = false }
+bevy            = { version = "0.10", default-features = false }
+bytemuck        = { version = "1.4", features = ["derive"] }
 
 log             = "0.4"
 env_logger      = "0.9"
-
+rand            = "0.8"
 smallvec        = "1.9"
 crossbeam       = "0.8"
 futures         = "0.3"
 derive_deref    = "1.1"
+lazy_static     = "1.4"
+pi_wy_rng       = { git = "https://github.com/GaiaWorld/pi_wy_rng.git" }
 
 
+pi_time             = "0.3"
 pi_render           = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_utils        = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
 render_derive       = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
