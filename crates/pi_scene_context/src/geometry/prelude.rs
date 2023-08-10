@@ -7,7 +7,7 @@ pub use super::instance::{
     instance_boneoffset::*,
     instance_world_matrix::*,
     sys_instance::*,
-    InstanceSourceID,
+    InstanceMesh,
     InstanceSourceRefs,
     DirtyInstanceSourceRefs
 };

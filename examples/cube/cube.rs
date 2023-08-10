@@ -1,17 +1,9 @@
 #![feature(box_into_inner)]
 
-
-use default_render::{interface::*, SingleIDBaseDefaultMaterial, PluginDefaultMaterial};
-use pi_3d::PluginBundleDefault;
-use pi_atom::Atom;
 use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
-use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
-use pi_render::rhi::options::RenderOptions;
+use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
-use pi_scene_math::Vector3;
-use pi_mesh_builder::{cube::*, ball::PluginBallBuilder, quad::PluginQuadBuilder};
-use unlit_material::PluginUnlitMaterial;
+use pi_mesh_builder::cube::*;
 
 pub trait AddEvent {
 	// 添加事件， 该实现每帧清理一次
@@ -169,35 +161,13 @@ fn setup(
 
 }
 
-
+#[path = "../base.rs"]
+mod base;
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-
-    let mut app = App::default();
-
-	let mut window_plugin = WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(800, 600);
-    }
-
-    app.insert_resource(AssetMgrConfigs::default());
-    app.add_plugin(InputPlugin::default());
-    app.add_plugin(window_plugin);
-    app.add_plugin(AccessibilityPlugin);
-    app.add_plugin(bevy::winit::WinitPlugin::default());
-    // .add_plugin(WorldInspectorPlugin::new())
-    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
-    app.add_plugin(PiRenderPlugin::default());
+    let mut app = base::test_plugins();
+    
     app.add_plugin(PluginTest);
-    app.add_plugin(PluginFrameTime);
-    app.add_plugin(PluginWindowRender);
-    app.add_plugins(PluginBundleDefault);
-    app.add_plugin(PluginCubeBuilder);
-    app.add_plugin(PluginQuadBuilder);
-    app.add_plugin(PluginStateToFile);
-    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
-
-    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
+    app.add_system(base::sys_nodeinfo);
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);

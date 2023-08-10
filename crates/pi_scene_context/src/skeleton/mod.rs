@@ -1,6 +1,8 @@
 
 use pi_engine_shell::prelude::*;
 
+use crate::object::sys_dispose_ready;
+
 use self::{sys::*, command::*, command_sys::*};
 
 mod bone;
@@ -44,6 +46,7 @@ impl Plugin for PluginSkeleton {
                 sys_skin_buffer_update,
             ).chain().in_set(ERunStageChap::Uniform)
         );
+        app.add_system(sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     // fn init(
     //     &mut self,

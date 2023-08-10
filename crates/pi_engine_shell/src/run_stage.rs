@@ -142,6 +142,8 @@ pub enum ERunStageChap {
     DrawPipelineLoaded,
     DrawCall,
     Draw,
+    Dispose,
+    _DisposeApply,
     StateCheck,
 }
 
@@ -173,7 +175,9 @@ impl Plugin for PluginRunstage {
         app.configure_set(ERunStageChap::DrawPipelineLoaded.after(ERunStageChap::DrawPipeline));
         app.configure_set(ERunStageChap::DrawCall.after(ERunStageChap::DrawPipelineLoaded));
         app.configure_set(ERunStageChap::Draw.after(ERunStageChap::DrawCall));
-        app.configure_set(ERunStageChap::StateCheck.after(ERunStageChap::Draw).before(PiRenderSystemSet));
+        app.configure_set(ERunStageChap::Dispose.after(ERunStageChap::Draw));
+        app.configure_set(ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
+        app.configure_set(ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
         
         // app.configure_set(
         //     (
@@ -206,6 +210,7 @@ impl Plugin for PluginRunstage {
         app.add_system(apply_system_buffers.in_set(ERunStageChap::_SecondInitialApply));
         app.add_system(apply_system_buffers.in_set(ERunStageChap::_ThirdInitialApply));
         app.add_system(apply_system_buffers.in_set(ERunStageChap::_CommandApply));
+        app.add_system(apply_system_buffers.in_set(ERunStageChap::_DisposeApply));
         // app.add_system(apply_system_buffers.in_set(ERunStageChap::AnimeAmount));
         // app.add_system(apply_system_buffers.in_set(ERunStageChap::Anime));
         // app.add_system(apply_system_buffers.in_set(ERunStageChap::Logic01));

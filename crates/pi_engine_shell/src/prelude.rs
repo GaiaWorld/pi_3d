@@ -79,6 +79,7 @@ pub use crate::effect_texture2d::*;
 pub use crate::frame_time::SingleFrameTimeCommand;
 pub use crate::entity_ref::*;
 pub use crate::animation::*;
+pub use crate::interpolation::*;
 
 ///
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Component)]
@@ -125,7 +126,7 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
 }
 
 #[derive(Deref, DerefMut, Component)]
-pub struct EInstanceCodeComp(pub EInstanceCode);
+pub struct EVerticeExtendCodeComp(pub EVerticeExtendCode);
 
 #[derive(Deref, DerefMut, Component)]
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts);

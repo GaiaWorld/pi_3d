@@ -1,10 +1,10 @@
-use pi_engine_shell::prelude::EntityCommands;
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3};
 
 use crate::{
     emitter::*,
-    interpolation::{parse_color4_gradient, parse_float_interpolation, FloatInterpolation, self},
-    iparticle_system_config::{IParticleSystemConfig, IShape, ParamInfo, TParamType},
+    interpolation::{parse_color4_gradient, parse_float_interpolation, self},
+    iparticle_system_config::{IParticleSystemConfig, IShape, TParamType},
     modifier::*,
     tools::TBurstData,
     base::*,

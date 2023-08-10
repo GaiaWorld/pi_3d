@@ -2,12 +2,12 @@ use std::mem::replace;
 
 use pi_engine_shell::prelude::*;
 
-use crate::prelude::instance_buffer_update;
+use crate::{prelude::instance_buffer_update, object::ActionEntity};
 
 use super::{
     vertex_buffer_useinfo::*,
     base::*,
-    instance::{instance_world_matrix::InstanceBufferWorldMatrix, instance_color::InstanceBufferColor, instance_tilloff::InstanceBufferTillOff, InstanceSourceID},
+    instance::{instance_world_matrix::InstanceBufferWorldMatrix, instance_color::InstanceBufferColor, instance_tilloff::InstanceBufferTillOff, InstanceMesh},
 };
 
 use super::command::*;
@@ -24,18 +24,20 @@ pub fn sys_act_geometry_create(
         if let Some(mut cmd) = commands.get_entity(id_mesh) {
             cmd.insert(GeometryID(entity));
         }
-
         
         let mut geocommands = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
             return;
         };
+
+        ActionEntity::init(&mut geocommands);
+
         geocommands
             .insert(VertexBufferLayoutsComp(VertexBufferLayouts::from(&vertex_desc)))
             .insert(MeshID(id_mesh));
 
-        let instancesource = InstanceSourceID(id_mesh);
+        let instancesource = InstanceMesh(id_mesh);
 
         let geo_desc = GeometryDesc { list: vertex_desc };
     
@@ -57,7 +59,7 @@ pub fn sys_act_geometry_create(
             .remove::<AssetDescVBSlot15>()
             .remove::<AssetDescVBSlot16>();
 
-        let mut instance_code = EInstanceCode(EInstanceCode::NONE);
+        let mut instance_code = EVerticeExtendCode(EVerticeExtendCode::NONE);
         init_slot::<AssetDescVBSlot01, AssetResVBSlot01>(&instancesource, entity, &geo_desc, &mut instance_code, &mut geoloader.loader_01,  &mut vb_data_map, &asset_mgr, &mut geocommands);
         init_slot::<AssetDescVBSlot02, AssetResVBSlot02>(&instancesource, entity, &geo_desc, &mut instance_code, &mut geoloader.loader_02,  &mut vb_data_map, &asset_mgr,  &mut geocommands);
         init_slot::<AssetDescVBSlot03, AssetResVBSlot03>(&instancesource, entity, &geo_desc, &mut instance_code, &mut geoloader.loader_03,  &mut vb_data_map, &asset_mgr,  &mut geocommands);
@@ -73,7 +75,7 @@ pub fn sys_act_geometry_create(
 
         // log::debug!(">>>>  GeometryDesc ");
         geocommands.insert(geo_desc);
-        geocommands.insert(EInstanceCodeComp(instance_code));
+        geocommands.insert(EVerticeExtendCodeComp(instance_code));
         
         if let Some(indices_desc) = indices_desc {
             if let Some(data) = asset_mgr.get(&indices_desc.buffer.asset_u64()) {
@@ -250,10 +252,10 @@ fn init_slot<
     D: TVertexBufferUseInfo + Component,
     D1: From<EVerticesBufferUsage> + Component,
 >(
-    instancesource: &InstanceSourceID,
+    instancesource: &InstanceMesh,
     id_geo: ObjectID,
     geodesc: &GeometryDesc,
-    instance_code: &mut EInstanceCode,
+    instance_code: &mut EVerticeExtendCode,
     loader: &mut VertexBufferLoader<ObjectID, D1>,
     vb_data_map: &mut SingleVertexBufferDataMap,
     asset_mgr: &ShareAssetMgr<EVertexBufferRange>,
@@ -283,19 +285,19 @@ fn init_slot<
                     EInstanceKind::WorldMatrix => {
                         let buff = InstanceBufferWorldMatrix { slot: slot_index, index: KeyVertexBuffer::from((buff_id + "WorldMatrix").as_str()) };
                         commands.insert(buff);
-                        instance_code.0 = instance_code.0 | EInstanceCode::BASE;
+                        instance_code.0 = instance_code.0 | EVerticeExtendCode::INSTANCE_BASE;
                     },
                     EInstanceKind::Color => {
                         let buff = InstanceBufferColor { slot: slot_index, index: KeyVertexBuffer::from((buff_id + "Color").as_str()) };
                         commands.insert(buff);
                         // log::debug!("Instance Color");
-                        instance_code.0 = instance_code.0 | EInstanceCode::COLOR;
+                        instance_code.0 = instance_code.0 | EVerticeExtendCode::INSTANCE_COLOR;
                     },
                     EInstanceKind::TillOffset => {
                         let buff = InstanceBufferTillOff { slot: slot_index, index: KeyVertexBuffer::from((buff_id + "TillOff").as_str()) };
                         commands.insert(buff);
                         // log::debug!("Instance TillOffset");
-                        instance_code.0 = instance_code.0 | EInstanceCode::TILL_OFF_1;
+                        instance_code.0 = instance_code.0 | EVerticeExtendCode::INSTANCE_TILL_OFF_1;
                     },
                     _ => { },
                 }

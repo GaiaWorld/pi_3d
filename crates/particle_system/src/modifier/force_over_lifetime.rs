@@ -1,11 +1,6 @@
-use std::sync::Arc;
+use pi_engine_shell::prelude::*;
 
-use crate::{particle::Particle, tools::{Force, BaseRandom}};
-
-use super::base::{
-    transform_vector_as_local_space, transform_vector_as_world_space, IParticleModifier,
-    TranslationInterpolate, TEMP_VECTOR3_A,
-};
+use crate::tools::Force;
 
 #[derive(Clone)]
 pub struct ForceOverLifetime {

@@ -1,12 +1,6 @@
 
 use pi_scene_math::{Vector3, Number};
-
-use crate::{
-    interpolation::{FloatInterpolation, IInterpolation},
-    particle::Particle, tools::{GravityFactor, BaseRandom},
-};
-
-use super::base::{TEMP_VECTOR3_A, IParticleModifier};
+use pi_engine_shell::prelude::*;
 
 pub struct Gravity {
     pub interpolation: FloatInterpolation,

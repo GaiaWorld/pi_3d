@@ -178,7 +178,7 @@ pub struct BundleMesh(
 pub struct BundleInstanceMesh(
     BundleTransformNode,
     AbstructMesh,
-    InstanceSourceID,
+    InstanceMesh,
     InstanceRGB,
     InstanceAlpha,
     InstanceColor,
@@ -192,7 +192,7 @@ pub struct BundleInstanceMesh(
 );
 
 pub struct BundlePass(
-    PassSource,
+    ModelPass,
     PassBindEffectValue,
     PassBindEffectTextures,
     PassBindGroupScene,

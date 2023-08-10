@@ -36,3 +36,6 @@ pub enum UniformModifier {
     Int32(usize, i32),
     Uint32(usize, u32),
 }
+
+#[derive(Debug, Clone, Copy, Resource)]
+pub struct SingleIDBaseDefaultMaterial(pub Entity);

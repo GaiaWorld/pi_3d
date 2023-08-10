@@ -25,7 +25,7 @@ use super::{
 /// 渲染器搜集渲染
     pub fn sys_pass_bind_groups<T: TPass + Component, I: TPassID + Component>(
         passes: Query<
-            (ObjectID, &PassSource, &PassReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &PassBindGroups, &T),
+            (ObjectID, &ModelPass, &PassReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &PassBindGroups, &T),
             Or<(Changed<PassReady>, Changed<PassBindGroupScene>, Changed<PassBindGroupModel>, Changed<PassBindGroupTextureSamplers>)>
         >,
         mut commands: Commands,
@@ -69,7 +69,7 @@ use super::{
             ),
             Or<(Changed<GeometryID>, Changed<RenderAlignment>)>,
         >,
-        geometrys: Query<(&EInstanceCodeComp, &VertexBufferLayoutsComp)>, 
+        geometrys: Query<(&EVerticeExtendCodeComp, &VertexBufferLayoutsComp)>, 
         passes: Query<(&PassReady, &PassBindGroups, &PassShader), With<T>>,
         mut commands: Commands,
         mut shader_center: ResMut<AssetDataCenterShader3D>,
@@ -172,9 +172,9 @@ use super::{
                 &GeometryID, &I, &RenderAlignment
             ),
         >,
-        geometrys: Query<(&EInstanceCodeComp, &VertexBufferLayoutsComp)>, 
+        geometrys: Query<(&EVerticeExtendCodeComp, &VertexBufferLayoutsComp)>, 
         passes: Query<
-            (ObjectID, &PassSource, &PassReady, &PassBindGroups, &PassShader, &T),
+            (ObjectID, &ModelPass, &PassReady, &PassBindGroups, &PassShader, &T),
             Or<(Changed<PassReady>, Changed<PassBindGroups>)>
         >,
         mut commands: Commands,
@@ -419,7 +419,7 @@ use super::{
         >,
         geometrys: Query<&VertexBufferLayoutsComp>, 
         passes: Query<
-            (ObjectID, &PassSource, &PassBindGroups, &PassShader, &T, & PassPipeline),
+            (ObjectID, &ModelPass, &PassBindGroups, &PassShader, &T, & PassPipeline),
             Changed<PassShader>
         >,
         // mut commands: Commands,
@@ -543,7 +543,7 @@ use super::{
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
         models: Query<(&GeometryID, &IndiceRenderRange)>,
         geometrys: Query<&RenderGeometry>,
-        mut passes: Query<(ObjectID, &PassSource, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
+        mut passes: Query<(ObjectID, &ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
         // mut commands: Commands,
     ) {
         let time1 = pi_time::Instant::now();
@@ -552,16 +552,20 @@ use super::{
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                 if let Ok((id_geo, renderindices)) = models.get(id_model.0) {
                     if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
-                        let draw = DrawObj3D {
-                            pipeline: Some(pipeline.clone()),
-                            bindgroups: bindgroups.groups(),
-                            vertices: rendergeo.vertices(),
-                            instances: rendergeo.instances(),
-                            vertex: rendergeo.vertex_range(),
-                            indices: renderindices.apply(rendergeo),
-                        };
-                        
-                        *old_draw = PassDraw(Some(Arc::new(draw)));
+                        if rendergeo.isok() {
+                            let draw = DrawObj3D {
+                                pipeline: Some(pipeline.clone()),
+                                bindgroups: bindgroups.groups(),
+                                vertices: rendergeo.vertices(),
+                                instances: rendergeo.instances(),
+                                vertex: rendergeo.vertex_range(),
+                                indices: renderindices.apply(rendergeo),
+                            };
+                            
+                            *old_draw = PassDraw(Some(Arc::new(draw)));
+                        } else {
+                            *old_draw = PassDraw(None);
+                        }
                         // log::warn!("PassDraw: {:?}", id_pass);
                         // log::debug!("PassDrawLoaded: 1 Pass");
                         // commands.entity(id_pass).insert(PassDraw(Some(Arc::new(draw))));
@@ -584,7 +588,7 @@ use super::{
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
         models: Query<(&GeometryID, &I, &IndiceRenderRange), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>)>>,
         geometrys: Query<&RenderGeometry>,
-        mut passes: Query<(&PassSource, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
+        mut passes: Query<(&ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
         let time1 = pi_time::Instant::now();
@@ -593,6 +597,7 @@ use super::{
             if let Ok((id_model, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
+                        if rendergeo.isok() {
                             let draw = DrawObj3D {
                                 pipeline: Some(pipeline.clone()),
                                 bindgroups: bindgroups.groups(),
@@ -605,6 +610,9 @@ use super::{
                             // log::warn!("PassDraw: {:?}", id_pass.id());
                             // log::debug!("PassDrawLoaded: 1 Model");
                             // commands.entity(id_pass.id()).insert(PassDraw(Some(Arc::new(draw))));
+                        } else {
+                            *old_draw = PassDraw(None);
+                        }
                     } else {
                         // log::warn!("PassDraw None: {:?}", id_pass.id());
                         *old_draw = PassDraw(None);

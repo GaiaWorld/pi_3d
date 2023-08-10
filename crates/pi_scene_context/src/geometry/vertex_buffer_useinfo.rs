@@ -31,7 +31,7 @@ pub trait TAssetResVertexBufferForInstance: From<EVerticesBufferUsage> + TAssetR
             EVerticesBufferUsage::EVBRange(buffer)   => {
                 let val = match buffer.deref() {
                     EVertexBufferRange::Updatable(_, _, _) => None,
-                    EVertexBufferRange::NotUpdatable(buffer) => {
+                    EVertexBufferRange::NotUpdatable(buffer, _, _) => {
                         if let Some(buffer) = allocator.create_not_updatable_buffer(device, queue, data, Some(&buffer)) {
                             Some(Self::from(EVerticesBufferUsage::EVBRange(Arc::new(buffer))))
                         } else {

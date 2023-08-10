@@ -8,6 +8,7 @@ pub use base::*;
 
 mod load;
 mod base;
+mod particle_system;
 
 
 pub struct PluginGLTF2Res;

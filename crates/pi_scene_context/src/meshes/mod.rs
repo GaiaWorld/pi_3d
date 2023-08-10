@@ -2,15 +2,17 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    geometry::prelude::*,
+    geometry::prelude::*, object::sys_dispose_ready, transforms::transform_node_sys::sys_world_matrix_calc,
 };
 
 use self::{
     command::*, 
     command_sys::*, 
     model::*,
+    system::*,
 };
 
+mod system;
 mod model;
 mod command;
 pub mod command_sys;
@@ -28,38 +30,6 @@ pub mod prelude;
 
 pub struct PluginMesh;
 impl crate::Plugin for PluginMesh {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut crate::engine::Engine,
-    //     stages: &mut crate::run_stage::RunStage,
-    // ) -> Result<(), crate::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-
-    //     SysMeshCreateCommand::setup(world, stages.query_stage::<SysMeshCreateCommand>(ERunStageChap::Initial));
-    //     SysMeshModifyCommand::setup(world, stages.query_stage::<SysMeshModifyCommand>(ERunStageChap::Initial));
-    //     SysInstanceMeshCreateCommand::setup(world, stages.query_stage::<SysInstanceMeshCreateCommand>(ERunStageChap::Initial));
-    //     SysInstanceMeshModifyCommand::setup(world, stages.query_stage::<SysInstanceMeshModifyCommand>(ERunStageChap::Initial));
-    
-    //     // SysModelAboutUpdate::setup(world, stages.query_stage::<SysModelAboutUpdate>(ERunStageChap::Command));
-    //     SysRenderMatrixUpdate::setup(world, stages.query_stage::<SysRenderMatrixUpdate>(ERunStageChap::Command));
-    //     SysRenderMatrixUniformUpdate::setup(world, stages.query_stage::<SysRenderMatrixUniformUpdate>(ERunStageChap::Command));
-
-    //     SysInstanceBufferWorldMatrixUpdate::setup(world, stages.query_stage::<SysInstanceBufferWorldMatrixUpdate>(ERunStageChap::Command));
-    //     SysInstanceBufferColorUpdate::setup(world, stages.query_stage::<SysInstanceBufferColorUpdate>(ERunStageChap::Command));
-    //     SysInstanceBufferTillOffUpdate::setup(world, stages.query_stage::<SysInstanceBufferTillOffUpdate>(ERunStageChap::Command));
-
-    //     // SysModelAboutBindGroup::setup(world, stages.query_stage::<SysModelAboutBindGroup>(ERunStageChap::Uniform));
-
-    //     world.insert_resource(SingleMeshCreateCommandList::default());
-    //     world.insert_resource(SingleMeshModifyCommandList::default());
-    //     world.insert_resource(SingleInstanceMeshCreateCommandList::default());
-    //     world.insert_resource(SingleInstanceMeshModifyCommandList::default());
-    //     world.insert_resource(InstanceSourceRecord { counter: 0 });
-
-    //     PluginAlphaIndex.init(engine, stages);
-
-    //     Ok(())
-    // }
 
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ActionListMeshCreate::default());
@@ -100,6 +70,9 @@ impl crate::Plugin for PluginMesh {
             ).before(sys_instance_color).in_set(ERunStageChap::Command)
         );
         app.add_system(
+            sys_enable_about_instance.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
+        );
+        app.add_system(
             sys_calc_render_matrix.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
         );
         app.add_system(
@@ -125,6 +98,14 @@ impl crate::Plugin for PluginMesh {
                 sys_act_geomettry_instance_color.run_if(should_run),
                 sys_act_geomettry_instance_tilloff.run_if(should_run),
             ).chain().before(sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>)
+        );
+
+        app.add_systems(
+            (
+                sys_dispose_about_mesh,
+                sys_dispose_about_instance,
+                sys_dispose_about_pass,
+            ).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
     }
 }

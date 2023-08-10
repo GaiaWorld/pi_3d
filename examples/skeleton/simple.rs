@@ -1,39 +1,15 @@
 #![feature(box_into_inner)]
 
-use default_render::{SingleIDBaseDefaultMaterial, shader::DefaultShader};
-use pi_3d::PluginBundleDefault;
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime, };
+use pi_engine_shell::prelude::*;
 use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
-use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
+use pi_mesh_builder::cube::*;
+use unlit_material::shader::UnlitShader;
 
-use std::sync::Arc;
-use pi_async_rt::rt::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
-
-pub struct PluginLocalLoad;
-impl Plugin for PluginLocalLoad {
-    fn build(&self, app: &mut App) {
-        
-        init_load_cb(Arc::new(|path: String| {
-            MULTI_MEDIA_RUNTIME
-                .spawn(async move {
-                    log::debug!("Load {}", path);
-                    let r = std::fs::read(path.clone()).unwrap();
-                    on_load(&path, r);
-                })
-                .unwrap();
-        }));
-    }
-}
 
 fn setup(
     mut commands: Commands,
@@ -274,37 +250,12 @@ impl Plugin for PluginTest {
 }
 
 
+#[path = "../base.rs"]
+mod base;
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
-
-    let mut app = App::default();
-
-	let mut window_plugin = WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(800, 600);
-    }
-
-    app.insert_resource(AssetMgrConfigs::default());
-    app.add_plugin(InputPlugin::default());
-    app.add_plugin(window_plugin);
-    app.add_plugin(AccessibilityPlugin);
-    app.add_plugin(bevy::winit::WinitPlugin::default());
-    // .add_plugin(WorldInspectorPlugin::new())
-    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
-    app.add_plugin(PiRenderPlugin::default());
-    app.add_plugin(PluginLocalLoad);
+    let mut app = base::test_plugins_with_gltf();
+    
     app.add_plugin(PluginTest);
-    app.add_plugin(PluginFrameTime);
-    app.add_plugin(PluginWindowRender);
-    app.add_plugins(PluginBundleDefault);
-    app.add_plugin(PluginCubeBuilder);
-    app.add_plugin(PluginQuadBuilder);
-    app.add_plugin(PluginStateToFile);
-    app.add_plugin(PluginNodeMaterial);
-    app.add_plugin(PluginUnlitMaterial);
-    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
-
-    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);

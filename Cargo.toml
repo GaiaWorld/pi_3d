@@ -118,6 +118,10 @@ path = "examples/cube/unlit_cube.rs"
 # [[example]]
 # name = "simple"
 # path = "examples/simple/simple.rs"
+
+[[example]]
+name = "dispose"
+path = "examples/simple/dispose.rs"
 # 
 # [[example]]
 # name = "quad"

@@ -1,9 +1,4 @@
-use pi_scene_math::Vector3;
-use rand::Rng;
-
-use crate::{particle::Particle, tools::BaseRandom};
-
-use super::base::IParticleModifier;
+use pi_engine_shell::prelude::*;
 
 #[derive(Clone)]
 pub struct Noise {

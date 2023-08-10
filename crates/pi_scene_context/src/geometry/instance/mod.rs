@@ -9,13 +9,13 @@ pub mod instance_boneoffset;
 pub mod sys_instance;
 
 #[derive(Debug, Clone, Component)]
-pub struct InstanceSourceID(pub Entity);
-impl InstanceSourceID {
+pub struct InstanceMesh(pub Entity);
+impl InstanceMesh {
     pub fn id(&self) -> String {
         self.0.to_bits().to_string()
     }
 }
-impl TEntityRef for InstanceSourceID {
+impl TEntityRef for InstanceMesh {
     fn id(&self) -> Entity {
         self.0
     }
@@ -25,4 +25,4 @@ impl TEntityRef for InstanceSourceID {
 #[derive(Debug, Clone, Default, Component)]
 pub struct DirtyInstanceSourceRefs;
 
-pub type InstanceSourceRefs = EntityRefInfo<DirtyInstanceSourceRefs, InstanceSourceID>;
+pub type InstanceSourceRefs = EntityRefInfo<DirtyInstanceSourceRefs, InstanceMesh>;

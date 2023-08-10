@@ -17,5 +17,6 @@ pub struct PluginSceneAnimation;
 impl Plugin for PluginSceneAnimation {
     fn build(&self, app: &mut App) {
         app.add_system(sys_scene_anime_ctx.run_if(should_run).in_set(ERunStageChap::AnimeAmount));
+        app.add_system(sys_dispose_about_animationgroup.in_set(ERunStageChap::Dispose));
     }
 }

@@ -4,8 +4,8 @@ use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     transforms::transform_node_sys::*,
-    meshes::command_sys::*,
-    pass::*,
+    meshes::prelude::*,
+    pass::*, object::sys_dispose_ready,
 };
 
 use self::{
@@ -13,6 +13,7 @@ use self::{
     directional::{DirectionalShadowProjection, system::*},
     shadow_generator::{system::*},
     command::*,
+    command_sys::*, system::*,
 };
 
 pub mod base;
@@ -20,8 +21,10 @@ pub mod directional;
 pub mod point;
 pub mod vertex;
 pub mod command;
+pub mod command_sys;
 pub mod shadow_generator;
 pub mod interface;
+pub mod system;
 
 pub struct PluginLighting;
 impl Plugin for PluginLighting {
@@ -113,5 +116,7 @@ impl Plugin for PluginLighting {
                 sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection>.run_if(should_run).after(sys_calc_render_matrix)
             ).chain().in_set(ERunStageChap::Uniform)
         );
+
+        app.add_system(sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

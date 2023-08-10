@@ -3,7 +3,7 @@ use bevy::ecs::entity;
 use pi_bevy_render_plugin::component::GraphId;
 use pi_engine_shell::prelude::*;
 
-use crate::{viewer::prelude::*, postprocess::Postprocess, prelude::PassTagOrders};
+use crate::{viewer::prelude::*, postprocess::Postprocess, prelude::PassTagOrders, object::ActionEntity};
 
 use super::{
     renderer::*,
@@ -129,7 +129,7 @@ pub fn sys_act_renderer_connect(
 
 pub struct ActionRenderer;
 impl ActionRenderer {
-    pub(crate) fn as_renderer(
+    pub(crate) fn init(
         commands_renderer: &mut EntityCommands,
         id_viewer: Entity,
         passorders: PassTagOrders,
@@ -139,6 +139,7 @@ impl ActionRenderer {
         depth_format: DepthStencilFormat,
         toscreen: bool,
     ) {
+        ActionEntity::init(commands_renderer);
         commands_renderer
             .insert(passorders)
             .insert(Renderer::new())

@@ -3,6 +3,8 @@ use std::ops::Mul;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
+use crate::{prelude::ActionListTransformNodeParent, transforms::command_sys::ActionTransformNode};
+
 use super::skeleton::*;
 
 #[derive(Component)]
@@ -40,34 +42,3 @@ impl BoneDifferenceMatrix {
 
 #[derive(Component)]
 pub struct BoneMatrix(pub Matrix);
-
-pub struct ActionBone;
-impl ActionBone {
-    pub fn init(
-        commands: &mut EntityCommands,
-        empty: &SingleEmptyEntity,
-        parent: Entity,
-    ) {
-        commands
-            .insert(BoneParent(parent))
-            .insert(BoneAbsolute(Matrix::identity()))
-            .insert(BoneAbsoluteInv(Matrix::identity()))
-            .insert(BoneDifferenceMatrix(Matrix::identity()))
-            .insert(BoneMatrix(Matrix::identity()))
-            .insert(BoneBaseMatrix(Matrix::identity()))
-            // .insert(SkeletonID(empty.id()))
-        ;
-    }
-    pub fn modify_pose(
-        commands: &mut EntityCommands,
-        pose: Matrix,
-    ) {
-        commands.insert(BoneBaseMatrix(pose));
-    }
-    pub fn modify_skin(
-        commands: &mut EntityCommands,
-        id_skin: Entity,
-    ) {
-        commands.insert(SkeletonID(id_skin));
-    }
-}

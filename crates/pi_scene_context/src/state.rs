@@ -98,7 +98,7 @@ pub struct StateRecordCfg {
 //     #[system]
     fn sys_mesh_state_by_pass<T: TMeshStatePass + Component, P: TPass + Component>(
         mut models: Query<&mut MeshStates>,
-        passes: Query<(&PassSource, &T, &P), Changed<T>>,
+        passes: Query<(&ModelPass, &T, &P), Changed<T>>,
         mut commands: Commands,
     ) {
         passes.iter().for_each(|(id_model, val, _)| {

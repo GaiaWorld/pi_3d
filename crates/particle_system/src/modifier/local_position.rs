@@ -1,15 +1,6 @@
-use pi_scene_math::{Quaternion, Vector3};
+use pi_engine_shell::prelude::*;
 
-use crate::{
-    interpolation::{FloatInterpolation, IInterpolation},
-    iparticle_system_config::EInterpolationCurveMode,
-    particle::Particle, tools::{OrbitVelocity, BaseRandom},
-};
-
-use super::base::{
-    IParticleModifier, TranslationInterpolate, TEMP_VECTOR3_A, TEMP_VECTOR3_B, TEMP_VECTOR3_C,
-    TEMP_VECTOR3_D,
-};
+use crate::tools::OrbitVelocity;
 
 pub struct OrbitVelocityModifier {
     /// 绕轨道中心的角速度 2*PI 即 1s 绕一周

@@ -1,9 +1,7 @@
-use crate::{
-    interpolation::{FloatInterpolation, IInterpolation},
-    particle::Particle,
-};
+use pi_engine_shell::prelude::*;
+use pi_scene_math::Vector4;
 
-use super::base::IParticleModifier;
+use crate::base::ParticleCustomV4;
 
 #[derive(Clone)]
 pub struct CustomDataForUV {
@@ -30,11 +28,12 @@ impl Default for CustomDataForUV {
 }
 
 impl CustomDataForUV {
-    pub fn modify(&mut self, particle: &mut Particle, amount: &mut f32, _delta_seconds: f32) {
-        particle.uv[0] = 1.0 / self.u_scale.interpolate(*amount, particle.base_random);
-        particle.uv[1] = 1.0 / self.v_scale.interpolate(*amount, particle.base_random);
-        particle.uv[2] = self.u_offset.interpolate(*amount, particle.base_random);
-        particle.uv[3] = self.v_offset.interpolate(*amount, particle.base_random);
+    pub fn modify(&mut self, particle: &mut Vector4, amount: &mut f32, randoms: &BaseRandom) {
+        let x = 1.0 / self.u_scale.interpolate(*amount, randoms.x);
+        let y = 1.0 / self.v_scale.interpolate(*amount, randoms.y);
+        let z = self.u_offset.interpolate(*amount, randoms.z);
+        let w = self.v_offset.interpolate(*amount, randoms.w);
+        particle.copy_from_slice(&[x, y, z, w]);
     }
 }
 

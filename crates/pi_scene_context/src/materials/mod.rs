@@ -3,6 +3,8 @@ use pi_assets::asset::GarbageEmpty;
 use pi_engine_shell::{prelude::*};
 
 
+use crate::object::sys_dispose_ready;
+
 use self::{
     command::*,
     command_sys::*,
@@ -12,7 +14,7 @@ use self::{
         sys_pass::*,
         set_up_uniforms
     },
-    shader_effect::*
+    shader_effect::*, system::sys_dispose_about_material, prelude::SingleIDBaseDefaultMaterial
 };
 
 mod material;
@@ -66,6 +68,11 @@ impl Plugin for PluginMaterial {
             &app.world.get_resource::<PiRenderQueue>().unwrap(),
         );
         app.insert_resource(defaulttextures);
+        
+        let entity = app.world.spawn_empty().id();
+        // log::warn!("Default Maerial {:?}", scene);
+        let single = SingleIDBaseDefaultMaterial(entity);
+        app.insert_resource(single);
 
         let cfg = asset_capacity::<AssetCfgShaderMeta3D>(app);
         app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
@@ -159,6 +166,9 @@ impl Plugin for PluginMaterial {
             sys_material_uniform_apply.run_if(should_run).in_set(ERunStageChap::Uniform)
         );
 
+        app.add_system(
+            sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+        );
         // PluginMaterialUniforms.build(app);
         // app.add_plugin(PluginMaterialUniforms);
     }

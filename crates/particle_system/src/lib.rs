@@ -31,6 +31,7 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(ResParticleCalculatorUninstallQueue::default());
         app.insert_resource(ActionListCPUParticleCalculator::default());
         app.insert_resource(ActionListCPUParticleSystem::default());
+        app.insert_resource(ActionListCPUParticleSystemState::default());
 
         app.add_system(
             sys_particle_calculator.in_set(ERunStageChap::Initial),
@@ -40,6 +41,7 @@ impl Plugin for PluginParticleSystem {
         );
         app.add_systems(
             (
+                sys_partilce_system_state.run_if(should_run),
                 sys_ids.run_if(should_run),
                 sys_emission.run_if(should_run)
             ).chain().in_set(ERunStageChap::Command),

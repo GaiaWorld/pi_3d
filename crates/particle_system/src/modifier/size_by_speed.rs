@@ -1,9 +1,6 @@
 
 use pi_scene_math::Vector3;
-
-use crate::{interpolation::FloatInterpolation, particle::Particle, tools::*};
-
-use super::base::{IParticleModifier, ScalingInterpolate};
+use pi_engine_shell::prelude::*;
 
 #[derive(Clone)]
 pub struct SizeBySpeed {

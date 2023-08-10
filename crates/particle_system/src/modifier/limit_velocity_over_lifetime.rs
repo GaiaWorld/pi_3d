@@ -1,9 +1,6 @@
-use crate::{
-    interpolation::{FloatInterpolation, IInterpolation},
-    particle::Particle, tools::{LimitVelocityScalar, BaseRandom},
-};
+use pi_engine_shell::prelude::*;
 
-use super::base::IParticleModifier;
+use crate::tools::LimitVelocityScalar;
 
 #[derive(Clone)]
 pub struct LimitVelocityOverLifetime {

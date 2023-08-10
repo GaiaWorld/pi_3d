@@ -1,10 +1,11 @@
 
 
 use pi_engine_shell::prelude::*;
+use pi_scene_math::Matrix;
 
 use crate::{
     scene::command_sys::*,
-    transforms::{prelude::*, command_sys::*},
+    transforms::{prelude::*, command_sys::*}, commands::{ActionListDisposeCan, OpsDisposeCan},
 };
 
 use super::{
@@ -18,35 +19,30 @@ pub fn sys_act_skin_create(
     mut commands: Commands,
     device: Res<PiRenderDevice>,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
         let bone_count = bones.len();
         let bonecount = EBoneCount::new(bone_count as u8 + 1);
         let mode = ESkinCode::UBO(bonemode, bonecount, cache_frames);
 
-        bones.iter().for_each(|id_bone| {
-            if let Some(mut cmd) = commands.get_entity(id_bone.clone()) {
-                ActionBone::modify_skin(&mut cmd, id_skin);
-            }
-        });
-
-        match Skeleton::new(root, bones, mode, &device, &mut dynbuffer, cachedata) {
+        match Skeleton::new(root, bones.clone(), mode, &device, &mut dynbuffer, cachedata) {
             Some(skeleton) => {
+                bones.iter().for_each(|id_bone| {
+                    if let Some(mut cmd) = commands.get_entity(id_bone.clone()) {
+                        ActionBone::modify_skin(&mut cmd, id_skin);
+                    }
+                });
+
                 if let Some(mut cmd) = commands.get_entity(id_skin) {
-                    // if let Some(data) = cachedata {
-                    //     skeleton.bind.data().write_data(0, bytemuck::cast_slice(&data));
-                    // }
-                    cmd
-                        .insert(skeleton)
-                        .insert(SkeletonInitBaseMatrix)
-                        .insert(SkeletonBonesDirty(true))
-                        .insert(SkeletonRefs::default())
-                        .insert(DirtySkeletonRefs(false))
-                        ;
+                    ActionSkeleton::init(&mut cmd, skeleton);
                 }
             },
             None => {
-
+                bones.iter().for_each(|entity| {
+                    disposecanlist.push(OpsDisposeCan::ops(*entity));
+                });
+                disposecanlist.push(OpsDisposeCan::ops(id_skin));
             },
         }
     });
@@ -97,11 +93,8 @@ pub fn sys_act_bone_create(
         } else {
             return;
         };
-        ActionScene::add_to_scene(&mut bonecmd, &mut tree, scene);
-        ActionTransformNode::init_for_tree(&mut bonecmd);
-        ActionTransformNode::as_transform_node(&mut bonecmd, name);
         ActionAnime::as_anime_group_target(&mut bonecmd);
-        ActionBone::init(&mut bonecmd, &empty, parent);
+        ActionBone::init(&mut bonecmd, &empty, parent, &mut tree, scene, name);
     });
 }
 
@@ -120,4 +113,56 @@ pub fn sys_act_bone_pose(
             cmds.push(OpsBonePose::ops(bone, matrix));
         }
     });
+}
+
+pub struct ActionSkeleton;
+impl ActionSkeleton {
+    pub fn init(
+        commands: &mut EntityCommands,
+        skeleton: Skeleton,
+    ) {
+        commands
+            .insert(skeleton)
+            .insert(SkeletonInitBaseMatrix)
+            .insert(SkeletonBonesDirty(true))
+            .insert(SkeletonRefs::default())
+            .insert(DirtySkeletonRefs(false))
+            ;
+    }
+}
+
+pub struct ActionBone;
+impl ActionBone {
+    pub fn init(
+        commands: &mut EntityCommands,
+        empty: &SingleEmptyEntity,
+        parent: Entity,
+        tree: &mut ActionListTransformNodeParent,
+        scene: Entity,
+        name: String
+    ) {
+        ActionTransformNode::init(commands, tree, scene, name);
+
+        commands
+            .insert(BoneParent(parent))
+            .insert(BoneAbsolute(Matrix::identity()))
+            .insert(BoneAbsoluteInv(Matrix::identity()))
+            .insert(BoneDifferenceMatrix(Matrix::identity()))
+            .insert(BoneMatrix(Matrix::identity()))
+            .insert(BoneBaseMatrix(Matrix::identity()))
+            // .insert(SkeletonID(empty.id()))
+        ;
+    }
+    pub(crate) fn modify_pose(
+        commands: &mut EntityCommands,
+        pose: Matrix,
+    ) {
+        commands.insert(BoneBaseMatrix(pose));
+    }
+    pub(crate) fn modify_skin(
+        commands: &mut EntityCommands,
+        id_skin: Entity,
+    ) {
+        commands.insert(SkeletonID(id_skin));
+    }
 }

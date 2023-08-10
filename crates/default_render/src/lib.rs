@@ -7,8 +7,6 @@ pub mod shader;
 pub mod command;
 pub mod interface;
 
-#[derive(Debug, Clone, Copy, Resource)]
-pub struct SingleIDBaseDefaultMaterial(pub Entity);
 
 fn setup(
     mat: Res<SingleIDBaseDefaultMaterial>,
@@ -45,28 +43,12 @@ impl Plugin for PluginDefaultMaterial {
     // }
 
     fn build(&self, app: &mut App) {
-        let entity = app.world.spawn_empty().id();
-        // log::warn!("Default Maerial {:?}", scene);
-        let single = SingleIDBaseDefaultMaterial(entity);
         
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
         ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
-        
-        app.insert_resource(single);
+
         app.add_startup_system(setup);
-
-        // let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap();
-        // let key = KeyShaderMeta::from(DefaultShader::KEY);
-        // if !asset_mgr.contains_key(&key) {
-        //     if let Ok(meta) = asset_mgr.insert(key.clone(), DefaultShader::res()) {
-        //         let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
-        //         wait_list.1.push((key.clone(), meta));
-        //     }
-        // }
-
-        // let mut matcmds = app.world.get_resource_mut::<ActionListMaterialCreate>().unwrap();
-        // matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY), EPassTag::Opaque));
     }
 }
 

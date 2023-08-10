@@ -111,16 +111,16 @@ impl AxisBuilder {
     }
 }
 
-pub struct InterfaceAxis;
-impl InterfaceAxis {
-    pub fn new_axis(
-        app: &mut App,
-        scene: ObjectID
-    ) -> ObjectID {
+// pub struct InterfaceAxis;
+// impl InterfaceAxis {
+//     pub fn new_axis(
+//         app: &mut App,
+//         scene: ObjectID
+//     ) -> ObjectID {
     
-        let id_mesh = ActionMesh::create(app, scene, String::from("Axis"));
-        ActionMesh::use_geometry(app, id_mesh, AxisBuilder::attrs_meta(), AxisBuilder::indices_meta());
+//         let id_mesh = ActionMesh::create(app, scene, String::from("Axis"));
+//         ActionMesh::use_geometry(app, id_mesh, AxisBuilder::attrs_meta(), AxisBuilder::indices_meta());
 
-        id_mesh
-    }
-}
+//         id_mesh
+//     }
+// }

@@ -4,6 +4,8 @@ use std::sync::Arc;
 use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 
+use crate::{commands::DisposeReady, prelude::MaterialID};
+
 pub type PassTag = u16;
 
 #[derive(Debug, Clone, Component)]
@@ -136,7 +138,7 @@ pub struct FlagPassDirtyBindEffectValue;
 pub struct FlagPassDirtyBindEffectTextures;
 
 #[derive(Component)]
-pub struct PassSource(pub ObjectID);
+pub struct ModelPass(pub Entity);
 
 pub trait TPass {
     fn new() -> Self;

@@ -1,7 +1,5 @@
 use pi_scene_math::{Vector4, Number};
-use rand::Rng;
-use crate::{particle::Particle, iparticle_system_config::FourGradientInfo, tools::{Random, BaseRandom}};
-use super::base::Color4Interpolate;
+use pi_engine_shell::prelude::*;
 
 #[derive(Default)]
 pub struct StartColor {

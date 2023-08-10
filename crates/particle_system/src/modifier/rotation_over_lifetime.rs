@@ -1,8 +1,5 @@
 use pi_scene_math::{Vector3, Number};
-
-use crate::{interpolation::FloatInterpolation, particle::Particle, tools::BaseRandom};
-
-use super::base::{RotationInterpolate, IParticleModifier};
+use pi_engine_shell::prelude::*;
 
 #[derive(Default)]
 pub struct RotationOverLifetime {

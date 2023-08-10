@@ -3,20 +3,24 @@ use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
 
-use crate::{base::*, interpolation::IInterpolation, tools::{Random, Velocity}};
+use crate::{base::*, tools::{Random, Velocity}};
 
 /// 系统的启动
 pub fn sys_emission(
     scenes: Query<&SceneTime>,
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorEmission)>,
-    mut particle_sys: Query<(&SceneID, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleAgeLifetime)>,
+    mut particle_sys: Query<(&SceneID, &ParticleState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleAgeLifetime)>,
 ) {
-    particle_sys.iter_mut().for_each(|(idscene, mut random, mut ids, mut particlesystime, mut emission, mut randoms, mut agelifetime)| {
+    particle_sys.iter_mut().for_each(|(idscene, state, mut random, mut ids, mut particlesystime, mut emission, mut randoms, mut agelifetime)| {
         if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.0)) {
             let delta_ms = scenetime.delta_ms() as u32;
 
-            particlesystime.run(delta_ms, 1000, base.duration);
-            
+            if state.playing {
+                particlesystime.run(delta_ms, 1000, base.duration);
+            } else {
+                particlesystime.run(0, 1000, base.duration);
+            }
+
             // log::warn!("Emission: {:?}, {:?}, ", delta_ms, particlesystime.running_delta_ms);
 
             // 间隔时间到达帧运行间隔
@@ -501,7 +505,8 @@ pub fn sys_update_buffer(
                 });
 
                 if updatebuffer && length == 0 {
-                    datamatrix = Matrix::identity().as_slice().to_vec();
+                    let mut matrix = Matrix::identity();matrix.append_scaling_mut(0.000001); matrix.append_translation_mut(&Vector3::new(0., -9999999.0, 0.));
+                    datamatrix = matrix.as_slice().to_vec();
                     datacolors = Vector4::zeros().as_slice().to_vec();
                     datauvs = Vector4::zeros().as_slice().to_vec();
                 }

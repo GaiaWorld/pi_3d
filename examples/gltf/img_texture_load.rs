@@ -1,6 +1,6 @@
 #![feature(box_into_inner)]
 
-use default_render::SingleIDBaseDefaultMaterial;
+
 use pi_3d::{PluginBundleDefault};
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
@@ -18,26 +18,6 @@ use std::sync::Arc;
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
-pub struct PluginLocalLoad;
-impl Plugin for PluginLocalLoad {
-    fn build(&self, app: &mut App) {
-        
-        init_load_cb(Arc::new(|path: String| {
-            MULTI_MEDIA_RUNTIME
-                .spawn(async move {
-                    log::debug!("Load {}", path);
-                    let pathbuf = std::path::PathBuf::from(path.clone());
-                    if pathbuf.exists() {
-                        let r = std::fs::read(pathbuf.clone()).unwrap();
-                        on_load(&path, r);
-                    } else {
-                        
-                    }
-                })
-                .unwrap();
-        }));
-    }
-}
 
 fn setup(
     mut commands: Commands,
@@ -89,39 +69,13 @@ impl Plugin for PluginTest {
 }
 
 
+
+#[path = "../base.rs"]
+mod base;
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-
-    let mut app = App::default();
-
-	let mut window_plugin = WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(800, 600);
-    }
-
-    app.insert_resource(AssetMgrConfigs::default());
-    app.add_plugin(InputPlugin::default());
-    app.add_plugin(window_plugin);
-    app.add_plugin(AccessibilityPlugin);
-    app.add_plugin(bevy::winit::WinitPlugin::default());
-    // .add_plugin(WorldInspectorPlugin::new())
-    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
-    app.add_plugin(PiRenderPlugin::default());
-    app.add_plugin(PluginLocalLoad);
+    let mut app = base::test_plugins_with_gltf();
+    
     app.add_plugin(PluginTest);
-    app.add_plugin(PluginFrameTime);
-    app.add_plugin(PluginWindowRender);
-    app.add_plugins(PluginBundleDefault);
-    app.add_plugin(PluginCubeBuilder);
-    app.add_plugin(PluginQuadBuilder);
-    app.add_plugin(PluginStateToFile);
-    app.add_plugin(PluginNodeMaterial);
-    app.add_plugin(PluginUnlitMaterial);
-    app.add_plugins(PluginGroupNodeMaterialAnime);
-    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
-    app.add_plugin(pi_gltf2_load::PluginGLTF2Res);
-
-    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
     app.add_startup_system(setup);
     app.add_system(sys_load_check);

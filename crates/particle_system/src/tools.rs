@@ -80,28 +80,6 @@ pub enum EParticleRenderMode {
     None = 5,
 }
 
-
-pub struct BaseRandom {
-    pub(crate) seed: u64,
-    pub(crate) base: Number,
-    pub(crate) x: Number,
-    pub(crate) y: Number,
-    pub(crate) z: Number,
-    pub(crate) w: Number,
-}
-impl Default for BaseRandom {
-    fn default() -> Self {
-        Self {
-            seed: 0,
-            base: 0.,
-            x: 0.,
-            y: 0.,
-            z: 0.,
-            w: 0.,
-        }
-    }
-}
-
 pub struct AgeLifeTime {
     pub(crate) age: u32,
     pub(crate) lifetime: u32,
@@ -112,7 +90,6 @@ impl Default for AgeLifeTime {
         Self { age: u32::MAX, lifetime: 0, progress: 0. }
     }
 }
-
 
 pub struct EmitMatrix {
     pub(crate) pose_invert: Matrix,

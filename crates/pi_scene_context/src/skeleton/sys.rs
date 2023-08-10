@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-use crate::transforms::{transform_node::*};
+use crate::{transforms::{transform_node::*}, commands::{DisposeReady, OpsDisposeCan, ActionListDisposeCan}};
 
 use super::{skeleton::*, bone::*};
 
@@ -152,4 +152,19 @@ use super::{skeleton::*, bone::*};
                 
             },
         }
+    }
+
+    pub fn sys_dispose_about_skeleton(
+        items: Query<(Entity, &DisposeReady, &SkeletonRefs, &Skeleton), Or<(Changed<DisposeReady>, Changed<SkeletonRefs>)>>,
+        mut disposecanlist: ResMut<ActionListDisposeCan>,
+    ) {
+        items.iter().for_each(|(entity, state, refs, skeleton)| {
+            if state.0 == false || refs.len() > 0 { return };
+
+            skeleton.bones.iter().for_each(|entity| {
+                disposecanlist.push(OpsDisposeCan::ops(*entity));
+            });
+
+            disposecanlist.push(OpsDisposeCan::ops(entity));
+        });
     }

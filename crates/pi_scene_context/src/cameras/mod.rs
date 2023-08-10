@@ -2,14 +2,14 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    viewer::prelude::*,
+    viewer::prelude::*, object::sys_dispose_ready,
 };
 
 use self::{
     command::*,
     command_sys::*,
     camera_sys::*,
-    target_camera::TargetCameraParam, camera::CameraParam
+    target_camera::TargetCameraParam, camera::CameraParam, system::sys_dispose_about_camera
 };
 
 mod animation;
@@ -21,6 +21,7 @@ pub mod camera_sys;
 mod command;
 pub mod command_sys;
 mod interface;
+mod system;
 pub mod prelude;
 
 #[derive(Resource, Default)]
@@ -136,5 +137,7 @@ impl Plugin for PluginCamera {
                 sys_tick_viewer_culling::<TargetCameraParam, CameraParam>.run_if(should_run)
             ).chain().in_set(ERunStageChap::DrawBinds)
         );
+
+        app.add_system(sys_dispose_about_camera.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

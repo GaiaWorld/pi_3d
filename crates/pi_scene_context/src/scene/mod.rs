@@ -2,10 +2,13 @@
 use pi_engine_shell::prelude::*;
 
 
+use crate::object::sys_dispose_ready;
+
 use self::{
     environment::sys::*,
     command_sys::*,
     prelude::*,
+    system::*,
 };
 
 pub mod coordinate_system;
@@ -16,12 +19,16 @@ pub mod environment;
 pub mod light;
 pub mod passes_cfg;
 mod base;
+mod system;
 pub mod prelude;
 
 
 pub struct PluginScene;
 impl Plugin for PluginScene {
     fn build(&self, app: &mut App) {
+        let id = app.world.spawn_empty().id();
+        app.insert_resource(SingleEmptyEntity::new(id));
+
         app.insert_resource(ActionListSceneCreate::default());
         app.insert_resource(ActionListSceneTime::default());
         app.insert_resource(ActionListSceneAmbientColor::default());
@@ -52,6 +59,8 @@ impl Plugin for PluginScene {
                 sys_bind_update_scene_time
             ).in_set(ERunStageChap::Uniform)
         );
+
+        app.add_system(sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     
 }

@@ -75,23 +75,23 @@ impl QuadBuilder {
     }
 }
 
-pub struct ActionQuad;
-impl ActionQuad {
-    pub fn create(
-        app: &mut App,
-        scene: Entity,
-        name: String,
-    ) -> Entity {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
-        let id_geo = commands.spawn_empty().id();
+// pub struct ActionQuad;
+// impl ActionQuad {
+//     pub fn create(
+//         app: &mut App,
+//         scene: Entity,
+//         name: String,
+//     ) -> Entity {
+//         let mut queue = CommandQueue::default();
+//         let mut commands = Commands::new(&mut queue, &app.world);
+//         let id_geo = commands.spawn_empty().id();
 
-        let id_mesh = ActionMesh::create(app, scene, name);
-        ActionMesh::use_geometry(app, id_mesh, QuadBuilder::attrs_meta(), Some(QuadBuilder::indices_meta()));
+//         let id_mesh = ActionMesh::create(app, scene, name);
+//         ActionMesh::use_geometry(app, id_mesh, QuadBuilder::attrs_meta(), Some(QuadBuilder::indices_meta()));
 
-        id_mesh
-    }
-}
+//         id_mesh
+//     }
+// }
 
 fn regist(
     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,

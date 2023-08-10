@@ -315,9 +315,9 @@ pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue + Debug>(
                 let index = i * step;
                 let value = T::newn(values, index);
                 // log::warn!("Frame {:?}, data: {:?}", frame, T::newn(values, index));
-                if step == 1 {
-                    log::warn!("Frame: {:?}, {:?}", frame, value);
-                }
+                // if step == 1 {
+                //     log::warn!("Frame: {:?}, {:?}", frame, value);
+                // }
                 curve.curve_frame_values_frame(frame, value);
             }
             curve
@@ -358,9 +358,9 @@ pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue + Debug>(
                 let value = T::newn(values, index + vs);
                 let outtangent = intangent.clone();
                 // log::warn!("Frame {:?}, data: {:?}", frame, T::newn(data, index + 1));
-                if step == 8 {
-                    log::warn!("Frame: {:?}, {:?}, {:?}", frame, intangent, value);
-                }
+                // if step == 8 {
+                //     log::warn!("Frame: {:?}, {:?}, {:?}", frame, intangent, value);
+                // }
                 curve.curve_cubic_splice_frame(frame, value, intangent, outtangent);
             }
             curve

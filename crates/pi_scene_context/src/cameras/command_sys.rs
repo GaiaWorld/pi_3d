@@ -30,10 +30,7 @@ pub fn sys_camera_create(
     cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity, name, toscreen)| {
         if let Some(mut commands) = commands.get_entity(entity) {
 
-            ActionScene::add_to_scene(&mut commands, &mut tree, scene);
-            ActionTransformNode::init_for_tree(&mut commands);
-            ActionTransformNode::as_transform_node(&mut commands, name);
-            ActionCamera::as_camera(&mut commands, toscreen);
+            ActionCamera::init(&mut commands, &mut tree, scene, name, toscreen);
             ActionAnime::as_anime_group_target(&mut commands);
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
@@ -228,7 +225,7 @@ pub fn sys_camera_renderer_action(
             viewer_renderers.map.insert(rendername.clone(), (passorders.clone(), RendererID(id_renderer)));
 
             if let Some(mut cmd) = commands.get_entity(id_renderer) {
-                ActionRenderer::as_renderer(
+                ActionRenderer::init(
                     &mut cmd, id_viewer, passorders, ViewerSize::DEFAULT_WIDTH, ViewerSize::DEFAULT_HEIGHT,
                     color_format, depth_stencil_format, toscreen.0
                 );
@@ -242,6 +239,16 @@ pub fn sys_camera_renderer_action(
 
 pub struct ActionCamera;
 impl ActionCamera {
+    pub fn init(
+        commands: &mut EntityCommands,
+        tree: &mut ActionListTransformNodeParent,
+        scene: Entity,
+        name: String,
+        toscreen: bool,
+    ) {
+        ActionTransformNode::init(commands, tree, scene, name);
+        ActionCamera::as_camera(commands, toscreen);
+    }
     pub(crate) fn as_camera(
         commands: &mut EntityCommands,
         toscreen: bool,

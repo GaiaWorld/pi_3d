@@ -4,7 +4,7 @@ use pi_bevy_ecs_extend::prelude::EntityTree;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix}, Matrix, Rotation3, Quaternion};
 
-use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::{TransformRecord, Enable, GlobalEnable}};
+use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::{TransformRecord, Enable, GlobalEnable}, commands::{DisposeReady, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeCan}};
 
 use super::{
     transform_node::*,
@@ -351,4 +351,16 @@ fn calc_world_root(
             (entity, false, Matrix::identity(), true)
         },
     }
+}
+
+pub fn sys_dispose_about_transform_node(
+    items: Query<(Entity, &DisposeReady, &TransformNode), Changed<DisposeReady>>,
+    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
+) {
+    items.iter().for_each(|(entity, state, _)| {
+        if state.0 == false { return }
+
+        disposecanlist.push(OpsDisposeCan::ops(entity));
+    });
 }

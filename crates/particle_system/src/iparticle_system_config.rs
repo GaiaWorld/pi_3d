@@ -1,9 +1,9 @@
 use crate::{
     emitter::{EBoxShapeMode, EShapeEmitterArcMode},
-    interpolation::{ICurve, IGradient},
     modifier::*,
     tools::*,
 };
+use pi_engine_shell::prelude::*;
 
 
 /**
@@ -13,23 +13,6 @@ pub const TSHAPE_ARC_MODE_RANDOM: isize = 1;
 pub const TSHAPE_ARC_MODE_LOOP: isize = 2;
 pub const TSHAPE_ARC_MODE_PING_PONG: isize = 3;
 pub const TSHAPE_ARC_MODE_BURST_SPREAD: isize = 4;
-
-/**
- * 曲线类型
- */
-const TINTERPOLATE_CONSTANT: isize = 1;
-const TINTERPOLATE_TWO_CONSTANTS: isize = 2;
-const TINTERPOLATE_CURVE: isize = 4;
-const TINTERPOLATE_TWO_CURVES: isize = 8;
-
-/**
- * 渐变类型
- */
-const TINTERPOLATE_COLOR: isize = 1;
-const TINTERPOLATE_TWO_COLORS: isize = 2;
-const TINTERPOLATE_GRADIENT: isize = 4;
-const TINTERPOLATE_TWO_GRADIENTS: isize = 8;
-const TINTERPOLATE_RANDOM: isize = 16;
 
 /**
  * 默认数据配置
@@ -83,65 +66,7 @@ impl Default for IShapeArc {
         IShapeArc::IShapeArcRandom(IShapeArcRandom::default())
     }
 }
-/**
- * 曲线插值模式
- */
-#[derive(Debug, PartialEq, Clone)]
-pub enum EInterpolationCurveMode {
-    /**
-     * 静态数值
-     */
-    Constant = TINTERPOLATE_CONSTANT,
-    /**
-     * 静态数值随机 - XYZ 随机值相同
-     */
-    TwoConstants = TINTERPOLATE_TWO_CONSTANTS,
-    /**
-     * 曲线插值
-     */
-    Curve = TINTERPOLATE_CURVE,
-    /**
-     * 曲线插值
-     */
-    TwoCurves = TINTERPOLATE_TWO_CURVES,
-}
 
-impl Default for EInterpolationCurveMode {
-    fn default() -> EInterpolationCurveMode {
-        EInterpolationCurveMode::Constant
-    }
-}
-/**
- * 渐变插值模式
- */
-#[derive(Clone, Debug)]
-pub enum EInterpolationGradienMode {
-    /**
-     * 静态数值
-     */
-    Color = TINTERPOLATE_COLOR,
-    /**
-     * 静态数值随机 - XYZ 随机值相同
-     */
-    TwoColors = TINTERPOLATE_TWO_COLORS,
-    /**
-     * 曲线插值
-     */
-    Gradient = TINTERPOLATE_GRADIENT,
-    /**
-     * 曲线插值
-     */
-    TwoGradients = TINTERPOLATE_TWO_GRADIENTS,
-    /**
-     * 曲线插值
-     */
-    Random = TINTERPOLATE_RANDOM,
-}
-impl Default for EInterpolationGradienMode {
-    fn default() -> EInterpolationGradienMode {
-        EInterpolationGradienMode::Color
-    }
-}
 /**
  * 形状发射器 Arc 信息
  */
@@ -371,62 +296,6 @@ impl Default for IShape{
     fn default() -> Self {
         IShape::ShapeBox(IShapeBox::default())
     }
-}
-
-type OneParam = f32;
-type ThreeParam = [f32; 3];
-type FourParam = [f32; 4];
-type OneParamCurve = ICurve;
-type ThreeParamCurve = [ICurve; 3];
-type FourParamCurve = [ICurve; 4];
-type FourGradient = [Vec<IGradient>; 4];
-
-pub enum ParamInfo {
-    OneParamInfo(OneParamInfo),
-    ThreeParamInfo(ThreeParamInfo),
-}
-
-impl Default for ParamInfo {
-    fn default() -> Self {
-        ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(0.0))
-    }
-}
-
-#[derive(Clone)]
-pub enum OneParamInfo {
-    TInterpolateConstant(OneParam),
-    TInterpolateTwoConstants(OneParam, OneParam),
-    TInterpolateCurve(OneParamCurve),
-    TInterpolateTwoCurves(OneParamCurve, OneParamCurve),
-}
-
-impl Default for OneParamInfo {
-    fn default() -> Self {
-        OneParamInfo::TInterpolateConstant(0.0)
-    }
-}
-    
-pub enum ThreeParamInfo {
-    TInterpolateConstant(ThreeParam),
-    TInterpolateTwoConstants(ThreeParam, ThreeParam),
-    TInterpolateCurve(ThreeParamCurve),
-    TInterpolateTwoCurves(ThreeParamCurve, ThreeParamCurve),
-}
-
-pub enum FourParamInfo {
-    TInterpolateConstant(FourParam),
-    TInterpolateTwoConstants(FourParam, FourParam),
-    TInterpolateCurve(FourParamCurve),
-    TInterpolateTwoCurves(FourParamCurve, FourParamCurve),
-}
-
-#[derive(Clone, Default)]
-pub enum FourGradientInfo {
-    #[default] TInterpolateRandom,
-    TInterpolateColor(FourParam),
-    TInterpolateTwoColors(FourParam, FourParam),
-    TInterpolateGradient(FourGradient),
-    TInterpolateTwoGradients(FourGradient, FourGradient),
 }
 
 pub struct ITextureSheet {

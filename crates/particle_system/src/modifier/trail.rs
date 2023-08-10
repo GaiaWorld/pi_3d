@@ -1,14 +1,13 @@
 use pi_scene_math::Vector3;
+use pi_engine_shell::prelude::*;
 
 use crate::{
-    interpolation::{Color4Gradient, FloatInterpolation, IInterpolation},
-    iparticle_system_config::EInterpolationCurveMode,
     tools::*,
     particle::Particle,
 };
 
 use super::{
-    base::Color4Interpolate, color_over_lifetime::ColorOverLifetime,
+    color_over_lifetime::ColorOverLifetime,
     trial_geometry::TrailGeometryModifier,
 };
 

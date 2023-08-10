@@ -6,6 +6,7 @@ use pi_assets::{mgr::{LoadResult, Receiver, AssetMgr}, asset::{Garbageer, Handle
 use pi_engine_shell::prelude::*;
 use pi_gltf::Gltf;
 use pi_hash::{XHashMap, XHashSet};
+use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemActionSet, ParticleSystemCalculatorID, OpsCPUParticleCalculator};
 use pi_scene_context::prelude::*;
 use pi_node_materials::prelude::*;
 use pi_render::rhi::RenderQueue;
@@ -13,7 +14,7 @@ use pi_share::Share;
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
 
-use crate::{TypeAnimeAssetMgrs, EAnimePropertyType, curve_gltf, p3d_anime_curve_query, interpolation_from_u8};
+use crate::{TypeAnimeAssetMgrs, EAnimePropertyType, curve_gltf, p3d_anime_curve_query, interpolation_from_u8, particle_system::gltf_format_particle_cfg};
 
 pub type KeyGLTFBase = Atom;
 pub type GLTFJson = String;
@@ -70,6 +71,7 @@ pub struct GLTF {
     pub lightdiffuse_curves: Vec<Handle<TypeFrameCurve<LightDiffuse>>>,
     pub boneoff_curves: Vec<Handle<TypeFrameCurve<InstanceBoneoffset>>>,
     pub indicerange_curves: Vec<Handle<TypeFrameCurve<IndiceRenderRange>>>,
+    pub particlesys_calculators: Vec<Handle<ParticleSystemCalculatorID>>,
     pub output: String,
     pub errors: Vec<ErrorGLTF>,
     pub animecount: usize,
@@ -105,6 +107,7 @@ impl  GLTF {
             lightdiffuse_curves:    vec![],
             boneoff_curves:         vec![],
             indicerange_curves:     vec![],
+            particlesys_calculators: vec![],
             output: String::from(""),
             errors: vec![],
             animecount: 0,
@@ -310,11 +313,13 @@ impl GLTFTempLoaded {
     }
     pub fn analy(
         self,
+        commands: &mut Commands,
         vb_assets_mgr: &ShareAssetMgr<AssetVertexBuffer>, 
         vballocator: &mut VertexBufferAllocator3D,
         device: &RenderDevice,
         queue: &RenderQueue,
         anime_assets: &TypeAnimeAssetMgrs,
+        particlesys_cmds: &mut ParticleSystemActionSet,
     ) -> GLTF {
         let mut result = GLTF::new(self.gltf.clone());
         let basekey = self.id.base_url.to_string() + "#";
@@ -604,6 +609,25 @@ impl GLTFTempLoaded {
                 }
             }
         }
+
+        // ParticleSystemCalculator
+        for node in self.gltf.0.nodes() {
+            if let Some(extras) = node.extras() {
+                if let Some(cfg) = extras.get("meshParticle") {
+                    let cfg: IParticleSystemConfig = gltf_format_particle_cfg(cfg);
+                    let key = Atom::from(basekey.clone() + cfg.name.as_str());
+                    let id = commands.spawn_empty().id();
+                    particlesys_cmds.calculator_cmds.push(OpsCPUParticleCalculator::ops(id, cfg));
+                    let res = ParticleSystemCalculatorID(id, 1024, particlesys_cmds.calculator_queue.queue());
+                    if let Ok(res) = particlesys_cmds.calcultors.insert(key.asset_u64(), res) {
+                        result.particlesys_calculators.push(res);
+                    } else {
+                        particlesys_cmds.calculator_queue.queue().push(id);
+                    }
+                }
+            }
+        }
+
         result
     }
 }
@@ -774,9 +798,11 @@ pub fn sys_gltf_base_loaded_check(
 }
 
 pub fn sys_gltf_analy(
+    mut commands: Commands,
     mut loader: ResMut<GLTFResLoader>,
     anime_assets: TypeAnimeAssetMgrs,
     mut vballocator: ResMut<VertexBufferAllocator3D>,
+    mut particlesys: ParticleSystemActionSet,
     vb_assets_mgr: Res<ShareAssetMgr<AssetVertexBuffer>>,
     assets_mgr: Res<ShareAssetMgr<GLTF>>,
     device: Res<PiRenderDevice>,
@@ -810,7 +836,7 @@ pub fn sys_gltf_analy(
         if isok && assets_mgr.contains_key(&key_u64) == false {
             if let Some(temp) = loader.temp.remove(&id) {
                 // analy(temp, loader.queue.clone(), &mut allocator, &vb_asset_mgr);
-                let res = temp.analy(&vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets);
+                let res = temp.analy(&mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys);
                 assets_mgr.insert(key_u64, res);
             }
         }

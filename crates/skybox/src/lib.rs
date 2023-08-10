@@ -1,4 +1,4 @@
-use pi_mesh_builder::cube::ActionCube;
+
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 
@@ -11,27 +11,27 @@ pub mod texture;
 // pub struct SingleSkyboxMaterial(pub MaterialID);
 
 
-pub struct InterfaceSkybox;
-impl InterfaceSkybox {
-    pub fn new_skybox(
-        app: &mut App,
-        scene: Entity
-    ) -> Entity {
-        let entity = ActionCube::new_cube(app, scene, String::from("Sky"));
+// pub struct InterfaceSkybox;
+// impl InterfaceSkybox {
+//     pub fn new_skybox(
+//         app: &mut App,
+//         scene: Entity
+//     ) -> Entity {
+//         let entity = ActionCube::new_cube(app, scene, String::from("Sky"));
 
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
+//         let mut queue = CommandQueue::default();
+//         let mut commands = Commands::new(&mut queue, &app.world);
 
-        let mat = commands.spawn_empty().id();
-        queue.apply(&mut app.world);
+//         let mat = commands.spawn_empty().id();
+//         queue.apply(&mut app.world);
 
-        ActionMaterial::init(app, mat, KeyShaderMeta::from(SkyboxShader::KEY), EPassTag::Sky);
+//         ActionMaterial::init(app, mat, KeyShaderMeta::from(SkyboxShader::KEY), EPassTag::Sky);
 
-        ActionMaterial::use_material(app, OpsMaterialUse::ops(entity, mat));
+//         ActionMaterial::use_material(app, OpsMaterialUse::ops(entity, mat));
 
-        entity
-    }
-}
+//         entity
+//     }
+// }
 
 // impl InterfaceSkybox for EnginShell {
 //     fn new_skybox(&self, scene: ObjectID) -> ObjectID {

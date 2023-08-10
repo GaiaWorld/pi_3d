@@ -134,19 +134,19 @@ impl CubeBuilder {
     }
 }
 
-pub struct ActionCube;
-impl ActionCube {
-    pub fn new_cube(
-        app: &mut App,
-        scene: ObjectID,
-        name: String,
-    ) -> ObjectID {
-        let id_mesh = ActionMesh::create(app, scene, name);
-        ActionMesh::use_geometry(app, id_mesh, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
+// pub struct ActionCube;
+// impl ActionCube {
+//     pub fn new_cube(
+//         app: &mut App,
+//         scene: ObjectID,
+//         name: String,
+//     ) -> ObjectID {
+//         let id_mesh = ActionMesh::create(app, scene, name);
+//         ActionMesh::use_geometry(app, id_mesh, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
 
-        id_mesh
-    }
-}
+//         id_mesh
+//     }
+// }
 
 // impl InterfaceCube for Engine {
     fn setup(

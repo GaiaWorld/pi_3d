@@ -3,7 +3,7 @@ use std::{mem::replace, sync::Arc};
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    pass::*, renderers::prelude::*,
+    pass::*, renderers::prelude::*, object::ActionEntity,
 };
 
 use super::{
@@ -37,6 +37,8 @@ pub fn sys_act_material_create(
             }
             matcmds.insert(AssetResShaderEffectMeta::from(meta));
         }
+
+        ActionEntity::init(&mut matcmds);
 
         matcmds
             .insert(AssetKeyShaderEffect(key_shader))

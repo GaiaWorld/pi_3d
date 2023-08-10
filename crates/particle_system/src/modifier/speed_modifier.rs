@@ -1,8 +1,6 @@
 use pi_scene_math::Number;
-
-use crate::{interpolation::{FloatInterpolation, IInterpolation}, iparticle_system_config::EInterpolationCurveMode, tools::SpeedFactor};
-
-use super::base::IParticleModifier;
+use pi_engine_shell::prelude::*;
+use crate::{tools::SpeedFactor};
 
 
 pub struct SpeedModifier {
@@ -15,7 +13,7 @@ impl Default for SpeedModifier {
     }
 }
 impl SpeedModifier {
-    pub fn modify(&self, item: &mut SpeedFactor, amount: Number, randoms: &crate::tools::BaseRandom) {
+    pub fn modify(&self, item: &mut SpeedFactor, amount: Number, randoms: &BaseRandom) {
         item.value = self.speed_modifier.interpolate(amount, randoms.x);
     }
 }

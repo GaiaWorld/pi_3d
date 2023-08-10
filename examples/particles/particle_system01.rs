@@ -1,43 +1,14 @@
 
-use default_render::{SingleIDBaseDefaultMaterial, shader::DefaultShader};
-use pi_3d::PluginBundleDefault;
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
-use pi_atom::Atom;
+
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
+use pi_engine_shell::prelude::*;
 use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
-use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
-use pi_scene_context::{prelude::*, viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix}};
+use pi_scene_context::prelude::*;
 use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
-use pi_particle_system::{prelude::*, PluginParticleSystem};
-
-use std::sync::Arc;
-use pi_async_rt::rt::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
-
-pub struct PluginLocalLoad;
-impl Plugin for PluginLocalLoad {
-    fn build(&self, app: &mut App) {
-        
-        init_load_cb(Arc::new(|path: String| {
-            MULTI_MEDIA_RUNTIME
-                .spawn(async move {
-                    log::warn!("Load {}", path);
-                    if let Ok(r) = std::fs::read(path.clone()) {
-                        on_load(&path, r);
-                    } else {
-                        log::error!("Load Error: {:?}", path);
-                    }
-                    // let r = std::fs::read(path.clone()).unwrap();
-                })
-                .unwrap();
-        }));
-    }
-}
+use pi_mesh_builder::cube::*;
+use unlit_material::shader::UnlitShader;
+use pi_particle_system::prelude::*;
 
 fn setup(
     mut commands: Commands,
@@ -84,7 +55,7 @@ fn setup(
     cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
 
-    let temp = 4;
+    let temp = 1;
     for i in 0..temp {
         for j in 0..temp {
             for k in 0..temp {
@@ -100,12 +71,13 @@ fn setup(
                     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
                     //
                     let syskey = String::from("Test");
-                    let syscfg = demo_cfg(10000., 50.);
+                    let syscfg = demo_cfg(100., 50.);
                     let calculator = commands.spawn_empty().id();
                     particlesys_cmds.calculator_cmds.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_cmds.calculator_queue.queue());
                     let calculator = particlesys_cmds.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
                     particlesys_cmds.particlesys_cmds.push(OpsCPUParticleSystem::ops(source, source, calculator, 100));
+                    particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_start(source));
                     //
                     let idmat = commands.spawn_empty().id();
                     matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
@@ -202,40 +174,15 @@ impl Plugin for PluginTest {
 }
 
 
+
+#[path = "../base.rs"]
+mod base;
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-
-    let mut app = App::default();
-
-	let mut window_plugin = WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(800, 600);
-    }
-
-    app.insert_resource(AssetMgrConfigs::default());
-    app.add_plugin(InputPlugin::default());
-    app.add_plugin(window_plugin);
-    app.add_plugin(AccessibilityPlugin);
-    app.add_plugin(bevy::winit::WinitPlugin::default());
-    // .add_plugin(WorldInspectorPlugin::new())
-    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
-    app.add_plugin(PiRenderPlugin::default());
-    app.add_plugin(PluginLocalLoad);
-    app.add_plugin(PluginFrameTime);
-    app.add_plugin(PluginWindowRender);
-    app.add_plugins(PluginBundleDefault);
-    app.add_plugin(PluginCubeBuilder);
-    app.add_plugin(PluginQuadBuilder);
-    app.add_plugin(PluginStateToFile);
-    app.add_plugin(PluginUnlitMaterial);
-    app.add_plugin(PluginNodeMaterial);
-    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
-    app.add_plugin(PluginParticleSystem);
-    app.add_plugins(pi_node_materials::PluginGroupNodeMaterialAnime);
-    app.add_plugin(pi_gltf2_load::PluginGLTF2Res);
+    let mut app = base::test_plugins_with_gltf();
+    
     app.add_plugin(PluginTest);
+    app.add_system(base::sys_nodeinfo);
 
-    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_startup_system(setup);

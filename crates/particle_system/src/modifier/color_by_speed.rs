@@ -1,8 +1,6 @@
 use pi_scene_math::Color4;
 
-use crate::{particle::Particle, tools::BaseRandom};
-
-use super::base::{Color4Interpolate, TEMP_COLOR4_A, IParticleModifier};
+use pi_engine_shell::prelude::*;
 
 #[derive(Clone)]
 pub struct ColorBySpeed {

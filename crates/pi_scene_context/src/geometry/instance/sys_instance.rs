@@ -29,7 +29,7 @@ use super::*;
 //     #[system]
 
     pub fn sys_instance_color(
-        mut items: Query<(&InstanceSourceID, &InstanceRGB, &InstanceAlpha, &mut InstanceColor), Or<(Changed<InstanceRGB>, Changed<InstanceAlpha>)>>,
+        mut items: Query<(&InstanceMesh, &InstanceRGB, &InstanceAlpha, &mut InstanceColor), Or<(Changed<InstanceRGB>, Changed<InstanceAlpha>)>>,
         mut sources: Query<&mut InstanceColorDirty>
     ) {
         items.iter_mut().for_each(|(source, rgb, alpha, mut color)| {
@@ -52,7 +52,7 @@ use super::*;
                 ObjectID,
                 &InstanceSourceRefs, &GeometryID, &mut F,
             ),
-            Changed<F>
+            Or<(Changed<F>, Changed<DirtyInstanceSourceRefs>)>
         >,
         mut geometrys: Query<&mut T>,
         mut geoloader: ResMut<GeometryVBLoader>,
@@ -85,10 +85,13 @@ use super::*;
             _,
             inslist, id_geo, mut flag,
         )| {
-            // log::trace!("SysInstanceBufferUpdateFunc:");
-            if flag.dirty() == false {
-                return;
-            }
+            // log::warn!("Instance Data Len: {:?}", data.len());
+
+            // // log::trace!("SysInstanceBufferUpdateFunc:");
+            // if flag.dirty() == false {
+            //     return;
+            // }
+
             let id_geo = id_geo.0.clone();
             if let Ok(mut buffer) = geometrys.get_mut(id_geo.clone()) {
                 // log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.len());
@@ -101,18 +104,18 @@ use super::*;
                     }
                 });
     
-                if list.len() == 0 {
-                    //
-                } else {
+                // if list.len() == 0 {
+                //     //
+                // } else {
                     flag.reset();
     
                     let data = D::collect(&list);
                     // log::debug!("InstanceDataLen: {:?}", data.len());
-                    let data = if data.len() > 0 {
-                        data
-                    } else {
-                        return;
-                    };
+                    // let data = if data.len() > 0 {
+                    //     data
+                    // } else {
+                    //     return;
+                    // };
     
                     // log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
                     instance_buffer_update::<T>(
@@ -124,7 +127,7 @@ use super::*;
                         &mut slots, &mut allocator, &asset_mgr,
                         &device, &queue
                     );
-                }
+                // }
             }
         });
         

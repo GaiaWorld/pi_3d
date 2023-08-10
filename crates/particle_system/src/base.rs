@@ -5,17 +5,15 @@ use bevy::prelude::Deref;
 use crossbeam::queue::SegQueue;
 use pi_assets::asset::{Asset, Size, Handle};
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{ScalingMode, RenderAlignment, EScalingMode};
+use pi_scene_context::prelude::{EScalingMode};
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolVector3, TToolRotation, TToolMatrix}};
 use pi_share::Share;
 use rand::Rng;
 
 use crate::{
-    interpolation::{FloatInterpolation, IInterpolation},
     tools::*,
     modifier::*,
     emitter::ShapeEmitter,
-    particle_system_tool::*
 };
 
 pub type IdxParticle = usize;
@@ -174,6 +172,7 @@ pub struct ParticleCalculatorColorBySpeed(pub(crate) ColorBySpeed);
 #[derive(Component)]
 pub struct ParticleCalculatorTextureSheet(pub(crate) TextureSheet);
 
+
 #[derive(Component)]
 pub struct ParticleCalculatorBase {
     pub(crate) looping: bool,
@@ -225,6 +224,13 @@ impl ParticleCalculatorBase {
     }
 }
 
+
+#[derive(Component)]
+pub struct ParticleState {
+    pub(crate) start: bool,
+    pub(crate) playing: bool,
+}
+
 /// 存活的粒子ID列表
 #[derive(Component)]
 pub struct ParticleIDs {
@@ -235,6 +241,7 @@ pub struct ParticleIDs {
     pub(crate) unactives: Vec<IdxParticle>,
     /// 新创建的粒子ID列表
     pub(crate) newids: Vec<IdxParticle>,
+    pub(crate) maxcount: usize,
 }
 impl ParticleIDs {
     pub fn new(calculator: Handle<ParticleSystemCalculatorID>, maxcount: usize) -> Self {
@@ -247,6 +254,7 @@ impl ParticleIDs {
             actives: vec![],
             unactives: unactives,
             newids: vec![],
+            maxcount,
         }
     }
     pub fn create_new(&mut self, newcount: usize) {
@@ -263,11 +271,24 @@ impl ParticleIDs {
     pub fn clear_new(&mut self) {
         self.newids.clear();
     }
+    pub fn reset(&mut self) {
+        let maxcount = self.maxcount;
+        let mut unactives = Vec::with_capacity(maxcount);
+        for i in 0..maxcount {
+            unactives.push(maxcount - 1 - i);
+        }
+
+        self.actives.clear();
+        self.newids.clear();
+        self.unactives = unactives;
+    }
 }
 
 /// 粒子系统
 #[derive(Component)]
 pub struct ParticleSystemTime {
+    /// 运行速度
+    pub(crate) time_scale: f32,
     /// 上一次运行时间点
     pub(crate) last_running_timems: u32,
     /// 运行时的有效间隔时间
@@ -294,6 +315,7 @@ pub struct ParticleSystemTime {
 impl ParticleSystemTime {
     pub fn new() -> Self {
         Self {
+            time_scale: 1.,
             last_running_timems: 0,
             running_delta_ms: 0,
             total_ms: 0,
@@ -312,7 +334,7 @@ impl ParticleSystemTime {
     /// * emission_time 一次发射器循环的时间 固定的 1000 ms
     /// * duration 粒子系统发射持续时间
     pub fn run(&mut self, delta_ms: u32, emission_time: u32, duration: u32) {
-        self.total_ms += delta_ms;
+        self.total_ms += (delta_ms as f32 * self.time_scale) as u32;
 
         if self.total_ms < self.delay_ms  {
             self.running_delta_ms = 0;
@@ -1108,12 +1130,17 @@ impl ParticleDirection {
             let mut orbit_center: Vector3 = Vector3::zeros();
             emitter.orbit_center(&position, &orbit.offset, &mut orbit_center);
             let radial_vec: Vector3 = position.sub(&orbit_center);
-            let temp = delta_seconds * speedfactor.value;
-            let orbit_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(orbit.orbit.x * temp, orbit.orbit.y * temp, orbit.orbit.z * temp);
-            let orbit_direction = orbit_rotation.transform_vector(&radial_vec) - radial_vec;
+            let orbit_direction = if CoordinateSytem3::length_squared(&orbit.orbit) < 0.00000001 {
+                let temp = delta_seconds * speedfactor.value;
+                let orbit_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(orbit.orbit.x * temp, orbit.orbit.y * temp, orbit.orbit.z * temp);
+                orbit_rotation.transform_vector(&radial_vec) - radial_vec
+            }
+            else {
+                Vector3::zeros()
+            };
 
             let radial_len = CoordinateSytem3::length(&radial_vec);
-            if 0.000001 < radial_len {
+            if 0.00000001 < radial_len {
                 velocity += radial_vec.scale(1. / radial_len).scale(orbit.radial);
             };
 
@@ -1216,7 +1243,7 @@ impl ParticleUV {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Deref, DerefMut)]
 pub struct ParticleCustomV4(pub(crate) Vec<Vector4>);
 impl ParticleCustomV4 {
     pub fn new(maxcount: usize) -> Self {

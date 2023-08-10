@@ -21,5 +21,6 @@ pub use crate::{
     },
     flags::*,
     object::*,
+    commands::*,
     viewer::prelude::*,
 };

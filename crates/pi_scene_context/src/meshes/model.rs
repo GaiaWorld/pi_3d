@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use pi_render::renderer::vertex_format::TVertexFormatByteSize;
 use pi_scene_math::{Matrix, Vector3, Rotation3};
 
-use crate::prelude::RenderGeometry;
+use crate::prelude::*;
 
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]

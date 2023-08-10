@@ -1,5 +1,4 @@
-use super::base::{IParticleModifier, ScalingInterpolate};
-use crate::{interpolation::FloatInterpolation, tools::*, particle::Particle};
+use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Number};
 
 #[derive(Default)]

@@ -31,7 +31,7 @@ pub fn sys_create_cpu_partilce_system(
         };
 
         if let Ok(base) = calculators.get(calculator.0) {
-            log::warn!("create_cpu_partilce_system");
+            // log::warn!("create_cpu_partilce_system");
             let maxcount = base.maxcount;
             let mut vec_vec3_arr: Vec<Vec<Vector3>> = Vec::with_capacity(maxcount);
             for _ in 0..maxcount {
@@ -39,6 +39,7 @@ pub fn sys_create_cpu_partilce_system(
             }
 
             entitycmd
+                .insert(ParticleState { start: false, playing: false })
                 .insert(ParticleRandom::new(0))
                 .insert(ParticleSystemTime::new())
                 .insert(ParticleSystemEmission::new())
@@ -70,5 +71,34 @@ pub fn sys_create_cpu_partilce_system(
             cmds.push(OpsCPUParticleSystem(entity, sourcemesh, calculator, maxcount, count + 1));
         }
 
+    });
+}
+
+pub fn sys_partilce_system_state(
+    mut cmds: ResMut<ActionListCPUParticleSystemState>,
+    mut items: Query<(&mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission)>,
+) {
+    cmds.drain().drain(..).for_each(|cmd| {
+        match cmd {
+            OpsCPUParticleSystemState::Start(entity, count) => {
+                if let Ok((mut state, mut ids, mut time, mut emission)) = items.get_mut(entity) {
+                    state.playing = true;
+                    state.start = true;
+                    ids.reset();
+                    let timescale = time.time_scale;
+                    *time = ParticleSystemTime::new(); time.time_scale = timescale;
+                    *emission = ParticleSystemEmission::new();
+                } else if count < 2 {
+                    cmds.push(OpsCPUParticleSystemState::Start(entity, count + 1));
+                }
+            },
+            OpsCPUParticleSystemState::TimeScale(entity, timescale, count) => {
+                if let Ok((mut state, mut ids, mut time, mut emission)) = items.get_mut(entity) {
+                    time.time_scale = timescale;
+                } else if count < 2 {
+                    cmds.push(OpsCPUParticleSystemState::TimeScale(entity, timescale, count + 1));
+                }
+            },
+        }
     });
 }

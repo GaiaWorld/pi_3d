@@ -18,13 +18,11 @@ pub mod animation;
 pub mod tree_left_right;
 pub mod object;
 pub mod prelude;
+mod system;
 
 pub struct PluginTransformNode;
 impl Plugin for PluginTransformNode {
     fn build(&self, app: &mut bevy::prelude::App) {
-        let id = app.world.spawn_empty().id();
-        app.insert_resource(SingleEmptyEntity::new(id));
-    
         app.insert_resource(ActionListTransformNodeCreate::default())
             .insert_resource(ActionListTransformNodeLocalEuler::default())
             .insert_resource(ActionListTransformNodeLocalPosition::default())

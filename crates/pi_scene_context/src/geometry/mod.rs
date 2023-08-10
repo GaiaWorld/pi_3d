@@ -6,7 +6,7 @@ use pi_engine_shell::prelude::*;
 ///
 /// 网格信息单独与 GameObject 绑定
 
-use crate::{object::ObjectID, plugin::Plugin};
+use crate::{object::{ObjectID, sys_dispose_ready}, plugin::Plugin, prelude::{DisposeCan, DisposeReady, ActionListDisposeCan, OpsDisposeCan}};
 
 use self::{
     sys_vertex_buffer_use::*,
@@ -97,6 +97,20 @@ impl Plugin for PluginGeometry {
                 sys_vertex_buffer_loaded_05,
                 sys_vertex_buffer_loaded_06,
             ).in_set(ERunStageChap::Uniform)
-    );
+        );
+        app.add_system(
+            sys_dispose_about_geometry.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+        );
     }
+}
+
+pub fn sys_dispose_about_geometry(
+    items: Query<(Entity, &DisposeReady, &GeometryDesc), Changed<DisposeReady>>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
+) {
+    items.iter().for_each(|(entity, state, _)| {
+        if state.0 == false { return; }
+
+        disposecanlist.push(OpsDisposeCan::ops(entity));
+    });
 }

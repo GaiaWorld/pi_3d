@@ -10,8 +10,7 @@
 
 use pi_scene_math::Vector3;
 
-use super::base::ScalingInterpolate;
-use crate::{particle::Particle, iparticle_system_config::ParamInfo, tools::BaseRandom};
+use pi_engine_shell::prelude::*;
 
 #[derive(Default)]
 pub struct StartSize {

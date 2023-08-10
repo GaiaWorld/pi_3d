@@ -71,6 +71,44 @@ impl RenderGeometry {
             0..1
         }
     }
+    pub fn isok(&self) -> bool {
+        let mut flag = true;
+        let range = self.vertices[0].value_range();
+        flag = flag && (range.end > range.start);
+
+        if let Some(item) = self.instances.get(0) {
+            let range = item.value_range();
+            flag = flag && (range.end > range.start);
+        }
+
+        // log::warn!("flag: {:?}, {:?}, {:?}", flag, range.end, range.start);
+
+        flag
+    }
+    pub fn create(
+        mut values: Vec<(wgpu::VertexStepMode, RenderVertices)>,
+        indices: (Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>),
+    ) -> Self {
+        let mut vertices = vec![];
+        let mut instances = vec![];
+
+        values.drain(..).for_each(|(step_mode, render_vertices)| {
+            if step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+        });
+
+        let indices = if let (Some(desc), Some(val)) = indices {
+            Some(RenderIndices::create((desc, val)))
+        } else { None};
+
+        Self {
+            vertices,
+            instances,
+            indices,
+        }
+    }
+    pub fn vertex_range(&self) -> Range<u32> {
+        self.vertices[0].value_range()
+    }
 }
 
 impl From<
@@ -263,31 +301,5 @@ impl From<
             instances,
             indices
         }
-    }
-}
-impl RenderGeometry {
-    pub fn create(
-        mut values: Vec<(wgpu::VertexStepMode, RenderVertices)>,
-        indices: (Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>),
-    ) -> Self {
-        let mut vertices = vec![];
-        let mut instances = vec![];
-
-        values.drain(..).for_each(|(step_mode, render_vertices)| {
-            if step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
-        });
-
-        let indices = if let (Some(desc), Some(val)) = indices {
-            Some(RenderIndices::create((desc, val)))
-        } else { None};
-
-        Self {
-            vertices,
-            instances,
-            indices,
-        }
-    }
-    pub fn vertex_range(&self) -> Range<u32> {
-        self.vertices[0].value_range()
     }
 }

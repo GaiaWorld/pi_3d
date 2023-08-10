@@ -2,6 +2,7 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::*;
 
 use crate::flags::*;
+use crate::object::ActionEntity;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
@@ -18,10 +19,9 @@ pub fn sys_act_transform_node_create(
         } else {
             return;
         };
-        ActionScene::add_to_scene(&mut transformnode, &mut tree, scene);
-        ActionTransformNode::init_for_tree(&mut transformnode);
-        ActionTransformNode::as_transform_node(&mut transformnode, name);
+        ActionTransformNode::init(&mut transformnode, &mut tree, scene, name);
         ActionAnime::as_anime_group_target(&mut transformnode);
+        transformnode.insert(TransformNode);
     });
 }
 
@@ -111,7 +111,18 @@ pub fn sys_act_local_scaling(
 
 pub struct ActionTransformNode;
 impl ActionTransformNode {
-    pub(crate) fn as_transform_node(
+    pub fn init(
+        transformnode: &mut EntityCommands,
+        tree: &mut ActionListTransformNodeParent,
+        scene: Entity,
+        name: String,
+    ) {
+        ActionEntity::init(transformnode);
+        ActionScene::add_to_scene(transformnode, tree, scene);
+        ActionTransformNode::init_for_tree(transformnode);
+        ActionTransformNode::as_transform_node(transformnode, name);
+    }
+    fn as_transform_node(
         commands: &mut EntityCommands,
         name: String,
     ) {

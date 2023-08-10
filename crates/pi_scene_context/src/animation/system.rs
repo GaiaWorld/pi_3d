@@ -4,7 +4,7 @@ use pi_animation::{animation_group_manager::AnimationGroupManager};
 use pi_curves::curve::{frame::{KeyFrameCurveValue}};
 use pi_engine_shell::prelude::*;
 
-use crate::{scene::environment::scene_time::SceneTime, prelude::SceneAnimationEnable};
+use crate::{scene::environment::scene_time::SceneTime, prelude::SceneAnimationEnable, commands::DisposeReady};
 
 use super::{base::*};
 
@@ -91,4 +91,20 @@ pub fn sys_scene_anime_ctx(
 
     let time1 = pi_time::Instant::now();
     log::debug!("SysSceneAnime: {:?}", time1 - time0);
+}
+
+
+pub fn sys_dispose_about_animationgroup(
+    items: Query<(&DisposeReady, &SceneID, &AnimationGroups), Changed<DisposeReady>>,
+    mut animeglobal: ResMut<GlobalAnimeAbout>,
+    mut scenectxs: ResMut<SceneAnimationContextMap>,
+) {
+    items.iter().for_each(|(state, scene, groups)| {
+        if state.0 == true {
+            groups.map.iter().for_each(|(k, id_group)| {
+                scenectxs.delete_group(&scene.0, *id_group);
+                animeglobal.remove(id_group);
+            });
+        }
+    });
 }

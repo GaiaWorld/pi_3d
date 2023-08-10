@@ -1,13 +1,9 @@
-use std::sync::Arc;
+
 
 use pi_scene_math::Vector3;
+use pi_engine_shell::prelude::*;
 
-use crate::{interpolation::FloatInterpolation, particle::Particle, iparticle_system_config::ParamInfo, tools::{BaseRandom, Velocity}};
-
-use super::base::{
-    transform_vector_as_local_space, transform_vector_as_world_space, IParticleModifier,
-    TranslationInterpolate,
-};
+use crate::tools::Velocity;
 
 #[derive(Clone)]
 pub struct VelocityOverLifetime {

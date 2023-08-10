@@ -293,7 +293,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 &I,
             ),
         >,
-        passes: Query<(&PassBindEffectValue, &PassReady, &T, &PassSource), Changed<PassReady>>,
+        passes: Query<(&PassBindEffectValue, &PassReady, &T, &ModelPass), Changed<PassReady>>,
         device: Res<PiRenderDevice>,
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
@@ -404,7 +404,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &ModelList, &ViewerRenderersInfo),
         >,
-        passes: Query<(ObjectID, &PassSource, &PassReady, &PassBindEffectTextures), (Changed<PassBindEffectTextures>, With<T>)>,
+        passes: Query<(ObjectID, &ModelPass, &PassReady, &PassBindEffectTextures), (Changed<PassBindEffectTextures>, With<T>)>,
         mut commands: Commands,
         mut texturesamplers_wait: ResMut<AssetBindGroupTextureSamplersWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,

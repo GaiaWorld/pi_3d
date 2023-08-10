@@ -9,10 +9,7 @@
 // }
 
 use pi_scene_math::{Number, Color4};
-
-use crate::{particle::Particle, tools::BaseRandom};
-
-use super::base::{Color4Interpolate, IParticleModifier, TEMP_COLOR4_A};
+use pi_engine_shell::prelude::*;
 
 #[derive(Clone, Default)]
 pub struct ColorOverLifetime {

@@ -2,7 +2,7 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
-    prelude::{SceneMainCameraID, Enable, GlobalEnable},
+    prelude::{SceneMainCameraID, Enable, GlobalEnable}, object::ActionEntity,
 };
 
 use super::{prelude::*};
@@ -13,17 +13,18 @@ pub fn sys_act_scene_create(
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, cfg)| {
-        ActionScene::init(&mut commands, entity, cfg);
-        let mut entitycmds = if let Some(cmd) = commands.get_entity(entity) {
-            cmd
+
+        let id_left = commands.spawn_empty().id();
+        let id_right = commands.spawn_empty().id();
+
+        if let Some(mut entitycmds) = commands.get_entity(entity) {
+            ActionScene::init(&mut entitycmds, entity, cfg, id_left, id_right, &mut dynbuffer);
         } else {
+            commands.entity(id_left).despawn();
+            commands.entity(id_right).despawn();
             return;
         };
 
-        ActionTransformNode::init_for_tree(&mut entitycmds);
-        if let Some(bindeffect) = BindSceneEffect::new( &mut dynbuffer) {
-            entitycmds.insert(bindeffect);
-        }
     });
 }
 
@@ -107,54 +108,16 @@ pub fn sys_act_scene_animation_enable(
 
 pub struct ActionScene;
 impl ActionScene {
-    pub fn create(
-        app: &mut App,
-        passcfg: ScenePassRenderCfg,
-    ) -> Entity {
-        
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
-
-        let id_left = commands.spawn_empty().id();
-        let id_right = commands.spawn_empty().id();
-
-        let mut entitycmds = commands.spawn_empty();
-
-        entitycmds
-            .insert(passcfg)
-            .insert(SceneCoordinateSytem3D::default())
-            .insert(SceneTime::new())
-            .insert(SceneFogColor(1., 1., 1.))
-            .insert(SceneFogParam(FogParam::None))
-            .insert(AmbientColor(1., 1., 1.))
-            .insert(AmbientIntensity(1.))
-            .insert(TreeLeftRoot::new(id_left))
-            .insert(TreeRightRoot::new(id_right))
-            // .insert(AnimationGroups::default())
-            .insert(SceneMainCameraID(None))
-            .insert(SceneAnimationEnable::default())
-            .insert(Enable(1.))
-            .insert(GlobalEnable(true))
-        ;
-
-        let entity = entitycmds.id();
-
-        entity
-    }
-    
     pub fn init(
-        commands: &mut Commands,
+        entitycmds: &mut EntityCommands,
         scene: Entity,
         passcfg: ScenePassRenderCfg,
+        id_left: Entity,
+        id_right: Entity,
+        dynbuffer: &mut BindBufferAllocator,
     ) {
-        let id_left = commands.spawn_empty().id();
-        let id_right = commands.spawn_empty().id();
-
-        let mut entitycmds = if let Some(mut cmd) = commands.get_entity(scene) {
-            cmd
-        } else {
-            return;
-        };
+        ActionTransformNode::init_for_tree(entitycmds);
+        ActionEntity::init(entitycmds);
 
         entitycmds
             .insert(passcfg)
@@ -170,6 +133,10 @@ impl ActionScene {
             .insert(SceneMainCameraID(None))
             .insert(SceneAnimationEnable::default())
             ;
+        
+        if let Some(bindeffect) = BindSceneEffect::new(dynbuffer) {
+            entitycmds.insert(bindeffect);
+        }
     }
 
     pub(crate) fn add_to_scene(

@@ -19,7 +19,7 @@ use crate::{
     transforms::{command_sys::ActionTransformNode, prelude::*},
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange, RecordIndiceRenderRange},
+    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange, RecordIndiceRenderRange}, object::ActionEntity,
 };
 
 use super::{
@@ -40,35 +40,7 @@ pub fn sys_act_mesh_create(
     empty: Res<SingleEmptyEntity>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, name, count)| {
-        let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
-            cmd
-        } else {
-            return;
-        };
-        
-        ActionScene::add_to_scene(&mut entitycmd, &mut tree, scene);
-        ActionTransformNode::init_for_tree(&mut entitycmd);
-        ActionTransformNode::as_transform_node(&mut entitycmd, name);
-        ActionAnime::as_anime_group_target(&mut entitycmd);
-        ActionMesh::as_mesh(&mut entitycmd);
-        ActionMesh::as_instance_source(&mut entitycmd);
-
-        if let Some(bind) = BindModel::new(&device, &mut allocator) {
-            log::info!("BindModel New");
-            entitycmd.insert(bind);
-        }
-
-        entitycmd.insert(MeshStates::default());
-        entitycmd.insert(DirtyMeshStates);
-        
-        create_passobj::<Pass01,PassID01>(entity, &mut commands, &empty);
-        create_passobj::<Pass02,PassID02>(entity, &mut commands, &empty);
-        create_passobj::<Pass03,PassID03>(entity, &mut commands, &empty);
-        create_passobj::<Pass04,PassID04>(entity, &mut commands, &empty);
-        create_passobj::<Pass05,PassID05>(entity, &mut commands, &empty);
-        create_passobj::<Pass06,PassID06>(entity, &mut commands, &empty);
-        create_passobj::<Pass07,PassID07>(entity, &mut commands, &empty);
-        create_passobj::<Pass08,PassID08>(entity, &mut commands, &empty);
+        ActionMesh::init(&mut commands, entity, scene, &mut tree, &mut allocator, &device, &empty);
     });
 }
 
@@ -80,30 +52,26 @@ pub fn sys_act_instanced_mesh_create(
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, name, count)| {
         if let Ok((id_scene, mut instancelist, mut flag)) = meshes.get_mut(source) {
-            
-            let mut entitycmd = if let Some(cmd) = commands.get_entity(source) {
+            if let Some(mut cmd) = commands.get_entity(source) {
                 cmd
+                    .insert(InstanceColorDirty(true))
+                    .insert(InstanceTillOffDirty(true))
+                    .insert(InstanceWorldMatrixDirty(true))
+                    ;
             } else {
                 return;
             };
 
-            entitycmd
-                .insert(InstanceColorDirty(true))
-                .insert(InstanceTillOffDirty(true))
-                .insert(InstanceWorldMatrixDirty(true))
-                ;
 
             let mut ins_cmds = if let Some(cmd) = commands.get_entity(instance) {
                 cmd
             } else {
                 return;
             };
+
             // 
-            ActionScene::add_to_scene(&mut ins_cmds, &mut tree, id_scene.0);
-            ActionTransformNode::init_for_tree(&mut ins_cmds);
-            ActionTransformNode::as_transform_node(&mut ins_cmds, name);
+            ActionInstanceMesh::init(&mut ins_cmds, &mut tree, source, id_scene.0, name);
             ActionAnime::as_anime_group_target(&mut ins_cmds);
-            ActionInstanceMesh::as_instance(&mut ins_cmds, source);
 
             instancelist.insert(instance);
             *flag = DirtyInstanceSourceRefs;
@@ -144,7 +112,7 @@ pub fn sys_act_mesh_modify(
 pub fn sys_act_instance_color_alpha(
     mut cmds: ResMut<ActionListInstanceColorAlpha>,
     entities: Query<Entity>,
-    mut instances: Query<(&InstanceSourceID, &mut InstanceColor)>,
+    mut instances: Query<(&InstanceMesh, &mut InstanceColor)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceColorAlpha(instance, r, g, b, a, count)| {
         if entities.contains(instance) {
@@ -162,7 +130,7 @@ pub fn sys_act_instance_color_alpha(
 pub fn sys_act_instance_color(
     mut cmds: ResMut<ActionListInstanceColor>,
     entities: Query<Entity>,
-    mut instances: Query<(&InstanceSourceID, &mut InstanceRGB)>,
+    mut instances: Query<(&InstanceMesh, &mut InstanceRGB)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceColor(instance, r, g, b, count)| {
         if entities.contains(instance) {
@@ -180,7 +148,7 @@ pub fn sys_act_instance_color(
 pub fn sys_act_instance_alpha(
     mut cmds: ResMut<ActionListInstanceAlpha>,
     entities: Query<Entity>,
-    mut instances: Query<(&InstanceSourceID, &mut InstanceAlpha)>,
+    mut instances: Query<(&InstanceMesh, &mut InstanceAlpha)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceAlpha(instance, val, count)| {
         if entities.contains(instance) {
@@ -198,7 +166,7 @@ pub fn sys_act_instance_alpha(
 pub fn sys_act_instance_tilloff(
     mut cmds: ResMut<ActionListInstanceTillOff>,
     entities: Query<Entity>,
-    mut instances: Query<(&InstanceSourceID, &mut InstanceTillOff)>,
+    mut instances: Query<(&InstanceMesh, &mut InstanceTillOff)>,
     mut source_colors: Query<&mut InstanceTillOffDirty>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceTillOff(instance, val, count)| {
@@ -297,6 +265,43 @@ pub fn sys_act_mesh_render_indice(
 
 pub struct ActionMesh;
 impl ActionMesh {
+    pub fn init(
+        commands: &mut Commands,
+        entity: Entity,
+        scene: Entity,
+        tree: &mut ActionListTransformNodeParent,
+        allocator: &mut ResBindBufferAllocator,
+        device: &PiRenderDevice,
+        empty: &SingleEmptyEntity,
+    ) {
+        let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
+            cmd
+        } else {
+            return;
+        };
+
+        ActionTransformNode::init(&mut entitycmd, tree, scene, String::from(""));
+        ActionAnime::as_anime_group_target(&mut entitycmd);
+        ActionMesh::as_mesh(&mut entitycmd);
+        ActionMesh::as_instance_source(&mut entitycmd);
+
+        if let Some(bind) = BindModel::new(&device, allocator) {
+            log::info!("BindModel New");
+            entitycmd.insert(bind);
+        }
+
+        entitycmd.insert(MeshStates::default());
+        entitycmd.insert(DirtyMeshStates);
+
+        create_passobj::<Pass01,PassID01>(entity, commands, &empty);
+        create_passobj::<Pass02,PassID02>(entity, commands, &empty);
+        create_passobj::<Pass03,PassID03>(entity, commands, &empty);
+        create_passobj::<Pass04,PassID04>(entity, commands, &empty);
+        create_passobj::<Pass05,PassID05>(entity, commands, &empty);
+        create_passobj::<Pass06,PassID06>(entity, commands, &empty);
+        create_passobj::<Pass07,PassID07>(entity, commands, &empty);
+        create_passobj::<Pass08,PassID08>(entity, commands, &empty);
+    }
     pub(crate) fn as_mesh(
         commands: &mut EntityCommands,
     ) {
@@ -362,20 +367,20 @@ impl ActionMesh {
         entity
     }
 
-    pub fn use_geometry(
-        app: &mut App,
-        id_mesh: Entity,
-        vertex_desc: Vec<VertexBufferDesc>,
-        indices_desc: Option<IndicesBufferDesc>,
-    ) {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
+    // pub fn use_geometry(
+    //     app: &mut App,
+    //     id_mesh: Entity,
+    //     vertex_desc: Vec<VertexBufferDesc>,
+    //     indices_desc: Option<IndicesBufferDesc>,
+    // ) {
+    //     let mut queue = CommandQueue::default();
+    //     let mut commands = Commands::new(&mut queue, &app.world);
 
-        let id_geo = commands.spawn_empty().id();
+    //     let id_geo = commands.spawn_empty().id();
 
-        let mut cmds = app.world.get_resource_mut::<ActionListGeometryCreate>().unwrap();
-        ActionGeometry::create(&mut cmds, id_geo, id_mesh, vertex_desc, indices_desc);
-    }
+    //     let mut cmds = app.world.get_resource_mut::<ActionListGeometryCreate>().unwrap();
+    //     ActionGeometry::create(&mut cmds, id_geo, id_mesh, vertex_desc, indices_desc);
+    // }
 
     pub fn modify(
         app: &mut App,
@@ -400,27 +405,22 @@ impl ActionMesh {
 }
 pub struct ActionInstanceMesh;
 impl ActionInstanceMesh {
-    pub fn create(
-        app: &mut App,
+    pub fn init(
+        commands: &mut EntityCommands,
+        tree: &mut ActionListTransformNodeParent,
         source: Entity,
+        scene: Entity,
         name: String,
-    ) -> Entity {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
-
-        let entity = commands.spawn_empty().id();
-
-        let mut cmds = app.world.get_resource_mut::<ActionListInstanceMeshCreate>().unwrap();
-        cmds.push(OpsInstanceMeshCreation(source, entity, name, 0));
-
-        entity
+    ) {
+        ActionTransformNode::init(commands, tree, scene, name);
+        ActionInstanceMesh::as_instance(commands, source);
     }
     pub(crate) fn as_instance(
         commands: &mut EntityCommands,
         source: Entity,
     ) {
         commands.insert(AbstructMesh);
-        commands.insert(InstanceSourceID(source));
+        commands.insert(InstanceMesh(source));
         commands.insert(InstanceRGB(1., 1., 1.));
         commands.insert(InstanceAlpha(1.));
         commands.insert(InstanceColor(Vector4::new(1., 1., 1., 1.)));
@@ -445,188 +445,12 @@ fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
 
     commands.entity(model).insert(T2::new(id));
 
-    commands.entity(id).insert(T::new())
-        .insert(PassSource(model))
+    let mut entitycmd = commands.entity(id);
+    ActionEntity::init(&mut entitycmd);
+    entitycmd.insert(T::new())
+        .insert(ModelPass(model))
         .insert(MaterialID(mat.id()))
         ;
 
     id
 }
-
-
-    // pub fn sys_instance_color_modify(
-    //     instances: Query<&InstanceSourceID, Changed<InstanceColor>>,
-    //     mut commands: Commands,
-    // ) {
-    //     instances.iter().for_each(|source| {
-    //         if let Some(mut cmd) = commands.get_entity(source.0) {
-    //             cmd.insert(InstanceColorDirty(true));
-    //         } else {
-    //             return;
-    //         };
-    //     });
-    // }
-    // pub fn sys_instance_tilloff_modify(
-    //     instances: Query<&InstanceSourceID, Changed<InstanceTillOff>>,
-    //     mut commands: Commands,
-    // ) {
-    //     instances.iter().for_each(|source| {
-    //         if let Some(mut cmd) = commands.get_entity(source.0) {
-    //             cmd.insert(InstanceTillOffDirty(true));
-    //         } else {
-    //             return;
-    //         };
-    //     });
-    // }
-
-    
-    pub fn sys_calc_render_matrix(
-        mut meshes: Query<
-            (ObjectID, &AbstructMesh, &LocalScaling, &LocalEulerAngles, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut GlobalTransform),
-            (Without<InstanceSourceID>, Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
-        >,
-        mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
-    ) {
-        let time = pi_time::Instant::now();
-
-        meshes.iter_mut().for_each(|(
-            obj, _,
-            localscaling, localeuler, worldmatrix, worldmatrix_inv, scalingmode, renderalignment, velocity, mut transform
-        )| {
-            if let Ok((mut wm, mut wmi)) = matrixs.get_mut(obj) {
-
-                // log::warn!("calc_render_matrix:");
-                // render_wm.0.clone_from(&worldmatrix.0);
-                // render_wminv.0.clone_from(&worldmatrix_inv.0);
-                let pos = transform.position().clone();
-                let mut scl = Vector3::new(1., 1., 1.);
-                match scalingmode.0 {
-                    crate::prelude::EScalingMode::Hierarchy => {
-                        if renderalignment.0 == ERenderAlignment::Local {
-                            wm.0.clone_from(&worldmatrix.0);
-                            wmi.0.clone_from(&worldmatrix_inv.0);
-                            return;
-                        }
-                        scl.clone_from(transform.scaling());
-                    },
-                    crate::prelude::EScalingMode::Local => {
-                        scl.clone_from(&localscaling.0);
-                    },
-                    crate::prelude::EScalingMode::Shape => {
-                        // 1, 1, 1
-                    },
-                }
-
-                let mut m = Matrix::identity();
-                let g_rotation = transform.rotation();
-                let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
-                CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
-                if let Some(local) = renderalignment.0.calc_local(velocity) {
-                    m = m * local;
-                }
-
-                wm.0.clone_from(&m);
-                m.try_inverse_mut();
-                wmi.0.clone_from(&m);
-            }
-
-        });
-        
-        let time1 = pi_time::Instant::now();
-        // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
-    }
-    
-    pub fn sys_calc_render_matrix_instance(
-        meshes: Query<&RenderAlignment>,
-        mut instances: Query<
-            (ObjectID, &AbstructMesh, &LocalScaling, &LocalEulerAngles, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &ModelVelocity, &mut GlobalTransform, &InstanceSourceID),
-            Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>, Changed<ModelVelocity>, Changed<ScalingMode>)>
-        >,
-        mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
-        mut inssources: Query<&mut InstanceWorldMatrixDirty>,
-    ) {
-        let time = pi_time::Instant::now();
-
-        instances.iter_mut().for_each(|(
-            obj, _,
-            localscaling, localeuler, worldmatrix, worldmatrix_inv, scalingmode, velocity, mut transform, id_source
-        )| {
-            if let (Ok((mut wm, mut wmi)), Ok(renderalignment)) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
-                
-                if let Ok(mut dirty) = inssources.get_mut(id_source.0) {
-                    *dirty = InstanceWorldMatrixDirty(true);
-                }
-
-                // let mut flag = true;
-
-                // log::warn!("calc_render_matrix:");
-                // render_wm.0.clone_from(&worldmatrix.0);
-                // render_wminv.0.clone_from(&worldmatrix_inv.0);
-                let pos = transform.position().clone();
-                let mut scl = Vector3::new(1., 1., 1.);
-                match scalingmode.0 {
-                    crate::prelude::EScalingMode::Hierarchy => {
-                        if renderalignment.0 == ERenderAlignment::Local {
-                            wm.0.clone_from(&worldmatrix.0);
-                            wmi.0.clone_from(&worldmatrix_inv.0);
-                            // log::warn!("Normal Alignment");
-                            return;
-                        }
-                        scl.clone_from(transform.scaling());
-                        // flag = false;
-                    },
-                    crate::prelude::EScalingMode::Local => {
-                        scl.clone_from(&localscaling.0);
-                    },
-                    crate::prelude::EScalingMode::Shape => {
-                        // 1, 1, 1
-                    },
-                }
-
-                let mut m = Matrix::identity();
-                let g_rotation = transform.rotation();
-                let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
-                CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
-                if let Some(local) = renderalignment.0.calc_local(velocity) {
-                    m = m * local;
-                }
-
-                wm.0.clone_from(&m);
-                m.try_inverse_mut();
-                wmi.0.clone_from(&m);
-            }
-
-        });
-        
-        let time1 = pi_time::Instant::now();
-        log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
-    }
-
-    pub fn sys_render_matrix_for_uniform(
-        mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), Changed<RenderWorldMatrix>>,
-    ) {
-        meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, bind_model)| {
-            // log::debug!("SysModelUniformUpdate:");
-
-            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
-        });
-    }
-
-    pub fn sys_velocity_for_uniform(
-        mut meshes: Query<(&ModelVelocity, &BindModel), Changed<ModelVelocity>>,
-    ) {
-        meshes.iter_mut().for_each(|(velocity, bind_model)| {
-            let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
-        });
-    }
-
-    pub fn sys_skinoffset_for_uniform(
-        mut meshes: Query<(&InstanceBoneoffset, &BindModel), Changed<InstanceBoneoffset>>,
-    ) {
-        meshes.iter_mut().for_each(|(skinoffset, bind_model)| {
-            // log::debug!("SysModelUniformUpdate:");
-            bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[skinoffset.0]));
-        });
-    }
