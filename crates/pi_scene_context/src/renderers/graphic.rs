@@ -77,6 +77,9 @@ impl Node for RenderNode {
         mut commands: ShareRefCell<wgpu::CommandEncoder>,
         input: &'a Self::Input,
         _: &'a ParamUsage,
+		_id: NodeId,
+		_from: &[NodeId],
+		_to: &[NodeId],
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let time = pi_time::Instant::now();
 
