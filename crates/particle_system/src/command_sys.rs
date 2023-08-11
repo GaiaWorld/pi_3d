@@ -3,7 +3,7 @@ use pi_scene_math::{Vector3, Vector4, Matrix};
 
 use crate::{command::*, base::*, extend::format};
 
-pub fn sys_particle_calculator(
+pub fn sys_act_particle_calculator(
     mut cmds: ResMut<ActionListCPUParticleCalculator>,
     mut commands: Commands,
 ) {
@@ -17,7 +17,7 @@ pub fn sys_particle_calculator(
     });
 }
 
-pub fn sys_create_cpu_partilce_system(
+pub fn sys_act_create_cpu_partilce_system(
     mut cmds: ResMut<ActionListCPUParticleSystem>,
     mut commands: Commands,
     mut calculators: Query<&ParticleCalculatorBase>,
@@ -74,7 +74,7 @@ pub fn sys_create_cpu_partilce_system(
     });
 }
 
-pub fn sys_partilce_system_state(
+pub fn sys_act_partilce_system_state(
     mut cmds: ResMut<ActionListCPUParticleSystemState>,
     mut items: Query<(&mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission)>,
 ) {

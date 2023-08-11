@@ -3,15 +3,40 @@ use std::{ops::Sub, sync::Arc};
 use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Number, Vector4, Vector2, coordiante_system::CoordinateSytem3, vector::TToolVector3, Matrix};
+use pi_wy_rng::WyRng;
 
-
+#[derive(Component)]
 pub struct ColorOverTrail(pub Color4Gradient);
 
+#[derive(Component)]
 pub struct WidthOverTrail(pub FloatInterpolation);
 
-pub struct MinimunVertexDistance(pub Number);
+#[derive(Component)]
+pub struct TrailMinimunVertexDistance(pub Number);
 
+#[derive(Component)]
 pub struct TrailWorldPlace(pub bool);
+
+#[derive(Component)]
+pub struct TrailLinkedTransform(pub Entity);
+
+#[derive(Component)]
+pub struct TrailAgeControl(pub u32);
+
+#[derive(Component)]
+pub struct TrailColor(pub Vector4);
+
+#[derive(Component)]
+pub struct TrailSize(pub f32);
+
+#[derive(Component)]
+pub struct TrailRandom(pub WyRng);
+
+#[derive(Component)]
+pub struct TrailMesh(pub Entity);
+
+#[derive(Component)]
+pub struct TrailGeometry(pub Entity);
 
 #[derive(Clone)]
 pub struct KeyPoint {
@@ -25,7 +50,7 @@ pub struct KeyPoint {
     pub color: Vector4,
 }
 
-#[derive(Default)]
+#[derive(Default, Component)]
 pub struct TrailPoints(pub Vec<KeyPoint>);
 impl TrailPoints {
     pub fn run(
@@ -135,7 +160,7 @@ impl TrailPoints {
                 let mut axis = Vector3::zeros();
                 let mut idx = 0;
                 self.0.iter().for_each(|item| {
-                    if maxverticeslen < datavertices.len() + TrialBuffer::FLOAT_PER_VERTEX as usize * (2 + 2) {
+                    if maxverticeslen < datavertices.len() + TrailBuffer::FLOAT_PER_VERTEX as usize * (2 + 2) {
                         return;
                     }
                     CoordinateSytem3::transform_coordinates(&item.pos, worldmatrix, &mut pos);
@@ -177,7 +202,7 @@ impl TrailPoints {
             } else {
                 let mut idx = 0;
                 self.0.iter().for_each(|item| {
-                    if maxverticeslen < datavertices.len() + TrialBuffer::FLOAT_PER_VERTEX as usize * (2 + 2) {
+                    if maxverticeslen < datavertices.len() + TrailBuffer::FLOAT_PER_VERTEX as usize * (2 + 2) {
                         return;
                     }
                     if idx == 0 {
@@ -222,6 +247,7 @@ impl TrailPoints {
     }
 }
 
+#[derive(Component)]
 pub struct TrailBase {
     /// 启动时间点
     pub starttime: u32,
@@ -231,22 +257,22 @@ pub struct TrailBase {
     pub lifetime: u32,
 }
 impl TrailBase {
-    pub fn new(time: u32, lifetime: u32) -> Self {
-        Self { starttime: time, time: time, lifetime }
+    pub fn new(lifetime: u32) -> Self {
+        Self { starttime: 0, time: 0, lifetime }
     }
-    pub fn update(&mut self, time: u32) {
-        self.time = time;
+    pub fn update(&mut self, delta_ms: u32) {
+        self.time += delta_ms;
     }
 }
 
-pub struct TrialBuffer {
+pub struct TrailBuffer {
     pub vertices: Vec<f32>,
     pub count: u32,
     pub maxcount: u32,
     buffer: (Arc<NotUpdatableBufferRange>, u32, u32),
     pub key: KeyVertexBuffer,
 }
-impl TrialBuffer {
+impl TrailBuffer {
     pub const MAX_COUNT: u32 = 1024 * 1024;
     pub const FLOAT_PER_VERTEX: u32 = (3 + 4 + 3 + 2);
     pub const SIZE_PER_VERTEX: u32 = Self::FLOAT_PER_VERTEX * 4;
@@ -299,9 +325,9 @@ impl TrialBuffer {
         trailworldspace: bool,
         worldmatrix: &Matrix,
     ) -> (u32, u32) {
-        let last_count = self.vertices.len() as u32 / Self::FLOAT_PER_VERTEX;
+        let last_count = self.vertices.len() as u32;
         trailpoints.data(trailworldspace, worldmatrix, &mut self.vertices, (self.maxcount * Self::FLOAT_PER_VERTEX) as usize);
-        let new_count = self.vertices.len() as u32 / Self::FLOAT_PER_VERTEX;
+        let new_count = self.vertices.len() as u32;
 
         (last_count * 4, new_count * 4)
     }
@@ -317,7 +343,7 @@ impl TrialBuffer {
     }
 }
 
-impl TAssetCapacity for TrialBuffer {
+impl TAssetCapacity for TrailBuffer {
     const ASSET_TYPE: &'static str = "TRAIL_BUFFER";
     fn capacity() -> AssetCapacity {
         AssetCapacity { flag: false, min: 1024 * 1024, max: 1024 * 1024, timeout: 1000  }
@@ -337,7 +363,7 @@ fn test_trail() {
     let sizecontrol: Number = 1.;
     let widthinterpolator: FloatInterpolation = FloatInterpolation::new(1.);
     let agecontrol: u32 = 500;
-    let mut base: TrailBase = TrailBase::new(time, 1000);
+    let mut base: TrailBase = TrailBase::new(1000);
     let randoms: BaseRandom = BaseRandom::default();
     let minimumdistance: Number = 0.2;
     let worldmatrix: Matrix = Matrix::identity();
@@ -364,7 +390,7 @@ fn test_trail() {
             &worldmatrix, trailworldspace
         );
 
-        trailpoints.data(trailworldspace, &worldmatrix, &mut dataposition, TrialBuffer::MAX_COUNT as usize);
+        trailpoints.data(trailworldspace, &worldmatrix, &mut dataposition, TrailBuffer::MAX_COUNT as usize);
 
         println!("{:?}", dataposition);
         println!("{:?}", datacolor);

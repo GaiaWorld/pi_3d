@@ -34,14 +34,14 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(ActionListCPUParticleSystemState::default());
 
         app.add_system(
-            sys_particle_calculator.in_set(ERunStageChap::Initial),
+            sys_act_particle_calculator.in_set(ERunStageChap::Initial),
         );
         app.add_system(
-            sys_create_cpu_partilce_system.in_set(ERunStageChap::SecondInitial),
+            sys_act_create_cpu_partilce_system.in_set(ERunStageChap::SecondInitial),
         );
         app.add_systems(
             (
-                sys_partilce_system_state.run_if(should_run),
+                sys_act_partilce_system_state.run_if(should_run),
                 sys_ids.run_if(should_run),
                 sys_emission.run_if(should_run)
             ).chain().in_set(ERunStageChap::Command),

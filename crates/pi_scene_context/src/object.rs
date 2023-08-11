@@ -15,7 +15,7 @@ impl ActionEntity {
     }
 }
 
-pub type OpsDispose = DisposeReady;
+pub type OpsDispose = OpsDisposeReady;
 pub type ActionListDispose = ActionListDisposeReady;
 
 pub fn sys_dispose_ready(

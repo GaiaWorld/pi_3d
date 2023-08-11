@@ -76,6 +76,8 @@ impl ResParticleCalculatorUninstallQueue {
     }
 }
 
+pub type KeyParticleSystemCalculator = u64;
+
 pub struct ParticleSystemCalculatorID(pub Entity, pub usize, pub Share<SegQueue<Entity>>);
 impl std::fmt::Debug for ParticleSystemCalculatorID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -88,7 +90,7 @@ impl Drop for ParticleSystemCalculatorID {
     }
 }
 impl Asset for ParticleSystemCalculatorID {
-    type Key = u64;
+    type Key = KeyParticleSystemCalculator;
 }
 impl Size for ParticleSystemCalculatorID {
     fn size(&self) -> usize {

@@ -23,14 +23,6 @@ impl Default for EScalingMode {
 #[derive(Component)]
 pub struct Mesh;
 
-#[derive(Component)]
-pub struct MeshID(pub ObjectID);
-impl TEntityRef for MeshID {
-    fn id(&self) -> Entity {
-        self.0
-    }
-}
-
 #[derive(Debug, Clone, Default, Component)]
 pub struct DirtyMeshRef;
 

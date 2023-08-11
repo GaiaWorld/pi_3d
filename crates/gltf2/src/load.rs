@@ -6,7 +6,7 @@ use pi_assets::{mgr::{LoadResult, Receiver, AssetMgr}, asset::{Garbageer, Handle
 use pi_engine_shell::prelude::*;
 use pi_gltf::Gltf;
 use pi_hash::{XHashMap, XHashSet};
-use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemActionSet, ParticleSystemCalculatorID, OpsCPUParticleCalculator};
+use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemActionSet, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator};
 use pi_scene_context::prelude::*;
 use pi_node_materials::prelude::*;
 use pi_render::rhi::RenderQueue;
@@ -71,13 +71,34 @@ pub struct GLTF {
     pub lightdiffuse_curves: Vec<Handle<TypeFrameCurve<LightDiffuse>>>,
     pub boneoff_curves: Vec<Handle<TypeFrameCurve<InstanceBoneoffset>>>,
     pub indicerange_curves: Vec<Handle<TypeFrameCurve<IndiceRenderRange>>>,
-    pub particlesys_calculators: Vec<Handle<ParticleSystemCalculatorID>>,
+    pub particlesys_calculators: XHashMap<usize, Handle<ParticleSystemCalculatorID>>,
     pub output: String,
     pub errors: Vec<ErrorGLTF>,
     pub animecount: usize,
+    pub path: String,
 }
 impl  GLTF {
-    pub fn new(base: Handle<GLTFBase>) -> Self {
+    pub fn key_accessor(&self, index: usize) -> String {
+        let path = self.path.clone() + "#AC#";
+        path + index.to_string().as_str()
+    }
+    pub fn key_particle_calculator(&self, index: usize) -> KeyParticleSystemCalculator {
+        let path = self.path.clone() + "#P#";
+        let key = Atom::from(path + index.to_string().as_str());
+
+        key.asset_u64()
+    }
+    pub fn key_anime_curve(&self, group_index: usize, channel_index: usize) -> u64 {
+        let mut path = self.path.clone() + "#A#";
+        path += group_index.to_string().as_str();
+        path += "#";
+        path += channel_index.to_string().as_str();
+
+        let key = Atom::from(path.as_str());
+
+        key.asset_u64()
+    }
+    pub fn new(base: Handle<GLTFBase>, path: String) -> Self {
         Self {
             textures:               vec![],
             vbs:                    vec![],
@@ -107,10 +128,11 @@ impl  GLTF {
             lightdiffuse_curves:    vec![],
             boneoff_curves:         vec![],
             indicerange_curves:     vec![],
-            particlesys_calculators: vec![],
+            particlesys_calculators: XHashMap::default(),
             output: String::from(""),
             errors: vec![],
             animecount: 0,
+            path,
         }
     }
 }
@@ -321,15 +343,15 @@ impl GLTFTempLoaded {
         anime_assets: &TypeAnimeAssetMgrs,
         particlesys_cmds: &mut ParticleSystemActionSet,
     ) -> GLTF {
-        let mut result = GLTF::new(self.gltf.clone());
-        let basekey = self.id.base_url.to_string() + "#";
+        let mut result = GLTF::new(self.gltf.clone(), self.id.base_url.to_string());
+        // let basekey = self.id.base_url.to_string() + "#";
 
         // VertexBuffer
         for mesh in self.gltf.0.meshes() {
             mesh.primitives().for_each(|primitive| {
                 // Indices Buffer
                 if let Some(accessor) = primitive.indices() {
-                    let key = basekey.clone() + accessor.index().to_string().as_str();
+                    let key = result.key_accessor(accessor.index());
                     let indice_key = KeyVertexBuffer::from(key.as_str());
                     let indice_key_u64 = indice_key.asset_u64();
                     if let Some(buffer) = vb_assets_mgr.get(&indice_key_u64) {
@@ -346,12 +368,11 @@ impl GLTFTempLoaded {
                             }
                         }
                     };
-
                 }
 
                 // attributes - 未处理稀疏存储情况
                 for (semantic, accessor) in primitive.attributes() {
-                    let key = basekey.clone() + accessor.index().to_string().as_str();
+                    let key = result.key_accessor(accessor.index());
                     let indice_key = KeyVertexBuffer::from(key.as_str());
                     let indice_key_u64 = indice_key.asset_u64();
                     if let Some(buffer) = vb_assets_mgr.get(&indice_key_u64) {
@@ -375,14 +396,11 @@ impl GLTFTempLoaded {
         // Animation Curve
         let mut index_group = 0;
         for animation in self.gltf.0.animations() {
-            let mut group_key = basekey.clone() + index_group.to_string().as_str();
-            group_key += "#";
             index_group += 1;
             let mut index_chanel = 0;
             for channel in animation.channels() {
-                let curve_key = group_key.clone() + index_chanel.to_string().as_str();
                 index_chanel += 1;
-                let curve_key_u64 = curve_key.asset_u64();
+                let curve_key_u64 = result.key_anime_curve(index_group, index_chanel);
 
                 let mut baseinterpolation = Some(channel.sampler().interpolation());
 
@@ -614,13 +632,14 @@ impl GLTFTempLoaded {
         for node in self.gltf.0.nodes() {
             if let Some(extras) = node.extras() {
                 if let Some(cfg) = extras.get("meshParticle") {
+                    let index = node.index();
                     let cfg: IParticleSystemConfig = gltf_format_particle_cfg(cfg);
-                    let key = Atom::from(basekey.clone() + cfg.name.as_str());
+                    let key_u64 = result.key_particle_calculator(index);
                     let id = commands.spawn_empty().id();
                     particlesys_cmds.calculator_cmds.push(OpsCPUParticleCalculator::ops(id, cfg));
                     let res = ParticleSystemCalculatorID(id, 1024, particlesys_cmds.calculator_queue.queue());
-                    if let Ok(res) = particlesys_cmds.calcultors.insert(key.asset_u64(), res) {
-                        result.particlesys_calculators.push(res);
+                    if let Ok(res) = particlesys_cmds.calcultors.insert(key_u64, res) {
+                        result.particlesys_calculators.insert(index, res);
                     } else {
                         particlesys_cmds.calculator_queue.queue().push(id);
                     }

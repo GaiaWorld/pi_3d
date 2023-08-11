@@ -25,6 +25,7 @@ axis                    = { path = "crates/axis" }
 particle                = { path = "crates/particle" }
 pi_gltf2_load           = { path = "crates/gltf2" }
 pi_particle_system      = { path = "crates/particle_system" }
+pi_trail_renderer       = { path = "crates/trail" }
 
 pi_node_materials       = { path = "crates/node_materials" }
 unlit_material          = { path = "crates/unlit_material" }
@@ -269,3 +270,7 @@ path = "examples/gltf/img_texture_load.rs"
 [[example]]
 name = "particle_system01"
 path = "examples/particles/particle_system01.rs"
+
+[[example]]
+name = "trial01"
+path = "examples/trial/01.rs"
