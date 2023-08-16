@@ -18,4 +18,5 @@ pub struct ParticleSystemActionSet<'w> {
     pub calculator_cmds: ResMut<'w, ActionListCPUParticleCalculator>,
     pub particlesys_cmds: ResMut<'w, ActionListCPUParticleSystem>,
     pub particlesys_state_cmds: ResMut<'w, ActionListCPUParticleSystemState>,
+    pub trail_material: ResMut<'w, ActionListCPUParticleSystemTrailMaterial>,
 }

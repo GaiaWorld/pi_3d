@@ -21,6 +21,7 @@ use base::*;
 use command::*;
 use command_sys::*;
 use pi_scene_context::transforms::transform_node_sys::sys_world_matrix_calc;
+use pi_trail_renderer::TrailBuffer;
 use system::*;
 
 pub struct PluginParticleSystem;
@@ -32,6 +33,15 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(ActionListCPUParticleCalculator::default());
         app.insert_resource(ActionListCPUParticleSystem::default());
         app.insert_resource(ActionListCPUParticleSystemState::default());
+        app.insert_resource(ActionListCPUParticleSystemTrailMaterial::default());
+        
+        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleTrailBuffer>();
+        let maxbytes = cfg.max;
+        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+        let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
+        let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        let trailbuffer = TrailBuffer::new(maxbytes as u32, &mut allocator, &device, &queue);
+        app.insert_resource(ResParticleTrailBuffer(trailbuffer));
 
         app.add_system(
             sys_act_particle_calculator.in_set(ERunStageChap::Initial),
@@ -41,6 +51,7 @@ impl Plugin for PluginParticleSystem {
         );
         app.add_systems(
             (
+                sys_act_particle_system_trail_material,
                 sys_act_partilce_system_state.run_if(should_run),
                 sys_ids.run_if(should_run),
                 sys_emission.run_if(should_run)
@@ -58,12 +69,14 @@ impl Plugin for PluginParticleSystem {
         );
         app.add_systems(
             (
+                sys_size_over_life_time.run_if(should_run),
                 sys_color_over_life_time.run_if(should_run),
                 sys_rotation_over_life_time.run_if(should_run),
                 sys_velocity_over_life_time.run_if(should_run),
                 sys_orbit_over_life_time.run_if(should_run),
                 sys_speed_modifier_over_life_time.run_if(should_run),
                 sys_limit_velocity_over_life_time.run_if(should_run),
+                sys_texturesheet.run_if(should_run),
             ).after(sys_emitter).in_set(ERunStageChap::Command),
         );
         app.add_system(
@@ -81,6 +94,9 @@ impl Plugin for PluginParticleSystem {
         );
         app.add_system(
             sys_update_buffer.run_if(should_run).in_set(ERunStageChap::Uniform),
+        );
+        app.add_system(
+            sys_update_buffer_trail.run_if(should_run).after(sys_update_buffer).in_set(ERunStageChap::Uniform),
         );
     }
 }

@@ -1,13 +1,14 @@
 
-use std::ops::Sub;
+use std::{ops::Sub, sync::Arc};
 
 use bevy::prelude::Deref;
 use crossbeam::queue::SegQueue;
 use pi_assets::asset::{Asset, Size, Handle};
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{EScalingMode};
+use pi_scene_context::prelude::{EScalingMode, RenderGeometry};
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolVector3, TToolRotation, TToolMatrix}};
 use pi_share::Share;
+use pi_trail_renderer::{TrailPoints, TrailBase, TrailBuffer};
 use rand::Rng;
 
 use crate::{
@@ -174,6 +175,9 @@ pub struct ParticleCalculatorColorBySpeed(pub(crate) ColorBySpeed);
 #[derive(Component)]
 pub struct ParticleCalculatorTextureSheet(pub(crate) TextureSheet);
 
+#[derive(Component)]
+pub struct ParticleCalculatorTrail(pub(crate) TrailModifier);
+
 
 #[derive(Component)]
 pub struct ParticleCalculatorBase {
@@ -226,6 +230,266 @@ impl ParticleCalculatorBase {
     }
 }
 
+#[derive(Resource)]
+pub struct ResParticleTrailBuffer(pub Option<TrailBuffer>);
+impl TAssetCapacity for ResParticleTrailBuffer {
+    const ASSET_TYPE: &'static str = "PARTICLE_TRAIL_BUFFER";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 1024 * 1024, timeout: 1000 }
+    }
+}
+
+#[derive(Component)]
+pub struct ParticleTrailMesh {
+    pub mesh: Entity,
+    pub geo: Entity,
+}
+impl ParticleTrailMesh {
+    pub fn new(
+        trailmesh: Entity,
+        trailgeo: Entity
+    ) -> Self {
+        Self { mesh: trailmesh, geo: trailgeo }
+    }
+}
+
+#[derive(Component)]
+pub struct ParticleTrail {
+    pub pathlist: Vec<TrailPoints>,
+    pub timelist: Vec<TrailBase>,
+    pub lifetime: Vec<u32>,
+}
+impl ParticleTrail {
+    pub fn new(
+        maxcout: usize
+    ) -> Self {
+        let mut pathlist = Vec::with_capacity(maxcout);
+        let mut timelist = Vec::with_capacity(maxcout);
+        let mut lifetime = Vec::with_capacity(maxcout);
+        for _ in 0..maxcout {
+            pathlist.push(TrailPoints::default());
+            timelist.push(TrailBase::new(0));
+            lifetime.push(0);
+        }
+        Self { pathlist, timelist, lifetime }
+    }
+    pub fn start(
+        &mut self,
+        newids: &Vec<IdxParticle>,
+        ages: &Vec<AgeLifeTime>,
+        diewaittimes: &mut Vec<u32>,
+        randomlist: &Vec<BaseRandom>,
+        time: &ParticleSystemTime,
+        trailmodifier: &TrailModifier,
+    ) {
+        newids.iter().for_each(|idx| {
+            let randoms = randomlist.get(*idx).unwrap();
+            let age = ages.get(*idx).unwrap();
+            let diewaittime = diewaittimes.get_mut(*idx).unwrap();
+
+            let lifetime = (trailmodifier.lifetime.interpolate(time.loop_progress, randoms.base) * age.lifetime as f32) as u32;
+
+            if trailmodifier.die_with_particle == false {
+                *diewaittime = lifetime;
+            } else {
+                *diewaittime = 0;
+            }
+
+            let item = self.lifetime.get_mut(*idx).unwrap();
+            *item = lifetime;
+
+            let item = self.timelist.get_mut(*idx).unwrap();
+            *item = TrailBase::new(u32::MAX);
+
+            let item = self.pathlist.get_mut(*idx).unwrap();
+            item.reset();
+        });
+    }
+    pub fn run_new(
+        &mut self,
+        newids: &Vec<IdxParticle>,
+        randomlist: &Vec<BaseRandom>,
+        colors: &Vec<Vector4>,
+        localpositions: &Vec<Vector3>,
+        localscalings: &Vec<Vector3>,
+        localrotations: &Vec<Vector3>,
+        worldmatrixs: &Vec<EmitMatrix>,
+        directions: &Vec<Direction>,
+        time: &ParticleSystemTime,
+        trailmodifier: &TrailModifier,
+        trailbuffer: &mut TrailBuffer,
+        geometries: &mut RenderGeometry,
+    ) {
+        let mut color = Vector4::new(1., 1., 1., 1.);
+        let mut localscaling = Vector3::new(1., 0., 0.);
+        let trailworldspace = trailmodifier.get_world_space();
+        let mut start = u32::MAX;
+        let mut end = 0;
+        newids.iter().for_each(|idx| {
+            let randoms = randomlist.get(*idx).unwrap();
+            let particlecolor = colors.get(*idx).unwrap();
+            let agecontrol = self.lifetime.get(*idx).unwrap();
+
+            let direction = directions.get(*idx).unwrap();
+            let translation = localpositions.get(*idx).unwrap() + direction.value.scale(-1. * 0.0000001 / f32::max(direction.length, 1.));
+            let scaling = localscalings.get(*idx).unwrap();
+            let eulers = localrotations.get(*idx).unwrap();
+            let mut localmatrix = Matrix::identity();
+            CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
+
+            let worldmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
+            // let worldmatrix = &worldmatrixs.get(*idx).unwrap().pose;
+
+            let age = self.timelist.get_mut(*idx).unwrap();
+
+            let item = self.pathlist.get_mut(*idx).unwrap();
+
+            if trailmodifier.inherit_particle_color {
+                color.copy_from(particlecolor);
+            } else {
+                color.copy_from_slice(&[1., 1., 1., 1.]);
+            }
+
+            let width: f32 = if trailmodifier.size_affects_width {
+                1.
+            } else {
+                CoordinateSytem3::transform_normal(&Vector3::new(1., 0., 0.), &localmatrix, &mut localscaling);
+                let len = CoordinateSytem3::length(&localscaling);
+                if len < 0.00000001 { 0. } else { 1. / len }
+            };
+
+            // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
+            let flag = item.run(
+                worldmatrix, &localmatrix, 
+                &color, &trailmodifier.color_over_lifetime.color4_interpolate.gradient, &trailmodifier.color_over_trail.color4_interpolate.gradient,
+                width, &trailmodifier.width_over_trail, *agecontrol, &age, randoms, 9999999., trailmodifier.minimun_vertex_distance,
+                trailworldspace
+            );
+
+            // log::warn!("Trail: {:?}, {:?}", age, flag);
+            if flag {
+                let (istart, iend) = trailbuffer.collect(&item, trailworldspace, worldmatrix);
+                start = istart.min(start);
+                end = iend.max(end);
+            }
+        });
+
+        if let Some(vertices) = geometries.vertices.get_mut(0) {
+            if start < end {
+                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
+            } else {
+                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
+            }
+        }
+    }
+    pub fn run(
+        &mut self,
+        activeids: &Vec<IdxParticle>,
+        randomlist: &Vec<BaseRandom>,
+        colors: &Vec<Vector4>,
+        localpositions: &Vec<Vector3>,
+        localscalings: &Vec<Vector3>,
+        localrotations: &Vec<Vector3>,
+        worldmatrixs: &Vec<EmitMatrix>,
+        time: &ParticleSystemTime,
+        trailmodifier: &TrailModifier,
+        trailbuffer: &mut TrailBuffer,
+        geometries: &mut RenderGeometry,
+    ) {
+        let mut color = Vector4::new(1., 1., 1., 1.);
+        let mut localscaling = Vector3::new(1., 0., 0.);
+        let trailworldspace = trailmodifier.get_world_space();
+        let mut start = u32::MAX;
+        let mut end = 0;
+        activeids.iter().for_each(|idx| {
+            let randoms = randomlist.get(*idx).unwrap();
+            let particlecolor = colors.get(*idx).unwrap();
+            let agecontrol = self.lifetime.get(*idx).unwrap();
+
+            let translation = localpositions.get(*idx).unwrap();
+            let scaling = localscalings.get(*idx).unwrap();
+            let eulers = localrotations.get(*idx).unwrap();
+            let mut localmatrix = Matrix::identity();
+            CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
+
+            let worldmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
+
+            let age = self.timelist.get_mut(*idx).unwrap();
+            age.update(time.running_delta_ms);
+
+            let item = self.pathlist.get_mut(*idx).unwrap();
+
+            if trailmodifier.inherit_particle_color {
+                color.copy_from(particlecolor);
+            } else {
+                color.copy_from_slice(&[1., 1., 1., 1.]);
+            }
+
+            let width: f32 = if trailmodifier.size_affects_width {
+                1.
+            } else {
+                CoordinateSytem3::transform_normal(&Vector3::new(1., 0., 0.), &localmatrix, &mut localscaling);
+                let len = CoordinateSytem3::length(&localscaling);
+                if len < 0.00000001 { 0. } else { 1. / len }
+            };
+
+            // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
+            let flag = item.run(
+                worldmatrix, &localmatrix, 
+                &color, &trailmodifier.color_over_lifetime.color4_interpolate.gradient, &trailmodifier.color_over_trail.color4_interpolate.gradient,
+                width, &trailmodifier.width_over_trail, *agecontrol, &age, randoms, 9999999., trailmodifier.minimun_vertex_distance,
+                trailworldspace
+            );
+
+            // log::warn!("Trail: {:?}, {:?}", age, flag);
+            if flag {
+                let (istart, iend) = trailbuffer.collect(&item, trailworldspace, worldmatrix);
+                start = istart.min(start);
+                end = iend.max(end);
+            }
+        });
+
+        if let Some(vertices) = geometries.vertices.get_mut(0) {
+            if start < end {
+                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
+            } else {
+                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
+            }
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct ParticleDieWaitTime(pub Vec<u32>);
+impl ParticleDieWaitTime {
+    pub fn new(maxcount: usize) -> Self {
+        let mut list = Vec::with_capacity(maxcount);
+        for _ in 0..maxcount {
+            list.push(0);
+        }
+        Self (list)
+    }
+    pub fn start(
+        &mut self,
+        newids: &Vec<IdxParticle>,
+        ages: &Vec<AgeLifeTime>,
+        randoms: &Vec<BaseRandom>,
+        time: &ParticleSystemTime,
+        interpolation: Option<&FloatInterpolation>,
+    ) {
+        newids.iter().for_each(|idx| {
+            let item = self.0.get_mut(*idx).unwrap();
+    
+            if let Some(interpolation) = interpolation {
+                let random = randoms.get(*idx).unwrap();
+                let age = ages.get(*idx).unwrap();
+                *item = (interpolation.interpolate(time.loop_progress, random.base) * age.lifetime as f32) as u32;
+            } else {
+                *item = 0;
+            }
+        });
+    }
+}
 
 #[derive(Component)]
 pub struct ParticleState {
@@ -239,6 +503,8 @@ pub struct ParticleIDs {
     pub(crate) calculator: Handle<ParticleSystemCalculatorID>,
     /// 存活的粒子ID列表
     pub(crate) actives: Vec<IdxParticle>,
+    /// 存活的粒子ID列表
+    pub(crate) dies: Vec<IdxParticle>,
     /// 非存活的粒子ID列表
     pub(crate) unactives: Vec<IdxParticle>,
     /// 新创建的粒子ID列表
@@ -256,6 +522,7 @@ impl ParticleIDs {
             actives: vec![],
             unactives: unactives,
             newids: vec![],
+            dies: vec![],
             maxcount,
         }
     }
@@ -826,6 +1093,7 @@ impl ParticleEmitMatrix {
         global_scaling: &Vector3,
         local_scaling: &Vector3,
     ) {
+        // log::warn!("EmitMatrix:");
         let mut scaling = global_scaling.clone();
         // let mut pose_invert = if let Some(temp) = world_matrix.append_translation(&global_position.scale(-1.)).try_inverse() {
         //     temp
@@ -845,41 +1113,39 @@ impl ParticleEmitMatrix {
             },
         }
         
-        let mut pose = Matrix::identity();
-        CoordinateSytem3::matrix4_compose_rotation(&scaling, &global_rotation, &Vector3::zeros(), &mut pose);
-        let mut pose_invert = if let Some(temp) = pose.try_inverse() {
+        let mut emittermatrix = Matrix::identity();
+        CoordinateSytem3::matrix4_compose_rotation(&scaling, &global_rotation, &global_position, &mut emittermatrix);
+        let emittermatrix_invert = if let Some(temp) = emittermatrix.try_inverse() {
             temp
         } else { Matrix::identity() };
 
-        let global_rotmat = global_rotation.to_homogeneous();
         let global_euler = global_rotation.euler_angles();
 
         match simulation {
             EParticleSimulationSpace::Local => {
                 ids.iter().for_each(|idx| {
                     let item = self.0.get_mut(*idx).unwrap();
-                    item.position.clone_from(&global_position);
+                    // item.position.clone_from(&global_position);
                     item.scaling.clone_from(&scaling);
                     item.rotation.clone_from(&global_rotation);
-                    item.rotmat.clone_from(&global_rotmat);
-                    item.pose.clone_from(&pose);
-                    item.pose_invert.clone_from(&pose_invert);
+                    item.matrix.clone_from(&emittermatrix);
+                    item.matrix_invert.clone_from(&emittermatrix_invert);
                     item.eulers = global_euler;
                 });
             },
             EParticleSimulationSpace::World => {
                 newids.iter().for_each(|idx| {
                     let item = self.0.get_mut(*idx).unwrap();
-                    item.position.clone_from(&global_position);
+                    // item.position.clone_from(&global_position);
                     item.scaling.clone_from(&scaling);
                     item.rotation.clone_from(&global_rotation);
-                    item.rotmat.clone_from(&global_rotmat);
-                    item.pose.clone_from(&pose);
-                    item.pose_invert.clone_from(&pose_invert);
+                    item.matrix.clone_from(&emittermatrix);
+                    item.matrix_invert.clone_from(&emittermatrix_invert);
                     item.eulers = global_euler;
                 });
             },
         }
+        // log::warn!("EmitMatrix: End");
     }
 }
 
@@ -914,7 +1180,7 @@ impl ParticleGravityFactor {
             let mut factor = 0.;
             calculator.modify(&mut factor, age.progress, delta_seconds, randoms);
 
-            CoordinateSytem3::transform_normal(&gravity.scale(factor), &emitmatrix.pose_invert, &mut item.value);
+            CoordinateSytem3::transform_normal(&gravity.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
         });
     }
 }
@@ -949,7 +1215,7 @@ impl ParticleForce {
             calculator.modify(item, age.progress, delta_seconds, randoms);
 
             if calculator.is_local_space == false {
-                CoordinateSytem3::transform_normal(&item.value.clone(), &emitmatrix.pose_invert, &mut item.value);
+                CoordinateSytem3::transform_normal(&item.value.clone(), &emitmatrix.matrix_invert, &mut item.value);
             }
         });
     }
@@ -1109,6 +1375,7 @@ impl ParticleDirection {
         emitter: &ShapeEmitter,
         time: &ParticleSystemTime,
     ) {
+        // log::warn!("Direction: ");
         let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         let origin = Vector3::zeros();
         ids.iter().for_each(|idx| {
@@ -1164,6 +1431,7 @@ impl ParticleDirection {
 
             *position += new_direction;
         });
+        // log::warn!("Direction: End");
     }
 }
 

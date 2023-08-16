@@ -48,7 +48,7 @@ impl ShaderShadowGenerator {
         ShaderEffectMeta::new(
             ShaderEffectValueUniformDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                // mat4_list: vec![],
+                mat4_list: vec![],
                 // mat2_list: vec![],
                 vec4_list: vec![],
                 vec2_list: vec![],

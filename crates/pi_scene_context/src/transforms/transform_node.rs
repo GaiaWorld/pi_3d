@@ -162,7 +162,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
     }
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
-        log::warn!("LocalRotationQuaternion has not 'append' operation!");
+        // log::warn!("LocalRotationQuaternion has not 'append' operation!");
         Self(self.0 + rhs.0 * amount, true)
     }
     fn size() -> usize {

@@ -12,7 +12,7 @@ use super::{
     float::{FloatUniform},
     // int::{IntUniform},
     uint::{UintUniform},
-    // mat4::Mat4Uniform,
+    mat4::Mat4Uniform,
     // mat2::Mat2Uniform,
     vec4::Vec4Uniform,
     vec2::Vec2Uniform,
@@ -27,7 +27,7 @@ pub struct BindEffect(pub BindEffectValues);
 
 
 pub struct BindEffectValues {
-    // pub mat4_: Mat4Uniform,
+    pub mat4_: Mat4Uniform,
     // pub mat2_: Mat2Uniform,
     pub vec4_: Vec4Uniform,
     pub vec2_: Vec2Uniform,
@@ -50,7 +50,7 @@ impl BindEffectValues {
             let mut keys = XHashMap::default();
 
             let uniforms = &meta.uniforms;
-            // let mut mat4 = Mat4Uniform::new(&effect_val_bind);     mat4.init(&uniforms.mat4_list);
+            let mut mat4 = Mat4Uniform::new(&effect_val_bind);     mat4.init(&uniforms.mat4_list);
             // let mut mat2 = Mat2Uniform::new(&effect_val_bind);     mat2.init(&uniforms.mat2_list);
             let mut vec4 = Vec4Uniform::new(&effect_val_bind);     vec4.init(&uniforms.vec4_list); 
             let mut vec2 = Vec2Uniform::new(&effect_val_bind);     vec2.init(&uniforms.vec2_list);
@@ -58,10 +58,10 @@ impl BindEffectValues {
             // let mut int = IntUniform::new(&effect_val_bind);      int.init(&uniforms.int_list);
             let mut uint = UintUniform::new(&effect_val_bind);     uint.init(&uniforms.uint_list);
             
-            // let mut index = 0;
-            // uniforms.mat4_list.iter().for_each(|v| {
-            //     keys.insert(v.0.clone(), index); index += 1;
-            // });
+            let mut index = 0;
+            uniforms.mat4_list.iter().for_each(|v| {
+                keys.insert(v.0.clone(), index); index += 1;
+            });
             // let mut index = 0;
             // uniforms.mat2_list.iter().for_each(|v| {
             //     keys.insert(v.0.clone(), index); index += 1;
@@ -88,7 +88,7 @@ impl BindEffectValues {
             });
 
             Some(Self {
-                // mat4_: mat4,
+                mat4_: mat4,
                 // mat2_: mat2,
                 vec4_: vec4,
                 vec2_: vec2,
@@ -104,11 +104,11 @@ impl BindEffectValues {
         }
     }
 
-    // pub fn mat4(& self, slot: usize, value: &[Number]) {
-    //     let item = unsafe { &mut *(self as *const Self as *mut Self) };
-    //     item.dirty = true;
-    //     item.mat4_.set(slot, value);
-    // }
+    pub fn mat4(& self, slot: usize, value: &[Number]) {
+        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        item.dirty = true;
+        item.mat4_.set(slot, value);
+    }
     
     // pub fn mat2(& self, slot: usize, value: &[Number]) {
     //     let item = unsafe { &mut *(self as *const Self as *mut Self) };
@@ -148,7 +148,7 @@ impl BindEffectValues {
 
     pub fn update(&self) {
         let range = self.bind.data();
-        // self.mat4_.update(range);
+        self.mat4_.update(range);
         // self.mat2_.update(range);
         self.vec4_.update(range);
         self.vec2_.update(range);

@@ -471,3 +471,14 @@ use super::{
         });
     }
 // }
+
+pub fn sys_geometry_enable(
+    geometries: Query<(&RenderGeometry, &MeshID), Changed<RenderGeometry>>,
+    mut meshes: Query<&mut RenderGeometryEable>,
+) {
+    geometries.iter().for_each(|(_, idmesh)| {
+        if let Ok(mut state) = meshes.get_mut(idmesh.0) {
+            *state = RenderGeometryEable(true);
+        }
+    });
+}

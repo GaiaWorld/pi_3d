@@ -679,6 +679,44 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
 
         cmds.insert(ParticleCalculatorCustomV4 { x, y, z, w });
     }
+    // Trail
+    if let Some(trail) = &(config.trail) {
+        let mut ps_trail = TrailModifier::new();
+        ps_trail.set_mode(trail.mode);
+        ps_trail.ratio = trail.ratio;
+        parse_float_interpolation(
+            &mut ps_trail.lifetime,
+            &Some(trail.lifetime.clone()),
+            TParamType::None,
+            1.0,
+        );
+        ps_trail.ribbon_count = trail.ribbon_count;
+        ps_trail.attach_ribbons_to_transfoem = trail.attach_rtt == 1;
+        ps_trail.minimun_vertex_distance = trail.min_dist;
+        ps_trail.set_world_space(trail.world_space == 1);
+        ps_trail.die_with_particle = trail.die_with == 1;
+        ps_trail.size_affects_width = trail.size_awidth == 1;
+        ps_trail.set_texture_mode(trail.tex_mode);
+        ps_trail.size_affects_lifetime = trail.size_alifetime == 1;
+        ps_trail.inherit_particle_color = trail.inherit_color == 1;
+        parse_color4_gradient(
+            &mut ps_trail.color_over_lifetime.color4_interpolate.gradient,
+            Some(&trail.color_over_life),
+            TParamType::None,
+        );
+        parse_float_interpolation(
+            &mut ps_trail.width_over_trail,
+            &Some(trail.width_over_trail.clone()),
+            TParamType::None,
+            1.0,
+        );
+        parse_color4_gradient(
+            &mut ps_trail.color_over_trail.color4_interpolate.gradient,
+            Some(&trail.color_over_trail),
+            TParamType::None,
+        );
+        cmds.insert(ParticleCalculatorTrail(ps_trail));
+    }
 }
 
 pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {

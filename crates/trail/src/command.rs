@@ -7,9 +7,12 @@ impl OpsTrail {
         Self(id_scene, id_linked_transform, id_material, entity)
     }
 }
-pub type ActionListTrial = ActionList<OpsTrail>;
+pub type ActionListTrail = ActionList<OpsTrail>;
 
-#[derive(SystemParam)]
-pub struct ActionSetTrail<'w> {
-    pub create: ResMut<'w, ActionListTrial>,
+pub struct OpsTrailAgeControl(pub(crate) Entity, pub(crate) u32, pub(crate) u8);
+impl OpsTrailAgeControl {
+    pub fn ops(entity: Entity, ms: u32) -> Self {
+        Self(entity, ms, 0)
+    }
 }
+pub type ActionListTrailAge = ActionList<OpsTrailAgeControl>;

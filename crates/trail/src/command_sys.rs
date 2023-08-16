@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
+use bevy::ecs::entity;
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
+use pi_scene_math::Vector4;
 
 use crate::{base::*, command::*, ResTrailBuffer};
 
 
 pub fn sys_act_trail_mesh_geometry(
-    mut cmds: ResMut<ActionListTrial>,
+    mut cmds: ResMut<ActionListTrail>,
     mut commands: Commands,
     trailbuffer: Res<ResTrailBuffer>,
     mut tree: ResMut<ActionListTransformNodeParent>,
@@ -21,7 +23,7 @@ pub fn sys_act_trail_mesh_geometry(
     if let Some(trailbuffer) = &trailbuffer.0 {
         cmds.drain().drain(..).for_each(|OpsTrail(id_scene, id_linked, id_mat, entity)| {
 
-            let id_mesh = commands.spawn_empty().id();
+            let id_mesh = entity;
             let id_geo = commands.spawn_empty().id();
 
             matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
@@ -30,14 +32,15 @@ pub fn sys_act_trail_mesh_geometry(
             ActionMesh::init(&mut commands, id_mesh, id_scene, &mut tree, &mut allocator, &device, &empty);
 
             if let Some(mut cmd) = commands.get_entity(id_mesh) {
-                log::warn!("Mesh Ok");
+                // log::warn!("Mesh Ok");
                 // meshtopology.push(OpsTopology::ops(id_mesh, PrimitiveTopology::TriangleStrip));
                 cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
+                cmd.insert(CCullMode(CullMode::Off));
                 cmd.insert(GeometryID(id_geo));
             }
 
             if let Some(mut cmd) = commands.get_entity(id_geo) {
-                log::warn!("Geometry Ok");
+                // log::warn!("Geometry Ok");
                 let mut verticescode = EVerticeExtendCodeComp(EVerticeExtendCode(EVerticeExtendCode::NONE));
                 verticescode.0.0 += EVerticeExtendCode::TRIAL;
                 let vertex_desc = vec![trailbuffer.buffer_desc()];
@@ -62,22 +65,38 @@ pub fn sys_act_trail_mesh_geometry(
                 cmd
                     .insert(SceneID(id_scene))
                     .insert(TrailLinkedTransform(id_linked))
-                    .insert(TrailMesh(id_geo))
-                    .insert(TrailGeometry(id_mesh))
+                    // .insert(TrailMesh(id_mesh))
+                    .insert(TrailGeometry(id_geo))
                     .insert(TrailBase::new(u32::MAX))
-                    .insert(TrailWorldPlace(false))
+                    .insert(TrailWorldPlace(true))
                     .insert(TrailPoints::default())
                     .insert(ColorOverTrail(Color4Gradient::default()))
                     .insert(TrailMinimunVertexDistance(0.01))
                     .insert(WidthOverTrail(FloatInterpolation::new(1.)))
-                    .insert(TrailAgeControl(1000))
+                    .insert(TrailAgeControl(200))
+                    .insert(TrailSize(1.))
+                    .insert(TrailColor(Vector4::new(1., 1., 1., 1.)))
+                    .insert(TrailRandom(pi_wy_rng::WyRng::default()))
                     ;
             }
         });
     }
 }
 
-pub fn act_update_trial_geometry_buffer(
+pub fn sys_act_trail_age(
+    mut cmds: ResMut<ActionListTrailAge>,
+    mut items: Query<&mut TrailAgeControl>,
+) {
+    cmds.drain().drain(..).for_each(|OpsTrailAgeControl(entity, ms, count)| {
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = TrailAgeControl(ms);
+        } else if count < 2 {
+            cmds.push(OpsTrailAgeControl(entity, ms, count+1))
+        }
+    });
+}
+
+pub fn act_update_trail_geometry_buffer(
     id_geo: Entity,
     items: &mut Query<&mut AssetResVBSlot01>,
     data: (Arc<NotUpdatableBufferRange>, u32, u32),

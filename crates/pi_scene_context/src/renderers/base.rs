@@ -43,15 +43,13 @@ impl BindGroups3D {
 
         bind_group_layouts
     }
-    pub fn key_bindgroup_layouts(&self) -> [Option<KeyBindGroupLayout>; 4] {
+    pub fn key_bindgroup_layouts(&self) -> [Option<u64>; 4] {
         let mut key_bindgroup_layouts = [None, None, None, None];
         
-        key_bindgroup_layouts[0] = Some(self.scene.bind_group().key_layout());
-
-        key_bindgroup_layouts[1] = Some(self.model.bind_group().key_layout());
-
+        key_bindgroup_layouts[0] = Some(*self.scene.bind_group().layout().key());
+        key_bindgroup_layouts[1] = Some(*self.model.bind_group().layout().key());
         if let Some(set_2) = &self.textures {
-            key_bindgroup_layouts[2] = Some(set_2.bind_group().key_layout());
+            key_bindgroup_layouts[2] = Some(*set_2.bind_group().layout().key());
         }
 
         key_bindgroup_layouts

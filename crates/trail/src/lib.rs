@@ -1,4 +1,4 @@
-use command_sys::sys_act_trail_mesh_geometry;
+
 use pi_engine_shell::prelude::*;
 
 mod base;
@@ -6,18 +6,21 @@ mod command_sys;
 mod command;
 mod system;
 
+use pi_scene_context::{transforms::transform_node_sys::sys_world_matrix_calc2, prelude::sys_dispose_ready};
+
 pub use base::*;
 pub use command::*;
-use pi_scene_context::{transforms::transform_node_sys::sys_world_matrix_calc2, prelude::sys_dispose_ready};
+pub use command_sys::*;
 pub use system::*;
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct ResTrailBuffer(pub Option<TrailBuffer>);
 
 #[derive(SystemParam)]
-pub struct ActionSetTrialRenderer<'w> {
-    pub trail: ResMut<'w, ActionListTrial>,
+pub struct ActionSetTrailRenderer<'w> {
+    pub create: ResMut<'w, ActionListTrail>,
     pub trailbuffer: ResMut<'w, ResTrailBuffer>,
+    pub age: ResMut<'w, ActionListTrailAge>,
 }
 
 pub struct PluginTrail;
@@ -29,10 +32,14 @@ impl Plugin for PluginTrail {
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
 
         let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
-        let trialbuffer = TrailBuffer::new(maxcount as u32, &mut allocator, &device, &queue);
+        let trailbuffer = TrailBuffer::new(maxcount as u32, &mut allocator, &device, &queue);
+        app.insert_resource(ResTrailBuffer(trailbuffer));
 
-        app.insert_resource(ResTrailBuffer(trialbuffer));
+        app.insert_resource(ActionListTrail::default());
+        app.insert_resource(ActionListTrailAge::default());
+
         app.add_system(sys_act_trail_mesh_geometry.in_set(ERunStageChap::Initial));
+        app.add_system(sys_act_trail_age.in_set(ERunStageChap::Command));
         
         app.add_system(sys_trail_update.in_set(ERunStageChap::CalcRenderMatrix));
         app.add_systems(

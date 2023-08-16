@@ -217,7 +217,7 @@ impl Node for RenderNode {
             
                         renderpass.set_viewport(x, y, w, h, 0., max_depth);
                         renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                        // log::warn!("Draws: {:?}", renderer.draws.list.len());
+                        log::warn!("Draws: {:?}", renderer.draws.list.len());
                         DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
                         let time1 = pi_time::Instant::now();

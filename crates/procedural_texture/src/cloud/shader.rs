@@ -14,7 +14,7 @@ impl CloudShader {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                // mat4_list: vec![],
+                mat4_list: vec![],
                 // mat2_list: vec![],
                 vec4_list: vec![
                     UniformPropertyVec4(Atom::from("skyColor"), [0.15, 0.68, 1.0, 1.0]),

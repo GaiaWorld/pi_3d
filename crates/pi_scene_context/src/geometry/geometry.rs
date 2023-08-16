@@ -107,7 +107,10 @@ impl RenderGeometry {
         }
     }
     pub fn vertex_range(&self) -> Range<u32> {
-        self.vertices[0].value_range()
+        let mut range = self.vertices[0].value_range();
+        // range.end = range.end - range.start;
+        // range.start = 0;
+        range
     }
 }
 

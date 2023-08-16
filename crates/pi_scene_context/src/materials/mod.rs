@@ -108,7 +108,7 @@ impl Plugin for PluginMaterial {
             (
                 // sys_act_uniform,
                 // sys_act_uniform_by_name,
-                // sys_act_material_mat4.run_if(should_run),
+                sys_act_material_mat4.run_if(should_run),
                 // sys_act_material_mat2.run_if(should_run),
                 sys_act_material_vec4.run_if(should_run),
                 sys_act_material_vec2.run_if(should_run),

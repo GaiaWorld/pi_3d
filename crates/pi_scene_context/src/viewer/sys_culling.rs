@@ -98,14 +98,14 @@ use super::base::*;
         let time1 = pi_time::Instant::now();
         // log::debug!("SysModelListAfterCullinUpdateByCamera: ");
         viewers.iter_mut().for_each(|(id_viewer, vieweractive, liet_model, camerapos, cameraview, mut cullings)| {
-            // log::debug!("SysViewerCulling: {:?}", vieweractive);
+            log::warn!("SysViewerCulling: {:?}", vieweractive);
             cullings.0.clear();
             if vieweractive.0 {
-                // log::warn!("ModelList: {:?}", liet_model.0.len());
+                log::warn!("ModelList: {:?}", liet_model.0.len());
                 liet_model.0.iter().for_each(|(objid, _)| {
                     // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
                     if let Ok((_, enable, _, geo_enable)) = items.get(objid.clone()) {
-                        // log::warn!("Moldellist Geo: {:?}, ", geo_enable.0);
+                        log::warn!("Moldellist Geo: {:?}, {:?}", enable.0, geo_enable.0);
                         // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
                         if enable.0 && geo_enable.0 {
                             cullings.0.push(objid.clone());

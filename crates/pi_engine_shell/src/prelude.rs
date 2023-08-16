@@ -80,6 +80,7 @@ pub use crate::frame_time::SingleFrameTimeCommand;
 pub use crate::entity_ref::*;
 pub use crate::animation::*;
 pub use crate::interpolation::*;
+pub use crate::extends::*;
 
 ///
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Component)]

@@ -1,4 +1,6 @@
 
+use std::sync::Arc;
+
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
@@ -9,13 +11,13 @@ use crate::{base::*, tools::{Random, Velocity}};
 pub fn sys_emission(
     scenes: Query<&SceneTime>,
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorEmission)>,
-    mut particle_sys: Query<(&SceneID, &ParticleState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleAgeLifetime)>,
+    mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom)>,
 ) {
-    particle_sys.iter_mut().for_each(|(idscene, state, mut random, mut ids, mut particlesystime, mut emission, mut randoms, mut agelifetime)| {
+    particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emission, mut randoms)| {
         if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.0)) {
             let delta_ms = scenetime.delta_ms() as u32;
 
-            if state.playing {
+            if state.playing && disposestate.0 == false {
                 particlesystime.run(delta_ms, 1000, base.duration);
             } else {
                 particlesystime.run(0, 1000, base.duration);
@@ -85,16 +87,23 @@ pub fn sys_emitter(
 
 pub fn sys_start_lifetime(
     calculators: Query<&ParticleCalculatorStartLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime)>,
+    mut particle_sys: Query<(Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime, &mut ParticleDieWaitTime)>,
+    calculators_trail: Query<&ParticleCalculatorTrail>,
+    mut particle_sys_trail: Query<&mut ParticleTrail>,
 ) {
-    particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items)| {
+    particle_sys.iter_mut().for_each(|(entity, ids, time, randoms, mut items, mut diewaittimes)| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
             let newids = &ids.newids;
-            let activeids = &ids.actives;
             items.start(time, newids, calculator, randoms);
+
+            if let (Ok(trailmodifier), Ok(mut trails)) = (calculators_trail.get(ids.calculator.0), particle_sys_trail.get_mut(entity)) {
+                trails.start(newids, &items, &mut diewaittimes.0, &randoms, time, &trailmodifier.0);
+            } else {
+                diewaittimes.start(newids, &items, randoms, time, None);
+            }
         }
     });
 }
@@ -125,7 +134,6 @@ pub fn sys_start_rotation(
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
             let newids = &ids.newids;
-            let activeids = &ids.actives;
             items.start(newids, &randoms, time, calculator);
         }
     });
@@ -141,7 +149,6 @@ pub fn sys_start_color(
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
             let newids = &ids.newids;
-            let activeids = &ids.actives;
             items.start(newids, &mut colors, &randoms, time, calculator);
         }
     });
@@ -157,7 +164,6 @@ pub fn sys_start_texture_sheet(
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
             let newids = &ids.newids;
-            let activeids = &ids.actives;
             items.start(newids, &randoms, calculator);
         }
     });
@@ -355,20 +361,24 @@ pub fn sys_rotation_by_speed(
 }
 
 pub fn sys_ids(
-    mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime)>,
+    mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime, &ParticleDieWaitTime)>,
 ) {
-    particle_sys.iter_mut().for_each(|(mut ids, ages, time)| {
+    particle_sys.iter_mut().for_each(|(mut ids, ages, time, diewaittimes)| {
         if time.running_delta_ms <= 0 { return; }
 
         ids.newids.clear();
 
-        let mut actives = ids.actives.clone();
+        let mut items = [ids.actives.clone(), ids.dies.clone()].concat();
         ids.actives.clear();
-        actives.drain(..).for_each(|idx| {
+        ids.dies.clear();
+        items.drain(..).for_each(|idx| {
             let age = ages.get(idx).unwrap();
+            let diewait = diewaittimes.0.get(idx).unwrap();
             // log::warn!("Age: {:?}, Lifetime: {:?}", age.age, age.lifetime);
             if age.age <= age.lifetime {
                 ids.actives.push(idx);
+            } else if age.age < age.lifetime + diewait {
+                ids.dies.push(idx);
             } else {
                 ids.unactives.push(idx);
             }
@@ -378,9 +388,27 @@ pub fn sys_ids(
     });
 }
 
+pub fn sys_texturesheet(
+    texturesheets: Query<&ParticleCalculatorTextureSheet>,
+    mut particle_sys: Query<
+        (&ParticleIDs, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleUV),
+    >,
+) {
+    particle_sys.iter_mut().for_each(
+        |(
+            ids, ages, baserandoms,
+            mut uvs
+        )| {
+            if let Ok(texturesheet) = texturesheets.get(ids.calculator.0) {
+                let activeids = &ids.actives;
+                uvs.run(activeids, ages, baserandoms, &texturesheet.0);
+            }
+        }
+    );
+}
+
 pub fn sys_update_buffer(
     calculators: Query<&ParticleCalculatorBase>,
-    texturesheets: Query<&ParticleCalculatorTextureSheet>,
     particle_sys: Query<
         (Entity, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColor, &ParticleUV),
     >,
@@ -416,6 +444,7 @@ pub fn sys_update_buffer(
     let mut ptime = pi_time::Instant::now();
     let mut ptime1 = pi_time::Instant::now();
 
+    // log::warn!("ParticleBuffer: ");
     particle_sys.iter().for_each(
         |(
             entity, time, ids, scalings, rotations, positions, directions, emitmatrixs,
@@ -430,11 +459,13 @@ pub fn sys_update_buffer(
                 let mut datamatrix: Vec<f32> = Vec::with_capacity(length * 16);
                 let mut datacolors: Vec<f32> = Vec::with_capacity(length * 4);
                 let mut datauvs: Vec<f32> = Vec::with_capacity(length * 4);
-                let mut pose = Matrix::identity();
                 
                 let renderalign = calculator.render_align();
                 let updatebuffer = renderalign.is_some();
                 // log::warn!("ActiveCount: {:?}", length);
+
+                let mut emitposition = Vector3::zeros();
+                let zero = Vector3::zeros();
 
                 ids.actives.iter().for_each(|idx| {
                     let scaling = scalings.get(*idx).unwrap();
@@ -451,32 +482,34 @@ pub fn sys_update_buffer(
                     let uv = uvs.get(*idx).unwrap();
                     let mut g_velocity = Vector3::zeros();
 
-                    CoordinateSytem3::transform_coordinates(&direction.value, &emitmatrix.pose, &mut g_velocity);
+                    CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
+                    CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
+                    // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
 
                     let matrix = if let Some(renderalign) = renderalign {
                         let mut matrix = match renderalign {
                             ERenderAlignment::Velocity => {
                                 let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
                                 let mut matrix = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitmatrix.position, &mut matrix);
+                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
                                 matrix
                             },
                             ERenderAlignment::StretchedBillboard => {
                                 let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
                                 let mut matrix = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitmatrix.position, &mut matrix);
+                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
                                 matrix
                             }
                             _ => {
-                                let matrix = emitmatrix.pose.append_translation(&emitmatrix.position);
+                                let mut matrix = Matrix::identity();
+                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
                                 matrix
                             }
                         };
                         
                         let mut local = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
+                        CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
                         // log::warn!("a MAREIX: {:?}", matrix);
-            
                         matrix = matrix * local;
             
                         if let Some(local) = renderalign.calc_local(&g_velocity) {
@@ -484,14 +517,14 @@ pub fn sys_update_buffer(
                         }
                         matrix
                     } else {
-                        let mut matrix = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitmatrix.position, &mut matrix);
+                        // let mut matrix = Matrix::identity();
+                        // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
+                        let matrix = &emitmatrix.matrix;
                         let mut local = Matrix::identity();
                         CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
                         // log::warn!("MAREIX: {:?}", matrix);
                         // log::warn!("LOCAL: {:?}", local);
-                        matrix = matrix * local;
-                        matrix
+                        matrix * local
                     };
 
                     if updatebuffer {
@@ -558,4 +591,53 @@ pub fn sys_update_buffer(
 
     ptime1 = pi_time::Instant::now();
     // log::warn!("update_buffer: {:?}", ptime1 - ptime);
+    // log::warn!("ParticleBuffer: End");
+}
+
+pub fn sys_update_buffer_trail(
+    trailmodifiers: Query<&ParticleCalculatorTrail>,
+    mut particle_sys: Query<
+        (&ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColor, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
+    >,
+    mut meshes: Query<&mut RenderGeometry>,
+    mut trailbuffer: ResMut<ResParticleTrailBuffer>,
+    queue: Res<PiRenderQueue>,
+) {
+    if let Some(trailbuffer) = &mut trailbuffer.0 {
+        particle_sys.iter_mut().for_each(
+            |(
+                time, ids, emitmatrixs, randoms, colors, positions, scalings, rotations, directions, trailmesh, mut trails
+            )| {
+                // log::warn!("Trail Update: 00");
+                if let Ok(mut geometries) = meshes.get_mut(trailmesh.geo){
+                    if let Ok(trailmodifier) = trailmodifiers.get(ids.calculator.0) {
+                        let newids = &ids.newids;
+                        trails.run_new(newids, randoms, colors, positions, scalings, rotations, emitmatrixs, directions, time, &trailmodifier.0, trailbuffer, &mut geometries);
+
+                        let activeids = [ids.actives.clone(), ids.dies.clone()].concat();
+                        // log::warn!("Trail Update: {:?}", activeids.len());
+                        trails.run(&activeids, randoms, colors, positions, scalings, rotations, emitmatrixs, time, &trailmodifier.0, trailbuffer, &mut geometries);
+                    } else {
+                        if let Some(vertices) = geometries.vertices.get_mut(0) {
+                            vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
+                        }
+                    }
+                }
+            }
+        );
+        trailbuffer.after_collect(&queue);
+    }
+}
+
+pub fn sys_dispose_about_particle_system(
+    particles: Query<(Entity, &DisposeReady, &ParticleTrailMesh), Changed<DisposeReady>>,
+    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
+) {
+    particles.iter().for_each(|(entity, state, trailmesh)| {
+        if state.0 == false { return; }
+
+        disposereadylist.push(OpsDisposeReady::ops(trailmesh.mesh));
+        disposecanlist.push(OpsDisposeCan::ops(entity));
+    });
 }

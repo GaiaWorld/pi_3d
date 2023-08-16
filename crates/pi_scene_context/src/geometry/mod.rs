@@ -98,6 +98,10 @@ impl Plugin for PluginGeometry {
                 sys_vertex_buffer_loaded_06,
             ).in_set(ERunStageChap::Uniform)
         );
+        
+        app.add_system(
+            sys_geometry_enable.in_set(ERunStageChap::Uniform)
+        );
         app.add_system(
             sys_dispose_about_geometry.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );

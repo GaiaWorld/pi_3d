@@ -20,6 +20,7 @@ pub mod prelude;
 mod entity_ref;
 mod animation;
 mod interpolation;
+mod extends;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 

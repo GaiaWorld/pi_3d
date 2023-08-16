@@ -55,7 +55,7 @@ use super::{
                 if quat.1 {
                     // log::warn!("Quaternion: {:?}", quat);
                     let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
-                    // let (z, x, y) = rotation.euler_angles();
+                    // log::warn!("Quaternion: Ok");
                     // *loacl_quaternion = LocalRotationQuaternion(quaternion);
                     *local_rotation = LocalRotation(rotation);
                 }
@@ -80,6 +80,7 @@ use super::{
     pub fn sys_local_matrix_calc(
         mut localmatrixs: Query<(ObjectID, &LocalPosition, &LocalScaling, &LocalRotation, &mut LocalMatrix), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
     ) {
+        // log::warn!("LocalMatrix: ");
         let time = pi_time::Instant::now();
         localmatrixs.iter_mut().for_each(|(entity, position, scaling, rotation, mut localmatrix)| {
             // log::warn!("LocalMatrixCalc: {:?}", entity);
@@ -91,7 +92,7 @@ use super::{
             *localmatrix = LocalMatrix(matrix, true);
         });
         let time1 = pi_time::Instant::now();
-        // log::debug!("Local Matrix Calc: {:?}", time1 - time);
+        // log::warn!("Local Matrix Calc: {:?}", time1 - time);
     }
 // }
 
@@ -116,7 +117,7 @@ use super::{
     ) {
         let time = pi_time::Instant::now();
 
-        // log::debug!("World Matrix Calc:");
+        // log::warn!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
             let mut temp_ids: Vec<(ObjectID, bool, Matrix, bool)> = vec![];
             // let mut idflag: usize = 0;
@@ -165,7 +166,7 @@ use super::{
         let time1 = pi_time::Instant::now();
 
         record.all_wmcompute = (time1 - time).as_millis() as u32;
-        // log::debug!("World Matrix Calc: {:?}", time1 - time);
+        // log::warn!("World Matrix Calc: {:?}", time1 - time);
     }
 // }
 

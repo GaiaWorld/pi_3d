@@ -325,7 +325,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                                 (None, None) => { None },
                                 (Some(bind_skin), Some(_)) => { Some(bind_skin.clone()) },
                                 _ => { 
-                                    log::warn!("Skinnnnnnn");
+                                    // log::warn!("Skinnnnnnn");
                                     return;
                                 }
                             };
@@ -439,7 +439,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             let key_bind_group = key.key_bind_group();
             // log::warn!("Set0Loaded : ");
             if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
-                let data = BindGroupScene::new(BindGroupUsage::new(0, key_bind_group, bind_group), key);
+                let data = BindGroupScene::new(BindGroupUsage::new(0, key.binds(), bind_group), key);
                 let data = Arc::new(data);
                 v.iter().for_each(|id| {
                     if let Some(mut cmd) = commands.get_entity(*id) {
@@ -457,7 +457,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         model_wait.0.drain().for_each(|(key, v)| {
             let key_bind_group = key.key_bind_group();
             if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
-                let data = BindGroupModel::new(BindGroupUsage::new(1, key_bind_group, bind_group), key);
+                let data = BindGroupModel::new(BindGroupUsage::new(1, key.binds(), bind_group), key);
                 let data = Arc::new(data);
                 v.iter().for_each(|id| {
                     if let Some(mut cmd) = commands.get_entity(*id) {
@@ -476,7 +476,8 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             let key_bind_group = key.key_bind_group();
             if let Some(key_bind_group) = key_bind_group {
                 if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
-                    let data = BindGroupTextureSamplers::new(key, BindGroupUsage::new(2, key_bind_group, bind_group));
+                    let binds = key.binds().unwrap();
+                    let data = BindGroupTextureSamplers::new(key, BindGroupUsage::new(2, binds, bind_group));
                     let data = Arc::new(data);
                     v.iter().for_each(|id| {
                         if let Some(mut cmd) = commands.get_entity(*id) {
@@ -502,7 +503,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 
 
 fn create_bind_group(
-    key_bind_group: &KeyBindGroup,
+    key_bind_group: &KeyBindGroup ,
     device: &RenderDevice,
     asset_mgr_bindgroup_layout: &Share<AssetMgr<BindGroupLayout>>,
     asset_mgr_bindgroup: &Share<AssetMgr<BindGroup>>,

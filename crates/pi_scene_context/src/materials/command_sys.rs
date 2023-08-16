@@ -159,24 +159,24 @@ fn reset_passobj(
     }
 }
 
-// pub fn sys_act_material_mat4(
-//     mut cmds: ResMut<ActionListUniformMat4>,
-//     mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
-// ) {
-//     cmds.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value, count)| {
-//         if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-//             if let Some(slot) = bindvalues.slot(&slot) {
-//                 bindvalues.mat4(slot, &value);
-//                 *flag = BindEffectValueDirty(true);
-//             }
-//             return;
-//         }
+pub fn sys_act_material_mat4(
+    mut cmds: ResMut<ActionListUniformMat4>,
+    mut bindvalues: Query<(& BindEffect, &mut BindEffectValueDirty)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value, count)| {
+        if let Ok(( bindvalues, mut flag)) = bindvalues.get_mut(entity) {
+            if let Some(slot) = bindvalues.slot(&slot) {
+                bindvalues.mat4(slot, &value);
+                *flag = BindEffectValueDirty(true);
+            }
+            return;
+        }
 
-//         if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-//             OpsUniformMat4(entity, slot, value, count + 1);
-//         }
-//     });
-// }
+        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
+            OpsUniformMat4(entity, slot, value, count + 1);
+        }
+    });
+}
 
 // pub fn sys_act_material_mat2(
 //     mut cmds: ResMut<ActionListUniformMat2>,

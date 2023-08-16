@@ -12,10 +12,10 @@ impl OpsCPUParticleCalculator {
 }
 pub type ActionListCPUParticleCalculator = ActionList<OpsCPUParticleCalculator>;
 
-pub struct OpsCPUParticleSystem(pub(crate) Entity, pub(crate) Entity, pub(crate) Handle<ParticleSystemCalculatorID>, pub(crate) usize, pub(crate) u8);
+pub struct OpsCPUParticleSystem(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Handle<ParticleSystemCalculatorID>, pub(crate) u8);
 impl OpsCPUParticleSystem {
-    pub fn ops(node: Entity, sourcemesh: Entity, calculator: Handle<ParticleSystemCalculatorID>, maxcount: usize) -> Self {
-        Self(node, sourcemesh, calculator, maxcount, 0)
+    pub fn ops(scene: Entity, node: Entity, trailmesh: Entity, trailgeo: Entity, calculator: Handle<ParticleSystemCalculatorID>) -> Self {
+        Self(scene, node, trailmesh, trailgeo, calculator, 0)
     }
 }
 pub type ActionListCPUParticleSystem = ActionList<OpsCPUParticleSystem>;
@@ -33,3 +33,11 @@ impl OpsCPUParticleSystemState {
     }
 }
 pub type ActionListCPUParticleSystemState = ActionList<OpsCPUParticleSystemState>;
+
+pub struct OpsCPUParticleSystemTrailMaterial(pub(crate) Entity, pub(crate) Entity, pub(crate) u8);
+impl OpsCPUParticleSystemTrailMaterial {
+    pub fn ops(node: Entity, mat: Entity) -> Self {
+        Self(node, mat, 0)
+    }
+}
+pub type ActionListCPUParticleSystemTrailMaterial = ActionList<OpsCPUParticleSystemTrailMaterial>;

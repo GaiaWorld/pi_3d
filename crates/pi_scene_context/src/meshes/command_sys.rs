@@ -315,6 +315,7 @@ impl ActionMesh {
         commands
             .insert(AbstructMesh)
             .insert(Mesh)
+            .insert(RenderGeometryEable(false))
             .insert(RenderWorldMatrix(Matrix::identity()))
             .insert(RenderWorldMatrixInv(Matrix::identity()))
             .insert(RenderMatrixDirty(true))

@@ -51,6 +51,9 @@ pub fn sys_nodeinfo(
     passes: Query<&ModelPass>,
     skeletons: Query<&Skeleton>,
     bones: Query<&BoneParent>,
+    pipeline_center: Res<AssetDataCenterPipeline3D>,
+    asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
+    asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
 ) {
     let count_material = materials.iter().count();
     let count_geometry = geometries.iter().count();
@@ -64,8 +67,12 @@ pub fn sys_nodeinfo(
     let count_skeleton = skeletons.iter().count();
     let count_bone = bones.iter().count();
 
+    let count_pipeline = pipeline_center.0.asset_mgr().len();
+    let count_bindgroup = asset_mgr_bindgroup.0.len();
+    let count_bindgrouplayout = asset_mgr_bindgroup_layout.0.len();
+
     log::warn!(
-        "Materials: {:?}, Geometry: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Renderer: {:?}, Light: {:?}, Pass: {:?}, Skeleton: {:?}, Bone: {:?}",
+        "Materials: {:?}, Geometry: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Renderer: {:?}, Light: {:?}, Pass: {:?}, Skeleton: {:?}, Bone: {:?}, Pipeline: {:?}, BindGroup: {:?}, BindGroupLayout: {:?}",
         count_material,
         count_geometry,
         count_transform,
@@ -77,6 +84,9 @@ pub fn sys_nodeinfo(
         count_pass,
         count_skeleton,
         count_bone,
+        count_pipeline,
+        count_bindgroup,
+        count_bindgrouplayout,
     );
 }
 
@@ -146,6 +156,7 @@ pub fn test_plugins_with_gltf() -> App {
     app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
     app.add_plugin(PluginParticleSystem);
     app.add_plugin(pi_gltf2_load::PluginGLTF2Res);
+    app.add_plugin(pi_trail_renderer::PluginTrail);
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

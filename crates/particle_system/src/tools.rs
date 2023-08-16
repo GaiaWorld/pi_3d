@@ -91,24 +91,23 @@ impl Default for AgeLifeTime {
     }
 }
 
+/// 发射器的矩阵信息
 pub struct EmitMatrix {
-    pub(crate) pose_invert: Matrix,
-    pub(crate) pose: Matrix,
+    pub(crate) matrix_invert: Matrix,
+    pub(crate) matrix: Matrix,
     pub(crate) scaling: Vector3,
-    pub(crate) position: Vector3,
+    // pub(crate) position: Vector3,
     pub(crate) rotation: Rotation3,
-    pub(crate) rotmat: Matrix,
     pub(crate) eulers: (Number, Number, Number),
 }
 impl Default for EmitMatrix {
     fn default() -> Self {
         Self {
-            pose_invert: Matrix::identity(),
-            pose: Matrix::identity(),
+            matrix_invert: Matrix::identity(),
+            matrix: Matrix::identity(),
             scaling: Vector3::new(1., 1., 1.),
-            position: Vector3::new(0., 0., 0.),
+            // position: Vector3::new(0., 0., 0.),
             rotation: Rotation3::identity(),
-            rotmat: Matrix::identity(),
             eulers: (0., 0., 0.),
         }
     }

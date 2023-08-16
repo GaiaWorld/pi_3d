@@ -345,7 +345,7 @@ use super::{
                 if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
                     let key_shader = shader.key().clone();
                     let bind_group_layouts = bindgroups.bind_group_layouts();
-                    let key_bindgroup_layouts = bindgroups.key_bindgroup_layouts();
+                    let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
     
@@ -366,7 +366,7 @@ use super::{
                     let targets = RenderTargetState::color_target(pass_color_format, &blend);
                     let key_state = KeyRenderPipelineState {
                         primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
-                        target_state: vec![targets[0].clone()],
+                        target_state: targets[0].clone(),
                         depth_stencil: depth_stencil,
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
                     };
@@ -388,6 +388,7 @@ use super::{
                     } else {
                         // log::debug!("SysPipeline: 4 Model");
                         if !pipeline_center.check(&key_u64) {
+                            // log::warn!("SysPassPipeline: {:?}", key_pipeline);
                             let pipeline = KeyPipeline3D::create(key_pipeline, shader.clone(), bind_group_layouts, &device);
                             pipeline_center.add(&key_u64, pipeline, None);
                         }
@@ -455,7 +456,7 @@ use super::{
                     };
                     let key_shader = shader.key().clone();
                     let bind_group_layouts = bindgroups.bind_group_layouts();
-                    let key_bindgroup_layouts = bindgroups.key_bindgroup_layouts();
+                    let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
 
                     let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
     
@@ -475,7 +476,7 @@ use super::{
                     let targets = RenderTargetState::color_target(pass_color_format, &blend);
                     let key_state = KeyRenderPipelineState {
                         primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
-                        target_state: vec![targets[0].clone()],
+                        target_state: targets[0].clone(),
                         depth_stencil: depth_stencil,
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
                     };
@@ -497,6 +498,7 @@ use super::{
                     } else {
                         // log::debug!("SysPipeline: 4 Pass");
                         if !pipeline_center.check(&key_u64) {
+                            // log::warn!("SysPassPipeline: {:?}", key_pipeline);
                             let pipeline = KeyPipeline3D::create(key_pipeline, shader.clone(), bind_group_layouts, &device);
                             pipeline_center.add(&key_u64, pipeline, None);
                         }
@@ -541,7 +543,7 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &IndiceRenderRange)>,
+        models: Query<(&GeometryID, &IndiceRenderRange, &RenderGeometryEable)>,
         geometrys: Query<&RenderGeometry>,
         mut passes: Query<(ObjectID, &ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
         // mut commands: Commands,
@@ -550,7 +552,9 @@ use super::{
 
         passes.iter_mut().for_each(|(id_pass, id_model, bindgroups, pipeline, mut old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                if let Ok((id_geo, renderindices)) = models.get(id_model.0) {
+                if let Ok((id_geo, renderindices, geoenable)) = models.get(id_model.0) {
+                    if geoenable.0 == false { return; }
+        
                     if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
                             let draw = DrawObj3D {
@@ -586,14 +590,16 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &I, &IndiceRenderRange), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>)>>,
+        models: Query<(&GeometryID, &I, &IndiceRenderRange, &RenderGeometryEable), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>)>>,
         geometrys: Query<&RenderGeometry>,
         mut passes: Query<(&ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
         let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(id_geo, id_pass, renderindices)| {
+        models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable)| {
+            if geoenable.0 == false { return; }
+
             if let Ok((id_model, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
@@ -650,7 +656,7 @@ use super::{
 
         renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
-            // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
+            log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
             if enable.0 == false {
                 return;
             }
@@ -782,7 +788,7 @@ use super::{
                     });
 
                     record.0.insert(id, renderer.draws.list.len() as u32);
-                    // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
+                    log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
                 }
             }
         });

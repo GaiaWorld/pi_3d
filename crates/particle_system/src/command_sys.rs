@@ -1,5 +1,9 @@
-use bevy::{prelude::{ResMut, Commands, Query}, ecs::entity};
-use pi_scene_math::{Vector3, Vector4, Matrix};
+
+use std::sync::Arc;
+
+use pi_engine_shell::prelude::*;
+use pi_scene_context::prelude::*;
+use pi_scene_math::*;
 
 use crate::{command::*, base::*, extend::format};
 
@@ -20,17 +24,30 @@ pub fn sys_act_particle_calculator(
 pub fn sys_act_create_cpu_partilce_system(
     mut cmds: ResMut<ActionListCPUParticleSystem>,
     mut commands: Commands,
-    mut calculators: Query<&ParticleCalculatorBase>,
+    calculators: Query<&ParticleCalculatorBase>,
+    trailmodifiers: Query<&ParticleCalculatorTrail>,
+    // trails: Query<&ParticleTrail>,
+    trailbuffer: Res<ResParticleTrailBuffer>,
+    mut tree: ResMut<ActionListTransformNodeParent>,
+    mut allocator: ResMut<ResBindBufferAllocator>,
+    device: Res<PiRenderDevice>,
+    empty: Res<SingleEmptyEntity>,
+    mut matuse: ResMut<ActionListMaterialUse>,
+    mut disposeready: ResMut<ActionListDisposeReady>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(entity, sourcemesh, calculator, maxcount, count)| {
+    cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
             // log::warn!("create_cpu_partilce_system CANNT");
+            disposeready.push(OpsDisposeReady::ops(entity));
+            disposeready.push(OpsDisposeReady::ops(trailmesh));
+            disposeready.push(OpsDisposeReady::ops(trailgeo));
             return;
         };
 
-        if let Ok(base) = calculators.get(calculator.0) {
+        let idcalculator = calculator.0;
+        if let Ok(base) = calculators.get(idcalculator) {
             // log::warn!("create_cpu_partilce_system");
             let maxcount = base.maxcount;
             let mut vec_vec3_arr: Vec<Vec<Vector3>> = Vec::with_capacity(maxcount);
@@ -46,6 +63,7 @@ pub fn sys_act_create_cpu_partilce_system(
                 .insert(ParticleIDs::new(calculator, maxcount))
                 .insert(ParticleBaseRandom::new(maxcount))
                 .insert(ParticleAgeLifetime::new(maxcount))
+                .insert(ParticleDieWaitTime::new(maxcount))
                 .insert(ParticleStartColor::new(maxcount))
                 .insert(ParticleStartScaling::new(maxcount))
                 // .insert(ParticleStartRotation::new(maxcount))
@@ -65,10 +83,53 @@ pub fn sys_act_create_cpu_partilce_system(
                 .insert(ParticleCustomV4::new(maxcount))
                 .insert(ParticleGlobalPosList(vec_vec3_arr.clone()))
                 .insert(ParticleLocalPosList(vec_vec3_arr))
+                .insert(ParticleTrailMesh::new(trailmesh, trailgeo))
                 ;
+            if let (Ok(trailmodifier), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
+                log::warn!("Trail Init: ");
+                // if trails.contains(entity) == false {
+                    let id_mesh = trailmesh;
+                    let id_geo = trailgeo;
+                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut tree, &mut allocator, &device, &empty);
+        
+                    if let Some(mut cmd) = commands.get_entity(id_mesh) {
+                        // log::warn!("Mesh Ok");
+                        // meshtopology.push(OpsTopology::ops(id_mesh, PrimitiveTopology::TriangleStrip));
+                        cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
+                        cmd.insert(CCullMode(CullMode::Off));
+                        cmd.insert(GeometryID(id_geo));
+                    }
+                    if let Some(mut cmd) = commands.get_entity(id_geo) {
+                        // log::warn!("Geometry Ok");
+                        let mut verticescode = EVerticeExtendCodeComp(EVerticeExtendCode(EVerticeExtendCode::NONE));
+                        verticescode.0.0 += EVerticeExtendCode::TRIAL_BILLBOARD;
+                        let vertex_desc = vec![trailbuffer.buffer_desc()];
+                        let vblayout = VertexBufferLayoutsComp(VertexBufferLayouts::from(&vertex_desc));
+                        let slot = AssetDescVBSlot01::from(vertex_desc[0].clone());
+                        let geo_desc = GeometryDesc { list: vertex_desc };
+                        let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
+            
+                        ActionEntity::init(&mut cmd);
+                        cmd
+                            .insert(MeshID(id_mesh))
+                            .insert(vblayout)
+                            .insert(geo_desc)
+                            .insert(slot)
+                            .insert(buffer)
+                            .insert(verticescode)
+                            ;
+                    }
+                // }
+                
+                commands.entity(entity).insert(ParticleTrail::new(maxcount));
+            }
         } else if count < 1 {
             // log::warn!("create_cpu_partilce_system FAIL");
-            cmds.push(OpsCPUParticleSystem(entity, sourcemesh, calculator, maxcount, count + 1));
+            cmds.push(OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count + 1));
+        } else {
+            disposeready.push(OpsDisposeReady::ops(entity));
+            disposeready.push(OpsDisposeReady::ops(trailmesh));
+            disposeready.push(OpsDisposeReady::ops(trailgeo));
         }
 
     });
@@ -99,6 +160,20 @@ pub fn sys_act_partilce_system_state(
                     cmds.push(OpsCPUParticleSystemState::TimeScale(entity, timescale, count + 1));
                 }
             },
+        }
+    });
+}
+
+pub fn sys_act_particle_system_trail_material(
+    mut cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
+    items: Query<&ParticleTrailMesh>,
+    mut actions: ResMut<ActionListMaterialUse>,
+) {
+    cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, count)| {
+        if let Ok(trail) = items.get(entity) {
+            actions.push(OpsMaterialUse::Use(trail.mesh, idmat));
+        } else if count < 8 {
+            cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, count + 1))
         }
     });
 }

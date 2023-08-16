@@ -106,7 +106,9 @@ pi_hal = { path = "../pi_hal" }
 # pi_async_graph = {path = "../pi_async_graph"}
 
 [dev-dependencies]
-bevy                = { version="0.10", default-features = false, features=["bevy_winit"] }
+rand            = "0.8"
+bevy            = { version="0.10", default-features = false, features=["bevy_winit"] }
+pi_wy_rng       = { git = "https://github.com/GaiaWorld/pi_wy_rng.git" }
 
 [[example]]
 name = "cube"
