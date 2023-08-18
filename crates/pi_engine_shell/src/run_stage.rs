@@ -1,6 +1,6 @@
 
 
-use bevy::prelude::{SystemSet, Plugin, IntoSystemSetConfig, apply_system_buffers, IntoSystemConfig};
+use bevy::prelude::{SystemSet, Plugin, IntoSystemSetConfig, IntoSystemConfigs, Update, apply_deferred};
 use pi_bevy_render_plugin::PiRenderSystemSet;
 
 // pub struct RunStage {
@@ -150,34 +150,34 @@ pub enum ERunStageChap {
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.configure_set(ERunStageChap::Initial);
-        app.configure_set(ERunStageChap::_InitialApply.after(ERunStageChap::Initial));
-        app.configure_set(ERunStageChap::SecondInitial.after(ERunStageChap::_InitialApply));
-        app.configure_set(ERunStageChap::_SecondInitialApply.after(ERunStageChap::SecondInitial));
-        app.configure_set(ERunStageChap::ThirdInitial.after(ERunStageChap::_SecondInitialApply));
-        app.configure_set(ERunStageChap::_ThirdInitialApply.after(ERunStageChap::ThirdInitial));
-        app.configure_set(ERunStageChap::Command.after(ERunStageChap::_ThirdInitialApply));
-        app.configure_set(ERunStageChap::_CommandApply.after(ERunStageChap::Command));
-        app.configure_set(ERunStageChap::AnimeAmount.after(ERunStageChap::_CommandApply));
-        app.configure_set(ERunStageChap::Anime.after(ERunStageChap::AnimeAmount));
-        app.configure_set(ERunStageChap::Logic01.after(ERunStageChap::Anime));
-        app.configure_set(ERunStageChap::Logic02.after(ERunStageChap::Logic01));
-        app.configure_set(ERunStageChap::CalcWorldMatrix.after(ERunStageChap::Logic02));
-        app.configure_set(ERunStageChap::CalcRenderMatrix.after(ERunStageChap::CalcWorldMatrix));
-        app.configure_set(ERunStageChap::Uniform.after(ERunStageChap::CalcRenderMatrix));
-        app.configure_set(ERunStageChap::DrawUniformToGPU.after(ERunStageChap::Uniform));
-        app.configure_set(ERunStageChap::DrawBinds.after(ERunStageChap::DrawUniformToGPU));
-        app.configure_set(ERunStageChap::DrawBindGroups.after(ERunStageChap::DrawBinds));
-        app.configure_set(ERunStageChap::DrawBindGroupsLoaded.after(ERunStageChap::DrawBindGroups));
-        app.configure_set(ERunStageChap::DrawShader.after(ERunStageChap::DrawBindGroupsLoaded));
-        app.configure_set(ERunStageChap::DrawShaderLoaded.after(ERunStageChap::DrawShader));
-        app.configure_set(ERunStageChap::DrawPipeline.after(ERunStageChap::DrawShaderLoaded));
-        app.configure_set(ERunStageChap::DrawPipelineLoaded.after(ERunStageChap::DrawPipeline));
-        app.configure_set(ERunStageChap::DrawCall.after(ERunStageChap::DrawPipelineLoaded));
-        app.configure_set(ERunStageChap::Draw.after(ERunStageChap::DrawCall));
-        app.configure_set(ERunStageChap::Dispose.after(ERunStageChap::Draw));
-        app.configure_set(ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
-        app.configure_set(ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
+        app.configure_set(Update, ERunStageChap::Initial);
+        app.configure_set(Update, ERunStageChap::_InitialApply.after(ERunStageChap::Initial));
+        app.configure_set(Update, ERunStageChap::SecondInitial.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, ERunStageChap::_SecondInitialApply.after(ERunStageChap::SecondInitial));
+        app.configure_set(Update, ERunStageChap::ThirdInitial.after(ERunStageChap::_SecondInitialApply));
+        app.configure_set(Update, ERunStageChap::_ThirdInitialApply.after(ERunStageChap::ThirdInitial));
+        app.configure_set(Update, ERunStageChap::Command.after(ERunStageChap::_ThirdInitialApply));
+        app.configure_set(Update, ERunStageChap::_CommandApply.after(ERunStageChap::Command));
+        app.configure_set(Update, ERunStageChap::AnimeAmount.after(ERunStageChap::_CommandApply));
+        app.configure_set(Update, ERunStageChap::Anime.after(ERunStageChap::AnimeAmount));
+        app.configure_set(Update, ERunStageChap::Logic01.after(ERunStageChap::Anime));
+        app.configure_set(Update, ERunStageChap::Logic02.after(ERunStageChap::Logic01));
+        app.configure_set(Update, ERunStageChap::CalcWorldMatrix.after(ERunStageChap::Logic02));
+        app.configure_set(Update, ERunStageChap::CalcRenderMatrix.after(ERunStageChap::CalcWorldMatrix));
+        app.configure_set(Update, ERunStageChap::Uniform.after(ERunStageChap::CalcRenderMatrix));
+        app.configure_set(Update, ERunStageChap::DrawUniformToGPU.after(ERunStageChap::Uniform));
+        app.configure_set(Update, ERunStageChap::DrawBinds.after(ERunStageChap::DrawUniformToGPU));
+        app.configure_set(Update, ERunStageChap::DrawBindGroups.after(ERunStageChap::DrawBinds));
+        app.configure_set(Update, ERunStageChap::DrawBindGroupsLoaded.after(ERunStageChap::DrawBindGroups));
+        app.configure_set(Update, ERunStageChap::DrawShader.after(ERunStageChap::DrawBindGroupsLoaded));
+        app.configure_set(Update, ERunStageChap::DrawShaderLoaded.after(ERunStageChap::DrawShader));
+        app.configure_set(Update, ERunStageChap::DrawPipeline.after(ERunStageChap::DrawShaderLoaded));
+        app.configure_set(Update, ERunStageChap::DrawPipelineLoaded.after(ERunStageChap::DrawPipeline));
+        app.configure_set(Update, ERunStageChap::DrawCall.after(ERunStageChap::DrawPipelineLoaded));
+        app.configure_set(Update, ERunStageChap::Draw.after(ERunStageChap::DrawCall));
+        app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::Draw));
+        app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
+        app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
         
         // app.configure_set(
         //     (
@@ -206,29 +206,29 @@ impl Plugin for PluginRunstage {
         //     ).chain()
         // );
 
-        app.add_system(apply_system_buffers.in_set(ERunStageChap::_InitialApply));
-        app.add_system(apply_system_buffers.in_set(ERunStageChap::_SecondInitialApply));
-        app.add_system(apply_system_buffers.in_set(ERunStageChap::_ThirdInitialApply));
-        app.add_system(apply_system_buffers.in_set(ERunStageChap::_CommandApply));
-        app.add_system(apply_system_buffers.in_set(ERunStageChap::_DisposeApply));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::AnimeAmount));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::Anime));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::Logic01));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::Logic02));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::CalcWorldMatrix));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::CalcRenderMatrix));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::Uniform));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawUniformToGPU));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawBinds));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawBindGroups));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawBindGroupsLoaded));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawShader));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawShaderLoaded));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawPipeline));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawPipelineLoaded));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::DrawCall));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::Draw));
-        // app.add_system(apply_system_buffers.in_set(ERunStageChap::StateCheck));
+        app.add_system(apply_deferred.in_set(ERunStageChap::_InitialApply));
+        app.add_system(apply_deferred.in_set(ERunStageChap::_SecondInitialApply));
+        app.add_system(apply_deferred.in_set(ERunStageChap::_ThirdInitialApply));
+        app.add_system(apply_deferred.in_set(ERunStageChap::_CommandApply));
+        app.add_system(apply_deferred.in_set(ERunStageChap::_DisposeApply));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::AnimeAmount));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::Anime));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::Logic01));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::Logic02));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::CalcWorldMatrix));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::CalcRenderMatrix));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::Uniform));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawUniformToGPU));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawBinds));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawBindGroups));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawBindGroupsLoaded));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawShader));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawShaderLoaded));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawPipeline));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawPipelineLoaded));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawCall));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::Draw));
+        // app.add_system(apply_deferred.in_set(ERunStageChap::StateCheck));
     }
 }
 

@@ -328,6 +328,7 @@ impl Plugin for PluginStateToFile {
         app.insert_resource(StateRecordCfg { write_state: true });
         
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassBindGroupScene, Pass01>,
                 sys_mesh_state_by_pass::<PassBindGroupScene, Pass02>,
@@ -341,6 +342,7 @@ impl Plugin for PluginStateToFile {
         );
         
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassBindGroupModel, Pass01>,
                 sys_mesh_state_by_pass::<PassBindGroupModel, Pass02>,
@@ -353,6 +355,7 @@ impl Plugin for PluginStateToFile {
             ).in_set(ERunStageChap::StateCheck)
         );
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, Pass01>,
                 sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, Pass02>,
@@ -365,6 +368,7 @@ impl Plugin for PluginStateToFile {
             ).in_set(ERunStageChap::StateCheck)
         );
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, Pass01>,
                 sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, Pass02>,
@@ -377,6 +381,7 @@ impl Plugin for PluginStateToFile {
             ).in_set(ERunStageChap::StateCheck)
         );
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassBindGroups, Pass01>,
                 sys_mesh_state_by_pass::<PassBindGroups, Pass02>,
@@ -389,6 +394,7 @@ impl Plugin for PluginStateToFile {
             ).in_set(ERunStageChap::StateCheck)
         );
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassShader, Pass01>,
                 sys_mesh_state_by_pass::<PassShader, Pass02>,
@@ -401,6 +407,7 @@ impl Plugin for PluginStateToFile {
             ).in_set(ERunStageChap::StateCheck)
         );
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassPipeline, Pass01>,
                 sys_mesh_state_by_pass::<PassPipeline, Pass02>,
@@ -413,6 +420,7 @@ impl Plugin for PluginStateToFile {
             ).in_set(ERunStageChap::StateCheck)
         );
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_pass::<PassDraw, Pass01>,
                 sys_mesh_state_by_pass::<PassDraw, Pass02>,
@@ -425,6 +433,7 @@ impl Plugin for PluginStateToFile {
             ).in_set(ERunStageChap::StateCheck)
         );
         app.add_systems(
+			Update,
             (
                 sys_mesh_state_by_model::<AbstructMesh>,
                 sys_mesh_state_by_geometry,

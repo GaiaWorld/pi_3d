@@ -59,6 +59,7 @@ impl Plugin for PluginLighting {
         // app.add_system(sys_cmd_light_modify.in_set(ERunStageChap::Command));
         // app.add_system(sys_light_render_modify.in_set(ERunStageChap::Command));
         app.add_systems(
+			Update,
             (
                 sys_act_light_create,
                 sys_act_light_param,
@@ -66,6 +67,7 @@ impl Plugin for PluginLighting {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_light_render_modify,
                 sys_shadow_param_update,
@@ -74,6 +76,7 @@ impl Plugin for PluginLighting {
         );
         
         app.add_systems(
+			Update,
             (
                 sys_shadow_generator_apply_while_shadow_modify::<PassID01>,
                 sys_shadow_generator_apply_while_shadow_modify::<PassID02>,
@@ -102,6 +105,7 @@ impl Plugin for PluginLighting {
         // init_plugin_for_viewer::<LightDirection, Fn, DirectionalShadowProjection, Fn>(app, sys_world_matrix_calc, sys_directional_light_shadow_modify)
         // PluginViewer::<LightDirection, SysLightModifyCommand, DirectionalShadowProjection, SysDirectionalShadowModify>::default().init(engine, stages);
         app.add_systems(
+			Update,
             (
                 sys_calc_view_matrix_by_viewer::<LightDirection>.after(sys_world_matrix_calc),
                 sys_calc_proj_matrix::<DirectionalShadowProjection>,
@@ -109,6 +113,7 @@ impl Plugin for PluginLighting {
             ).chain().in_set(ERunStageChap::CalcWorldMatrix)
         );
         app.add_systems(
+			Update,
             (
                 sys_update_viewer_uniform::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
                 sys_update_viewer_model_list_by_viewer::<LightDirection, DirectionalShadowProjection>.run_if(should_run),

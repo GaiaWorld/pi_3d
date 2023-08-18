@@ -53,8 +53,8 @@ pi_hal                  = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 pi_assets               = "0.13"
 pi-async-rt             = "0.1"
 
-wgpu                = "0.15"
-bevy                = { version="0.10", default-features = false }
+wgpu                = "0.16"
+bevy                = { version="0.11", default-features = false }
 bevy_mod_debugdump  = { version="0.7" }
 
 log                 = "0.4"
@@ -95,6 +95,9 @@ pi_postprocess = { path = "../pi_post_process" }
 [patch."https://github.com/GaiaWorld/pi_gltf.git"]
 pi_gltf = { path = "../pi_gltf" }
 
+[patch."https://github.com/GaiaWorld/pi_spatial.git"]
+pi_spatial = { path = "../pi_spatial" }
+
 [patch."http://ser.yinengyun.com:10082/tech/winit.git"]
 winit = { path = "../winit" }
 
@@ -107,7 +110,7 @@ pi_hal = { path = "../pi_hal" }
 
 [dev-dependencies]
 rand            = "0.8"
-bevy            = { version="0.10", default-features = false, features=["bevy_winit"] }
+bevy            = { version="0.11", default-features = false, features=["bevy_winit"] }
 pi_wy_rng       = { git = "https://github.com/GaiaWorld/pi_wy_rng.git" }
 
 [[example]]

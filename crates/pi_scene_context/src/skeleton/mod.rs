@@ -23,11 +23,13 @@ impl Plugin for PluginSkeleton {
         app.insert_resource(ActionListBoneCreate::default());
         app.insert_resource(ActionListBonePose::default());
         app.add_systems(
+			Update,
             (
                 sys_act_skin_create,
             ).chain().in_set(ERunStageChap::Initial)
         );
         app.add_systems(
+			Update,
             (
                 sys_act_bone_create,
                 sys_act_bone_pose
@@ -41,6 +43,7 @@ impl Plugin for PluginSkeleton {
             sys_bones_initial.in_set(ERunStageChap::Command),
         );
         app.add_systems(
+			Update,
             (
                 sys_skin_dirty_by_bone,
                 sys_skin_buffer_update,

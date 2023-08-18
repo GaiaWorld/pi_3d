@@ -99,6 +99,7 @@ impl Plugin for PluginRenderer {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_act_model_blend.run_if(should_run),
                 sys_act_mesh_cull_mode.run_if(should_run),
@@ -130,6 +131,7 @@ impl Plugin for PluginRenderer {
 
 
         app.add_systems(
+			Update,
             (
                 sys_bind_buffer_apply.run_if(should_run).in_set(ERunStageChap::DrawUniformToGPU),
                 sys_bind_group_loaded.run_if(should_run).in_set(ERunStageChap::DrawBindGroupsLoaded),
@@ -139,6 +141,7 @@ impl Plugin for PluginRenderer {
             )
         );
         app.add_systems(
+			Update,
             (
                 sys_set0_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
                 sys_set0_modify_by_renderer::<Pass02, PassID02>.run_if(should_run),
@@ -151,6 +154,7 @@ impl Plugin for PluginRenderer {
             ).in_set(ERunStageChap::DrawBinds)
         );
         app.add_systems(
+			Update,
             (
 
                 sys_set1_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
@@ -164,6 +168,7 @@ impl Plugin for PluginRenderer {
             ).in_set(ERunStageChap::DrawBinds)
         );
         app.add_systems(
+			Update,
             (
 
                 sys_set2_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
@@ -178,6 +183,7 @@ impl Plugin for PluginRenderer {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_set1_modify_by_pass::<Pass01, PassID01>.run_if(should_run),
                 sys_set1_modify_by_pass::<Pass02, PassID02>.run_if(should_run),
@@ -191,6 +197,7 @@ impl Plugin for PluginRenderer {
         );
         
         app.add_systems(
+			Update,
             (
                 sys_set0_modify_by_scene::<Pass01, PassID01>.run_if(should_run),
                 sys_set0_modify_by_scene::<Pass02, PassID02>.run_if(should_run),
@@ -204,6 +211,7 @@ impl Plugin for PluginRenderer {
         );
         
         app.add_systems(
+			Update,
             (
 
                 sys_set1_modify_by_model::<Pass01, PassID01>.run_if(should_run),
@@ -218,6 +226,7 @@ impl Plugin for PluginRenderer {
         );
         
         app.add_systems(
+			Update,
             (
 
                 sys_set2_modify_by_model::<Pass01, PassID01>.run_if(should_run),
@@ -233,6 +242,7 @@ impl Plugin for PluginRenderer {
 
 
         app.add_systems(
+			Update,
             (
                 sys_pass_bind_groups::<Pass01, PassID01>.run_if(should_run),
                 sys_pass_bind_groups::<Pass02, PassID02>.run_if(should_run),
@@ -246,6 +256,7 @@ impl Plugin for PluginRenderer {
         );
         
         app.add_systems(
+			Update,
             (
                 sys_pass_shader_request_by_model::<Pass01, PassID01>.run_if(should_run),
                 sys_pass_shader_request_by_model::<Pass02, PassID02>.run_if(should_run),
@@ -259,6 +270,7 @@ impl Plugin for PluginRenderer {
         );
         
         app.add_systems(
+			Update,
             (
                 sys_pass_shader_request_by_pass::<Pass01, PassID01>.run_if(should_run),
                 sys_pass_shader_request_by_pass::<Pass02, PassID02>.run_if(should_run),
@@ -272,6 +284,7 @@ impl Plugin for PluginRenderer {
         );
         
         app.add_systems(
+			Update,
             (
                 sys_pass_pipeline_request_by_model::<Pass01, PassID01>.run_if(should_run),
                 sys_pass_pipeline_request_by_model::<Pass02, PassID02>.run_if(should_run),
@@ -284,6 +297,7 @@ impl Plugin for PluginRenderer {
             ).in_set(ERunStageChap::DrawPipeline)
         );
         app.add_systems(
+			Update,
             (
                 sys_pass_pipeline_request_by_pass::<Pass01, PassID01>.run_if(should_run),
                 sys_pass_pipeline_request_by_pass::<Pass02, PassID02>.run_if(should_run),
@@ -296,6 +310,7 @@ impl Plugin for PluginRenderer {
             ).in_set(ERunStageChap::DrawPipeline)
         );
         app.add_systems(
+			Update,
             (
                 sys_pass_draw_modify_by_model::<Pass01, PassID01>.run_if(should_run),
                 sys_pass_draw_modify_by_model::<Pass02, PassID02>.run_if(should_run),
@@ -308,6 +323,7 @@ impl Plugin for PluginRenderer {
             ).in_set(ERunStageChap::DrawCall)
         );
         app.add_systems(
+			Update,
             (
                 sys_pass_draw_modify_by_pass::<Pass01, PassID01>.run_if(should_run),
                 sys_pass_draw_modify_by_pass::<Pass02, PassID02>.run_if(should_run),

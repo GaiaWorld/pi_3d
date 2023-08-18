@@ -10,14 +10,14 @@ keywords = ["3d scene"]
 
 [dependencies]
 pi_share        = "0.4"
-pi_slotmap      = "0.1"
+pi_slotmap = "0.1"
 pi_hash         = "0.1"
 pi_assets       = "0.13"
 pi_atom         = { version="0.2", features = ["serde"] }
 
-wgpu            = "0.15"
-naga            = { version = "0.10", features = [ "glsl-in", ] }
-bevy            = { version="0.10", default-features = false }
+wgpu            = "0.16"
+naga            = { version = "0.12", features = [ "glsl-in", ] }
+bevy            = { version="0.11", default-features = false }
 
 log             = "0.4"
 env_logger      = "0.9"

@@ -327,6 +327,7 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
         if app.world.contains_resource::<ImageTextureLoader>() == false {
             app.insert_resource(ImageTextureLoader::default());
             app.add_systems(
+				Update,
                 (
                     sys_image_texture_load_launch,
                     sys_image_texture_loaded
@@ -335,6 +336,7 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
         }
         app.insert_resource(ImageTextureViewLoader::<K>::default());
         app.add_systems(
+			Update,
             (
                 sys_image_texture_view_load_launch::<K, D>,
                 sys_image_texture_view_loaded_check::<K, D>,

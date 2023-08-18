@@ -4,7 +4,7 @@ mod command_sys;
 use core::fmt::Debug;
 use std::marker::PhantomData;
 
-use bevy::prelude::{App, Plugin, IntoSystemConfigs, Entity, IntoSystemConfig, Component, Resource};
+use bevy::prelude::{App, Plugin, IntoSystemConfigs, Entity, Component, Resource, Update};
 
 pub use base::*;
 pub use command::*;
@@ -29,6 +29,7 @@ impl Plugin for PluginGlobalAnimation {
         // app.insert_resource(ActionListAddTargetAnime::default());
 
         app.add_systems(
+			Update,
             (
                 sys_anime_group_attach.run_if(should_run),
                 sys_calc_reset_while_animationgroup_start.run_if(should_run),
@@ -80,6 +81,7 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
             sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear)
         );
         app.add_systems(
+			Update,
             (
                 sys_calc_reset_animatablecomp::<D, R>.run_if(should_run),
                 sys_calc_type_anime::<D>.run_if(should_run)

@@ -30,14 +30,8 @@ pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 
 
 
-naga = { version = "0.9", features = [
-    "glsl-in",
-    "spv-in",
-    "spv-out",
-    "wgsl-in",
-    "wgsl-out",
-] }
-wgpu = "0.15"
+naga = { version = "0.12", features = ["glsl-in"] }
+wgpu = "0.16"
 env_logger = "0.9"
 log = "0.4"
 smallvec = "1.9"

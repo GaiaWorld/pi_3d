@@ -96,6 +96,7 @@ impl Plugin for PluginNodeMaterial {
         app.insert_resource(ActionListOpacityTexTilloff::default());
         
         app.add_systems(
+			Update,
             (
                 sys_act_alpha,
                 sys_act_alphacutoff,

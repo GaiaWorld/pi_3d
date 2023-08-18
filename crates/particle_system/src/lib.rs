@@ -50,6 +50,7 @@ impl Plugin for PluginParticleSystem {
             sys_act_create_cpu_partilce_system.in_set(ERunStageChap::SecondInitial),
         );
         app.add_systems(
+			Update,
             (
                 sys_act_particle_system_trail_material,
                 sys_act_partilce_system_state.run_if(should_run),
@@ -58,6 +59,7 @@ impl Plugin for PluginParticleSystem {
             ).chain().in_set(ERunStageChap::Command),
         );
         app.add_systems(
+			Update,
             (
                 sys_emitter.run_if(should_run),
                 sys_start_lifetime.run_if(should_run),
@@ -68,6 +70,7 @@ impl Plugin for PluginParticleSystem {
             ).after(sys_emission).in_set(ERunStageChap::Command),
         );
         app.add_systems(
+			Update,
             (
                 sys_size_over_life_time.run_if(should_run),
                 sys_color_over_life_time.run_if(should_run),
@@ -83,6 +86,7 @@ impl Plugin for PluginParticleSystem {
             sys_direction.run_if(should_run).after(sys_velocity_over_life_time).in_set(ERunStageChap::Command),
         );
         app.add_systems(
+			Update,
             (
                 sys_color_by_speed.run_if(should_run),
                 sys_size_by_speed.run_if(should_run),

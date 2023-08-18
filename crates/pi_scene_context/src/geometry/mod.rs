@@ -83,12 +83,14 @@ impl Plugin for PluginGeometry {
         app.insert_resource(GeometryVBLoader::default());
 
         app.add_systems(
+			Update,
             (
                 sys_act_geometry_create.in_set(ERunStageChap::Initial),
                 sys_vertex_buffer_loaded.in_set(ERunStageChap::Command),
             )
         );
         app.add_systems(
+			Update,
             (
                 sys_vertex_buffer_loaded_01,
                 sys_vertex_buffer_loaded_02,

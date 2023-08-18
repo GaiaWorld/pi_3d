@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["3d scene"]
 
 [dependencies]
-wgpu            = "0.15"
+wgpu            = "0.16"
 env_logger      = "0.9"
 log             = "0.4"
 smallvec        = "1.9"
@@ -24,9 +24,9 @@ pi_spatial      = { git = "https://github.com/GaiaWorld/pi_spatial.git" }
 
 
 approx          = "0.5"
-naga            = { version = "0.10", features = [ "glsl-in" ] }
+naga            = { version = "0.12", features = [ "glsl-in" ] }
 bytemuck        = { version = "1.4", features = [ "derive" ] }
-bevy            = { version="0.10", default-features = false }
+bevy            = { version="0.11", default-features = false }
 image           = "0.24"
 winit           = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
 pollster        = "0.2"
@@ -36,7 +36,6 @@ pi_map              = "0.1"
 pi_slotmap          = "0.1"
 pi_hash             = "0.1"
 pi_share            = "0.4"
-pi_graph            = "0.1"
 pi_atom             = { version="0.2", features = ["serde"] }
 
 pi_time             = "0.3"
@@ -44,7 +43,6 @@ pi_assets           = "0.13"
 pi_futures          = "0.1"
 
 pi-async-rt         = "0.1"
-pi_idtree           = "0.1"
 pi_slotmap_tree     = "0.3"
 pi_hal              = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 

@@ -11,9 +11,9 @@ keywords = ["pi engine"]
 [dependencies]
 log                 = "0.4"
 env_logger          = "0.9"
-wgpu                = "0.15"
-naga                = { version = "0.10", features = [ "glsl-in", ] }
-bevy                = { version = "0.10", default-features = false }
+wgpu                = "0.16"
+naga                = { version = "0.12", features = [ "glsl-in", ] }
+bevy                = { version = "0.11", default-features = false }
 
 smallvec            = "1.9"
 crossbeam           = "0.8"
@@ -32,10 +32,9 @@ pollster            = "0.2"
 spin_sleep          = "1.1"
 derive_deref        = "1.1"
 
-pi_slotmap          = "0.1"
+pi_slotmap = "0.1"
 pi_hash             = "0.1"
 pi_share            = "0.4"
-pi_graph            = "0.1"
 
 pi_time             = "0.3"
 
@@ -46,7 +45,6 @@ pi_assets           = "0.13"
 pi_futures          = "0.1"
 
 pi-async-rt             = "0.1"
-pi_idtree           = "0.1"
 pi_slotmap_tree     = "0.3"
 pi_hal              = { git = "https://github.com/GaiaWorld/pi_hal.git" }
 

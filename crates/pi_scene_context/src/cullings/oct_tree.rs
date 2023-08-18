@@ -179,7 +179,9 @@ impl Plugin for PluginBoundingOctTree {
         app.insert_resource(ActionListAddBindingInfo::default());
         app.insert_resource(ActionListRemoveBindingInfo::default());
 
-        app.add_systems((
+        app.add_systems(
+			Update,
+			(
             sys_add_binding_info,
             sys_remove_binding_info,
             sys_check_binding_info,

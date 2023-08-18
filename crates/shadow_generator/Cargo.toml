@@ -25,14 +25,14 @@ pi_share = "0.4"
 pi_assets = "0.13"
 pi_atom = { version="0.2", features = ["serde"] }
 
-naga = { version = "0.10", features = [
+naga = { version = "0.12", features = [
     "glsl-in",
     "spv-in",
     "spv-out",
     "wgsl-in",
     "wgsl-out",
 ] }
-wgpu = "0.15"
+wgpu = "0.16"
 env_logger = "0.9"
 log = "0.4"
 smallvec = "1.9"

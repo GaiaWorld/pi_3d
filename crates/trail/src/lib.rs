@@ -43,6 +43,7 @@ impl Plugin for PluginTrail {
         
         app.add_system(sys_trail_update.in_set(ERunStageChap::CalcRenderMatrix));
         app.add_systems(
+			Update,
             (
                 sys_dispose_about_trail_linked,
                 sys_dispose_about_trail

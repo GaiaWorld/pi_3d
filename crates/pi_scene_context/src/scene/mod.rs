@@ -42,6 +42,7 @@ impl Plugin for PluginScene {
         );
         
         app.add_systems(
+			Update,
             (
                 sys_act_scene_time,
                 sys_act_scene_ambientcolor,
@@ -53,6 +54,7 @@ impl Plugin for PluginScene {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_bind_update_scene_ambient,
                 sys_bind_update_scene_fog,
