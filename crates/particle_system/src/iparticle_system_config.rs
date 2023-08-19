@@ -5,6 +5,17 @@ use crate::{
 };
 use pi_engine_shell::prelude::*;
 
+/**
+ * 形状发射器类型
+ */
+pub const TSHAPE_TYPE_CONE: isize = 0;
+pub const TSHAPE_TYPE_SPHERE: isize = 1;
+pub const TSHAPE_TYPE_BOX: isize = 2;
+pub const TSHAPE_TYPE_CIRCLE: isize = 3;
+pub const TSHAPE_TYPE_HEMISPHERE: isize = 4;
+pub const TSHAPE_TYPE_EDGE: isize = 5;
+pub const TSHAPE_TYPE_RECTANGLE: isize = 6;
+
 
 /**
  * ArcMode 类型

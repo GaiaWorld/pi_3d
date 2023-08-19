@@ -11,7 +11,7 @@ impl QuadBuilder {
     const KEY_BUFFER_NORMAL:    &'static str = "QuadNormal";
     const KEY_BUFFER_UV:        &'static str = "QuadUV";
     const KEY_BUFFER_INDICES:   &'static str = "QuadIndices";
-    const KEY_BUFFER:           &'static str = "CubeBuildin";
+    const KEY_BUFFER:           &'static str = "QuadBuildin";
     // const KEY_BUFFER_COLOR4:    IDAssetVertexBuffer = -2005;
     // const KEY_BUFFER_POSITION:  IDAssetVertexBuffer = -2004;
     // const KEY_BUFFER_NORMAL:    IDAssetVertexBuffer = -2003;

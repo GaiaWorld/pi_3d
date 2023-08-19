@@ -5,6 +5,8 @@ use crate::{iparticle_system_config::{
 use pi_scene_math::{Matrix, Vector3};
 use pi_wy_rng::WyRng;
 use rand::{SeedableRng, Rng};
+
+
 pub trait IShapeEmitterTypeValue {
     const POSITION: Vector3;
     const ROTATION: Vector3;

@@ -184,15 +184,15 @@ impl SingleEmptyEntity {
 
 pub trait TRenderAlignmentCalc {
     fn calc_rotation(&self, g_rotation: &Rotation3, g_rotation_euler: (Number, Number, Number), g_velocity: &Vector3) -> Rotation3;
-    fn calc_local(&self, g_velocity: &Vector3) -> Option<Matrix>;
+    fn calc_local(&self, g_velocity: &Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix>;
 }
 impl TRenderAlignmentCalc for ERenderAlignment {
     fn calc_rotation(&self, g_rotation: &Rotation3, g_rotation_euler: (Number, Number, Number), g_velocity: &Vector3) -> Rotation3 {
         let mut m = Rotation3::identity();
         match self {
             ERenderAlignment::View => {
-                let (_, _, z) =  g_rotation_euler;
-                m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
+                // let (_, _, z) =  g_rotation_euler;
+                // m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
             },
             ERenderAlignment::World => {
                 // m = Rotation3::identity();
@@ -201,60 +201,64 @@ impl TRenderAlignmentCalc for ERenderAlignment {
                 m = g_rotation.clone();
             },
             ERenderAlignment::Facing => {
-                let (_, _, z) =  g_rotation_euler;
-                m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
+                // let (_, _, z) =  g_rotation_euler;
+                // m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
             },
             ERenderAlignment::Velocity => {
                 let vlen = CoordinateSytem3::length(g_velocity);
-                let z_axis = if vlen > 0.00000001 {
-                    g_velocity.normalize()
+                let z_axis = if vlen > f32::EPSILON {
+                    // log::warn!("Vel A");
+                    g_velocity.scale(1.0 / vlen)
                 } else {
+                    // log::warn!("Vel B");
                     Vector3::new(0., 0., 1.)
                 };
+                m = CoordinateSytem3::quaternion_from_unit_vector(&Vector3::z_axis(), &z_axis).to_rotation_matrix();
 
-                let mut y_axis = Vector3::new(0., 1., 0.);
-                let mut x_axis = y_axis.cross(&z_axis);
-                if CoordinateSytem3::length(&x_axis) > 0. {
-                    x_axis.normalize_mut();
-                    y_axis = z_axis.cross(&x_axis);
-                } else {
-                    y_axis = Vector3::new(1., 0., 0.);
-                    x_axis = y_axis.cross(&z_axis);
-                }
-                m = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
+                // let mut y_axis = Vector3::new(0., 1., 0.);
+                // let mut x_axis = y_axis.cross(&z_axis);
+                // if CoordinateSytem3::length(&x_axis) > f32::EPSILON {
+                //     x_axis.normalize_mut();
+                //     y_axis = z_axis.cross(&x_axis);
+                // } else {
+                //     y_axis = Vector3::new(1., 0., 0.);
+                //     x_axis = y_axis.cross(&z_axis);
+                // }
+                // m = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
             },
             ERenderAlignment::StretchedBillboard => {
                 let vlen = CoordinateSytem3::length(g_velocity);
-                let x_axis = if vlen > 0.00000001 {
-                    g_velocity.normalize()
+                let x_axis = if vlen > f32::EPSILON {
+                    g_velocity.scale(-1.0 / vlen)
                 } else {
                     Vector3::new(1., 0., 0.)
                 };
+                m = CoordinateSytem3::quaternion_from_unit_vector(&Vector3::x_axis(), &x_axis).to_rotation_matrix();
 
-                let mut y_axis = Vector3::new(0., 1., 0.);
-                let mut z_axis = x_axis.cross(&y_axis);
-                if CoordinateSytem3::length(&z_axis) > 0. {
-                    z_axis.normalize_mut();
-                    y_axis = z_axis.cross(&x_axis);
-                } else {
-                    y_axis = Vector3::new(0., 0., 1.);
-                    z_axis = x_axis.cross(&y_axis);
-                }
-                m = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
+                // let mut y_axis = Vector3::new(0., 1., 0.);
+                // let mut z_axis = x_axis.cross(&y_axis);
+                // if CoordinateSytem3::length(&z_axis) > f32::EPSILON {
+                //     z_axis.normalize_mut();
+                //     y_axis = z_axis.cross(&x_axis);
+                // } else {
+                //     y_axis = Vector3::new(0., 0., 1.);
+                //     z_axis = x_axis.cross(&y_axis);
+                // }
+                // m = CoordinateSytem3::rotation_matrix_from_axises(&x_axis, &y_axis, &z_axis);
 
             },
             ERenderAlignment::HorizontalBillboard => {
-                let (_, _, z) =  g_rotation_euler;
-                m = CoordinateSytem3::rotation_matrix_from_euler_angles((90_f32).to_radians(), 0., z);
+                // let (_, _, z) =  g_rotation_euler;
+                m = CoordinateSytem3::rotation_matrix_from_euler_angles((-90_f32).to_radians(), 0., 0.);
             },
             ERenderAlignment::VerticalBillboard => {
-                let (_, _, z) =  g_rotation_euler;
-                m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
+                // let (_, _, z) =  g_rotation_euler;
+                // m = CoordinateSytem3::rotation_matrix_from_euler_angles(0., 0., z);
             },
         }
         m
     }
-    fn calc_local(&self, g_velocity: &Vector3) -> Option<Matrix> {
+    fn calc_local(&self, g_velocity: &Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix> {
         match self {
             ERenderAlignment::View => None,
             ERenderAlignment::World => None,
@@ -263,9 +267,9 @@ impl TRenderAlignmentCalc for ERenderAlignment {
             ERenderAlignment::Velocity => None,
             ERenderAlignment::StretchedBillboard => {
                 let mut result = Matrix::identity();
-                let vlen = CoordinateSytem3::length(g_velocity);
+                let vlen = CoordinateSytem3::length(g_velocity) + length_scale + length_modify;
                 let scaling = Vector3::new(vlen, 1., 1.);
-                let translation = Vector3::new(-0.5 * vlen, 0., 0.);
+                let translation = Vector3::new(0.5 * vlen, 0., 0.);
                 CoordinateSytem3::matrix4_compose_rotation(&scaling, &Rotation3::identity(), &translation, &mut result);
                 Some(result)
             },

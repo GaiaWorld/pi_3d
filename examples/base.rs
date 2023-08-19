@@ -1,6 +1,7 @@
 
 
 use pi_3d::PluginBundleDefault;
+use pi_3d_state::StateGlobal;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_group::AnimationGroupID};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
@@ -39,55 +40,68 @@ pub fn main() {
     
 }
 
-pub fn sys_nodeinfo(
-    materials: Query<&MaterialRefs>,
-    geometries: Query<&GeometryDesc>,
-    transformnodes: Query<&TransformNode>,
-    meshes: Query<&Mesh>,
-    instancemeshes: Query<&InstanceMesh>,
-    cameras: Query<&Camera>,
-    renderers: Query<&Renderer>,
-    lights: Query<&Light>,
-    passes: Query<&ModelPass>,
-    skeletons: Query<&Skeleton>,
-    bones: Query<&BoneParent>,
-    pipeline_center: Res<AssetDataCenterPipeline3D>,
-    asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-    asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
+pub struct DemoScene;
+impl DemoScene {
+    pub fn new(
+        commands: &mut Commands,
+        scenecmds: &mut ActionSetScene,
+        cameracmds: &mut ActionSetCamera,
+        transformcmds: &mut ActionSetTransform,
+        animegroupcmd: &mut ActionSetAnimationGroup,
+        final_render: &mut WindowRenderer,
+        renderercmds: &mut ActionSetRenderer,
+        camera_size: f32,
+        camera_fov: f32,
+        camera_position: (f32, f32, f32),
+        orthographic_camera: bool
+    ) -> (Entity, Entity) {
+        final_render.cleardepth = 0.0;
+
+        let scene = commands.spawn_empty().id();
+        animegroupcmd.scene_ctxs.init_scene(scene);
+        scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
+
+        let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
+        cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
+        transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, camera_position.0, camera_position.1, camera_position.2));
+        cameracmds.mode.push(OpsCameraMode::ops(camera01, orthographic_camera));
+        cameracmds.active.push(OpsCameraActive::ops(camera01, true));
+        cameracmds.size.push(OpsCameraOrthSize::ops(camera01, camera_size));
+        cameracmds.fov.push(OpsCameraFov::ops(camera01, camera_fov));
+        
+        let desc = RendererGraphicDesc {
+            pre: Some(final_render.clear_entity),
+            curr: String::from("TestCamera"),
+            next: Some(final_render.render_entity),
+            passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
+        };
+        let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
+        renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
+        renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
+        cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+
+        (scene, camera01)
+    }
+}
+
+pub fn sys_scene_time_from_frame(
+    mut scenes: Query<&mut SceneTime>,
+    frame: Res<SingleFrameTimeCommand>,
 ) {
-    let count_material = materials.iter().count();
-    let count_geometry = geometries.iter().count();
-    let count_transform = transformnodes.iter().count();
-    let count_mesh = meshes.iter().count();
-    let count_instance = instancemeshes.iter().count();
-    let count_camera = cameras.iter().count();
-    let count_renderer = renderers.iter().count();
-    let count_light = lights.iter().count();
-    let count_pass = passes.iter().count();
-    let count_skeleton = skeletons.iter().count();
-    let count_bone = bones.iter().count();
+    scenes.iter_mut().for_each(|mut comp| {
+        let time = comp.time_ms + frame.delta_ms();
+        // log::warn!("Time: {:?}, Delta MS: {:?}", time, frame.delta_ms());
+        comp.reset(time);
+    });
+}
 
-    let count_pipeline = pipeline_center.0.asset_mgr().len();
-    let count_bindgroup = asset_mgr_bindgroup.0.len();
-    let count_bindgrouplayout = asset_mgr_bindgroup_layout.0.len();
-
-    log::warn!(
-        "Materials: {:?}, Geometry: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Renderer: {:?}, Light: {:?}, Pass: {:?}, Skeleton: {:?}, Bone: {:?}, Pipeline: {:?}, BindGroup: {:?}, BindGroupLayout: {:?}",
-        count_material,
-        count_geometry,
-        count_transform,
-        count_mesh,
-        count_instance,
-        count_camera,
-        count_renderer,
-        count_light,
-        count_pass,
-        count_skeleton,
-        count_bone,
-        count_pipeline,
-        count_bindgroup,
-        count_bindgrouplayout,
-    );
+pub struct PluginSceneTimeFromPluginFrame;
+impl Plugin for PluginSceneTimeFromPluginFrame {
+    fn build(&self, app: &mut App) {
+        app.add_system(
+            sys_scene_time_from_frame.after(pi_engine_shell::frame_time::sys_frame_time).in_set(ERunStageChap::Initial)
+        );
+    }
 }
 
 pub fn test_plugins() -> App {
@@ -118,7 +132,9 @@ pub fn test_plugins() -> App {
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugins(PluginGroupNodeMaterialAnime);
-    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
+    app.add_plugin(PluginSceneTimeFromPluginFrame);
+
+    app.world.get_resource_mut::<StateGlobal>().unwrap().debug = true;
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
@@ -153,10 +169,12 @@ pub fn test_plugins_with_gltf() -> App {
     app.add_plugin(PluginNodeMaterial);
     app.add_plugin(PluginUnlitMaterial);
     app.add_plugins(PluginGroupNodeMaterialAnime);
-    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
+    app.add_plugin(PluginSceneTimeFromPluginFrame);
     app.add_plugin(PluginParticleSystem);
     app.add_plugin(pi_gltf2_load::PluginGLTF2Res);
     app.add_plugin(pi_trail_renderer::PluginTrail);
+
+    app.world.get_resource_mut::<StateGlobal>().unwrap().debug = true;
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

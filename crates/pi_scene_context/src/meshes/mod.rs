@@ -48,7 +48,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListBoneOffset::default());
 
         app.add_system(
-            sys_act_mesh_create.in_set(ERunStageChap::Initial)
+            sys_create_mesh.in_set(ERunStageChap::Initial)
         );
         app.add_system(
             sys_act_instanced_mesh_create.in_set(ERunStageChap::Initial)
@@ -102,9 +102,9 @@ impl crate::Plugin for PluginMesh {
 
         app.add_systems(
             (
-                sys_dispose_about_mesh,
-                sys_dispose_about_instance,
-                sys_dispose_about_pass,
+                sys_dispose_about_mesh.run_if(should_run),
+                sys_dispose_about_instance.run_if(should_run),
+                sys_dispose_about_pass.run_if(should_run),
             ).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
     }

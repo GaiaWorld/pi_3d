@@ -7,10 +7,10 @@ use super::{
     base::*,
 };
 
-pub struct OpsGeomeryCreate(pub(crate) Entity, pub(crate) Entity, pub(crate) Vec<VertexBufferDesc>, pub(crate) Option<IndicesBufferDesc>);
+pub struct OpsGeomeryCreate(pub(crate) Entity, pub(crate) Entity, pub(crate) Vec<VertexBufferDesc>, pub(crate) Option<IndicesBufferDesc>, pub(crate) u8);
 impl OpsGeomeryCreate {
     pub fn ops(mesh: Entity, geo: Entity, vertices: Vec<VertexBufferDesc>, indices: Option<IndicesBufferDesc>) -> Self {
-        Self(mesh, geo, vertices, indices)
+        Self(mesh, geo, vertices, indices, 0)
     }
 }
 pub type ActionListGeometryCreate = ActionList<OpsGeomeryCreate>;

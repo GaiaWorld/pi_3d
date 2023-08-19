@@ -29,13 +29,21 @@ impl SceneTime {
             self.last_time_ms   = 0;
             self.time_ms        = 0;
         } else {
+            if time < self.time_ms {
+                // log::warn!("Curr: {:?}, Last: {:?}", time, self.time_ms);
+                return;
+            }
             self.last_time_ms   = self.time_ms;
             self.time_ms        = time;
         }
     }
 
     pub fn delta_ms(&self) -> u64 {
-        self.time_ms - self.last_time_ms
+        if self.time_ms > self.last_time_ms {
+            self.time_ms - self.last_time_ms
+        } else {
+            0
+        }
     }
     // pub fn data(&self, data: &mut Vec<f32>) {
     //     let time_ms = self.time_ms as f32 * 0.001;
@@ -48,7 +56,7 @@ impl SceneTime {
     //         data.push(*v);
     //     });
     // }
-    pub fn update(&mut self, bind: &BindSceneEffect) {
+    pub fn update(&self, bind: &BindSceneEffect) {
         let time_ms = self.time_ms as f32 * 0.001;
         let delta_ms = self.delta_ms() as f32 * 0.001;
         let values = [

@@ -24,12 +24,12 @@ impl Plugin for PluginSkeleton {
         app.insert_resource(ActionListBonePose::default());
         app.add_systems(
             (
-                sys_act_skin_create,
+                sys_create_skin,
             ).chain().in_set(ERunStageChap::Initial)
         );
         app.add_systems(
             (
-                sys_act_bone_create,
+                sys_create_bone,
                 sys_act_bone_pose
             ).chain().in_set(ERunStageChap::Initial)
         );
@@ -46,7 +46,7 @@ impl Plugin for PluginSkeleton {
                 sys_skin_buffer_update,
             ).chain().in_set(ERunStageChap::Uniform)
         );
-        app.add_system(sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_system(sys_dispose_about_skeleton.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     // fn init(
     //     &mut self,

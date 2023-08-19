@@ -14,7 +14,7 @@ use crate::{
     pass::{EPassTag, PassTagOrders},
     scene::command_sys::ActionScene,
     transforms::{command_sys::*, prelude::*},
-    animation::command_sys::*, prelude::GlobalEnable,
+    animation::command_sys::*, prelude::{GlobalEnable, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady},
 };
 
 use super::{
@@ -27,7 +27,7 @@ use super::{
     command::*,
 };
 
-pub fn sys_act_light_create(
+pub fn sys_create_light(
     mut cmds: ResMut<ActionListLightCreate>,
     mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
@@ -37,6 +37,8 @@ pub fn sys_act_light_create(
     mut matusecmds: ResMut<ActionListMaterialUse>,
     empty: Res<SingleEmptyEntity>,
     mut renderercmds: ResMut<ActionListRendererModify>,
+    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity, name)| {
         let mat = commands.spawn_empty().id();
@@ -50,6 +52,7 @@ pub fn sys_act_light_create(
         let mut lightcmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
+            disposereadylist.push(OpsDisposeReady::ops(entity));
             return;
         };
 

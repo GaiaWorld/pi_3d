@@ -48,7 +48,7 @@ pub fn sys_scene_anime_ctx(
         // ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos);
         {
             let delta_ms = scene_time.delta_ms() as KeyFrameCurveValue * ctx.0.time_scale as KeyFrameCurveValue;
-            // log::warn!("Scene Anime Deltatime {:?}", delta_ms);
+            // log::warn!("Scene Anime Deltatime  {:?} {:?} {:?}", delta_ms, scene_time.delta_ms(), ctx.0.time_scale);
             let ctx = &mut ctx.0;
             for (id_group, group_info) in ctx.group_infos.iter_mut() {
                 group_info.start_event = false;
@@ -100,11 +100,11 @@ pub fn sys_dispose_about_animationgroup(
     mut scenectxs: ResMut<SceneAnimationContextMap>,
 ) {
     items.iter().for_each(|(state, scene, groups)| {
-        if state.0 == true {
-            groups.map.iter().for_each(|(k, id_group)| {
-                scenectxs.delete_group(&scene.0, *id_group);
-                animeglobal.remove(id_group);
-            });
-        }
+        if state.0 == false { return; }
+
+        groups.map.iter().for_each(|(k, id_group)| {
+            scenectxs.delete_group(&scene.0, *id_group);
+            animeglobal.remove(id_group);
+        });
     });
 }

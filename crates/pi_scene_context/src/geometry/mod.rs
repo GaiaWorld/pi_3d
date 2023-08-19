@@ -84,8 +84,8 @@ impl Plugin for PluginGeometry {
 
         app.add_systems(
             (
-                sys_act_geometry_create.in_set(ERunStageChap::Initial),
-                sys_vertex_buffer_loaded.in_set(ERunStageChap::Command),
+                sys_create_geometry.in_set(ERunStageChap::Initial),
+                sys_vertex_buffer_loaded.in_set(ERunStageChap::SecondInitial),
             )
         );
         app.add_systems(
@@ -96,14 +96,14 @@ impl Plugin for PluginGeometry {
                 sys_vertex_buffer_loaded_04,
                 sys_vertex_buffer_loaded_05,
                 sys_vertex_buffer_loaded_06,
-            ).in_set(ERunStageChap::Uniform)
+            ).chain().in_set(ERunStageChap::Uniform)
         );
         
         app.add_system(
-            sys_geometry_enable.in_set(ERunStageChap::Uniform)
+            sys_geometry_enable.after(sys_vertex_buffer_loaded_06).in_set(ERunStageChap::Uniform)
         );
         app.add_system(
-            sys_dispose_about_geometry.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            sys_dispose_about_geometry.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
     }
 }

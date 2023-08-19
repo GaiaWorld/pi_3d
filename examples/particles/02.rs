@@ -33,24 +33,6 @@ use pi_scene_math::*;
 use std::sync::Arc;
 use unlit_material::{command::*, shader::UnlitShader, PluginUnlitMaterial};
 
-pub struct PluginLocalLoad;
-impl Plugin for PluginLocalLoad {
-    fn build(&self, app: &mut App) {
-        init_load_cb(Arc::new(|path: String| {
-            MULTI_MEDIA_RUNTIME
-                .spawn(async move {
-                    log::warn!("Load {}", path);
-                    if let Ok(r) = std::fs::read(path.clone()) {
-                        on_load(&path, r);
-                    } else {
-                        log::error!("Load Error: {:?}", path);
-                    }
-                    // let r = std::fs::read(path.clone()).unwrap();
-                })
-                .unwrap();
-        }));
-    }
-}
 
 fn setup(
     mut commands: Commands,
@@ -411,35 +393,13 @@ impl Plugin for PluginTest {
     }
 }
 
+#[path = "../base.rs"]
+mod base;
 pub fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-
-    let mut app = App::default();
-
-    let mut window_plugin = WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(800, 600);
-    }
-
-    app.insert_resource(AssetMgrConfigs::default());
-    app.add_plugin(InputPlugin::default());
-    app.add_plugin(window_plugin);
-    app.add_plugin(AccessibilityPlugin);
-    app.add_plugin(bevy::winit::WinitPlugin::default());
-    // .add_plugin(WorldInspectorPlugin::new())
-    app.add_plugin(pi_bevy_asset::PiAssetPlugin::default());
-    app.add_plugin(PiRenderPlugin::default());
-    app.add_plugin(PluginLocalLoad);
+    let mut app = base::test_plugins_with_gltf();
+    
     app.add_plugin(PluginTest);
-    app.add_plugin(PluginFrameTime);
-    app.add_plugin(PluginWindowRender);
-    app.add_plugins(PluginBundleDefault);
-    app.add_plugin(PluginCubeBuilder);
-    app.add_plugin(PluginQuadBuilder);
-    app.add_plugin(PluginStateToFile);
-    app.add_plugin(PluginUnlitMaterial);
-    app.add_plugin(PluginNodeMaterial);
-    app.add_plugin(pi_3d::PluginSceneTimeFromPluginFrame);
+    app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_system(sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix));
 

@@ -43,7 +43,10 @@ impl RenderIndicesFrom for RenderIndices {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Debug, Default, Clone, Component, Deref, DerefMut)]
+pub struct RenderGeometryComp(pub Option<RenderGeometry>);
+
+#[derive(Debug, Clone)]
 pub struct RenderGeometry {
     pub vertices: Vec<RenderVertices>,
     pub instances: Vec<RenderVertices>,

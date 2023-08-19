@@ -3,7 +3,7 @@ use std::{mem::replace, sync::Arc};
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    pass::*, renderers::prelude::*, object::ActionEntity,
+    pass::*, renderers::prelude::*, object::ActionEntity, prelude::{ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady},
 };
 
 use super::{
@@ -16,17 +16,20 @@ use super::{
     command::*,
 };
 
-pub fn sys_act_material_create(
+pub fn sys_create_material(
     mut cmds: ResMut<ActionListMaterialCreate>,
     mut asset_shader: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
     mut commands: Commands,
+    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, passtag)| {
         let mut matcmds = if let Some(mut cmd) = commands.get_entity(entity) { 
             cmd
         } else {
+            disposereadylist.push(OpsDisposeReady::ops(entity));
             return;
         };
 

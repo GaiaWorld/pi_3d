@@ -19,7 +19,7 @@ use crate::{
     transforms::{command_sys::ActionTransformNode, prelude::*},
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange, RecordIndiceRenderRange}, object::ActionEntity,
+    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange, RecordIndiceRenderRange, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady}, object::ActionEntity,
 };
 
 use super::{
@@ -31,16 +31,21 @@ use super::{
 };
 
 
-pub fn sys_act_mesh_create(
+pub fn sys_create_mesh(
     mut cmds: ResMut<ActionListMeshCreate>,
     mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
     empty: Res<SingleEmptyEntity>,
+    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
+
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, name, count)| {
-        ActionMesh::init(&mut commands, entity, scene, &mut tree, &mut allocator, &device, &empty);
+        if ActionMesh::init(&mut commands, entity, scene, &mut tree, &mut allocator, &device, &empty) == false {
+            disposereadylist.push(OpsDisposeReady::ops(entity));
+        }
     });
 }
 
@@ -273,16 +278,16 @@ impl ActionMesh {
         allocator: &mut ResBindBufferAllocator,
         device: &PiRenderDevice,
         empty: &SingleEmptyEntity,
-    ) {
+    ) -> bool {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
-            return;
+            return false;
         };
 
         ActionTransformNode::init(&mut entitycmd, tree, scene, String::from(""));
         ActionAnime::as_anime_group_target(&mut entitycmd);
-        ActionMesh::as_mesh(&mut entitycmd);
+        ActionMesh::as_mesh(&mut entitycmd, empty.id());
         ActionMesh::as_instance_source(&mut entitycmd);
 
         if let Some(bind) = BindModel::new(&device, allocator) {
@@ -301,9 +306,12 @@ impl ActionMesh {
         create_passobj::<Pass06,PassID06>(entity, commands, &empty);
         create_passobj::<Pass07,PassID07>(entity, commands, &empty);
         create_passobj::<Pass08,PassID08>(entity, commands, &empty);
+
+        return true;
     }
     pub(crate) fn as_mesh(
         commands: &mut EntityCommands,
+        geometry: Entity,
     ) {
         let mut unclipdepth = false;
 
@@ -315,6 +323,7 @@ impl ActionMesh {
         commands
             .insert(AbstructMesh)
             .insert(Mesh)
+            .insert(GeometryID(geometry))
             .insert(RenderGeometryEable(false))
             .insert(RenderWorldMatrix(Matrix::identity()))
             .insert(RenderWorldMatrixInv(Matrix::identity()))

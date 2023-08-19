@@ -7,7 +7,7 @@ use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
 use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{sys_act_material_create, sys_material_uniform_apply};
+use pi_scene_context::prelude::{sys_create_material, sys_material_uniform_apply};
 use prelude::*;
 use premultiply::*;
 use command::*;
@@ -110,7 +110,7 @@ impl Plugin for PluginNodeMaterial {
 
         app.add_system(sys_node_material_uniform_update.before(sys_material_uniform_apply));
 
-        app.add_system(sys_material_anime_init.after(sys_act_material_create));
+        app.add_system(sys_material_anime_init.after(sys_create_material));
     }
 }
 

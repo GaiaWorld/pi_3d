@@ -5,7 +5,7 @@ use pi_scene_math::Matrix;
 
 use crate::{
     scene::command_sys::*,
-    transforms::{prelude::*, command_sys::*}, commands::{ActionListDisposeCan, OpsDisposeCan},
+    transforms::{prelude::*, command_sys::*}, commands::{ActionListDisposeCan, OpsDisposeCan}, prelude::{OpsDisposeReady, ActionListDisposeReady},
 };
 
 use super::{
@@ -14,11 +14,12 @@ use super::{
     bone::*,
 };
 
-pub fn sys_act_skin_create(
+pub fn sys_create_skin(
     mut cmds: ResMut<ActionListSkinCreate>,
     mut commands: Commands,
     device: Res<PiRenderDevice>,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
+    mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
@@ -81,7 +82,7 @@ pub fn sys_act_skin_use(
     });
 }
 
-pub fn sys_act_bone_create(
+pub fn sys_create_bone(
     mut cmds: ResMut<ActionListBoneCreate>,
     mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,

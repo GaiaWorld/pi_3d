@@ -23,6 +23,7 @@ pub type ActionListCPUParticleSystem = ActionList<OpsCPUParticleSystem>;
 pub enum OpsCPUParticleSystemState {
     Start(Entity, u8),
     TimeScale(Entity, f32, u8),
+    Stop(Entity, u8),
 }
 impl OpsCPUParticleSystemState {
     pub fn ops_start(entity: Entity) -> Self {
@@ -30,6 +31,9 @@ impl OpsCPUParticleSystemState {
     }
     pub fn ops_speed(entity: Entity, speed: f32) -> Self {
         Self::TimeScale(entity, speed, 0)
+    }
+    pub fn ops_stop(entity: Entity) -> Self {
+        Self::Stop(entity, 0)
     }
 }
 pub type ActionListCPUParticleSystemState = ActionList<OpsCPUParticleSystemState>;

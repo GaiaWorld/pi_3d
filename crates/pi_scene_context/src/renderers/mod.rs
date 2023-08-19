@@ -95,7 +95,7 @@ impl Plugin for PluginRenderer {
         app.insert_resource(ActionListRendererModify::default());
         app.insert_resource(RendererDrawCallRecord::default());
         app.add_system(
-            sys_act_renderer_create.in_set(ERunStageChap::Initial)
+            sys_create_renderer.in_set(ERunStageChap::Initial)
         );
 
         app.add_systems(
@@ -234,14 +234,7 @@ impl Plugin for PluginRenderer {
 
         app.add_systems(
             (
-                sys_pass_bind_groups::<Pass01, PassID01>.run_if(should_run),
-                sys_pass_bind_groups::<Pass02, PassID02>.run_if(should_run),
-                sys_pass_bind_groups::<Pass03, PassID03>.run_if(should_run),
-                sys_pass_bind_groups::<Pass04, PassID04>.run_if(should_run),
-                sys_pass_bind_groups::<Pass05, PassID05>.run_if(should_run),
-                sys_pass_bind_groups::<Pass06, PassID06>.run_if(should_run),
-                sys_pass_bind_groups::<Pass07, PassID07>.run_if(should_run),
-                sys_pass_bind_groups::<Pass08, PassID08>.run_if(should_run),
+                sys_pass_bind_groups.run_if(should_run),
             ).in_set(ERunStageChap::DrawBindGroups)
         );
         

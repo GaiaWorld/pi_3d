@@ -6,7 +6,7 @@ use pi_engine_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_share::{ShareRefCell};
 
-use crate::{renderers::{renderer::*}, pass::PassTagOrders};
+use crate::{renderers::{renderer::*}, pass::PassTagOrders, prelude::DisposeReady};
 
 
 #[derive(Clone)]
@@ -42,12 +42,12 @@ pub struct QueryParam<'w, 's> (
         'w,
         's,
         (
-            &'static RendererEnable, &'static Renderer, &'static RenderSize,
+            &'static RendererEnable, &'static DisposeReady, &'static Renderer, &'static RenderSize,
             &'static RenderColorFormat, &'static RenderColorClear,
             &'static RenderDepthFormat, &'static RenderDepthClear,
             &'static RenderStencilClear,
             &'static RenderAutoClearColor,&'static RenderAutoClearDepth, &'static RenderAutoClearStencil,
-            &'static RenderToFinalTarget
+            &'static RenderToFinalTarget,
         ),
     >,
 );
@@ -101,12 +101,12 @@ impl Node for RenderNode {
         let param: QueryParam = param.get(world);
         let (window, device, queue, final_render_target, atlas_allocator, query) = (param.0, param.1, param.2, param.3, param.4, param.5);
         if let Ok((
-            enable, renderer, rendersize, format, color_clear, depth, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
+            enable, disposed, renderer, rendersize, format, color_clear, depth, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
         )) = query.get(self.renderer_id) {
             // query.
     
             // log::warn!("Draws: Graphic {:?}", enable.0);
-            if !enable.0 {
+            if !enable.0 || disposed.0 {
                 return Box::pin(
                     async move {
                         Ok(output)
@@ -217,7 +217,7 @@ impl Node for RenderNode {
             
                         renderpass.set_viewport(x, y, w, h, 0., max_depth);
                         renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                        log::warn!("Draws: {:?}", renderer.draws.list.len());
+                        // log::warn!("Draws: {:?}", renderer.draws.list.len());
                         DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
                         let time1 = pi_time::Instant::now();
@@ -266,7 +266,7 @@ impl Node for RenderNode {
                         }
                     );
                     
-                    // log::warn!("Render Size: {:?}", (format.desc(), depth.desc()));
+                    // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
                     atlas_allocator.allocate(
                         width,
                         height,
@@ -341,6 +341,8 @@ impl Node for RenderNode {
                 }
                 
                 if renderer.draws.list.len() > 0 {
+                    // log::warn!("3D Draws: {:?}", renderer.draws.list.len());
+
                     let mut color_attachments = vec![];
                     color_attachments.push(
                         Some(
@@ -365,14 +367,13 @@ impl Node for RenderNode {
         
                     renderpass.set_viewport(x, y, w, h, 0., max_depth);
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                    // log::warn!("Draws: {:?}", renderer.draws.list.len());
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
                     let time1 = pi_time::Instant::now();
-                    // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                    // log::warn!("3D Draws End: {:?}", time1 - time);
                 }
     
-                output.target = Some(srt.clone());
+                output.target = Some(srt);
         
                 Box::pin(
                     async move {

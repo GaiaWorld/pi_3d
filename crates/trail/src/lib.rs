@@ -41,11 +41,11 @@ impl Plugin for PluginTrail {
         app.add_system(sys_act_trail_mesh_geometry.in_set(ERunStageChap::Initial));
         app.add_system(sys_act_trail_age.in_set(ERunStageChap::Command));
         
-        app.add_system(sys_trail_update.in_set(ERunStageChap::CalcRenderMatrix));
+        app.add_system(sys_trail_update.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix));
         app.add_systems(
             (
-                sys_dispose_about_trail_linked,
-                sys_dispose_about_trail
+                sys_dispose_about_trail_linked.run_if(should_run),
+                sys_dispose_about_trail.run_if(should_run)
             ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
         );
     }

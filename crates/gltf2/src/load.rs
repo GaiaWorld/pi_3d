@@ -76,20 +76,21 @@ pub struct GLTF {
     pub errors: Vec<ErrorGLTF>,
     pub animecount: usize,
     pub path: String,
+    pub base: Handle<GLTFBase>,
 }
 impl  GLTF {
     pub fn key_accessor(&self, index: usize) -> String {
-        let path = self.path.clone() + "#AC#";
+        let path = self.path.clone() + "#";
         path + index.to_string().as_str()
     }
     pub fn key_particle_calculator(&self, index: usize) -> KeyParticleSystemCalculator {
-        let path = self.path.clone() + "#P#";
+        let path = self.path.clone() + "#";
         let key = Atom::from(path + index.to_string().as_str());
 
         key.asset_u64()
     }
     pub fn key_anime_curve(&self, group_index: usize, channel_index: usize) -> u64 {
-        let mut path = self.path.clone() + "#A#";
+        let mut path = self.path.clone() + "#";
         path += group_index.to_string().as_str();
         path += "#";
         path += channel_index.to_string().as_str();
@@ -133,6 +134,7 @@ impl  GLTF {
             errors: vec![],
             animecount: 0,
             path,
+            base
         }
     }
 }

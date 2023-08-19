@@ -1,7 +1,10 @@
 #![feature(box_into_inner)]
 
+use base::DemoScene;
 use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
 use pi_engine_shell::prelude::*;
+use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
+use pi_node_materials::NodeMaterialBlocks;
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::cube::*;
 
@@ -110,52 +113,37 @@ impl Plugin for PluginTest {
 
 fn setup(
     mut commands: Commands,
-    mut testdata: ResMut<ActionListTestData>,
-    mut scenecmds: ResMut<ActionListSceneCreate>,
-    mut treecmds: ResMut<ActionListTransformNodeParent>,
+    mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
-    mut localpositioncmds: ResMut<ActionListTransformNodeLocalPosition>,
+    mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
-    mut geometrycreate: ResMut<ActionListGeometryCreate>,
-    mut matuse: ResMut<ActionListMaterialUse>,
+    mut instancemeshcmds: ActionSetInstanceMesh,
+    mut geometrycmd: ActionSetGeometry,
+    mut matcmds: ActionSetMaterial,
+    mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
+    nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
+    anime_assets: TypeAnimeAssetMgrs,
+    
+    mut testdata: ResMut<ActionListTestData>,
 ) {
     fps.frame_ms = 200;
 
-    final_render.cleardepth = 0.0;
+    let tes_size = 4;
+    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
 
-    let scene = commands.spawn_empty().id();
-    scenecmds.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
-
-    let camera01 = commands.spawn_empty().id(); treecmds.push(OpsTransformNodeParent::ops(camera01, scene));
-    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 4.));
-    localpositioncmds.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-
-    let desc = RendererGraphicDesc {
-        pre: Some(final_render.clear_entity),
-        curr: String::from("TestCamera"),
-        next: Some(final_render.render_entity),
-        passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
-    };
-    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
-    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
-
-    let cube = commands.spawn_empty().id(); treecmds.push(OpsTransformNodeParent::ops(cube, scene));
+    let cube = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));
     meshcmds.indexrange.push(OpsMeshRenderIndiceRange::ops(cube, Some(3), Some(12)));
     meshcmds.cullmode.push(OpsCullMode::ops(cube, CullMode::Off));
     
     let id_geo = commands.spawn_empty().id();
-    geometrycreate.push(OpsGeomeryCreate::ops(cube, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
+    geometrycmd.create.push(OpsGeomeryCreate::ops(cube, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
 
-    matuse.push(OpsMaterialUse::ops(cube, defaultmat.0));
+    matcmds.usemat.push(OpsMaterialUse::ops(cube, defaultmat.0));
 
     testdata.push((cube, 0., 0., 0.));
 
@@ -167,7 +155,7 @@ pub fn main() {
     let mut app = base::test_plugins();
     
     app.add_plugin(PluginTest);
-    app.add_system(base::sys_nodeinfo);
+    app.add_system(pi_3d::sys_info_node);
     
     app.add_startup_system(setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
