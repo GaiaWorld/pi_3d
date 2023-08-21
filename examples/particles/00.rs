@@ -34,28 +34,8 @@ fn setup(
     let tes_size = 50;
     fps.frame_ms = 4;
 
-    final_render.cleardepth = 0.0;
+    let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
 
-    let scene = commands.spawn_empty().id();
-    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
-
-    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
-    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-    // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
-
-    let desc = RendererGraphicDesc {
-        pre: Some(final_render.clear_entity),
-        curr: String::from("TestCamera"),
-        next: Some(final_render.render_entity),
-        passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
-    };
-    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
-    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
@@ -64,6 +44,7 @@ fn setup(
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(VertexBufferDesc::instance_world_matrix());
     attrs.push(VertexBufferDesc::instance_color());
+    attrs.push(VertexBufferDesc::instance_tilloff());
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
@@ -89,6 +70,31 @@ fn sys_demo_particle(
     mut geometrys: Query<(&mut InstanceBufferWorldMatrix, &mut InstanceBufferColor)>,
     mut geoloader: ResMut<GeometryVBLoader>,
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
+    mut slots: (
+        Query<&mut AssetResVBSlot01>,
+        Query<&mut AssetResVBSlot02>,
+        Query<&mut AssetResVBSlot03>,
+        Query<&mut AssetResVBSlot04>,
+        Query<&mut AssetResVBSlot05>,
+        Query<&mut AssetResVBSlot06>,
+        Query<&mut AssetResVBSlot07>,
+        Query<&mut AssetResVBSlot08>,
+        Query<&mut AssetResVBSlot09>,
+        Query<&mut AssetResVBSlot10>,
+        Query<&mut AssetResVBSlot11>,
+        Query<&mut AssetResVBSlot12>,
+        Query<&mut AssetResVBSlot13>,
+        Query<&mut AssetResVBSlot14>,
+        Query<&mut AssetResVBSlot15>,
+        Query<&mut AssetResVBSlot16>,
+    ),
+    mut allocator: ResMut<VertexBufferAllocator3D>,
+    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+    device: Res<PiRenderDevice>,
+    queue: Res<PiRenderQueue>,
+    mut matrixuse: ResMut<ActionListInstanceWorldMatrixs>,
+    mut coloruse: ResMut<ActionListInstanceColors>,
+    mut uvuse: ResMut<ActionListInstanceTilloffs>,
 ) {
     particles.iter().for_each(|(idscene, idgeo)| {
         if let Ok((scenetime, maincamera)) = scenes.get(idscene.0) {
@@ -106,6 +112,7 @@ fn sys_demo_particle(
             if let Ok((mut wm, mut colors)) = geometrys.get_mut(idgeo.0) {
                 let mut buffermatrix = vec![];
                 let mut buffercolor = vec![];
+                let mut bufferuv = vec![];
             
                 for z in 0..20 {
                     let ringcount = (z + 1) * 10;
@@ -132,6 +139,7 @@ fn sys_demo_particle(
                             f32::sin(tt + z as f32) * 0.5 + 0.5,
                             f32::cos(tt) * 0.5 + 0.5,
                         ));
+                        bufferuv.push(Vector4::new(1., 1., 0., 0.));
                     }
                 }
 
@@ -148,9 +156,18 @@ fn sys_demo_particle(
                         wmdata.push(*v);
                     })
                 });
+                let mut uvdata: Vec<u8> = vec![];
+                bufferuv.iter().for_each(|v| {
+                    bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
+                        uvdata.push(*v);
+                    })
+                });
 
-                geometry_update_instance_buffer::<InstanceBufferWorldMatrix>(Some(wmdata), idgeo.0, &mut wm, &mut geoloader, &mut vb_data_map);
-                geometry_update_instance_buffer::<InstanceBufferColor>(Some(colordata), idgeo.0, &mut colors, &mut geoloader, &mut vb_data_map);
+                matrixuse.push(OpsInstanceWorldMatrixs::ops(idgeo.0, wmdata));
+                coloruse.push(OpsInstanceColors::ops(idgeo.0, colordata));
+                uvuse.push(OpsInstanceTilloffs::ops(idgeo.0, uvdata));
+                // instance_buffer_update::<InstanceBufferWorldMatrix>(wmdata, idgeo.0, &mut wm, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
+                // instance_buffer_update::<InstanceBufferColor>(colordata, idgeo.0, &mut colors, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
             }
         }
     });

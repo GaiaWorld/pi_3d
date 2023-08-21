@@ -58,11 +58,11 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
         } else if render_alignment == 1 {
             config.render_alignment = EParticleRenderAlignment::World;
         } else if render_alignment == 2 {
-            config.render_alignment = EParticleRenderAlignment::Velocity;
+            config.render_alignment = EParticleRenderAlignment::Local;
         } else if render_alignment == 3 {
             config.render_alignment = EParticleRenderAlignment::Facing;
         } else if render_alignment == 4 {
-            config.render_alignment = EParticleRenderAlignment::Local;
+            config.render_alignment = EParticleRenderAlignment::Velocity;
         }
     }
 
@@ -165,10 +165,6 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
         config.limit_velocity_over_lifetime = Some(format_one_param_info(cfg));
     }
 
-    if let Some(cfg) = mesh_particle_cfg.get("limitVelocityOverLifetime") {
-        config.limit_velocity_over_lifetime = Some(format_one_param_info(cfg));
-    }
-
     if let Some(cfg) = mesh_particle_cfg.get("limitVelocityOverLifetimeDampen") {
         config.limit_velocity_over_lifetime_dampen = Some(cfg.as_f64().unwrap() as f32);
     }
@@ -225,10 +221,6 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
         config.texture = Some(cfg.as_str().unwrap().to_string())
     }
 
-    if let Some(_cfg) = mesh_particle_cfg.get("trail") {
-        todo!()
-    }
-
     if let Some(cfg) = mesh_particle_cfg.get("orbtialVelocity") {
         config.orbtial_velocity = Some(format_param_info(cfg));
     }
@@ -262,43 +254,83 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
         ]);
     }
 
+    if let Some(cfg) = mesh_particle_cfg.get("trail") {
+        let trail = ITrail {
+            ratio: cfg.get("ratio").unwrap().as_f64().unwrap() as f32,
+            mode: ETrailMode::Particles,
+            lifetime: format_one_param_info(cfg.get("lifetime").unwrap()),
+            ribbon_count: cfg.get("ribbonCount").unwrap().as_f64().unwrap() as f32,
+            attach_rtt: cfg.get("attachRTT").unwrap().as_f64().unwrap() as u32,
+            min_dist: cfg.get("minDist").unwrap().as_f64().unwrap() as f32,
+            world_space: cfg.get("worldSpace").unwrap().as_f64().unwrap() as u32,
+            die_with: cfg.get("dieWith").unwrap().as_f64().unwrap() as u32,
+            tex_mode: ETrailTextureMode::from(cfg.get("texMode").unwrap().as_f64().unwrap() as u8),
+            size_awidth: cfg.get("sizeAWidth").unwrap().as_f64().unwrap() as u32,
+            size_alifetime: cfg.get("sizeALifetime").unwrap().as_f64().unwrap() as u32,
+            inherit_color: cfg.get("inheritColor").unwrap().as_f64().unwrap() as u32,
+            color_over_life: format_four_gradient_info(cfg.get("colorOverLife").unwrap()),
+            width_over_trail: format_one_param_info(cfg.get("widthOverTrail").unwrap()),
+            color_over_trail: format_four_gradient_info(cfg.get("colorOverTrail").unwrap()),
+            material: 0.,
+        };
+        config.trail = Some(trail);
+    }
+
     config
 }
 
+fn format_curve(config: &Value) -> ICurve {
+    let mut res = vec![];
+    for v in config[0].as_array().unwrap() {
+        let mut t = vec![];
+        for v_t in v.as_array().unwrap() {
+            t.push(v_t.as_f64().unwrap() as f32);
+        }
+        res.push(t);
+    }
+    let s = config[1].as_f64().unwrap() as f32;
+    (res, s)
+}
+
+fn format_gradient(config: &Value) -> Vec<IGradient> {
+    let mut vec1 = vec![];
+    for v in config.as_array().unwrap() {
+        vec1.push([v[0].as_f64().unwrap() as f32, v[1].as_f64().unwrap() as f32]);
+    }
+    vec1
+}
+
+/// * [1, typeof TInterpolateConstant, OneParam] 
+/// * [1, typeof TInterpolateTwoConstants, OneParam, OneParam] 
+/// * [1, typeof TInterpolateCurve, OneParamCurve] 
+/// * [1, typeof TInterpolateTwoCurves, OneParamCurve, OneParamCurve];
 fn format_one_param_info(config: &Value) -> OneParamInfo {
-    match config[1].as_i64().unwrap() {
-        1 => OneParamInfo::TInterpolateConstant(config[2].as_f64().unwrap() as f32),
-        2 => OneParamInfo::TInterpolateTwoConstants(
+    match config[1].as_u64().unwrap() as u8 {
+        TINTERPOLATE_CONSTANT => OneParamInfo::TInterpolateConstant(config[2].as_f64().unwrap() as f32),
+        TINTERPOLATE_TWO_CONSTANTS => OneParamInfo::TInterpolateTwoConstants(
             config[2].as_f64().unwrap() as f32,
             config[3].as_f64().unwrap() as f32,
         ),
-        4 => {
-            let mut res = vec![];
-            for v in config[2][0].as_array().unwrap() {
-                let mut t = vec![];
-                for v_t in v.as_array().unwrap() {
-                    t.push(v_t.as_f64().unwrap() as f32);
-                }
-                res.push(t);
-            }
-            let s = config[2][1].as_f64().unwrap() as f32;
-            OneParamInfo::TInterpolateCurve((res, s))
+        TINTERPOLATE_CURVE => {
+            OneParamInfo::TInterpolateCurve(format_curve(&config[2]))
         }
-        8 => todo!(),
+        TINTERPOLATE_TWO_CURVES => {
+            OneParamInfo::TInterpolateTwoCurves(format_curve(&config[2]), format_curve(&config[3]))
+        },
         _ => {
-            panic!("config of OneParamInfo: {} is exits!!!!", config)
+            OneParamInfo::TInterpolateConstant(0.)
         }
     }
 }
 
 fn format_three_param_info(config: &Value) -> ThreeParamInfo {
-    match config[1].as_i64().unwrap() {
-        1 => ThreeParamInfo::TInterpolateConstant([
+    match config[1].as_u64().unwrap() as u8 {
+        TINTERPOLATE_CONSTANT => ThreeParamInfo::TInterpolateConstant([
             config[2][0].as_f64().unwrap() as f32,
             config[2][1].as_f64().unwrap() as f32,
             config[2][2].as_f64().unwrap() as f32,
         ]),
-        2 => ThreeParamInfo::TInterpolateTwoConstants(
+        TINTERPOLATE_TWO_CONSTANTS => ThreeParamInfo::TInterpolateTwoConstants(
             [
                 config[2][0].as_f64().unwrap() as f32,
                 config[2][1].as_f64().unwrap() as f32,
@@ -310,7 +342,29 @@ fn format_three_param_info(config: &Value) -> ThreeParamInfo {
                 config[3][2].as_f64().unwrap() as f32,
             ],
         ),
-        4 | 8 => todo!(),
+        TINTERPOLATE_CURVE => {
+            ThreeParamInfo::TInterpolateCurve(
+                [
+                    format_curve(&config[2][0]),
+                    format_curve(&config[2][1]),
+                    format_curve(&config[2][2]),
+                ]
+            )
+        }
+        TINTERPOLATE_TWO_CURVES => {
+            ThreeParamInfo::TInterpolateTwoCurves(
+                [
+                    format_curve(&config[2][0]),
+                    format_curve(&config[2][1]),
+                    format_curve(&config[2][2]),
+                ],
+                [
+                    format_curve(&config[3][0]),
+                    format_curve(&config[3][1]),
+                    format_curve(&config[3][2]),
+                ]
+            )
+        },
         _ => {
             panic!("config of ThreeParamInfo: {} is exits!!!!", config)
         }
@@ -318,9 +372,9 @@ fn format_three_param_info(config: &Value) -> ThreeParamInfo {
 }
 
 fn format_param_info(config: &Value) -> ParamInfo {
-    match config[0].as_i64().unwrap() {
-        1 => ParamInfo::OneParamInfo(format_one_param_info(config)),
-        3 => ParamInfo::ThreeParamInfo(format_three_param_info(config)),
+    match config[0].as_i64().unwrap() as u8 {
+        VALUE_1 => ParamInfo::OneParamInfo(format_one_param_info(config)),
+        VALUE_3 => ParamInfo::ThreeParamInfo(format_three_param_info(config)),
         _ => {
             panic!("config of ParamInfo: {} is exits!!!!", config)
         }
@@ -328,14 +382,14 @@ fn format_param_info(config: &Value) -> ParamInfo {
 }
 
 fn format_four_gradient_info(config: &Value) -> FourGradientInfo {
-    match config[1].as_i64().unwrap() {
-        1 => FourGradientInfo::TInterpolateColor([
+    match config[1].as_i64().unwrap() as u8 {
+        TINTERPOLATE_COLOR => FourGradientInfo::TInterpolateColor([
             config[2][0].as_f64().unwrap() as f32,
             config[2][1].as_f64().unwrap() as f32,
             config[2][2].as_f64().unwrap() as f32,
             config[2][3].as_f64().unwrap() as f32,
         ]),
-        2 => FourGradientInfo::TInterpolateTwoColors(
+        TINTERPOLATE_TWO_COLORS => FourGradientInfo::TInterpolateTwoColors(
             [
                 config[2][0].as_f64().unwrap() as f32,
                 config[2][1].as_f64().unwrap() as f32,
@@ -349,29 +403,35 @@ fn format_four_gradient_info(config: &Value) -> FourGradientInfo {
                 config[3][3].as_f64().unwrap() as f32,
             ],
         ),
-        4 => {
-            let mut vec1 = vec![];
-            for v in config[2][0].as_array().unwrap() {
-                vec1.push([v[0].as_f64().unwrap() as f32, v[1].as_f64().unwrap() as f32]);
-            }
-            let mut vec2 = vec![];
-            for v in config[2][1].as_array().unwrap() {
-                vec2.push([v[0].as_f64().unwrap() as f32, v[1].as_f64().unwrap() as f32]);
-            }
-            let mut vec3 = vec![];
-            for v in config[2][2].as_array().unwrap() {
-                vec3.push([v[0].as_f64().unwrap() as f32, v[1].as_f64().unwrap() as f32]);
-            }
-            let mut vec4 = vec![];
-            for v in config[2][3].as_array().unwrap() {
-                vec4.push([v[0].as_f64().unwrap() as f32, v[1].as_f64().unwrap() as f32]);
-            }
-            FourGradientInfo::TInterpolateGradient([vec1, vec2, vec3, vec4])
+        TINTERPOLATE_GRADIENT => {
+            FourGradientInfo::TInterpolateGradient(
+                [
+                    format_gradient(&config[2][0]),
+                    format_gradient(&config[2][1]),
+                    format_gradient(&config[2][2]),
+                    format_gradient(&config[2][3]),
+                ]
+            )
         }
-        8 => todo!(),
-        16 => FourGradientInfo::TInterpolateRandom,
+        TINTERPOLATE_TWO_GRADIENTS => {
+            FourGradientInfo::TInterpolateTwoGradients(
+                [
+                    format_gradient(&config[2][0]),
+                    format_gradient(&config[2][1]),
+                    format_gradient(&config[2][2]),
+                    format_gradient(&config[2][3]),
+                ],
+                [
+                    format_gradient(&config[3][0]),
+                    format_gradient(&config[3][1]),
+                    format_gradient(&config[3][2]),
+                    format_gradient(&config[3][3]),
+                ]
+            )
+        },
+        TINTERPOLATE_RANDOM => FourGradientInfo::TInterpolateRandom,
         _ => {
-            panic!("config of FourGradientInfo: {} is exits!!!!", config)
+            FourGradientInfo::TInterpolateColor([1., 1., 1., 1.])
         }
     }
 }
@@ -398,32 +458,31 @@ fn format_shape(config: &Value) -> IShape {
         let spread = v["spread"].as_f64().unwrap() as f32;
         let speed = v["speed"].as_f64().unwrap() as f32;
 
-        arc = match v["mode"].as_i64().unwrap() {
-            1 => IShapeArc::IShapeArcRandom(IShapeArcRandom {
+        arc = match v["mode"].as_i64().unwrap() as isize {
+            TSHAPE_ARC_MODE_LOOP => IShapeArc::IShapeArcLoop(IShapeArcLoop {
+                mode: EShapeEmitterArcMode::Loop,
+                value,
+                spread,
+                speed,
+            }),
+            TSHAPE_ARC_MODE_PING_PONG => IShapeArc::IShapeArcPingPong(IShapeArcPingPong {
+                mode: EShapeEmitterArcMode::PingPong,
+                value,
+                spread,
+                speed,
+            }),
+            TSHAPE_ARC_MODE_BURST_SPREAD => IShapeArc::IShapeArcBurstSpread(IShapeArcBurstSpread {
+                mode: EShapeEmitterArcMode::BurstsSpread,
+                value,
+                spread,
+                speed,
+            }),
+            _ => IShapeArc::IShapeArcRandom(IShapeArcRandom {
                 mode: EShapeEmitterArcMode::Random,
                 value,
                 spread,
                 speed,
             }),
-            2 => IShapeArc::IShapeArcLoop(IShapeArcLoop {
-                mode: EShapeEmitterArcMode::Loop,
-                value: v["mode"].as_f64().unwrap() as f32,
-                spread: v["spread"].as_f64().unwrap() as f32,
-                speed: v["speed"].as_f64().unwrap() as f32,
-            }),
-            3 => IShapeArc::IShapeArcPingPong(IShapeArcPingPong {
-                mode: EShapeEmitterArcMode::PingPong,
-                value: v["mode"].as_f64().unwrap() as f32,
-                spread: v["spread"].as_f64().unwrap() as f32,
-                speed: v["speed"].as_f64().unwrap() as f32,
-            }),
-            4 => IShapeArc::IShapeArcBurstSpread(IShapeArcBurstSpread {
-                mode: EShapeEmitterArcMode::BurstsSpread,
-                value: v["mode"].as_f64().unwrap() as f32,
-                spread: v["spread"].as_f64().unwrap() as f32,
-                speed: v["speed"].as_f64().unwrap() as f32,
-            }),
-            _ => panic!("arc mode is not exits"),
         }
     };
 
@@ -495,8 +554,8 @@ fn format_shape(config: &Value) -> IShape {
         }
     };
 
-    match config["type"].as_i64().unwrap() {
-        0 => IShape::ShapeCone(IShapeCone {
+    match config["type"].as_i64().unwrap() as isize {
+        TSHAPE_TYPE_CONE => IShape::ShapeCone(IShapeCone {
             _type: 0,
             radius,
             angle,
@@ -510,7 +569,7 @@ fn format_shape(config: &Value) -> IShape {
             align_dir,
             randomize,
         }),
-        1 => IShape::ShapeSphere(IShapeSphere {
+        TSHAPE_TYPE_SPHERE => IShape::ShapeSphere(IShapeSphere {
             _type: 1,
             radius,
             radius_thickness,
@@ -521,7 +580,7 @@ fn format_shape(config: &Value) -> IShape {
             align_dir,
             randomize,
         }),
-        2 => IShape::ShapeBox(IShapeBox {
+        TSHAPE_TYPE_BOX => IShape::ShapeBox(IShapeBox {
             _type: 2,
             scale,
             position,
@@ -531,7 +590,7 @@ fn format_shape(config: &Value) -> IShape {
             is_volume,
             box_emit_mode,
         }),
-        3 => IShape::ShapeCircle(IShapeCircle {
+        TSHAPE_TYPE_CIRCLE => IShape::ShapeCircle(IShapeCircle {
             _type: 3,
             radius,
             radius_thickness,
@@ -542,7 +601,7 @@ fn format_shape(config: &Value) -> IShape {
             align_dir,
             randomize,
         }),
-        4 => IShape::ShapeHemisphere(IShapeHemisphere {
+        TSHAPE_TYPE_HEMISPHERE => IShape::ShapeHemisphere(IShapeHemisphere {
             _type: 4,
             radius,
             radius_thickness,
@@ -553,7 +612,7 @@ fn format_shape(config: &Value) -> IShape {
             align_dir,
             randomize,
         }),
-        5 => IShape::ShapeEdge(IShapeEdge {
+        TSHAPE_TYPE_EDGE => IShape::ShapeEdge(IShapeEdge {
             _type: 5,
             radius,
             arc,
@@ -563,7 +622,7 @@ fn format_shape(config: &Value) -> IShape {
             align_dir,
             randomize,
         }),
-        6 => IShape::ShapeRectangle(IShapeRectangle {
+        TSHAPE_TYPE_RECTANGLE => IShape::ShapeRectangle(IShapeRectangle {
             _type: 6,
             scale,
             position,
@@ -571,9 +630,18 @@ fn format_shape(config: &Value) -> IShape {
             align_dir,
             randomize,
         }),
-
         _ => {
-            panic!("config of FourGradientInfo: {} is exits!!!!", config)
+            IShape::ShapeHemisphere(IShapeHemisphere {
+                _type: 4,
+                radius,
+                radius_thickness,
+                arc,
+                scale,
+                position,
+                rotation,
+                align_dir,
+                randomize,
+            })
         }
     }
 }
@@ -584,14 +652,14 @@ fn format_texture_sheet(config: &Value) -> ITextureSheet {
         anim_mode: match config["animMode"].as_i64().unwrap() {
             0 => AnimationMode::WholeSheet,
             1 => AnimationMode::SingleRow,
-            _ => panic!("animMode is not exits"),
+            _ => AnimationMode::WholeSheet,
         },
         custom_row: config["customRow"].as_i64().unwrap() as f32,
         cycles: config["cycles"].as_i64().unwrap() as f32,
         row_mode: match config["rowMode"].as_i64().unwrap() {
             0 => RowMode::Custom,
             1 => RowMode::Random,
-            _ => panic!("rowMode is not exits"),
+            _ => RowMode::Random,
         },
         start_frame: format_one_param_info(&config["startFrame"]),
         tiles_x: config["tilesX"].as_i64().unwrap() as f32,
@@ -599,7 +667,7 @@ fn format_texture_sheet(config: &Value) -> ITextureSheet {
         time_mode: match config["timeMode"].as_i64().unwrap() {
             0 => TimeMode::Liftime,
             1 => TimeMode::Speed,
-            _ => panic!("timeMode is not exits"),
+            _ => TimeMode::Liftime,
         },
     }
 }

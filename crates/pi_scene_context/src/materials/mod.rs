@@ -95,7 +95,7 @@ impl Plugin for PluginMaterial {
         app.add_systems(
 			Update,
             (
-                sys_act_material_create.run_if(should_run),
+                sys_create_material.run_if(should_run),
                 // sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
                 // sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
             ).chain().in_set(ERunStageChap::Initial)
@@ -173,7 +173,7 @@ impl Plugin for PluginMaterial {
         );
 
         app.add_systems(Update, 
-            sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            sys_dispose_about_material.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
         // PluginMaterialUniforms.build(app);
         // app.add_plugin(PluginMaterialUniforms);

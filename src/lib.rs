@@ -1,3 +1,4 @@
+use pi_3d_state::{PluginStateGlobal, StateGlobal};
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
 use pi_scene_context::{prelude::*, scene::PluginScene, animation::PluginSceneAnimation, transforms::PluginGroupTransformNode, cameras::PluginCamera, meshes::PluginMesh, geometry::PluginGeometry, light::{PluginLighting, base::Light}, layer_mask::PluginLayerMask, materials::PluginGroupMaterial, renderers::PluginRenderer, skeleton::PluginSkeleton};
@@ -9,13 +10,30 @@ pub struct Limit(pub wgpu::Limits);
 //     }
 // }
 
-pub fn sys_scene_time_from_frame(
-    mut scenes: Query<&mut SceneTime>,
-    frame: Res<SingleFrameTimeCommand>,
+
+pub fn sys_info_node(
+    scenes: Query<Entity, With<SceneTime>>,
+    states: Res<StateGlobal>,
 ) {
-    scenes.iter_mut().for_each(|mut comp| {
-        let time = comp.last_time_ms + frame.frame_ms;
-        comp.reset(time);
+    scenes.iter().for_each(|entity| {
+        if let Some(state) = states.scenes.get(&entity) {
+            log::warn!(
+                "Scene: {:?}, Draw: {:?}, Vertex: {:?}, Materials: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Light: {:?}, Skeleton: {:?}, ParticleSys: {:?}, Trail: {:?}, AnimeGroup: {:?}",
+                entity,
+                state.count_drawobj,
+                state.count_vertex,
+                state.count_material,
+                state.count_transform,
+                state.count_mesh,
+                state.count_instance,
+                state.count_camera,
+                state.count_light,
+                state.count_skeleton,
+                state.count_particlesys,
+                state.count_trail,
+                state.count_animationgroup,
+            );
+        }
     });
 }
 
@@ -28,54 +46,62 @@ impl Plugin for PluginSceneTimeFromPluginFrame {
     }
 }
 
-pub fn sys_nodeinfo(
-    materials: Query<&MaterialRefs>,
-    geometries: Query<&GeometryDesc>,
-    transformnodes: Query<&TransformNode>,
-    meshes: Query<&Mesh>,
-    instancemeshes: Query<&InstanceMesh>,
-    cameras: Query<&Camera>,
-    renderers: Query<&Renderer>,
-    lights: Query<&Light>,
-    passes: Query<&ModelPass>,
-    skeletons: Query<&Skeleton>,
-    bones: Query<&BoneParent>,
-    pipeline_center: Res<AssetDataCenterPipeline3D>,
-    asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-    asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
+pub fn sys_info_draw(
+    draws: Query<(&PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue, &PassShader, &PassBindGroups, &PassPipeline, &PassDraw)>,
+    geometries: Query<&RenderGeometryComp>,
+    meshes: Query<&RenderGeometryEable>,
+    viewers: Query<&ModelListAfterCulling>,
 ) {
-    let count_material = materials.iter().count();
-    let count_geometry = geometries.iter().count();
-    let count_transform = transformnodes.iter().count();
-    let count_mesh = meshes.iter().count();
-    let count_instance = instancemeshes.iter().count();
-    let count_camera = cameras.iter().count();
-    let count_renderer = renderers.iter().count();
-    let count_light = lights.iter().count();
-    let count_pass = passes.iter().count();
-    let count_skeleton = skeletons.iter().count();
-    let count_bone = bones.iter().count();
+    let mut count_set0 = 0;
+    let mut count_set1 = 0;
+    let mut count_effect = 0;
+    let mut count_bindgroups = 0;
+    let mut count_shader = 0;
+    let mut count_pipeline = 0;
+    let mut count_draw = 0;
+    draws.iter().for_each(|(bindgroup_scene, bindgroup_model, bindeffect, shader, bindgroups, pipeline, draw)| {
+        if bindgroup_scene.is_some() { count_set0 += 1; }
+        if bindgroup_model.is_some() { count_set1 += 1; }
+        if bindeffect.0.is_some() { count_effect += 1; }
+        if bindgroups.0.is_some() { count_bindgroups += 1; }
+        if shader.is_some() { count_shader += 1; }
+        if pipeline.is_some() { count_pipeline += 1; }
+        if draw.is_some() {
+            count_draw += 1;
+        }
+    });
 
-    let count_pipeline = pipeline_center.0.asset_mgr().len();
-    let count_bindgroup = asset_mgr_bindgroup.0.len();
-    let count_bindgrouplayout = asset_mgr_bindgroup_layout.0.len();
+    let mut count_ready_geo = 0;
+    geometries.iter().for_each(|item| {
+        if item.is_some() {
+            count_ready_geo += 1;
+        }
+    });
+    
+    let mut count_ready_geo_mesh = 0;
+    meshes.iter().for_each(|item| {
+        if item.0 {
+            count_ready_geo_mesh += 1;
+        }
+    });
+
+    let mut viewer_cullings = vec![];
+    viewers.iter().for_each(|item| {
+        viewer_cullings.push(item.0.len());
+    });
 
     log::warn!(
-        "Materials: {:?}, Geometry: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Renderer: {:?}, Light: {:?}, Pass: {:?}, Skeleton: {:?}, Bone: {:?}, Pipeline: {:?}, BindGroup: {:?}, BindGroupLayout: {:?}",
-        count_material,
-        count_geometry,
-        count_transform,
-        count_mesh,
-        count_instance,
-        count_camera,
-        count_renderer,
-        count_light,
-        count_pass,
-        count_skeleton,
-        count_bone,
-        count_pipeline,
-        count_bindgroup,
-        count_bindgrouplayout,
+        "ReadyGeo: {:?}-{:?}, Cullings: {:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+        count_ready_geo, count_ready_geo_mesh, viewer_cullings, count_set0, count_set1, count_effect, count_bindgroups, count_shader, count_pipeline, count_draw
+    );
+}
+
+pub fn sys_info_resource(
+    states: Res<StateGlobal>,
+) {
+    log::warn!(
+        "BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
+        states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
     );
 }
 
@@ -106,6 +132,7 @@ impl PluginGroup for PluginBundleDefault {
             .add(PluginSkeleton)
             .add(PluginDefaultMaterial)
             .add(PluginDispose)
+            .add(PluginStateGlobal)
             ;
 
         group

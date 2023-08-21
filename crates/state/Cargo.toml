@@ -1,0 +1,45 @@
+[package]
+name = "pi_3d_state"
+version = "0.0.1"
+authors = ["baip0002 <2494156981@qq.com>"]
+edition = "2021"
+description = "3D Scene State Info."
+repository = "https://github.com/GaiaWorld/pi_3d"
+license = "MIT OR Apache-2.0"
+keywords = ["Scene State"]
+
+[dependencies]
+pi_share        = "0.4"
+pi_slotmap      = "0.1"
+pi_hash         = "0.1"
+pi_assets       = "0.13"
+pi_atom         = { version = "0.2", features = ["serde"] }
+
+wgpu            = "0.15"
+bevy            = { version = "0.10", default-features = false }
+bytemuck        = { version = "1.4", features = ["derive"] }
+
+log             = "0.4"
+env_logger      = "0.9"
+rand            = "0.8"
+smallvec        = "1.9"
+crossbeam       = "0.8"
+futures         = "0.3"
+derive_deref    = "1.1"
+lazy_static     = "1.4"
+pi_wy_rng       = { git = "https://github.com/GaiaWorld/pi_wy_rng.git" }
+
+
+pi_time             = "0.3"
+pi_render           = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_utils        = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+render_derive       = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+
+pi_scene_math       = { git = "https://github.com/GaiaWorld/pi_scene" }
+
+pi_scene_context        = { path = "../pi_scene_context" }
+pi_engine_shell         = { path = "../pi_engine_shell" }
+pi_node_materials       = { path = "../node_materials" }
+pi_gltf2_load           = { path = "../gltf2" }
+pi_particle_system      = { path = "../particle_system" }
+pi_trail_renderer       = { path = "../trail" }

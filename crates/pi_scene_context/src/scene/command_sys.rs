@@ -7,7 +7,7 @@ use crate::{
 
 use super::{prelude::*};
 
-pub fn sys_act_scene_create(
+pub fn sys_create_scene(
     mut cmds: ResMut<ActionListSceneCreate>,
     mut commands: Commands,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,

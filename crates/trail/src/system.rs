@@ -12,7 +12,7 @@ use crate::{base::*, ResTrailBuffer};
 pub fn sys_trail_update(
     transforms: Query<(&WorldMatrix, &LocalMatrix)>,
     scenes: Query<&SceneTime>,
-    mut geometries: Query<&mut RenderGeometry>,
+    mut geometries: Query<&mut RenderGeometryComp>,
     mut items: Query<
         (
             &SceneID, &TrailLinkedTransform, &TrailGeometry,
@@ -35,9 +35,14 @@ pub fn sys_trail_update(
             if let (Ok(scenetime), Ok((worldmatrix, localmatrix))) = (scenes.get(idscene.0), transforms.get(idlinked.0)) {
                 base.update(scenetime.delta_ms() as u32);
 
+                let parentmatrix = if let Some(local) = localmatrix.0.try_inverse() {
+                    worldmatrix.0 * local
+                } else { worldmatrix.0.clone() };
+                let worldmatrix = &worldmatrix.0;
+
                 let randoms = BaseRandom { seed: random.0.gen_range(0..u64::MAX), base: random.0.gen_range(0.0..1.0), x: random.0.gen_range(0.0..1.0), y: random.0.gen_range(0.0..1.0), z: random.0.gen_range(0.0..1.0), w: random.0.gen_range(0.0..1.0) };
                 let flag = points.run(
-                    &worldmatrix.0, &localmatrix.0,
+                    worldmatrix, &localmatrix.0,
                     &colorcontrol.0, &colorinterpolator.0, &colorinterpolator.0,
                     sizecontrol.0, &widthinterpolator.0,
                     agecontrol.0, &base,
@@ -52,11 +57,13 @@ pub fn sys_trail_update(
                 // log::warn!("Trail Update Geometry: ");
                 if flag {
                     if let Ok(mut geometry) = geometries.get_mut(idgeo.0) {
-                        let (start, end) = trailbuffer.collect(&points, worldspace.0, &worldmatrix.0);
-                        // *geometry = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end))));
-                        if let Some(vertices) = geometry.vertices.get_mut(0) {
-                            // log::warn!("Trail Update Geometry: {:?}", (start, end));
-                            vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
+                        if let Some(geometry) = &mut geometry.0 {
+                            let (start, end) = trailbuffer.collect(&points, worldspace.0, &parentmatrix);
+                            // *geometry = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end))));
+                            if let Some(vertices) = geometry.vertices.get_mut(0) {
+                                // log::warn!("Trail Update Geometry: {:?}", (start, end));
+                                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
+                            }
                         }
                     }
                 }

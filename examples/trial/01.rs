@@ -31,30 +31,7 @@ fn setup(
     mut trailcmds: ActionSetTrailRenderer,
 ) {
     let tes_size = 50;
-
-    final_render.cleardepth = 0.0;
-
-    let scene = commands.spawn_empty().id();
-    animegroupcmd.scene_ctxs.init_scene(scene);
-    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
-
-    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
-    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -50.));
-    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-    // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
-
-    let desc = RendererGraphicDesc {
-        pre: Some(final_render.clear_entity),
-        curr: String::from("TestCamera"),
-        next: Some(final_render.render_entity),
-        passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
-    };
-    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
-    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 10., -50.), true);
 
     let idmat = commands.spawn_empty().id();
     matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Transparent));
@@ -114,7 +91,7 @@ fn setup(
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
     let mut random = pi_wy_rng::WyRng::default();
-    for idx in 0..6000 {
+    for idx in 0..2000 {
         let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
         let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
@@ -127,6 +104,7 @@ fn setup(
             transformcmds.create.push(OpsTransformNode::ops(scene, source, String::from("TestCube")));
         }
         transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(source, random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0)));
+        transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(source, 4., 1., 1.));
 
         let trail = commands.spawn_empty().id();
         trailcmds.create.push(OpsTrail::ops(scene, source, idmat, trail));

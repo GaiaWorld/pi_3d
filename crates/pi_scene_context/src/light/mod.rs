@@ -61,7 +61,7 @@ impl Plugin for PluginLighting {
         app.add_systems(
 			Update,
             (
-                sys_act_light_create,
+                sys_create_light,
                 sys_act_light_param,
             ).chain().in_set(ERunStageChap::Initial)
         );
@@ -122,6 +122,6 @@ impl Plugin for PluginLighting {
             ).chain().in_set(ERunStageChap::Uniform)
         );
 
-        app.add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_light.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

@@ -33,7 +33,7 @@ impl Plugin for PluginTransformNode {
             ;
 
         app.add_systems(Update, 
-            sys_act_transform_node_create.in_set(ERunStageChap::Initial),
+            sys_create_transform_node.in_set(ERunStageChap::Initial),
         );
         app.add_systems(Update, 
             sys_act_transform_parent.in_set(ERunStageChap::SecondInitial),

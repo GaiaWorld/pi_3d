@@ -2,7 +2,7 @@
 
 
 
-use pi_3d::{PluginBundleDefault, PluginSceneTimeFromPluginFrame};
+use pi_3d::{PluginBundleDefault};
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_frame_event::CurveFrameEvent, animation_listener::{AnimationListener, EAnimationEventResult}};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
@@ -19,6 +19,8 @@ use pi_mesh_builder::{cube::*, ball::*, quad::*};
 use std::sync::Arc;
 use pi_async_rt::rt::AsyncRuntime;
 use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+
+use crate::base::DemoScene;
 
 
 fn setup(
@@ -43,30 +45,9 @@ fn setup(
     fps.frame_ms = 16;
 
     final_render.cleardepth = 0.0;
-
-    let scene = commands.spawn_empty().id();
-    animegroupcmd.scene_ctxs.init_scene(scene);
-    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
-
-    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
-    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 10., -40.));
+    
+    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 1., 0.7, (0., 10., -40.), false);
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
-    cameracmds.mode.push(OpsCameraMode::ops(camera01, false));
-    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, 4.));
-    // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
-
-    let desc = RendererGraphicDesc {
-        pre: Some(final_render.clear_entity),
-        curr: String::from("TestCamera"),
-        next: Some(final_render.render_entity),
-        passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
-    };
-    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
-    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
@@ -161,8 +142,11 @@ pub fn main() {
     
     app.add_plugin(PluginTest);
     
-    app.add_system(base::sys_nodeinfo);
+    app.add_system(pi_3d::sys_info_node);
+    app.add_system(pi_3d::sys_info_resource);
     app.add_startup_system(setup);
+    app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
+
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

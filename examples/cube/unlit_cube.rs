@@ -1,6 +1,7 @@
 #![feature(box_into_inner)]
 
 
+use base::DemoScene;
 use pi_3d::PluginBundleDefault;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
@@ -8,6 +9,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
+use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
@@ -76,7 +78,6 @@ use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 // }
 
 fn setup(
-    
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
     mut cameracmds: ActionSetCamera,
@@ -91,30 +92,13 @@ fn setup(
     nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
 ) {
     let tes_size = 20;
     fps.frame_ms = 4;
-    final_render.cleardepth = 0.0;
 
-    let scene = commands.spawn_empty().id();
-    scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
-
-    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
-    cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, String::from("TestCamera"), true));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-    
-    let desc = RendererGraphicDesc {
-        pre: Some(final_render.clear_entity),
-        curr: String::from("TestCamera"),
-        next: Some(final_render.render_entity),
-        passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
-    };
-    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
-    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
 
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));

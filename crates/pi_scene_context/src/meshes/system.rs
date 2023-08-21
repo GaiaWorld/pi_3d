@@ -59,7 +59,7 @@ pub fn sys_calc_render_matrix(
             let g_rotation = transform.rotation();
             let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
             CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
-            if let Some(local) = renderalignment.0.calc_local(velocity) {
+            if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
                 m = m * local;
             }
 
@@ -125,7 +125,7 @@ pub fn sys_calc_render_matrix_instance(
             let g_rotation = transform.rotation();
             let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
             CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
-            if let Some(local) = renderalignment.0.calc_local(velocity) {
+            if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
                 m = m * local;
             }
 
@@ -225,7 +225,7 @@ pub fn sys_dispose_about_mesh(
         //     georefs.remove(&entity);
         // }
         // log::warn!("Geometry: {:?}", idgeo.0);
-        disposereadylist.push(OpsDisposeReady::ops(idgeo.0));
+        disposecanlist.push(OpsDisposeCan::ops(idgeo.0));
 
         if let Some(idskin) = idskin {
             if let Ok((mut refs, skin)) = skeletons.get_mut(idskin.0) {

@@ -7,7 +7,7 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord, IndiceRenderRange},
+    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord, IndiceRenderRange, DisposeReady},
 };
 
 use super::{
@@ -23,38 +23,31 @@ use super::{
 
 
 /// 渲染器搜集渲染
-    pub fn sys_pass_bind_groups<T: TPass + Component, I: TPassID + Component>(
-        passes: Query<
-            (ObjectID, &ModelPass, &PassReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &PassBindGroups, &T),
+    pub fn sys_pass_bind_groups(
+        mut passes: Query<
+            (ObjectID, &ModelPass, &PassReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &mut PassBindGroups),
             Or<(Changed<PassReady>, Changed<PassBindGroupScene>, Changed<PassBindGroupModel>, Changed<PassBindGroupTextureSamplers>)>
         >,
         mut commands: Commands,
     ) {
-        passes.iter().for_each(|(id_pass, id_model, ready, set0, set1, set2, old, _)| {
+        passes.iter_mut().for_each(|(id_pass, id_model, ready, set0, set1, set2, mut bindgroups)| {
             if let Some((key_meta, meta)) = ready.val() {
                 if let (Some(set0), Some(set1)) = (set0.val(), set1.val()) {
                     if meta.textures.len() > 0 && set2.val().is_none() {
-                        if old.val().is_some() {
-                            if let Some(mut cmd) = commands.get_entity(id_pass) {
-                                cmd.insert(PassBindGroups::new(None));
-                            }
+                        if bindgroups.val().is_some() {
+                            *bindgroups = PassBindGroups::new(None);
                         }
                     } else {
-                        // log::warn!("BindGroups Ok!!");
-                        if let Some(mut cmd) = commands.get_entity(id_pass) {
-                            cmd.insert(PassBindGroups::new(Some(
-                                BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
-                            )));
-                        }
+                        *bindgroups = PassBindGroups::new(Some(
+                            BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
+                        ));
                     }
                     return;
                 }
             }
             
-            if old.val().is_some() {
-                if let Some(mut cmd) = commands.get_entity(id_pass) {
-                    cmd.insert(PassBindGroups::new(None));
-                }
+            if bindgroups.val().is_some() {
+                *bindgroups = PassBindGroups::new(None);
             }
         });
     }
@@ -122,15 +115,12 @@ use super::{
                             Some(set2.as_ref())
                         } else { None };
                 
-                        if let Some(shader) = shader_center.get(&key_shader) {
+                        if shader_center.request(&key_shader, None) {
                             // log::debug!("SysPassShaderRequestByModel: 4");
-                            if let Some(mut cmd) = commands.get_entity(id_pass) {
-                                cmd.insert(PassShader::from((shader, None)));
-                            }
+                            shader_loader.request(id_pass, &key_shader);
                         } else {
                             // log::debug!("SysPassShaderRequestByModel: 5");
                             if !shader_center.check(&key_shader) {
-                                
 
                                 let shader = meta.build_2(
                                     &device,
@@ -225,11 +215,9 @@ use super::{
                         Some(set2.as_ref())
                     } else { None };
             
-                    if let Some(shader) = shader_center.get(&key_shader) {
-                        // log::debug!("SysPassShaderRequestByPass: 3");
-                            if let Some(mut cmd) = commands.get_entity(id_pass) {
-                                cmd.insert(PassShader::from((shader, None)));
-                            }
+                    if shader_center.request(&key_shader, None) {
+                        // log::debug!("SysPassShaderRequestByModel: 4");
+                        shader_loader.request(id_pass, &key_shader);
                     } else {
                         // log::debug!("SysPassShaderRequestByPass: 4");
                         if !shader_center.check(&key_shader) {
@@ -380,7 +368,7 @@ use super::{
 
                     let key_u64 = key_pipeline.to_u64();
 
-                    if let Some(pipeline) = pipeline_center.get(&key_u64) {
+                    if pipeline_center.request(&key_u64, None) {
                         // log::debug!("SysPipeline: 3 Model");
                         // *oldpipeline = PassPipeline::new(Some(pipeline));
                         pipeline_loader.request(id_pass, &key_u64);
@@ -490,11 +478,10 @@ use super::{
 
                     let key_u64 = key_pipeline.to_u64();
 
-                    if let Some(pipeline) = pipeline_center.get(&key_u64) {
+                    if pipeline_center.request(&key_u64, None) {
                         // log::debug!("SysPipeline: 3 Pass");
                         // *oldpipeline = PassPipeline::new(Some(pipeline));
                         pipeline_loader.request(id_pass, &key_u64);
-                        // commands.entity(id_pass).insert(PassPipeline::new(Some(pipeline)));
                     } else {
                         // log::debug!("SysPipeline: 4 Pass");
                         if !pipeline_center.check(&key_u64) {
@@ -543,8 +530,8 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &IndiceRenderRange, &RenderGeometryEable)>,
-        geometrys: Query<&RenderGeometry>,
+        models: Query<(&GeometryID, &IndiceRenderRange, &RenderGeometryEable, &DisposeReady)>,
+        geometrys: Query<&RenderGeometryComp>,
         mut passes: Query<(ObjectID, &ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
         // mut commands: Commands,
     ) {
@@ -552,10 +539,10 @@ use super::{
 
         passes.iter_mut().for_each(|(id_pass, id_model, bindgroups, pipeline, mut old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                if let Ok((id_geo, renderindices, geoenable)) = models.get(id_model.0) {
-                    if geoenable.0 == false { return; }
+                if let Ok((id_geo, renderindices, geoenable, disposed)) = models.get(id_model.0) {
+                    if geoenable.0 == false || disposed.0 == true { return; }
         
-                    if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
+                    if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
                             let draw = DrawObj3D {
                                 pipeline: Some(pipeline.clone()),
@@ -590,19 +577,19 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &I, &IndiceRenderRange, &RenderGeometryEable), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>)>>,
-        geometrys: Query<&RenderGeometry>,
+        models: Query<(&GeometryID, &I, &IndiceRenderRange, &RenderGeometryEable, &DisposeReady), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<DisposeReady>)>>,
+        geometrys: Query<&RenderGeometryComp>,
         mut passes: Query<(&ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
         let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable)| {
-            if geoenable.0 == false { return; }
+        models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable, disposed)| {
+            if geoenable.0 == false || disposed.0 == true { return; }
 
             if let Ok((id_model, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                    if let Ok(rendergeo) = geometrys.get(id_geo.0.clone()) {
+                    if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
                             let draw = DrawObj3D {
                                 pipeline: Some(pipeline.clone()),
@@ -639,11 +626,11 @@ use super::{
             )
         >,
         viewers: Query<
-            (&SceneID, &ModelListAfterCulling, &ViewerSize, Option<&CameraViewport>, &ViewerGlobalPosition),
+            (&SceneID, &ModelListAfterCulling, &ViewerSize, Option<&CameraViewport>, &ViewerGlobalPosition, &DisposeReady),
         >,
         models: Query<
             (
-                &GlobalTransform, &TransparentSortParam,
+                &DisposeReady, &GlobalTransform, &TransparentSortParam,
                 (&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08)
             )
         >,
@@ -656,13 +643,15 @@ use super::{
 
         renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
-            log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
+            // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
             if enable.0 == false {
                 return;
             }
             let mut list_sort_opaque: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
             let mut list_sort_blend: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
-            if let Ok((idscene, list_model, viewersize, viewport, viewposition)) = viewers.get(id_viewer.0) {
+            if let Ok((idscene, list_model, viewersize, viewport, viewposition, disposed)) = viewers.get(id_viewer.0) {
+                if disposed.0 { return; }
+
                 if let Ok(passcfg) = scenes.get(idscene.0) {
                     *rendersize = RenderSize(viewersize.0, viewersize.1);
                     
@@ -674,8 +663,9 @@ use super::{
                     }
                     list_model.0.iter().for_each(|id_obj| {
     
-                        if let Ok((nodeposition, rendersort, passrecord)) = models.get(id_obj.clone()) {
+                        if let Ok((disposed, nodeposition, rendersort, passrecord)) = models.get(id_obj.clone()) {
                             // log::warn!("Renderer: A");
+                            if disposed.0 == true { return; }
                             
                             let temp = nodeposition.position() - &viewposition.0;
                             let distance = temp.x * temp.x + temp.y * temp.y + temp.z * temp.z;
@@ -788,7 +778,7 @@ use super::{
                     });
 
                     record.0.insert(id, renderer.draws.list.len() as u32);
-                    log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
+                    // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
                 }
             }
         });

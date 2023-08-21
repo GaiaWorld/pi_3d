@@ -5,7 +5,7 @@ use crate::{
     geometry::prelude::*,
     renderers::prelude::*,
     skeleton::prelude::*,
-    pass::*, commands::{DisposeReady, DisposeCan, ActionListDisposeReady, OpsDisposeReady, ActionListDisposeCan, OpsDisposeCan},
+    pass::*, commands::{DisposeReady, DisposeCan, ActionListDisposeReady, OpsDisposeReady, ActionListDisposeCan, OpsDisposeCan}, prelude::{Enable, GlobalEnable},
 };
 
 pub struct ActionEntity;
@@ -21,6 +21,7 @@ pub type ActionListDispose = ActionListDisposeReady;
 pub fn sys_dispose_ready(
     mut cmds: ResMut<ActionListDisposeReady>,
     mut items: Query<&mut DisposeReady>,
+    mut enables: Query<(&mut Enable, &mut GlobalEnable)>,
     empty: Res<SingleEmptyEntity>,
 ) {
     cmds.drain().drain(..).for_each(|OpsDisposeReady(entity)| {
@@ -28,6 +29,10 @@ pub fn sys_dispose_ready(
 
         if let Ok(mut item) = items.get_mut(entity) {
             *item = DisposeReady(true);
+            if let Ok((mut enable, mut globalenable)) = enables.get_mut(entity) {
+                *enable = Enable(0.);
+                *globalenable = GlobalEnable(false);
+            }
         } else {
             cmds.push(OpsDisposeReady(entity))
         }
@@ -258,9 +263,9 @@ impl Plugin for PluginDispose {
         app.insert_resource(ActionListSceneDispose::default());
         app.insert_resource(ActionListDispose::default());
         app.insert_resource(ActionListDisposeCan::default());
-        app.add_systems(Update, sys_act_scene_dispose.in_set(ERunStageChap::Initial));
-        app.add_systems(Update, sys_dispose_ready.in_set(ERunStageChap::Dispose));
-        app.add_systems(Update, sys_dispose_can.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
-        app.add_systems(Update, sys_dispose.after(sys_dispose_can).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, (sys_act_scene_dispose.run_if(should_run).in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_dispose_ready.run_if(should_run).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_can.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose.run_if(should_run).after(sys_dispose_can).in_set(ERunStageChap::Dispose));
     }
 }

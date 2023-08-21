@@ -65,7 +65,7 @@ pub trait TMeshStatePass {
 }
 
 impl TMeshState for AbstructMesh                    { const MESH_STATE: u8 = 001; }
-impl TMeshState for RenderGeometry                  { const MESH_STATE: u8 = 002; }
+impl TMeshState for RenderGeometryComp                  { const MESH_STATE: u8 = 002; }
 impl TMeshStatePass for PassBindGroupScene              { const MESH_STATE: u8 = 003; fn is_some(&self) -> bool { self.val().is_some() } }
 impl TMeshStatePass for PassBindGroupModel              { const MESH_STATE: u8 = 004; fn is_some(&self) -> bool { self.val().is_some() } }
 impl TMeshStatePass for PassBindGroupTextureSamplers    { const MESH_STATE: u8 = 005; fn is_some(&self) -> bool { self.val().is_some() } }
@@ -160,7 +160,7 @@ pub struct StateRecordCfg {
         mut commands: Commands,
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
-            let state = EMeshState::val(RenderGeometry::MESH_STATE, 0);
+            let state = EMeshState::val(RenderGeometryComp::MESH_STATE, 0);
             if !states.0.contains(&state) {
                 states.0.push(state);
             }

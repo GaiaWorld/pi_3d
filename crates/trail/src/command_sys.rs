@@ -41,18 +41,16 @@ pub fn sys_act_trail_mesh_geometry(
 
             if let Some(mut cmd) = commands.get_entity(id_geo) {
                 // log::warn!("Geometry Ok");
+                let vertex_desc = vec![trailbuffer.buffer_desc()];
+                ActionGeometry::init(&mut cmd, &vertex_desc, None, id_mesh);
+
                 let mut verticescode = EVerticeExtendCodeComp(EVerticeExtendCode(EVerticeExtendCode::NONE));
                 verticescode.0.0 += EVerticeExtendCode::TRIAL;
-                let vertex_desc = vec![trailbuffer.buffer_desc()];
-                let vblayout = VertexBufferLayoutsComp(VertexBufferLayouts::from(&vertex_desc));
                 let slot = AssetDescVBSlot01::from(vertex_desc[0].clone());
                 let geo_desc = GeometryDesc { list: vertex_desc };
                 let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
     
-                ActionEntity::init(&mut cmd);
                 cmd
-                    .insert(MeshID(id_mesh))
-                    .insert(vblayout)
                     .insert(geo_desc)
                     .insert(slot)
                     .insert(buffer)

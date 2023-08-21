@@ -5,7 +5,7 @@ use bevy::prelude::Deref;
 use crossbeam::queue::SegQueue;
 use pi_assets::asset::{Asset, Size, Handle};
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{EScalingMode, RenderGeometry};
+use pi_scene_context::prelude::*;
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolVector3, TToolRotation, TToolMatrix}};
 use pi_share::Share;
 use pi_trail_renderer::{TrailPoints, TrailBase, TrailBuffer};
@@ -315,14 +315,11 @@ impl ParticleTrail {
         localrotations: &Vec<Vector3>,
         worldmatrixs: &Vec<EmitMatrix>,
         directions: &Vec<Direction>,
-        time: &ParticleSystemTime,
         trailmodifier: &TrailModifier,
-        trailbuffer: &mut TrailBuffer,
-        geometries: &mut RenderGeometry,
     ) {
         let mut color = Vector4::new(1., 1., 1., 1.);
         let mut localscaling = Vector3::new(1., 0., 0.);
-        let trailworldspace = trailmodifier.get_world_space();
+        let trailworldspace = trailmodifier.use_world_space;
         let mut start = u32::MAX;
         let mut end = 0;
         newids.iter().for_each(|idx| {
@@ -337,7 +334,7 @@ impl ParticleTrail {
             let mut localmatrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
 
-            let worldmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
+            let parentmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
             // let worldmatrix = &worldmatrixs.get(*idx).unwrap().pose;
 
             let age = self.timelist.get_mut(*idx).unwrap();
@@ -359,28 +356,13 @@ impl ParticleTrail {
             };
 
             // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
-            let flag = item.run(
-                worldmatrix, &localmatrix, 
+            let flag: bool = item.run(
+                parentmatrix, &localmatrix, 
                 &color, &trailmodifier.color_over_lifetime.color4_interpolate.gradient, &trailmodifier.color_over_trail.color4_interpolate.gradient,
                 width, &trailmodifier.width_over_trail, *agecontrol, &age, randoms, 9999999., trailmodifier.minimun_vertex_distance,
                 trailworldspace
             );
-
-            // log::warn!("Trail: {:?}, {:?}", age, flag);
-            if flag {
-                let (istart, iend) = trailbuffer.collect(&item, trailworldspace, worldmatrix);
-                start = istart.min(start);
-                end = iend.max(end);
-            }
         });
-
-        if let Some(vertices) = geometries.vertices.get_mut(0) {
-            if start < end {
-                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
-            } else {
-                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
-            }
-        }
     }
     pub fn run(
         &mut self,
@@ -394,11 +376,11 @@ impl ParticleTrail {
         time: &ParticleSystemTime,
         trailmodifier: &TrailModifier,
         trailbuffer: &mut TrailBuffer,
-        geometries: &mut RenderGeometry,
-    ) {
+    ) -> (u32, u32) {
         let mut color = Vector4::new(1., 1., 1., 1.);
+        let basesize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
         let mut localscaling = Vector3::new(1., 0., 0.);
-        let trailworldspace = trailmodifier.get_world_space();
+        let trailworldspace = trailmodifier.use_world_space;
         let mut start = u32::MAX;
         let mut end = 0;
         activeids.iter().for_each(|idx| {
@@ -412,7 +394,8 @@ impl ParticleTrail {
             let mut localmatrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
 
-            let worldmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
+            let parentmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
+            let worldmatrix = parentmatrix * localmatrix;
 
             let age = self.timelist.get_mut(*idx).unwrap();
             age.update(time.running_delta_ms);
@@ -428,14 +411,14 @@ impl ParticleTrail {
             let width: f32 = if trailmodifier.size_affects_width {
                 1.
             } else {
-                CoordinateSytem3::transform_normal(&Vector3::new(1., 0., 0.), &localmatrix, &mut localscaling);
+                CoordinateSytem3::transform_normal(&basesize, &localmatrix, &mut localscaling);
                 let len = CoordinateSytem3::length(&localscaling);
                 if len < 0.00000001 { 0. } else { 1. / len }
             };
 
             // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
             let flag = item.run(
-                worldmatrix, &localmatrix, 
+                &worldmatrix, &localmatrix, 
                 &color, &trailmodifier.color_over_lifetime.color4_interpolate.gradient, &trailmodifier.color_over_trail.color4_interpolate.gradient,
                 width, &trailmodifier.width_over_trail, *agecontrol, &age, randoms, 9999999., trailmodifier.minimun_vertex_distance,
                 trailworldspace
@@ -443,19 +426,13 @@ impl ParticleTrail {
 
             // log::warn!("Trail: {:?}, {:?}", age, flag);
             if flag {
-                let (istart, iend) = trailbuffer.collect(&item, trailworldspace, worldmatrix);
+                let (istart, iend) = trailbuffer.collect(&item, trailworldspace,  parentmatrix);
                 start = istart.min(start);
                 end = iend.max(end);
             }
         });
 
-        if let Some(vertices) = geometries.vertices.get_mut(0) {
-            if start < end {
-                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
-            } else {
-                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
-            }
-        }
+        (start, end)
     }
 }
 
@@ -783,6 +760,11 @@ impl ParticleAgeLifetime {
         self.0.iter_mut().for_each(|item| {
             if item.age < u32::MAX - time.running_delta_ms {
                 item.age += time.running_delta_ms;
+                if item.lifetime == 0 {
+                    item.progress = 1.;
+                } else {
+                    item.progress = f32::max(0., f32::min(item.age as f32 / item.lifetime as f32, 1.))
+                }
             }
         });
         newids.iter().for_each(|idx| {

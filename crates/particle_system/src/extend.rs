@@ -508,8 +508,8 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
     let mut base = ParticleCalculatorBase {
         looping: config.looping == 1,
         prewarm: config.prewarm,
-        delay: config.start_delay as u32 * 1000,
-        duration: config.duration as u32 * 1000,
+        delay: (config.start_delay * 1000.) as u32,
+        duration: (config.duration * 1000.) as u32 ,
         maxcount: config.max_particles as usize,
         scaling_space: config.scaling_mode.mode(),
         simulation_space: config.simulation_space_is_world.mode(),
@@ -682,7 +682,8 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
     // Trail
     if let Some(trail) = &(config.trail) {
         let mut ps_trail = TrailModifier::new();
-        ps_trail.set_mode(trail.mode);
+        // ps_trail.set_mode(trail.mode);
+        ps_trail.mode = trail.mode;
         ps_trail.ratio = trail.ratio;
         parse_float_interpolation(
             &mut ps_trail.lifetime,
@@ -693,10 +694,10 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         ps_trail.ribbon_count = trail.ribbon_count;
         ps_trail.attach_ribbons_to_transfoem = trail.attach_rtt == 1;
         ps_trail.minimun_vertex_distance = trail.min_dist;
-        ps_trail.set_world_space(trail.world_space == 1);
+        ps_trail.use_world_space = trail.world_space == 1;
         ps_trail.die_with_particle = trail.die_with == 1;
         ps_trail.size_affects_width = trail.size_awidth == 1;
-        ps_trail.set_texture_mode(trail.tex_mode);
+        ps_trail.texture_mode = trail.tex_mode;
         ps_trail.size_affects_lifetime = trail.size_alifetime == 1;
         ps_trail.inherit_particle_color = trail.inherit_color == 1;
         parse_color4_gradient(

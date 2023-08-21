@@ -22,10 +22,11 @@ procedural_texture      = { path = "crates/procedural_texture" }
 skeletons               = { path = "crates/skeletons" }
 axis                    = { path = "crates/axis" }
 
-particle                = { path = "crates/particle" }
+# particle                = { path = "crates/particle" }
 pi_gltf2_load           = { path = "crates/gltf2" }
 pi_particle_system      = { path = "crates/particle_system" }
 pi_trail_renderer       = { path = "crates/trail" }
+pi_3d_state             = { path = "crates/state" }
 
 pi_node_materials       = { path = "crates/node_materials" }
 unlit_material          = { path = "crates/unlit_material" }
@@ -110,6 +111,7 @@ pi_window_renderer = { path="../pi_bevy/crates/window_renderer" }
 rand            = "0.8"
 bevy            = { version="0.11", default-features = false, features=["bevy_winit"] }
 pi_wy_rng       = "0.1"
+pi_gltf         = { git = "https://github.com/GaiaWorld/pi_gltf.git", features = ["extras"] }
 
 [[example]]
 name = "cube"
@@ -273,6 +275,9 @@ path = "examples/gltf/img_texture_load.rs"
 [[example]]
 name = "particle_system01"
 path = "examples/particles/particle_system01.rs"
+[[example]]
+name = "particle_system_render_velocity"
+path = "examples/particles/render_velocity.rs"
 
 [[example]]
 name = "trial01"

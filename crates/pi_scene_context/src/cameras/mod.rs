@@ -143,6 +143,6 @@ impl Plugin for PluginCamera {
             ).chain().in_set(ERunStageChap::DrawBinds)
         );
 
-        app.add_systems(Update, sys_dispose_about_camera.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_camera.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

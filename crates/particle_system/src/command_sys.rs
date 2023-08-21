@@ -34,6 +34,7 @@ pub fn sys_act_create_cpu_partilce_system(
     empty: Res<SingleEmptyEntity>,
     mut matuse: ResMut<ActionListMaterialUse>,
     mut disposeready: ResMut<ActionListDisposeReady>,
+    mut meshes: ResMut<ActionListMeshRenderAlignment>
 ) {
     cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -53,6 +54,9 @@ pub fn sys_act_create_cpu_partilce_system(
             let mut vec_vec3_arr: Vec<Vec<Vector3>> = Vec::with_capacity(maxcount);
             for _ in 0..maxcount {
                 vec_vec3_arr.push(vec![]);
+            }
+            if let Some(val) = base.render_align() {
+                meshes.push(OpsMeshRenderAlignment::ops(entity, val));
             }
 
             entitycmd
@@ -86,7 +90,7 @@ pub fn sys_act_create_cpu_partilce_system(
                 .insert(ParticleTrailMesh::new(trailmesh, trailgeo))
                 ;
             if let (Ok(trailmodifier), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
-                log::warn!("Trail Init: ");
+                // log::warn!("Trail Init: ");
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
@@ -101,18 +105,16 @@ pub fn sys_act_create_cpu_partilce_system(
                     }
                     if let Some(mut cmd) = commands.get_entity(id_geo) {
                         // log::warn!("Geometry Ok");
+                        let vertex_desc = vec![trailbuffer.buffer_desc()];
+                        ActionGeometry::init(&mut cmd, &vertex_desc, None, id_mesh);
+
                         let mut verticescode = EVerticeExtendCodeComp(EVerticeExtendCode(EVerticeExtendCode::NONE));
                         verticescode.0.0 += EVerticeExtendCode::TRIAL_BILLBOARD;
-                        let vertex_desc = vec![trailbuffer.buffer_desc()];
-                        let vblayout = VertexBufferLayoutsComp(VertexBufferLayouts::from(&vertex_desc));
                         let slot = AssetDescVBSlot01::from(vertex_desc[0].clone());
                         let geo_desc = GeometryDesc { list: vertex_desc };
                         let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
-            
-                        ActionEntity::init(&mut cmd);
+                        
                         cmd
-                            .insert(MeshID(id_mesh))
-                            .insert(vblayout)
                             .insert(geo_desc)
                             .insert(slot)
                             .insert(buffer)
@@ -158,6 +160,14 @@ pub fn sys_act_partilce_system_state(
                     time.time_scale = timescale;
                 } else if count < 2 {
                     cmds.push(OpsCPUParticleSystemState::TimeScale(entity, timescale, count + 1));
+                }
+            },
+            OpsCPUParticleSystemState::Stop(entity, count) => {
+                if let Ok((mut state, mut ids, mut time, mut emission)) = items.get_mut(entity) {
+                    state.playing = false;
+                    state.start = false;
+                } else if count < 2 {
+                    cmds.push(OpsCPUParticleSystemState::Stop(entity, count + 1));
                 }
             },
         }

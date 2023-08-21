@@ -7,12 +7,24 @@ use crate::engine_shell::EnginShell;
 pub struct SingleFrameTimeCommand {
     pub last: pi_time::Instant,
     pub frame_ms: u64,
+    pub curr: pi_time::Instant,
 }
 impl Default for SingleFrameTimeCommand {
     fn default() -> Self {
         Self {
             last: pi_time::Instant::now(),
             frame_ms: 8,
+            curr: pi_time::Instant::now(),
+        }
+    }
+}
+impl SingleFrameTimeCommand {
+    pub fn delta_ms(&self) -> u64 {
+        if self.last < self.curr {
+            (self.curr - self.last).as_millis() as u64
+        } else {
+            // log::warn!("Curr {:?}, Last: {:?}", self.curr, self.last);
+            0
         }
     }
 }
@@ -40,11 +52,12 @@ pub fn sys_frame_time(
     mut frame: ResMut<SingleFrameTimeCommand>,
 ) {
     let last = frame.last;
+    frame.last = frame.curr;
 
     let time = pi_time::Instant::now();
 
     if time > last {
-        let d = time - last;
+        let d: std::time::Duration = time - last;
 
         let delay = frame.frame_ms;
 
@@ -56,7 +69,11 @@ pub fn sys_frame_time(
         spin_sleep::sleep(duration);
     }
 
-    frame.last = pi_time::Instant::now();
+    frame.curr = pi_time::Instant::now();
+
+    // if frame.curr < frame.last {
+    //     log::warn!("Time Error: Last {:}");
+    // }
     
     // log::debug!("Frame Time: {:?}", frame.last - last);
 }

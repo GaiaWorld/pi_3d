@@ -3,12 +3,13 @@ use pi_scene_math::*;
 
 use crate::flags::*;
 use crate::object::ActionEntity;
+use crate::prelude::DisposeReady;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
 use super::transform_node::*;
 
-pub fn sys_act_transform_node_create(
+pub fn sys_create_transform_node(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
     mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
@@ -27,14 +28,18 @@ pub fn sys_act_transform_node_create(
 
 pub fn sys_act_transform_parent(
     mut cmds: ResMut<ActionListTransformNodeParent>,
-    // mut commands: Commands,
     mut tree: EntityTreeMut,
+    nodes: Query<&DisposeReady>,
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val, count)| {
         if tree.get_down(val).is_some() && tree.get_up(entity).is_some() {
             // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
             // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
-            ActionTransformNode::tree_modify(&mut tree, entity, val);
+            if let (Ok(state0), Ok(state1)) = (nodes.get(entity), nodes.get(val)) {
+                if state0.0 == false && state1.0 == false {
+                    ActionTransformNode::tree_modify(&mut tree, entity, val);
+                }
+            }
         } else {
             if count < 2 {
                 cmds.push(OpsTransformNodeParent(entity, val, count + 1));

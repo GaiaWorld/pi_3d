@@ -12,21 +12,28 @@ pub const TEMP_COLOR4_B: Color4 = Color4::new(1., 1., 1., 1.);
 pub const TEMP_COLOR4_C: Color4 = Color4::new(1., 1., 1., 1.);
 
 /**
+ * 数据类型
+ */
+pub const VALUE_1: u8 = 1;
+pub const VALUE_3: u8 = 3;
+pub const VALUE_4: u8 = 4;
+
+/**
  * 曲线类型
  */
-pub const TINTERPOLATE_CONSTANT: isize = 1;
-pub const TINTERPOLATE_TWO_CONSTANTS: isize = 2;
-pub const TINTERPOLATE_CURVE: isize = 4;
-pub const TINTERPOLATE_TWO_CURVES: isize = 8;
+pub const TINTERPOLATE_CONSTANT: u8 = 1;
+pub const TINTERPOLATE_TWO_CONSTANTS: u8 = 2;
+pub const TINTERPOLATE_CURVE: u8 = 4;
+pub const TINTERPOLATE_TWO_CURVES: u8 = 8;
 
 /**
  * 渐变类型
  */
-pub const TINTERPOLATE_COLOR: isize = 1;
-pub const TINTERPOLATE_TWO_COLORS: isize = 2;
-pub const TINTERPOLATE_GRADIENT: isize = 4;
-pub const TINTERPOLATE_TWO_GRADIENTS: isize = 8;
-pub const TINTERPOLATE_RANDOM: isize = 16;
+pub const TINTERPOLATE_COLOR: u8 = 1;
+pub const TINTERPOLATE_TWO_COLORS: u8 = 2;
+pub const TINTERPOLATE_GRADIENT: u8 = 4;
+pub const TINTERPOLATE_TWO_GRADIENTS: u8 = 8;
+pub const TINTERPOLATE_RANDOM: u8 = 16;
 
 pub struct BaseRandom {
     pub seed: u64,
@@ -57,19 +64,19 @@ pub enum EInterpolationCurveMode {
     /**
      * 静态数值
      */
-    Constant = TINTERPOLATE_CONSTANT,
+    Constant = TINTERPOLATE_CONSTANT as isize,
     /**
      * 静态数值随机 - XYZ 随机值相同
      */
-    TwoConstants = TINTERPOLATE_TWO_CONSTANTS,
+    TwoConstants = TINTERPOLATE_TWO_CONSTANTS as isize,
     /**
      * 曲线插值
      */
-    Curve = TINTERPOLATE_CURVE,
+    Curve = TINTERPOLATE_CURVE as isize,
     /**
      * 曲线插值
      */
-    TwoCurves = TINTERPOLATE_TWO_CURVES,
+    TwoCurves = TINTERPOLATE_TWO_CURVES as isize,
 }
 
 impl Default for EInterpolationCurveMode {
@@ -86,23 +93,23 @@ pub enum EInterpolationGradienMode {
     /**
      * 静态数值
      */
-    Color = TINTERPOLATE_COLOR,
+    Color = TINTERPOLATE_COLOR as isize,
     /**
      * 静态数值随机 - XYZ 随机值相同
      */
-    TwoColors = TINTERPOLATE_TWO_COLORS,
+    TwoColors = TINTERPOLATE_TWO_COLORS as isize,
     /**
      * 曲线插值
      */
-    Gradient = TINTERPOLATE_GRADIENT,
+    Gradient = TINTERPOLATE_GRADIENT as isize,
     /**
      * 曲线插值
      */
-    TwoGradients = TINTERPOLATE_TWO_GRADIENTS,
+    TwoGradients = TINTERPOLATE_TWO_GRADIENTS as isize,
     /**
      * 曲线插值
      */
-    Random = TINTERPOLATE_RANDOM,
+    Random = TINTERPOLATE_RANDOM as isize,
 }
 impl Default for EInterpolationGradienMode {
     fn default() -> EInterpolationGradienMode {
@@ -198,6 +205,7 @@ pub type OneParamCurve = ICurve;
 pub type ThreeParamCurve = [ICurve; 3];
 pub type FourParamCurve = [ICurve; 4];
 pub type FourGradient = [Vec<IGradient>; 4];
+
 
 pub enum ParamInfo {
     OneParamInfo(OneParamInfo),

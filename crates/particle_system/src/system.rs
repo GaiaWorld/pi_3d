@@ -47,9 +47,9 @@ pub fn sys_emission(
 
 pub fn sys_emitmatrix(
     calculators: Query<&ParticleCalculatorBase>,
-    mut particle_sys: Query<(&LocalScaling, &WorldMatrix, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix)>,
+    mut particle_sys: Query<(&LocalScaling, &LocalPosition, &WorldMatrix, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix)>,
 ) {
-    particle_sys.iter_mut().for_each(|(local_scaling, world_matrix, mut transform, ids, time, mut emitmatrix)| {
+    particle_sys.iter_mut().for_each(|(local_scaling, localpos, world_matrix, mut transform, ids, time, mut emitmatrix)| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(base) = calculators.get(ids.calculator.0) {
@@ -58,6 +58,7 @@ pub fn sys_emitmatrix(
             let global_rotation = transform.rotation().clone();
             let global_scaling = transform.scaling().clone();
             let global_position = transform.position();
+            // log::warn!("Position: {:?} {:?}", &localpos.0, global_position);
             emitmatrix.emit(newids, activeids, &base.simulation_space, &base.scaling_space, &world_matrix.0, global_position, &global_rotation, &global_scaling, &local_scaling.0);
         }
     });
@@ -410,14 +411,13 @@ pub fn sys_texturesheet(
 pub fn sys_update_buffer(
     calculators: Query<&ParticleCalculatorBase>,
     particle_sys: Query<
-        (Entity, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColor, &ParticleUV),
+        (Entity, &ParticleState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColor, &ParticleUV),
     >,
     meshes: Query<(&GlobalEnable, &GeometryID)>,
+    mut meshrenderenables: Query<&mut RenderGeometryEable>,
     mut worldmatrixbuffers: Query<&mut InstanceBufferWorldMatrix>,
     mut colorbuffers: Query<&mut InstanceBufferColor>,
     mut uvbuffers: Query<&mut InstanceBufferTillOff>,
-    mut geoloader: ResMut<GeometryVBLoader>,
-    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     mut slots: (
         Query<&mut AssetResVBSlot01>,
         Query<&mut AssetResVBSlot02>,
@@ -437,7 +437,6 @@ pub fn sys_update_buffer(
         Query<&mut AssetResVBSlot16>,
     ),
     mut allocator: ResMut<VertexBufferAllocator3D>,
-    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
 ) {
@@ -447,9 +446,16 @@ pub fn sys_update_buffer(
     // log::warn!("ParticleBuffer: ");
     particle_sys.iter().for_each(
         |(
-            entity, time, ids, scalings, rotations, positions, directions, emitmatrixs,
+            entity, state, time, ids, scalings, rotations, positions, directions, emitmatrixs,
             colors, uvs
         )| {
+            if state.playing == false {
+                if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
+                    *rendergeometry = RenderGeometryEable(false);
+                    return;
+                }
+            }
+
             if time.running_delta_ms <= 0 { return; }
 
             let length = ids.actives.len();
@@ -485,34 +491,40 @@ pub fn sys_update_buffer(
                     CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
                     CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
                     // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
+                    let vlen = CoordinateSytem3::length(&g_velocity);
+                    // log::warn!("Velocity: {:?}", g_velocity);
 
                     let matrix = if let Some(renderalign) = renderalign {
-                        let mut matrix = match renderalign {
-                            ERenderAlignment::Velocity => {
-                                let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
-                                let mut matrix = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
-                                matrix
-                            },
-                            ERenderAlignment::StretchedBillboard => {
-                                let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
-                                let mut matrix = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
-                                matrix
-                            }
-                            _ => {
-                                let mut matrix = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
-                                matrix
-                            }
-                        };
+                        // let mut matrix = match renderalign {
+                        //     ERenderAlignment::Velocity => {
+                        //         let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
+                        //         let mut matrix = Matrix::identity();
+                        //         CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
+                        //         matrix
+                        //     },
+                        //     ERenderAlignment::StretchedBillboard => {
+                        //         let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
+                        //         let mut matrix = Matrix::identity();
+                        //         CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
+                        //         matrix
+                        //     }
+                        //     _ => {
+                        //         let mut matrix = Matrix::identity();
+                        //         CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
+                        //         matrix
+                        //     }
+                        // };
+                        let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
+                        // log::warn!("rotation : {:?}", rotation);
+                        let mut matrix = Matrix::identity();
+                        CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
                         
                         let mut local = Matrix::identity();
                         CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
                         // log::warn!("a MAREIX: {:?}", matrix);
                         matrix = matrix * local;
             
-                        if let Some(local) = renderalign.calc_local(&g_velocity) {
+                        if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
                             matrix = matrix * local;
                         }
                         matrix
@@ -557,8 +569,8 @@ pub fn sys_update_buffer(
                                 let data = bytemuck::pod_collect_to_vec(&datamatrix);
                                 instance_buffer_update::<InstanceBufferWorldMatrix>(
                                     data, id_geo,
-                                    &mut buffer, &mut geoloader, &mut vb_data_map,
-                                    &mut slots, &mut allocator, &asset_mgr,
+                                    &mut buffer,
+                                    &mut slots, &mut allocator,
                                     &device, &queue
                                 );
                             }
@@ -567,8 +579,8 @@ pub fn sys_update_buffer(
                                 let data = bytemuck::pod_collect_to_vec(&datacolors);
                                 instance_buffer_update::<InstanceBufferColor>(
                                     data, id_geo,
-                                    &mut buffer, &mut geoloader, &mut vb_data_map,
-                                    &mut slots, &mut allocator, &asset_mgr,
+                                    &mut buffer,
+                                    &mut slots, &mut allocator,
                                     &device, &queue
                                 );
                             }
@@ -577,8 +589,8 @@ pub fn sys_update_buffer(
                                 let data = bytemuck::pod_collect_to_vec(&datauvs);
                                 instance_buffer_update::<InstanceBufferTillOff>(
                                     data, id_geo,
-                                    &mut buffer, &mut geoloader, &mut vb_data_map,
-                                    &mut slots, &mut allocator, &asset_mgr,
+                                    &mut buffer,
+                                    &mut slots, &mut allocator,
                                     &device, &queue
                                 );
                             }
@@ -597,29 +609,48 @@ pub fn sys_update_buffer(
 pub fn sys_update_buffer_trail(
     trailmodifiers: Query<&ParticleCalculatorTrail>,
     mut particle_sys: Query<
-        (&ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColor, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
+        (&ParticleState, &ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColor, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
     >,
-    mut meshes: Query<&mut RenderGeometry>,
+    mut geometries: Query<&mut RenderGeometryComp>,
+    mut meshes: Query<&mut RenderGeometryEable>,
     mut trailbuffer: ResMut<ResParticleTrailBuffer>,
     queue: Res<PiRenderQueue>,
 ) {
     if let Some(trailbuffer) = &mut trailbuffer.0 {
         particle_sys.iter_mut().for_each(
             |(
-                time, ids, emitmatrixs, randoms, colors, positions, scalings, rotations, directions, trailmesh, mut trails
+                state, time, ids, emitmatrixs, randoms, colors, positions, scalings, rotations, directions, trailmesh, mut trails
             )| {
                 // log::warn!("Trail Update: 00");
-                if let Ok(mut geometries) = meshes.get_mut(trailmesh.geo){
+                if let Ok(mut geometry) = geometries.get_mut(trailmesh.geo){
+                    if state.playing == false {
+                        if let Ok(mut rendergeometry) = meshes.get_mut(trailmesh.mesh) {
+                            *rendergeometry = RenderGeometryEable(false);
+                        }
+                        return;
+                    }
                     if let Ok(trailmodifier) = trailmodifiers.get(ids.calculator.0) {
                         let newids = &ids.newids;
-                        trails.run_new(newids, randoms, colors, positions, scalings, rotations, emitmatrixs, directions, time, &trailmodifier.0, trailbuffer, &mut geometries);
+                        trails.run_new(newids, randoms, colors, positions, scalings, rotations, emitmatrixs, directions, &trailmodifier.0);
 
                         let activeids = [ids.actives.clone(), ids.dies.clone()].concat();
                         // log::warn!("Trail Update: {:?}", activeids.len());
-                        trails.run(&activeids, randoms, colors, positions, scalings, rotations, emitmatrixs, time, &trailmodifier.0, trailbuffer, &mut geometries);
+                        let (start, end) = trails.run(&activeids, randoms, colors, positions, scalings, rotations, emitmatrixs, time, &trailmodifier.0, trailbuffer);
+                    
+                        if let Some(geometry) = &mut geometry.0 {
+                            if let Some(vertices) = geometry.vertices.get_mut(0) {
+                                if start < end {
+                                    vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
+                                } else {
+                                    vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
+                                }
+                            }
+                        }
                     } else {
-                        if let Some(vertices) = geometries.vertices.get_mut(0) {
-                            vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
+                        if let Some(geometry) = &mut geometry.0 {
+                            if let Some(vertices) = geometry.vertices.get_mut(0) {
+                                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
+                            }
                         }
                     }
                 }

@@ -62,7 +62,7 @@ impl TrailPoints {
     }
     pub fn run(
         &mut self,
-        parentmatrix: &Matrix,
+        worldmatrix: &Matrix,
         localmatrix: &Matrix,
         colorcontrol: &Vector4,
         colorinterpolator: &Color4Gradient,
@@ -79,15 +79,17 @@ impl TrailPoints {
         if base.time <= base.starttime + base.lifetime {
             let mut newpos = Vector3::zeros();
             let mut newaxisx = Vector3::new(1., 0., 0.);
+            let mut newsize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
 
             if trailworldspace {
-                let worldmatrix = parentmatrix * localmatrix;
                 CoordinateSytem3::transform_coordinates(&newpos.clone(), &worldmatrix, &mut newpos);
                 CoordinateSytem3::transform_normal(&newaxisx.clone(), &worldmatrix, &mut newaxisx);
+                CoordinateSytem3::transform_normal(&newsize.clone(), &worldmatrix, &mut newsize);
                 // log::warn!("New Point 1: {:?}  {:?}", newaxisx, newpos);
             } else {
                 CoordinateSytem3::transform_coordinates(&newpos.clone(), localmatrix, &mut newpos);
                 CoordinateSytem3::transform_normal(&newaxisx.clone(), localmatrix, &mut newaxisx);
+                CoordinateSytem3::transform_normal(&newsize.clone(), localmatrix, &mut newsize);
                 // log::warn!("New Point 2: {:?}  {:?}", localmatrix, newpos);
             }
             let xlen = CoordinateSytem3::length(&newaxisx);
@@ -131,7 +133,7 @@ impl TrailPoints {
                 let color = Vector4::new(color[0] * colorcontrol.x, color[1] * colorcontrol.y, color[2] * colorcontrol.z, color[3] * colorcontrol.w);
     
                 self.1 = PathPoints::path_color(&self.0, randoms, &color, colorinterpolator2);
-                self.2 = PathPoints::path_width(&self.0, randoms, sizecontrol, widthinterpolator);
+                self.2 = PathPoints::path_width(&self.0, randoms, sizecontrol * CoordinateSytem3::length(&newsize) / f32::sqrt(3.0), widthinterpolator);
                 true
             }
         } else {
@@ -143,7 +145,7 @@ impl TrailPoints {
     pub fn data(
         &self,
         trailworldspace: bool,
-        worldmatrix: &Matrix,
+        parentmatrix: &Matrix,
         datavertices: &mut Vec<f32>,
         maxverticeslen: usize,
     ) -> bool {
@@ -154,6 +156,7 @@ impl TrailPoints {
             let mut axisx = Vector3::zeros();
             let mut color = Vector4::zeros();
             let mut width = 0.;
+            let basesize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
             for idx in 0..count {
                 if maxverticeslen < datavertices.len() + TrailBuffer::FLOAT_PER_VERTEX as usize * (2 + 2) {
                     break;
@@ -161,11 +164,15 @@ impl TrailPoints {
 
                 let index = count - idx - 1;
                 let item = &self.0[index];
+                let mut sizetemp = 1.;
                 if trailworldspace == false {
                     // log::warn!("World");
-                    CoordinateSytem3::transform_coordinates(&item.pos, worldmatrix, &mut pos);
-                    CoordinateSytem3::transform_normal(&item.zaxis, worldmatrix, &mut axisz);
-                    CoordinateSytem3::transform_normal(&item.xaxis, worldmatrix, &mut axisx);
+                    CoordinateSytem3::transform_coordinates(&item.pos, parentmatrix, &mut pos);
+                    CoordinateSytem3::transform_normal(&item.zaxis, parentmatrix, &mut axisz);
+                    CoordinateSytem3::transform_normal(&item.xaxis, parentmatrix, &mut axisx);
+                    let mut newsize = Vector3::zeros();
+                    CoordinateSytem3::transform_normal(&basesize, parentmatrix, &mut newsize);
+                    sizetemp = CoordinateSytem3::length(&newsize);
                 } else {
                     // log::warn!("Collect {:?} {:?}", item.xaxis, item.pos);
                     pos.copy_from(&item.pos);
@@ -173,7 +180,7 @@ impl TrailPoints {
                     axisx.copy_from(&item.xaxis);
                 }
                 color.copy_from(&self.1[index]);
-                width = self.2[index];
+                width = self.2[index] * sizetemp;
                 if idx == 0 {
                     datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
                     datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
@@ -275,7 +282,7 @@ impl TrailBuffer {
     ) -> Option<Self> {
         let maxcount = maxbytes / Self::SIZE_PER_VERTEX;
 
-        let size = Self::SIZE_PER_VERTEX * maxcount;
+        let size = maxbytes;
         let mut data = Vec::with_capacity(size as usize);
         for _ in 0..size {
             data.push(0);
@@ -297,10 +304,10 @@ impl TrailBuffer {
         &mut self,
         trailpoints: &TrailPoints,
         trailworldspace: bool,
-        worldmatrix: &Matrix,
+        parentmatrix: &Matrix,
     ) -> (u32, u32) {
         let last_count = self.vertices.len() as u32;
-        trailpoints.data(trailworldspace, worldmatrix, &mut self.vertices, (self.maxcount * Self::FLOAT_PER_VERTEX) as usize);
+        trailpoints.data(trailworldspace, parentmatrix, &mut self.vertices, (self.maxcount * Self::FLOAT_PER_VERTEX) as usize);
         let new_count = self.vertices.len() as u32;
 
         (last_count * 4, new_count * 4)
@@ -320,7 +327,7 @@ impl TrailBuffer {
 impl TAssetCapacity for TrailBuffer {
     const ASSET_TYPE: &'static str = "TRAIL_BUFFER";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 1024 * 1024, max: 10 * 1024 * 1024, timeout: 1000  }
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 1 * 1024 * 1024, timeout: 1000  }
     }
 }
 

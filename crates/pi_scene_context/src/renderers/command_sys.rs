@@ -12,7 +12,7 @@ use super::{
     command::*
 };
 
-pub fn sys_act_renderer_create(
+pub fn sys_create_renderer(
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
     mut commands: Commands,
