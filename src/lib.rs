@@ -22,7 +22,7 @@ pub fn sys_scene_time_from_frame(
 pub struct PluginSceneTimeFromPluginFrame;
 impl Plugin for PluginSceneTimeFromPluginFrame {
     fn build(&self, app: &mut App) {
-        app.add_system(
+        app.add_systems(Update, 
             sys_scene_time_from_frame.in_set(ERunStageChap::Command)
         );
     }

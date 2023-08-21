@@ -47,13 +47,13 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListMeshRenderIndiceRange::default());
         app.insert_resource(ActionListBoneOffset::default());
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_mesh_create.in_set(ERunStageChap::Initial)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_instanced_mesh_create.in_set(ERunStageChap::Initial)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_instance_color.in_set(ERunStageChap::Command)
         );
         app.add_systems(
@@ -70,13 +70,13 @@ impl crate::Plugin for PluginMesh {
                 sys_act_mesh_render_indice,
             ).before(sys_instance_color).in_set(ERunStageChap::Command)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_enable_about_instance.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_calc_render_matrix.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix)
         );
         app.add_systems(

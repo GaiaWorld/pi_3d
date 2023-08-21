@@ -101,7 +101,7 @@ impl Plugin for PluginMaterial {
             ).chain().in_set(ERunStageChap::Initial)
         );
         
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_material_use.run_if(should_run).in_set(ERunStageChap::SecondInitial)
         );
 
@@ -168,11 +168,11 @@ impl Plugin for PluginMaterial {
                 // sys_effect_tex_to_model_while_mat_modify::<PassID08>,
             ).in_set(ERunStageChap::DrawBinds)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_material_uniform_apply.run_if(should_run).in_set(ERunStageChap::Uniform)
         );
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
         // PluginMaterialUniforms.build(app);

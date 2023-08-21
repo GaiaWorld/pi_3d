@@ -32,10 +32,10 @@ impl Plugin for PluginTransformNode {
             .insert_resource(TransformRecord::default())
             ;
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_transform_node_create.in_set(ERunStageChap::Initial),
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_transform_parent.in_set(ERunStageChap::SecondInitial),
         );
         app.add_systems(

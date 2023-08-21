@@ -280,8 +280,8 @@ where
             world.insert_resource(ShareAssetMgr::<D>::new(GarbageEmpty(), self.0, self.1, self.2));
         }
 
-        app.add_system(sys_sync_load_create::<K0, K, D, R>.in_set(ERunStageChap::Initial)); 
-        app.add_system(sys_sync_load_check_await::<K0, K, D, R>.in_set(ERunStageChap::Initial)); 
+        app.add_systems(Update, sys_sync_load_create::<K0, K, D, R>.in_set(ERunStageChap::Initial)); 
+        app.add_systems(Update, sys_sync_load_check_await::<K0, K, D, R>.in_set(ERunStageChap::Initial)); 
         // AssetSyncLoad::<K0, K, D, R, S>::setup(world, stages.query_stage::<AssetSyncLoad::<K0, K, D, R, S>>(ERunStageChap::Initial));
         // AssetSyncLoadCheck::<K0, K, D, R>::setup(world, stages.query_stage::<AssetSyncLoadCheck::<K0, K, D, R>>(ERunStageChap::Initial));
 

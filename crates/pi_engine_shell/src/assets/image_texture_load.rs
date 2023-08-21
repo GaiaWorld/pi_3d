@@ -8,11 +8,9 @@ use pi_assets::{
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
 use pi_bevy_asset::ShareAssetMgr;
-use pi_hash::{XHashMap, XHashSet};
-use pi_render::rhi::{
-    asset::{ImageTextureDesc, TextureRes},
-};
-use pi_share::{Share, ThreadSync};
+use pi_hash::XHashMap;
+use pi_render::rhi::asset::{ImageTextureDesc, TextureRes};
+use pi_share::Share;
 use crate::prelude::*;
 
 pub type IDImageTextureLoad = u64;

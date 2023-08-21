@@ -101,10 +101,10 @@ impl Plugin for PluginGeometry {
             ).in_set(ERunStageChap::Uniform)
         );
         
-        app.add_system(
+        app.add_systems(Update, 
             sys_geometry_enable.in_set(ERunStageChap::Uniform)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_dispose_about_geometry.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
     }

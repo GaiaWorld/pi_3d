@@ -17,7 +17,7 @@ fn setup(
 pub struct PluginCloudMaterial;
 impl Plugin for PluginCloudMaterial {
     fn build(&self, app: &mut App) {
-        app.add_system(setup);
+        app.add_systems(Update, setup);
     }
     // fn init(
     //     &mut self,

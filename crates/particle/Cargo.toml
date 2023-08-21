@@ -13,9 +13,9 @@ pi_scene_context = { path = "../pi_scene_context" }
 pi_engine_shell = { path = "../pi_engine_shell" }
 
 
-pi_render = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_utils = { git = "https://github.com/GaiaWorld/pi_render" , branch = "bevy_shader"}
-render_derive = { git = "https://github.com/GaiaWorld/pi_render" , branch = "bevy_shader"}
+pi_render = { version = "0.1", registry = "yn" }
+render_utils = { version = "0.1", registry = "yn" }
+render_derive = { version = "0.1", registry = "yn" }
 
 pi_scene_math = { git = "https://github.com/GaiaWorld/pi_scene" }
 
@@ -26,7 +26,7 @@ lazy_static = "1.4"
 rand = "0.8"
 nalgebra = "0.32"
 
-pi_hal = { git = "https://github.com/GaiaWorld/pi_hal.git" }
+pi_hal = { version = "0.1", registry = "yn" }
 
 
 

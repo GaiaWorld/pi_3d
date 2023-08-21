@@ -36,10 +36,10 @@ impl Plugin for PluginSkeleton {
             ).chain().in_set(ERunStageChap::Initial)
         );
         
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_skin_use.in_set(ERunStageChap::SecondInitial)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_bones_initial.in_set(ERunStageChap::Command),
         );
         app.add_systems(
@@ -49,7 +49,7 @@ impl Plugin for PluginSkeleton {
                 sys_skin_buffer_update,
             ).chain().in_set(ERunStageChap::Uniform)
         );
-        app.add_system(sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     // fn init(
     //     &mut self,

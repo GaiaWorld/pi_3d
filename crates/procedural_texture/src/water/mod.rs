@@ -17,7 +17,7 @@ fn setup(
 pub struct PluginWaterMaterial;
 impl Plugin for PluginWaterMaterial {
     fn build(&self, app: &mut App) {
-        app.add_system(setup);
+        app.add_systems(Update, setup);
     }
     // fn init(
     //     &mut self,

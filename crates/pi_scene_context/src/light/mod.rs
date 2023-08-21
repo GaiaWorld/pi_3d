@@ -55,9 +55,9 @@ impl Plugin for PluginLighting {
         app.insert_resource(ActionListLightCreate::default());
         app.insert_resource(ActionListLightParam::default());
 
-        // app.add_system(sys_cmd_light_create.in_set(ERunStageChap::Initial));
-        // app.add_system(sys_cmd_light_modify.in_set(ERunStageChap::Command));
-        // app.add_system(sys_light_render_modify.in_set(ERunStageChap::Command));
+        // app.add_systems(Update, sys_cmd_light_create.in_set(ERunStageChap::Initial));
+        // app.add_systems(Update, sys_cmd_light_modify.in_set(ERunStageChap::Command));
+        // app.add_systems(Update, sys_light_render_modify.in_set(ERunStageChap::Command));
         app.add_systems(
 			Update,
             (
@@ -89,7 +89,7 @@ impl Plugin for PluginLighting {
             ).in_set(ERunStageChap::Command)
         );
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_directional_light_shadow_modify.in_set(ERunStageChap::Command)
         );
 
@@ -122,6 +122,6 @@ impl Plugin for PluginLighting {
             ).chain().in_set(ERunStageChap::Uniform)
         );
 
-        app.add_system(sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

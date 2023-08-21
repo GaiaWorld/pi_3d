@@ -206,29 +206,29 @@ impl Plugin for PluginRunstage {
         //     ).chain()
         // );
 
-        app.add_system(apply_deferred.in_set(ERunStageChap::_InitialApply));
-        app.add_system(apply_deferred.in_set(ERunStageChap::_SecondInitialApply));
-        app.add_system(apply_deferred.in_set(ERunStageChap::_ThirdInitialApply));
-        app.add_system(apply_deferred.in_set(ERunStageChap::_CommandApply));
-        app.add_system(apply_deferred.in_set(ERunStageChap::_DisposeApply));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::AnimeAmount));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::Anime));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::Logic01));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::Logic02));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::CalcWorldMatrix));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::CalcRenderMatrix));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::Uniform));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawUniformToGPU));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawBinds));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawBindGroups));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawBindGroupsLoaded));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawShader));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawShaderLoaded));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawPipeline));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawPipelineLoaded));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::DrawCall));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::Draw));
-        // app.add_system(apply_deferred.in_set(ERunStageChap::StateCheck));
+        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
+        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_SecondInitialApply));
+        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_ThirdInitialApply));
+        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_CommandApply));
+        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::AnimeAmount));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Anime));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Logic01));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Logic02));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::CalcWorldMatrix));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::CalcRenderMatrix));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Uniform));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawUniformToGPU));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawBinds));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawBindGroups));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawBindGroupsLoaded));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawShader));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawShaderLoaded));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawPipeline));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawPipelineLoaded));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawCall));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Draw));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::StateCheck));
     }
 }
 

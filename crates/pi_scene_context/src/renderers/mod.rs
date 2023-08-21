@@ -94,7 +94,7 @@ impl Plugin for PluginRenderer {
         app.insert_resource(ActionListRendererConnect::default());
         app.insert_resource(ActionListRendererModify::default());
         app.insert_resource(RendererDrawCallRecord::default());
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_renderer_create.in_set(ERunStageChap::Initial)
         );
 
@@ -119,13 +119,13 @@ impl Plugin for PluginRenderer {
                 sys_act_render_queue.run_if(should_run),
             ).in_set(ERunStageChap::SecondInitial)
         );
-        // app.add_system(
+        // app.add_systems(Update, 
         //     sys_render_primitive_modify.in_set(ERunStageChap::Command)
         // );
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_renderer_connect.run_if(should_run).in_set(ERunStageChap::Command)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_renderer_modify.run_if(should_run).in_set(ERunStageChap::Command)
         );
 

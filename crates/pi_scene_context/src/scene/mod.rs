@@ -37,7 +37,7 @@ impl Plugin for PluginScene {
         app.insert_resource(ActionListSceneFogParam::default());
         app.insert_resource(ActionListSceneAnimationEnable::default());
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_scene_create.in_set(ERunStageChap::Initial)
         );
         
@@ -62,7 +62,7 @@ impl Plugin for PluginScene {
             ).in_set(ERunStageChap::Uniform)
         );
 
-        app.add_system(sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     
 }

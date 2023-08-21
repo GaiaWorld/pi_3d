@@ -23,7 +23,7 @@ pub struct PluginUnlitMaterial;
 impl Plugin for PluginUnlitMaterial {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListUnlitMaterial::default());
-        app.add_system(sys_act_unlit_material.in_set(ERunStageChap::Command));
+        app.add_systems(Update, sys_act_unlit_material.in_set(ERunStageChap::Command));
 
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
