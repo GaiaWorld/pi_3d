@@ -111,7 +111,7 @@ impl Plugin for PluginNodeMaterial {
 
         app.add_systems(Update, sys_node_material_uniform_update.before(sys_material_uniform_apply));
 
-        app.add_systems(Update, sys_material_anime_init.after(sys_act_material_create));
+        app.add_systems(Update, sys_material_anime_init.after(sys_create_material));
     }
 }
 

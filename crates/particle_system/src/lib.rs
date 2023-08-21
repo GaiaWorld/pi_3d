@@ -102,7 +102,8 @@ impl Plugin for PluginParticleSystem {
         app.add_systems(Update, 
             sys_update_buffer_trail.run_if(should_run).after(sys_update_buffer).in_set(ERunStageChap::Uniform),
         );
-        app.add_system(
+        app.add_systems(
+			Update, 
             sys_dispose_about_particle_system.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::StateCheck),
         );
     }

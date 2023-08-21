@@ -99,7 +99,7 @@ impl Plugin for PluginLighting {
 
         // SysDirectionalShadowModify::setup(world, stages.query_stage::<SysDirectionalShadowModify>(ERunStageChap::Command));
 
-        // app.add_plugin(PluginShadowGenerator);
+        // app.add_plugins(PluginShadowGenerator);
         // PluginShadowGenerator.init(engine, stages);
 
         // init_plugin_for_viewer::<LightDirection, Fn, DirectionalShadowProjection, Fn>(app, sys_world_matrix_calc, sys_directional_light_shadow_modify)

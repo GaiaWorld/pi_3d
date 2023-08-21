@@ -176,7 +176,7 @@ impl Plugin for PluginMaterial {
             sys_dispose_about_material.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
         // PluginMaterialUniforms.build(app);
-        // app.add_plugin(PluginMaterialUniforms);
+        // app.add_plugins(PluginMaterialUniforms);
     }
     // fn init(
     //     &mut self,

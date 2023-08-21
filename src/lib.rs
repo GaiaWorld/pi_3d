@@ -37,15 +37,6 @@ pub fn sys_info_node(
     });
 }
 
-pub struct PluginSceneTimeFromPluginFrame;
-impl Plugin for PluginSceneTimeFromPluginFrame {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, 
-            sys_scene_time_from_frame.in_set(ERunStageChap::Command)
-        );
-    }
-}
-
 pub fn sys_info_draw(
     draws: Query<(&PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue, &PassShader, &PassBindGroups, &PassPipeline, &PassDraw)>,
     geometries: Query<&RenderGeometryComp>,
