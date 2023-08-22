@@ -93,6 +93,6 @@ impl Plugin for PluginObject {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.world.insert_resource(SingleObjectCommand::default());
         
-        app.add_system(sys_object);
+        app.add_systems(Update, sys_object);
     }
 }

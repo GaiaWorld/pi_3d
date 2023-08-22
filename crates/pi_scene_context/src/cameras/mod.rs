@@ -77,7 +77,7 @@ impl Plugin for PluginCamera {
         //     SysModelListUpdateByViewer::setup(world, stages.query_stage::<SysModelListUpdateByViewer>(ERunStageChap::Command));
         //     SysModelListUpdateByModel::setup(world, stages.query_stage::<SysModelListUpdateByModel>(ERunStageChap::Command));
         //     SysModelListAfterCullingTick::setup(world, stages.query_stage::<SysModelListAfterCullingTick>(ERunStageChap::Command));
-        //     app.add_system(system)
+        //     app.add_systems(Update, system)
         // }
         app.insert_resource(ActionListCameraCreate::default());
         app.insert_resource(ActionListCameraMode::default());
@@ -92,6 +92,7 @@ impl Plugin for PluginCamera {
         app.insert_resource(ActionListCameraRenderer::default());
 
         app.add_systems(
+			Update,
             (
                 sys_camera_create,
                 sys_camera_renderer_action,
@@ -99,6 +100,7 @@ impl Plugin for PluginCamera {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_camera_mode,
                 sys_camera_fixed_mode,
@@ -113,6 +115,7 @@ impl Plugin for PluginCamera {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_update_camera_param,
                 sys_cmds_target_camera_modify,
@@ -123,6 +126,7 @@ impl Plugin for PluginCamera {
 
         // init_plugin_for_viewer::<TargetCameraParam, Fn, CameraParam, Fn>(app, sys_cmds_target_camera_modify, sys_world_matrix_calc)
         app.add_systems(
+			Update,
             (
                 sys_calc_view_matrix_by_viewer::<TargetCameraParam>.run_if(should_run),
                 sys_calc_proj_matrix::<CameraParam>.run_if(should_run),
@@ -131,6 +135,7 @@ impl Plugin for PluginCamera {
             ).chain().in_set(ERunStageChap::DrawUniformToGPU)
         );
         app.add_systems(
+			Update,
             (
                 sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>.run_if(should_run),
                 sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>.run_if(should_run),
@@ -138,6 +143,6 @@ impl Plugin for PluginCamera {
             ).chain().in_set(ERunStageChap::DrawBinds)
         );
 
-        app.add_system(sys_dispose_about_camera.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_camera.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

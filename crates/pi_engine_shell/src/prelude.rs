@@ -3,7 +3,7 @@ use std::{ops::Range, mem::replace};
 pub use bevy::{
     app::{ prelude::*, PluginGroupBuilder }, core::prelude::*, ecs::prelude::*, hierarchy::prelude::*, input::{prelude::*, InputPlugin},
     log::prelude::*, math::prelude::*, reflect::prelude::*, time::prelude::*,
-    utils::prelude::*, window::{prelude::*},
+    utils::prelude::*, window::prelude::*,
     ecs::system::{CommandQueue, EntityCommands, SystemState, SystemParam}, prelude::{Deref, DerefMut},
     a11y::*,
     // winit::*,
@@ -50,21 +50,19 @@ pub use pi_render::{
     render_3d::{
         shader::*,
         bind_groups::{ scene::*, model::*, texture_sampler::* },
-        binds::{ scene::*, model::*, effect_value::*, effect_sampler2d::*, effect_texture2d::*, texture_sampler::* },
+        binds::{ scene::*, model::*, effect_value::*, effect_sampler2d::*, effect_texture2d::*},
     },
     rhi::{
         asset::*,
         pipeline::*,
-        device::{ RenderDevice },
+        device::RenderDevice,
         RenderQueue,
         shader::WriteBuffer,
         texture::*,
     },
-    components::view::{
-        target_alloc::*,
-    },
+    components::view::target_alloc::*,
 };
-pub use pi_assets::{asset::GarbageEmpty};
+pub use pi_assets::asset::GarbageEmpty;
 pub use pi_curves::curve::{ FrameIndex, FramePerSecond };
 
 pub use crate::run_stage::ERunStageChap;
@@ -158,7 +156,7 @@ impl<T: Send + Sync> Default for ActionList<T> {
     }
 }
 impl<T: Send + Sync> ActionList<T> {
-    pub fn push_some(&mut self, val: impl IntoIterator<Item = T>) {
+    pub fn push_some(&mut self, _val: impl IntoIterator<Item = T>) {
         // self.0.extend(val);
     }
     pub fn push(&mut self, val: T) {

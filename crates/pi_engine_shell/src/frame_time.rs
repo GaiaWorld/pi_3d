@@ -87,6 +87,6 @@ impl Plugin for PluginFrameTime {
         app.world.insert_resource(SingleFrameTimeCommand::default());
 
         #[cfg(not(target_arch = "wasm32"))]
-        app.add_system(sys_frame_time.in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_frame_time.in_set(ERunStageChap::Initial));
     }
 }

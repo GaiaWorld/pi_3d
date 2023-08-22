@@ -165,7 +165,7 @@ pub struct PluginStateGlobal;
 impl Plugin for PluginStateGlobal {
     fn build(&self, app: &mut App) {
         app.insert_resource(StateGlobal::default());
-        app.add_system(sys_state_scene.run_if(should_run).in_set(ERunStageChap::StateCheck));  
-        app.add_system(sys_state_global.run_if(should_run).in_set(ERunStageChap::StateCheck));   
+        app.add_systems(Update, sys_state_scene.run_if(should_run).in_set(ERunStageChap::StateCheck));  
+        app.add_systems(Update, sys_state_global.run_if(should_run).in_set(ERunStageChap::StateCheck));   
     }
 }

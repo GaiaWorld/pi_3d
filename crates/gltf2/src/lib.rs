@@ -22,6 +22,7 @@ impl Plugin for PluginGLTF2Res {
 
         app.insert_resource(GLTFResLoader::new());
         app.add_systems(
+			Update,
             (
                 sys_load_gltf_launch,
                 sys_gltf_base_loaded_launch,

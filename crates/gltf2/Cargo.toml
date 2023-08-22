@@ -16,9 +16,9 @@ pi_hash         = "0.1"
 pi_assets       = "0.13"
 pi_atom         = { version="0.2", features = ["serde"] }
 
-wgpu            = "0.15"
-naga            = { version = "0.10", features = [ "glsl-in", ] }
-bevy            = { version = "0.10", default-features = false }
+wgpu            ="0.16"
+naga            = { version = "0.12", features = [ "glsl-in", ] }
+bevy            = { version = "0.11", default-features = false }
 bytemuck        = { version = "1.4", features = ["derive"] }
 
 log             = "0.4"
@@ -30,15 +30,15 @@ futures         = "0.3"
 derive_deref    = "1.1"
 base64          = "0.20.0"
 
-pi_hal              = { git = "https://github.com/GaiaWorld/pi_hal.git" }
+pi_hal              = { version = "0.1", registry = "yn" }
 
-pi_render           = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_utils        = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
-render_derive       = { git = "https://github.com/GaiaWorld/pi_render", branch = "bevy_shader" }
+pi_render           = { version = "0.1", registry = "yn" }
+render_utils        = { version = "0.1", registry = "yn" }
+render_derive       = { version = "0.1", registry = "yn" }
 
 pi_scene_math       = { git = "https://github.com/GaiaWorld/pi_scene" }
-pi_animation        = { git = "https://github.com/GaiaWorld/pi_animation.git" }
-pi_curves           = { git = "https://github.com/GaiaWorld/pi_curves.git" }
+pi_animation        = { version = "0.1", registry = "yn" }
+pi_curves           = { version = "0.1", registry = "yn" }
 pi_gltf             = { git = "https://github.com/GaiaWorld/pi_gltf.git", features = ["extras"] }
 
 pi_scene_context    = { path = "../pi_scene_context" }

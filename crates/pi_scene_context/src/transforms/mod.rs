@@ -32,13 +32,14 @@ impl Plugin for PluginTransformNode {
             .insert_resource(TransformRecord::default())
             ;
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_create_transform_node.in_set(ERunStageChap::Initial),
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_transform_parent.in_set(ERunStageChap::SecondInitial),
         );
         app.add_systems(
+			Update,
             (
                 sys_act_local_euler.in_set(ERunStageChap::Command),
                 sys_act_local_position.in_set(ERunStageChap::Command),
@@ -46,6 +47,7 @@ impl Plugin for PluginTransformNode {
             )
         );
         app.add_systems(
+			Update,
             (
                 sys_local_euler_calc_rotation,
                 sys_local_quaternion_calc_rotation,

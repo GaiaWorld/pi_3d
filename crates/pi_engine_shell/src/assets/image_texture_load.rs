@@ -8,11 +8,9 @@ use pi_assets::{
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
 use pi_bevy_asset::ShareAssetMgr;
-use pi_hash::{XHashMap, XHashSet};
-use pi_render::rhi::{
-    asset::{ImageTextureDesc, TextureRes},
-};
-use pi_share::{Share, ThreadSync};
+use pi_hash::XHashMap;
+use pi_render::rhi::asset::{ImageTextureDesc, TextureRes};
+use pi_share::Share;
 use crate::prelude::*;
 
 pub type IDImageTextureLoad = u64;
@@ -327,6 +325,7 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
         if app.world.contains_resource::<ImageTextureLoader>() == false {
             app.insert_resource(ImageTextureLoader::default());
             app.add_systems(
+				Update,
                 (
                     sys_image_texture_load_launch,
                     sys_image_texture_loaded
@@ -335,6 +334,7 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
         }
         app.insert_resource(ImageTextureViewLoader::<K>::default());
         app.add_systems(
+			Update,
             (
                 sys_image_texture_view_load_launch::<K, D>,
                 sys_image_texture_view_loaded_check::<K, D>,

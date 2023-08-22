@@ -93,6 +93,7 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListUniformTexture::default());
 
         app.add_systems(
+			Update,
             (
                 sys_create_material.run_if(should_run),
                 // sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
@@ -100,11 +101,12 @@ impl Plugin for PluginMaterial {
             ).chain().in_set(ERunStageChap::Initial)
         );
         
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_material_use.run_if(should_run).in_set(ERunStageChap::SecondInitial)
         );
 
         app.add_systems(
+			Update,
             (
                 // sys_act_uniform,
                 // sys_act_uniform_by_name,
@@ -121,12 +123,14 @@ impl Plugin for PluginMaterial {
         );
         
         app.add_systems(
+			Update,
             (
                 // sys_material_init,
                 sys_material_textures_modify,
             ).in_set(ERunStageChap::Command)
         );
         app.add_systems(
+			Update,
             (
                 sys_texture_ready01.run_if(should_run),
                 sys_texture_ready02.run_if(should_run),
@@ -139,6 +143,7 @@ impl Plugin for PluginMaterial {
             ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
+			Update,
             (
                 sys_effect_bind_to_model_while_mat_modify.run_if(should_run), // ::<PassID01>,
                 // sys_effect_bind_to_model_while_mat_modify::<PassID02>,
@@ -151,6 +156,7 @@ impl Plugin for PluginMaterial {
             ).in_set(ERunStageChap::DrawBinds)
         );
         app.add_systems(
+			Update,
             (
                 sys_effect_tex_to_model_while_mat_modify.run_if(should_run), //::<PassID01>,
                 // sys_effect_tex_to_model_while_mat_modify::<PassID02>,
@@ -162,15 +168,15 @@ impl Plugin for PluginMaterial {
                 // sys_effect_tex_to_model_while_mat_modify::<PassID08>,
             ).in_set(ERunStageChap::DrawBinds)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_material_uniform_apply.run_if(should_run).in_set(ERunStageChap::Uniform)
         );
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_dispose_about_material.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
         // PluginMaterialUniforms.build(app);
-        // app.add_plugin(PluginMaterialUniforms);
+        // app.add_plugins(PluginMaterialUniforms);
     }
     // fn init(
     //     &mut self,

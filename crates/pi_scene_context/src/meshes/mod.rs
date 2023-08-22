@@ -47,16 +47,17 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListMeshRenderIndiceRange::default());
         app.insert_resource(ActionListBoneOffset::default());
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_create_mesh.in_set(ERunStageChap::Initial)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_instanced_mesh_create.in_set(ERunStageChap::Initial)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_instance_color.in_set(ERunStageChap::Command)
         );
         app.add_systems(
+			Update,
             (
                 sys_act_bone_offset,
                 sys_act_mesh_modify,
@@ -69,16 +70,17 @@ impl crate::Plugin for PluginMesh {
                 sys_act_mesh_render_indice,
             ).before(sys_instance_color).in_set(ERunStageChap::Command)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_enable_about_instance.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_calc_render_matrix.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix)
         );
         app.add_systems(
+			Update,
             (
                 sys_render_matrix_for_uniform.run_if(should_run),
                 sys_velocity_for_uniform.run_if(should_run),
@@ -86,6 +88,7 @@ impl crate::Plugin for PluginMesh {
             ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
+			Update,
             (
                 sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>.run_if(should_run),
                 sys_tick_instance_buffer_update::<InstanceTillOff, InstanceBufferTillOff, InstanceTillOffDirty>.run_if(should_run),
@@ -93,6 +96,7 @@ impl crate::Plugin for PluginMesh {
             ).chain().in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
+			Update,
             (
                 sys_act_geomettry_instance_world_matrix.run_if(should_run),
                 sys_act_geomettry_instance_color.run_if(should_run),
@@ -101,6 +105,7 @@ impl crate::Plugin for PluginMesh {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_dispose_about_mesh.run_if(should_run),
                 sys_dispose_about_instance.run_if(should_run),

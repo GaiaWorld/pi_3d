@@ -99,7 +99,7 @@ impl Plugin for PluginRenderBindGroup {
         if app.world.get_resource::<ResBindsRecorder>().is_none() {
             let allocator = ResBindsRecorder(BindsRecorder::new());
             app.insert_resource(allocator);
-            app.add_system(sys_recycle_binds_recorder.in_set(ERunStageChap::Initial));
+            app.add_systems(Update, sys_recycle_binds_recorder.in_set(ERunStageChap::Initial));
         }
     }
 }

@@ -43,13 +43,14 @@ impl Plugin for PluginParticleSystem {
         let trailbuffer = TrailBuffer::new(maxbytes as u32, &mut allocator, &device, &queue);
         app.insert_resource(ResParticleTrailBuffer(trailbuffer));
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_particle_calculator.in_set(ERunStageChap::Initial),
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_act_create_cpu_partilce_system.in_set(ERunStageChap::SecondInitial),
         );
         app.add_systems(
+			Update,
             (
                 sys_act_particle_system_trail_material,
                 sys_act_partilce_system_state.run_if(should_run),
@@ -58,6 +59,7 @@ impl Plugin for PluginParticleSystem {
             ).chain().in_set(ERunStageChap::Command),
         );
         app.add_systems(
+			Update,
             (
                 sys_emitter.run_if(should_run),
                 sys_start_lifetime.run_if(should_run),
@@ -68,6 +70,7 @@ impl Plugin for PluginParticleSystem {
             ).after(sys_emission).in_set(ERunStageChap::Command),
         );
         app.add_systems(
+			Update,
             (
                 sys_size_over_life_time.run_if(should_run),
                 sys_color_over_life_time.run_if(should_run),
@@ -79,26 +82,28 @@ impl Plugin for PluginParticleSystem {
                 sys_texturesheet.run_if(should_run),
             ).after(sys_emitter).in_set(ERunStageChap::Command),
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_direction.run_if(should_run).after(sys_velocity_over_life_time).in_set(ERunStageChap::Command),
         );
         app.add_systems(
+			Update,
             (
                 sys_color_by_speed.run_if(should_run),
                 sys_size_by_speed.run_if(should_run),
                 sys_rotation_by_speed.run_if(should_run),
             ).after(sys_direction).in_set(ERunStageChap::Command),
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_emitmatrix.run_if(should_run).after(sys_world_matrix_calc).in_set(ERunStageChap::CalcWorldMatrix),
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_update_buffer.run_if(should_run).in_set(ERunStageChap::Uniform),
         );
-        app.add_system(
+        app.add_systems(Update, 
             sys_update_buffer_trail.run_if(should_run).after(sys_update_buffer).in_set(ERunStageChap::Uniform),
         );
-        app.add_system(
+        app.add_systems(
+			Update, 
             sys_dispose_about_particle_system.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::StateCheck),
         );
     }

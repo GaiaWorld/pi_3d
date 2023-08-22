@@ -270,7 +270,7 @@ where
             app.world.insert_resource(ShareAssetMgr::<D>::new(GarbageEmpty(), self.0, self.1, self.2));
         }
 
-        app.add_system(sys_sync_load_option_create::<K0, K, D, R>.in_set(ERunStageChap::Initial));
-        app.add_system(sys_sync_load_option_check_await::<K0, K, D, R>.in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_sync_load_option_create::<K0, K, D, R>.in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_sync_load_option_check_await::<K0, K, D, R>.in_set(ERunStageChap::Initial));
     }
 }

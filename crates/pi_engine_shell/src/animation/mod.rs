@@ -4,7 +4,7 @@ mod command_sys;
 use core::fmt::Debug;
 use std::marker::PhantomData;
 
-use bevy::prelude::{App, Plugin, IntoSystemConfigs, Entity, IntoSystemConfig, Component, Resource};
+use bevy::prelude::{App, Plugin, IntoSystemConfigs, Entity, Component, Resource, Update};
 
 pub use base::*;
 pub use command::*;
@@ -29,6 +29,7 @@ impl Plugin for PluginGlobalAnimation {
         // app.insert_resource(ActionListAddTargetAnime::default());
 
         app.add_systems(
+			Update,
             (
                 sys_anime_group_attach.run_if(should_run),
                 sys_calc_reset_while_animationgroup_start.run_if(should_run),
@@ -39,7 +40,7 @@ impl Plugin for PluginGlobalAnimation {
             ).chain().in_set(ERunStageChap::Command)
         );
         
-        app.add_system(
+        app.add_systems(Update, 
             sys_animation_removed_data_clear.run_if(should_run).in_set(ERunStageChap::Initial)
         );
 
@@ -76,17 +77,18 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
         let type_ctx = TypeAnimeContext::<D>::new(ty, &mut runtime_info_map);
         app.insert_resource(type_ctx);
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear)
         );
         app.add_systems(
+			Update,
             (
                 sys_calc_reset_animatablecomp::<D, R>.run_if(should_run),
                 sys_calc_type_anime::<D>.run_if(should_run)
             ).chain().in_set(ERunStageChap::Anime)
         );
         
-        // app.add_system(sys_calc_type_anime::<D>.in_set(ERunStageChap::Anime));
+        // app.add_systems(Update, sys_calc_type_anime::<D>.in_set(ERunStageChap::Anime));
 
         // SysTypeAnimeDispose::<D>::setup(world, stages.query_stage::<SysTypeAnimeDispose::<D>>(ERunStageChap::Initial));
         // SysTypeAnime::<D>::setup(world, stages.query_stage::<SysTypeAnime::<D>>(ERunStageChap::Anime));

@@ -105,7 +105,7 @@ impl BindEffectValues {
     }
 
     pub fn mat4(& self, slot: usize, value: &[Number]) {
-        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.mat4_.set(slot, value);
     }
@@ -117,19 +117,19 @@ impl BindEffectValues {
     // }
     
     pub fn vec4(& self, slot: usize, value: &[Number]) {
-        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.vec4_.set(slot, value);
     }
     
     pub fn vec2(& self, slot: usize, value: &[Number]) {
-        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.vec2_.set(slot, value);
     }
     
     pub fn float(& self, slot: usize, value: Number) {
-        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.float.set(slot, value);
     }
@@ -141,7 +141,7 @@ impl BindEffectValues {
     // }
     
     pub fn uint(& self, slot: usize, value: u32) {
-        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.uint_.set(slot, value);
     }
@@ -174,7 +174,7 @@ impl BindEffectValues {
     // }
 
     pub fn vec4_one(& self, slot: usize, offset: usize, value: Number) {
-        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         if let Some(data) = item.vec4_.value_mut(slot) {
             data[offset] = value;
@@ -182,7 +182,7 @@ impl BindEffectValues {
     }
 
     pub fn vec2_one(& self, slot: usize, offset: usize, value: Number) {
-        let item = unsafe { &mut *(self as *const Self as *mut Self) };
+        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         if let Some(data) = item.vec2_.value_mut(slot) {
             data[offset] = value;

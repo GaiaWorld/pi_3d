@@ -37,11 +37,12 @@ impl Plugin for PluginScene {
         app.insert_resource(ActionListSceneFogParam::default());
         app.insert_resource(ActionListSceneAnimationEnable::default());
 
-        app.add_system(
+        app.add_systems(Update, 
             sys_create_scene.in_set(ERunStageChap::Initial)
         );
         
         app.add_systems(
+			Update,
             (
                 sys_act_scene_time,
                 sys_act_scene_ambientcolor,
@@ -53,6 +54,7 @@ impl Plugin for PluginScene {
         );
 
         app.add_systems(
+			Update,
             (
                 sys_bind_update_scene_ambient,
                 sys_bind_update_scene_fog,
@@ -60,7 +62,7 @@ impl Plugin for PluginScene {
             ).in_set(ERunStageChap::Uniform)
         );
 
-        app.add_system(sys_dispose_about_scene.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_scene.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     
 }

@@ -91,9 +91,9 @@ pub fn sys_material_anime_init(
 
 //         app.world.insert_resource(type_ctx);
 
-//         // app.add_system(
+//         // app.add_systems(Update, 
 //         //     sys_listen_type_anime_ctx::<D>.in_set(ERunStageChap::Command)
 //         // );
-//         app.add_system(sys_calc_type_anime::<D>.run_if(should_run).in_set(ERunStageChap::Anime));
+//         app.add_systems(Update, sys_calc_type_anime::<D>.run_if(should_run).in_set(ERunStageChap::Anime));
 //     }
 // }

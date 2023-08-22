@@ -37,7 +37,6 @@ pub fn sys_info_node(
     });
 }
 
-
 pub fn sys_info_draw(
     draws: Query<(&PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue, &PassShader, &PassBindGroups, &PassPipeline, &PassDraw)>,
     geometries: Query<&RenderGeometryComp>,
