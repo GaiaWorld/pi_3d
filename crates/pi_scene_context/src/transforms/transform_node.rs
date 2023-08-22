@@ -134,8 +134,34 @@ impl LocalRotationQuaternion {
 }
 impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
-        let temp = self.0.lerp(&rhs.0, amount);
-        Self(temp, true)
+        let li = self.0.i;
+        let lj = self.0.j;
+        let lk = self.0.k;
+        let lw = self.0.w;
+        let ri = rhs.0.i;
+        let rj = rhs.0.j;
+        let rk = rhs.0.k;
+        let rw = rhs.0.w;
+        let mut num4 = li * ri + lj * rj + lk * rk + lw * rw;
+        let mut flag = false;
+        if num4 < Number::EPSILON {
+            num4 = -1.0 * num4;
+        }
+        let (num2, num3) = if 0.9999999 < num4 {
+            (
+                if flag { -1. * amount } else { amount },
+                1.0 - amount
+            )
+        } else {
+            let num5 = Number::acos(num4);
+            let num6 = 1.0 / Number::sin(num5);
+            (
+                if flag { -1.0 * Number::sin(amount * num5) * num6 } else { Number::sin(num5) * num6 },
+                Number::sin((1.0 - amount) * num5) * num6
+            )
+        };
+
+        Self::create(num3 * li + num2 * ri, num3 * lj + num2 * rj, num3 * lk + num2 * rk, num3 * lw + num2 * rw)
     }
 
     fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {

@@ -469,6 +469,9 @@ impl ParticleDieWaitTime {
 }
 
 #[derive(Component)]
+pub struct ParticleActive(pub bool);
+
+#[derive(Component)]
 pub struct ParticleState {
     pub(crate) start: bool,
     pub(crate) playing: bool,

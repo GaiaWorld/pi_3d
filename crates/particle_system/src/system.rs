@@ -7,6 +7,24 @@ use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix
 
 use crate::{base::*, tools::{Random, Velocity}};
 
+pub fn sys_particle_active(
+    mut items: Query<(&GlobalEnable, &ParticleActive, &mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission), Or<(Changed<GlobalEnable>, Changed<ParticleActive>)>>
+) {
+    items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission)| {
+        if enable.0 == true && active.0 == true && state.start == false {
+            state.playing = true;
+            state.start = true;
+
+            let timescale = time.time_scale;
+            *time = ParticleSystemTime::new(); time.time_scale = timescale;
+            *emission = ParticleSystemEmission::new();
+        } else {
+            state.playing = false;
+            state.start = false;
+        }
+    });
+}
+
 /// 系统的启动
 pub fn sys_emission(
     scenes: Query<&SceneTime>,

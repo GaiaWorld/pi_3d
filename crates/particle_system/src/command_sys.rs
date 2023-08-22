@@ -60,6 +60,7 @@ pub fn sys_act_create_cpu_partilce_system(
             }
 
             entitycmd
+                .insert(ParticleActive(true))
                 .insert(ParticleState { start: false, playing: false })
                 .insert(ParticleRandom::new(0))
                 .insert(ParticleSystemTime::new())
@@ -139,33 +140,27 @@ pub fn sys_act_create_cpu_partilce_system(
 
 pub fn sys_act_partilce_system_state(
     mut cmds: ResMut<ActionListCPUParticleSystemState>,
-    mut items: Query<(&mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission)>,
+    mut items: Query<(&mut ParticleActive, &mut ParticleSystemTime)>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsCPUParticleSystemState::Start(entity, count) => {
-                if let Ok((mut state, mut ids, mut time, mut emission)) = items.get_mut(entity) {
-                    state.playing = true;
-                    state.start = true;
-                    ids.reset();
-                    let timescale = time.time_scale;
-                    *time = ParticleSystemTime::new(); time.time_scale = timescale;
-                    *emission = ParticleSystemEmission::new();
+                if let Ok((mut active, mut time)) = items.get_mut(entity) {
+                    active.0 = true;
                 } else if count < 2 {
                     cmds.push(OpsCPUParticleSystemState::Start(entity, count + 1));
                 }
             },
             OpsCPUParticleSystemState::TimeScale(entity, timescale, count) => {
-                if let Ok((mut state, mut ids, mut time, mut emission)) = items.get_mut(entity) {
+                if let Ok((mut active, mut time)) = items.get_mut(entity) {
                     time.time_scale = timescale;
                 } else if count < 2 {
                     cmds.push(OpsCPUParticleSystemState::TimeScale(entity, timescale, count + 1));
                 }
             },
             OpsCPUParticleSystemState::Stop(entity, count) => {
-                if let Ok((mut state, mut ids, mut time, mut emission)) = items.get_mut(entity) {
-                    state.playing = false;
-                    state.start = false;
+                if let Ok((mut active, mut time)) = items.get_mut(entity) {
+                    active.0 = false;
                 } else if count < 2 {
                     cmds.push(OpsCPUParticleSystemState::Stop(entity, count + 1));
                 }
