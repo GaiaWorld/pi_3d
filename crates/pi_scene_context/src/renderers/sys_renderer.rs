@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 use crate::{
@@ -28,10 +28,9 @@ use super::{
             (ObjectID, &ModelPass, &PassReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &mut PassBindGroups),
             Or<(Changed<PassReady>, Changed<PassBindGroupScene>, Changed<PassBindGroupModel>, Changed<PassBindGroupTextureSamplers>)>
         >,
-        mut commands: Commands,
     ) {
-        passes.iter_mut().for_each(|(id_pass, id_model, ready, set0, set1, set2, mut bindgroups)| {
-            if let Some((key_meta, meta)) = ready.val() {
+        passes.iter_mut().for_each(|(_id_pass, _id_model, ready, set0, set1, set2, mut bindgroups)| {
+            if let Some((_key_meta, meta)) = ready.val() {
                 if let (Some(set0), Some(set1)) = (set0.val(), set1.val()) {
                     if meta.textures.len() > 0 && set2.val().is_none() {
                         if bindgroups.val().is_some() {
@@ -64,27 +63,26 @@ use super::{
         >,
         geometrys: Query<(&EVerticeExtendCodeComp, &VertexBufferLayoutsComp)>, 
         passes: Query<(&PassReady, &PassBindGroups, &PassShader), With<T>>,
-        mut commands: Commands,
         mut shader_center: ResMut<AssetDataCenterShader3D>,
         mut shader_loader: ResMut<AssetLoaderShader3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
         models.iter().for_each(
-            |(id_model, id_geo, passid, renderalignment)| {
+            |(_id_model, id_geo, passid, renderalignment)| {
                 // log::debug!("SysPassShaderRequestByModel: 0");
                 let id_pass = passid.id();
                 let (instance, vb) = if let Ok(val) = geometrys.get(id_geo.0) {
                     val
                 } else {
                     // log::debug!("SysPassShaderRequestByModel: 11");
-                            if let Some(mut cmd) = commands.get_entity(id_pass) {
-                                cmd.insert(PassShader(None));
-                            }
+                            // if let Some(mut cmd) = commands.get_entity(id_pass) {
+                            //     cmd.insert(PassShader(None));
+                            // }
                     return;
                 };
-                if let Ok((ready, bindgroups, old_shader)) = passes.get(id_pass.clone()) {
+                if let Ok((ready, bindgroups, _old_shader)) = passes.get(id_pass.clone()) {
                     // log::debug!("SysPassShaderRequestByModel: 2");
                     if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
                         
@@ -109,11 +107,13 @@ use super::{
                         let mut fs_defines = vec![];
                         fs_defines.push(set0.fs_define_code());
                         fs_defines.push(set1.fs_define_code());
-                        let set2 = if let Some(set2) = set2 {
+                        // let set2 = 
+                        if let Some(set2) = set2 {
                             vs_defines.push(set2.vs_define_code());
                             fs_defines.push(set2.fs_define_code());
-                            Some(set2.as_ref())
-                        } else { None };
+                            // Some(set2.as_ref())
+                        }
+                        //  else { None };
                 
                         if shader_center.request(&key_shader, None) {
                             // log::debug!("SysPassShaderRequestByModel: 4");
@@ -141,12 +141,12 @@ use super::{
                             shader_loader.request(id_pass, &key_shader);
                         }
                     } else {
-                        if old_shader.val().is_some() {
-                            // log::debug!("SysPassShaderRequestByModel: No Ready");
-                            if let Some(mut cmd) = commands.get_entity(id_pass) {
-                                cmd.insert(PassShader(None));
-                            }
-                        }
+                        // if old_shader.val().is_some() {
+                        //     log::debug!("SysPassShaderRequestByModel: No Ready");
+                        //     if let Some(mut cmd) = commands.get_entity(id_pass) {
+                        //         cmd.insert(PassShader(None));
+                        //     }
+                        // }
                     }
                 }
             }
@@ -167,30 +167,30 @@ use super::{
             (ObjectID, &ModelPass, &PassReady, &PassBindGroups, &PassShader, &T),
             Or<(Changed<PassReady>, Changed<PassBindGroups>)>
         >,
-        mut commands: Commands,
+        // mut commands: Commands,
         mut shader_center: ResMut<AssetDataCenterShader3D>,
         mut shader_loader: ResMut<AssetLoaderShader3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
-        passes.iter().for_each(|(id_pass, id_model, ready, bindgroups, old_shader, _)| {
+        passes.iter().for_each(|(id_pass, id_model, ready, bindgroups, _old_shader, _)| {
             // log::debug!("SysPassShaderRequestByPass: 0");
             if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
                 // log::debug!("SysPassShaderRequestByPass: 1");
-                if let Ok((id_geometry, passid, renderalignment)) = models.get(id_model.0) {
+                if let Ok((id_geometry, _passid, renderalignment)) = models.get(id_model.0) {
                     // log::debug!("SysPassShaderRequestByPass: 2");
                     let (instance, vb) = if let Ok(val) = geometrys.get(id_geometry.0) {
                         val
                     } else {
-                        if let Some(mut cmd) = commands.get_entity(id_pass) {
-                            cmd.insert(PassShader(None));
-                        }
+                        // if let Some(mut cmd) = commands.get_entity(id_pass) {
+                        //     cmd.insert(PassShader(None));
+                        // }
                         // log::debug!("SysPassShaderRequestByPass: 11");
                         return;
                     };
                     let key_attributes = vb.as_key_shader_from_attributes();
-                    let key_shader_defines = 0;
+                    // let key_shader_defines = 0;
     
                     let key_set_blocks = bindgroups.key_set_blocks();
     
@@ -209,11 +209,13 @@ use super::{
                     let mut fs_defines = vec![];
                     fs_defines.push(set0.fs_define_code());
                     fs_defines.push(set1.fs_define_code());
-                    let set2 = if let Some(set2) = set2 {
+                    // let set2 = 
+                    if let Some(set2) = set2 {
                         vs_defines.push(set2.vs_define_code());
                         fs_defines.push(set2.fs_define_code());
-                        Some(set2.as_ref())
-                    } else { None };
+                        // Some(set2.as_ref())
+                    }
+                    //  else { None };
             
                     if shader_center.request(&key_shader, None) {
                         // log::debug!("SysPassShaderRequestByModel: 4");
@@ -240,20 +242,20 @@ use super::{
                         shader_loader.request(id_pass, &key_shader);
                     }
                 } else {
-                    if old_shader.val().is_some() {
-                        // log::debug!("SysPassShaderRequestByPass: No Geo");
-                            if let Some(mut cmd) = commands.get_entity(id_pass) {
-                                cmd.insert(PassShader(None));
-                            }
-                    }
+                    // if old_shader.val().is_some() {
+                    //     // log::debug!("SysPassShaderRequestByPass: No Geo");
+                    //         if let Some(mut cmd) = commands.get_entity(id_pass) {
+                    //             cmd.insert(PassShader(None));
+                    //         }
+                    // }
                 }
             } else {
-                if old_shader.val().is_some() {
-                    // log::debug!("SysPassShaderRequestByPass: No Ready");
-                            if let Some(mut cmd) = commands.get_entity(id_pass) {
-                                cmd.insert(PassShader(None));
-                            }
-                }
+                // if old_shader.val().is_some() {
+                //     // log::debug!("SysPassShaderRequestByPass: No Ready");
+                //             if let Some(mut cmd) = commands.get_entity(id_pass) {
+                //                 cmd.insert(PassShader(None));
+                //             }
+                // }
             }
         });
 
@@ -265,7 +267,7 @@ use super::{
         mut shader_center: ResMut<AssetDataCenterShader3D>,
         mut shader_loader: ResMut<AssetLoaderShader3D>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
         shader_center.single_create().iter().for_each(|(key, value)| {
             // log::debug!("PassShaderLoaded: 0");
             shader_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
@@ -305,7 +307,7 @@ use super::{
         mut pipeline_loader: ResMut<AssetLoaderPipeline3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
         models.iter().for_each(| (
             idscene,
@@ -319,7 +321,7 @@ use super::{
                 return;
             };
             let id_pass = passid.id();
-            if let Ok((shader, bindgroups, old_draw, _, oldpipeline)) = passes.get(id_pass) {
+            if let Ok((shader, bindgroups, old_draw, _, _)) = passes.get(id_pass) {
                 // log::debug!("SysPipeline: 0 Model");
                 let vb = if let Ok(vb) = geometrys.get(id_geo.0.clone()) {
                     vb
@@ -358,6 +360,7 @@ use super::{
                         depth_stencil: depth_stencil,
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
                     };
+                    // log::warn!("{:?}", key_state);
 
                     let key_pipeline = KeyPipeline3D {
                         key_state,
@@ -416,9 +419,9 @@ use super::{
         mut pipeline_loader: ResMut<AssetLoaderPipeline3D>,
         device: Res<PiRenderDevice>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
-        passes.iter().for_each(|(id_pass, id_model, bindgroups, shader, _, oldpipeline)| {
+        passes.iter().for_each(|(id_pass, id_model, bindgroups, shader, _, _)| {
             // log::debug!("SysPipeline: 0 Pass");
             if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
                 // log::debug!("SysPipeline: 1 Pass");
@@ -469,6 +472,8 @@ use super::{
                         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
                     };
 
+                    // log::warn!("{:?}", key_state);
+
                     let key_pipeline = KeyPipeline3D {
                         key_state,
                         key_shader,
@@ -511,9 +516,8 @@ use super::{
         mut passes: Query<&mut PassPipeline>,
         mut pipeline_center: ResMut<AssetDataCenterPipeline3D>,
         mut pipeline_loader: ResMut<AssetLoaderPipeline3D>,
-        device: Res<PiRenderDevice>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
         pipeline_center.single_create().iter().for_each(|(key, value)| {
             // log::debug!("SysPassPipeline: 0");
@@ -535,9 +539,9 @@ use super::{
         mut passes: Query<(ObjectID, &ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
         // mut commands: Commands,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
-        passes.iter_mut().for_each(|(id_pass, id_model, bindgroups, pipeline, mut old_draw, _)| {
+        passes.iter_mut().for_each(|(_, id_model, bindgroups, pipeline, mut old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                 if let Ok((id_geo, renderindices, geoenable, disposed)) = models.get(id_model.0) {
                     if geoenable.0 == false || disposed.0 == true { return; }
@@ -582,12 +586,12 @@ use super::{
         mut passes: Query<(&ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
         models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable, disposed)| {
             if geoenable.0 == false || disposed.0 == true { return; }
 
-            if let Ok((id_model, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
+            if let Ok((_, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
@@ -619,7 +623,7 @@ use super::{
     }
 
     pub fn sys_renderer_draws_modify(
-        mut scenes: Query<&ScenePassRenderCfg>,
+        scenes: Query<&ScenePassRenderCfg>,
         mut renderers: Query<
             (
                 ObjectID, &ViewerID, &mut Renderer, &PassTagOrders, &RendererEnable, &mut RenderSize
@@ -639,7 +643,7 @@ use super::{
         >,
         mut record: ResMut<RendererDrawCallRecord>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
         renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
@@ -659,7 +663,7 @@ use super::{
                     if let Some(viewport) = viewport {
                         renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);
                     } else {
-                        renderer.draws.viewport = (0., 0., 1., 1., -1., 1.);
+                        renderer.draws.viewport = (0., 0., 1., 1., 0., 1.);
                     }
                     list_model.0.iter().for_each(|id_obj| {
     

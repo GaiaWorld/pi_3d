@@ -1,6 +1,4 @@
 
-use std::mem::size_of;
-
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr};
 use pi_engine_shell::{prelude::*, engine_shell::asset_capacity};
 
@@ -151,7 +149,7 @@ impl Plugin for PluginRenderer {
                 sys_set0_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
                 sys_set0_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
                 sys_set0_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
         app.add_systems(
 			Update,
@@ -165,7 +163,7 @@ impl Plugin for PluginRenderer {
                 sys_set1_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
                 sys_set1_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
                 sys_set1_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
         app.add_systems(
 			Update,
@@ -179,7 +177,7 @@ impl Plugin for PluginRenderer {
                 sys_set2_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
                 sys_set2_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
                 sys_set2_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
 
         app.add_systems(
@@ -193,7 +191,7 @@ impl Plugin for PluginRenderer {
                 sys_set1_modify_by_pass::<Pass06, PassID06>.run_if(should_run),
                 sys_set1_modify_by_pass::<Pass07, PassID07>.run_if(should_run),
                 sys_set1_modify_by_pass::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
         
         app.add_systems(
@@ -207,7 +205,7 @@ impl Plugin for PluginRenderer {
                 sys_set0_modify_by_scene::<Pass06, PassID06>.run_if(should_run),
                 sys_set0_modify_by_scene::<Pass07, PassID07>.run_if(should_run),
                 sys_set0_modify_by_scene::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
         
         app.add_systems(
@@ -222,7 +220,7 @@ impl Plugin for PluginRenderer {
                 sys_set1_modify_by_model::<Pass06, PassID06>.run_if(should_run),
                 sys_set1_modify_by_model::<Pass07, PassID07>.run_if(should_run),
                 sys_set1_modify_by_model::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
         
         app.add_systems(
@@ -237,7 +235,7 @@ impl Plugin for PluginRenderer {
                 sys_set2_modify_by_model::<Pass06, PassID06>.run_if(should_run),
                 sys_set2_modify_by_model::<Pass07, PassID07>.run_if(should_run),
                 sys_set2_modify_by_model::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
 
 

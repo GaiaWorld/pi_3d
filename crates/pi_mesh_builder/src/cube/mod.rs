@@ -8,10 +8,10 @@ use pi_scene_context::prelude::*;
 
 pub struct CubeBuilder;
 impl CubeBuilder {
-    const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";
-    const KEY_BUFFER_POSITION:  &'static str = "CubePosition";
-    const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
-    const KEY_BUFFER_UV:        &'static str = "CubeUV";
+    // const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";
+    // const KEY_BUFFER_POSITION:  &'static str = "CubePosition";
+    // const KEY_BUFFER_NORMAL:    &'static str = "CubeNormal";
+    // const KEY_BUFFER_UV:        &'static str = "CubeUV";
     const KEY_BUFFER_INDICES:   &'static str = "CubeIndices";
     const KEY_BUFFER:           &'static str = "CubeBuildin";
     // const KEY_BUFFER_COLOR4:    IDAssetVertexBuffer = -1005;
@@ -20,16 +20,16 @@ impl CubeBuilder {
     // const KEY_BUFFER_UV:        IDAssetVertexBuffer = -1002;
     // const KEY_BUFFER_INDICES:   IDAssetVertexBuffer = -1001;
     // const KEY_BUFFER:           IDAssetVertexBuffer = -1000;
-    const VERTEX_COUNT:         usize = 24;
+    // const VERTEX_COUNT:         usize = 24;
     const POSITION_OFFSET:      usize = 0;
     const POSITION_SIZE:        usize = 72 * 4;
-    const NORMAL_OFFSET:        usize = Self::POSITION_OFFSET + Self::POSITION_SIZE;
-    const NORMAL_SIZE:          usize = 72* 4 ;
-    const UV_OFFSET:            usize = Self::NORMAL_OFFSET + Self::NORMAL_SIZE;
-    const UV_SIZE:              usize = 48 * 4;
-    const INDICES_OFFSET:       usize = Self::UV_OFFSET + Self::UV_SIZE;
-    const INDICES_SIZE:         usize = 36 * 2;
-    const TOTAL_SIZE:           usize = Self::INDICES_OFFSET + Self::INDICES_SIZE;
+    // const NORMAL_OFFSET:        usize = Self::POSITION_OFFSET + Self::POSITION_SIZE;
+    // const NORMAL_SIZE:          usize = 72* 4 ;
+    // const UV_OFFSET:            usize = Self::NORMAL_OFFSET + Self::NORMAL_SIZE;
+    // const UV_SIZE:              usize = 48 * 4;
+    // const INDICES_OFFSET:       usize = Self::UV_OFFSET + Self::UV_SIZE;
+    // const INDICES_SIZE:         usize = 36 * 2;
+    // const TOTAL_SIZE:           usize = Self::INDICES_OFFSET + Self::INDICES_SIZE;
     pub fn attrs_meta() -> Vec<VertexBufferDesc> {
         let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER);
         vec![
@@ -149,18 +149,18 @@ impl CubeBuilder {
 // }
 
 // impl InterfaceCube for Engine {
-    fn setup(
-        asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
-        mut data_map: ResMut<VertexBufferDataMap3D>,
-    ) {
-        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER)) {
-            ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
-        }
-        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES)) {
-            // log::warn!("CubeBuilder::KEY_BUFFER_INDICES");
-            ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
-        }
-    }
+    // fn setup(
+    //     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+    //     mut data_map: ResMut<VertexBufferDataMap3D>,
+    // ) {
+    //     if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER)) {
+    //         ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+    //     }
+    //     if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES)) {
+    //         // log::warn!("CubeBuilder::KEY_BUFFER_INDICES");
+    //         ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+    //     }
+    // }
     // fn new_cube(
     //     & self,
     //     scene: ObjectID,

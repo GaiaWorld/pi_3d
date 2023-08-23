@@ -3,10 +3,8 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::Vector4;
 
 use crate::{
-    geometry::{
-        vertex_buffer_useinfo::*, 
-        base::*, 
-    }, prelude::{AbstructMesh, GlobalEnable, InstanceRGB, InstanceAlpha, InstanceColor, InstanceColorDirty},
+    geometry::vertex_buffer_useinfo::*,
+    prelude::{AbstructMesh, GlobalEnable, InstanceRGB, InstanceAlpha, InstanceColor, InstanceColorDirty},
 };
 
 use super::*;
@@ -77,7 +75,7 @@ use super::*;
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
     ) {
-        let time = pi_time::Instant::now();
+        // let time = pi_time::Instant::now();
         sources.iter_mut().for_each(|(
             _,
             inslist, id_geo, mut flag,
@@ -100,7 +98,7 @@ use super::*;
                         }
                     }
                 });
-    
+
                 // if list.len() == 0 {
                 //     //
                 // } else {
@@ -126,7 +124,7 @@ use super::*;
             }
         });
         
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
         // log::debug!("SysInstanceBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
     }
 // }
@@ -218,7 +216,7 @@ pub fn instance_buffer_update<T: TInstanceBuffer>(
     device: &RenderDevice,
     queue: &RenderQueue,
 ) {
-    let key = buffer.id();
+    // let key = buffer.id();
 
     match buffer.slot() {
         EVertexBufferSlot::Slot01 => {

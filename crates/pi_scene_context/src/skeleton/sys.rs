@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-use crate::{transforms::{transform_node::*}, commands::{DisposeReady, OpsDisposeCan, ActionListDisposeCan}};
+use crate::{transforms::transform_node::*, commands::*};
 
 use super::{skeleton::*, bone::*};
 
@@ -142,13 +142,13 @@ use super::{skeleton::*, bone::*};
         p_abs: &Matrix,
     ) {
         match bones.get_mut(entity) {
-            Ok((base, mut abs, mut absinv)) => {
+            Ok((_base, mut abs, mut absinv)) => {
                 abs.update(p_abs);
                 absinv.update(&abs);
 
                 temp_list.push((entity, abs.0.clone()));
             },
-            Err(e) => {
+            Err(_e) => {
                 
             },
         }

@@ -1,25 +1,25 @@
-use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::TToolMatrix};
+// use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::TToolMatrix};
 
-use crate::tools::*;
+// use crate::tools::*;
 
-pub type TRenderWorldMatrixCompute = dyn Fn(
-    Matrix,
-    &mut Matrix,
-    &mut Matrix,
-    Matrix,
-    Vector3,
-    &mut Vector3,
-    f32,
-    Vector3,
-    Vector3,
-    Vector3,
-    f32,
-    f32,
-);
+// pub type TRenderWorldMatrixCompute = dyn Fn(
+//     Matrix,
+//     &mut Matrix,
+//     &mut Matrix,
+//     Matrix,
+//     Vector3,
+//     &mut Vector3,
+//     f32,
+//     Vector3,
+//     Vector3,
+//     Vector3,
+//     f32,
+//     f32,
+// );
 
-const TEMP_VECTOR3_TRANSLATION: Vector3 = Vector3::new(0., 0., 0.);
+// const TEMP_VECTOR3_TRANSLATION: Vector3 = Vector3::new(0., 0., 0.);
 
-const STRETCHED_BILLBOARD_ROT: Vector3 = Vector3::new(0., 0., -1.5707963267948966);
+// const STRETCHED_BILLBOARD_ROT: Vector3 = Vector3::new(0., 0., -1.5707963267948966);
 // (<any>window)._StretchedBillboardRot = _StretchedBillboardRot;
 
 // pub struct StretchedBillboard;

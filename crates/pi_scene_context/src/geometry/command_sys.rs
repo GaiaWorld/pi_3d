@@ -1,4 +1,4 @@
-use std::{mem::replace, sync::Arc};
+use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 
@@ -23,7 +23,7 @@ pub fn sys_create_geometry(
     mut allocator: ResMut<VertexBufferAllocator3D>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, vertex_desc, indices_desc, count)| {
@@ -101,8 +101,6 @@ pub fn sys_create_geometry(
 
 pub fn sys_act_geomettry_instance_world_matrix(
     mut cmds: ResMut<ActionListInstanceWorldMatrixs>,
-    mut geoloader: ResMut<GeometryVBLoader>,
-    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     mut geometrys: Query<&mut InstanceBufferWorldMatrix>,
     mut slots: (
         Query<&mut AssetResVBSlot01>,
@@ -139,8 +137,6 @@ pub fn sys_act_geomettry_instance_world_matrix(
 
 pub fn sys_act_geomettry_instance_color(
     mut cmds: ResMut<ActionListInstanceColors>,
-    mut geoloader: ResMut<GeometryVBLoader>,
-    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     mut geometrys: Query<&mut InstanceBufferColor>,
     mut slots: (
         Query<&mut AssetResVBSlot01>,
@@ -178,8 +174,6 @@ pub fn sys_act_geomettry_instance_color(
 
 pub fn sys_act_geomettry_instance_tilloff(
     mut cmds: ResMut<ActionListInstanceTilloffs>,
-    mut geoloader: ResMut<GeometryVBLoader>,
-    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     mut geometrys: Query<&mut InstanceBufferTillOff>,
     mut slots: (
         Query<&mut AssetResVBSlot01>,

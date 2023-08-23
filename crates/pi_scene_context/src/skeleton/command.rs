@@ -32,10 +32,10 @@ impl OpsSkinUse {
 }
 pub type ActionListSkinUse = ActionList<OpsSkinUse>;
 
-pub struct OpsBoneCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) String);
+pub struct OpsBoneCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity);
 impl OpsBoneCreation {
-    pub fn ops(bone: Entity, parent: Entity, scene: Entity, name: String) -> Self {
-        Self(bone, parent, scene, name)
+    pub fn ops(bone: Entity, parent: Entity, scene: Entity) -> Self {
+        Self(bone, parent, scene)
     }
 }
 pub type ActionListBoneCreate = ActionList<OpsBoneCreation>;

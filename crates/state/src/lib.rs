@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use pi_hash::XHashMap;
-use pi_particle_system::prelude::ParticleSystemTime;
+use pi_node_materials::prelude::*;
+use pi_particle_system::prelude::*;
 use pi_scene_context::{prelude::*, light::base::Light};
 use pi_trail_renderer::TrailBase;
 
@@ -18,6 +21,7 @@ pub struct StateScene {
     pub count_vertex: usize,
     pub count_particlesys: usize,
     pub count_trail: usize,
+    // pub entity: Entity,
 }
 
 pub fn sys_state_scene(
@@ -140,9 +144,9 @@ pub struct StateGlobal {
     pub scenes: XHashMap<Entity, StateScene>,
 }
 
+
 pub fn sys_state_global(
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-    asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
     bindbuffers: Res<ResBindBufferAllocator>,
     vertexbuffers: Res<VertexBufferAllocator3D>,
     shaders: Res<AssetDataCenterShader3D>,
@@ -166,6 +170,106 @@ impl Plugin for PluginStateGlobal {
     fn build(&self, app: &mut App) {
         app.insert_resource(StateGlobal::default());
         app.add_systems(Update, sys_state_scene.run_if(should_run).in_set(ERunStageChap::StateCheck));  
-        app.add_systems(Update, sys_state_global.run_if(should_run).in_set(ERunStageChap::StateCheck));   
+        app.add_systems(Update, sys_state_global.run_if(should_run).in_set(ERunStageChap::StateCheck));
+
+        // let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+        // let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
+
+        // let maxcount = 
+        // let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        // let buffer = StateGeometryBuffer::new(maxcount as u32, &mut allocator, &device, &queue);
+    }
+}
+
+
+#[derive(Resource)]
+pub struct StateGeometryBuffer{
+    pub vertices: Vec<f32>,
+    pub count: u32,
+    pub maxcount: u32,
+    buffer: (Arc<NotUpdatableBufferRange>, u32, u32),
+    pub key: KeyVertexBuffer,
+}
+impl StateGeometryBuffer {
+    pub const MAX_COUNT: u32 = 1024 * 1024;
+    pub const FLOAT_PER_VERTEX: u32 = (3 + 4);
+    pub const SIZE_PER_VERTEX: u32 = Self::FLOAT_PER_VERTEX * 4;
+    pub fn buffer_desc(&self) -> VertexBufferDesc {
+        VertexBufferDesc {
+            key: self.key.clone(),
+            range: None,
+            attrs: vec![
+                VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
+                VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
+            ],
+            step_mode: wgpu::VertexStepMode::Vertex,
+            kind: EInstanceKind::None,
+        }
+    }
+    pub fn buffer(&self) -> Arc<NotUpdatableBufferRange> {
+        self.buffer.0.clone()
+    }
+    pub fn new(
+        maxbytes: u32, 
+        allocator: &mut VertexBufferAllocator,
+        device: &RenderDevice,
+        queue: &RenderQueue,
+    ) -> Option<Self> {
+        let maxcount = maxbytes / Self::SIZE_PER_VERTEX;
+
+        let size = maxbytes;
+        let mut data = Vec::with_capacity(size as usize);
+        for _ in 0..size {
+            data.push(0);
+        }
+        if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
+            Some(Self {
+                vertices: vec![],
+                count: 0,
+                maxcount: maxcount,
+                buffer: (buffer, 0, size),
+                key: KeyVertexBuffer::from("@SingleStateBuffer#@#@"),
+            })
+        } else {
+            None
+        }
+    }
+    pub fn after_collect(
+        &mut self,
+        queue: &RenderQueue,
+    ) {
+        if 0 < self.vertices.len()  {
+            let buffer = self.buffer.0.buffer();
+            queue.write_buffer(buffer, 0, bytemuck::cast_slice(&self.vertices));
+            self.vertices.clear();
+        }
+    }
+}
+
+pub struct StateUIShader;
+impl StateUIShader {
+    pub const KEY: &'static str = "StateUIShader";
+    pub fn res() -> ShaderEffectMeta {
+        let mut nodemat = NodeMaterialBuilder::new();
+        nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0));
+
+        nodemat.vs = String::from("
+        gl_Position = vec4(A_POSITION.xy, 0.5, 0.0);
+        v_color = A_COLOR;
+        ");
+        nodemat.fs = String::from("
+        gl_FragColor = v_color;
+        ");
+
+        nodemat.varyings = Varyings(
+            vec![
+                Varying { 
+                    format: Atom::from("vec4"),
+                    name: Atom::from("v_color"),
+                },
+            ]
+        );
+
+        nodemat.meta()
     }
 }

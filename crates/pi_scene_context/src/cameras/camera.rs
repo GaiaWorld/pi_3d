@@ -2,7 +2,7 @@ use pi_bevy_asset::TAssetCapacity;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
 
-use crate::{viewer::prelude::*,};
+use crate::viewer::prelude::*;
 
 
 #[derive(Debug, Clone, Copy, Component)]
@@ -30,7 +30,7 @@ impl Default for CameraViewport {
             y: 0.,
             w: 1.,
             h: 1.,
-            mindepth: -1.,
+            mindepth: 0.,
             maxdepth: 1.,
         }
     }

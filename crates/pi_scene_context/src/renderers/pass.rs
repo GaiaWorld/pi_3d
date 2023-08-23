@@ -1,10 +1,10 @@
 
 use std::sync::Arc;
 
-use pi_assets::{asset::{Handle, GarbageEmpty}};
+use pi_assets::asset::*;
 use pi_engine_shell::prelude::*;
 
-use crate::{pass::{TPassData}};
+use crate::pass::*;
 
 use super::base::*;
 

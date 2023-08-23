@@ -1,8 +1,8 @@
 use std::ops::Range;
 
 use pi_engine_shell::prelude::*;
-use pi_map::{smallvecmap::SmallVecMap};
-use pi_render::renderer::{vertices::{RenderVertices, RenderIndices}};
+use pi_map::smallvecmap::SmallVecMap;
+use pi_render::renderer::vertices::{RenderVertices, RenderIndices};
 
 use super::vertex_buffer_useinfo::{
     AssetResVBSlot01, AssetDescVBSlot01,
@@ -110,7 +110,7 @@ impl RenderGeometry {
         }
     }
     pub fn vertex_range(&self) -> Range<u32> {
-        let mut range = self.vertices[0].value_range();
+        let range = self.vertices[0].value_range();
         // range.end = range.end - range.start;
         // range.start = 0;
         range

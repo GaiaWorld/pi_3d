@@ -4,14 +4,14 @@ use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     transforms::transform_node_sys::*,
-    meshes::prelude::*,
-    pass::*, object::sys_dispose_ready,
+    pass::*,
+    object::sys_dispose_ready,
 };
 
 use self::{
     base::LightDirection,
     directional::{DirectionalShadowProjection, system::*},
-    shadow_generator::{system::*},
+    shadow_generator::system::*,
     command::*,
     command_sys::*, system::*,
 };
@@ -115,10 +115,21 @@ impl Plugin for PluginLighting {
         app.add_systems(
 			Update,
             (
-                sys_update_viewer_uniform::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
                 sys_update_viewer_model_list_by_viewer::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
                 sys_update_viewer_model_list_by_model::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
-                sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection>.run_if(should_run).after(sys_calc_render_matrix)
+            ).chain().in_set(ERunStageChap::CalcRenderMatrix)
+        );
+
+        app.add_systems(
+			Update,
+            (
+                sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection>.run_if(should_run)
+            ).chain().in_set(ERunStageChap::CalcRenderMatrix)
+        );
+        app.add_systems(
+			Update,
+            (
+                sys_update_viewer_uniform::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
             ).chain().in_set(ERunStageChap::Uniform)
         );
 

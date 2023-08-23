@@ -1,16 +1,14 @@
 
-use std::{ops::Mul, f32::consts::E};
-
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Vector4, Matrix, Number, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}, Rotation3, Vector3};
+use pi_scene_math::{Matrix, coordiante_system::CoordinateSytem3, vector::TToolMatrix, Vector3};
 
 use crate::{
     geometry::{
         prelude::*,
-        command_sys::*, instance::instance_boneoffset::*
+        instance::instance_boneoffset::*
     },
-    transforms::{prelude::*},
-    prelude::*, commands::{DisposeReady, DisposeCan, ActionListDisposeCan, ActionListDisposeReady, OpsDisposeCan, OpsDisposeReady},
+    transforms::prelude::*,
+    prelude::*, commands::*
 };
 
 use super::{
@@ -20,16 +18,16 @@ use super::{
 
 pub fn sys_calc_render_matrix(
     mut meshes: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &LocalEulerAngles, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut GlobalTransform),
+        (ObjectID, &AbstructMesh, &LocalScaling, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut GlobalTransform),
         (Without<InstanceMesh>, Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
-    let time = pi_time::Instant::now();
+    // let time = pi_time::Instant::now();
 
     meshes.iter_mut().for_each(|(
         obj, _,
-        localscaling, localeuler, worldmatrix, worldmatrix_inv, scalingmode, renderalignment, velocity, mut transform
+        localscaling, worldmatrix, worldmatrix_inv, scalingmode, renderalignment, velocity, mut transform
     )| {
         if let Ok((mut wm, mut wmi)) = matrixs.get_mut(obj) {
 
@@ -57,7 +55,7 @@ pub fn sys_calc_render_matrix(
 
             let mut m = Matrix::identity();
             let g_rotation = transform.rotation();
-            let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
+            let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
             CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
             if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
                 m = m * local;
@@ -70,14 +68,14 @@ pub fn sys_calc_render_matrix(
 
     });
     
-    let time1 = pi_time::Instant::now();
+    // let time1 = pi_time::Instant::now();
     // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
 }
 
 pub fn sys_calc_render_matrix_instance(
     meshes: Query<&RenderAlignment>,
     mut instances: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &LocalEulerAngles, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &ModelVelocity, &mut GlobalTransform, &InstanceMesh),
+        (ObjectID, &AbstructMesh, &LocalScaling, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &ModelVelocity, &mut GlobalTransform, &InstanceMesh),
         Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>, Changed<ModelVelocity>, Changed<ScalingMode>)>
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
@@ -87,7 +85,7 @@ pub fn sys_calc_render_matrix_instance(
 
     instances.iter_mut().for_each(|(
         obj, _,
-        localscaling, localeuler, worldmatrix, worldmatrix_inv, scalingmode, velocity, mut transform, id_source
+        localscaling, worldmatrix, worldmatrix_inv, scalingmode, velocity, mut transform, id_source
     )| {
         if let (Ok((mut wm, mut wmi)), Ok(renderalignment)) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
             
@@ -123,7 +121,7 @@ pub fn sys_calc_render_matrix_instance(
 
             let mut m = Matrix::identity();
             let g_rotation = transform.rotation();
-            let rotation = renderalignment.0.calc_rotation(g_rotation, g_rotation.euler_angles(), velocity);
+            let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
             CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
             if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
                 m = m * local;
@@ -178,7 +176,7 @@ pub fn sys_enable_about_instance(
     instances: Query<&InstanceMesh, Changed<GlobalEnable>>,
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
-    instances.iter().for_each(|(instance)| {
+    instances.iter().for_each(|instance| {
         if let Ok(mut flag) = meshes.get_mut(instance.0) {
             *flag = DirtyInstanceSourceRefs;
         }
@@ -186,7 +184,7 @@ pub fn sys_enable_about_instance(
 }
 
 pub fn sys_dispose_about_mesh(
-    mut items: Query<
+    items: Query<
         (
             Entity, &DisposeReady,
             &PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08,
@@ -228,7 +226,7 @@ pub fn sys_dispose_about_mesh(
         disposecanlist.push(OpsDisposeCan::ops(idgeo.0));
 
         if let Some(idskin) = idskin {
-            if let Ok((mut refs, skin)) = skeletons.get_mut(idskin.0) {
+            if let Ok((mut refs, _skin)) = skeletons.get_mut(idskin.0) {
                 refs.remove(&entity);
             }
             disposereadylist.push(OpsDisposeReady::ops(idskin.0));
@@ -260,9 +258,8 @@ pub fn sys_dispose_about_pass(
 pub fn sys_dispose_about_instance(
     items: Query<(Entity, &DisposeReady, &InstanceMesh), Changed<DisposeReady>>,
     mut instancesources: Query<(&mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs)>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
-    empty: Res<SingleEmptyEntity>,
 ) {
     items.iter().for_each(|(entity, state, sourceid)| {
         if state.0 == false { return; }

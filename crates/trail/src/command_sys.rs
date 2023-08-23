@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use bevy::ecs::entity;
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::Vector4;
@@ -12,13 +11,9 @@ pub fn sys_act_trail_mesh_geometry(
     mut cmds: ResMut<ActionListTrail>,
     mut commands: Commands,
     trailbuffer: Res<ResTrailBuffer>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut allocator: ResMut<ResBindBufferAllocator>,
-    device: Res<PiRenderDevice>,
     empty: Res<SingleEmptyEntity>,
     mut matuse: ResMut<ActionListMaterialUse>,
-    mut meshcreate: ResMut<ActionListMeshCreate>,
-    mut meshtopology: ResMut<ActionListTopology>,
 ) {
     if let Some(trailbuffer) = &trailbuffer.0 {
         cmds.drain().drain(..).for_each(|OpsTrail(id_scene, id_linked, id_mat, entity)| {
@@ -29,7 +24,7 @@ pub fn sys_act_trail_mesh_geometry(
             matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 
             // meshcreate.push(OpsMeshCreation::ops(id_scene, id_mesh, String::from("")));
-            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut tree, &mut allocator, &device, &empty);
+            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty);
 
             if let Some(mut cmd) = commands.get_entity(id_mesh) {
                 // log::warn!("Mesh Ok");

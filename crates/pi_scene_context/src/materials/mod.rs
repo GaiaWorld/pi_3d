@@ -1,6 +1,6 @@
 
 use pi_assets::asset::GarbageEmpty;
-use pi_engine_shell::{prelude::*};
+use pi_engine_shell::prelude::*;
 
 
 use crate::object::sys_dispose_ready;
@@ -14,7 +14,8 @@ use self::{
         sys_pass::*,
         set_up_uniforms
     },
-    shader_effect::*, system::sys_dispose_about_material, prelude::SingleIDBaseDefaultMaterial
+    system::sys_dispose_about_material,
+    prelude::SingleIDBaseDefaultMaterial
 };
 
 mod material;
@@ -77,7 +78,7 @@ impl Plugin for PluginMaterial {
         let cfg = asset_capacity::<AssetCfgShaderMeta3D>(app);
         app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
 
-        app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
+        // app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
 
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
@@ -153,7 +154,7 @@ impl Plugin for PluginMaterial {
                 // sys_effect_bind_to_model_while_mat_modify::<PassID06>,
                 // sys_effect_bind_to_model_while_mat_modify::<PassID07>,
                 // sys_effect_bind_to_model_while_mat_modify::<PassID08>,
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
         app.add_systems(
 			Update,
@@ -166,7 +167,7 @@ impl Plugin for PluginMaterial {
                 // sys_effect_tex_to_model_while_mat_modify::<PassID06>,
                 // sys_effect_tex_to_model_while_mat_modify::<PassID07>,
                 // sys_effect_tex_to_model_while_mat_modify::<PassID08>,
-            ).in_set(ERunStageChap::DrawBinds)
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
         app.add_systems(Update, 
             sys_material_uniform_apply.run_if(should_run).in_set(ERunStageChap::Uniform)

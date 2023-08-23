@@ -1,6 +1,4 @@
 use pi_scene_math::{Matrix, Vector3};
-use pi_wy_rng::WyRng;
-use rand::{SeedableRng, Rng};
 
 use crate::tools::{normalize, Random};
 
@@ -101,7 +99,6 @@ impl IShapeEmitterType for EdgeShapeEmitter {
         &self,
         direction_to_update: &mut pi_scene_math::Vector3,
         local_position: &Vector3,
-        is_local: bool,
         random: &mut Random,
     ) {
         let mut direction = Vector3::new(0., 1., 0.).normalize();
@@ -133,7 +130,6 @@ impl IShapeEmitterType for EdgeShapeEmitter {
         emission_progress: f32,
         emission_index: f32,
         emission_total: f32,
-        is_local: bool,
         random: &mut Random,
     ) {
         let s = compute_radians(

@@ -1,4 +1,4 @@
-use pi_scene_math::{Vector3, Number};
+use pi_scene_math::*;
 use pi_engine_shell::prelude::*;
 
 #[derive(Default)]

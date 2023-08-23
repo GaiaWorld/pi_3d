@@ -1,25 +1,22 @@
 
-use std::{ops::Mul, f32::consts::E};
-
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Vector4, Matrix, Number, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}, Rotation3, Vector3};
+use pi_scene_math::{Vector4, Matrix};
 
 use crate::{
     geometry::{
         prelude::*,
-        command_sys::*, instance::instance_boneoffset::{InstanceBoneOffsetDirty, InstanceBoneoffset, RecordInstanceBoneoffset}
+        instance::instance_boneoffset::*
     },
     pass::*,
-    renderers::{
-        prelude::*,
-    },
+    renderers::prelude::*,
     state::{MeshStates, DirtyMeshStates},
     layer_mask::prelude::*,
-    scene::command_sys::ActionScene,
-    transforms::{command_sys::ActionTransformNode, prelude::*},
+    transforms::command_sys::ActionTransformNode,
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::{RenderAlignment, ModelVelocity, ScalingMode, IndiceRenderRange, RecordIndiceRenderRange, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady}, object::ActionEntity,
+    prelude::*,
+    object::ActionEntity,
+    cullings::prelude::*,
 };
 
 use super::{
@@ -33,17 +30,15 @@ use super::{
 
 pub fn sys_create_mesh(
     mut cmds: ResMut<ActionListMeshCreate>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
     mut allocator: ResMut<ResBindBufferAllocator>,
-    device: Res<PiRenderDevice>,
     empty: Res<SingleEmptyEntity>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut _disposecanlist: ResMut<ActionListDisposeCan>,
 
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, name, count)| {
-        if ActionMesh::init(&mut commands, entity, scene, &mut tree, &mut allocator, &device, &empty) == false {
+    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity)| {
+        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty) == false {
             disposereadylist.push(OpsDisposeReady::ops(entity));
         }
     });
@@ -51,11 +46,10 @@ pub fn sys_create_mesh(
 
 pub fn sys_act_instanced_mesh_create(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
     mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, name, count)| {
+    cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, count)| {
         if let Ok((id_scene, mut instancelist, mut flag)) = meshes.get_mut(source) {
             if let Some(mut cmd) = commands.get_entity(source) {
                 cmd
@@ -75,14 +69,14 @@ pub fn sys_act_instanced_mesh_create(
             };
 
             // 
-            ActionInstanceMesh::init(&mut ins_cmds, &mut tree, source, id_scene.0, name);
+            ActionInstanceMesh::init(&mut ins_cmds, source, id_scene.0);
             ActionAnime::as_anime_group_target(&mut ins_cmds);
 
             instancelist.insert(instance);
             *flag = DirtyInstanceSourceRefs;
         } else {
             if count < 2 {
-                cmds.push(OpsInstanceMeshCreation(source, instance, name, count + 1))
+                cmds.push(OpsInstanceMeshCreation(source, instance, count + 1))
             }
         }
     });
@@ -121,7 +115,7 @@ pub fn sys_act_instance_color_alpha(
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceColorAlpha(instance, r, g, b, a, count)| {
         if entities.contains(instance) {
-            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
+            if let Ok((_source, mut instance_data)) = instances.get_mut(instance) {
                 *instance_data = InstanceColor(Vector4::new(r, g, b, a));
             } else {
                 if count < 2 {
@@ -139,7 +133,7 @@ pub fn sys_act_instance_color(
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceColor(instance, r, g, b, count)| {
         if entities.contains(instance) {
-            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
+            if let Ok((_source, mut instance_data)) = instances.get_mut(instance) {
                 *instance_data = InstanceRGB(r, g, b);
             } else {
                 if count < 2 {
@@ -157,7 +151,7 @@ pub fn sys_act_instance_alpha(
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceAlpha(instance, val, count)| {
         if entities.contains(instance) {
-            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
+            if let Ok((_source, mut instance_data)) = instances.get_mut(instance) {
                 *instance_data = InstanceAlpha(val);
             } else {
                 if count < 2 {
@@ -274,9 +268,7 @@ impl ActionMesh {
         commands: &mut Commands,
         entity: Entity,
         scene: Entity,
-        tree: &mut ActionListTransformNodeParent,
         allocator: &mut ResBindBufferAllocator,
-        device: &PiRenderDevice,
         empty: &SingleEmptyEntity,
     ) -> bool {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -285,12 +277,12 @@ impl ActionMesh {
             return false;
         };
 
-        ActionTransformNode::init(&mut entitycmd, tree, scene, String::from(""));
+        ActionTransformNode::init(&mut entitycmd, scene);
         ActionAnime::as_anime_group_target(&mut entitycmd);
         ActionMesh::as_mesh(&mut entitycmd, empty.id());
         ActionMesh::as_instance_source(&mut entitycmd);
 
-        if let Some(bind) = BindModel::new(&device, allocator) {
+        if let Some(bind) = BindModel::new(allocator) {
             log::info!("BindModel New");
             entitycmd.insert(bind);
         }
@@ -313,12 +305,12 @@ impl ActionMesh {
         commands: &mut EntityCommands,
         geometry: Entity,
     ) {
-        let mut unclipdepth = false;
-
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            unclipdepth = true;
-        }
+        // let mut unclipdepth = false;
+        // #[cfg(not(target_arch = "wasm32"))]
+        // {
+        //     unclipdepth = true;
+        // }
+        let unclipdepth = false;
 
         commands
             .insert(AbstructMesh)
@@ -358,12 +350,13 @@ impl ActionMesh {
             .insert(RecordInstanceBoneoffset::default())
             .insert(IndiceRenderRange::default())
             .insert(RecordIndiceRenderRange::default())
+            .insert(GeometryBounding::default())
+            .insert(GeometryCullingMode::default())
             ;
     }
     pub fn create(
         app: &mut App,
         scene: Entity,
-        name: String,
     ) -> Entity {
         let mut queue = CommandQueue::default();
         let mut commands = Commands::new(&mut queue, &app.world);
@@ -372,7 +365,7 @@ impl ActionMesh {
         queue.apply(&mut app.world);
 
         let mut cmds = app.world.get_resource_mut::<ActionListMeshCreate>().unwrap();
-        cmds.push(OpsMeshCreation(scene, entity, name, 0));
+        cmds.push(OpsMeshCreation(scene, entity));
 
         entity
     }
@@ -417,12 +410,10 @@ pub struct ActionInstanceMesh;
 impl ActionInstanceMesh {
     pub fn init(
         commands: &mut EntityCommands,
-        tree: &mut ActionListTransformNodeParent,
         source: Entity,
         scene: Entity,
-        name: String,
     ) {
-        ActionTransformNode::init(commands, tree, scene, name);
+        ActionTransformNode::init(commands, scene);
         ActionInstanceMesh::as_instance(commands, source);
     }
     pub(crate) fn as_instance(
@@ -443,6 +434,8 @@ impl ActionInstanceMesh {
         commands.insert(RenderWorldMatrixInv(Matrix::identity()));
         commands.insert(ModelVelocity::default());
         commands.insert(ScalingMode::default());
+        commands.insert(GeometryBounding::default());
+        commands.insert(GeometryCullingMode::default());
     }
 }
 

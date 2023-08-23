@@ -6,10 +6,10 @@ use pi_scene_context::prelude::*;
 
 pub struct QuadBuilder;
 impl QuadBuilder {
-    const KEY_BUFFER_COLOR4:    &'static str = "QuadColor4";
-    const KEY_BUFFER_POSITION:  &'static str = "QuadPosition";
-    const KEY_BUFFER_NORMAL:    &'static str = "QuadNormal";
-    const KEY_BUFFER_UV:        &'static str = "QuadUV";
+    // const KEY_BUFFER_COLOR4:    &'static str = "QuadColor4";
+    // const KEY_BUFFER_POSITION:  &'static str = "QuadPosition";
+    // const KEY_BUFFER_NORMAL:    &'static str = "QuadNormal";
+    // const KEY_BUFFER_UV:        &'static str = "QuadUV";
     const KEY_BUFFER_INDICES:   &'static str = "QuadIndices";
     const KEY_BUFFER:           &'static str = "QuadBuildin";
     // const KEY_BUFFER_COLOR4:    IDAssetVertexBuffer = -2005;
@@ -93,17 +93,17 @@ impl QuadBuilder {
 //     }
 // }
 
-fn regist(
-    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
-    mut data_map: ResMut<VertexBufferDataMap3D>,
-) {
-    if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER)) {
-        ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER), bytemuck::cast_slice(&QuadBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
-    }
-    if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES)) {
-        ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
-    }
-}
+// fn regist(
+//     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
+//     mut data_map: ResMut<VertexBufferDataMap3D>,
+// ) {
+//     if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER)) {
+//         ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER), bytemuck::cast_slice(&QuadBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+//     }
+//     if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES)) {
+//         ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+//     }
+// }
 
 // pub trait InterfaceQuad {
 //     fn regist_quad(

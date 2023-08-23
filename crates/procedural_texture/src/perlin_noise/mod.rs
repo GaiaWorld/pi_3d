@@ -10,9 +10,8 @@ pub mod command;
 
 fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
-    mut wait_list: ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(PerlinNoiseShader::KEY), PerlinNoiseShader::meta());
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(PerlinNoiseShader::KEY), PerlinNoiseShader::meta());
 }
 
 pub struct PluginPerlinNoise;

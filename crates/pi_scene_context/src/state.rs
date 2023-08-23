@@ -8,7 +8,6 @@ use crate::{
     renderers::prelude::*, 
     meshes::prelude::*,
     geometry::prelude::*,
-    viewer::prelude::*,
 };
 
 
@@ -26,7 +25,7 @@ pub enum EMeshState {
     DrawReady(PassTag),
 }
 impl EMeshState {
-    fn num(&self) -> u8 {
+    pub fn num(&self) -> u8 {
         match self {
             EMeshState::Init                => 001,
             EMeshState::GeomtryReady        => 002,
@@ -207,7 +206,9 @@ pub struct StateRecordCfg {
                 let path = root_dir.join(file_name);
                 if let Ok(old) = std::fs::read_to_string(path) {
                     result = old + result.as_str();
-                    std::fs::write(root_dir.join(file_name), result.as_str());
+                    if let Ok(_) = std::fs::write(root_dir.join(file_name), result.as_str()) {
+
+                    }
                 }
             }
         }
@@ -220,17 +221,17 @@ pub struct StateRecordCfg {
 // #[setup]
 // impl SysCheck {
 //     #[system]
-    fn sys_check(
-        items: Query<(&Renderer, &RenderSize, &RenderColorFormat, &RenderColorClear, &RenderDepthFormat, &RenderDepthClear), Changed<RenderSize>>,
-        items2: Query<(&ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo), Changed<ViewerActive>>,
-    ) {
-        // items.iter().for_each(|v| {
-        //     // log::warn!("####################");
-        // });
-        // items2.iter().for_each(|v| {
-        //     // log::warn!("#################### 2");
-        // });
-    }
+    // fn sys_check(
+    //     items: Query<(&Renderer, &RenderSize, &RenderColorFormat, &RenderColorClear, &RenderDepthFormat, &RenderDepthClear), Changed<RenderSize>>,
+    //     items2: Query<(&ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo), Changed<ViewerActive>>,
+    // ) {
+    //     // items.iter().for_each(|v| {
+    //     //     // log::warn!("####################");
+    //     // });
+    //     // items2.iter().for_each(|v| {
+    //     //     // log::warn!("#################### 2");
+    //     // });
+    // }
 // }
 
 pub struct PluginStateToFile;
@@ -320,12 +321,16 @@ impl Plugin for PluginStateToFile {
     // }
 
     fn build(&self, app: &mut App) {
+
+        app.insert_resource(StateRecordCfg { write_state: true });
         
         let root_dir = std::env::current_dir().unwrap();
         let file_name = FILE_NAME;
-        std::fs::write(root_dir.join(file_name), "");
+        if let Ok(_) = std::fs::write(root_dir.join(file_name), "") {
 
-        app.insert_resource(StateRecordCfg { write_state: true });
+        } else {
+            return;
+        }
         
         app.add_systems(
 			Update,
@@ -437,7 +442,7 @@ impl Plugin for PluginStateToFile {
             (
                 sys_mesh_state_by_model::<AbstructMesh>,
                 sys_mesh_state_by_geometry,
-                sys_check,
+                // sys_check,
                 sys_mesh_state_to_file
             ).chain().in_set(ERunStageChap::StateCheck)
         );

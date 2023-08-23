@@ -7,14 +7,14 @@ use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, ru
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
+    scene::interface::InterfaceScene,
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}
 };
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
-use pi_mesh_builder::cube::{InterfaceCube};
+use pi_mesh_builder::cube::InterfaceCube;
 
 #[derive(Debug, Default)]
 pub struct SingleTestData {
@@ -111,7 +111,7 @@ pub fn main() {
             ..Default::default()
         }
     );
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

@@ -18,7 +18,7 @@ impl Default for ForceOverLifetime {
 }
 
 impl ForceOverLifetime {
-    pub fn modify(&self, item: &mut Force, amount: f32, delta_seconds: f32, randoms: &BaseRandom) {
+    pub fn modify(&self, item: &mut Force, amount: f32, _: f32, randoms: &BaseRandom) {
         self.translation_interpolate.compute(amount, randoms, &mut item.value);
     }
 }

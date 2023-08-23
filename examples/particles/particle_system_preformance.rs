@@ -33,7 +33,7 @@ fn setup(
     let tes_size = 50;
 
     let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -50.), true);
-
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
 
     let temp = 4;
@@ -42,7 +42,7 @@ fn setup(
             for k in 0..temp {
                 let item = {
                     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+                    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
                     let id_geo = commands.spawn_empty().id();
                     let mut attrs = CubeBuilder::attrs_meta();
                     // ParticleSystem Add
@@ -129,28 +129,12 @@ fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     cfg
 }
 
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
-}
-
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -161,10 +145,10 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_startup_system(setup);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

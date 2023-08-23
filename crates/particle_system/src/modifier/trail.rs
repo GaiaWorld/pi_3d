@@ -1,15 +1,12 @@
-use pi_scene_math::Vector3;
+// use pi_scene_math::Vector3;
 use pi_engine_shell::prelude::*;
 
-use crate::{
-    tools::*,
-    particle::Particle,
-};
+// use crate::{
+//     tools::*,
+//     particle::Particle,
+// };
 
-use super::{
-    color_over_lifetime::ColorOverLifetime,
-    trial_geometry::TrailGeometryModifier,
-};
+use super::color_over_lifetime::ColorOverLifetime;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ETrailMode {

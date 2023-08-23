@@ -45,10 +45,9 @@ impl Plugin for PluginDefaultMaterial {
     fn build(&self, app: &mut App) {
         
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
-        let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
-        ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
+        ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
 
-        app.add_startup_system(setup);
+        app.add_systems(Update, setup);
     }
 }
 

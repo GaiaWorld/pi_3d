@@ -3,23 +3,13 @@
 
 
 use base::DemoScene;
-use pi_3d::{PluginBundleDefault};
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, curve_frame_event::CurveFrameEvent, animation_listener::{AnimationListener, EAnimationEventResult}};
-use pi_atom::Atom;
-use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
-use pi_bevy_render_plugin::{PiRenderPlugin, PiRenderSystemSet};
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::{SingleFrameTimeCommand, PluginFrameTime}};
+use pi_curves::curve::frame_curve::FrameCurve;
+use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
 use pi_gltf2_load::*;
-use pi_node_materials::{PluginNodeMaterial};
 use pi_scene_context::prelude::*;
-use pi_scene_math::{Vector3, Vector4};
-use pi_mesh_builder::{cube::*, ball::*, quad::*};
-
-use std::sync::Arc;
-use pi_async_rt::prelude::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+use pi_scene_math::*;
+use pi_mesh_builder::cube::*;
 
 
 fn setup(
@@ -29,7 +19,6 @@ fn setup(
     mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
-    mut abstructmeshcms: ActionSetAbstructMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matuse: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
@@ -44,9 +33,10 @@ fn setup(
     fps.frame_ms = 16;
 
     let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 10., 0.7, (0., 10., -40.), false);
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
     meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
@@ -59,9 +49,9 @@ fn setup(
     matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
 
     let root = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(root, scene));
-    transformcmds.create.push(OpsTransformNode::ops(scene, root, "".to_string()));
+    transformcmds.create.push(OpsTransformNode::ops(scene, root));
     
-    let key_group = pi_atom::Atom::from("key_group");
+    // let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
     animegroupcmd.global.record_group(source, id_group);
     animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
@@ -88,22 +78,22 @@ fn setup(
     animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
 
     let temproot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(temproot, root));
-    transformcmds.create.push(OpsTransformNode::ops(scene, temproot, "".to_string()));
-    let cell_col = 4.;
-    let cell_row = 4.;
+    transformcmds.create.push(OpsTransformNode::ops(scene, temproot));
+    // let cell_col = 4.;
+    // let cell_row = 4.;
     let size = 4;
     for i in 0..size {
         for j in 0..size {
             for k in 0..size {
                 
                 let ins: Entity = commands.spawn_empty().id();
-                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, ins, String::from("a")));
+                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, ins));
                 transformcmds.tree.push(OpsTransformNodeParent::ops(ins, temproot));
                 
                 let r = (i as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
                 let g = (j as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
                 let b = (k as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
-                let a: f32 = (k as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
+                let _a: f32 = (k as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
 
                 let x = (i as f32 - size as f32 / 2.) + 0.5;
                 let y = (j as f32 - size as f32 / 2.) + 0.5;
@@ -116,28 +106,12 @@ fn setup(
     }
 }
 
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
-}
-
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -147,9 +121,9 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins();
     
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
 
-    app.add_startup_system(setup);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

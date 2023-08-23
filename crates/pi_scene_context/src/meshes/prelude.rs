@@ -1,7 +1,11 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{renderers::prelude::*, layer_mask::prelude::*, geometry::command::*};
+use crate::{
+    renderers::prelude::*,
+    geometry::command::*,
+    cullings::prelude::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}
+};
 
 pub use super::{
     model::*,
@@ -36,6 +40,8 @@ pub struct ActionSetMesh<'w> {
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
     pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
     pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
+    pub bounding: ResMut<'w, ActionListMeshBounding>,
+    pub boundingculling: ResMut<'w, ActionListMeshBoundingCullingMode>,
 }
 
 #[derive(SystemParam)]

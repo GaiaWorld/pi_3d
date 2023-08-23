@@ -12,9 +12,9 @@ pub fn sys_dispose_about_light(
     renderers: Query<&RendererID>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
-    empty: Res<SingleEmptyEntity>,
+    _empty: Res<SingleEmptyEntity>,
 ) {
-    items.iter().for_each(|(entity, state, light)| {
+    items.iter().for_each(|(entity, state, _light)| {
         if state.0 == false { return; }
 
         if let Ok(id) = materials.get(entity) {

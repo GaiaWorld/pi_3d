@@ -1,19 +1,10 @@
 
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
-use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
-use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
+
+use pi_engine_shell::prelude::*;
 use pi_scene_context::{prelude::*, viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix}};
 use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
-
-use std::sync::Arc;
-use pi_async_rt::rt::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+use pi_mesh_builder::cube::*;
+use unlit_material::*;
 
 fn setup(
     mut commands: Commands,
@@ -21,24 +12,21 @@ fn setup(
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
-    nodematblocks: Res<NodeMaterialBlocks>,
-    defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
 ) {
     let tes_size = 50;
     fps.frame_ms = 4;
 
     let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
-
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
@@ -68,30 +56,6 @@ fn sys_demo_particle(
     scenes: Query<(&SceneTime, &SceneMainCameraID)>,
     cameras: Query<(&ViewerGlobalPosition, &ViewerViewMatrix)>,
     mut geometrys: Query<(&mut InstanceBufferWorldMatrix, &mut InstanceBufferColor)>,
-    mut geoloader: ResMut<GeometryVBLoader>,
-    mut vb_data_map: ResMut<VertexBufferDataMap3D>,
-    mut slots: (
-        Query<&mut AssetResVBSlot01>,
-        Query<&mut AssetResVBSlot02>,
-        Query<&mut AssetResVBSlot03>,
-        Query<&mut AssetResVBSlot04>,
-        Query<&mut AssetResVBSlot05>,
-        Query<&mut AssetResVBSlot06>,
-        Query<&mut AssetResVBSlot07>,
-        Query<&mut AssetResVBSlot08>,
-        Query<&mut AssetResVBSlot09>,
-        Query<&mut AssetResVBSlot10>,
-        Query<&mut AssetResVBSlot11>,
-        Query<&mut AssetResVBSlot12>,
-        Query<&mut AssetResVBSlot13>,
-        Query<&mut AssetResVBSlot14>,
-        Query<&mut AssetResVBSlot15>,
-        Query<&mut AssetResVBSlot16>,
-    ),
-    mut allocator: ResMut<VertexBufferAllocator3D>,
-    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
-    device: Res<PiRenderDevice>,
-    queue: Res<PiRenderQueue>,
     mut matrixuse: ResMut<ActionListInstanceWorldMatrixs>,
     mut coloruse: ResMut<ActionListInstanceColors>,
     mut uvuse: ResMut<ActionListInstanceTilloffs>,
@@ -99,7 +63,7 @@ fn sys_demo_particle(
     particles.iter().for_each(|(idscene, idgeo)| {
         if let Ok((scenetime, maincamera)) = scenes.get(idscene.0) {
 
-            let (camerapos, camerarotationmatrix) = if let Some(maincamera) = maincamera.0 {
+            let (_camerapos, _camerarotationmatrix) = if let Some(maincamera) = maincamera.0 {
                 if let Ok((viewpos, viewmat)) = cameras.get(maincamera) {
                     (viewpos.0.clone(), viewmat.get_rotation_matrix())
                 } else {
@@ -109,7 +73,7 @@ fn sys_demo_particle(
                 (Vector3::new(0., 0., -1.), Matrix::identity())
             };
 
-            if let Ok((mut wm, mut colors)) = geometrys.get_mut(idgeo.0) {
+            if let Ok((_, _)) = geometrys.get_mut(idgeo.0) {
                 let mut buffermatrix = vec![];
                 let mut buffercolor = vec![];
                 let mut bufferuv = vec![];
@@ -173,28 +137,12 @@ fn sys_demo_particle(
     });
 }
 
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
-}
-
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -204,14 +152,14 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     
-    app.add_system(
+    app.add_systems(Update, 
         sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix)
     );
 
-    app.add_startup_system(setup);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

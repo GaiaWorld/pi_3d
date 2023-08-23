@@ -1,8 +1,7 @@
-use std::ops::Range;
 
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Number;
-use crate::{materials::{value::{FromValueUniformStatistics}}};
+use crate::materials::value::FromValueUniformStatistics;
 
 const MAX: u8 = 64;
 

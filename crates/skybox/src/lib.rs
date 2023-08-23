@@ -46,9 +46,8 @@ pub mod texture;
 
 fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
-    mut wait_list: ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(SkyboxShader::KEY), SkyboxShader::meta());
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(SkyboxShader::KEY), SkyboxShader::meta());
 }
 
 

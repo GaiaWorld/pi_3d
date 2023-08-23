@@ -5,19 +5,24 @@ use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
 
-use crate::{base::*, tools::{Random, Velocity}};
+use crate::base::*;
 
 pub fn sys_particle_active(
     mut items: Query<(&GlobalEnable, &ParticleActive, &mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission), Or<(Changed<GlobalEnable>, Changed<ParticleActive>)>>
 ) {
     items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission)| {
-        if enable.0 == true && active.0 == true && state.start == false {
-            state.playing = true;
-            state.start = true;
-
-            let timescale = time.time_scale;
-            *time = ParticleSystemTime::new(); time.time_scale = timescale;
-            *emission = ParticleSystemEmission::new();
+        
+        if enable.0 == true && active.0 == true {
+            if state.start == false {
+                // log::warn!("{:?}, {:?}, {:?}, ", enable.0, active.0, state.playing);
+                state.playing = true;
+                state.start = true;
+    
+                ids.reset();
+                let timescale = time.time_scale;
+                *time = ParticleSystemTime::new(); time.time_scale = timescale;
+                *emission = ParticleSystemEmission::new();
+            }
         } else {
             state.playing = false;
             state.start = false;
@@ -34,6 +39,8 @@ pub fn sys_emission(
     particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emission, mut randoms)| {
         if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.0)) {
             let delta_ms = scenetime.delta_ms() as u32;
+
+            // log::warn!("{:?}, {:?}, {:?}, ", delta_ms, state.playing, disposestate.0);
 
             if state.playing && disposestate.0 == false {
                 particlesystime.run(delta_ms, 1000, base.duration);
@@ -65,9 +72,9 @@ pub fn sys_emission(
 
 pub fn sys_emitmatrix(
     calculators: Query<&ParticleCalculatorBase>,
-    mut particle_sys: Query<(&LocalScaling, &LocalPosition, &WorldMatrix, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix)>,
+    mut particle_sys: Query<(&LocalScaling, &WorldMatrix, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix)>,
 ) {
-    particle_sys.iter_mut().for_each(|(local_scaling, localpos, world_matrix, mut transform, ids, time, mut emitmatrix)| {
+    particle_sys.iter_mut().for_each(|(local_scaling, world_matrix, mut transform, ids, time, mut emitmatrix)| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(base) = calculators.get(ids.calculator.0) {
@@ -86,7 +93,7 @@ pub fn sys_emitter(
     calculators: Query<(&ParticleCalculatorShapeEmitter, &ParticleCalculatorStartSpeed)>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection)>,
 ) {
-    let time = pi_time::Instant::now();
+    // let time = pi_time::Instant::now();
 
     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut locpos, mut directions)| {
         if time.running_delta_ms <= 0 { return; }
@@ -94,13 +101,13 @@ pub fn sys_emitter(
         if let Ok((emitter, startspeed)) = calculators.get(ids.calculator.0) {
             let emitter = &emitter.0;
             let newids = &ids.newids;
-            let activeids = &ids.actives;
+            // let activeids = &ids.actives;
 
             locpos.start(newids, &mut directions, randoms, time, emitter, startspeed);
         }
     });
     
-    let time1 = pi_time::Instant::now();
+    // let time1 = pi_time::Instant::now();
     // log::warn!("emitter: {:?}", time1 - time);
 }
 
@@ -137,7 +144,7 @@ pub fn sys_start_size(
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
             let newids = &ids.newids;
-            let activeids = &ids.actives;
+            // let activeids = &ids.actives;
             items.start(newids, &mut localscalings, &randoms, time, calculator, );
         }
     });
@@ -197,7 +204,7 @@ pub fn sys_color_over_life_time(
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
-            let newids = &ids.newids;
+            // let newids = &ids.newids;
             let activeids = &ids.actives;
             items.run(activeids, ages, startcolors, randoms, calculator);
         }
@@ -213,7 +220,7 @@ pub fn sys_rotation_over_life_time(
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
-            let newids = &ids.newids;
+            // let newids = &ids.newids;
             let activeids = &ids.actives;
             items.run(activeids, ages, randoms, time, calculator);
         }
@@ -230,9 +237,9 @@ pub fn sys_size_over_life_time(
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
-            let newids = &ids.newids;
+            // let newids = &ids.newids;
             let activeids = &ids.actives;
-            items.run(activeids, ages, randoms, time, calculator);
+            items.run(activeids, ages, randoms, calculator);
         }
     });
 }
@@ -247,7 +254,7 @@ pub fn sys_velocity_over_life_time(
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
-            let newids = &ids.newids;
+            // let newids = &ids.newids;
             let activeids = &ids.actives;
             items.run(activeids, ages, randoms, time, calculator);
         }
@@ -267,7 +274,7 @@ pub fn sys_orbit_over_life_time(
         let velocity = velocitys.get(ids.calculator.0);
         let radial = radials.get(ids.calculator.0);
 
-        let newids = &ids.newids;
+        // let newids = &ids.newids;
         let activeids = &ids.actives;
         items.run(activeids, ages, randoms, time, offset, velocity, radial);
     });
@@ -282,7 +289,7 @@ pub fn sys_speed_modifier_over_life_time(
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
-            let newids = &ids.newids;
+            // let newids = &ids.newids;
             let activeids = &ids.actives;
             items.run(activeids, ages, randoms, time, calculator);
         }
@@ -298,7 +305,7 @@ pub fn sys_limit_velocity_over_life_time(
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
-            let newids = &ids.newids;
+            // let newids = &ids.newids;
             let activeids = &ids.actives;
             items.run(activeids, ages, randoms, time, calculator);
         }
@@ -308,14 +315,14 @@ pub fn sys_limit_velocity_over_life_time(
 pub fn sys_direction(
     calculators: Query<&ParticleCalculatorShapeEmitter>,
     mut particle_sys: Query<(
-        &ParticleIDs, &ParticleSystemTime, &ParticleEmitMatrix,
+        &ParticleIDs, &ParticleSystemTime,
         &ParticleVelocity, &ParticleGravityFactor, &ParticleForce, &ParticleOrbitVelocity, &ParticleSpeedFactor, &ParticleLimitVelocityScalar,
         &mut ParticleDirection, &mut ParticleLocalPosition
     )>,
 ) {
     particle_sys.iter_mut().for_each(
         |(
-            ids, time, emitmatrixs,
+            ids, time,
             velocities, gravities, forces, orbits, speedfactors, limitscalars,
             mut direction, mut positions
         )| {
@@ -323,9 +330,9 @@ pub fn sys_direction(
 
             if let Ok(calculator) = calculators.get(ids.calculator.0) {
                 let emitter = &calculator.0;
-                let newids = &ids.newids;
+                // let newids = &ids.newids;
                 let activeids = &ids.actives;
-                direction.run(activeids, forces, gravities, velocities, limitscalars, orbits, speedfactors, emitmatrixs, &mut positions, emitter, time);
+                direction.run(activeids, forces, gravities, velocities, limitscalars, orbits, speedfactors, &mut positions, emitter, time);
             }
         }
     );
@@ -458,8 +465,8 @@ pub fn sys_update_buffer(
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
 ) {
-    let mut ptime = pi_time::Instant::now();
-    let mut ptime1 = pi_time::Instant::now();
+    // let mut ptime = pi_time::Instant::now();
+    // let mut ptime1 = pi_time::Instant::now();
 
     // log::warn!("ParticleBuffer: ");
     particle_sys.iter().for_each(
@@ -513,26 +520,7 @@ pub fn sys_update_buffer(
                     // log::warn!("Velocity: {:?}", g_velocity);
 
                     let matrix = if let Some(renderalign) = renderalign {
-                        // let mut matrix = match renderalign {
-                        //     ERenderAlignment::Velocity => {
-                        //         let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
-                        //         let mut matrix = Matrix::identity();
-                        //         CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
-                        //         matrix
-                        //     },
-                        //     ERenderAlignment::StretchedBillboard => {
-                        //         let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
-                        //         let mut matrix = Matrix::identity();
-                        //         CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
-                        //         matrix
-                        //     }
-                        //     _ => {
-                        //         let mut matrix = Matrix::identity();
-                        //         CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
-                        //         matrix
-                        //     }
-                        // };
-                        let rotation = renderalign.calc_rotation(&emitmatrix.rotation, emitmatrix.eulers, &g_velocity);
+                        let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
                         // log::warn!("rotation : {:?}", rotation);
                         let mut matrix = Matrix::identity();
                         CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
@@ -619,7 +607,7 @@ pub fn sys_update_buffer(
         }
     );
 
-    ptime1 = pi_time::Instant::now();
+    // ptime1 = pi_time::Instant::now();
     // log::warn!("update_buffer: {:?}", ptime1 - ptime);
     // log::warn!("ParticleBuffer: End");
 }

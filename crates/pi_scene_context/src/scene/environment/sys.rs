@@ -7,7 +7,7 @@ use super::{BindSceneEffect, scene_time::*, ambient_light::*, fog::*};
 pub fn sys_bind_update_scene_time(
     mut scenes: Query<(&mut SceneTime, &mut BindSceneEffect)>,
 ) {
-    scenes.iter_mut().for_each(|(mut scene_time, mut bind)| {
+    scenes.iter_mut().for_each(|( scene_time, bind)| {
         scene_time.update(&bind);
     });
 }

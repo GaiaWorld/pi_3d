@@ -1,17 +1,15 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
-use pi_assets::{asset::Handle, mgr::AssetMgr};
+use pi_assets::asset::Handle;
 use pi_hash::XHashMap;
 use pi_scene_math::Number;
-use crate::{
-    materials::{value::FromValueUniformStatistics},
-};
+use crate::materials::value::FromValueUniformStatistics;
 
 use super::{
-    float::{FloatUniform},
+    float::FloatUniform,
     // int::{IntUniform},
-    uint::{UintUniform},
+    uint::UintUniform,
     mat4::Mat4Uniform,
     // mat2::Mat2Uniform,
     vec4::Vec4Uniform,

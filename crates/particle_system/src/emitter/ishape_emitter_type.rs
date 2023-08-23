@@ -3,8 +3,6 @@ use crate::{iparticle_system_config::{
     TSHAPE_ARC_MODE_RANDOM,
 }, tools::Random};
 use pi_scene_math::{Matrix, Vector3};
-use pi_wy_rng::WyRng;
-use rand::{SeedableRng, Rng};
 
 
 pub trait IShapeEmitterTypeValue {
@@ -30,7 +28,6 @@ pub trait IShapeEmitterType {
         &self,
         direction_to_update: &mut Vector3,
         local_position: &Vector3,
-        is_local: bool,
         random: &mut Random,
     );
 
@@ -51,7 +48,6 @@ pub trait IShapeEmitterType {
         emission_progress: f32,
         emission_index: f32,
         emission_total: f32,
-        is_local: bool,
         random: &mut Random,
     );
 

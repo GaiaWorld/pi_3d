@@ -2,17 +2,12 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    materials::{
-        prelude::*,
-        command_sys::*
-    },
+    materials::prelude::*,
     pass::*,
     viewer::prelude::*,
-    pass::*
 };
 
 use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormalBias, ShadowDepthScale, KEY_SHADOW_DEPTH_BIAS, KEY_SHADOW_DEPTH_SCALE, KEY_SHADOW_NORMAL_BIAS, KEY_SHADOW_MINZ, KEY_SHADOW_MAXZ};
-
 
 // pub struct SysShadowParamUpdateWhileMatCreate;
 // impl TSystemStageInfo for SysShadowParamUpdateWhileMatCreate {
@@ -33,10 +28,9 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
             (&mut BindEffect, &mut BindEffectValueDirty),
             Changed<BindEffect>,
         >,
-        mut commads: Commands,
     ) {
-        shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
-            if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
+        shadows.iter().for_each(|(id_mat, _enable, minz, maxz, bias, normal_bias, depth_scale)| {
+            if let Ok((bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
                 bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
                 bind.vec2(0, &[**minz, **minz + **maxz]);
                 *flag = BindEffectValueDirty(true);
@@ -66,11 +60,10 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
         mut materails: Query<
             (&mut BindEffect, &mut BindEffectValueDirty)
         >,
-        mut commands: Commands,
     ) {
         shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if enable.0 {
-                if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
+                if let Ok((bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_DEPTH_BIAS)) {
                         bind.float(slot, **bias);
                     }
@@ -119,7 +112,7 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
         shadows.iter().for_each(|(id_mat, enable, modelist)| {
             if let Ok((pass, mut materialrefs, mut flag)) = materials.get_mut(id_mat.0) {
                 if P::TAG == pass.as_pass() && enable.0 {
-                    modelist.0.iter().for_each(|(id_model, _)| {
+                    modelist.0.iter().for_each(|id_model| {
                         if let Ok(pass) = meshes.get(*id_model) {
                             
                             if let Some(mut cmd) = commands.get_entity(pass.id()) {

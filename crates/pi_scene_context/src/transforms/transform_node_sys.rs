@@ -2,13 +2,11 @@
 
 use pi_bevy_ecs_extend::prelude::EntityTree;
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix}, Matrix, Rotation3, Quaternion};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, Matrix, Rotation3, Quaternion};
 
 use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::{TransformRecord, Enable, GlobalEnable}, commands::{DisposeReady, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeCan}};
 
-use super::{
-    transform_node::*,
-};
+use super::transform_node::*;
 
 // pub struct SysLocalEulerModifyCalc;
 // impl TSystemStageInfo for SysLocalEulerModifyCalc {
@@ -81,8 +79,8 @@ use super::{
         mut localmatrixs: Query<(ObjectID, &LocalPosition, &LocalScaling, &LocalRotation, &mut LocalMatrix), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
     ) {
         // log::warn!("LocalMatrix: ");
-        let time = pi_time::Instant::now();
-        localmatrixs.iter_mut().for_each(|(entity, position, scaling, rotation, mut localmatrix)| {
+        // let time = pi_time::Instant::now();
+        localmatrixs.iter_mut().for_each(|(_entity, position, scaling, rotation, mut localmatrix)| {
             // log::warn!("LocalMatrixCalc: {:?}", entity);
             let mut matrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
@@ -91,7 +89,7 @@ use super::{
             // localmatrix.1 = true;
             *localmatrix = LocalMatrix(matrix, true);
         });
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
         // log::warn!("Local Matrix Calc: {:?}", time1 - time);
     }
 // }
@@ -186,9 +184,8 @@ use super::{
         mut nodes: Query<(&mut LocalMatrix, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable)>,
         mut transforms: Query<&mut GlobalTransform>,
         tree: EntityTree,
-        mut record: ResMut<TransformRecord>,
     ) {
-        let time = pi_time::Instant::now();
+        // let time = pi_time::Instant::now();
 
         // log::debug!("World Matrix Calc:");
         for (root, _) in query_scenes.iter() {
@@ -233,7 +230,7 @@ use super::{
             );
         }
 
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
         // log::debug!("World Matrix Calc2: {:?}", time1 - time);
     }
 // }
@@ -356,7 +353,7 @@ fn calc_world_root(
 
 pub fn sys_dispose_about_transform_node(
     items: Query<(Entity, &DisposeReady, &TransformNode), Changed<DisposeReady>>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     items.iter().for_each(|(entity, state, _)| {

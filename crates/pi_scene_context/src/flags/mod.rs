@@ -1,4 +1,4 @@
-use pi_atom::Atom;
+
 use pi_engine_shell::prelude::*;
 
 pub mod enable;
@@ -24,8 +24,6 @@ pub struct SceneMainCameraID(pub Option<Entity>);
 
 #[derive(Debug, Component)]
 pub struct CameraID(pub usize);
-#[derive(Component)]
-pub struct UniqueName(pub Atom);
 
 #[derive(Debug, Component, Default)]
 pub struct RecordEnable(pub Enable);

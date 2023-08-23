@@ -81,7 +81,7 @@ impl Plugin for PluginBallBuilder {
     //     Ok(())
     // }
 
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
         // app.add
     }
 }

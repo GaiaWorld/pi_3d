@@ -47,7 +47,6 @@ impl IShapeEmitterType for BoxShapeEmitter {
         &self,
         direction_to_update: &mut Vector3,
         _local_position: &Vector3,
-        is_local: bool,
         random: &mut Random,
     ) {
         let mut direction = self.direction;
@@ -78,7 +77,6 @@ impl IShapeEmitterType for BoxShapeEmitter {
         _emission_progress: f32,
         _emission_index: f32,
         _emission_total: f32,
-        is_local: bool,
         random: &mut Random,
     ) {
         let mut rand_x: f32 = random.random_range(-0.5, 0.5);

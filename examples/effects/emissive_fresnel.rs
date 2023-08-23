@@ -2,27 +2,12 @@
 
 
 use base::DemoScene;
-use pi_3d::PluginBundleDefault;
-use pi_animation::{amount::AnimationAmountCalc, loop_mode::ELoopMode};
 use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{frame_time::PluginFrameTime, prelude::*};
-use pi_mesh_builder::{ball::*, cube::*, quad::PluginQuadBuilder};
-use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
+use pi_engine_shell::prelude::*;
+use pi_mesh_builder::ball::*;
+use pi_node_materials::prelude::*;
 use pi_scene_context::prelude::*;
-use pi_scene_math::*;
-use unlit_material::{
-    command::*,
-    effects::{emissive_fresnel::EmissiveFresnelShader, main_opacity::MainOpacityShader},
-    shader::UnlitShader,
-    PluginUnlitMaterial,
-};
-
-use pi_async_rt::rt::AsyncRuntime;
-use pi_hal::{init_load_cb, on_load, runtime::MULTI_MEDIA_RUNTIME};
-use std::sync::Arc;
+use unlit_material::*;
 
 
 fn setup(
@@ -31,19 +16,15 @@ fn setup(
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
-    nodematblocks: Res<NodeMaterialBlocks>,
-    defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
 ) {
     ActionMaterial::regist_material_meta(
         &matcmds.metas,
-        &mut matcmds.metas_wait,
         KeyShaderMeta::from(EmissiveFresnelShader::KEY),
         EmissiveFresnelShader::meta(),
     );
@@ -51,7 +32,7 @@ fn setup(
     let tes_size = 5;
     fps.frame_ms = 4;
     let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
-
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id();
     transformcmds
@@ -60,7 +41,6 @@ fn setup(
     meshcmds.create.push(OpsMeshCreation::ops(
         scene,
         source,
-        String::from("TestCube"),
     ));
     let mut blend = ModelBlend::default();
     blend.combine();
@@ -127,7 +107,6 @@ fn setup(
 }
 
 fn sys_setup_ball(
-    asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
     mut data_map: ResMut<VertexBufferDataMap3D>,
 ) {
     let param = BallParam {
@@ -136,7 +115,7 @@ fn sys_setup_ball(
     };
 
     let (positions, normals, indices, uvs) = generate_sphere(&param);
-    let id = ("BallPos#20#20");
+    let id = "BallPos#20#20";
     ActionVertexBuffer::create(
         &mut data_map,
         KeyVertexBuffer::from(id),
@@ -145,7 +124,7 @@ fn sys_setup_ball(
             .map(|v| *v)
             .collect::<Vec<u8>>(),
     );
-    let id = ("BallNor#20#20");
+    let id = "BallNor#20#20";
     ActionVertexBuffer::create(
         &mut data_map,
         KeyVertexBuffer::from(id),
@@ -154,7 +133,7 @@ fn sys_setup_ball(
             .map(|v| *v)
             .collect::<Vec<u8>>(),
     );
-    let id = ("BallUV#20#20");
+    let id = "BallUV#20#20";
     ActionVertexBuffer::create(
         &mut data_map,
         KeyVertexBuffer::from(id),
@@ -163,7 +142,7 @@ fn sys_setup_ball(
             .map(|v| *v)
             .collect::<Vec<u8>>(),
     );
-    let id = ("BallInd#20#20");
+    let id = "BallInd#20#20";
     ActionVertexBuffer::create_indices(
         &mut data_map,
         KeyVertexBuffer::from(id),
@@ -174,28 +153,12 @@ fn sys_setup_ball(
     );
 }
 
-pub trait AddEvent {
-    // 添加事件， 该实现每帧清理一次
-    fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-    fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-        if !self.world.contains_resource::<Events<T>>() {
-            self.init_resource::<Events<T>>()
-                .add_system(Events::<T>::update_system);
-        }
-        self
-    }
-}
-
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -204,10 +167,10 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins();
     
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
 
-    app.add_startup_system(sys_setup_ball);
-    app.add_startup_system(setup);
+    app.add_systems(Startup, sys_setup_ball);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
 
     app.run()

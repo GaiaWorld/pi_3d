@@ -1,6 +1,6 @@
 #![feature(box_into_inner)]
 
-use std::{sync::Arc, };
+use std::sync::Arc;
 
 
 use pi_share::ShareMutex;

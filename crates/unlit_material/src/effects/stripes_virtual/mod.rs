@@ -16,7 +16,7 @@ impl StripesVirtualShader {
     pub const KEY_COLOR1: &'static str = "uColor1";
     
 
-    pub fn create(infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn create(_infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from("\r\nlayout(location = 0) out vec4 gl_FragColor; \r\n");
 

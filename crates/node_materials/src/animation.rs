@@ -1,7 +1,7 @@
 use pi_scene_math::*;
 use pi_engine_shell::prelude::*;
 
-use pi_scene_context::{prelude::*};
+use pi_scene_context::prelude::*;
 
 use crate::{
     main_tex::*,
@@ -827,7 +827,7 @@ pub struct Bundle (
     CellId,
 );
 impl Bundle {
-    pub fn init(cmds: &mut EntityCommands) {
+    pub fn _init(cmds: &mut EntityCommands) {
         cmds
             .insert(MainTexUScale::default())
             .insert(MainTexVScale::default())

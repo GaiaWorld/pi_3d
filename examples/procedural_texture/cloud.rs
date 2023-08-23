@@ -3,15 +3,15 @@ use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, frame_time::Interfac
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     plugin::Plugin,
-    transforms::{interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
+    transforms::interface::InterfaceTransformNode,
+    scene::interface::InterfaceScene,
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{interface::{InterfaceMaterial}}
+    materials::interface::InterfaceMaterial
 };
 
 use pi_scene_math::Vector3;
-use procedural_texture::{cloud::{PluginCloudMaterial, interface::InterfaceCloudMaterial}};
+use procedural_texture::cloud::{PluginCloudMaterial, interface::InterfaceCloudMaterial};
 use pi_mesh_builder::{cube::InterfaceCube, quad::{InterfaceQuad, PluginQuadBuilder}};
 
 
@@ -61,10 +61,10 @@ pub fn main() {
             ..Default::default()
         }
     );
-    shell.add_plugin(PluginBundleDefault);
-    shell.add_plugin(PluginQuadBuilder);
-    shell.add_plugin(PluginCloudMaterial);
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginBundleDefault);
+    shell.add_plugins(PluginQuadBuilder);
+    shell.add_plugins(PluginCloudMaterial);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

@@ -2,9 +2,9 @@ use std::ops::Range;
 
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Number;
-use crate::{materials::{value::{FromValueUniformStatistics}}};
+use crate::materials::value::FromValueUniformStatistics;
 
-use super::{update_data};
+use super::update_data;
 
 const MAX: u8 = 128;
 /// 最多 32 个 vec4 - 共 512 byte
@@ -25,7 +25,7 @@ impl FromValueUniformStatistics for Vec4Uniform {
 }
 impl Vec4Uniform {
     const N: usize = 4;
-    const M: [Number; Self::N] = [0., 0., 0., 0.];
+    // const M: [Number; Self::N] = [0., 0., 0., 0.];
     pub fn init(&mut self, desc: &Vec<UniformPropertyVec4>) {
         let mut index = 0;
         desc.iter().for_each(|item| {

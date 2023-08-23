@@ -11,7 +11,7 @@ pub fn sys_act_particle_calculator(
     mut cmds: ResMut<ActionListCPUParticleCalculator>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleCalculator(entity, cfg, count)| {
+    cmds.drain().drain(..).for_each(|OpsCPUParticleCalculator(entity, cfg, _)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else { return; };
@@ -26,13 +26,9 @@ pub fn sys_act_create_cpu_partilce_system(
     mut commands: Commands,
     calculators: Query<&ParticleCalculatorBase>,
     trailmodifiers: Query<&ParticleCalculatorTrail>,
-    // trails: Query<&ParticleTrail>,
     trailbuffer: Res<ResParticleTrailBuffer>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut allocator: ResMut<ResBindBufferAllocator>,
-    device: Res<PiRenderDevice>,
     empty: Res<SingleEmptyEntity>,
-    mut matuse: ResMut<ActionListMaterialUse>,
     mut disposeready: ResMut<ActionListDisposeReady>,
     mut meshes: ResMut<ActionListMeshRenderAlignment>
 ) {
@@ -90,12 +86,12 @@ pub fn sys_act_create_cpu_partilce_system(
                 .insert(ParticleLocalPosList(vec_vec3_arr))
                 .insert(ParticleTrailMesh::new(trailmesh, trailgeo))
                 ;
-            if let (Ok(trailmodifier), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
+            if let (Ok(_), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
                 // log::warn!("Trail Init: ");
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
-                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut tree, &mut allocator, &device, &empty);
+                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty);
         
                     if let Some(mut cmd) = commands.get_entity(id_mesh) {
                         // log::warn!("Mesh Ok");
@@ -145,21 +141,21 @@ pub fn sys_act_partilce_system_state(
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsCPUParticleSystemState::Start(entity, count) => {
-                if let Ok((mut active, mut time)) = items.get_mut(entity) {
+                if let Ok((mut active, _)) = items.get_mut(entity) {
                     active.0 = true;
                 } else if count < 2 {
                     cmds.push(OpsCPUParticleSystemState::Start(entity, count + 1));
                 }
             },
             OpsCPUParticleSystemState::TimeScale(entity, timescale, count) => {
-                if let Ok((mut active, mut time)) = items.get_mut(entity) {
+                if let Ok((_, mut time)) = items.get_mut(entity) {
                     time.time_scale = timescale;
                 } else if count < 2 {
                     cmds.push(OpsCPUParticleSystemState::TimeScale(entity, timescale, count + 1));
                 }
             },
             OpsCPUParticleSystemState::Stop(entity, count) => {
-                if let Ok((mut active, mut time)) = items.get_mut(entity) {
+                if let Ok((mut active, _)) = items.get_mut(entity) {
                     active.0 = false;
                 } else if count < 2 {
                     cmds.push(OpsCPUParticleSystemState::Stop(entity, count + 1));

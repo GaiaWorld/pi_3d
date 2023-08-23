@@ -1,5 +1,4 @@
 
-use bevy::ecs::entity;
 use pi_bevy_render_plugin::component::GraphId;
 use pi_engine_shell::prelude::*;
 
@@ -8,7 +7,7 @@ use crate::{viewer::prelude::*, postprocess::Postprocess, prelude::PassTagOrders
 use super::{
     renderer::*,
     render_object::RendererID,
-    graphic::{RendererGraphicDesc, RenderNode},
+    graphic::*,
     command::*
 };
 
@@ -25,7 +24,7 @@ pub fn sys_create_renderer(
                     cmd.insert(GraphId(nodeid));
                 }
             },
-            Err(e) => {
+            Err(_e) => {
                 // log::error!("Renderer Error: {:?}", e);
                 log::error!("Renderer Error:");
             },
@@ -115,7 +114,7 @@ pub fn sys_act_renderer_connect(
 ) {
     cmds.drain().drain(..).for_each(|OpsRendererConnect(before, after, count)| {
         if let (Ok(before), Ok(after)) = (renderers.get(before), renderers.get(after)) {
-            if let Err(e) = render_graphic.add_depend(before.0, after.0) {
+            if let Err(_e) = render_graphic.add_depend(before.0, after.0) {
                 // log::error!("{:?}", e);
                 log::error!("sys_act_renderer_connect add_depend Error");
             }
@@ -170,7 +169,7 @@ impl ActionRenderer {
                     cmd.insert(GraphId(nodeid));  
                 }
             },
-            Err(e) => {
+            Err(_e) => {
                 // log::error!("{:?}", e);
                 log::error!("create_graphic_node fail");
             },
@@ -186,21 +185,21 @@ impl ActionRenderer {
     }
     pub fn init_graphic_node(
         render_graphic: &mut PiRenderGraph,
-        id_renderer: RendererID,
+        _id_renderer: RendererID,
         nodeid: NodeId,
         pre: Option<NodeId>,
         next: Option<NodeId>,
     ) {
         if let Some(key_pre) = pre {
             // log::warn!("Add Node {:?} > {:?}", key_pre, nodeid);
-            if let Err(e) = render_graphic.add_depend(key_pre, nodeid) {
+            if let Err(_e) = render_graphic.add_depend(key_pre, nodeid) {
                 // log::error!("{:?}", e);
                 log::error!("render_graphic.add_depend faile");
             }
         }
         if let Some(key_next) = next {
             // log::warn!("Add Node {:?} > {:?}", nodeid, key_next);
-            if let Err(e) = render_graphic.add_depend(nodeid, key_next) {
+            if let Err(_e) = render_graphic.add_depend(nodeid, key_next) {
                 // log::error!("{:?}", e);
                 log::error!("render_graphic.add_depend faile");
             }

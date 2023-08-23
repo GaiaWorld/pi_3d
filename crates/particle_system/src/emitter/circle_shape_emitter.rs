@@ -1,6 +1,4 @@
 use pi_scene_math::{Matrix, Vector3};
-use pi_wy_rng::WyRng;
-use rand::{SeedableRng, Rng};
 
 use crate::tools::{normalize, Random};
 
@@ -124,7 +122,6 @@ impl IShapeEmitterType for CircleShapeEmitter {
         &self,
         direction_to_update: &mut Vector3,
         local_position: &Vector3,
-        is_local: bool,
         random: &mut Random,
     ) {
         let mut direction = normalize(local_position);
@@ -145,7 +142,6 @@ impl IShapeEmitterType for CircleShapeEmitter {
         emission_progress: f32,
         emission_index: f32,
         emission_total: f32,
-        is_local: bool,
         random: &mut Random,
     ) {
         let s = compute_radians(

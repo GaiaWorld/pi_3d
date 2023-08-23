@@ -1,8 +1,6 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Vector4;
 
-use crate::base::ParticleCustomV4;
-
 #[derive(Clone)]
 pub struct CustomDataForUV {
     pub u_scale: FloatInterpolation,

@@ -1,29 +1,12 @@
 #![feature(box_into_inner)]
 
-
-use pi_3d::{PluginBundleDefault};
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
-use pi_node_materials::{prelude::*, PluginNodeMaterial, NodeMaterialBlocks};
-use pi_scene_context::prelude::*;
-use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::main_opacity::MainOpacityShader};
-
-use std::sync::Arc;
-use pi_async_rt::prelude::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+use pi_engine_shell::prelude::*;
 
 
 fn setup(
-    mut commands: Commands,
     mut loader: ResMut<ImageTextureLoader>,
 ) {
-    let id = commands.spawn_empty().id();
     loader.create_load(KeyImageTexture::File(Atom::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_0805.png"), true));
 }
 
@@ -43,28 +26,12 @@ fn sys_load_check(
     }
 }
 
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
-}
-
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -75,10 +42,10 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
     
-    app.add_startup_system(setup);
-    app.add_system(sys_load_check);
+    app.add_systems(Startup, setup);
+    app.add_systems(Update, sys_load_check);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

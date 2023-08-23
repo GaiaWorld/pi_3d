@@ -6,7 +6,6 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::{
     engine_shell::{AppShell, EnginShell},
     frame_time::InterfaceFrameTime,
-    object::{ObjectID},
     plugin::Plugin, run_stage::{TSystemStageInfo, ERunStageChap},
 };
 use pi_render::rhi::options::RenderOptions;
@@ -14,7 +13,7 @@ use pi_scene_context::{
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
     main_camera_render::interface::InterfaceMainCamera,
-    materials::{material::{ECommand, InterfaceMaterial, SingleValueUniformCommands}},
+    materials::material::*,
     scene::interface::InterfaceScene,
     transforms::interface::InterfaceTransformNode,
 };
@@ -120,10 +119,10 @@ pub fn main() {
         power_preference: wgpu::PowerPreference::HighPerformance,
         ..Default::default()
     });
-    shell.add_plugin(PluginBundleDefault);
-    // shell.add_plugin(PluginSkinBuilder);
-    shell.add_plugin(PluginBones);
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginBundleDefault);
+    // shell.add_plugins(PluginSkinBuilder);
+    shell.add_plugins(PluginBones);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

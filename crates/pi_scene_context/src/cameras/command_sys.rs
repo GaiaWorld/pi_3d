@@ -1,17 +1,11 @@
 
-use std::f32::consts::E;
-
-use pi_bevy_render_plugin::component::GraphId;
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Number, Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
+use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
     viewer::{prelude::*, command_sys::ActionViewer},
     renderers::{prelude::*, command_sys::*}, 
-    flags::{Enable, UniqueName}, 
-    animation::{command_sys::*},
-    scene::command_sys::ActionScene,
-    transforms::{command_sys::ActionTransformNode, prelude::*},
+    transforms::command_sys::ActionTransformNode,
     layer_mask::prelude::*, prelude::{SceneMainCameraID, SceneID},
 };
 
@@ -23,14 +17,13 @@ use super::{
 
 pub fn sys_camera_create(
     mut cmds: ResMut<ActionListCameraCreate>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
     mut dynallocator: ResMut<ResBindBufferAllocator>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity, name, toscreen)| {
+    cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity, toscreen)| {
         if let Some(mut commands) = commands.get_entity(entity) {
 
-            ActionCamera::init(&mut commands, &mut tree, scene, name, toscreen);
+            ActionCamera::init(&mut commands, scene, toscreen);
             ActionAnime::as_anime_group_target(&mut commands);
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
@@ -200,14 +193,14 @@ pub fn sys_camera_renderer_action(
     mut commands: Commands,
     mut viewers: Query<
         (
-            &mut ViewerRenderersInfo, &UniqueName, &CameraToScreen
+            &mut ViewerRenderersInfo, &CameraToScreen
         )
     >,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count)| {
         // log::warn!("OpsCameraRenderer: {:?}", graphic_desc.curr);
 
-        if let Ok((mut viewer_renderers, name, toscreen)) = viewers.get_mut(id_viewer) {
+        if let Ok((mut viewer_renderers, toscreen)) = viewers.get_mut(id_viewer) {
             // log::warn!("OpsCameraRenderer: {:?} Camera {:?}", graphic_desc.curr, &name.0);
 
             if let Some((_, id_render)) = viewer_renderers.map.get(&rendername) {
@@ -241,12 +234,10 @@ pub struct ActionCamera;
 impl ActionCamera {
     pub fn init(
         commands: &mut EntityCommands,
-        tree: &mut ActionListTransformNodeParent,
         scene: Entity,
-        name: String,
         toscreen: bool,
     ) {
-        ActionTransformNode::init(commands, tree, scene, name);
+        ActionTransformNode::init(commands, scene);
         ActionCamera::as_camera(commands, toscreen);
     }
     pub(crate) fn as_camera(
@@ -273,7 +264,6 @@ impl ActionCamera {
     pub fn create(
         app: &mut App,
         scene: Entity,
-        name: String,
         toscreen: bool,
     ) -> Entity {
         let mut queue = CommandQueue::default();
@@ -283,7 +273,7 @@ impl ActionCamera {
         queue.apply(&mut app.world);
 
         let mut cmds = app.world.get_resource_mut::<ActionListCameraCreate>().unwrap();
-        cmds.push(OpsCameraCreation(scene, entity, name, toscreen));
+        cmds.push(OpsCameraCreation(scene, entity, toscreen));
 
         entity
     }
@@ -320,7 +310,7 @@ impl ActionCamera {
     ) {
         cameras.iter().for_each(|(enable, renderers, toscreen)| {
             let enable = enable.0;
-            renderers.map.iter().for_each(|(k, v)| {
+            renderers.map.iter().for_each(|(_k, v)| {
                 let id_render = v.1.0;
                 renderercmds.push(OpsRendererCommand::Active(id_render, enable));
                 renderercmds.push(OpsRendererCommand::RenderToFinal(id_render, toscreen.0));

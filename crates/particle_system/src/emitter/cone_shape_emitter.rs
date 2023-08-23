@@ -1,6 +1,4 @@
 use pi_scene_math::{Matrix, Vector3};
-use pi_wy_rng::WyRng;
-use rand::{SeedableRng, Rng};
 
 use crate::tools::{normalize, Random};
 
@@ -204,7 +202,6 @@ impl IShapeEmitterType for ConeShapeEmitter {
         &self,
         direction_to_update: &mut pi_scene_math::Vector3,
         local_position: &Vector3,
-        is_local: bool,
         random: &mut Random,
     ) {
         // println!(
@@ -249,7 +246,6 @@ impl IShapeEmitterType for ConeShapeEmitter {
         emission_progress: f32,
         emission_index: f32,
         emission_total: f32,
-        is_local: bool,
         random: &mut Random,
     ) {
         let s = compute_radians(

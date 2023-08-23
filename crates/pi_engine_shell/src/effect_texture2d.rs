@@ -2,11 +2,7 @@
 use bevy::prelude::{Deref, Component};
 use pi_assets::asset::Handle;
 
-use pi_render::{
-    renderer::{
-        texture::*,
-    },
-};
+use pi_render::renderer::texture::*;
 
 #[derive(Debug, Clone, Deref, Hash, PartialEq, Eq, Component)]
 pub struct EffectBindTexture2D01Comp(pub pi_render::render_3d::binds::effect_texture2d::EffectBindTexture2D01);

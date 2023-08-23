@@ -1,11 +1,9 @@
-use std::{marker::PhantomData};
+use std::marker::PhantomData;
 
 use pi_engine_shell::prelude::*;
 
 
-use self::{
-    base::*,
-};
+use self::base::*;
 
 mod base;
 mod command;
@@ -63,8 +61,8 @@ impl<
     //     Ok(())
     // }
 
-    fn build(&self, app: &mut App) {
-        let world = &mut app.world;
+    fn build(&self, _app: &mut App) {
+        // let world = &mut app.world;
 
         // if world.get_resource::<SingleRendererCommandList>().is_none() {
         //     world.insert_resource(SingleRendererCommandList::default());

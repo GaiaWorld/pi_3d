@@ -2,15 +2,15 @@ use pi_engine_shell::prelude::*;
 
 use pi_scene_context::prelude::*;
 
-use crate::shader::UnlitShader;
+use crate::UnlitShader;
 
-use super::{command::{ActionListUnlitMaterial, EUnlitMaterialCommand}};
+use super::command::{ActionListUnlitMaterial, EUnlitMaterialCommand};
 
 pub struct ActionUnlitMaterial;
 impl ActionUnlitMaterial {
     pub fn create(
         app: &mut App,
-        name: String,
+        _name: String,
         pass: EPassTag,
     ) -> Entity {
         let mut queue = CommandQueue::default();

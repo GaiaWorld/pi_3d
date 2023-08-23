@@ -1,27 +1,9 @@
 #![feature(box_into_inner)]
 
 use base::DemoScene;
-use pi_bevy_ecs_extend::{prelude::Layer, system_param::layer_dirty::ComponentEvent};
 use pi_engine_shell::prelude::*;
-use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
-use pi_node_materials::NodeMaterialBlocks;
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::cube::*;
-
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
-}
 
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
@@ -58,7 +40,6 @@ pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 //     fn init(
 //         &mut self,
@@ -117,16 +98,13 @@ fn setup(
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
-    nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
-    anime_assets: TypeAnimeAssetMgrs,
     
     mut testdata: ResMut<ActionListTestData>,
 ) {
@@ -134,9 +112,10 @@ fn setup(
 
     let tes_size = 4;
     let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let cube = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, cube, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, cube));
     meshcmds.indexrange.push(OpsMeshRenderIndiceRange::ops(cube, Some(3), Some(12)));
     meshcmds.cullmode.push(OpsCullMode::ops(cube, CullMode::Off));
     
@@ -154,10 +133,10 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins();
     
-    app.add_plugin(PluginTest);
-    app.add_system(pi_3d::sys_info_node);
+    app.add_plugins(PluginTest);
+    app.add_systems(Update, pi_3d::sys_info_node);
     
-    app.add_startup_system(setup);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()
@@ -169,7 +148,7 @@ pub fn main() {
     //         ..Default::default()
     //     }
     // );
-    // shell.add_plugin(PluginTest);
+    // shell.add_plugins(PluginTest);
     // shell.ready();
     // shell.setup(&PluginTest::setup);
     // shell.run();

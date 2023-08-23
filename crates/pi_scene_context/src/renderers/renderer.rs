@@ -1,13 +1,11 @@
-use std::{fmt::Debug};
 
-use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 use pi_hash::{DefaultHasher, XHashMap};
 use smallvec::SmallVec;
 
 use crate::{viewer::prelude::*, prelude::PassTagOrders};
 
-use super::{graphic::{RenderNode, RendererGraphicDesc}, base::DrawList3D, render_object::RendererID};
+use super::{base::DrawList3D, render_object::RendererID};
 
 
 #[derive(Debug, Clone, Default, Resource)]
@@ -108,7 +106,7 @@ impl RenderDepthFormat {
 pub struct RenderDepthClear(pub f32);
 impl Default for RenderDepthClear {
     fn default() -> Self {
-        Self(1.)
+        Self(0.)
     }
 }
 

@@ -1,15 +1,13 @@
 
-use pi_animation::{animation::AnimationInfo, loop_mode::ELoopMode, amount::AnimationAmountCalc};
+use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 
-use pi_atom::Atom;
-use pi_bevy_asset::ShareAssetMgr;
-use pi_curves::{curve::{frame::{KeyFrameCurveValue, FrameDataValue}, FramePerSecond}, easing::EEasingMode};
+use pi_curves::{curve::{frame::KeyFrameCurveValue, FramePerSecond}, easing::EEasingMode};
 use pi_slotmap::DefaultKey;
 use pi_bevy_ecs_extend::action::ActionList;
 
 use bevy::{
     ecs::prelude::*, 
-    ecs::system::{SystemParam}
+    ecs::system::SystemParam
 };
 
 use super::base::*;

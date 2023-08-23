@@ -116,15 +116,15 @@ pub fn sys_image_texture_load_launch(
                 again.push((id, param.clone()));
             }
             match &param {
-                KeyImageTexture::Data(url, srgb) => {
+                KeyImageTexture::Data(_url, _srgb) => {
                     // log::error!("image_texture_view_load fail, Not Found DateTexture: {:?}", url);
                     // log::error!("image_texture_view_load fail, Not Found DateTexture:");
                     loader.fail_imgtex.push((param, EErrorImageLoad::CanntLoadDataTexture));
                 },
-                KeyImageTexture::File(url, srgb) => {
+                KeyImageTexture::File(_url, _srgb) => {
                     let imageresult = AssetMgr::load(&image_assets_mgr, &param);
                     match imageresult {
-                        LoadResult::Ok(res) => {
+                        LoadResult::Ok(_res) => {
                             // loader.success_imgtex.push((param, res));
                         },
                         _ => {
@@ -140,10 +140,10 @@ pub fn sys_image_texture_load_launch(
             
                                     let result = ImageTexture::async_load(desc, imageresult).await;
                                     match result {
-                                        Ok(res) => {
+                                        Ok(_res) => {
                                             // success.push((param, res));
                                         },
-                                        Err(e) => {
+                                        Err(_e) => {
                                             // log::error!("load image fail, {:?}", e);
                                             failquene.push((param.clone(), EErrorImageLoad::LoadFail));
                                             // log::error!("load image fail,");
@@ -224,7 +224,7 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
                                         Ok(res) => {
                                             success.push((entity, key, ETextureViewUsage::Tex(res)));
                                         }
-                                        Err(e) => {
+                                        Err(_e) => {
                                             // log::error!("load image fail, {:?}", e);
                                             log::error!("load image fail");
                                             fail.push((entity, key));
@@ -259,7 +259,7 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
                     }
                 }
             },
-            EKeyTexture::SRT(key) => {
+            EKeyTexture::SRT(_key) => {
                 // TODO
             },
         }
@@ -299,7 +299,7 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
     waitagain.drain(..).for_each(|item| { loader.wait.push(item) });
 
     let mut item = loader.success.pop();
-    while let Some((entity, key, view)) = item {
+    while let Some((entity, _key, view)) = item {
         item = loader.success.pop();
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert( D::from(view) );
@@ -307,11 +307,11 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
     }
 
     let whitekey = KeyTexture::from(DefaultTexture::WHITE_2D);
-    let white = EKeyTexture::Tex(whitekey.clone());
+    // let white = EKeyTexture::Tex(whitekey.clone());
     let key_u64 = whitekey.asset_u64();
     let view = texres_assets_mgr.get(&key_u64).unwrap();
     let mut item = loader.fail.pop();
-    while let Some((entity, key)) = item {
+    while let Some((entity, _key)) = item {
         item = loader.fail.pop();
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert( D::from(ETextureViewUsage::Tex(view.clone())) );

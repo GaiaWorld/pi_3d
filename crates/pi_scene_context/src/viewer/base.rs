@@ -1,12 +1,10 @@
-use std::{ sync::Arc};
+use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
-use pi_hash::XHashMap;
+use pi_hash::{XHashMap, XHashSet};
 use pi_scene_math::{Vector3, Matrix, coordiante_system::CoordinateSytem3, Number};
 
-use crate::{
-    transforms::prelude::*,
-};
+use crate::transforms::prelude::*;
 
 #[derive(Debug, Clone, Copy,Component)]
 pub struct Viewport {
@@ -22,29 +20,29 @@ impl Default for Viewport {
 }
 
 #[derive(Debug, Default, Clone, Component)]
-pub struct ModelList(pub XHashMap<ObjectID, ObjectID>);
+pub struct ModelList(pub XHashSet<Entity>);
 
 #[derive(Debug, Default, Clone, Component)]
 pub struct FlagModelList(pub bool);
 
 #[derive(Debug, Default, Component)]
-pub struct ModelListAdd(pub XHashMap<ObjectID, ObjectID>);
+pub struct ModelListAdd(pub XHashSet<Entity>);
 
 #[derive(Component)]
 pub struct FlagModelListAdd(pub bool);
 
 #[derive(Debug, Default, Component)]
-pub struct ModelListDel(pub XHashMap<ObjectID, ObjectID>);
+pub struct ModelListDel(pub XHashSet<Entity>);
 
 #[derive(Component)]
 pub struct FlagModelListDel(pub bool);
 
 #[derive(Debug, Default, Component)]
-pub struct ModelListAfterCulling(pub Vec<ObjectID>);
+pub struct ModelListAfterCulling(pub Vec<Entity>);
 
 /// 视口ID - 可能是 相机、灯光
 #[derive(Component)]
-pub struct ViewerID(pub ObjectID);
+pub struct ViewerID(pub Entity);
 
 /// 视口状态
 #[derive(Debug, Clone, Copy, Component)]
@@ -77,20 +75,20 @@ impl Default for ViewerAspect {
 
 #[derive(Component)]
 pub struct ViewerCullFilter {
-    test: Vec<Entity>
+    _test: Vec<Entity>
 }
 impl Default for ViewerCullFilter {
     fn default() -> Self {
         Self {
-            test: vec![]
+            _test: vec![]
         }
     }
 }
 impl ViewerCullFilter {
-    pub fn add(&mut self, entity: Entity) {
+    pub fn add(&mut self, _entity: Entity) {
 
     }
-    pub fn remove(&mut self, entity: Entity) {
+    pub fn remove(&mut self, _entity: Entity) {
 
     }
 }

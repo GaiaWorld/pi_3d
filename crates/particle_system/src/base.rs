@@ -1,5 +1,5 @@
 
-use std::{ops::Sub, sync::Arc};
+use std::ops::Sub;
 
 use bevy::prelude::Deref;
 use crossbeam::queue::SegQueue;
@@ -19,7 +19,7 @@ use crate::{
 
 pub type IdxParticle = usize;
 
-pub type TCurveTime = Number;
+// pub type TCurveTime = Number;
 pub type TCurveValue = Number;
 pub type TCurveInTangent = Number;
 pub type TCurveOutTangent = Number;
@@ -65,9 +65,9 @@ pub enum TGradienMode {
     Random,
 }
 
-pub struct ICurveKey(TCurveTime, TCurveValue, TCurveInTangent, TCurveOutTangent, TCurveMode);
+// pub struct ICurveKey(TCurveTime, TCurveValue, TCurveInTangent, TCurveOutTangent, TCurveMode);
 
-pub struct ICurve(Vec<ICurveKey>, TCurveScalar);
+// pub struct ICurve(Vec<ICurveKey>, TCurveScalar);
 
 #[derive(Resource, Default)]
 pub struct ResParticleCalculatorUninstallQueue(pub(crate) Share<SegQueue<Entity>>);
@@ -320,8 +320,6 @@ impl ParticleTrail {
         let mut color = Vector4::new(1., 1., 1., 1.);
         let mut localscaling = Vector3::new(1., 0., 0.);
         let trailworldspace = trailmodifier.use_world_space;
-        let mut start = u32::MAX;
-        let mut end = 0;
         newids.iter().for_each(|idx| {
             let randoms = randomlist.get(*idx).unwrap();
             let particlecolor = colors.get(*idx).unwrap();
@@ -356,7 +354,7 @@ impl ParticleTrail {
             };
 
             // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
-            let flag: bool = item.run(
+            let _ = item.run(
                 parentmatrix, &localmatrix, 
                 &color, &trailmodifier.color_over_lifetime.color4_interpolate.gradient, &trailmodifier.color_over_trail.color4_interpolate.gradient,
                 width, &trailmodifier.width_over_trail, *agecontrol, &age, randoms, 9999999., trailmodifier.minimun_vertex_distance,
@@ -695,7 +693,7 @@ impl ParticleSystemEmission {
                 bursts.iter().for_each(|burst| {
                     let busrt_time = (burst[0] * 1000.) as usize;
                     let busrt_count = burst[1] as usize;
-                    let busrt_loop = burst[2] as usize;
+                    let _busrt_loop = burst[2] as usize;
                     let busrt_interval = (burst[3] * 1000.) as usize;
     
                     if busrt_time < duration as usize {
@@ -706,6 +704,7 @@ impl ParticleSystemEmission {
                     }
     
                     self.burst_loop_count_record[idx] = 0;
+                    idx += 1;
                 });
             }
     
@@ -714,7 +713,7 @@ impl ParticleSystemEmission {
             bursts.iter().for_each(|burst| {
                 let busrt_time = (burst[0] * 1000.) as usize;
                 let busrt_count = burst[1] as usize;
-                let busrt_loop = burst[2] as usize;
+                let _busrt_loop = burst[2] as usize;
                 let busrt_interval = (burst[3] * 1000.) as usize;
     
                 if busrt_time < loop_progress_time as usize {
@@ -725,6 +724,7 @@ impl ParticleSystemEmission {
                     self.burst_loop_count_record[idx] = needloopcount;
                 }
     
+                idx += 1;
             });
 
             if rate_over_time > 0 {
@@ -890,10 +890,10 @@ impl ParticleLocalPosition {
             let randoms = randomlist.get(*idx).unwrap();
             let mut random = Random::new(randoms.seed);
 
-            emitter.start_position_function(position_to_update, time.emission_loop as f32, time.emission_progress, emission_index as f32, emission_total, true, &mut random);
+            emitter.start_position_function(position_to_update, time.emission_loop as f32, time.emission_progress, emission_index as f32, emission_total, &mut random);
 
             let local_position = &position_to_update;
-            emitter.start_direction_function(&mut direction_to_update.velocity_start, local_position, true, &mut random);
+            emitter.start_direction_function(&mut direction_to_update.velocity_start, local_position, &mut random);
 
             let startspeed = startspeed.0.interpolate(time.emission_progress, randoms.base);
             direction_to_update.velocity_start.scale_mut(startspeed);
@@ -903,12 +903,12 @@ impl ParticleLocalPosition {
             emission_index += 1;
         });
     }
-    pub fn run(
-        &mut self,
-        ids: &Vec<IdxParticle>,
-    ) {
+    // pub fn run(
+    //     &mut self,
+    //     ids: &Vec<IdxParticle>,
+    // ) {
 
-    }
+    // }
 }
 
 #[derive(Component, Deref)]
@@ -928,7 +928,7 @@ impl ParticleLocalRotation {
         time: &ParticleSystemTime,
         calculator: &StartRotation,
     ) {
-        let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         newids.iter().for_each(|idx| {
             let randoms = randomlist.get(*idx).unwrap();
             let item = self.0.get_mut(*idx).unwrap();
@@ -984,7 +984,6 @@ impl ParticleLocalScaling {
         activeids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
         randomlist: &Vec<BaseRandom>,
-        time: &ParticleSystemTime,
         calculator: &SizeOverLifetime,
     ) {
         activeids.iter().for_each(|idx| {
@@ -1072,7 +1071,7 @@ impl ParticleEmitMatrix {
         ids: &Vec<IdxParticle>,
         simulation: &EParticleSimulationSpace,
         scalingmode: &EScalingMode,
-        world_matrix: &Matrix,
+        _world_matrix: &Matrix,
         global_position: &Vector3,
         global_rotation: &Rotation3,
         global_scaling: &Vector3,
@@ -1104,8 +1103,6 @@ impl ParticleEmitMatrix {
             temp
         } else { Matrix::identity() };
 
-        let global_euler = global_rotation.euler_angles();
-
         match simulation {
             EParticleSimulationSpace::Local => {
                 ids.iter().for_each(|idx| {
@@ -1115,7 +1112,6 @@ impl ParticleEmitMatrix {
                     item.rotation.clone_from(&global_rotation);
                     item.matrix.clone_from(&emittermatrix);
                     item.matrix_invert.clone_from(&emittermatrix_invert);
-                    item.eulers = global_euler;
                 });
             },
             EParticleSimulationSpace::World => {
@@ -1126,7 +1122,6 @@ impl ParticleEmitMatrix {
                     item.rotation.clone_from(&global_rotation);
                     item.matrix.clone_from(&emittermatrix);
                     item.matrix_invert.clone_from(&emittermatrix_invert);
-                    item.eulers = global_euler;
                 });
             },
         }
@@ -1222,10 +1217,10 @@ impl ParticleVelocity {
         ids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
         randomlist: &Vec<BaseRandom>,
-        time: &ParticleSystemTime,
+        _: &ParticleSystemTime,
         calculator: &VelocityOverLifetime,
     ) {
-        let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         ids.iter().for_each(|idx| {
             let item = self.0.get_mut(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
@@ -1252,10 +1247,10 @@ impl ParticleSpeedFactor {
         ids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
         randomlist: &Vec<BaseRandom>,
-        time: &ParticleSystemTime,
+        _: &ParticleSystemTime,
         calculator: &SpeedModifier,
     ) {
-        let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         ids.iter().for_each(|idx| {
             let item = self.0.get_mut(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
@@ -1282,12 +1277,12 @@ impl ParticleOrbitVelocity {
         ids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
         randomlist: &Vec<BaseRandom>,
-        time: &ParticleSystemTime,
+        _: &ParticleSystemTime,
         offset: Result<&ParticleCalculatorOrbitOffset, T>,
         velocity: Result<&ParticleCalculatorOrbitVelocity, T>,
         radial: Result<&ParticleCalculatorOrbitRadial, T>,
     ) {
-        let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         ids.iter().for_each(|idx| {
             let item = self.0.get_mut(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
@@ -1321,10 +1316,10 @@ impl ParticleLimitVelocityScalar {
         ids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
         randomlist: &Vec<BaseRandom>,
-        time: &ParticleSystemTime,
+        _: &ParticleSystemTime,
         calculator: &LimitVelocityOverLifetime,
     ) {
-        let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         ids.iter().for_each(|idx| {
             let item = self.0.get_mut(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
@@ -1355,7 +1350,6 @@ impl ParticleDirection {
         limitscalars: &Vec<LimitVelocityScalar>,
         orbits: &Vec<OrbitVelocity>,
         speedfactors: &Vec<SpeedFactor>,
-        emitmatrixs: &Vec<EmitMatrix>,
         positions: &mut Vec<Vector3>,
         emitter: &ShapeEmitter,
         time: &ParticleSystemTime,
@@ -1368,7 +1362,6 @@ impl ParticleDirection {
             let gravity = gravities.get(*idx).unwrap();
             let velocity = velocities.get(*idx).unwrap();
             let limitscalar = limitscalars.get(*idx).unwrap();
-            let emitmatrix = emitmatrixs.get(*idx).unwrap();
             let orbit = orbits.get(*idx).unwrap();
             let speedfactor = speedfactors.get(*idx).unwrap();
             let position = positions.get_mut(*idx).unwrap();
@@ -1404,7 +1397,7 @@ impl ParticleDirection {
 
             let directionscalar = new_direction.metric_distance(&origin);
             if directionscalar > limitscalar.value * delta_seconds {
-                let factor = (1.0 - limitscalar.dampen * (directionscalar - limitscalar.value * delta_seconds) / directionscalar * (0.66));
+                let factor = 1.0 - limitscalar.dampen * (directionscalar - limitscalar.value * delta_seconds) / directionscalar * (0.66);
                 new_direction.scale_mut(factor);
             }
 
@@ -1420,45 +1413,6 @@ impl ParticleDirection {
     }
 }
 
-
-pub struct ParticleWorldMatrix;
-impl ParticleWorldMatrix {
-    pub fn run(
-        ids: &Vec<IdxParticle>,
-        positions: &Vec<Vector3>,
-        scalings: &Vec<Vector3>,
-        rotations: &Vec<Vector3>,
-        directions: &Vec<Direction>,
-        emitmatrix: &Vec<EmitMatrix>,
-        renderalign: &ERenderAlignment,
-    ) -> Vec<f32> {
-        let mut result = vec![];
-
-        // ids.iter().for_each(|idx| {
-        //     let position = positions.get(*idx).unwrap();
-        //     let scaling = scalings.get(*idx).unwrap();
-        //     let euler = rotations.get(*idx).unwrap();
-        //     let direction = directions.get(*idx).unwrap();
-        //     let emitmatrix = emitmatrix.get(*idx).unwrap();
-        //     // emitmatrix.w
-
-        //     let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &direction.value);
-        //     let mut matrix = Matrix::identity();
-        //     CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitmatrix.position, &mut matrix);
-            
-        //     let mut local = Matrix::identity();
-        //     CoordinateSytem3::matrix4_compose_euler_angle(scaling, euler, position, &mut local);
-
-        //     matrix = matrix * local;
-
-        //     if let Some(local) = renderalign.calc_local(&direction.value) {
-        //         matrix = matrix * local;
-        //     }
-        // });
-
-        result
-    }
-}
 
 #[derive(Component, Deref)]
 pub struct ParticleUV(pub(crate) Vec<TextureUV>);

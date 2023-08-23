@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use super::{vertex_buffer_useinfo::*, base::*};
+use super::base::*;
 
 
 // pub struct SysVertexBufferLoad;

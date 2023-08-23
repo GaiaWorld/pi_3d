@@ -7,18 +7,18 @@ use pi_ecs_macros::setup;
 use pi_engine_shell::{
     engine_shell::{AppShell, EnginShell},
     frame_time::InterfaceFrameTime,
-    object::{ObjectID},
+    object::ObjectID,
     plugin::Plugin, run_stage::{TSystemStageInfo, ERunStageChap},
 };
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{interface::{InterfaceMaterial}},
+    materials::interface::InterfaceMaterial,
     scene::interface::InterfaceScene,
     transforms::{interface::InterfaceTransformNode, command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}}, renderers::graphic::RendererGraphicDesc, pass::{EPassTag, PassTagOrders},
 };
-use pi_scene_math::{Vector3};
+use pi_scene_math::*;
 use axis::{axis::{InterfaceAxis, PluginAxisBuilder}, interface::InterfaceAxisMaterial, PluginAxis};
 
 #[derive(Debug, Default)]
@@ -101,9 +101,9 @@ pub fn main() {
         power_preference: wgpu::PowerPreference::HighPerformance,
         ..Default::default()
     });
-    shell.add_plugin(PluginBundleDefault);
-    shell.add_plugin(PluginAxis);
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginBundleDefault);
+    shell.add_plugins(PluginAxis);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

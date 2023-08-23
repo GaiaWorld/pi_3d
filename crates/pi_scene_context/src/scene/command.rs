@@ -1,16 +1,29 @@
 
 use pi_engine_shell::prelude::*;
+use pi_scene_math::Number;
 
-use crate::prelude::FogParam;
+use crate::{prelude::FogParam, cullings::prelude::*};
 
-use super::{
-    ScenePassRenderCfg,
-};
+use super::ScenePassRenderCfg;
 
-pub struct OpsSceneCreation(pub(crate) Entity, pub(crate) ScenePassRenderCfg);
+pub struct OpsSceneCreation(pub(crate) Entity, pub(crate) ScenePassRenderCfg, pub(crate) SceneBoundingPool);
 impl OpsSceneCreation {
-    pub fn ops(scene: Entity, passes_cfg: ScenePassRenderCfg) -> Self {
-        Self(scene, passes_cfg)
+    pub fn ops(scene: Entity, passes_cfg: ScenePassRenderCfg, cullingmode: u8, param: [usize;9]) -> Self {
+        let pool = match cullingmode {
+            2 => {
+                SceneBoundingPool::create_oct(
+                    (param[0] as Number, param[1] as Number, param[2] as Number),
+                    (param[3] as Number, param[4] as Number, param[5] as Number),
+                    param[6],
+                    param[7],
+                    param[8]
+                )
+            },
+            _ => {
+                SceneBoundingPool::create_vec()
+            }
+        };
+        Self(scene, passes_cfg, pool)
     }
 }
 pub type ActionListSceneCreate = ActionList<OpsSceneCreation>;

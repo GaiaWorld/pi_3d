@@ -33,5 +33,5 @@ pub struct ActionSetMaterial<'w> {
     pub mat4: ResMut<'w, ActionListUniformMat4>,
     pub texture: ResMut<'w, ActionListUniformTexture>,
     pub metas: Res<'w, ShareAssetMgr<ShaderEffectMeta>>,
-    pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
+    // pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 }

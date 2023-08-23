@@ -7,7 +7,7 @@ use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, ru
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
+    scene::interface::InterfaceScene,
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}
 };
@@ -114,7 +114,7 @@ pub fn main() {
             ..Default::default()
         }
     );
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

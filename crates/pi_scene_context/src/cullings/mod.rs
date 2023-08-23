@@ -1,31 +1,28 @@
 
 
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{
-    Vector3,
-};
+use pi_scene_math::Vector3;
 
-use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, bounding::BoundingInfo};
+use crate::transforms::transform_node_sys::sys_world_matrix_calc;
 
-pub mod bounding_box;
-pub mod bounding_sphere;
-pub mod sys;
-pub mod bounding;
-pub mod oct_tree;
-pub mod quad_tree;
+use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::{sys_update_culling_by_worldmatrix, sys_update_culling_by_cullinginfo}, command::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}, command_sys::{sys_act_mesh_bounding, sys_act_mesh_bounding_culling}};
+
+mod bounding_box;
+mod bounding_sphere;
+mod sys;
+mod bounding;
+mod oct_tree;
+mod quad_tree;
+mod base;
+mod command;
+mod command_sys;
+
+pub mod prelude;
+
 
 
 #[derive(Debug, Clone, Component)]
 pub struct IsCulled;
-
-/// 检测级别
-/// *
-pub enum ECullingStrategy {
-    /// 检测 包围球中心 在不在 视锥, 检测 包围球 在不在 视锥
-    Optimistic,
-    /// 检测 包围球中心 在不在 视锥, 检测 包围球 在不在 视锥, 检测 包围盒 在不在 视锥
-    STANDARD,
-}
 
 pub trait TIntersect {
     fn intersects_point(&self, p: &Vector3) -> bool;
@@ -34,45 +31,24 @@ pub trait TIntersect {
     fn intersects_min_max(&self, min: &Vector3, max: &Vector3) -> bool;
 }
 
-#[derive(Debug)]
-pub enum CullingCommand {
-    Bounding(Vector3, Vector3),
-}
-
-pub struct ActionCulling;
-impl ActionCulling {
-    pub fn modify(
-        entitycmd: &mut EntityCommands,
-        action: CullingCommand,
-    ) {
-        match action {
-            CullingCommand::Bounding(min, max) => {
-                entitycmd.insert(BoundingInfo::new(min, max));
-            }
-        }
-    }
-}
-
-
 pub struct PluginCulling;
 impl Plugin for PluginCulling {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut crate::engine::Engine,
-    //     stages: &mut crate::run_stage::RunStage,
-    // ) -> Result<(), crate::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-
-    //     SysCullingCommand::setup(world, stages.query_stage::<SysCullingCommand>(ERunStageChap::Initial));
-    //     SysCameraCulling::setup(world, stages.query_stage::<SysCameraCulling>(ERunStageChap::Command));
-
-    //     world.insert_resource(SingleCullingCommandList::default());
-
-    //     Ok(())
-    // }
-
     fn build(&self, app: &mut App) {
-        // todo!()
+        app.insert_resource(ActionListMeshBounding::default());
+        app.insert_resource(ActionListMeshBoundingCullingMode::default());
+
+        app.add_systems(Update, (
+            sys_act_mesh_bounding,
+            sys_act_mesh_bounding_culling
+        ).in_set(ERunStageChap::Command));
+
+        app.add_systems(
+            Update,
+            (
+                sys_update_culling_by_worldmatrix,
+                sys_update_culling_by_cullinginfo
+            ).chain().run_if(should_run).after(sys_world_matrix_calc).in_set(ERunStageChap::CalcWorldMatrix)
+        );
     }
 }
 

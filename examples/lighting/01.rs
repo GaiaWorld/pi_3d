@@ -10,9 +10,9 @@ use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, ru
 use pi_render::{rhi::{options::RenderOptions, glsl::Glsl}, renderer::{vertex_buffer_desc::VertexBufferDesc, pipeline::{DepthStencilState, DepthBiasState}}};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode, transform_node::{LocalPosition, LocalEulerAngles, LocalScaling}},
-    scene::{interface::InterfaceScene},
+    scene::interface::InterfaceScene,
     cameras::{interface::InterfaceCamera, camera::EFreeCameraMode},
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::{graphic::RendererGraphicDesc, render_depth_and_stencil::{InterfaceRenderDepthAndStencil, ModelDepthStencil}}, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::{TInterfaceGeomtery}, state::PluginStateToFile, light::{PluginLighting, interface::TLight}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, animation::interface::{InterfaceAnimeAsset, InterfaceAnimationGroup}, renderers::{graphic::RendererGraphicDesc, render_depth_and_stencil::{InterfaceRenderDepthAndStencil, ModelDepthStencil}}, pass::{EPassTag, PassTagOrders}, meshes::interface::InterfaceMesh, geometry::TInterfaceGeomtery, state::PluginStateToFile, light::{PluginLighting, interface::TLight}
 };
 use pi_ecs::{prelude::{ResMut, Setup}, storage::Local};
 use pi_ecs_macros::setup;
@@ -122,7 +122,7 @@ pub fn main() {
             ..Default::default()
         }
     );
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();   

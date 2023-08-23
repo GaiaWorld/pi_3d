@@ -1,7 +1,20 @@
 use pi_3d_state::{PluginStateGlobal, StateGlobal};
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
-use pi_scene_context::{prelude::*, scene::PluginScene, animation::PluginSceneAnimation, transforms::PluginGroupTransformNode, cameras::PluginCamera, meshes::PluginMesh, geometry::PluginGeometry, light::{PluginLighting, base::Light}, layer_mask::PluginLayerMask, materials::PluginGroupMaterial, renderers::PluginRenderer, skeleton::PluginSkeleton};
+use pi_scene_context::{
+    prelude::*,
+    scene::PluginScene,
+    animation::PluginSceneAnimation,
+    transforms::PluginGroupTransformNode,
+    cameras::PluginCamera,
+    meshes::PluginMesh,
+    geometry::PluginGeometry,
+    light::PluginLighting,
+    layer_mask::PluginLayerMask,
+    materials::PluginGroupMaterial,
+    renderers::PluginRenderer,
+    skeleton::PluginSkeleton, cullings::PluginCulling
+};
 
 pub struct Limit(pub wgpu::Limits);
 // impl TMemoryAllocatorLimit for Limit {
@@ -117,7 +130,8 @@ impl PluginGroup for PluginBundleDefault {
             .add(PluginAnimeRenderIndiceRange::new())
             .add(PluginGeometry)
             .add(PluginLighting)
-            .add(PluginLayerMask);
+            .add(PluginLayerMask)
+            .add(PluginCulling);
         group = PluginGroupMaterial::add(group);
         group = group.add(PluginRenderer)
             .add(PluginSkeleton)

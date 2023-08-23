@@ -7,14 +7,10 @@ use crate::{
         prelude::*,
         command_sys::*,
     },
-    materials::{
-        prelude::*,
-        command_sys::*
-    },
+    materials::prelude::*,
     pass::{EPassTag, PassTagOrders},
-    scene::command_sys::ActionScene,
-    transforms::{command_sys::*, prelude::*},
-    animation::command_sys::*, prelude::{GlobalEnable, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady},
+    transforms::command_sys::*,
+    prelude::{GlobalEnable, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady},
 };
 
 use super::{
@@ -29,7 +25,6 @@ use super::{
 
 pub fn sys_create_light(
     mut cmds: ResMut<ActionListLightCreate>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
     mut dynallocator: ResMut<ResBindBufferAllocator> ,
     mut render_graphic: ResMut<PiRenderGraph> ,
@@ -38,9 +33,9 @@ pub fn sys_create_light(
     empty: Res<SingleEmptyEntity>,
     mut renderercmds: ResMut<ActionListRendererModify>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity, name)| {
+    cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity)| {
         let mat = commands.spawn_empty().id();
         matcreatecmds.push(OpsMaterialCreate(mat, Atom::from(ShaderShadowGenerator::KEY), EPassTag::ShadowCast));
         matusecmds.push(OpsMaterialUse::ops(entity, mat));
@@ -56,7 +51,7 @@ pub fn sys_create_light(
             return;
         };
 
-        ActionLight::init(&mut lightcmd, &mut tree, scene, name.clone());
+        ActionLight::init(&mut lightcmd, scene);
         ActionAnime::as_anime_group_target(&mut lightcmd);
 
         lightcmd
@@ -78,14 +73,14 @@ pub fn sys_create_light(
         let passorders = PassTagOrders::new(vec![EPassTag::ShadowCast]);
 
         let render_node = RenderNode::new(id_renderer);
-        match render_graphic.add_node(name.clone(), render_node) {
+        match render_graphic.add_node(entity.to_bits().to_string(), render_node) {
             Ok(nodeid) => {
                 if let Some(mut cmd) = commands.get_entity(id_renderer) {
                     cmd.insert(GraphId(nodeid));
 
                     // ActionRenderer::init_graphic_node(&mut render_graphic, RendererID(id_renderer), nodeid, Some(final_render.clear_node), None);
 
-                    viewer_renderers.map.insert(name.clone(), (passorders.clone(), RendererID(id_renderer)));
+                    viewer_renderers.map.insert(entity.to_bits().to_string(), (passorders.clone(), RendererID(id_renderer)));
                     
                     ActionRenderer::init(
                         &mut cmd, id_viewer, passorders, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT,
@@ -179,7 +174,7 @@ pub fn sys_light_render_modify(
     mut commands: Commands,
     mut renderercmds: ResMut<ActionListRendererModify>,
 ) {
-    lights.iter().for_each(|(id_light, light, shadowenable, enable, renderers, size)| {
+    lights.iter().for_each(|(id_light, _light, shadowenable, enable, renderers, _size)| {
         renderers.map.iter().for_each(|(_, v)| {
             let id_render = v.1.0;
 
@@ -217,17 +212,15 @@ impl ActionLight {
     }
     pub fn init(
         commands: &mut EntityCommands,
-        tree: &mut ActionListTransformNodeParent,
         scene: Entity,
-        name: String,
     ) {
-        ActionTransformNode::init(commands, tree, scene, name);
+        ActionTransformNode::init(commands, scene);
         ActionLight::as_light(commands);
     }
 
     pub fn modify(
         app: &mut App,
-        light: Entity,
+        _light: Entity,
         cmd: ELightModifyCommand,
     ) {
         let mut cmds = app.world.get_resource_mut::<ActionListLightParam>().unwrap();

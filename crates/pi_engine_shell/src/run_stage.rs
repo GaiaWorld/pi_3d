@@ -133,7 +133,7 @@ pub enum ERunStageChap {
     CalcRenderMatrix,
     Uniform,
     DrawUniformToGPU,
-    DrawBinds,
+    DrawBindsAndCulling,
     DrawBindGroups,
     DrawBindGroupsLoaded,
     DrawShader,
@@ -166,8 +166,8 @@ impl Plugin for PluginRunstage {
         app.configure_set(Update, ERunStageChap::CalcRenderMatrix.after(ERunStageChap::CalcWorldMatrix));
         app.configure_set(Update, ERunStageChap::Uniform.after(ERunStageChap::CalcRenderMatrix));
         app.configure_set(Update, ERunStageChap::DrawUniformToGPU.after(ERunStageChap::Uniform));
-        app.configure_set(Update, ERunStageChap::DrawBinds.after(ERunStageChap::DrawUniformToGPU));
-        app.configure_set(Update, ERunStageChap::DrawBindGroups.after(ERunStageChap::DrawBinds));
+        app.configure_set(Update, ERunStageChap::DrawBindsAndCulling.after(ERunStageChap::DrawUniformToGPU));
+        app.configure_set(Update, ERunStageChap::DrawBindGroups.after(ERunStageChap::DrawBindsAndCulling));
         app.configure_set(Update, ERunStageChap::DrawBindGroupsLoaded.after(ERunStageChap::DrawBindGroups));
         app.configure_set(Update, ERunStageChap::DrawShader.after(ERunStageChap::DrawBindGroupsLoaded));
         app.configure_set(Update, ERunStageChap::DrawShaderLoaded.after(ERunStageChap::DrawShader));

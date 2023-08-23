@@ -8,7 +8,6 @@ use pi_engine_shell::prelude::*;
 use self::{
     command::*,
     command_sys::*,
-    base::*,
 };
 
 mod base;

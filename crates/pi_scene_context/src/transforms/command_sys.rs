@@ -11,16 +11,15 @@ use super::transform_node::*;
 
 pub fn sys_create_transform_node(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity, name)| {
+    cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity)| {
         let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
             return;
         };
-        ActionTransformNode::init(&mut transformnode, &mut tree, scene, name);
+        ActionTransformNode::init(&mut transformnode, scene);
         ActionAnime::as_anime_group_target(&mut transformnode);
         transformnode.insert(TransformNode);
     });
@@ -118,21 +117,17 @@ pub struct ActionTransformNode;
 impl ActionTransformNode {
     pub fn init(
         transformnode: &mut EntityCommands,
-        tree: &mut ActionListTransformNodeParent,
         scene: Entity,
-        name: String,
     ) {
         ActionEntity::init(transformnode);
-        ActionScene::add_to_scene(transformnode, tree, scene);
+        ActionScene::add_to_scene(transformnode, scene);
         ActionTransformNode::init_for_tree(transformnode);
-        ActionTransformNode::as_transform_node(transformnode, name);
+        ActionTransformNode::as_transform_node(transformnode);
     }
     fn as_transform_node(
         commands: &mut EntityCommands,
-        name: String,
     ) {
         commands
-            .insert(UniqueName(Atom::from(name)))
             .insert(LocalPosition::default())
             .insert(LocalScaling::default())
             .insert(LocalRotationQuaternion::default())

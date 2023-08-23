@@ -3,11 +3,7 @@
 use bevy::prelude::{Deref, Component};
 use pi_assets::asset::Handle;
 
-use pi_render::{
-    renderer::{
-        sampler::{BindDataSampler, SamplerRes},
-    },
-};
+use pi_render::renderer::sampler::{BindDataSampler, SamplerRes};
 
 
 #[derive(Debug, Clone, Deref, Hash, PartialEq, Eq, Component)]

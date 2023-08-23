@@ -1,7 +1,7 @@
 
-use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
+use pi_engine_shell::prelude::*;
 
-use crate::{bytes_write_to_memory,};
+use crate::bytes_write_to_memory;
 
 use super::BindSceneEffect;
 

@@ -1,11 +1,9 @@
 use pi_scene_math::{Matrix, Vector3};
-use pi_wy_rng::WyRng;
-use rand::{SeedableRng, Rng};
 
 use crate::tools::{normalize, Random};
 
 use super::{
-    ishape_emitter_type::{IShapeEmitterType},
+    ishape_emitter_type::IShapeEmitterType,
     SerializationObject,
 };
 
@@ -50,7 +48,7 @@ impl IShapeEmitterType for RectangleShapeEmitter {
         &self,
         direction_to_update: &mut Vector3,
         local_position: &Vector3,
-        is_local: bool,
+        // is_local: bool,
         random: &mut Random,
     ) {
         let mut direction = self.direction;
@@ -81,7 +79,7 @@ impl IShapeEmitterType for RectangleShapeEmitter {
         _emission_progress: f32,
         _emission_index: f32,
         _emission_total: f32,
-        is_local: bool,
+        // is_local: bool,
         random: &mut Random,
     ) {
         let mut rand_x: f32 = random.random_range(-0.5, 0.5);

@@ -2,23 +2,18 @@
 
 
 use base::DemoScene;
-use pi_3d::PluginBundleDefault;
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation_group::AnimationGroupID};
+use pi_animation::{loop_mode::ELoopMode, animation_group::AnimationGroupID};
 use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
+use pi_curves::curve::frame_curve::FrameCurve;
+use pi_engine_shell::prelude::*;
 use pi_gltf2_load::*;
-use pi_node_materials::{prelude::*, NodeMaterialBlocks, PluginNodeMaterial};
+use pi_node_materials::{prelude::*, NodeMaterialBlocks};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::{main_opacity::MainOpacityShader, opacity_clip::OpacityClipShader}};
+use pi_mesh_builder::cube::*;
+use unlit_material::*;
 
-use std::{sync::Arc, mem::replace};
-use pi_async_rt::rt::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+use std::mem::replace;
 
 fn setup(
     mut commands: Commands,
@@ -26,34 +21,33 @@ fn setup(
     mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut final_render: ResMut<WindowRenderer>,
     nodematblocks: Res<NodeMaterialBlocks>,
-    defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
 ) {
-    ActionMaterial::regist_material_meta(&matcmds.metas, &mut matcmds.metas_wait, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
+    ActionMaterial::regist_material_meta(&matcmds.metas, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
 
     let tes_size = 5;
     fps.frame_ms = 50;
 
 
     let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
+    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let root = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(root, scene));
-    transformcmds.create.push(OpsTransformNode::ops(scene, root, String::from("Root")));
+    transformcmds.create.push(OpsTransformNode::ops(scene, root));
 
     let node = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node, scene));
-    transformcmds.create.push(OpsTransformNode::ops(scene, node, String::from("Node")));
+    transformcmds.create.push(OpsTransformNode::ops(scene, node));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
     let mut blend = ModelBlend::default(); blend.combine();
     meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
 
@@ -61,7 +55,7 @@ fn setup(
     transformcmds.tree.push(OpsTransformNodeParent::ops(node, root));
     
     let id_geo = commands.spawn_empty().id();
-    let mut attrs = CubeBuilder::attrs_meta();
+    let attrs = CubeBuilder::attrs_meta();
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
@@ -94,7 +88,7 @@ fn setup(
         )
     );
     
-    let key_group = pi_atom::Atom::from("key_group");
+    // let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
     animegroupcmd.global.record_group(source, id_group);
     animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
@@ -136,7 +130,7 @@ fn setup(
                 Ok(value) => {
                     value
                 },
-                Err(e) => {
+                Err(_e) => {
                     return;
                 },
             }
@@ -165,29 +159,12 @@ pub fn sys_anime_event(
     });
 }
 
-
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
-}
-
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -195,11 +172,11 @@ impl Plugin for PluginTest {
 mod base;
 pub fn main() {
     let mut app = base::test_plugins();
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
     
-    app.add_startup_system(setup);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
-    app.add_system(sys_anime_event.in_set(ERunStageChap::Anime));
+    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
     
     app.run()
 

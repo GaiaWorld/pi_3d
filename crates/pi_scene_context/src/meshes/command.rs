@@ -2,17 +2,15 @@
 use std::ops::Range;
 
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Vector4, Matrix, Number, Vector3};
+use pi_scene_math::{Vector4, Number, Vector3};
 
 use crate::{
     geometry::{
         prelude::*,
-        command_sys::*, instance::instance_boneoffset::{InstanceBoneoffset, InstanceBufferBoneOffset, InstanceBoneOffsetDirty}
+        instance::instance_boneoffset::*
     },
     pass::*,
-    renderers::{
-        prelude::*,
-    },
+    renderers::prelude::*,
     layer_mask::prelude::*,
     skeleton::prelude::*,
     materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode, IndiceRenderRange},
@@ -25,18 +23,18 @@ use super::{
     lighting::{MeshCastShadow, MeshReceiveShadow}
 };
 
-pub struct OpsMeshCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub u8);
+pub struct OpsMeshCreation(pub(crate) Entity, pub(crate) Entity);
 impl OpsMeshCreation {
-    pub fn ops(scene: Entity, entity: Entity, name: String) -> Self {
-        Self(scene, entity, name, 0)
+    pub fn ops(scene: Entity, entity: Entity) -> Self {
+        Self(scene, entity)
     }
 }
 pub type ActionListMeshCreate = ActionList<OpsMeshCreation>;
 
-pub struct OpsInstanceMeshCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub u8);
+pub struct OpsInstanceMeshCreation(pub(crate) Entity, pub(crate) Entity, pub u8);
 impl OpsInstanceMeshCreation {
-    pub fn ops(source: Entity, instance: Entity, name: String) -> Self {
-        Self(source, instance, name, 0)
+    pub fn ops(source: Entity, instance: Entity) -> Self {
+        Self(source, instance, 0)
     }
 }
 pub type ActionListInstanceMeshCreate = ActionList<OpsInstanceMeshCreation>;

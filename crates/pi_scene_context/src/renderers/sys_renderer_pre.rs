@@ -1,13 +1,11 @@
-use std::{sync::Arc, };
+use std::sync::Arc;
 
 use pi_assets::{mgr::AssetMgr, asset::Handle};
 use pi_engine_shell::prelude::*;
 use pi_share::Share;
 
 use crate::{
-    scene::{
-        environment::{BindSceneEffect,},
-    },
+    scene::environment::BindSceneEffect,
     viewer::prelude::*,
     skeleton::prelude::*,
     meshes::prelude::*,
@@ -23,7 +21,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
     ) {
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
 
         allocator.write_buffer(&device, &queue);
         vb_allocator.update_buffer(&device, &queue);
@@ -40,21 +38,17 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             (ObjectID, &ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo),
             Or<(Changed<BindViewer>, Changed<ViewerActive>, Changed<FlagModelList>, Changed<DirtyViewerRenderersInfo>)>,
         >,
-        renderers: Query<
-            &PassTagOrders,
-        >,
         scenes: Query<
             &BindSceneEffect,
         >,
         models: Query<&I>,
-        device: Res<PiRenderDevice>,
         mut scene_wait: ResMut<AssetBindGroupSceneWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
         let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
-            id_viewer, active, id_scene, bind_viewer, list_model, list_renderer
+            _id_viewer, active, id_scene, bind_viewer, list_model, list_renderer
         )| {
             // log::info!("Set0ByViewer {:?}:", active.0);
             if !active.0 {
@@ -67,11 +61,11 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 if let Ok(bind_base_effect) = scenes.get(id_scene.0) {
                     // log::info!("Set0ByViewer : 0");
                     let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()), &mut binds_recorder);
-                    list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+                    list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
                         let pass_tags = passorders;
                         
                         // log::info!("Set0ByViewer : 1");
-                        list_model.0.iter().for_each(|(id_obj, _)| {
+                        list_model.0.iter().for_each(|id_obj| {
                             // log::info!("Set0ByViewer : 2");
                             if let Ok(passid) = models.get(id_obj.clone()) {
                                 // log::info!("Set0ByViewer : 3");
@@ -92,9 +86,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 /// * 场景的数据变化时, 重新创建视口列表内物体相关Pass 的 Set0 数据
 ///   * BindSceneEffect 变化
     pub fn sys_set0_modify_by_scene<T: TPass + Component, I: TPassID + Component>(
-        renderers: Query<
-            &PassTagOrders,
-        >,
         viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo),
         >,
@@ -103,7 +94,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             Changed<BindSceneEffect>
         >,
         models: Query<&I>,
-        device: Res<PiRenderDevice>,
         mut scene_wait: ResMut<AssetBindGroupSceneWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
@@ -111,7 +101,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 
         scenes.iter().for_each(|(id_scene_obj, bind_base_effect)| {
             viewers.iter().for_each(|(
-                id_camera, active, id_scene, bind_viewer, list_model, list_renderer
+                _id_camera, active, id_scene, bind_viewer, list_model, list_renderer
             )| {
                 // log::info!("Set0ByScene :");
 
@@ -119,10 +109,10 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                 if active.0 && id_scene_obj == id_scene.0 {
                     // log::info!("Set0ByScene : 0");
                     let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()), &mut binds_recorder);
-                    list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+                    list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
                         // log::info!("Set0ByScene : 1");
                         let pass_tags = passorders;
-                        list_model.0.iter().for_each(|(id_obj, _)| {
+                        list_model.0.iter().for_each(|id_obj| {
                             // log::info!("Set0ByScene : 2");
                             if let Ok(passid) = models.get(id_obj.clone()) {
                                 // log::info!("Set0ByScene : 3");
@@ -149,9 +139,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             (ObjectID, &ViewerActive, &SceneID, &ModelList, &ViewerRenderersInfo),
             Or<(Changed<ModelList>, Changed<ViewerActive>, Changed<ViewerRenderersInfo>)>,
         >,
-        renderers: Query<
-            &PassTagOrders,
-        >,
         models: Query<
             (
                 &BindModel, &BindSkinValue, Option<&SkeletonID>,
@@ -159,25 +146,24 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             ),
         >,
         passes: Query<(&PassBindEffectValue, &PassReady), With<T>>,
-        device: Res<PiRenderDevice>,
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
         let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
-            id_camera, active, id_scene, list_model, list_renderer
+            _id_camera, active, _id_scene, list_model, list_renderer
         )| {
             if active.0 == false {
                 return;
             }
             // log::info!("SysSet1ModifyByRendererID: {:?}", list_model.0.len());
             
-            list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+            list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
                 // log::info!("SysSet1ModifyByRendererID: 1111111111111111");
                         let pass_tags = passorders;
                 // log::info!("SysSet1ModifyByRendererID: 2222222222222222");
-                list_model.0.iter().for_each(|(id_obj, _)| {
+                list_model.0.iter().for_each(|id_obj| {
                     if let Ok(
                         (
                             bind_model, bind_skl, id_skl,
@@ -211,9 +197,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 ///   * 骨骼数据变化 - 
 ///   * 渲染效果数据 变化
     pub fn sys_set1_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        renderers: Query<
-            &PassTagOrders,
-        >,
         viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo),
         >,
@@ -227,24 +210,22 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             )>,
         >,
         passes: Query<(&PassBindEffectValue, &PassReady), With<T>>,
-        // mut pass01_cmd: Commands<GameObject, PassBindGroupModel>,
-        device: Res<PiRenderDevice>,
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
         let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
-            id_camera, active, id_scene, bind_viewer, list_model, list_renderer
+            _id_camera, active, _id_scene, _bind_viewer, list_model, list_renderer
         )| {
             if active.0 == false {
                 return;
             }
             // log::info!("SysSet1ModifyByModel: {:?}", list_model.0.len());
-            list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+            list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
                 let pass_tags = passorders;
                 // log::info!("SysSet1ModifyByModel: 1111111111111111111111");
-                list_model.0.iter().for_each(|(id_obj, _)| {
+                list_model.0.iter().for_each(|id_obj| {
                     // log::info!("SysSet1ModifyByModel: 111111111");
                     if let Ok(
                         (
@@ -281,9 +262,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 ///   * 骨骼数据变化 - 
 ///   * 渲染效果数据 变化
     pub fn sys_set1_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
-        renderers: Query<
-            &PassTagOrders,
-        >,
         viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &BindViewer, &ModelList, &ViewerRenderersInfo),
         >,
@@ -294,7 +272,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
             ),
         >,
         passes: Query<(&PassBindEffectValue, &PassReady, &T, &ModelPass), Changed<PassReady>>,
-        device: Res<PiRenderDevice>,
         mut model_wait: ResMut<AssetBindGroupModelWaits>,
         mut binds_recorder: ResMut<ResBindsRecorder>,
     ) {
@@ -302,15 +279,15 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 
         passes.iter().for_each(|(val1, ready, _, id_model)| {
             viewers.iter().for_each(|(
-                id_camera, active, id_scene, bind_viewer, list_model, list_renderer
+                _id_camera, active, _id_scene, _bind_viewer, list_model, list_renderer
             )| {
                 if active.0 == false {
                     return;
                 }
                 // log::info!("SysSet1ModifyByPass: {:?}", list_model.0.len());
-                list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+                list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
                     let pass_tags = passorders;
-                    if list_model.0.contains_key(&id_model.0) {
+                    if list_model.0.contains(&id_model.0) {
                         // log::info!("SysSet1ModifyByPass: 111111111");
                         if let Ok(
                             (
@@ -350,9 +327,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 ///   * 渲染列表变化
 ///   * 渲染PassTags 变化
     pub fn sys_set2_modify_by_renderer<T: TPass + Component, I: TPassID + Component>(
-        renderers: Query<
-            &PassTagOrders,
-        >,
         viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &ModelList, &ViewerRenderersInfo),
             Or<(Changed<ModelList>, Changed<ViewerRenderersInfo>, Changed<ViewerActive>)>,
@@ -368,14 +342,14 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         let time1 = pi_time::Instant::now();
 
         viewers.iter().for_each(|(
-            id_camera, active, id_scene, list_model, list_renderer
+            _id_camera, active, _id_scene, list_model, list_renderer
         )| {
             if active.0 == false {
                 return;
             }
-            list_renderer.map.iter().for_each(|(_, (passorders, id_renderer))| {
+            list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
                 let pass_tags = passorders;
-                list_model.0.iter().for_each(|(id_obj, _)| {
+                list_model.0.iter().for_each(|id_obj| {
                     if let Ok(passid) = models.get(id_obj.clone()) {
                         if pass_tags.1 &  I::TAG == I::TAG {
                             if let Ok((meta1, effect_texture_samplers)) = passes.get(passid.id()) {
@@ -398,12 +372,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
     }
 
     pub fn sys_set2_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        renderers: Query<
-            &PassTagOrders,
-        >,
-        viewers: Query<
-            (ObjectID, &ViewerActive, &SceneID, &ModelList, &ViewerRenderersInfo),
-        >,
         passes: Query<(ObjectID, &ModelPass, &PassReady, &PassBindEffectTextures), (Changed<PassBindEffectTextures>, With<T>)>,
         mut commands: Commands,
         mut texturesamplers_wait: ResMut<AssetBindGroupTextureSamplersWaits>,
@@ -411,7 +379,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
     ) {
         let time1 = pi_time::Instant::now();
 
-        passes.iter().for_each(|(id_pass, id_model, meta1, effect_texture_samplers)| {
+        passes.iter().for_each(|(id_pass, _id_model, meta1, effect_texture_samplers)| {
             if let Some(effect_texture_samplers) = effect_texture_samplers.val() {
                 let key = KeyBindGroupTextureSamplers::new(KeyShaderSetTextureSamplers::default(), effect_texture_samplers.clone(), meta1.0.as_ref().unwrap().1.clone(), &mut binds_recorder);
                 texturesamplers_wait.add(&key, id_pass);

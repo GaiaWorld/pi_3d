@@ -1,12 +1,11 @@
 
 
-use pi_atom::Atom;
 use pi_bevy_render_plugin::SimpleInOut;
 use pi_engine_shell::prelude::*;
 use pi_futures::BoxFuture;
-use pi_share::{ShareRefCell};
+use pi_share::ShareRefCell;
 
-use crate::{renderers::{renderer::*}, pass::PassTagOrders, prelude::DisposeReady};
+use crate::{renderers::renderer::*, pass::PassTagOrders, prelude::DisposeReady};
 
 
 #[derive(Clone)]
@@ -33,9 +32,9 @@ pub struct RendererGraphicDesc {
 
 #[derive(SystemParam)]
 pub struct QueryParam<'w, 's> (
-    Res<'w, PiRenderWindow>,
-    Res<'w, PiRenderDevice>,
-    Res<'w, PiRenderQueue>,
+    // Res<'w, PiRenderWindow>,
+    // Res<'w, PiRenderDevice>,
+    // Res<'w, PiRenderQueue>,
     Res<'w, WindowRenderer>,
     Res<'w, PiSafeAtlasAllocator>,
     Query<
@@ -81,7 +80,7 @@ impl Node for RenderNode {
 		_from: &[NodeId],
 		_to: &[NodeId],
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
-        let time = pi_time::Instant::now();
+        // let time = pi_time::Instant::now();
 
         let mut output = SimpleInOut::default();
 
@@ -99,7 +98,7 @@ impl Node for RenderNode {
         // log::warn!("Draws: Graphic");
 
         let param: QueryParam = param.get(world);
-        let (window, device, queue, final_render_target, atlas_allocator, query) = (param.0, param.1, param.2, param.3, param.4, param.5);
+        let (final_render_target, atlas_allocator, query) = (param.0, param.1, param.2);
         if let Ok((
             enable, disposed, renderer, rendersize, format, color_clear, depth, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
         )) = query.get(self.renderer_id) {
@@ -149,6 +148,7 @@ impl Node for RenderNode {
                     // w = vw as f32 * w;
                     // h = vh as f32 * h;
     
+                    // log::warn!("Clear:  {:?} {:?} {:?}", auto_clear_color.0, auto_clear_depth.0, auto_clear_stencil.0);
                     // Clear
                     if auto_clear_color.0 || auto_clear_depth.0 || auto_clear_stencil.0 {
                         let mut renderpass = commands.begin_render_pass(
@@ -220,7 +220,7 @@ impl Node for RenderNode {
                         // log::warn!("Draws: {:?}", renderer.draws.list.len());
                         DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
-                        let time1 = pi_time::Instant::now();
+                        // let time1 = pi_time::Instant::now();
                         // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
                     }
             
@@ -230,7 +230,7 @@ impl Node for RenderNode {
                         }
                     )
                 } else {
-                    let time1 = pi_time::Instant::now();
+                    // let time1 = pi_time::Instant::now();
                     // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
             
                     Box::pin(
@@ -320,7 +320,8 @@ impl Node for RenderNode {
                 // log::warn!("Render color: {:?}", srt.target().colors);
                 // log::warn!("Render depth: {:?}", srt.target().depth);
     
-                if auto_clear_color.0 || (auto_clear_depth.0 || auto_clear_stencil.0 && srt.target().depth.is_some()) {
+                // log::warn!("Clear:  {:?} {:?} {:?} {:?}", auto_clear_color.0, auto_clear_depth.0, auto_clear_stencil.0, srt.target().depth.is_some());
+                if auto_clear_color.0 || (auto_clear_depth.0 || auto_clear_stencil.0) {
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
                             label: None,
@@ -369,7 +370,7 @@ impl Node for RenderNode {
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
         
-                    let time1 = pi_time::Instant::now();
+                    // let time1 = pi_time::Instant::now();
                     // log::warn!("3D Draws End: {:?}", time1 - time);
                 }
     

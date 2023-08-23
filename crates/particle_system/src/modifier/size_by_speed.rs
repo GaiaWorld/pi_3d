@@ -28,7 +28,7 @@ impl SizeBySpeed {
         let amount = 1.0f32.min(0.0f32.max((speed - self.range_x) / self.range_size));
         self.scaling_interpolate.compute(amount, randoms, &mut local_result);
 
-        particle.component_mul(&local_result);
+        particle.copy_from_slice(particle.component_mul(&local_result).as_slice());
     }
 }
 

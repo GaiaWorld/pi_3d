@@ -1,9 +1,9 @@
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Matrix, Vector3};
+use pi_scene_math::*;
 
 use crate::{
     emitter::*,
-    interpolation::{parse_color4_gradient, parse_float_interpolation, self},
+    interpolation::*,
     iparticle_system_config::{IParticleSystemConfig, IShape, TParamType},
     modifier::*,
     tools::TBurstData,

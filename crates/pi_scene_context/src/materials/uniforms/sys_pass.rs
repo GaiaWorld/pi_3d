@@ -35,7 +35,7 @@ use super::{
         mut passes: Query<(&mut PassReady, &mut PassBindEffectValue)>,
     ) {
         // log::info!("MaterialBind : ");
-        materials.iter().for_each(|(effect_key, effect, bind, list, pass)| {
+        materials.iter().for_each(|(effect_key, effect, bind, list, _pass)| {
             
             // log::info!("MaterialBind : 1");
             list.iter().for_each(|target| {
@@ -76,7 +76,7 @@ use super::{
         >,
         mut passes: Query<(&mut PassReady, &mut PassBindEffectTextures)>,
     ) {
-        materials.iter().for_each(|(bind, list, pass, effect_key, meta)| {
+        materials.iter().for_each(|(bind, list, _pass, effect_key, meta)| {
             list.iter().for_each(|target| {
 
                 if let Ok((mut passready, mut passbind)) = passes.get_mut(target.clone()) {

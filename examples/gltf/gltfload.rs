@@ -1,25 +1,11 @@
 #![feature(box_into_inner)]
 
-
-use pi_3d::{PluginBundleDefault};
-use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_assets::asset::Handle;
 use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
-use pi_gltf2_load::{GLTF, TypeAnimeAssetMgrs, TypeAnimeContexts};
-use pi_node_materials::{prelude::*, PluginNodeMaterial, NodeMaterialBlocks};
+use pi_engine_shell::prelude::*;
+use pi_gltf2_load::*;
 use pi_particle_system::prelude::{ParticleSystemActionSet, OpsCPUParticleSystem};
 use pi_scene_context::prelude::*;
-use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
-use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader, effects::main_opacity::MainOpacityShader};
-
-use std::sync::Arc;
-use pi_async_rt::prelude::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
 
 fn setup(
@@ -50,25 +36,17 @@ pub fn create_by_gltf(
     entity: Entity,
     gltf: Handle<GLTF>,
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
     mut transformcmds: ActionSetTransform,
     mut meshcmds: ActionSetMesh,
     mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut final_render: ResMut<WindowRenderer>,
-    mut renderercmds: ActionSetRenderer,
     mut particlesys_cmds: ParticleSystemActionSet,
-    mut animegroupcmd: ActionSetAnimationGroup,
-    anime_assets: TypeAnimeAssetMgrs,
-    mut anime_contexts: TypeAnimeContexts,
     roots: Query<&SceneID>,
 ) {
     if let Ok(scene) = roots.get(entity) {
         let scene = scene.0;
 
         let gltfvalue: &pi_gltf::Gltf = gltf.base.as_ref().as_ref();
-        gltfvalue.nodes().for_each(|(nodeinfo)| {
+        gltfvalue.nodes().for_each(|nodeinfo| {
             let node = commands.spawn_empty().id();
             if let Some(meshinfo) = nodeinfo.mesh() {
                 meshinfo.primitives().for_each(|primitive| {
@@ -192,28 +170,13 @@ pub fn create_by_gltf(
                     // matinfo.
                 });
 
-                meshcmds.create.push(OpsMeshCreation::ops(scene, node, String::from("")));
+                meshcmds.create.push(OpsMeshCreation::ops(scene, node));
             } else {
-                transformcmds.create.push(OpsTransformNode::ops(scene, node, String::from("")));
+                transformcmds.create.push(OpsTransformNode::ops(scene, node));
             };
 
         });
     }
-}
-
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
 }
 
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
@@ -222,7 +185,6 @@ pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -232,10 +194,10 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
     
-    app.add_startup_system(setup);
-    app.add_system(sys_load_check);
+    app.add_systems(Startup, setup);
+    app.add_systems(Update, sys_load_check);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

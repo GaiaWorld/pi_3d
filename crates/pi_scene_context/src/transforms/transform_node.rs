@@ -143,8 +143,8 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
         let rk = rhs.0.k;
         let rw = rhs.0.w;
         let mut num4 = li * ri + lj * rj + lk * rk + lw * rw;
-        let mut flag = false;
-        if num4 < Number::EPSILON {
+        let flag = num4 < 0.;
+        if flag {
             num4 = -1.0 * num4;
         }
         let (num2, num3) = if 0.9999999 < num4 {

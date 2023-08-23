@@ -4,9 +4,6 @@ use pi_scene_math::{Number, Vector3};
 
 use crate::{
     viewer::prelude::*,
-    renderers::{
-        prelude::*
-    }, 
     layer_mask::prelude::*, prelude::{PassTagOrders, BundleTransformNode},
 };
 
@@ -15,10 +12,10 @@ use super::{
     camera::*
 };
 
-pub struct OpsCameraCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub(crate) bool);
+pub struct OpsCameraCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) bool);
 impl OpsCameraCreation {
-    pub fn ops(scene: Entity, entity: Entity, name: String, toscreen: bool) -> Self {
-        Self(scene, entity, name, toscreen)
+    pub fn ops(scene: Entity, entity: Entity, toscreen: bool) -> Self {
+        Self(scene, entity, toscreen)
     }
 }
 pub type ActionListCameraCreate = ActionList<OpsCameraCreation>;

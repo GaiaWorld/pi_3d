@@ -2,29 +2,29 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
-    prelude::{SceneMainCameraID, Enable, GlobalEnable}, object::ActionEntity,
+    object::ActionEntity, prelude::SceneMainCameraID,
 };
 
-use super::{prelude::*};
+use super::prelude::*;
 
 pub fn sys_create_scene(
     mut cmds: ResMut<ActionListSceneCreate>,
     mut commands: Commands,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, cfg)| {
+    cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, cfg, pool)| {
 
         let id_left = commands.spawn_empty().id();
         let id_right = commands.spawn_empty().id();
 
         if let Some(mut entitycmds) = commands.get_entity(entity) {
-            ActionScene::init(&mut entitycmds, entity, cfg, id_left, id_right, &mut dynbuffer);
+            ActionScene::init(&mut entitycmds, cfg, id_left, id_right, &mut dynbuffer);
+            entitycmds.insert(pool);
         } else {
             commands.entity(id_left).despawn();
             commands.entity(id_right).despawn();
             return;
         };
-
     });
 }
 
@@ -110,7 +110,6 @@ pub struct ActionScene;
 impl ActionScene {
     pub fn init(
         entitycmds: &mut EntityCommands,
-        scene: Entity,
         passcfg: ScenePassRenderCfg,
         id_left: Entity,
         id_right: Entity,
@@ -141,7 +140,6 @@ impl ActionScene {
 
     pub(crate) fn add_to_scene(
         commands: &mut EntityCommands,
-        tree: &mut ActionListTransformNodeParent,
         scene: Entity,
     ) {
         // tree.push(OpsTransformNodeParent::ops(commands.id(), scene));

@@ -1,19 +1,18 @@
-use std::ops::Range;
-use pi_engine_shell::prelude::*;
-use pi_scene_math::Number;
-use crate::{materials::{value::{FromValueUniformStatistics}}};
 
-use super::{update_data};
+// use pi_scene_math::Number;
+// use crate::materials::value::FromValueUniformStatistics;
+
+// use super::update_data;
 
 
-const MAX: u8 = 64;
+// const MAX: u8 = 64;
 
-/// 最多 16 个 Mat2 - 共 256 byte
-pub struct Mat2Uniform {
-    slot: u8,
-    data: [Number; 64], // MAX as usize],
-    begin: u32,
-}
+// /// 最多 16 个 Mat2 - 共 256 byte
+// pub struct Mat2Uniform {
+//     slot: u8,
+//     data: [Number; 64], // MAX as usize],
+//     begin: u32,
+// }
 // impl FromValueUniformStatistics for Mat2Uniform {
 //     fn new(value: &ShaderBindEffectValue) -> Self {
 //         let slot = value.mat2_count.min(MAX / Self::N as u8);

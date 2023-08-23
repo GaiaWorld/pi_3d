@@ -1,22 +1,20 @@
 mod base;
 mod command;
 mod command_sys;
-use core::fmt::Debug;
 use std::marker::PhantomData;
 
-use bevy::prelude::{App, Plugin, IntoSystemConfigs, Entity, Component, Resource, Update};
+use bevy::prelude::{App, Plugin, IntoSystemConfigs, Entity, Update};
 
 pub use base::*;
 pub use command::*;
 pub use command_sys::*;
-use pi_animation::type_animation_context::TypeAnimationContext;
 use pi_assets::asset::GarbageEmpty;
-use pi_bevy_asset::{ShareAssetMgr, AssetCapacity, AssetMgrConfigs};
+use pi_bevy_asset::{ShareAssetMgr, AssetMgrConfigs};
 use pi_bevy_render_plugin::should_run;
-use pi_curves::curve::frame::{KeyFrameDataTypeAllocator, FrameDataValue};
+use pi_curves::curve::frame::KeyFrameDataTypeAllocator;
 use pi_hash::XHashMap;
 
-use crate::{prelude::ERunStageChap, engine_shell::asset_capacity};
+use crate::prelude::ERunStageChap;
 
 pub struct PluginGlobalAnimation;
 impl Plugin for PluginGlobalAnimation {

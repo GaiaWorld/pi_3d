@@ -49,33 +49,32 @@ impl ShapeEmitter {
         emission_progress: Number,
         emission_index: Number,
         emission_total: Number,
-        is_local: bool,
         random: &mut Random,
     ) {
         match self {
             ShapeEmitter::Box(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
             ShapeEmitter::Circle(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
             ShapeEmitter::Cone(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
             ShapeEmitter::Edge(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
             ShapeEmitter::Hemisphere(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
             ShapeEmitter::Point(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
             ShapeEmitter::Rectangle(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
             ShapeEmitter::Sphere(item) => {
-                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, is_local, random);
+                item.start_position_function(position_to_update, emission_loop, emission_progress, emission_index, emission_total, random);
             },
         }
     }
@@ -84,33 +83,32 @@ impl ShapeEmitter {
         &self,
         direction_to_update: &mut Vector3,
         local_position: &Vector3,
-        is_local: bool,
         random: &mut Random,
     ) {
         match self {
             ShapeEmitter::Box(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
             ShapeEmitter::Circle(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
             ShapeEmitter::Cone(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
             ShapeEmitter::Edge(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
             ShapeEmitter::Hemisphere(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
             ShapeEmitter::Point(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
             ShapeEmitter::Rectangle(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
             ShapeEmitter::Sphere(item) => {
-                item.start_direction_function(direction_to_update, local_position, is_local, random);
+                item.start_direction_function(direction_to_update, local_position, random);
             },
         }
     }

@@ -9,13 +9,13 @@ use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, as
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     plugin::Plugin,
-    transforms::{interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
+    transforms::interface::InterfaceTransformNode,
+    scene::interface::InterfaceScene,
     cameras::interface::InterfaceCamera,
-    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::{interface::{InterfaceMaterial}}, renderers::{render_primitive::{InterfaceRenderPrimitive, FrontFace}, graphic::RendererGraphicDesc}, pass::{EPassTag, PassTagOrders}
+    layer_mask::{interface::InterfaceLayerMask, LayerMask}, materials::interface::InterfaceMaterial, renderers::{render_primitive::{InterfaceRenderPrimitive, FrontFace}, graphic::RendererGraphicDesc}, pass::{EPassTag, PassTagOrders}
 };
 use pi_scene_math::Vector3;
-use pi_mesh_builder::{quad::{InterfaceQuad}, cube::{PluginCubeBuilder, InterfaceCube}, ball::{PluginBallBuilder, InterfaceBall}};
+use pi_mesh_builder::{quad::InterfaceQuad, cube::{PluginCubeBuilder, InterfaceCube}, ball::{PluginBallBuilder, InterfaceBall}};
 
 /// 实现测试代码的方法
 fn test(
@@ -72,13 +72,13 @@ pub fn main() {
     );
     shell
         // 默认必须的功能插件集合
-        .add_plugin(PluginBundleDefault)
+        .add_plugins(PluginBundleDefault)
         // 立方体网格
-        .add_plugin(PluginCubeBuilder)
+        .add_plugins(PluginCubeBuilder)
         // 球体网格
-        .add_plugin(PluginBallBuilder)
+        .add_plugins(PluginBallBuilder)
         // 立方体网格
-        .add_plugin(PluginAxisBuilder)
+        .add_plugins(PluginAxisBuilder)
         .ready()
         .setup(&test)
         .run();

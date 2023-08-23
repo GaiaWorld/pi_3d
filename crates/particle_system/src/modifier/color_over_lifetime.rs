@@ -8,7 +8,7 @@
 //     }
 // }
 
-use pi_scene_math::{Number, Color4};
+use pi_scene_math::*;
 use pi_engine_shell::prelude::*;
 
 #[derive(Clone, Default)]

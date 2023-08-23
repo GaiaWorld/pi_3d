@@ -1,14 +1,9 @@
-use std::{ sync::Arc};
 
 use pi_engine_shell::prelude::*;
 
-use crate::{
-    materials::{shader_effect::*},
-};
+use crate::materials::shader_effect::*;
 
-use super::{
-    texture::*,
-};
+use super::texture::*;
 
 pub type PluginTextureSlot01Load = PluginImageTextureViewLoad<TextureSlot01, EffectBindTexture2D01Comp>;
 pub type PluginTextureSlot02Load = PluginImageTextureViewLoad<TextureSlot02, EffectBindTexture2D02Comp>;
@@ -22,7 +17,7 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID
                 , &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>, Changed<EffectBindSampler2D01Comp>,
@@ -33,7 +28,7 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
         items.iter().for_each(|(
             id_obj
             , binddesc
-            , (tex01, slot01, sampl01)
+            , (tex01, sampl01)
         )| {
             // log::debug!("SysTextureResReady1 >");
             if binddesc.textures.len() == 1 {
@@ -72,8 +67,8 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
-                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -84,8 +79,8 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , (tex01, slot01, sampl01)
-            , (tex02, slot02, sampl02)
+            , (tex01, sampl01)
+            , (tex02, sampl02)
         )| {
             if binddesc.textures.len() == 2 {
                 let value = EffectTextureSamplersComp(
@@ -116,9 +111,9 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
-                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
-                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &EffectBindSampler2D03Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -130,9 +125,9 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , (tex01, slot01, sampl01)
-            , (tex02, slot02, sampl02)
-            , (tex03, slot03, sampl03)
+            , (tex01, sampl01)
+            , (tex02, sampl02)
+            , (tex03, sampl03)
         )| {
             if binddesc.textures.len() == 3 {
                 let value = EffectTextureSamplersComp(
@@ -162,10 +157,10 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
-                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
-                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
-                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &EffectBindSampler2D04Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -178,10 +173,10 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , (tex01, slot01, sampl01)
-            , (tex02, slot02, sampl02)
-            , (tex03, slot03, sampl03)
-            , (tex04, slot04, sampl04)
+            , (tex01, sampl01)
+            , (tex02, sampl02)
+            , (tex03, sampl03)
+            , (tex04, sampl04)
         )| {
             if binddesc.textures.len() == 4 {
                 let value = EffectTextureSamplersComp(
@@ -211,11 +206,11 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
-                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
-                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
-                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
-                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &EffectBindSampler2D05Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -229,11 +224,11 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , (tex01, slot01, sampl01)
-            , (tex02, slot02, sampl02)
-            , (tex03, slot03, sampl03)
-            , (tex04, slot04, sampl04)
-            , (tex05, slot05, sampl05)
+            , (tex01, sampl01)
+            , (tex02, sampl02)
+            , (tex03, sampl03)
+            , (tex04, sampl04)
+            , (tex05, sampl05)
         )| {
             if binddesc.textures.len() == 5 {
                 let value = EffectTextureSamplersComp(
@@ -263,12 +258,12 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
-                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
-                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
-                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
-                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
-                , (&EffectBindTexture2D06Comp, &TextureSlot06, &EffectBindSampler2D06Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &EffectBindSampler2D05Comp)
+                , (&EffectBindTexture2D06Comp, &EffectBindSampler2D06Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -283,12 +278,12 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , (tex01, slot01, sampl01)
-            , (tex02, slot02, sampl02)
-            , (tex03, slot03, sampl03)
-            , (tex04, slot04, sampl04)
-            , (tex05, slot05, sampl05)
-            , (tex06, slot06, sampl06)
+            , (tex01, sampl01)
+            , (tex02, sampl02)
+            , (tex03, sampl03)
+            , (tex04, sampl04)
+            , (tex05, sampl05)
+            , (tex06, sampl06)
         )| {
             if binddesc.textures.len() == 6 {
                 let value = EffectTextureSamplersComp(
@@ -318,13 +313,13 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
-                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
-                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
-                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
-                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
-                , (&EffectBindTexture2D06Comp, &TextureSlot06, &EffectBindSampler2D06Comp)
-                , (&EffectBindTexture2D07Comp, &TextureSlot07, &EffectBindSampler2D07Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &EffectBindSampler2D05Comp)
+                , (&EffectBindTexture2D06Comp, &EffectBindSampler2D06Comp)
+                , (&EffectBindTexture2D07Comp, &EffectBindSampler2D07Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -340,13 +335,13 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , (tex01, slot01, sampl01)
-            , (tex02, slot02, sampl02)
-            , (tex03, slot03, sampl03)
-            , (tex04, slot04, sampl04)
-            , (tex05, slot05, sampl05)
-            , (tex06, slot06, sampl06)
-            , (tex07, slot07, sampl07)
+            , (tex01, sampl01)
+            , (tex02, sampl02)
+            , (tex03, sampl03)
+            , (tex04, sampl04)
+            , (tex05, sampl05)
+            , (tex06, sampl06)
+            , (tex07, sampl07)
         )| {
             if binddesc.textures.len() == 7 {
                 let value = EffectTextureSamplersComp(
@@ -376,14 +371,14 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             (
                 ObjectID,
                 &AssetResShaderEffectMeta
-                , (&EffectBindTexture2D01Comp, &TextureSlot01, &EffectBindSampler2D01Comp)
-                , (&EffectBindTexture2D02Comp, &TextureSlot02, &EffectBindSampler2D02Comp)
-                , (&EffectBindTexture2D03Comp, &TextureSlot03, &EffectBindSampler2D03Comp)
-                , (&EffectBindTexture2D04Comp, &TextureSlot04, &EffectBindSampler2D04Comp)
-                , (&EffectBindTexture2D05Comp, &TextureSlot05, &EffectBindSampler2D05Comp)
-                , (&EffectBindTexture2D06Comp, &TextureSlot06, &EffectBindSampler2D06Comp)
-                , (&EffectBindTexture2D07Comp, &TextureSlot07, &EffectBindSampler2D07Comp)
-                , (&EffectBindTexture2D08Comp, &TextureSlot08, &EffectBindSampler2D08Comp)
+                , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
+                , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
+                , (&EffectBindTexture2D03Comp, &EffectBindSampler2D03Comp)
+                , (&EffectBindTexture2D04Comp, &EffectBindSampler2D04Comp)
+                , (&EffectBindTexture2D05Comp, &EffectBindSampler2D05Comp)
+                , (&EffectBindTexture2D06Comp, &EffectBindSampler2D06Comp)
+                , (&EffectBindTexture2D07Comp, &EffectBindSampler2D07Comp)
+                , (&EffectBindTexture2D08Comp, &EffectBindSampler2D08Comp)
             ),
             Or<(
                 Changed<EffectBindTexture2D01Comp>
@@ -400,14 +395,14 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
     ) {
         items.iter().for_each(|(
             id_obj, binddesc
-            , (tex01, slot01, sampl01)
-            , (tex02, slot02, sampl02)
-            , (tex03, slot03, sampl03)
-            , (tex04, slot04, sampl04)
-            , (tex05, slot05, sampl05)
-            , (tex06, slot06, sampl06)
-            , (tex07, slot07, sampl07)
-            , (tex08, slot08, sampl08)
+            , (tex01, sampl01)
+            , (tex02, sampl02)
+            , (tex03, sampl03)
+            , (tex04, sampl04)
+            , (tex05, sampl05)
+            , (tex06, sampl06)
+            , (tex07, sampl07)
+            , (tex08, sampl08)
         )| {
             if binddesc.textures.len() == 8 {
                 let value = EffectTextureSamplersComp(

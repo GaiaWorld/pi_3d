@@ -86,8 +86,8 @@ impl NodeMaterialBuilder {
             tempkeys.drain(..).for_each(|key| {
                 if let Some(info) = infos.get(key) {
                     info.depends.iter().for_each(|v| {
-                        temp.push(v.clone());
-                        keys.push(v.clone());
+                        temp.push(*v);
+                        keys.push(*v);
                     });
                 }
             });

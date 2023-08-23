@@ -6,11 +6,11 @@ use pi_mesh_builder::quad::{InterfaceQuad, PluginQuadBuilder};
 use pi_render::{rhi::options::RenderOptions, renderer::{texture::KeyTexture, sampler::KeySampler}, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam};
 use pi_scene_context::{
     plugin::Plugin,
-    transforms::{interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
+    transforms::interface::InterfaceTransformNode,
+    scene::interface::InterfaceScene,
     cameras::interface::InterfaceCamera, 
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{interface::{InterfaceMaterial}}
+    materials::interface::InterfaceMaterial
 };
 use pi_scene_math::Vector3;
 use procedural_texture::brdf::{PluginBRDFMaterial, interface::InterfaceBRDFMaterial};
@@ -76,10 +76,10 @@ pub fn main() {
             ..Default::default()
         }
     );
-    shell.add_plugin(PluginBundleDefault);
-    shell.add_plugin(PluginQuadBuilder);
-    shell.add_plugin(PluginBRDFMaterial);
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginBundleDefault);
+    shell.add_plugins(PluginQuadBuilder);
+    shell.add_plugins(PluginBRDFMaterial);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

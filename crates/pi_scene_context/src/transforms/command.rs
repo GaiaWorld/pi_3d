@@ -1,16 +1,16 @@
 
 use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
-use pi_scene_math::{Vector3};
+use pi_scene_math::*;
 
-use crate::{flags::UniqueName, prelude::{Enable, GlobalEnable, CullingFlag}};
+use crate::prelude::{Enable, GlobalEnable, CullingFlag};
 
-use super::{transform_node::*};
+use super::transform_node::*;
 
-pub struct OpsTransformNode(pub Entity, pub Entity, pub String);
+pub struct OpsTransformNode(pub Entity, pub Entity);
 impl OpsTransformNode {
-    pub fn ops(scene: Entity, node: Entity, name: String) -> Self {
-        Self(scene, node, name)
+    pub fn ops(scene: Entity, node: Entity) -> Self {
+        Self(scene, node)
     }
 }
 pub type ActionListTransformNodeCreate = ActionList<OpsTransformNode>;
@@ -56,7 +56,6 @@ impl OpsTransformNodeLocalScaling {
 pub type ActionListTransformNodeLocalScaling = ActionList<OpsTransformNodeLocalScaling>;
 
 pub struct BundleTransformNode(
-    UniqueName,
     Enable,
     GlobalEnable,
     LocalPosition,

@@ -3,21 +3,62 @@
 use command::{ActionListUnlitMaterial, sys_act_unlit_material};
 use pi_engine_shell::prelude::*;
 
+use pi_node_materials::prelude::*;
 use pi_scene_context::prelude::*;
 
-use shader::UnlitShader;
+mod command;
+mod interface;
+mod effects;
 
-pub mod shader;
-pub mod command;
-pub mod interface;
-pub mod effects;
+pub use command::*;
+pub use interface::*;
+pub use effects::*;
 
-fn setup(
-    asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
-    mut wait_list: ResMut<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
-) {
-    ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(UnlitShader::KEY), UnlitShader::meta());
+pub struct UnlitShader {
+    pub vs_module: wgpu::ShaderModule,
+    pub fs_module: wgpu::ShaderModule,
 }
+
+impl UnlitShader {
+    pub const KEY: &'static str = "UnlitShader";
+
+    pub fn meta() -> ShaderEffectMeta {
+
+        let mut nodemat = NodeMaterialBuilder::new();
+        nodemat.fs_define = String::from(include_str!("./unlit_define.frag"));
+
+        nodemat.vs = String::from(include_str!("./unlit.vert"));
+        nodemat.fs = String::from(include_str!("./unlit.frag"));
+
+        nodemat.varyings = Varyings(
+            vec![
+                Varying { 
+                    format: Atom::from("vec3"),
+                    name: Atom::from("v_normal"),
+                },
+                Varying { 
+                    format: Atom::from("vec3"),
+                    name: Atom::from("v_pos"),
+                },
+                Varying {
+                    format: Atom::from("vec2"),
+                    name: Atom::from("v_uv"),
+                },
+                Varying { 
+                    format: Atom::from("vec4"),
+                    name: Atom::from("v_color"),
+                },
+            ]
+        );
+
+        nodemat.apply::<BlockUVOffsetSpeed>();
+        nodemat.apply::<BlockMainTexture>();
+        nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
+
+        nodemat.meta()
+    }
+}
+
 
 pub struct PluginUnlitMaterial;
 impl Plugin for PluginUnlitMaterial {
@@ -26,24 +67,7 @@ impl Plugin for PluginUnlitMaterial {
         app.add_systems(Update, sys_act_unlit_material.in_set(ERunStageChap::Command));
 
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
-        let mut wait_list = app.world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
-        ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(UnlitShader::KEY), UnlitShader::meta());
+        ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(UnlitShader::KEY), UnlitShader::meta());
         // app.add_startup_system(setup);
     }
-    // fn init(
-    //     &mut self,
-    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
-    //     stages: &mut pi_engine_shell::run_stage::RunStage,
-    // ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-
-    //     let key = KeyShaderMeta::from(UnlitShader::KEY);
-    //     engine.regist_material_meta(key, UnlitShader::meta());
-
-    //     let world = engine.world_mut();
-    //     world.insert_resource(SingleUnlitMaterialCommandList::default());
-
-    //     SysUnlitMaterialCommand::setup(world, stages.query_stage::<SysUnlitMaterialCommand>(ERunStageChap::Command));
-        
-    //     Ok(())
-    // }
 }

@@ -1,8 +1,6 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{geometry::vertex_buffer_useinfo};
-
 #[derive(Component)]
 pub struct InstanceBufferWorldMatrix {
     pub slot: usize,

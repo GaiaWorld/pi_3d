@@ -1,11 +1,7 @@
 pub use pi_engine_shell::prelude::*;
 
 use crate::{
-    materials::prelude::*,
-    geometry::prelude::*,
-    renderers::prelude::*,
-    skeleton::prelude::*,
-    pass::*, commands::{DisposeReady, DisposeCan, ActionListDisposeReady, OpsDisposeReady, ActionListDisposeCan, OpsDisposeCan}, prelude::{Enable, GlobalEnable},
+    commands::*, prelude::*,
 };
 
 pub struct ActionEntity;
@@ -215,26 +211,26 @@ pub fn sys_dispose(
 //         }
 //     });
 // }
-fn sys_pass_dispose(
-    commands: &mut Commands,
-    entity: Entity,
-    passes: &Query<&MaterialID>,
-    materials: &mut Query<&mut MaterialRefs>,
-) {
-    if let Ok(idmat) = passes.get(entity) {
-        if let Ok(mut refs) = materials.get_mut(idmat.0) {
-            refs.remove(&entity);
-            if refs.len() == 0 && refs.request_dispose {
-                if let Some(mut cmd) = commands.get_entity(idmat.0) {
-                    cmd.despawn();
-                }
-            }
-        }
-    }
-    if let Some(mut cmd) = commands.get_entity(entity) {
-        cmd.despawn();
-    }
-}
+// fn sys_pass_dispose(
+//     commands: &mut Commands,
+//     entity: Entity,
+//     passes: &Query<&MaterialID>,
+//     materials: &mut Query<&mut MaterialRefs>,
+// ) {
+//     if let Ok(idmat) = passes.get(entity) {
+//         if let Ok(mut refs) = materials.get_mut(idmat.0) {
+//             refs.remove(&entity);
+//             if refs.len() == 0 && refs.request_dispose {
+//                 if let Some(mut cmd) = commands.get_entity(idmat.0) {
+//                     cmd.despawn();
+//                 }
+//             }
+//         }
+//     }
+//     if let Some(mut cmd) = commands.get_entity(entity) {
+//         cmd.despawn();
+//     }
+// }
 
 pub struct OpsSceneDispose(Entity);
 impl OpsSceneDispose {
@@ -245,7 +241,6 @@ impl OpsSceneDispose {
 pub type ActionListSceneDispose = ActionList<OpsSceneDispose>;
 pub fn sys_act_scene_dispose(
     mut cmds: ResMut<ActionListSceneDispose>,
-    mut cmds2: ResMut<ActionListDispose>,
     mut items: Query<&mut DisposeReady>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneDispose(idscene)| {

@@ -1,16 +1,14 @@
 
 
-use axis::{PluginAxis, axis::AxisBuilder};
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
+use axis::PluginAxis;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
 use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
-use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
 use rand::Rng;
-use unlit_material::shader::UnlitShader;
+use unlit_material::*;
 use pi_particle_system::prelude::*;
 
 fn setup(
@@ -27,16 +25,15 @@ fn setup(
     mut animegroupcmd: ActionSetAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
-    mut frame: ResMut<SingleFrameTimeCommand>,
 ) {
     let tes_size = 20;
     // frame.frame_ms = 200;
 
     let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -50.), true);
-
+    // cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let node = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node, scene));
-    transformcmds.create.push(OpsTransformNode::ops(scene, node, String::from("A")));
+    transformcmds.create.push(OpsTransformNode::ops(scene, node));
 
     let idmattrail = commands.spawn_empty().id();
     matcmds.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY, EPassTag::Transparent));
@@ -48,15 +45,17 @@ fn setup(
     }));
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 2;
+    let temp = 1;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
-    for i in 0..temp {
-        for j in 0..temp {
-            for k in 0..temp {
+    for _i in 0..temp {
+        for _j in 0..temp {
+            for _k in 0..temp {
                 let item = {
                     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, source, String::from("TestCube")));
+                    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+                    // meshcmds.frontface.push(OpsFrontFace::ops(scene, FrontFace::Ccw));
+                    meshcmds.depth_compare.push(OpsDepthCompare::ops(source, CompareFunction::LessEqual));
                     let id_geo = commands.spawn_empty().id();
                     let mut attrs = CubeBuilder::attrs_meta();
                     // ParticleSystem Add
@@ -74,7 +73,7 @@ fn setup(
                     let trailmesh = commands.spawn_empty().id();
                     let trailgeo = commands.spawn_empty().id();
                     particlesys_cmds.particlesys_cmds.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator));
-                    particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_start(source));
+                    // particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_start(source));
                     // particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
                     let idmat = commands.spawn_empty().id();
@@ -99,7 +98,7 @@ fn setup(
     // }));
 
     
-    let key_group = pi_atom::Atom::from("key_group");
+    // let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
     animegroupcmd.global.record_group(node, id_group);
     animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
@@ -160,28 +159,12 @@ fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     cfg
 }
 
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
-
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Events::<T>::update_system);
-		}
-		self
-	}
-}
-
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
-        app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
     }
 }
 
@@ -192,15 +175,15 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
-    app.add_plugin(PluginTest);
-    app.add_plugin(PluginAxis);
-    app.add_system(pi_3d::sys_info_node);
-    app.add_system(pi_3d::sys_info_draw);
-    app.add_system(pi_3d::sys_info_resource);
+    app.add_plugins(PluginTest);
+    app.add_plugins(PluginAxis);
+    app.add_systems(Update, pi_3d::sys_info_node);
+    app.add_systems(Update, pi_3d::sys_info_draw);
+    app.add_systems(Update, pi_3d::sys_info_resource);
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_startup_system(setup);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

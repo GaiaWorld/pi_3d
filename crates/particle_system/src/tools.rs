@@ -4,8 +4,8 @@ use pi_scene_math::*;
 use pi_wy_rng::WyRng;
 use rand::{Rng, SeedableRng};
 
-const RADIANS_ITER_COUNT: usize = 360;
-const RADIANS_ITER_E: f32 = std::f32::consts::PI * 2. / 360.;
+// const RADIANS_ITER_COUNT: usize = 360;
+// const RADIANS_ITER_E: f32 = std::f32::consts::PI * 2. / 360.;
 
 pub type TBurstData = [f32; 4];
 
@@ -98,7 +98,6 @@ pub struct EmitMatrix {
     pub(crate) scaling: Vector3,
     // pub(crate) position: Vector3,
     pub(crate) rotation: Rotation3,
-    pub(crate) eulers: (Number, Number, Number),
 }
 impl Default for EmitMatrix {
     fn default() -> Self {
@@ -108,7 +107,6 @@ impl Default for EmitMatrix {
             scaling: Vector3::new(1., 1., 1.),
             // position: Vector3::new(0., 0., 0.),
             rotation: Rotation3::identity(),
-            eulers: (0., 0., 0.),
         }
     }
 }

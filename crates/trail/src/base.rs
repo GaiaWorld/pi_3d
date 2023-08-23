@@ -1,8 +1,7 @@
-use std::{ops::Sub, sync::Arc};
+use std::sync::Arc;
 
-use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Vector3, Number, Vector4, Vector2, coordiante_system::CoordinateSytem3, vector::TToolVector3, Matrix};
+use pi_scene_math::{*, vector::TToolVector3};
 use pi_wy_rng::WyRng;
 
 #[derive(Component)]
@@ -82,17 +81,17 @@ impl TrailPoints {
             let mut newsize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
 
             if trailworldspace {
-                CoordinateSytem3::transform_coordinates(&newpos.clone(), &worldmatrix, &mut newpos);
-                CoordinateSytem3::transform_normal(&newaxisx.clone(), &worldmatrix, &mut newaxisx);
-                CoordinateSytem3::transform_normal(&newsize.clone(), &worldmatrix, &mut newsize);
+                coordiante_system::CoordinateSytem3::transform_coordinates(&newpos.clone(), &worldmatrix, &mut newpos);
+                coordiante_system::CoordinateSytem3::transform_normal(&newaxisx.clone(), &worldmatrix, &mut newaxisx);
+                coordiante_system::CoordinateSytem3::transform_normal(&newsize.clone(), &worldmatrix, &mut newsize);
                 // log::warn!("New Point 1: {:?}  {:?}", newaxisx, newpos);
             } else {
-                CoordinateSytem3::transform_coordinates(&newpos.clone(), localmatrix, &mut newpos);
-                CoordinateSytem3::transform_normal(&newaxisx.clone(), localmatrix, &mut newaxisx);
-                CoordinateSytem3::transform_normal(&newsize.clone(), localmatrix, &mut newsize);
+                coordiante_system::CoordinateSytem3::transform_coordinates(&newpos.clone(), localmatrix, &mut newpos);
+                coordiante_system::CoordinateSytem3::transform_normal(&newaxisx.clone(), localmatrix, &mut newaxisx);
+                coordiante_system::CoordinateSytem3::transform_normal(&newsize.clone(), localmatrix, &mut newsize);
                 // log::warn!("New Point 2: {:?}  {:?}", localmatrix, newpos);
             }
-            let xlen = CoordinateSytem3::length(&newaxisx);
+            let xlen = coordiante_system::CoordinateSytem3::length(&newaxisx);
             if 0.00000001 < xlen {
                 newaxisx.scale_mut(1. / xlen);
             } else {
@@ -101,7 +100,7 @@ impl TrailPoints {
 
             let newaxisz = if let Some(last) = self.0.last() {
                 let mut temp = newpos - last.pos;
-                let len = CoordinateSytem3::length(&temp);
+                let len = coordiante_system::CoordinateSytem3::length(&temp);
                 if 0.00000001 < len {
                     temp.scale_mut(1. / len);
                 } else {
@@ -109,7 +108,7 @@ impl TrailPoints {
                 }
                 temp
             } else {
-                let len = CoordinateSytem3::length(&newpos);
+                let len = coordiante_system::CoordinateSytem3::length(&newpos);
                 if 0.00000001 < len {
                     newpos.scale(1. / len)
                 } else {
@@ -133,7 +132,7 @@ impl TrailPoints {
                 let color = Vector4::new(color[0] * colorcontrol.x, color[1] * colorcontrol.y, color[2] * colorcontrol.z, color[3] * colorcontrol.w);
     
                 self.1 = PathPoints::path_color(&self.0, randoms, &color, colorinterpolator2);
-                self.2 = PathPoints::path_width(&self.0, randoms, sizecontrol * CoordinateSytem3::length(&newsize) / f32::sqrt(3.0), widthinterpolator);
+                self.2 = PathPoints::path_width(&self.0, randoms, sizecontrol * coordiante_system::CoordinateSytem3::length(&newsize) / f32::sqrt(3.0), widthinterpolator);
                 true
             }
         } else {
@@ -155,7 +154,7 @@ impl TrailPoints {
             let mut axisz = Vector3::zeros();
             let mut axisx = Vector3::zeros();
             let mut color = Vector4::zeros();
-            let mut width = 0.;
+            let mut width;
             let basesize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
             for idx in 0..count {
                 if maxverticeslen < datavertices.len() + TrailBuffer::FLOAT_PER_VERTEX as usize * (2 + 2) {
@@ -167,12 +166,12 @@ impl TrailPoints {
                 let mut sizetemp = 1.;
                 if trailworldspace == false {
                     // log::warn!("World");
-                    CoordinateSytem3::transform_coordinates(&item.pos, parentmatrix, &mut pos);
-                    CoordinateSytem3::transform_normal(&item.zaxis, parentmatrix, &mut axisz);
-                    CoordinateSytem3::transform_normal(&item.xaxis, parentmatrix, &mut axisx);
+                    coordiante_system::CoordinateSytem3::transform_coordinates(&item.pos, parentmatrix, &mut pos);
+                    coordiante_system::CoordinateSytem3::transform_normal(&item.zaxis, parentmatrix, &mut axisz);
+                    coordiante_system::CoordinateSytem3::transform_normal(&item.xaxis, parentmatrix, &mut axisx);
                     let mut newsize = Vector3::zeros();
-                    CoordinateSytem3::transform_normal(&basesize, parentmatrix, &mut newsize);
-                    sizetemp = CoordinateSytem3::length(&newsize);
+                    coordiante_system::CoordinateSytem3::transform_normal(&basesize, parentmatrix, &mut newsize);
+                    sizetemp = coordiante_system::CoordinateSytem3::length(&newsize);
                 } else {
                     // log::warn!("Collect {:?} {:?}", item.xaxis, item.pos);
                     pos.copy_from(&item.pos);
@@ -337,7 +336,7 @@ fn test_trail() {
     let mut time = 0;
     
     let mut newpos: Vector3 = Vector3::new(0., 0., 0.);
-    let mut newaxis: Vector3 = Vector3::new(0., 0., 1.);
+    // let mut newaxis: Vector3 = Vector3::new(0., 0., 1.);
     let colorcontrol: Vector4 = Vector4::new(1., 1., 1., 1.);
     let colorinterpolator: Color4Gradient = Color4Gradient::default();
     let colorinterpolator2: Color4Gradient = Color4Gradient::default();

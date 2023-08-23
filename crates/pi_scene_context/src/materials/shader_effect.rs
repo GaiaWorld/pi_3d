@@ -1,6 +1,6 @@
 
 use pi_engine_shell::prelude::*;
-use pi_assets::{asset::{Handle}};
+use pi_assets::asset::Handle;
 
 
 // #[derive(Clone, Debug)]

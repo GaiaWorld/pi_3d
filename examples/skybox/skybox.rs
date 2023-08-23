@@ -8,7 +8,7 @@ use pi_scene_context::{
     plugin::Plugin,
     object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
+    scene::interface::InterfaceScene,
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask}, renderers::graphic::RendererGraphicDesc, pass::{PassTagOrders, EPassTag}, materials::interface::InterfaceMaterial
 };
@@ -104,10 +104,10 @@ pub fn main() {
             ..Default::default()
         }
     );
-    shell.add_plugin(PluginBundleDefault);
-    shell.add_plugin(PluginCubeBuilder);
-    shell.add_plugin(PluginSkybox);
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginBundleDefault);
+    shell.add_plugins(PluginCubeBuilder);
+    shell.add_plugins(PluginSkybox);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

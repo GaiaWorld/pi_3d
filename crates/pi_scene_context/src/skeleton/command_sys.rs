@@ -4,8 +4,8 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
 use crate::{
-    scene::command_sys::*,
-    transforms::{prelude::*, command_sys::*}, commands::{ActionListDisposeCan, OpsDisposeCan}, prelude::{OpsDisposeReady, ActionListDisposeReady},
+    transforms::command_sys::*,
+    commands::*,
 };
 
 use super::{
@@ -19,7 +19,7 @@ pub fn sys_create_skin(
     mut commands: Commands,
     device: Res<PiRenderDevice>,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
@@ -58,7 +58,7 @@ pub fn sys_act_skin_use(
     cmds.drain().drain(..).for_each(|ops| {
         match ops {
             OpsSkinUse::Use(entity, skin) => {
-                if let (Ok(mut bind), Ok((mut skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
+                if let (Ok(mut bind), Ok((skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
                     *bind = BindSkinValue(Some(skeleton.bind.clone()));
                     commands.entity(entity).insert(SkeletonID(skin));
                     // log::warn!("Skinn OKKKKKKKKKKKK");
@@ -70,7 +70,7 @@ pub fn sys_act_skin_use(
                 }
             },
             OpsSkinUse::UnUse(entity, skin) => {
-                if let Ok((mut skeleton, mut skeletonrefs, mut flag)) = skins.get_mut(skin) {
+                if let Ok((_, mut skeletonrefs, mut flag)) = skins.get_mut(skin) {
                     if skeletonrefs.remove(&entity) && skeletonrefs.is_empty() {
                         *flag = DirtySkeletonRefs::default();
                     }
@@ -84,18 +84,17 @@ pub fn sys_act_skin_use(
 
 pub fn sys_create_bone(
     mut cmds: ResMut<ActionListBoneCreate>,
-    mut tree: ResMut<ActionListTransformNodeParent>,
     mut commands: Commands,
     empty: Res<SingleEmptyEntity>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene, name)| {
+    cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene)| {
         let mut bonecmd = if let Some(cmd) = commands.get_entity(bone) {
             cmd
         } else {
             return;
         };
         ActionAnime::as_anime_group_target(&mut bonecmd);
-        ActionBone::init(&mut bonecmd, &empty, parent, &mut tree, scene, name);
+        ActionBone::init(&mut bonecmd, &empty, parent, scene);
     });
 }
 
@@ -136,13 +135,11 @@ pub struct ActionBone;
 impl ActionBone {
     pub fn init(
         commands: &mut EntityCommands,
-        empty: &SingleEmptyEntity,
+        _empty: &SingleEmptyEntity,
         parent: Entity,
-        tree: &mut ActionListTransformNodeParent,
         scene: Entity,
-        name: String
     ) {
-        ActionTransformNode::init(commands, tree, scene, name);
+        ActionTransformNode::init(commands, scene);
 
         commands
             .insert(BoneParent(parent))
@@ -154,12 +151,12 @@ impl ActionBone {
             // .insert(SkeletonID(empty.id()))
         ;
     }
-    pub(crate) fn modify_pose(
-        commands: &mut EntityCommands,
-        pose: Matrix,
-    ) {
-        commands.insert(BoneBaseMatrix(pose));
-    }
+    // pub(crate) fn modify_pose(
+    //     commands: &mut EntityCommands,
+    //     pose: Matrix,
+    // ) {
+    //     commands.insert(BoneBaseMatrix(pose));
+    // }
     pub(crate) fn modify_skin(
         commands: &mut EntityCommands,
         id_skin: Entity,

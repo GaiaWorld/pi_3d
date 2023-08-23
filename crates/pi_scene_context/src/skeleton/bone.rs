@@ -3,10 +3,6 @@ use std::ops::Mul;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-use crate::{prelude::ActionListTransformNodeParent, transforms::command_sys::ActionTransformNode};
-
-use super::skeleton::*;
-
 #[derive(Component)]
 pub struct BoneParent(pub ObjectID);
 

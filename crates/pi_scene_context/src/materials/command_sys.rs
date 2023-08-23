@@ -1,4 +1,4 @@
-use std::{mem::replace, sync::Arc};
+use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 
@@ -10,7 +10,7 @@ use super::{
     material::{MaterialID, MaterialRefs, DirtyMaterialRefs},
     shader_effect::*,
     uniforms::{
-        texture::{UniformTextureWithSamplerParams},
+        texture::*,
         uniform::*,
     },
     command::*,
@@ -18,15 +18,15 @@ use super::{
 
 pub fn sys_create_material(
     mut cmds: ResMut<ActionListMaterialCreate>,
-    mut asset_shader: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    asset_shader: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
     mut commands: Commands,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, passtag)| {
-        let mut matcmds = if let Some(mut cmd) = commands.get_entity(entity) { 
+        let mut matcmds = if let Some(cmd) = commands.get_entity(entity) { 
             cmd
         } else {
             disposereadylist.push(OpsDisposeReady::ops(entity));
@@ -76,7 +76,7 @@ pub fn sys_act_material_use(
                             *matid = MaterialID(id_mat);
                             
                             // unuse
-                            if let Ok((mut materialrefs, mut flag, pass)) = materials.get_mut(old) {
+                            if let Ok((mut materialrefs, mut flag, _pass)) = materials.get_mut(old) {
                                 if materialrefs.remove(&id_mesh) {
                                     *flag = DirtyMaterialRefs::default();
                                 }
@@ -102,7 +102,7 @@ pub fn sys_act_material_use(
                                 }
                                 
                                 // unuse
-                                if let Ok((mut materialrefs, mut flag, pass)) = materials.get_mut(old) {
+                                if let Ok((mut materialrefs, mut flag, _pass)) = materials.get_mut(old) {
                                     if materialrefs.remove(&id_pass) {
                                         *flag = DirtyMaterialRefs::default();
                                     }
@@ -126,7 +126,7 @@ pub fn sys_act_material_use(
                     let old = matid.0;
                     *matid = MaterialID(empty.id());
                     // unuse
-                    if let Ok((mut materialrefs, mut flag, pass)) = materials.get_mut(old) {
+                    if let Ok((mut materialrefs, mut flag, _pass)) = materials.get_mut(old) {
                         if materialrefs.remove(&id_mesh) {
                             *flag = DirtyMaterialRefs::default();
                         }
@@ -143,7 +143,7 @@ pub fn sys_act_material_use(
 
 fn reset_passobj(
     idpass: Entity,
-    idmat: Entity,
+    _idmat: Entity,
     commands: &mut Commands,
 ) {
     if let Some(mut cmd) = commands.get_entity(idpass) { 
@@ -316,13 +316,13 @@ pub struct ActionMaterial;
 impl ActionMaterial {
     pub fn regist_material_meta(
         asset_mgr: &ShareAssetMgr<ShaderEffectMeta>,
-        wait_list: &mut AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
+        // wait_list: &mut AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
         key: KeyShaderMeta,
         meta: ShaderEffectMeta,
     ) {
         // log::warn!("Regist ShaderName: {:?}", key);
         if !asset_mgr.contains_key(&key) {
-            if let Ok(meta) = asset_mgr.insert(key.clone(), meta) {
+            if let Ok(_meta) = asset_mgr.insert(key.clone(), meta) {
                 // wait_list.1.push((key.clone(), meta));
                 // log::warn!("Regist ShaderName Success: {:?}", key);
             } else {

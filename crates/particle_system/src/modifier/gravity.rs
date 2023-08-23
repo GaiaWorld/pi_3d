@@ -1,5 +1,5 @@
 
-use pi_scene_math::{Vector3, Number};
+use pi_scene_math::*;
 use pi_engine_shell::prelude::*;
 
 pub struct Gravity {
@@ -14,7 +14,7 @@ impl Default for Gravity {
 }
 
 impl Gravity {
-    pub fn modify(&self, item: &mut Number, amount: f32, delta_seconds: f32, randoms: &BaseRandom) {
+    pub fn modify(&self, item: &mut Number, amount: f32, _: f32, randoms: &BaseRandom) {
         *item = self.interpolation.interpolate(amount, randoms.x);
     }
 }

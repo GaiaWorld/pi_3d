@@ -2,7 +2,9 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    viewer::prelude::*, object::sys_dispose_ready,
+    viewer::prelude::*,
+    object::sys_dispose_ready,
+    transforms::transform_node_sys::sys_world_matrix_calc,
 };
 
 use self::{
@@ -128,19 +130,29 @@ impl Plugin for PluginCamera {
         app.add_systems(
 			Update,
             (
-                sys_calc_view_matrix_by_viewer::<TargetCameraParam>.run_if(should_run),
+                sys_calc_view_matrix_by_viewer::<TargetCameraParam>.run_if(should_run).after(sys_world_matrix_calc),
                 sys_calc_proj_matrix::<CameraParam>.run_if(should_run),
                 sys_calc_transform_matrix::<TargetCameraParam, CameraParam>.run_if(should_run),
-                sys_update_viewer_uniform::<TargetCameraParam, CameraParam>.run_if(should_run),
-            ).chain().in_set(ERunStageChap::DrawUniformToGPU)
+            ).chain().in_set(ERunStageChap::CalcWorldMatrix)
         );
         app.add_systems(
 			Update,
             (
                 sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>.run_if(should_run),
                 sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>.run_if(should_run),
+            ).chain().in_set(ERunStageChap::CalcWorldMatrix)
+        );
+        app.add_systems(
+			Update,
+            (
                 sys_tick_viewer_culling::<TargetCameraParam, CameraParam>.run_if(should_run)
-            ).chain().in_set(ERunStageChap::DrawBinds)
+            ).chain().in_set(ERunStageChap::CalcRenderMatrix)
+        );
+        app.add_systems(
+			Update,
+            (
+                sys_update_viewer_uniform::<TargetCameraParam, CameraParam>.run_if(should_run),
+            ).in_set(ERunStageChap::DrawUniformToGPU)
         );
 
         app.add_systems(Update, sys_dispose_about_camera.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));

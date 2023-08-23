@@ -1,6 +1,4 @@
 use pi_scene_math::{Matrix, Vector3};
-use pi_wy_rng::WyRng;
-use rand::{SeedableRng, Rng};
 
 
 use crate::tools::Random;
@@ -91,7 +89,7 @@ impl IShapeEmitterType for PointShapeEmitter {
         &self,
         direction_to_update: &mut Vector3,
         _local_position: &Vector3,
-        is_local: bool,
+        // is_local: bool,
         random: &mut Random,
     ) {
 
@@ -109,8 +107,8 @@ impl IShapeEmitterType for PointShapeEmitter {
         _emission_progress: f32,
         _emission_index: f32,
         _emission_total: f32,
-        is_local: bool,
-        random: &mut Random,
+        // is_local: bool,
+        _random: &mut Random,
     ) {
             *position_to_update = Vector3::new(0., 0., 0.);
     }

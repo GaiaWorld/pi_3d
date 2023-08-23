@@ -1,26 +1,22 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{
-    transforms::{prelude::*},
-    renderers::prelude::*,
-    viewer::prelude::*,
-};
+use crate::viewer::prelude::*;
 
-use super::{camera::*, target_camera::*};
+use super::camera::*;
 
 
-    pub fn sys_calc_target_camera_local_rot(
-        query_cameras: Query<(ObjectID, &TargetCameraParam, &LocalPosition), Changed<TargetCameraParam>>,
-        mut rot_cmd: Commands,
-    ) {
-        // let coordsys = CoordinateSytem3::left();
-        // query_cameras.iter().for_each(|(obj, target_camera, lposition)| {
-        //     let mut rotation = Rotation3::identity();
-        //     target_camera.calc_rotation(&coordsys, &lposition.0, &mut rotation);
-        //     rot_cmd.entity(obj).insert(LocalRotation(rotation));
-        // });
-    }
+    // pub fn sys_calc_target_camera_local_rot(
+    //     query_cameras: Query<(ObjectID, &TargetCameraParam, &LocalPosition), Changed<TargetCameraParam>>,
+    //     mut rot_cmd: Commands,
+    // ) {
+    //     // let coordsys = CoordinateSytem3::left();
+    //     // query_cameras.iter().for_each(|(obj, target_camera, lposition)| {
+    //     //     let mut rotation = Rotation3::identity();
+    //     //     target_camera.calc_rotation(&coordsys, &lposition.0, &mut rotation);
+    //     //     rot_cmd.entity(obj).insert(LocalRotation(rotation));
+    //     // });
+    // }
 
     pub(crate) fn sys_update_camera_param(
         cameras: Query<

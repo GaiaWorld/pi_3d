@@ -18,7 +18,7 @@ impl AnimationGroupListener {
         data: Atom,
     ) -> &mut Self {
 
-        let (frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
+        let (frame_event, _listener) = if let Some(item) = self.listener.get_mut(key_group) {
             item
         } else {
             self.listener.insert(key_group.clone(), (CurveFrameEvent::<Atom>::new(group.max_frame()), AnimationListener::<Atom>::new(id_group.clone())));
@@ -38,7 +38,7 @@ impl AnimationGroupListener {
         call: OnStart,
     ) -> &mut Self {
 
-        let (frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
+        let (_frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
             item
         } else {
             self.listener.insert(key_group.clone(), (CurveFrameEvent::<Atom>::new(group.max_frame()), AnimationListener::<Atom>::new(id_group.clone())));
@@ -58,7 +58,7 @@ impl AnimationGroupListener {
         call: OnFrameEvent<Atom>,
     ) -> &mut Self {
 
-        let (frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
+        let (_frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
             item
         } else {
             self.listener.insert(key_group.clone(), (CurveFrameEvent::<Atom>::new(group.max_frame()), AnimationListener::<Atom>::new(id_group.clone())));
@@ -78,7 +78,7 @@ impl AnimationGroupListener {
         call: OnLoop,
     ) -> &mut Self {
 
-        let (frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
+        let (_frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
             item
         } else {
             self.listener.insert(key_group.clone(), (CurveFrameEvent::<Atom>::new(group.max_frame()), AnimationListener::<Atom>::new(id_group.clone())));
@@ -98,7 +98,7 @@ impl AnimationGroupListener {
         call: OnStart,
     ) -> &mut Self {
 
-        let (frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
+        let (_frame_event, listener) = if let Some(item) = self.listener.get_mut(key_group) {
             item
         } else {
             self.listener.insert(key_group.clone(), (CurveFrameEvent::<Atom>::new(group.max_frame()), AnimationListener::<Atom>::new(id_group.clone())));

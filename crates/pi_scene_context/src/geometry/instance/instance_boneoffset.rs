@@ -1,5 +1,4 @@
 
-use pi_scene_math::Vector4;
 use pi_engine_shell::prelude::*;
 
 #[derive(Component, Debug, Clone)]
@@ -46,7 +45,7 @@ impl pi_curves::curve::frame::FrameDataValue for InstanceBoneoffset {
         }
     }
 
-    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         if amount < 0.5 {
             value1.clone()
         } else {

@@ -181,11 +181,11 @@ impl SingleEmptyEntity {
 }
 
 pub trait TRenderAlignmentCalc {
-    fn calc_rotation(&self, g_rotation: &Rotation3, g_rotation_euler: (Number, Number, Number), g_velocity: &Vector3) -> Rotation3;
+    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3;
     fn calc_local(&self, g_velocity: &Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix>;
 }
 impl TRenderAlignmentCalc for ERenderAlignment {
-    fn calc_rotation(&self, g_rotation: &Rotation3, g_rotation_euler: (Number, Number, Number), g_velocity: &Vector3) -> Rotation3 {
+    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3 {
         let mut m = Rotation3::identity();
         match self {
             ERenderAlignment::View => {

@@ -4,8 +4,6 @@ use std::sync::Arc;
 use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 
-use crate::{commands::DisposeReady, prelude::MaterialID};
-
 pub type PassTag = u16;
 
 #[derive(Debug, Clone, Component)]

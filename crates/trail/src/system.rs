@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
-use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 use rand::Rng;
 
 use crate::{base::*, ResTrailBuffer};
@@ -25,7 +24,7 @@ pub fn sys_trail_update(
     mut buffer: ResMut<ResTrailBuffer>,
     queue: Res<PiRenderQueue>,
 ) {
-    let mut time1 = pi_time::Instant::now();
+    // let mut time1 = pi_time::Instant::now();
     if let Some(trailbuffer) = &mut buffer.0 {
         items.iter_mut().for_each(|(
             idscene, idlinked, idgeo, mut base, mut points,
@@ -75,7 +74,7 @@ pub fn sys_trail_update(
         trailbuffer.after_collect(&queue);
     }
     
-    let time2 = pi_time::Instant::now();
+    // let time2 = pi_time::Instant::now();
     // log::warn!("Trail Update: {:?}", time2 - time1);
 }
 
@@ -83,9 +82,9 @@ pub fn sys_dispose_about_trail_linked(
     transforms: Query<&DisposeReady, Changed<DisposeReady>>,
     trails: Query<(Entity, &TrailLinkedTransform, &TrailGeometry)>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
-    trails.iter().for_each(|(entity, idlinked, idgeo)| {
+    trails.iter().for_each(|(entity, idlinked, _)| {
         if let Ok(state) = transforms.get(idlinked.0) {
             if state.0 == false { return; }
 
@@ -96,11 +95,11 @@ pub fn sys_dispose_about_trail_linked(
 
 pub fn sys_dispose_about_trail(
     trails: Query<(Entity, &DisposeReady, &TrailLinkedTransform), Changed<DisposeReady>>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
 
-    trails.iter().for_each(|(entity, state, idlinked)| {
+    trails.iter().for_each(|(entity, state, _)| {
         if state.0 == false { return; }
 
         disposecanlist.push(OpsDisposeCan::ops(entity));

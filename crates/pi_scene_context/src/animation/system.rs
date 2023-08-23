@@ -1,12 +1,11 @@
 
 
-use pi_animation::{animation_group_manager::AnimationGroupManager};
-use pi_curves::curve::{frame::{KeyFrameCurveValue}};
+use pi_animation::animation_group_manager::AnimationGroupManager;
+use pi_curves::curve::frame::KeyFrameCurveValue;
 use pi_engine_shell::prelude::*;
 
 use crate::{scene::environment::scene_time::SceneTime, prelude::SceneAnimationEnable, commands::DisposeReady};
 
-use super::{base::*};
 
 pub fn sys_listen_scene_anime_ctx(
     // e: Event,
@@ -102,7 +101,7 @@ pub fn sys_dispose_about_animationgroup(
     items.iter().for_each(|(state, scene, groups)| {
         if state.0 == false { return; }
 
-        groups.map.iter().for_each(|(k, id_group)| {
+        groups.map.iter().for_each(|(_k, id_group)| {
             scenectxs.delete_group(&scene.0, *id_group);
             animeglobal.remove(id_group);
         });

@@ -6,7 +6,7 @@ use crate::{prelude::{MaterialRefs, SingleIDBaseDefaultMaterial}, commands::*};
 
 pub fn sys_dispose_about_material(
     items: Query<(Entity, &DisposeReady, &MaterialRefs), Changed<DisposeReady>>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {

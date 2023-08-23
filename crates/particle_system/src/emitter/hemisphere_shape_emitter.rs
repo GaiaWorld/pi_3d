@@ -188,7 +188,6 @@ impl IShapeEmitterType for HemisphereShapeEmitter {
         &self,
         direction_to_update: &mut pi_scene_math::Vector3,
         local_position: &Vector3,
-        is_local: bool,
         random: &mut Random,
     ) {
         let mut direction = normalize(&local_position);
@@ -209,7 +208,6 @@ impl IShapeEmitterType for HemisphereShapeEmitter {
         emission_progress: f32,
         emission_index: f32,
         emission_total: f32,
-        is_local: bool,
         random: &mut Random,
     ) {
         let s = compute_radians(

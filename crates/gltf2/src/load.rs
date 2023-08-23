@@ -1,11 +1,11 @@
-use std::{hash::{Hash, Hasher}, str::FromStr};
+use std::hash::{Hash, Hasher};
 
 use bevy::prelude::{Resource, ResMut};
 use crossbeam::queue::SegQueue;
-use pi_assets::{mgr::{LoadResult, Receiver, AssetMgr}, asset::{Garbageer, Handle}};
+use pi_assets::{mgr::*, asset::*};
 use pi_engine_shell::prelude::*;
 use pi_gltf::Gltf;
-use pi_hash::{XHashMap, XHashSet};
+use pi_hash::*;
 use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemActionSet, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator};
 use pi_scene_context::prelude::*;
 use pi_node_materials::prelude::*;
@@ -185,11 +185,11 @@ pub struct GLTFImage {
     data: Handle<ImageTexture>,
 }
 
-pub struct GLTFAccessorVB {
-    gltfid: KeyGLTF,
-    bufferid: KeyVertexBuffer,
-    data: Vec<u8>,
-}
+// pub struct GLTFAccessorVB {
+//     gltfid: KeyGLTF,
+//     bufferid: KeyVertexBuffer,
+//     data: Vec<u8>,
+// }
 
 #[derive(Debug, Clone, Copy)]
 pub enum ErrorGLTF {
@@ -289,10 +289,7 @@ impl GLTFTempLoaded {
             let imageid = item.index();
             let gltfid = self.id.clone();
             match item.source() {
-                pi_gltf::image::Source::View { view, mime_type } => {
-                    
-                },
-                pi_gltf::image::Source::Uri { uri, mime_type } => {
+                pi_gltf::image::Source::Uri { uri, mime_type: _ } => {
                     let path = relative_path(uri, self.id.base_url.as_str()); 
                     let key = KeyImageTexture::File(Atom::from(path), true);
                     let imageresult = AssetMgr::load(image_assets_mgr, &key);
@@ -318,11 +315,11 @@ impl GLTFTempLoaded {
                                         Ok(res) => {
                                             images.push(GLTFImage { gltfid: gltfid, imageid: imageid, data: res })
                                         },
-                                        Err(e) => {
+                                        Err(_e) => {
                                             // 图片加载失败仍然可渲染, 使用默认图片, 因此不添加Error
                                             // log::error!("load image fail, {:?}", e);
                                             // errorqueue.push(String::from(key.as_str()));
-                                            log::error!("load image fail,");
+                                            // log::error!("load image fail,");
                                             errors.push((gltfid, ErrorGLTF::ErrorImage));
                                         }
                                     }
@@ -331,6 +328,10 @@ impl GLTFTempLoaded {
                                 .unwrap();
                         }
                     }
+                },
+                _ => {
+                // pi_gltf::image::Source::View { view, mime_type } => {
+                    
                 },
             }
         }
@@ -373,7 +374,7 @@ impl GLTFTempLoaded {
                 }
 
                 // attributes - 未处理稀疏存储情况
-                for (semantic, accessor) in primitive.attributes() {
+                for (_semantic, accessor) in primitive.attributes() {
                     let key = result.key_accessor(accessor.index());
                     let indice_key = KeyVertexBuffer::from(key.as_str());
                     let indice_key_u64 = indice_key.asset_u64();
@@ -777,7 +778,7 @@ pub fn sys_gltf_base_loaded_launch(
                                     Ok(base) => {
                                         basesuccess.push(GLTFTempLoaded::new(param, base));
                                     },
-                                    Err(e) => {
+                                    Err(_e) => {
                                         errorqueue.push((param.clone(), ErrorGLTF::ErrorGLTFCache));
                                     },
                                 }
@@ -803,7 +804,6 @@ pub fn sys_gltf_base_loaded_launch(
 
 pub fn sys_gltf_base_loaded_check(
     mut loader: ResMut<GLTFResLoader>,
-    base_assets_mgr: Res<ShareAssetMgr<GLTFBase>>,
     image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
@@ -858,7 +858,9 @@ pub fn sys_gltf_analy(
             if let Some(temp) = loader.temp.remove(&id) {
                 // analy(temp, loader.queue.clone(), &mut allocator, &vb_asset_mgr);
                 let res = temp.analy(&mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys);
-                assets_mgr.insert(key_u64, res);
+                if let Ok(_) = assets_mgr.insert(key_u64, res) {
+
+                }
             }
         }
     });

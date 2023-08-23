@@ -2,7 +2,7 @@ use std::{sync::Arc, ops::Range};
 
 use pi_engine_shell::prelude::*;
 use pi_render::renderer::vertex_format::TVertexFormatByteSize;
-use pi_scene_math::{Matrix, Vector3, Rotation3};
+use pi_scene_math::{Matrix, Vector3};
 
 use crate::prelude::*;
 
@@ -59,7 +59,6 @@ impl Default for ModelVelocity {
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
 impl BindModel {
     pub fn new(
-        device: &PiRenderDevice,
         allocator: &mut BindBufferAllocator,
     ) -> Option<Self> {
 
@@ -125,7 +124,7 @@ impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {
         }
     }
 
-    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         if amount < 0.5 {
             value1.clone()
         } else {

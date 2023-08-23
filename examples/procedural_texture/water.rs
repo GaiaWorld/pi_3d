@@ -6,9 +6,8 @@ use pi_scene_context::{
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
     plugin::Plugin,
     scene::interface::InterfaceScene,
-    transforms::{
-        interface::InterfaceTransformNode,
-    }, materials::interface::{InterfaceMaterial},
+    transforms::interface::InterfaceTransformNode,
+    materials::interface::InterfaceMaterial,
 };
 use pi_scene_math::Vector3;
 use procedural_texture::water::interface::InterfaceWaterMaterial;
@@ -58,8 +57,8 @@ pub fn main() {
         power_preference: wgpu::PowerPreference::HighPerformance,
         ..Default::default()
     });
-    shell.add_plugin(PluginBundleDefault);
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginBundleDefault);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

@@ -54,6 +54,7 @@ impl Plugin for PluginParticleSystem {
             (
                 sys_act_particle_system_trail_material,
                 sys_act_partilce_system_state.run_if(should_run),
+                sys_particle_active,
                 sys_ids.run_if(should_run),
                 sys_emission.run_if(should_run)
             ).chain().in_set(ERunStageChap::Command),

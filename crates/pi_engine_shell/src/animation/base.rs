@@ -1,5 +1,5 @@
 
-use std::{marker::PhantomData, hash::Hash};
+use std::hash::Hash;
 
 use pi_animation::{
     type_animation_context::{TypeAnimationContext, AnimationContextAmount},
@@ -7,8 +7,7 @@ use pi_animation::{
     animation_group::AnimationGroupID,
     curve_frame_event::CurveFrameEvent, animation::AnimationInfo, target_animation::TargetAnimation, runtime_info::RuntimeInfoMap
 };
-use pi_assets::{asset::{Handle}};
-use pi_atom::Atom;
+use pi_assets::asset::Handle;
 use pi_bevy_asset::TAssetCapacity;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FrameIndex};
 use pi_hash::XHashMap;
@@ -209,7 +208,7 @@ impl SceneAnimationContextMap {
                 Ok(_) => {
                     // log::warn!("Start Anime Ok!");
                 },
-                Err(e) => {
+                Err(_e) => {
                     // log::warn!("Start Anime faile! {:?}", e);
                 },
             }
@@ -222,7 +221,9 @@ impl SceneAnimationContextMap {
         group: DefaultKey,
     )  {
         if let Some(ctx) = self.0.get_mut(&id_scene) {
-            ctx.0.pause(group);
+            if let Ok(_) = ctx.0.pause(group) {
+
+            }
         }
     }
     ///
@@ -232,7 +233,9 @@ impl SceneAnimationContextMap {
         group: DefaultKey,
     )  {
         if let Some(ctx) = self.0.get_mut(&id_scene) {
-            ctx.0.stop(group);
+            if let Ok(_) = ctx.0.stop(group) {
+
+            }
         }
     }
     pub fn add_target_anime(
@@ -244,7 +247,9 @@ impl SceneAnimationContextMap {
     )  {
         if let Some(ctx) = self.0.get_mut(&id_scene) {
             // log::warn!("add_target_anime Ok!");
-            ctx.0.add_target_animation_notype(animation, group, target);
+            if let Ok(_) = ctx.0.add_target_animation_notype(animation, group, target) {
+
+            }
         }
     }
 }

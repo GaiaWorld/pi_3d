@@ -1,19 +1,14 @@
 
 use pi_engine_shell::prelude::*;
-use pi_render::{renderer::{vertices::{RenderVertices}}};
+use pi_render::renderer::vertices::RenderVertices;
 
 
-use crate::{
-    geometry::{
-        geometry::RenderVerticesFrom,
-    },
-};
+use crate::geometry::geometry::RenderVerticesFrom;
 
 use super::{
     vertex_buffer_useinfo::*,
     base::GeometryDesc,
-    geometry::*,
-    sys_vertex_buffer_loaded
+    geometry::*
 };
 
     pub fn sys_vertex_buffer_loaded_01(

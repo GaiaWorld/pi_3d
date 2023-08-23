@@ -6,11 +6,11 @@ use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, as
 use pi_mesh_builder::quad::{PluginQuadBuilder, InterfaceQuad};
 use pi_render::{rhi::options::RenderOptions, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam, renderer::{sampler::KeySampler, texture::KeyTexture}};
 use pi_scene_context::{plugin::Plugin,
-    transforms::{interface::InterfaceTransformNode},
-    scene::{interface::InterfaceScene},
+    transforms::interface::InterfaceTransformNode,
+    scene::interface::InterfaceScene,
     cameras::interface::InterfaceCamera,
     layer_mask::{interface::InterfaceLayerMask, LayerMask},
-    materials::{interface::{InterfaceMaterial}}, pass::{EPassTag, PassTagOrders}, renderers::graphic::RendererGraphicDesc
+    materials::interface::InterfaceMaterial, pass::{EPassTag, PassTagOrders}, renderers::graphic::RendererGraphicDesc
 };
 use pi_scene_math::Vector3;
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
@@ -77,7 +77,7 @@ pub fn main() {
             ..Default::default()
         }
     );
-    shell.add_plugin(PluginTest);
+    shell.add_plugins(PluginTest);
     shell.ready();
     shell.setup(&PluginTest::setup);
     shell.run();

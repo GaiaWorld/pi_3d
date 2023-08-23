@@ -376,7 +376,7 @@ impl AddEvent for App {
     fn add_frame_event<T: Event>(&mut self) -> &mut Self {
         if !self.world.contains_resource::<Events<T>>() {
             self.init_resource::<Events<T>>()
-                .add_system(Events::<T>::update_system);
+                .add_systems(Update, Events::<T>::update_system);
         }
         self
     }
@@ -397,12 +397,12 @@ mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
-    app.add_plugin(PluginTest);
+    app.add_plugins(PluginTest);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_system(sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix));
+    app.add_systems(Update, sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix));
 
-    app.add_startup_system(setup);
+    app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
 
     app.run()
