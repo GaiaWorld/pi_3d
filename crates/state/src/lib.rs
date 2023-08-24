@@ -158,7 +158,7 @@ pub fn sys_state_global(
 ) {
     if stateglobal.debug == false { return };
 
-    stateglobal.count_gltf = asset_gltf.asset_mgr().len();
+    stateglobal.count_gltf = asset_gltf.len();
     stateglobal.count_bindbuffer = bindbuffers.asset_mgr().len();
     stateglobal.count_bindgroup = asset_mgr_bindgroup.0.len();
     stateglobal.count_pipeline = pipelines.asset_mgr().len();
