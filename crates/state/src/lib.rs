@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use pi_gltf2_load::GLTF;
 use pi_hash::XHashMap;
 use pi_node_materials::prelude::*;
 use pi_particle_system::prelude::*;
@@ -146,6 +147,7 @@ pub struct StateGlobal {
 
 
 pub fn sys_state_global(
+    asset_gltf: Res<ShareAssetMgr<GLTF>>,
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
     bindbuffers: Res<ResBindBufferAllocator>,
     vertexbuffers: Res<VertexBufferAllocator3D>,
@@ -156,6 +158,7 @@ pub fn sys_state_global(
 ) {
     if stateglobal.debug == false { return };
 
+    stateglobal.count_gltf = asset_gltf.asset_mgr().len();
     stateglobal.count_bindbuffer = bindbuffers.asset_mgr().len();
     stateglobal.count_bindgroup = asset_mgr_bindgroup.0.len();
     stateglobal.count_pipeline = pipelines.asset_mgr().len();
