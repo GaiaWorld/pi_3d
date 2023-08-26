@@ -23,7 +23,7 @@ pub type GLTFDynamicJson = Atom;
 pub struct GLTFBase(Gltf, usize);
 impl pi_assets::asset::Asset for GLTFBase {
     type Key = u64;
-    const TYPE: &'static str = "GLTFBase";
+    // const TYPE: &'static str = "GLTFBase";
 }
 impl pi_assets::asset::Size for GLTFBase {
     fn size(&self) -> usize {
@@ -141,7 +141,7 @@ impl  GLTF {
 }
 impl pi_assets::asset::Asset for GLTF {
     type Key = u64;
-    const TYPE: &'static str = "GLTF";
+    // const TYPE: &'static str = "GLTF";
 }
 impl pi_assets::asset::Size for GLTF {
     fn size(&self) -> usize {
