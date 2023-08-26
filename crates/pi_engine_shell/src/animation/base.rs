@@ -32,7 +32,7 @@ pub struct SceneID(pub Entity);
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Asset for TypeFrameCurve<F> {
     type Key = IDAssetTypeFrameCurve;
-    const TYPE: &'static str = "TypeFrameCurve";
+    // const TYPE: &'static str = "TypeFrameCurve";
 }
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Size for TypeFrameCurve<F> {
     fn size(&self) -> usize {
