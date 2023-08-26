@@ -148,6 +148,8 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
 
     if let Some(shape) = mesh_particle_cfg.get("shape") {
         config.shape = format_shape(shape);
+    } else {
+        config.shape = IShape::Point();
     }
 
     if let Some(velocity_over_lifetime) = mesh_particle_cfg.get("velocityOverLifetime") {

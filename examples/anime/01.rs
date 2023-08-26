@@ -38,12 +38,12 @@ fn setup(
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+    let instancestate = InstanceState::INSTANCE_BASE;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
-    let mut attrs = CubeBuilder::attrs_meta();
-    attrs.push(VertexBufferDesc::instance_world_matrix());
+    let attrs = CubeBuilder::attrs_meta();
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = defaultmat.0;

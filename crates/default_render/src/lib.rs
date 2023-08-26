@@ -47,7 +47,7 @@ impl Plugin for PluginDefaultMaterial {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
 
-        app.add_systems(Update, setup);
+        app.add_systems(Startup, setup);
     }
 }
 

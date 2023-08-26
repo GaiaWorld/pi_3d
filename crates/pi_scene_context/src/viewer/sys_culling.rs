@@ -39,7 +39,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
 
         // log::debug!("CameraModelListByViewer :");
         // log::debug!("SysModelListUpdateByCamera: ");
-        viewers.iter_mut().for_each(|(camera, vieweractive, scene, layer, mut list_model, _, _)| {
+        viewers.iter_mut().for_each(|(_camera, vieweractive, scene, layer, mut list_model, _, _)| {
             list_model.0.clear();
             // log::debug!("CameraModelListByViewer : 0");
             if vieweractive.0 {

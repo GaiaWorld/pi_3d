@@ -26,6 +26,7 @@ pub fn sys_create_material(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, passtag)| {
+        // log::error!("Material: ");
         let mut matcmds = if let Some(cmd) = commands.get_entity(entity) { 
             cmd
         } else {
@@ -34,11 +35,15 @@ pub fn sys_create_material(
         };
 
         if let Some(meta) = asset_shader.get(&key_shader) {
-
             if let Some(effect_val_bind) = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator) {
+                // log::error!("Material: {:?} {:?}", key_shader, true);
                 matcmds.insert(BindEffect(effect_val_bind));
+            } else {
+                // log::error!("Material: {:?} {:?} Bind", key_shader, false);
             }
             matcmds.insert(AssetResShaderEffectMeta::from(meta));
+        } else {
+            // log::error!("Material: {:?} {:?}", key_shader, false);
         }
 
         ActionEntity::init(&mut matcmds);
@@ -154,7 +159,7 @@ fn reset_passobj(
         .insert(PassBindGroupModel(None))
         .insert(PassBindGroupTextureSamplers(None))
         .insert(PassBindGroups(None))
-        .insert(PassReady(None))
+        .insert(PassEffectReady(None))
         .insert(PassShader(None))
         .insert(PassPipeline(None))
         .insert(PassDraw(None))
@@ -334,15 +339,15 @@ impl ActionMaterial {
             // log::warn!("Regist ShaderName contains_key ??: {:?}", key);
         }
     }
-    pub fn init(
-        app: &mut App,
-        mat: Entity,
-        key: KeyShaderMeta,
-        passtag: EPassTag,
-    ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListMaterialCreate>().unwrap();
-        cmds.push(OpsMaterialCreate(mat, key, passtag));
-    }
+    // pub fn init(
+    //     app: &mut App,
+    //     mat: Entity,
+    //     key: KeyShaderMeta,
+    //     passtag: EPassTag,
+    // ) {
+    //     let mut cmds = app.world.get_resource_mut::<ActionListMaterialCreate>().unwrap();
+    //     cmds.push(OpsMaterialCreate(mat, key, passtag));
+    // }
     
     pub fn use_material(
         app: &mut App,

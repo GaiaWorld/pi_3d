@@ -29,19 +29,22 @@ fn setup(
 ) {
     let tes_size = 20;
     fps.frame_ms = 30;
+    final_render.cleardepth = 0.0;
 
-    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 4., 0.7, (0., 10., -40.), false);
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 4., 0.7, (0., 0., -10.), false);
+    // cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    // cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let root = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(root, scene));
     transformcmds.create.push(OpsTransformNode::ops(scene, root));
     // transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(root, 0., 0., 0.));
-    transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, root));
+    // transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, root));
 
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
-    meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::VerticalBillboard));
+    let instancestate = 0;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
+    // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::VerticalBillboard));
     // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
@@ -99,7 +102,7 @@ fn setup(
         animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group.clone(), animation);
     }
 
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+    // animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 
@@ -120,6 +123,8 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     
+    app.add_systems(Update, pi_3d::sys_info_node);
+    app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     

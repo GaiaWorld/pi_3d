@@ -13,7 +13,7 @@ use crate::{
     renderers::prelude::*,
     layer_mask::prelude::*,
     skeleton::prelude::*,
-    materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode, IndiceRenderRange},
+    materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode, IndiceRenderRange, MeshInstanceState},
 };
 
 use super::{
@@ -23,10 +23,10 @@ use super::{
     lighting::{MeshCastShadow, MeshReceiveShadow}
 };
 
-pub struct OpsMeshCreation(pub(crate) Entity, pub(crate) Entity);
+pub struct OpsMeshCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) MeshInstanceState);
 impl OpsMeshCreation {
-    pub fn ops(scene: Entity, entity: Entity) -> Self {
-        Self(scene, entity)
+    pub fn ops(scene: Entity, entity: Entity, state: MeshInstanceState) -> Self {
+        Self(scene, entity, state)
     }
 }
 pub type ActionListMeshCreate = ActionList<OpsMeshCreation>;
@@ -196,7 +196,7 @@ pub struct BundlePass(
     PassBindGroupScene,
     PassBindGroupTextureSamplers,
     PassBindGroups,
-    PassReady,
+    PassEffectReady,
     PassShader,
     PassPipeline,
     PassDraw,

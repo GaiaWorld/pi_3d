@@ -60,6 +60,8 @@ impl PathPoints {
                 let mut newlast = newkey.clone();
                 newlast.distance = distance;
                 list.push(newlast);
+            } else {
+            list.push(lastpos);
             }
             list.push(newkey);
         } else {

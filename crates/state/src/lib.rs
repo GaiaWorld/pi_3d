@@ -12,6 +12,7 @@ pub struct StateScene {
     pub count_animationgroup: usize,
     pub count_transform: usize,
     pub count_mesh: usize,
+    pub count_geometry: usize,
     pub count_material: usize,
     pub count_instance: usize,
     pub count_skeleton: usize,
@@ -26,7 +27,8 @@ pub struct StateScene {
 }
 
 pub fn sys_state_scene(
-    materials: Query<Entity, With<MaterialRefs>>,
+    geometrys: Query<(&MeshID, &RenderGeometryComp)>,
+    materials: Query<(Entity, &BindEffect, &AssetResShaderEffectMeta), With<MaterialRefs>>,
     transformnodes: Query<Entity, With<TransformNode>>,
     meshes: Query<Entity, With<Mesh>>,
     instancemeshes: Query<Entity, With<InstanceMesh>>,
@@ -47,7 +49,17 @@ pub fn sys_state_scene(
 
     if stateglobal.debug == false { return };
 
-    materials.iter().for_each(|entity| {
+    geometrys.iter().for_each(|(idmesh, rendergeo)| {
+        if rendergeo.is_some() {
+            if let Ok(idscene) = idscenes.get(idmesh.0) {
+                if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+                    state.count_geometry += 1;
+                }
+            }
+        }
+    });
+
+    materials.iter().for_each(|(entity, _, _)| {
         if let Ok(idscene) = idscenes.get(entity) {
             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
                 state.count_material += 1;
@@ -138,6 +150,7 @@ pub struct StateGlobal {
     pub count_imgtexture: usize,
     pub count_bindgroup: usize,
     pub count_pipeline: usize,
+    pub count_shadermeta: usize,
     pub count_shader: usize,
     pub count_bindbuffer: usize,
     pub count_geometrybuffer: usize,
@@ -154,6 +167,7 @@ pub fn sys_state_global(
     shaders: Res<AssetDataCenterShader3D>,
     pipelines: Res<AssetDataCenterPipeline3D>,
     imagetextures: Res<ShareAssetMgr<ImageTexture>>,
+    shadermetas: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut stateglobal: ResMut<StateGlobal>,
 ) {
     if stateglobal.debug == false { return };
@@ -166,6 +180,7 @@ pub fn sys_state_global(
     stateglobal.size_geometrybuffer = vertexbuffers.total_buffer_size();
     stateglobal.count_shader = shaders.asset_mgr().len();
     stateglobal.count_imgtexture = imagetextures.len();
+    stateglobal.count_shadermeta = shadermetas.len();
 }
 
 pub struct PluginStateGlobal;
@@ -206,7 +221,7 @@ impl StateGeometryBuffer {
                 VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
             ],
             step_mode: wgpu::VertexStepMode::Vertex,
-            kind: EInstanceKind::None,
+            instance: false,
         }
     }
     pub fn buffer(&self) -> Arc<NotUpdatableBufferRange> {

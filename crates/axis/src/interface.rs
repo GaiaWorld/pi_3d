@@ -1,22 +1,19 @@
-use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::*;
-use crate::shader::AxisShader;
 
 pub struct InterfaceAxisMaterial;
 impl InterfaceAxisMaterial {
-    pub fn create(
-        app: &mut App
-    ) -> ObjectID {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
+    // pub fn create(
+    //     app: &mut App
+    // ) -> ObjectID {
+    //     let mut queue = CommandQueue::default();
+    //     let mut commands = Commands::new(&mut queue, &app.world);
 
-        let entity = commands.spawn_empty().id();
-        queue.apply(&mut app.world);
+    //     let entity = commands.spawn_empty().id();
+    //     queue.apply(&mut app.world);
 
-        ActionMaterial::init(app, entity, KeyShaderMeta::from(AxisShader::KEY), EPassTag::Opaque);
+    //     // ActionMaterial::init(app, entity, KeyShaderMeta::from(AxisShader::KEY), EPassTag::Opaque);
 
-        entity
-    }
+    //     entity
+    // }
 }
 
 // impl InterfaceAxisMaterial for engine_shell::EnginShell {

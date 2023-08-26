@@ -26,13 +26,12 @@ fn setup(
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     
     let id_geo = commands.spawn_empty().id();
-    let mut attrs = CubeBuilder::attrs_meta();
-    attrs.push(VertexBufferDesc::instance_world_matrix());
-    attrs.push(VertexBufferDesc::instance_color());
-    attrs.push(VertexBufferDesc::instance_tilloff());
+    let attrs = CubeBuilder::attrs_meta();
+    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();

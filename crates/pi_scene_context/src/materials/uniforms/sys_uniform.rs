@@ -1,6 +1,6 @@
 
 
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 
@@ -196,6 +196,7 @@ use super::{
                     );
                     texparams.0.get(&item.slotname).unwrap()
                 };
+                // log::error!("Texture {:?} {:?}", index, &param.url);
                 
                 if index == 0 {
                     // log::warn!("Texture 0 {:?}", &param.url);

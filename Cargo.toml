@@ -87,7 +87,7 @@ pi_gltf = { path = "../pi_gltf" }
 
 [patch.crates-io]
 # pi_spatial = { path = "../pi_spatial" }
-# pi_assets = {path = "../pi_assets"}
+pi_assets = {path = "../pi_assets"}
 # pi_async_graph = {path = "../pi_async_graph"}
 
 [patch.yn]

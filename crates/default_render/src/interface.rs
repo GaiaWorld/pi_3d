@@ -1,27 +1,25 @@
 
 use pi_engine_shell::prelude::*;
 
-use pi_render::renderer::shader::KeyShaderMeta;
 use pi_scene_context::prelude::*;
 
-use crate::shader::DefaultShader;
 
 pub struct ActionDefaultMaterial;
 impl ActionDefaultMaterial {
-    pub fn create(
-        app: &mut App,
-        pass: EPassTag,
-    ) -> Entity {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
+    // pub fn create(
+    //     app: &mut App,
+    //     pass: EPassTag,
+    // ) -> Entity {
+    //     let mut queue = CommandQueue::default();
+    //     let mut commands = Commands::new(&mut queue, &app.world);
 
-        let entity = commands.spawn_empty().id();
-        queue.apply(&mut app.world);
+    //     let entity = commands.spawn_empty().id();
+    //     queue.apply(&mut app.world);
 
-        ActionMaterial::init(app, entity, KeyShaderMeta::from(DefaultShader::KEY), pass);
+    //     // ActionMaterial::init(app, entity, KeyShaderMeta::from(DefaultShader::KEY), pass);
 
-        entity
-    }
+    //     entity
+    // }
     pub fn use_default_material(
         app: &mut App,
         id_mesh: Entity,

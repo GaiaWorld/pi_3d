@@ -1,25 +1,19 @@
 
-use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::*;
-
-use super::shader::CloudShader;
-
-
 pub struct InterfaceCloudMaterial;
 impl InterfaceCloudMaterial {
-    pub fn create_cloud_material(
-        app: &mut App,
-    ) -> Entity {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
+    // pub fn create_cloud_material(
+    //     app: &mut App,
+    // ) -> Entity {
+    //     let mut queue = CommandQueue::default();
+    //     let mut commands = Commands::new(&mut queue, &app.world);
 
-        let entity = commands.spawn_empty().id();
-        queue.apply(&mut app.world);
+    //     let entity = commands.spawn_empty().id();
+    //     queue.apply(&mut app.world);
 
-        ActionMaterial::init(app, entity, KeyShaderMeta::from(CloudShader::KEY), EPassTag::Sky);
+    //     ActionMaterial::init(app, entity, KeyShaderMeta::from(CloudShader::KEY), EPassTag::Sky);
 
-        entity
-    }
+    //     entity
+    // }
 }
 
 // impl InterfaceCloudMaterial for EnginShell {

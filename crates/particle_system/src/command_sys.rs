@@ -91,7 +91,7 @@ pub fn sys_act_create_cpu_partilce_system(
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
-                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty);
+                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default());
         
                     if let Some(mut cmd) = commands.get_entity(id_mesh) {
                         // log::warn!("Mesh Ok");

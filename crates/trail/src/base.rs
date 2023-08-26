@@ -92,7 +92,7 @@ impl TrailPoints {
                 // log::warn!("New Point 2: {:?}  {:?}", localmatrix, newpos);
             }
             let xlen = coordiante_system::CoordinateSytem3::length(&newaxisx);
-            if 0.00000001 < xlen {
+            if Number::EPSILON < xlen {
                 newaxisx.scale_mut(1. / xlen);
             } else {
                 newaxisx.copy_from_slice(&[1., 0., 0.]);
@@ -101,7 +101,7 @@ impl TrailPoints {
             let newaxisz = if let Some(last) = self.0.last() {
                 let mut temp = newpos - last.pos;
                 let len = coordiante_system::CoordinateSytem3::length(&temp);
-                if 0.00000001 < len {
+                if Number::EPSILON < len {
                     temp.scale_mut(1. / len);
                 } else {
                     temp.copy_from(&last.zaxis);
@@ -109,7 +109,7 @@ impl TrailPoints {
                 temp
             } else {
                 let len = coordiante_system::CoordinateSytem3::length(&newpos);
-                if 0.00000001 < len {
+                if Number::EPSILON < len {
                     newpos.scale(1. / len)
                 } else {
                     Vector3::new(0., 0., 1.)
@@ -123,7 +123,7 @@ impl TrailPoints {
             self.0 = path;
             // log::warn!("Total Distance: {:?}", totaldistance);
             // log::warn!("Point: {:?}  {:?}  {:?}  {:?}  {:?}  {:?}", limit_time, base, totaldistance, newpos, newaxisx, newaxisz);
-            if totaldistance < 0.00000001 {
+            if totaldistance < Number::EPSILON {
                 false
             } else {
                 let amount = (base.time - base.starttime) as f32 / base.lifetime as f32;
@@ -198,8 +198,6 @@ impl TrailPoints {
                     datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
                     datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
                     datavertices.push(width * 1.); datavertices.push(item.distance_percent);
-                }
-                {
                     datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
                     datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(color.w);
                     datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
@@ -267,7 +265,7 @@ impl TrailBuffer {
                 VertexAttribute { kind: EVertexDataKind::TrailInfo, format: wgpu::VertexFormat::Float32x2 },
             ],
             step_mode: wgpu::VertexStepMode::Vertex,
-            kind: EInstanceKind::None,
+            instance: false,
         }
     }
     pub fn buffer(&self) -> Arc<NotUpdatableBufferRange> {

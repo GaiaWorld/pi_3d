@@ -33,14 +33,15 @@ fn setup(
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+    let instancestate = 0;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     let mut blend = ModelBlend::default(); blend.combine();
     meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
     
     let id_geo = commands.spawn_empty().id();
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, 
         CubeBuilder::attrs_meta(),
-        Some(CubeBuilder::indices_meta())
+        Some(CubeBuilder::indices_meta()),
     ));
 
     let idmat = commands.spawn_empty().id();

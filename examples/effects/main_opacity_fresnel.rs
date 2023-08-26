@@ -30,7 +30,8 @@ fn setup(
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+    let instancestate = 0;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     let mut blend = ModelBlend::default(); blend.combine();
     meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
     
@@ -43,7 +44,7 @@ fn setup(
         ],
         Some(
             IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: KeyVertexBuffer::from("BallInd#20#20") }
-        )
+        ),
     ));
 
     let idmat = commands.spawn_empty().id();

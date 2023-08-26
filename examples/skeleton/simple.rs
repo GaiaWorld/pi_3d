@@ -35,7 +35,8 @@ fn setup(
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+    let instancestate = 0;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     
     // let key_group = pi_atom::Atom::from("key_group");

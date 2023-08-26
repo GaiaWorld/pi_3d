@@ -23,6 +23,17 @@ impl Default for EScalingMode {
 #[derive(Component)]
 pub struct Mesh;
 
+#[derive(Component)]
+pub struct MeshInstanceState {
+    pub state: u32,
+    pub use_single_instancebuffer: bool,
+}
+impl Default for MeshInstanceState {
+    fn default() -> Self {
+        Self { state: 0, use_single_instancebuffer: false }
+    }
+}
+
 #[derive(Debug, Clone, Default, Component)]
 pub struct DirtyMeshRef;
 

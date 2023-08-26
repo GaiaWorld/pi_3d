@@ -92,6 +92,7 @@ impl Drop for ParticleSystemCalculatorID {
 }
 impl Asset for ParticleSystemCalculatorID {
     type Key = KeyParticleSystemCalculator;
+    const TYPE: &'static str = "ParticleSystemCalculatorID";
 }
 impl Size for ParticleSystemCalculatorID {
     fn size(&self) -> usize {

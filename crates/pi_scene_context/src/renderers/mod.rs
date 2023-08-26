@@ -138,62 +138,7 @@ impl Plugin for PluginRenderer {
                 sys_renderer_draws_modify.run_if(should_run).in_set(ERunStageChap::Draw)
             )
         );
-        app.add_systems(
-			Update,
-            (
-                sys_set0_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
-                sys_set0_modify_by_renderer::<Pass02, PassID02>.run_if(should_run),
-                sys_set0_modify_by_renderer::<Pass03, PassID03>.run_if(should_run),
-                sys_set0_modify_by_renderer::<Pass04, PassID04>.run_if(should_run),
-                sys_set0_modify_by_renderer::<Pass05, PassID05>.run_if(should_run),
-                sys_set0_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
-                sys_set0_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
-                sys_set0_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
-        );
-        app.add_systems(
-			Update,
-            (
 
-                sys_set1_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
-                sys_set1_modify_by_renderer::<Pass02, PassID02>.run_if(should_run),
-                sys_set1_modify_by_renderer::<Pass03, PassID03>.run_if(should_run),
-                sys_set1_modify_by_renderer::<Pass04, PassID04>.run_if(should_run),
-                sys_set1_modify_by_renderer::<Pass05, PassID05>.run_if(should_run),
-                sys_set1_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
-                sys_set1_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
-                sys_set1_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
-        );
-        app.add_systems(
-			Update,
-            (
-
-                sys_set2_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
-                sys_set2_modify_by_renderer::<Pass02, PassID02>.run_if(should_run),
-                sys_set2_modify_by_renderer::<Pass03, PassID03>.run_if(should_run),
-                sys_set2_modify_by_renderer::<Pass04, PassID04>.run_if(should_run),
-                sys_set2_modify_by_renderer::<Pass05, PassID05>.run_if(should_run),
-                sys_set2_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
-                sys_set2_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
-                sys_set2_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_set1_modify_by_pass::<Pass01, PassID01>.run_if(should_run),
-                sys_set1_modify_by_pass::<Pass02, PassID02>.run_if(should_run),
-                sys_set1_modify_by_pass::<Pass03, PassID03>.run_if(should_run),
-                sys_set1_modify_by_pass::<Pass04, PassID04>.run_if(should_run),
-                sys_set1_modify_by_pass::<Pass05, PassID05>.run_if(should_run),
-                sys_set1_modify_by_pass::<Pass06, PassID06>.run_if(should_run),
-                sys_set1_modify_by_pass::<Pass07, PassID07>.run_if(should_run),
-                sys_set1_modify_by_pass::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
-        );
-        
         app.add_systems(
 			Update,
             (
@@ -207,11 +152,49 @@ impl Plugin for PluginRenderer {
                 sys_set0_modify_by_scene::<Pass08, PassID08>.run_if(should_run),
             ).in_set(ERunStageChap::DrawBindsAndCulling)
         );
-        
         app.add_systems(
 			Update,
             (
+                sys_set0_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
+                sys_set0_modify_by_renderer::<Pass02, PassID02>.run_if(should_run),
+                sys_set0_modify_by_renderer::<Pass03, PassID03>.run_if(should_run),
+                sys_set0_modify_by_renderer::<Pass04, PassID04>.run_if(should_run),
+                sys_set0_modify_by_renderer::<Pass05, PassID05>.run_if(should_run),
+                sys_set0_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
+                sys_set0_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
+                sys_set0_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
+            ).after(sys_set0_modify_by_scene::<Pass08, PassID08>).in_set(ERunStageChap::DrawBindsAndCulling)
+        );
+        app.add_systems(
+			Update,
+            (
+                sys_set0_modify_by_pass::<Pass01, PassID01>.run_if(should_run),
+                sys_set0_modify_by_pass::<Pass02, PassID02>.run_if(should_run),
+                sys_set0_modify_by_pass::<Pass03, PassID03>.run_if(should_run),
+                sys_set0_modify_by_pass::<Pass04, PassID04>.run_if(should_run),
+                sys_set0_modify_by_pass::<Pass05, PassID05>.run_if(should_run),
+                sys_set0_modify_by_pass::<Pass06, PassID06>.run_if(should_run),
+                sys_set0_modify_by_pass::<Pass07, PassID07>.run_if(should_run),
+                sys_set0_modify_by_pass::<Pass08, PassID08>.run_if(should_run),
+            ).after(sys_set0_modify_by_renderer::<Pass08, PassID08>).in_set(ERunStageChap::DrawBindsAndCulling)
+        );
 
+        app.add_systems(
+			Update,
+            (
+                sys_set1_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
+                sys_set1_modify_by_renderer::<Pass02, PassID02>.run_if(should_run),
+                sys_set1_modify_by_renderer::<Pass03, PassID03>.run_if(should_run),
+                sys_set1_modify_by_renderer::<Pass04, PassID04>.run_if(should_run),
+                sys_set1_modify_by_renderer::<Pass05, PassID05>.run_if(should_run),
+                sys_set1_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
+                sys_set1_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
+                sys_set1_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
+        );
+        app.add_systems(
+			Update,
+            (
                 sys_set1_modify_by_model::<Pass01, PassID01>.run_if(should_run),
                 sys_set1_modify_by_model::<Pass02, PassID02>.run_if(should_run),
                 sys_set1_modify_by_model::<Pass03, PassID03>.run_if(should_run),
@@ -220,24 +203,48 @@ impl Plugin for PluginRenderer {
                 sys_set1_modify_by_model::<Pass06, PassID06>.run_if(should_run),
                 sys_set1_modify_by_model::<Pass07, PassID07>.run_if(should_run),
                 sys_set1_modify_by_model::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
+            ).after(sys_set1_modify_by_renderer::<Pass08, PassID08>).in_set(ERunStageChap::DrawBindsAndCulling)
         );
-        
         app.add_systems(
 			Update,
             (
-
-                sys_set2_modify_by_model::<Pass01, PassID01>.run_if(should_run),
-                sys_set2_modify_by_model::<Pass02, PassID02>.run_if(should_run),
-                sys_set2_modify_by_model::<Pass03, PassID03>.run_if(should_run),
-                sys_set2_modify_by_model::<Pass04, PassID04>.run_if(should_run),
-                sys_set2_modify_by_model::<Pass05, PassID05>.run_if(should_run),
-                sys_set2_modify_by_model::<Pass06, PassID06>.run_if(should_run),
-                sys_set2_modify_by_model::<Pass07, PassID07>.run_if(should_run),
-                sys_set2_modify_by_model::<Pass08, PassID08>.run_if(should_run),
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
+                sys_set1_modify_by_pass::<Pass01, PassID01>.run_if(should_run),
+                sys_set1_modify_by_pass::<Pass02, PassID02>.run_if(should_run),
+                sys_set1_modify_by_pass::<Pass03, PassID03>.run_if(should_run),
+                sys_set1_modify_by_pass::<Pass04, PassID04>.run_if(should_run),
+                sys_set1_modify_by_pass::<Pass05, PassID05>.run_if(should_run),
+                sys_set1_modify_by_pass::<Pass06, PassID06>.run_if(should_run),
+                sys_set1_modify_by_pass::<Pass07, PassID07>.run_if(should_run),
+                sys_set1_modify_by_pass::<Pass08, PassID08>.run_if(should_run),
+            ).after(sys_set1_modify_by_model::<Pass08, PassID08>).in_set(ERunStageChap::DrawBindsAndCulling)
         );
 
+        app.add_systems(
+			Update,
+            (
+                sys_set2_modify_by_renderer::<Pass01, PassID01>.run_if(should_run),
+                sys_set2_modify_by_renderer::<Pass02, PassID02>.run_if(should_run),
+                sys_set2_modify_by_renderer::<Pass03, PassID03>.run_if(should_run),
+                sys_set2_modify_by_renderer::<Pass04, PassID04>.run_if(should_run),
+                sys_set2_modify_by_renderer::<Pass05, PassID05>.run_if(should_run),
+                sys_set2_modify_by_renderer::<Pass06, PassID06>.run_if(should_run),
+                sys_set2_modify_by_renderer::<Pass07, PassID07>.run_if(should_run),
+                sys_set2_modify_by_renderer::<Pass08, PassID08>.run_if(should_run),
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
+        );
+        app.add_systems(
+			Update,
+            (
+                sys_set2_modify_by_pass::<Pass01, PassID01>.run_if(should_run),
+                sys_set2_modify_by_pass::<Pass02, PassID02>.run_if(should_run),
+                sys_set2_modify_by_pass::<Pass03, PassID03>.run_if(should_run),
+                sys_set2_modify_by_pass::<Pass04, PassID04>.run_if(should_run),
+                sys_set2_modify_by_pass::<Pass05, PassID05>.run_if(should_run),
+                sys_set2_modify_by_pass::<Pass06, PassID06>.run_if(should_run),
+                sys_set2_modify_by_pass::<Pass07, PassID07>.run_if(should_run),
+                sys_set2_modify_by_pass::<Pass08, PassID08>.run_if(should_run),
+            ).in_set(ERunStageChap::DrawBindsAndCulling)
+        );
 
         app.add_systems(
 			Update,

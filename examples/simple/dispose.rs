@@ -40,7 +40,8 @@ pub struct ListTestData(Vec<Entity>, Option<Entity>, WyRng);
             let random = &mut testdata.2;
             // log::warn!("Random: {:?}", random.gen_range(-5.0f32..5.0f32));
             let cube: Entity = commands.spawn_empty().id();
-            meshcmds.create.push(OpsMeshCreation::ops(scene, cube));
+            let instancestate = 0;
+            meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
             transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
             transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, random.gen_range(-5.0f32..5.0f32) as f32, random.gen_range(-5.0f32..5.0f32), random.gen_range(-5.0f32..5.0f32)));
             testdata.0.insert(0, cube);
@@ -88,13 +89,13 @@ fn setup(
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+    let instancestate = InstanceState::INSTANCE_BASE;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     testdata.0.push(source);
     // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
-    let mut attrs = CubeBuilder::attrs_meta();
-    attrs.push(VertexBufferDesc::instance_world_matrix());
+    let attrs = CubeBuilder::attrs_meta();
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = defaultmat.0;

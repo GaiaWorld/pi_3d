@@ -25,8 +25,8 @@ use super::{
 /// 渲染器搜集渲染
     pub fn sys_pass_bind_groups(
         mut passes: Query<
-            (ObjectID, &ModelPass, &PassReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &mut PassBindGroups),
-            Or<(Changed<PassReady>, Changed<PassBindGroupScene>, Changed<PassBindGroupModel>, Changed<PassBindGroupTextureSamplers>)>
+            (ObjectID, &ModelPass, &PassEffectReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &mut PassBindGroups),
+            Or<(Changed<PassEffectReady>, Changed<PassBindGroupScene>, Changed<PassBindGroupModel>, Changed<PassBindGroupTextureSamplers>)>
         >,
     ) {
         passes.iter_mut().for_each(|(_id_pass, _id_model, ready, set0, set1, set2, mut bindgroups)| {
@@ -36,13 +36,17 @@ use super::{
                         if bindgroups.val().is_some() {
                             *bindgroups = PassBindGroups::new(None);
                         }
+                        // log::error!("Bindgroups: {:?}", false);
                     } else {
                         *bindgroups = PassBindGroups::new(Some(
                             BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
                         ));
+                        // log::error!("Bindgroups: {:?}", true);
                     }
                     return;
                 }
+            } else {
+                // log::error!("Bindgroups: Ready False");
             }
             
             if bindgroups.val().is_some() {
@@ -62,7 +66,7 @@ use super::{
             Or<(Changed<GeometryID>, Changed<RenderAlignment>)>,
         >,
         geometrys: Query<(&EVerticeExtendCodeComp, &VertexBufferLayoutsComp)>, 
-        passes: Query<(&PassReady, &PassBindGroups, &PassShader), With<T>>,
+        passes: Query<(&PassEffectReady, &PassBindGroups, &PassShader), With<T>>,
         mut shader_center: ResMut<AssetDataCenterShader3D>,
         mut shader_loader: ResMut<AssetLoaderShader3D>,
         device: Res<PiRenderDevice>,
@@ -76,6 +80,7 @@ use super::{
                 let (instance, vb) = if let Ok(val) = geometrys.get(id_geo.0) {
                     val
                 } else {
+                    // log::error!("Shader: {:?}", -1);
                     // log::debug!("SysPassShaderRequestByModel: 11");
                             // if let Some(mut cmd) = commands.get_entity(id_pass) {
                             //     cmd.insert(PassShader(None));
@@ -84,8 +89,9 @@ use super::{
                 };
                 if let Ok((ready, bindgroups, _old_shader)) = passes.get(id_pass.clone()) {
                     // log::debug!("SysPassShaderRequestByModel: 2");
+                    // log::error!("Shader: 1");
                     if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
-                        
+                        // log::error!("Shader: 2");
                         // log::debug!("SysPassShaderRequestByModel: 3");
                         let key_attributes = vb.as_key_shader_from_attributes();
                         let key_shader_defines = 0;
@@ -141,6 +147,7 @@ use super::{
                             shader_loader.request(id_pass, &key_shader);
                         }
                     } else {
+                        // log::error!("Shader: 00");
                         // if old_shader.val().is_some() {
                         //     log::debug!("SysPassShaderRequestByModel: No Ready");
                         //     if let Some(mut cmd) = commands.get_entity(id_pass) {
@@ -164,8 +171,8 @@ use super::{
         >,
         geometrys: Query<(&EVerticeExtendCodeComp, &VertexBufferLayoutsComp)>, 
         passes: Query<
-            (ObjectID, &ModelPass, &PassReady, &PassBindGroups, &PassShader, &T),
-            Or<(Changed<PassReady>, Changed<PassBindGroups>)>
+            (ObjectID, &ModelPass, &PassEffectReady, &PassBindGroups, &PassShader, &T),
+            Or<(Changed<PassEffectReady>, Changed<PassBindGroups>)>
         >,
         // mut commands: Commands,
         mut shader_center: ResMut<AssetDataCenterShader3D>,
@@ -183,12 +190,14 @@ use super::{
                     let (instance, vb) = if let Ok(val) = geometrys.get(id_geometry.0) {
                         val
                     } else {
+                        // log::error!("Shader: {:?}", -1);
                         // if let Some(mut cmd) = commands.get_entity(id_pass) {
                         //     cmd.insert(PassShader(None));
                         // }
                         // log::debug!("SysPassShaderRequestByPass: 11");
                         return;
                     };
+                    // log::error!("Shader: {:?}", 2);
                     let key_attributes = vb.as_key_shader_from_attributes();
                     // let key_shader_defines = 0;
     
@@ -263,7 +272,7 @@ use super::{
     }
 
     pub fn sys_pass_shader_loaded(
-        mut commands: Commands,
+        mut items: Query<&mut PassShader>,
         mut shader_center: ResMut<AssetDataCenterShader3D>,
         mut shader_loader: ResMut<AssetLoaderShader3D>,
     ) {
@@ -272,9 +281,9 @@ use super::{
             // log::debug!("PassShaderLoaded: 0");
             shader_loader.loaded(key, value).drain(..).for_each(|(entity, component)| {
                 // log::debug!("PassShaderLoaded: 1");
-                            if let Some(mut cmd) = commands.get_entity(entity) {
-                                cmd.insert(PassShader::from(component));
-                            }
+                if let Ok(mut item) = items.get_mut(entity) {
+                    *item = PassShader::from(component);
+                }
             })
         });
 

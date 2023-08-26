@@ -53,15 +53,13 @@ fn setup(
             for _k in 0..temp {
                 let item = {
                     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+                    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
+                    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
                     // meshcmds.frontface.push(OpsFrontFace::ops(scene, FrontFace::Ccw));
-                    meshcmds.depth_compare.push(OpsDepthCompare::ops(source, CompareFunction::LessEqual));
+                    // meshcmds.depth_compare.push(OpsDepthCompare::ops(source, CompareFunction::LessEqual));
                     let id_geo = commands.spawn_empty().id();
-                    let mut attrs = CubeBuilder::attrs_meta();
+                    let attrs = CubeBuilder::attrs_meta();
                     // ParticleSystem Add
-                    attrs.push(VertexBufferDesc::instance_world_matrix());
-                    attrs.push(VertexBufferDesc::instance_color());
-                    attrs.push(VertexBufferDesc::instance_tilloff());
                     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
                     //
                     let syskey = String::from("Test");
@@ -137,24 +135,24 @@ fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     // cfg.color_over_lifetime = Some(FourGradientInfo::TInterpolateRandom);
     cfg.lifetime = OneParamInfo::TInterpolateConstant(1.);
     cfg.shape = IShape::ShapeCone(IShapeCone::default());
-    cfg.trail = Some(ITrail {
-        ratio: 1.,
-        mode: ETrailMode::Particles,
-        lifetime: OneParamInfo::TInterpolateConstant(1.),
-        ribbon_count: 5.,
-        attach_rtt: 10,
-        min_dist: 0.5,
-        world_space: 0,
-        die_with: 1,
-        tex_mode: ETrailTextureMode::Stretch,
-        size_awidth: 1,
-        size_alifetime: 1,
-        inherit_color: 1,
-        color_over_life: FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]),
-        width_over_trail: OneParamInfo::TInterpolateConstant(1.),
-        color_over_trail: FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]),
-        material: 0.,
-    });
+    // cfg.trail = Some(ITrail {
+    //     ratio: 1.,
+    //     mode: ETrailMode::Particles,
+    //     lifetime: OneParamInfo::TInterpolateConstant(1.),
+    //     ribbon_count: 5.,
+    //     attach_rtt: 10,
+    //     min_dist: 0.5,
+    //     world_space: 0,
+    //     die_with: 1,
+    //     tex_mode: ETrailTextureMode::Stretch,
+    //     size_awidth: 1,
+    //     size_alifetime: 1,
+    //     inherit_color: 1,
+    //     color_over_life: FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]),
+    //     width_over_trail: OneParamInfo::TInterpolateConstant(1.),
+    //     color_over_trail: FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]),
+    //     material: 0.,
+    // });
 
     cfg
 }
@@ -185,6 +183,9 @@ pub fn main() {
 
     app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
+
+    log::warn!("State: {}", InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1);
+    log::warn!("State: {}", InstanceState::INSTANCE_BASE & InstanceState::INSTANCE_COLOR & InstanceState::INSTANCE_TILL_OFF_1);
     
     app.run()
 

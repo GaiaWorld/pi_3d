@@ -301,6 +301,7 @@ pub enum IShape {
     ShapeHemisphere(IShapeHemisphere),
     ShapeRectangle(IShapeRectangle),
     ShapeSphere(IShapeSphere),
+    Point(),
 }
 
 impl Default for IShape{

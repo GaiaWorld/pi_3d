@@ -77,7 +77,7 @@ impl crate::Plugin for PluginMesh {
             sys_calc_render_matrix.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
         );
         app.add_systems(Update, 
-            sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix)
+            sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix).in_set(ERunStageChap::CalcRenderMatrix)
         );
         app.add_systems(
 			Update,
@@ -90,10 +90,12 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(
 			Update,
             (
-                sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>.run_if(should_run),
-                sys_tick_instance_buffer_update::<InstanceTillOff, InstanceBufferTillOff, InstanceTillOffDirty>.run_if(should_run),
-                sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>.run_if(should_run),
-            ).chain().in_set(ERunStageChap::Uniform)
+                // sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>.run_if(should_run),
+                // sys_tick_instance_buffer_update::<InstanceTillOff, InstanceBufferTillOff, InstanceTillOffDirty>.run_if(should_run),
+                // sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>.run_if(should_run),
+                sys_tick_instanced_buffer_update.run_if(should_run),
+                sys_tick_instanced_buffer_update_single.run_if(should_run),
+            ).chain().after(sys_calc_render_matrix_instance).in_set(ERunStageChap::CalcRenderMatrix)
         );
         app.add_systems(
 			Update,
@@ -101,7 +103,9 @@ impl crate::Plugin for PluginMesh {
                 sys_act_geomettry_instance_world_matrix.run_if(should_run),
                 sys_act_geomettry_instance_color.run_if(should_run),
                 sys_act_geomettry_instance_tilloff.run_if(should_run),
-            ).chain().before(sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>)
+            // ).chain().before(sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>)
+            ).chain().in_set(ERunStageChap::Command)
+            // .before(sys_tick_instanced_buffer_update)
         );
 
         app.add_systems(

@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::*;
+use pi_scene_context::{prelude::*, geometry::instance::instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
 
 use crate::base::*;
@@ -440,9 +440,7 @@ pub fn sys_update_buffer(
     >,
     meshes: Query<(&GlobalEnable, &GeometryID)>,
     mut meshrenderenables: Query<&mut RenderGeometryEable>,
-    mut worldmatrixbuffers: Query<&mut InstanceBufferWorldMatrix>,
-    mut colorbuffers: Query<&mut InstanceBufferColor>,
-    mut uvbuffers: Query<&mut InstanceBufferTillOff>,
+    instanceinfos: Query<&InstancedInfo>,
     mut slots: (
         Query<&mut AssetResVBSlot01>,
         Query<&mut AssetResVBSlot02>,
@@ -461,6 +459,7 @@ pub fn sys_update_buffer(
         Query<&mut AssetResVBSlot15>,
         Query<&mut AssetResVBSlot16>,
     ),
+    mut instancedcache: ResMut<InstanceBufferAllocator>,
     mut allocator: ResMut<VertexBufferAllocator3D>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
@@ -471,9 +470,10 @@ pub fn sys_update_buffer(
     // log::warn!("ParticleBuffer: ");
     particle_sys.iter().for_each(
         |(
-            entity, state, time, ids, scalings, rotations, positions, directions, emitmatrixs,
+            entity, state, _time, ids, scalings, rotations, positions, directions, emitmatrixs,
             colors, uvs
         )| {
+            // log::warn!("sys_update_buffer A");
             if state.playing == false {
                 if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
                     *rendergeometry = RenderGeometryEable(false);
@@ -481,125 +481,88 @@ pub fn sys_update_buffer(
                 }
             }
 
-            if time.running_delta_ms <= 0 { return; }
+            // if time.running_delta_ms <= 0 { return; }
+            if let Ok((enable, idgeo)) = meshes.get(entity) {
 
-            let length = ids.actives.len();
-
-            // log::warn!("sys_update_buffer");
-            if let Ok(calculator) = calculators.get(ids.calculator.0) {
-                let mut datamatrix: Vec<f32> = Vec::with_capacity(length * 16);
-                let mut datacolors: Vec<f32> = Vec::with_capacity(length * 4);
-                let mut datauvs: Vec<f32> = Vec::with_capacity(length * 4);
+                if enable.0 == false { return; }
                 
-                let renderalign = calculator.render_align();
-                let updatebuffer = renderalign.is_some();
-                // log::warn!("ActiveCount: {:?}", length);
+                let id_geo = idgeo.0;
+                if let Ok(instanceinfo) = instanceinfos.get(id_geo) {
 
-                let mut emitposition = Vector3::zeros();
-                let zero = Vector3::zeros();
+                    let length = ids.actives.len();
 
-                ids.actives.iter().for_each(|idx| {
-                    let scaling = scalings.get(*idx).unwrap();
-                    let eulers = rotations.get(*idx).unwrap();
-
-                    let mut translation = positions.get(*idx).unwrap().clone();
-                    // log::warn!("LOCAL: {:?}", translation);
-
-                    translation = translation + calculator.pivot.clone();
-
-                    let direction = directions.get(*idx).unwrap();
-                    let emitmatrix = emitmatrixs.get(*idx).unwrap();
-                    let color = colors.get(*idx).unwrap();
-                    let uv = uvs.get(*idx).unwrap();
-                    let mut g_velocity = Vector3::zeros();
-
-                    CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
-                    CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
-                    // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
-                    let vlen = CoordinateSytem3::length(&g_velocity);
-                    // log::warn!("Velocity: {:?}", g_velocity);
-
-                    let matrix = if let Some(renderalign) = renderalign {
-                        let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
-                        // log::warn!("rotation : {:?}", rotation);
-                        let mut matrix = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
+                    // log::warn!("sys_update_buffer B");
+                    if let Ok(calculator) = calculators.get(ids.calculator.0) {
+                        let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
                         
-                        let mut local = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
-                        // log::warn!("a MAREIX: {:?}", matrix);
-                        matrix = matrix * local;
-            
-                        if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
-                            matrix = matrix * local;
-                        }
-                        matrix
-                    } else {
-                        // let mut matrix = Matrix::identity();
-                        // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
-                        let matrix = &emitmatrix.matrix;
-                        let mut local = Matrix::identity();
-                        CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
-                        // log::warn!("MAREIX: {:?}", matrix);
-                        // log::warn!("LOCAL: {:?}", local);
-                        matrix * local
-                    };
+                        let renderalign = calculator.render_align();
+                        let updatebuffer = renderalign.is_some();
+                        // log::warn!("ActiveCount: {:?}", length);
 
-                    if updatebuffer {
-                        // log::warn!("MAREIX: {:?}", matrix);
-                        // log::warn!("Color: {:?}", color);
-                        // log::warn!("UV: {:?}", uv);
-                        matrix.as_slice().iter().for_each(|v| { datamatrix.push(*v); });
-                        color.as_slice().iter().for_each(|v| { datacolors.push(*v); });
-                        datauvs.push(uv.uscale);datauvs.push(uv.vscale);datauvs.push(uv.uoffset);datauvs.push(uv.voffset);
-                    }
-                });
+                        let mut emitposition = Vector3::zeros();
+                        let zero = Vector3::zeros();
 
-                if updatebuffer && length == 0 {
-                    let mut matrix = Matrix::identity();matrix.append_scaling_mut(0.000001); matrix.append_translation_mut(&Vector3::new(0., -9999999.0, 0.));
-                    datamatrix = matrix.as_slice().to_vec();
-                    datacolors = Vector4::zeros().as_slice().to_vec();
-                    datauvs = Vector4::zeros().as_slice().to_vec();
-                }
-                
-                // ptime1 = pi_time::Instant::now();
-                // log::warn!("update_buffer Calc: {:?}", ptime1 - ptime);
-                // ptime = ptime1;
+                        ids.actives.iter().for_each(|idx| {
+                            let scaling = scalings.get(*idx).unwrap();
+                            let eulers = rotations.get(*idx).unwrap();
 
-                if updatebuffer {
-                    if let Ok((enable, idgeo)) = meshes.get(entity) {
-                        let id_geo = idgeo.0;
-                        if enable.0 {
-                            if let Ok(mut buffer) = worldmatrixbuffers.get_mut(id_geo) {
-                                // log::warn!("sys_update_buffer A");
-                                let data = bytemuck::pod_collect_to_vec(&datamatrix);
-                                instance_buffer_update::<InstanceBufferWorldMatrix>(
-                                    data, id_geo,
-                                    &mut buffer,
-                                    &mut slots, &mut allocator,
-                                    &device, &queue
-                                );
+                            let mut translation = positions.get(*idx).unwrap().clone();
+                            // log::warn!("LOCAL: {:?}", translation);
+
+                            translation = translation + calculator.pivot.clone();
+
+                            let direction = directions.get(*idx).unwrap();
+                            let emitmatrix = emitmatrixs.get(*idx).unwrap();
+                            let color = colors.get(*idx).unwrap();
+                            let uv = uvs.get(*idx).unwrap();
+                            let mut g_velocity = Vector3::zeros();
+
+                            CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
+                            CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
+                            // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
+                            let vlen = CoordinateSytem3::length(&g_velocity);
+                            // log::warn!("Velocity: {:?}", g_velocity);
+
+                            let matrix = if let Some(renderalign) = renderalign {
+                                let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
+                                // log::warn!("rotation : {:?}", rotation);
+                                let mut matrix = Matrix::identity();
+                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
+                                
+                                let mut local = Matrix::identity();
+                                CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
+                                // log::warn!("a MAREIX: {:?}", matrix);
+                                matrix = matrix * local;
+                    
+                                if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
+                                    matrix = matrix * local;
+                                }
+                                matrix
+                            } else {
+                                // let mut matrix = Matrix::identity();
+                                // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
+                                let matrix = &emitmatrix.matrix;
+                                let mut local = Matrix::identity();
+                                CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
+                                // log::warn!("MAREIX: {:?}", matrix);
+                                // log::warn!("LOCAL: {:?}", local);
+                                matrix * local
+                            };
+
+                            if updatebuffer {
+                                // log::warn!("MAREIX: {:?}", matrix);
+                                // log::warn!("Color: {:?}", color);
+                                // log::warn!("UV: {:?}", uv);
+                                matrix.as_slice().iter().for_each(|v| { collectdata.push(*v); });
+                                color.as_slice().iter().for_each(|v| { collectdata.push(*v); });
+                                collectdata.push(uv.uscale);collectdata.push(uv.vscale);collectdata.push(uv.uoffset);collectdata.push(uv.voffset);
                             }
-                            if let Ok(mut buffer) = colorbuffers.get_mut(id_geo) {
-                                // log::warn!("sys_update_buffer B");
-                                let data = bytemuck::pod_collect_to_vec(&datacolors);
-                                instance_buffer_update::<InstanceBufferColor>(
-                                    data, id_geo,
-                                    &mut buffer,
-                                    &mut slots, &mut allocator,
-                                    &device, &queue
-                                );
-                            }
-                            if let Ok(mut buffer) = uvbuffers.get_mut(id_geo) {
-                                // log::warn!("sys_update_buffer C");
-                                let data = bytemuck::pod_collect_to_vec(&datauvs);
-                                instance_buffer_update::<InstanceBufferTillOff>(
-                                    data, id_geo,
-                                    &mut buffer,
-                                    &mut slots, &mut allocator,
-                                    &device, &queue
-                                );
-                            }
+                        });
+
+                        if updatebuffer {
+                            // log::warn!("sys_update_buffer {}", updatebuffer);
+                            let collected = bytemuck::cast_slice(&collectdata);
+                            reset_instances_buffer(id_geo, &instanceinfo, collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
                         }
                     }
                 }

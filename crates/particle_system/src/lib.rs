@@ -20,7 +20,7 @@ pub mod prelude;
 use base::*;
 use command::*;
 use command_sys::*;
-use pi_scene_context::{transforms::transform_node_sys::sys_world_matrix_calc, prelude::sys_dispose_ready};
+use pi_scene_context::{transforms::transform_node_sys::sys_world_matrix_calc, prelude::{sys_dispose_ready, sys_tick_instanced_buffer_update}};
 use pi_trail_renderer::TrailBuffer;
 use system::*;
 
@@ -98,10 +98,10 @@ impl Plugin for PluginParticleSystem {
             sys_emitmatrix.run_if(should_run).after(sys_world_matrix_calc).in_set(ERunStageChap::CalcWorldMatrix),
         );
         app.add_systems(Update, 
-            sys_update_buffer.run_if(should_run).in_set(ERunStageChap::Uniform),
+            sys_update_buffer.run_if(should_run).after(sys_tick_instanced_buffer_update).in_set(ERunStageChap::CalcRenderMatrix),
         );
         app.add_systems(Update, 
-            sys_update_buffer_trail.run_if(should_run).after(sys_update_buffer).in_set(ERunStageChap::Uniform),
+            sys_update_buffer_trail.run_if(should_run).after(sys_update_buffer).in_set(ERunStageChap::CalcRenderMatrix),
         );
         app.add_systems(
 			Update, 

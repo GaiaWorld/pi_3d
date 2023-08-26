@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
-use pi_hash::{XHashMap, XHashSet};
+use pi_hash::XHashSet;
 use pi_scene_math::{Vector3, Matrix, coordiante_system::CoordinateSytem3, Number};
 
 use crate::transforms::prelude::*;

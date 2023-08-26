@@ -13,7 +13,7 @@ use self::{
     load::sys_vertex_buffer_loaded,
     command::*,
     command_sys::*,
-    base::*,
+    base::*, instance::instanced_buffer::InstanceBufferAllocator,
 };
 
 pub mod base;
@@ -78,7 +78,12 @@ impl Plugin for PluginGeometry {
             app.insert_resource(AssetCfgVertexBuffer3D::default());
             app.world.get_resource::<AssetCfgVertexBuffer3D>().unwrap()
         };
-        app.insert_resource(VertexBufferAllocator3D(VertexBufferAllocator::new(cfg.0.min, cfg.0.timeout)));
+        let device = app.world.get_resource::<PiRenderDevice>().unwrap();
+        let queue = app.world.get_resource::<PiRenderQueue>().unwrap();
+        let mut allocator = VertexBufferAllocator3D(VertexBufferAllocator::new(cfg.0.min, cfg.0.timeout));
+        let instanceallocator = InstanceBufferAllocator::new(1024 * 1024, &mut allocator, device, queue);
+        app.insert_resource(allocator);
+        app.insert_resource(instanceallocator);
         app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 10 * 1024, 10 * 1000));
         app.insert_resource(GeometryVBLoader::default());
 
@@ -99,6 +104,10 @@ impl Plugin for PluginGeometry {
                 sys_vertex_buffer_loaded_05,
                 sys_vertex_buffer_loaded_06,
             ).chain().in_set(ERunStageChap::Uniform)
+        );
+
+        app.add_systems(Update, 
+            sys_instanced_buffer_upload.in_set(ERunStageChap::Uniform)
         );
         
         app.add_systems(Update, 

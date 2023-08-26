@@ -1,28 +1,24 @@
 use pi_engine_shell::prelude::*;
 
-use pi_scene_context::prelude::*;
-
-use crate::UnlitShader;
-
 use super::command::{ActionListUnlitMaterial, EUnlitMaterialCommand};
 
 pub struct ActionUnlitMaterial;
 impl ActionUnlitMaterial {
-    pub fn create(
-        app: &mut App,
-        _name: String,
-        pass: EPassTag,
-    ) -> Entity {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
+    // pub fn create(
+    //     app: &mut App,
+    //     _name: String,
+    //     pass: EPassTag,
+    // ) -> Entity {
+    //     let mut queue = CommandQueue::default();
+    //     let mut commands = Commands::new(&mut queue, &app.world);
 
-        let entity = commands.spawn_empty().id();
-        queue.apply(&mut app.world);
+    //     let entity = commands.spawn_empty().id();
+    //     queue.apply(&mut app.world);
 
-        ActionMaterial::init(app, entity, KeyShaderMeta::from(UnlitShader::KEY), pass);
+    //     ActionMaterial::init(app, entity, KeyShaderMeta::from(UnlitShader::KEY), pass);
 
-        entity
-    }
+    //     entity
+    // }
     pub fn emissive_texture(
         app: &mut App,
         entity: ObjectID,

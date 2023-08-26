@@ -32,7 +32,7 @@ use super::{
             (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EPassTag),
             Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<BindEffect>)>
         >,
-        mut passes: Query<(&mut PassReady, &mut PassBindEffectValue)>,
+        mut passes: Query<(&mut PassEffectReady, &mut PassBindEffectValue)>,
     ) {
         // log::info!("MaterialBind : ");
         materials.iter().for_each(|(effect_key, effect, bind, list, _pass)| {
@@ -48,7 +48,7 @@ use super::{
                         None
                     };
                     
-                    *passready = PassReady(data);
+                    *passready = PassEffectReady(data);
                     *passbind = PassBindEffectValue(Some(bind.bind.clone()));
                 }
             });
@@ -74,7 +74,7 @@ use super::{
             (&EffectTextureSamplersComp, &MaterialRefs, &EPassTag, &AssetKeyShaderEffect, &AssetResShaderEffectMeta),
             Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<EffectTextureSamplersComp>, )>
         >,
-        mut passes: Query<(&mut PassReady, &mut PassBindEffectTextures)>,
+        mut passes: Query<(&mut PassEffectReady, &mut PassBindEffectTextures)>,
     ) {
         materials.iter().for_each(|(bind, list, _pass, effect_key, meta)| {
             list.iter().for_each(|target| {
@@ -91,7 +91,7 @@ use super::{
                     //     commands.entity(passid.id()).insert(PassBindEffectTextures(Some(bind.0.clone()))).insert(PassReady(data));
                     // }
                     let data = Some((effect_key.0.clone(), meta.0.clone()));
-                    *passready = PassReady(data);
+                    *passready = PassEffectReady(data);
                     *passbind = PassBindEffectTextures(Some(bind.0.clone()));
                 }
             });

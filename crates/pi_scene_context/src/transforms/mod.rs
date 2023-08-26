@@ -1,6 +1,8 @@
 
 use pi_engine_shell::prelude::*;
 
+use crate::object::sys_dispose_ready;
+
 use self::{
     command::*,
     command_sys::*,
@@ -57,6 +59,10 @@ impl Plugin for PluginTransformNode {
             ).chain().in_set(ERunStageChap::CalcWorldMatrix)
         );
 
+        app.add_systems(
+			Update,
+            sys_dispose_about_transform_node.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+        );
     }
 }
 

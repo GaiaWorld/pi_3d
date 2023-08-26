@@ -141,7 +141,7 @@ impl Plugin for PluginMaterial {
                 sys_texture_ready06.run_if(should_run),
                 sys_texture_ready07.run_if(should_run),
                 sys_texture_ready08.run_if(should_run),
-            ).in_set(ERunStageChap::Uniform)
+            ).in_set(ERunStageChap::Command)
         );
         app.add_systems(
 			Update,

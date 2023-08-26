@@ -1,13 +1,15 @@
 
+use std::sync::Arc;
+
 use pi_engine_shell::prelude::*;
-use pi_scene_math::Vector4;
+use pi_scene_math::{Vector4, Matrix};
 
 use crate::{
     geometry::vertex_buffer_useinfo::*,
-    prelude::{AbstructMesh, GlobalEnable, InstanceRGB, InstanceAlpha, InstanceColor, InstanceColorDirty},
+    prelude::{AbstructMesh, GlobalEnable, InstanceRGB, InstanceAlpha, InstanceColor, InstanceColorDirty, InstanceTillOff, RenderWorldMatrix, InstanceTillOffDirty, InstanceWorldMatrixDirty, DisposeReady, RenderGeometryEable, MeshInstanceState},
 };
 
-use super::*;
+use super::{*, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
 
 ///
 /// T: Mesh 中 保存实例数据的buffer
@@ -38,21 +40,19 @@ use super::*;
         });
     }
 
-    pub fn sys_tick_instance_buffer_update<
-        D: TInstanceData + Component,
-        T: TInstanceBuffer + Component,
-        F: TInstanceFlag + Component
-    >(
-        actives: Query<&GlobalEnable, With<AbstructMesh>>,
-        instances: Query<&D>,
+    pub fn sys_tick_instanced_buffer_update_single(
+        actives: Query<(&GlobalEnable, &InstanceMesh), With<AbstructMesh>>,
+        instancematrixs: Query<&RenderWorldMatrix>,
+        instancecolors: Query<&InstanceColor>,
+        instancetilloffs: Query<&InstanceTillOff>,
         mut sources: Query<
             (
-                ObjectID,
-                &InstanceSourceRefs, &GeometryID, &mut F,
+                Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable
             ),
-            Or<(Changed<F>, Changed<DirtyInstanceSourceRefs>)>
+            Or<(Changed<InstanceColorDirty>, Changed<InstanceTillOffDirty>, Changed<InstanceWorldMatrixDirty>, Changed<InstanceSourceRefs>)>
         >,
-        mut geometrys: Query<&mut T>,
+        dispoeds: Query<&DisposeReady>,
+        geometrys: Query<&InstancedInfo>,
         mut slots: (
             Query<&mut AssetResVBSlot01>,
             Query<&mut AssetResVBSlot02>,
@@ -71,129 +71,171 @@ use super::*;
             Query<&mut AssetResVBSlot15>,
             Query<&mut AssetResVBSlot16>,
         ),
+        mut instancedcache: ResMut<InstanceBufferAllocator>,
         mut allocator: ResMut<VertexBufferAllocator3D>,
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
     ) {
-        // let time = pi_time::Instant::now();
-        sources.iter_mut().for_each(|(
-            _,
-            inslist, id_geo, mut flag,
-        )| {
-            // log::warn!("Instance Data Len: {:?}", data.len());
+        let defaultcolor = InstanceColor(Vector4::new(1., 1., 1., 1.));
+        let defaulttilloff = InstanceTillOff(Vector4::new(1., 1., 0., 0.));
+        let defaultmatrix = RenderWorldMatrix(Matrix::identity());
+        sources.iter_mut().for_each(|(idsource, instances, idgeo, meshinsstate, mut renderenable)| {
+            if let Ok(disposed) = dispoeds.get(idsource) {
+                if disposed.0 == true { return; }
+                if meshinsstate.use_single_instancebuffer == false { return; }
+                // *renderenable = RenderGeometryEable(false);
 
-            // // log::trace!("SysInstanceBufferUpdateFunc:");
-            // if flag.dirty() == false {
-            //     return;
-            // }
-
-            let id_geo = id_geo.0.clone();
-            if let Ok(mut buffer) = geometrys.get_mut(id_geo.clone()) {
-                // log::debug!("SysInstanceBufferUpdateFunc: A, {:?}", inslist.len());
-                let mut list = vec![];
-                inslist.iter().for_each(|insid| {
-                    if let (Ok(instance), Ok(abstructmesh)) = (instances.get(insid.clone()), actives.get(insid.clone())) {
-                        if abstructmesh.0 {
-                            list.push(instance);
-                        }
+                if let Ok(buffer) = geometrys.get(idgeo.0) {
+                    if buffer.state > 0 {
+                        *renderenable = RenderGeometryEable(false);
                     }
-                });
-
-                // if list.len() == 0 {
-                //     //
-                // } else {
-                    flag.reset();
+                    if instances.len() > 0 {
+                        let mut idx: u32 = 0;
+                        let mut collected: Vec<u8> = vec![];
+                        instances.iter().for_each(|instance| {
+                            let instance = *instance;
+                            if let (Ok((enable, _)), Ok(disposed)) = (actives.get(instance), dispoeds.get(instance)) {
+                                if enable.0 == false || disposed.0 == true { return; }
     
-                    let data = D::collect(&list);
-                    // log::debug!("InstanceDataLen: {:?}", data.len());
-                    // let data = if data.len() > 0 {
-                    //     data
-                    // } else {
-                    //     return;
-                    // };
+                                if (buffer.state & InstanceState::INSTANCE_INDEX) == InstanceState::INSTANCE_INDEX {
+                                    bytemuck::cast_slice(&[idx]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                                if (buffer.state & InstanceState::INSTANCE_BASE) == InstanceState::INSTANCE_BASE {
+                                    if let Ok(item) = instancematrixs.get(instance) {
+                                        bytemuck::cast_slice(item.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    } else {
+                                        bytemuck::cast_slice(defaultmatrix.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    }
+                                }
+                                if (buffer.state & InstanceState::INSTANCE_COLOR) == InstanceState::INSTANCE_COLOR {
+                                    if let Ok(item) = instancecolors.get(instance) {
+                                        bytemuck::cast_slice(item.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    } else {
+                                        bytemuck::cast_slice(defaultcolor.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    }
+                                }
+                                if (buffer.state & InstanceState::INSTANCE_TILL_OFF_1) == InstanceState::INSTANCE_TILL_OFF_1 {
+                                    if let Ok(item) = instancetilloffs.get(instance) {
+                                        bytemuck::cast_slice(item.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    } else {
+                                        bytemuck::cast_slice(defaulttilloff.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    }
+                                }
+                            }
     
-                    // log::debug!("SysInstanceBufferUpdateFunc: B, {:?}", buffer.slot());
-                    instance_buffer_update::<T>(
-                        data,
-                        id_geo,
-                        &mut buffer,
-                        &mut slots, &mut allocator,
-                        &device, &queue
-                    );
-                // }
+                            idx += 0;
+                        });
+                        reset_instances_buffer(idgeo.0, buffer, &collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
+                    }
+                }
             }
         });
-        
-        // let time1 = pi_time::Instant::now();
-        // log::debug!("SysInstanceBufferUpdate<{}>: {:?}", T::display_name(), time1 - time);
     }
-// }
 
-// pub fn geometry_update_instance_buffer<T: TInstanceBuffer>(
-//     data: Option<Vec<u8>>,
-//     id_geo: Entity,
-//     buffer: &mut T,
-//     geoloader: &mut GeometryVBLoader,
-//     vb_data_map: &mut VertexBufferDataMap3D,
-// ) {
-//     let key = buffer.id();
 
-//     match buffer.slot() {
-//         EVertexBufferSlot::Slot01 => {
-//             geoloader.loader_01.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot02 => {
-//             geoloader.loader_02.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot03 => {
-//             geoloader.loader_03.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot04 => {
-//             geoloader.loader_04.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot05 => {
-//             geoloader.loader_05.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot06 => {
-//             geoloader.loader_06.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot07 => {
-//             geoloader.loader_07.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot08 => {
-//             geoloader.loader_08.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot09 => {
-//             geoloader.loader_09.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot10 => {
-//             geoloader.loader_10.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot11 => {
-//             geoloader.loader_11.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot12 => {
-//             geoloader.loader_12.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot13 => {
-//             geoloader.loader_13.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot14 => {
-//             geoloader.loader_14.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot15 => {
-//             geoloader.loader_15.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//         EVertexBufferSlot::Slot16 => {
-//             geoloader.loader_16.request_instance(id_geo, &key, data, vb_data_map);
-//         },
-//     }
-// }
+    pub fn sys_tick_instanced_buffer_update(
+        actives: Query<(&GlobalEnable, &InstanceMesh), With<AbstructMesh>>,
+        instancematrixs: Query<&RenderWorldMatrix>,
+        instancecolors: Query<&InstanceColor>,
+        instancetilloffs: Query<&InstanceTillOff>,
+        mut sources: Query<
+            (
+                Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable
+            )
+        >,
+        dispoeds: Query<&DisposeReady>,
+        geometrys: Query<&InstancedInfo>,
+        mut slots: (
+            Query<&mut AssetResVBSlot01>,
+            Query<&mut AssetResVBSlot02>,
+            Query<&mut AssetResVBSlot03>,
+            Query<&mut AssetResVBSlot04>,
+            Query<&mut AssetResVBSlot05>,
+            Query<&mut AssetResVBSlot06>,
+            Query<&mut AssetResVBSlot07>,
+            Query<&mut AssetResVBSlot08>,
+            Query<&mut AssetResVBSlot09>,
+            Query<&mut AssetResVBSlot10>,
+            Query<&mut AssetResVBSlot11>,
+            Query<&mut AssetResVBSlot12>,
+            Query<&mut AssetResVBSlot13>,
+            Query<&mut AssetResVBSlot14>,
+            Query<&mut AssetResVBSlot15>,
+            Query<&mut AssetResVBSlot16>,
+        ),
+        instancedcache: Res<InstanceBufferAllocator>,
+        mut allocator: ResMut<VertexBufferAllocator3D>,
+        device: Res<PiRenderDevice>,
+        queue: Res<PiRenderQueue>,
+    ) {
+        let defaultcolor = InstanceColor(Vector4::new(1., 1., 1., 1.));
+        let defaulttilloff = InstanceTillOff(Vector4::new(1., 1., 0., 0.));
+        let defaultmatrix = RenderWorldMatrix(Matrix::identity());
+        sources.iter_mut().for_each(|(idsource, instances, idgeo, meshinsstate, mut renderenable)| {
+            if let Ok(disposed) = dispoeds.get(idsource) {
+                if disposed.0 == true { return; }
+                if meshinsstate.use_single_instancebuffer == true { return; }
+                // *renderenable = RenderGeometryEable(false);
 
-pub fn instance_buffer_update<T: TInstanceBuffer>(
-    data: Vec<u8>,
-    id_geo: Entity,
-    buffer: &mut T,
+                if let Ok(buffer) = geometrys.get(idgeo.0) {
+                    if buffer.state > 0 {
+                        *renderenable = RenderGeometryEable(false);
+                    }
+                    if instances.len() > 0 {
+                        let mut idx: u32 = 0;
+                        let mut collected: Vec<u8> = vec![];
+                        instances.iter().for_each(|instance| {
+                            let instance = *instance;
+                            if let (Ok((enable, _)), Ok(disposed)) = (actives.get(instance), dispoeds.get(instance)) {
+                                if enable.0 == false || disposed.0 == true { return; }
+    
+                                if (buffer.state & InstanceState::INSTANCE_INDEX) == InstanceState::INSTANCE_INDEX {
+                                    bytemuck::cast_slice(&[idx]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                                if (buffer.state & InstanceState::INSTANCE_BASE) == InstanceState::INSTANCE_BASE {
+                                    if let Ok(item) = instancematrixs.get(instance) {
+                                        bytemuck::cast_slice(item.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    } else {
+                                        bytemuck::cast_slice(defaultmatrix.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    }
+                                }
+                                if (buffer.state & InstanceState::INSTANCE_COLOR) == InstanceState::INSTANCE_COLOR {
+                                    if let Ok(item) = instancecolors.get(instance) {
+                                        bytemuck::cast_slice(item.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    } else {
+                                        bytemuck::cast_slice(defaultcolor.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    }
+                                }
+                                if (buffer.state & InstanceState::INSTANCE_TILL_OFF_1) == InstanceState::INSTANCE_TILL_OFF_1 {
+                                    if let Ok(item) = instancetilloffs.get(instance) {
+                                        bytemuck::cast_slice(item.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    } else {
+                                        bytemuck::cast_slice(defaulttilloff.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                    }
+                                }
+                            }
+    
+                            idx += 0;
+                        });
+                        reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
+                    }
+                }
+            }
+        });
+    }
+
+
+    pub fn sys_instanced_buffer_upload(
+        mut instancedcache: ResMut<InstanceBufferAllocator>,
+        queue: Res<PiRenderQueue>,
+    ) {
+        instancedcache.upload(&queue);
+    }
+
+pub fn reset_instances_buffer(
+    idgeo: Entity,
+    instancedinfo: &InstancedInfo,
+    collected: &[u8],
     slots: &mut (
         Query<&mut AssetResVBSlot01>,
         Query<&mut AssetResVBSlot02>,
@@ -212,140 +254,111 @@ pub fn instance_buffer_update<T: TInstanceBuffer>(
         Query<&mut AssetResVBSlot15>,
         Query<&mut AssetResVBSlot16>,
     ),
-    allocator: &mut VertexBufferAllocator,
-    device: &RenderDevice,
-    queue: &RenderQueue,
+    instancedcache: &mut InstanceBufferAllocator,
+    allocator: &mut VertexBufferAllocator3D,
+    device:&RenderDevice,
+    queue: &PiRenderQueue,
 ) {
-    // let key = buffer.id();
+    let data = instancedcache.collect(&collected, instancedinfo.bytes_per_instance(), allocator, &device, &queue);
+    let data = if let Some(data) = data {
+        EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
+    } else {
+        let data = instancedcache.instance_initial_buffer();
+        EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
+    };
 
-    match buffer.slot() {
-        EVertexBufferSlot::Slot01 => {
-            if let Ok(mut buffer) = slots.0.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
+    match instancedinfo.slot() {
+        EVertexBufferSlot::Slot01 => if let Ok(mut buffer) = slots.0.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot02 => if let Ok(mut buffer) = slots.1.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot03 => if let Ok(mut buffer) = slots.2.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot04 => if let Ok(mut buffer) = slots.3.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot05 => if let Ok(mut buffer) = slots.4.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot06 => if let Ok(mut buffer) = slots.5.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot07 => if let Ok(mut buffer) = slots.6.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot08 => if let Ok(mut buffer) = slots.7.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot09 => if let Ok(mut buffer) = slots.8.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot10 => if let Ok(mut buffer) = slots.9.get_mut(idgeo)  { buffer.0 = data; },
+        EVertexBufferSlot::Slot11 => if let Ok(mut buffer) = slots.10.get_mut(idgeo) { buffer.0 = data; },
+        EVertexBufferSlot::Slot12 => if let Ok(mut buffer) = slots.11.get_mut(idgeo) { buffer.0 = data; },
+        EVertexBufferSlot::Slot13 => if let Ok(mut buffer) = slots.12.get_mut(idgeo) { buffer.0 = data; },
+        EVertexBufferSlot::Slot14 => if let Ok(mut buffer) = slots.13.get_mut(idgeo) { buffer.0 = data; },
+        EVertexBufferSlot::Slot15 => if let Ok(mut buffer) = slots.14.get_mut(idgeo) { buffer.0 = data; },
+        EVertexBufferSlot::Slot16 => if let Ok(mut buffer) = slots.15.get_mut(idgeo) { buffer.0 = data; },
+    };
+
+}
+
+pub fn reset_instances_buffer_single(
+    idgeo: Entity,
+    instancedinfo: &InstancedInfo,
+    collected: &[u8],
+    slots: &mut (
+        Query<&mut AssetResVBSlot01>,
+        Query<&mut AssetResVBSlot02>,
+        Query<&mut AssetResVBSlot03>,
+        Query<&mut AssetResVBSlot04>,
+        Query<&mut AssetResVBSlot05>,
+        Query<&mut AssetResVBSlot06>,
+        Query<&mut AssetResVBSlot07>,
+        Query<&mut AssetResVBSlot08>,
+        Query<&mut AssetResVBSlot09>,
+        Query<&mut AssetResVBSlot10>,
+        Query<&mut AssetResVBSlot11>,
+        Query<&mut AssetResVBSlot12>,
+        Query<&mut AssetResVBSlot13>,
+        Query<&mut AssetResVBSlot14>,
+        Query<&mut AssetResVBSlot15>,
+        Query<&mut AssetResVBSlot16>,
+    ),
+    instancedcache: &InstanceBufferAllocator,
+    allocator: &mut VertexBufferAllocator3D,
+    device:&RenderDevice,
+    queue: &PiRenderQueue,
+) {
+    match instancedinfo.slot() {
+        EVertexBufferSlot::Slot01 => if let Ok(mut buffer) = slots.0.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot02 => if let Ok(mut buffer) = slots.1.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot03 => if let Ok(mut buffer) = slots.2.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot04 => if let Ok(mut buffer) = slots.3.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot05 => if let Ok(mut buffer) = slots.4.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot06 => if let Ok(mut buffer) = slots.5.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot07 => if let Ok(mut buffer) = slots.6.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot08 => if let Ok(mut buffer) = slots.7.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot09 => if let Ok(mut buffer) = slots.8.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot10 => if let Ok(mut buffer) = slots.9.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot11 => if let Ok(mut buffer) = slots.10.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot12 => if let Ok(mut buffer) = slots.11.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot13 => if let Ok(mut buffer) = slots.12.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot14 => if let Ok(mut buffer) = slots.13.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot15 => if let Ok(mut buffer) = slots.14.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+        EVertexBufferSlot::Slot16 => if let Ok(mut buffer) = slots.15.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
+    };
+}
+
+fn update_instanced_buffer_for_single(
+    oldbuffer: &mut EVerticesBufferUsage,
+    collected: &[u8],
+    instancedcache: &InstanceBufferAllocator,
+    allocator: &mut VertexBufferAllocator3D,
+    device:&RenderDevice,
+    queue: &PiRenderQueue,
+) {
+    match oldbuffer {
+        EVerticesBufferUsage::EVBRange(buffer) => {
+            let newbuffer = if instancedcache.check(buffer.buffer()) == false {
+                buffer.buffer().size() < collected.len() as u64
+            } else {
+                true
+            };
+            if newbuffer {
+                if let Some(newbuffer) = allocator.create_not_updatable_buffer(device, queue, collected, None) {
+                    *buffer = Arc::new(newbuffer);
                 }
+            } else {
+                queue.write_buffer(buffer.buffer(), 0, collected);
+                *buffer = buffer.clone();
             }
         },
-        EVertexBufferSlot::Slot02 => {
-            if let Ok(mut buffer) = slots.1.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot03 => {
-            if let Ok(mut buffer) = slots.2.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot04 => {
-            if let Ok(mut buffer) = slots.3.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot05 => {
-            if let Ok(mut buffer) = slots.4.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot06 => {
-            if let Ok(mut buffer) = slots.5.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot07 => {
-            if let Ok(mut buffer) = slots.6.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot08 => {
-            if let Ok(mut buffer) = slots.7.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot09 => {
-            if let Ok(mut buffer) = slots.8.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot10 => {
-            if let Ok(mut buffer) = slots.9.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot11 => {
-            if let Ok(mut buffer) = slots.10.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot12 => {
-            if let Ok(mut buffer) = slots.11.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot13 => {
-            if let Ok(mut buffer) = slots.12.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot14 => {
-            if let Ok(mut buffer) = slots.13.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot15 => {
-            if let Ok(mut buffer) = slots.14.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
-        EVertexBufferSlot::Slot16 => {
-            if let Ok(mut buffer) = slots.15.get_mut(id_geo) {
-                if let Some(newbuffer) = buffer.instance_update(device, queue, allocator, &data) {
-                    *buffer = newbuffer;
-                    return;
-                }
-            }
-        },
+        _ => { },
     }
 }

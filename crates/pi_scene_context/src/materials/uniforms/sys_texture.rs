@@ -82,7 +82,9 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             , (tex01, sampl01)
             , (tex02, sampl02)
         )| {
+            log::error!("texture_ready02: {:?}", binddesc.textures.len());
             if binddesc.textures.len() == 2 {
+                log::error!("texture_ready02: Ok");
                 let value = EffectTextureSamplersComp(
                     EffectTextureSamplers {
                         textures: (
@@ -129,6 +131,7 @@ pub type PluginTextureSlot06Load = PluginImageTextureViewLoad<TextureSlot06, Eff
             , (tex02, sampl02)
             , (tex03, sampl03)
         )| {
+            log::error!("texture_ready03: {:?}", binddesc.textures.len());
             if binddesc.textures.len() == 3 {
                 let value = EffectTextureSamplersComp(
                     EffectTextureSamplers {

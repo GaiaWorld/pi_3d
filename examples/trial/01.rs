@@ -42,7 +42,8 @@ fn setup(
     }));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+    let instancestate = 0;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., 10., 0.));
     matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
     let id_geo = commands.spawn_empty().id();
@@ -57,7 +58,7 @@ fn setup(
     {
         let key_curve0 =  pi_atom::Atom::from("test2"); 
         let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 1.)), LocalEulerAngles(Vector3::new(0., 3.1415926 * 4., 3.1415926 * 2.)), (60.) as FrameIndex, 30, EEasingMode::None);
+        let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 0.)), LocalEulerAngles(Vector3::new(0., 0. * 4., 0. * 2.)), (60.) as FrameIndex, 30, EEasingMode::None);
         
         let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) { curve } else {
             match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
@@ -72,7 +73,7 @@ fn setup(
     {
         let key_curve0 =  pi_atom::Atom::from("test0"); 
         let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(-10., -10., 0.)), LocalPosition(Vector3::new(20., 20., 0.)), (60.) as FrameIndex, 30, EEasingMode::SineInOut);
+        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(-10., -10., 0.)), LocalPosition(Vector3::new(0., 20., 0.)), (60.) as FrameIndex, 30, EEasingMode::SineInOut);
         
         let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) { curve } else {
             match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
@@ -85,29 +86,31 @@ fn setup(
         animegroupcmd.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
     }
 
-    let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 0.2;param.loop_mode = ELoopMode::PositivePly(None);
+    let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 1.;param.loop_mode = ELoopMode::PositivePly(None);
     animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
     let mut random = pi_wy_rng::WyRng::default();
-    for idx in 0..2000 {
+    for idx in 0..200 {
         // let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
         let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
-        if idx == 0 {
-            meshcmds.create.push(OpsMeshCreation::ops(scene, source));
-            matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-            let id_geo = commands.spawn_empty().id();
-            geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
-        } else {
+        // if idx == 0 {
+        //     meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+        //     matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
+        //     let id_geo = commands.spawn_empty().id();
+        //     let instancestate = 0;
+        //     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()), instancestate));
+        // } else {
             transformcmds.create.push(OpsTransformNode::ops(scene, source));
-        }
+        // }
         transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(source, random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0)));
-        transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(source, 4., 1., 1.));
+        transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(source, 4., 4., 4.));
+        transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(source, 3., 0., 0.));
 
         let trail = commands.spawn_empty().id();
         trailcmds.create.push(OpsTrail::ops(scene, source, idmat, trail));
-        trailcmds.age.push(OpsTrailAgeControl::ops(trail, 200));
+        trailcmds.age.push(OpsTrailAgeControl::ops(trail, 500));
         let mut blend = ModelBlend::default(); blend.combine();
         meshcmds.blend.push(OpsRenderBlend::ops(trail, blend));
         meshcmds.depth_compare.push(OpsDepthCompare::ops(trail, CompareFunction::Always));
@@ -151,6 +154,8 @@ pub fn main() {
     app.add_plugins(PluginTest);
     // app.add_systems(Update, base::sys_nodeinfo);
 
+    app.add_systems(Update, pi_3d::sys_info_node);
+    app.add_systems(Update, pi_3d::sys_info_resource);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_systems(Startup, setup);

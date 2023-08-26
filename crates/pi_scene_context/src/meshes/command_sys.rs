@@ -35,10 +35,10 @@ pub fn sys_create_mesh(
     empty: Res<SingleEmptyEntity>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
-
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity)| {
-        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty) == false {
+    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state)| {
+        // log::error!("Create Mesh");
+        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state) == false {
             disposereadylist.push(OpsDisposeReady::ops(entity));
         }
     });
@@ -60,7 +60,6 @@ pub fn sys_act_instanced_mesh_create(
             } else {
                 return;
             };
-
 
             let mut ins_cmds = if let Some(cmd) = commands.get_entity(instance) {
                 cmd
@@ -270,6 +269,7 @@ impl ActionMesh {
         scene: Entity,
         allocator: &mut ResBindBufferAllocator,
         empty: &SingleEmptyEntity,
+        state: MeshInstanceState,
     ) -> bool {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
@@ -289,6 +289,7 @@ impl ActionMesh {
 
         entitycmd.insert(MeshStates::default());
         entitycmd.insert(DirtyMeshStates);
+        entitycmd.insert(state);
 
         create_passobj::<Pass01,PassID01>(entity, commands, &empty);
         create_passobj::<Pass02,PassID02>(entity, commands, &empty);
@@ -354,21 +355,21 @@ impl ActionMesh {
             .insert(GeometryCullingMode::default())
             ;
     }
-    pub fn create(
-        app: &mut App,
-        scene: Entity,
-    ) -> Entity {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
+    // pub fn create(
+    //     app: &mut App,
+    //     scene: Entity,
+    // ) -> Entity {
+    //     let mut queue = CommandQueue::default();
+    //     let mut commands = Commands::new(&mut queue, &app.world);
 
-        let entity = commands.spawn_empty().id();
-        queue.apply(&mut app.world);
+    //     let entity = commands.spawn_empty().id();
+    //     queue.apply(&mut app.world);
 
-        let mut cmds = app.world.get_resource_mut::<ActionListMeshCreate>().unwrap();
-        cmds.push(OpsMeshCreation(scene, entity));
+    //     let mut cmds = app.world.get_resource_mut::<ActionListMeshCreate>().unwrap();
+    //     cmds.push(OpsMeshCreation(scene, entity));
 
-        entity
-    }
+    //     entity
+    // }
 
     // pub fn use_geometry(
     //     app: &mut App,

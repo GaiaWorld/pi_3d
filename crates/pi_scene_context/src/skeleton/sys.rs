@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-use crate::{transforms::transform_node::*, commands::*};
+use crate::{transforms::transform_node::*, commands::*, prelude::NodeChilds};
 
 use super::{skeleton::*, bone::*};
 
@@ -23,7 +23,7 @@ use super::{skeleton::*, bone::*};
             Changed<SkeletonInitBaseMatrix>
         >,
         mut bones: Query<(&BoneBaseMatrix, &mut BoneAbsolute, &mut BoneAbsoluteInv)>,
-        tree: EntityTree,
+        parents: Query<&NodeChilds>,
     ) {
         items.iter().for_each(|skeleton| {
             let root = skeleton.root;
@@ -36,7 +36,7 @@ use super::{skeleton::*, bone::*};
             };
             if let Some((node, abs)) = temp {
                 let temp_ids: Vec<(ObjectID, Matrix)> = vec![(node, abs)];
-                calc_bone(&mut bones, &tree, temp_ids);
+                calc_bone(&mut bones, temp_ids, &parents);
             }
         });
     }
@@ -102,8 +102,8 @@ use super::{skeleton::*, bone::*};
 
     fn calc_bone(
         bones: &mut Query<(&BoneBaseMatrix, &mut BoneAbsolute, &mut BoneAbsoluteInv)>,
-        tree: &EntityTree,
-        mut temp_ids: Vec<(ObjectID, Matrix)>
+        mut temp_ids: Vec<(ObjectID, Matrix)>,
+        parents: &Query<&NodeChilds>,
     ) {
             // 广度优先遍历 - 最大遍历到深度 65535
             let max = 128;
@@ -112,20 +112,30 @@ use super::{skeleton::*, bone::*};
                 let mut temp_list = vec![];
                 if temp_ids.len() > 0 && deep < max {
                     temp_ids.into_iter().for_each(|(p_id, p_abs)| {
-                        match tree.get_down(p_id) {
-                            Some(node_children_head) => {
-                                let node_children_head = node_children_head.head.0;
-                                tree.iter(node_children_head).for_each(|entity| {
-                                    calc_bone_one(
-                                        bones,
-                                        &mut temp_list,
-                                        entity,
-                                        &p_abs
-                                    );
-                                }); 
-                            },
-                            None => {},
+                        if let Ok(childs) = parents.get(p_id) {
+                            childs.iter().for_each(|child| {
+                                calc_bone_one(
+                                    bones,
+                                    &mut temp_list,
+                                    *child,
+                                    &p_abs
+                                );
+                            });
                         }
+                        // match tree.get_down(p_id) {
+                        //     Some(node_children_head) => {
+                        //         let node_children_head = node_children_head.head.0;
+                        //         tree.iter(node_children_head).for_each(|entity| {
+                        //             calc_bone_one(
+                        //                 bones,
+                        //                 &mut temp_list,
+                        //                 entity,
+                        //                 &p_abs
+                        //             );
+                        //         }); 
+                        //     },
+                        //     None => {},
+                        // }
                     });
                     deep += 1;
                 } else {

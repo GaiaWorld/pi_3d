@@ -57,21 +57,21 @@ pub fn create_by_gltf(
                                 attributes.push(VertexBufferDesc {
                                     key: KeyVertexBuffer::from(gltf.key_accessor(accessor.index()).as_str()),
                                     attrs: vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }],
-                                    range: None, step_mode: wgpu::VertexStepMode::Vertex, kind: EInstanceKind::None,
+                                    range: None, step_mode: wgpu::VertexStepMode::Vertex, instance: false
                                 });
                             },
                             pi_gltf::Semantic::Normals => {
                                 attributes.push(VertexBufferDesc {
                                     key: KeyVertexBuffer::from(gltf.key_accessor(accessor.index()).as_str()),
                                     attrs: vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }],
-                                    range: None, step_mode: wgpu::VertexStepMode::Vertex, kind: EInstanceKind::None,
+                                    range: None, step_mode: wgpu::VertexStepMode::Vertex, instance: false
                                 });
                             },
                             pi_gltf::Semantic::Tangents => {
                                 attributes.push(VertexBufferDesc {
                                     key: KeyVertexBuffer::from(gltf.key_accessor(accessor.index()).as_str()),
                                     attrs: vec![VertexAttribute { kind: EVertexDataKind::Tangent, format: wgpu::VertexFormat::Float32x4 }],
-                                    range: None, step_mode: wgpu::VertexStepMode::Vertex, kind: EInstanceKind::None,
+                                    range: None, step_mode: wgpu::VertexStepMode::Vertex, instance: false
                                 });
                             },
                             pi_gltf::Semantic::Colors(slot) => {
@@ -79,7 +79,7 @@ pub fn create_by_gltf(
                                     attributes.push(VertexBufferDesc {
                                         key: KeyVertexBuffer::from(gltf.key_accessor(accessor.index()).as_str()),
                                         attrs: vec![VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 }],
-                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, kind: EInstanceKind::None,
+                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, instance: false
                                     });
                                 }
                             },
@@ -97,7 +97,7 @@ pub fn create_by_gltf(
                                     attributes.push(VertexBufferDesc {
                                         key: KeyVertexBuffer::from(gltf.key_accessor(accessor.index()).as_str()),
                                         attrs: vec![VertexAttribute { kind, format: wgpu::VertexFormat::Float32x2 }],
-                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, kind: EInstanceKind::None,
+                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, instance: false
                                     });
                                 }
                             },
@@ -111,7 +111,7 @@ pub fn create_by_gltf(
                                     attributes.push(VertexBufferDesc {
                                         key: KeyVertexBuffer::from(gltf.key_accessor(accessor.index()).as_str()),
                                         attrs: vec![VertexAttribute { kind, format: wgpu::VertexFormat::Float32x4 }],
-                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, kind: EInstanceKind::None,
+                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, instance: false
                                     });
                                 }
                             },
@@ -125,7 +125,7 @@ pub fn create_by_gltf(
                                     attributes.push(VertexBufferDesc {
                                         key: KeyVertexBuffer::from(gltf.key_accessor(accessor.index()).as_str()),
                                         attrs: vec![VertexAttribute { kind, format: wgpu::VertexFormat::Float32x4 }],
-                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, kind: EInstanceKind::None,
+                                        range: None, step_mode: wgpu::VertexStepMode::Vertex, instance: false
                                     });
                                 }
                             },
@@ -151,10 +151,6 @@ pub fn create_by_gltf(
 
                     if let Some(extras) = meshinfo.extras() {
                         if extras.get("meshParticle").is_some() {
-                            attributes.push(VertexBufferDesc::instance_world_matrix());
-                            attributes.push(VertexBufferDesc::instance_color());
-                            attributes.push(VertexBufferDesc::instance_tilloff());
-
                             if let Some(calculator) = particlesys_cmds.calcultors.get(&gltf.key_particle_calculator(nodeinfo.index())) {
                                 let trailmesh = commands.spawn_empty().id();
                                 let trailgeo = commands.spawn_empty().id();
@@ -164,13 +160,15 @@ pub fn create_by_gltf(
                     }
 
                     let geo = commands.spawn_empty().id();
+                    let instancestate = InstanceState::INSTANCE_BASE & InstanceState::INSTANCE_COLOR & InstanceState::INSTANCE_TILL_OFF_1;
                     geometrycmd.create.push(OpsGeomeryCreate::ops(node, geo, attributes, indices));
 
                     // let matinfo = primitive.material();
                     // matinfo.
                 });
 
-                meshcmds.create.push(OpsMeshCreation::ops(scene, node));
+                let instancestate = 0;
+                meshcmds.create.push(OpsMeshCreation::ops(scene, node, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
             } else {
                 transformcmds.create.push(OpsTransformNode::ops(scene, node));
             };

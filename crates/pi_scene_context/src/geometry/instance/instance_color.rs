@@ -10,6 +10,11 @@ pub struct InstanceAlpha(pub Number);
 
 #[derive(Component)]
 pub struct InstanceColor(pub Vector4);
+impl Default for InstanceColor {
+    fn default() -> Self {
+        Self(Vector4::new(1., 1., 1., 1.))
+    }
+}
 impl TInstanceData for InstanceColor {
     fn vertex_kind(&self) -> EVertexDataKind {
         todo!()

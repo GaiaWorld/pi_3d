@@ -115,7 +115,8 @@ fn setup(
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let cube = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(scene, cube));
+    let instancestate = 0;
+    meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     meshcmds.indexrange.push(OpsMeshRenderIndiceRange::ops(cube, Some(3), Some(12)));
     meshcmds.cullmode.push(OpsCullMode::ops(cube, CullMode::Off));
     

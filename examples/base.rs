@@ -158,6 +158,13 @@ pub fn test_plugins() -> App {
     app.add_plugins(
         PluginSceneTimeFromPluginFrame
     );
+    app.add_plugins(
+        (
+            PluginParticleSystem,
+            pi_gltf2_load::PluginGLTF2Res,
+            pi_trail_renderer::PluginTrail
+        )
+    );
     app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
     app.world.get_resource_mut::<StateGlobal>().unwrap().debug = true;

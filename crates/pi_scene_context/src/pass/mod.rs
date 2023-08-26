@@ -295,8 +295,8 @@ impl TPassData<Option<wgpu::TextureFormat>> for PassDepthFormat {
 /// * 材质没有纹理时 在使用材质时即准备好
 /// * 材质有纹理时 在纹理准备好时才准备好
 #[derive(Component)]
-pub struct PassReady(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for PassReady {
+pub struct PassEffectReady(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
+impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for PassEffectReady {
     fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
     fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
 }

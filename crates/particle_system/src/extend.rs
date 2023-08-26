@@ -910,6 +910,9 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
 
                 ShapeEmitter::Sphere(temp)
             }
+            IShape::Point() => {
+                ShapeEmitter::Point(PointShapeEmitter::new())
+            },
         };
 
         if let (Some(pos), Some(rotation), Some(scale)) = (_pos, _rotation, _scale) {

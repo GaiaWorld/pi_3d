@@ -24,7 +24,7 @@ pub fn sys_act_trail_mesh_geometry(
             matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 
             // meshcreate.push(OpsMeshCreation::ops(id_scene, id_mesh, String::from("")));
-            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty);
+            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default());
 
             if let Some(mut cmd) = commands.get_entity(id_mesh) {
                 // log::warn!("Mesh Ok");

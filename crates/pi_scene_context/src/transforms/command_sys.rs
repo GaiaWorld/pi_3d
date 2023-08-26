@@ -1,9 +1,13 @@
+// use std::f32::consts::E;
+
 use pi_engine_shell::prelude::*;
 use pi_scene_math::*;
 
 use crate::flags::*;
 use crate::object::ActionEntity;
 use crate::prelude::DisposeReady;
+use crate::prelude::NodeChilds;
+use crate::prelude::NodeParent;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
@@ -27,22 +31,46 @@ pub fn sys_create_transform_node(
 
 pub fn sys_act_transform_parent(
     mut cmds: ResMut<ActionListTransformNodeParent>,
-    mut tree: EntityTreeMut,
+    mut parents: Query<&mut NodeChilds>,
+    mut childrens: Query<(&SceneID, &mut NodeParent)>,
     nodes: Query<&DisposeReady>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val, count)| {
-        if tree.get_down(val).is_some() && tree.get_up(entity).is_some() {
-            // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
-            // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
-            if let (Ok(state0), Ok(state1)) = (nodes.get(entity), nodes.get(val)) {
-                if state0.0 == false && state1.0 == false {
-                    ActionTransformNode::tree_modify(&mut tree, entity, val);
+    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, idparent, count)| {
+        if let Ok(state0) = nodes.get(entity) {
+            if state0.0 { return; }
+            let mut oldparent = None;
+            let mut newparent = None;
+            if let Ok(state1) = nodes.get(idparent) {
+                if state1.0 == false && parents.contains(idparent) {
+                    if let Ok((_, mut parent)) = childrens.get_mut(entity) {
+                        oldparent = parent.0;
+                        newparent = Some(idparent);
+                        parent.0 = newparent;
+                    }
+                } else if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
+                        oldparent = parent.0;
+                        newparent = Some(idscene.0);
+                        parent.0 = newparent;
+                }
+            } else {
+                if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
+                    oldparent = parent.0;
+                    newparent = Some(idscene.0);
+                    parent.0 = newparent;
                 }
             }
-        } else {
-            if count < 2 {
-                cmds.push(OpsTransformNodeParent(entity, val, count + 1));
+            if let Some(oldparent) = oldparent {
+                if let Ok(mut childs) = parents.get_mut(oldparent) {
+                    childs.remove(&entity);
+                }
             }
+            if let Some(newparent) = newparent {
+                if let Ok(mut childs) = parents.get_mut(newparent) {
+                    childs.insert(entity);
+                }
+            }
+        } else if count < 2 {
+            cmds.push(OpsTransformNodeParent(entity, idparent, count + 1));
         }
     });
 }
@@ -149,24 +177,27 @@ impl ActionTransformNode {
     pub(crate) fn init_for_tree(
         commands: &mut EntityCommands,
     ) {
-        commands.insert(Down::default())
-            .insert(Up::default())
-            .insert(Layer::default())
+        commands
+            // .insert(Down::default())
+            // .insert(Up::default())
+            // .insert(Layer::default())
+            .insert(NodeChilds::default())
+            .insert(NodeParent(None))
             .insert(Enable::default())
             .insert(RecordEnable::default())
             .insert(GlobalEnable(true))
             ;
     }
 
-    pub(crate) fn tree_modify(
-        tree: &mut EntityTreeMut,
-        child: Entity,
-        parent: Entity,
-    ) {
-        // log::warn!("InsertChild");
-        // log::warn!("Tree Remove {:?}", child);
-        tree.remove(child);
-        // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
-        tree.insert_child(child, parent, 0);
-    }
+    // pub(crate) fn tree_modify(
+    //     tree: &mut EntityTreeMut,
+    //     child: Entity,
+    //     parent: Entity,
+    // ) {
+    //     // log::warn!("InsertChild");
+    //     // log::warn!("Tree Remove {:?}", child);
+    //     tree.remove(child);
+    //     // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
+    //     tree.insert_child(child, parent, 0);
+    // }
 }

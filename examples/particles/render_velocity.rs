@@ -53,14 +53,12 @@ fn setup(
             for _k in 0..temp {
                 let _item = {
                     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+                    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
+                    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
                     meshcmds.blend.push(OpsRenderBlend::Blend(source, ModelBlend::one_one()));
                     let id_geo = commands.spawn_empty().id();
-                    let mut attrs = QuadBuilder::attrs_meta();
+                    let attrs = QuadBuilder::attrs_meta();
                     // ParticleSystem Add
-                    attrs.push(VertexBufferDesc::instance_world_matrix());
-                    attrs.push(VertexBufferDesc::instance_color());
-                    attrs.push(VertexBufferDesc::instance_tilloff());
                     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(QuadBuilder::indices_meta())));
                     //
                     let syskey = String::from("Test");
