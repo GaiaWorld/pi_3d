@@ -6,7 +6,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
 use pi_node_materials::prelude::*;
-use pi_particle_system::PluginParticleSystem;
+use pi_particle_system::{PluginParticleSystem, prelude::ResParticleCommonBuffer};
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::{cube::*, quad::PluginQuadBuilder};
 use unlit_material::*;
@@ -184,7 +184,9 @@ pub fn test_plugins_with_gltf() -> App {
         primary_window.resolution.set_physical_resolution(800, 600);
     }
 
-    app.insert_resource(AssetMgrConfigs::default());
+    let mut cfg = AssetMgrConfigs::default();
+    cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 100  });
+    app.insert_resource(cfg);
     app.add_plugins(
         (
             InputPlugin::default(),

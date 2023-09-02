@@ -27,7 +27,7 @@ impl OpsMaterialUse {
 pub type ActionListMaterialUse = ActionList<OpsMaterialUse>;
 
 /// 材质属性操作 当没有找到目标材质时,最多等待 MATERIAL_UNIFORM_OPS_WAIT_FRAME 帧, 便抛弃该操作
-pub const MATERIAL_UNIFORM_OPS_WAIT_FRAME: u16 = 1200;
+pub const MATERIAL_UNIFORM_OPS_WAIT_FRAME: u16 = 8;
 
 pub struct OpsUniformMat4(pub(crate) Entity, pub(crate) Atom, pub(crate) [f32;16], pub(crate) u16);
 impl OpsUniformMat4 {

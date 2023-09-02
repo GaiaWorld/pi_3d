@@ -8,6 +8,8 @@ use pi_animation::animation::AnimationInfo;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_curves::curve::frame_curve::FrameCurve;
 
+use crate::prelude::Performance;
+
 use super::base::*;
 use super::command::*;
 
@@ -184,9 +186,10 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     type_ctx: Res<TypeAnimeContext<D>>,
     runinfos: Res<GlobalAnimeAbout>,
     mut items: Query<&mut D>,
+    mut performance: ResMut<Performance>,
     // empty: Res<SingleEmptyEntity>,
 ) {
-    // let time0 = pi_time::Instant::now();
+    let time0 = pi_time::Instant::now();
 
     let ty = type_ctx.ctx.ty();
     // log::warn!("Anime Run ");
@@ -211,12 +214,15 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
                 if enable {
                     *item = last_value;
                 }
+            } else {
+                // log::warn!("Animation Target NotFound:");
             }
         }
     } else {
         log::trace!("Not Found Anime Type: {}", ty);
     }
 
+    performance.animation += (pi_time::Instant::now() - time0).as_micros() as u32;
     // let time1 = pi_time::Instant::now();
     // log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
 }

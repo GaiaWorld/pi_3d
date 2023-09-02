@@ -6,10 +6,11 @@ use crate::animation::*;
 
 
 pub fn sys_material_anime_init(
-    materials: Query<(Entity, &BindEffect), Changed<BindEffect>>,
+    materials: Query<(Entity, &BindEffect), Added<BindEffect>>,
     mut commands: Commands,
 ) {
     materials.iter().for_each(|(entity, bindeffect)| {
+        // log::warn!("Mat New");
         let info = MaterialAnimeSlots::new(&bindeffect.0);
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd
@@ -29,6 +30,21 @@ pub fn sys_material_anime_init(
             .insert(OpacityTexUScale::default())
             .insert(OpacityTexVOffset::default())
             .insert(OpacityTexVScale::default())
+            .insert(RecordAlpha::default())
+            .insert(RecordCutoff::default())
+            .insert(RecordMaskCutoff::default())
+            .insert(RecordMainColor::default())
+            .insert(RecordMainTexUOffset::default())
+            .insert(RecordMainTexUScale::default())
+            .insert(RecordMainTexVScale::default())
+            .insert(RecordMaskTexUOffset::default())
+            .insert(RecordMaskTexUScale::default())
+            .insert(RecordMaskTexVOffset::default())
+            .insert(RecordMaskTexVScale::default())
+            .insert(RecordOpacityTexUOffset::default())
+            .insert(RecordOpacityTexUScale::default())
+            .insert(RecordOpacityTexVOffset::default())
+            .insert(RecordOpacityTexVScale::default())
             ;
         }
         

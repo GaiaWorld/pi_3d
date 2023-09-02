@@ -30,7 +30,7 @@ use super::{
     pub fn sys_effect_bind_to_model_while_mat_modify(
         materials: Query<
             (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EPassTag),
-            Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<BindEffect>)>
+            Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<BindEffectReset>)>
         >,
         mut passes: Query<(&mut PassEffectReady, &mut PassBindEffectValue)>,
     ) {
@@ -47,7 +47,7 @@ use super::{
                     } else {
                         None
                     };
-                    
+
                     *passready = PassEffectReady(data);
                     *passbind = PassBindEffectValue(Some(bind.bind.clone()));
                 }
@@ -72,27 +72,27 @@ use super::{
     pub fn sys_effect_tex_to_model_while_mat_modify(
         materials: Query<
             (&EffectTextureSamplersComp, &MaterialRefs, &EPassTag, &AssetKeyShaderEffect, &AssetResShaderEffectMeta),
-            Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<EffectTextureSamplersComp>, )>
+            Or<(Changed<EPassTag>, Changed<DirtyMaterialRefs>, Changed<EffectTextureSamplersComp>)>
         >,
         mut passes: Query<(&mut PassEffectReady, &mut PassBindEffectTextures)>,
     ) {
         materials.iter().for_each(|(bind, list, _pass, effect_key, meta)| {
             list.iter().for_each(|target| {
-
                 if let Ok((mut passready, mut passbind)) = passes.get_mut(target.clone()) {
-                    // let pass = pass.as_pass();
-                    // if dirty.0 & pass == 0 {
-                    //     dirty.0 += pass;
-                    // }
-                    // commands.entity(id_obj.clone()).insert(FlagPassDirtyBindEffectTextures);
-
-                    // if pass & T::TAG == T::TAG {
-                    //     let data = Some((effect_key.0.clone(), meta.0.clone()));
-                    //     commands.entity(passid.id()).insert(PassBindEffectTextures(Some(bind.0.clone()))).insert(PassReady(data));
-                    // }
                     let data = Some((effect_key.0.clone(), meta.0.clone()));
-                    *passready = PassEffectReady(data);
-                    *passbind = PassBindEffectTextures(Some(bind.0.clone()));
+
+                    if 0 == meta.0.textures.len() * 2 {
+                        *passready  = PassEffectReady(data);
+                        *passbind   = PassBindEffectTextures(None);
+                    } else if let Some(bind) = &bind.0 {
+                        if bind.binding_count == meta.0.textures.len() as u32 * 2 {
+                            *passready  = PassEffectReady(data);
+                            *passbind   = PassBindEffectTextures(Some(bind.clone()));
+                        } else {
+                            *passready  = PassEffectReady(None);
+                            *passbind   = PassBindEffectTextures(None);
+                        }
+                    }
                 }
             });
         });

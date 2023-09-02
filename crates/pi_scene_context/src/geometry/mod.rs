@@ -32,43 +32,8 @@ pub type GBID = Atom;
 
 pub struct PluginGeometry;
 impl Plugin for PluginGeometry {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut crate::engine::Engine,
-    //     stages: &mut crate::run_stage::RunStage,
-    // ) -> Result<(), crate::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-    //     world.insert_resource(SingleGeometryVBCommands::default());
-    //     world.insert_resource(VBAllocator::new());
-    //     world.insert_resource(AssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 1 * 1024 * 1024, 10 * 1000));
-
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot01>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot02>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot03>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot04>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot05>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot06>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot07>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot08>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot09>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot10>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot11>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot12>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot13>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot14>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot15>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResVBSlot16>::default());
-    //     world.insert_resource(VBLoaderSlot::<ObjectID, AssetResBufferIndices>::default());
-
-    //     SysGeometryVBCommand::setup(world, stages.query_stage::<SysGeometryVBCommand>(ERunStageChap::Initial));
-    //     SysVertexBufferLoad::setup(world, stages.query_stage::<SysVertexBufferLoad>(ERunStageChap::Draw));
-    //     PluginVertexBuffers.init(engine, stages);
-
-    //     Ok(())
-    // }
 
     fn build(&self, app: &mut bevy::prelude::App) {
-        // app.world.insert_resource(SingleGeometryVBCommands::default());
         app.insert_resource(ActionListGeometryCreate::default());
         app.insert_resource(VertexBufferDataMap3D(SingleVertexBufferDataMap::default()));
         
@@ -87,11 +52,16 @@ impl Plugin for PluginGeometry {
         app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 10 * 1024, 10 * 1000));
         app.insert_resource(GeometryVBLoader::default());
 
+        app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageGeometry::VertexBufferLoadedApply.after(StageGeometry::VertexBufferLoaded));
+        app.configure_set(Update, StageGeometry::GeometryLoaded.after(StageGeometry::VertexBufferLoadedApply).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageGeometry::VertexBufferLoadedApply) );
+
         app.add_systems(
 			Update,
             (
                 sys_create_geometry.in_set(ERunStageChap::Initial),
-                sys_vertex_buffer_loaded.in_set(ERunStageChap::SecondInitial),
+                sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded),
             )
         );
         app.add_systems(
@@ -103,16 +73,16 @@ impl Plugin for PluginGeometry {
                 sys_vertex_buffer_loaded_04,
                 sys_vertex_buffer_loaded_05,
                 sys_vertex_buffer_loaded_06,
-            ).chain().in_set(ERunStageChap::Uniform)
+            ).chain().in_set(StageGeometry::GeometryLoaded)
+        );
+        app.add_systems(Update, 
+            sys_geometry_enable.after(sys_vertex_buffer_loaded_06).in_set(StageGeometry::GeometryLoaded)
         );
 
         app.add_systems(Update, 
             sys_instanced_buffer_upload.in_set(ERunStageChap::Uniform)
         );
-        
-        app.add_systems(Update, 
-            sys_geometry_enable.after(sys_vertex_buffer_loaded_06).in_set(ERunStageChap::Uniform)
-        );
+
         app.add_systems(Update, 
             sys_dispose_about_geometry.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );

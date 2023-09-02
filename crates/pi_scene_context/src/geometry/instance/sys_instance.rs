@@ -49,7 +49,7 @@ use super::{*, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
             (
                 Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable
             ),
-            Or<(Changed<InstanceColorDirty>, Changed<InstanceTillOffDirty>, Changed<InstanceWorldMatrixDirty>, Changed<InstanceSourceRefs>)>
+            Or<(Changed<InstanceColorDirty>, Changed<InstanceTillOffDirty>, Changed<InstanceWorldMatrixDirty>, Changed<InstanceSourceRefs>, Changed<MeshInstanceState>)>
         >,
         dispoeds: Query<&DisposeReady>,
         geometrys: Query<&InstancedInfo>,
@@ -71,7 +71,7 @@ use super::{*, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
             Query<&mut AssetResVBSlot15>,
             Query<&mut AssetResVBSlot16>,
         ),
-        mut instancedcache: ResMut<InstanceBufferAllocator>,
+        instancedcache: Res<InstanceBufferAllocator>,
         mut allocator: ResMut<VertexBufferAllocator3D>,
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
@@ -125,7 +125,7 @@ use super::{*, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
     
                             idx += 0;
                         });
-                        reset_instances_buffer(idgeo.0, buffer, &collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
+                        reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
                     }
                 }
             }
@@ -163,7 +163,7 @@ use super::{*, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
             Query<&mut AssetResVBSlot15>,
             Query<&mut AssetResVBSlot16>,
         ),
-        instancedcache: Res<InstanceBufferAllocator>,
+        mut instancedcache: ResMut<InstanceBufferAllocator>,
         mut allocator: ResMut<VertexBufferAllocator3D>,
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
@@ -217,7 +217,7 @@ use super::{*, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
     
                             idx += 0;
                         });
-                        reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
+                        reset_instances_buffer(idgeo.0, buffer, &collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
                     }
                 }
             }
@@ -267,6 +267,32 @@ pub fn reset_instances_buffer(
         EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
     };
 
+    reset_instances_buffer_range(idgeo, instancedinfo, slots, data);
+}
+
+pub fn reset_instances_buffer_range(
+    idgeo: Entity,
+    instancedinfo: &InstancedInfo,
+    slots: &mut (
+        Query<&mut AssetResVBSlot01>,
+        Query<&mut AssetResVBSlot02>,
+        Query<&mut AssetResVBSlot03>,
+        Query<&mut AssetResVBSlot04>,
+        Query<&mut AssetResVBSlot05>,
+        Query<&mut AssetResVBSlot06>,
+        Query<&mut AssetResVBSlot07>,
+        Query<&mut AssetResVBSlot08>,
+        Query<&mut AssetResVBSlot09>,
+        Query<&mut AssetResVBSlot10>,
+        Query<&mut AssetResVBSlot11>,
+        Query<&mut AssetResVBSlot12>,
+        Query<&mut AssetResVBSlot13>,
+        Query<&mut AssetResVBSlot14>,
+        Query<&mut AssetResVBSlot15>,
+        Query<&mut AssetResVBSlot16>,
+    ),
+    data: EVerticesBufferUsage
+) {
     match instancedinfo.slot() {
         EVertexBufferSlot::Slot01 => if let Ok(mut buffer) = slots.0.get_mut(idgeo)  { buffer.0 = data; },
         EVertexBufferSlot::Slot02 => if let Ok(mut buffer) = slots.1.get_mut(idgeo)  { buffer.0 = data; },
@@ -285,7 +311,6 @@ pub fn reset_instances_buffer(
         EVertexBufferSlot::Slot15 => if let Ok(mut buffer) = slots.14.get_mut(idgeo) { buffer.0 = data; },
         EVertexBufferSlot::Slot16 => if let Ok(mut buffer) = slots.15.get_mut(idgeo) { buffer.0 = data; },
     };
-
 }
 
 pub fn reset_instances_buffer_single(

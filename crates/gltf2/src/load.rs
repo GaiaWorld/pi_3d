@@ -39,7 +39,7 @@ impl TAssetCapacity for GLTFBase {
     const ASSET_TYPE: &'static str = "RES_GLTF2_FILE";
 
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 20 * 1024 * 1024, timeout: 100 * 1000 }
+        AssetCapacity { flag: false, min: 256 * 1024, max: 512 * 1024, timeout: 1000 }
     }
 }
 
@@ -98,7 +98,11 @@ impl  GLTF {
 
         let key = Atom::from(path.as_str());
 
-        key.asset_u64()
+        let key = key.asset_u64();
+        
+        log::debug!("Curve: id: {:?}, {:?}-{:?}", key, group_index, channel_index);
+
+        key
     }
     pub fn new(base: Handle<GLTFBase>, path: String) -> Self {
         Self {
@@ -152,7 +156,7 @@ impl TAssetCapacity for GLTF {
     const ASSET_TYPE: &'static str = "RES_GLTF2";
 
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 20 * 1024 * 1024, timeout: 100 * 1000 }
+        AssetCapacity { flag: false, min: 64 * 1024, max: 128 * 1024, timeout: 100 }
     }
 }
 
@@ -237,12 +241,12 @@ impl GLTFTempLoaded {
             }
         }
         
-        let count = self.gltf.0.images().len();
-        for idx in 0..count {
-            if self.images.contains_key(&idx) == false {
-                return false;
-            }
-        }
+        // let count = self.gltf.0.images().len();
+        // for idx in 0..count {
+        //     if self.images.contains_key(&idx) == false {
+        //         return false;
+        //     }
+        // }
 
         return true;
     }
@@ -292,7 +296,7 @@ impl GLTFTempLoaded {
             let gltfid = self.id.clone();
             match item.source() {
                 pi_gltf::image::Source::Uri { uri, mime_type: _ } => {
-                    let path = relative_path(uri, self.id.base_url.as_str()); 
+                    let path = relative_path(uri, self.id.base_url.as_str());
                     let key = KeyImageTexture::File(Atom::from(path), true);
                     let imageresult = AssetMgr::load(image_assets_mgr, &key);
                     match imageresult {
@@ -427,7 +431,6 @@ impl GLTFTempLoaded {
                         property_id = EAnimePropertyType::from_u8(val.as_u64().unwrap() as u8);
                     }
                 }
-                // log::warn!("interpolation: {:?}", baseinterpolation);
 
                 if let (Some(property_id), Some(mode)) = (property_id, baseinterpolation) {
                     if p3d_anime_curve_query(&anime_assets, curve_key_u64, property_id) == false {
@@ -458,7 +461,7 @@ impl GLTFTempLoaded {
                         //     }
                         // }).read_outputs().map(|v| v.collect::<Vec<f32>>());
 
-                        // log::warn!("Curve: {:?}, {:?}, {:?}", curve_key, property_id, mode);
+                        log::debug!("Curve: {:?}, {:?}, {:?}", curve_key_u64, property_id, mode);
 
                         let design_frame_per_second = 100;
                         if let (Ok(times), Ok(values)) = (times, values) {
@@ -631,6 +634,8 @@ impl GLTFTempLoaded {
                     result.errors.push(ErrorGLTF::ErrorAnimation);
                 }
             }
+        
+            log::debug!("channels: {:?}, ", index_chanel);
         }
 
         // ParticleSystemCalculator
@@ -786,7 +791,7 @@ pub fn sys_gltf_base_loaded_launch(
                                 }
                             }
                             Err(e) => {
-                                log::error!("{:?}", e);
+                                log::debug!("{:?}", e);
                                 errorqueue.push((param.clone(), ErrorGLTF::ErrorGLTFParse));
                             },
                         }
@@ -813,7 +818,7 @@ pub fn sys_gltf_base_loaded_check(
     let mut item = loader.basesuccess.pop();
     while let Some(param) = item {
         param.load_buffers(loader.bufferqueue.clone(), loader.errorqueue.clone());
-        param.load_images(loader.imagequeue.clone(), loader.errorqueue.clone(), &image_assets_mgr, device.clone(), queue.clone());
+        // param.load_images(loader.imagequeue.clone(), loader.errorqueue.clone(), &image_assets_mgr, device.clone(), queue.clone());
 
         loader.temp.insert(param.id.clone(), param);
         item = loader.basesuccess.pop();
@@ -830,7 +835,9 @@ pub fn sys_gltf_analy(
     assets_mgr: Res<ShareAssetMgr<GLTF>>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
+    mut performance: ResMut<Performance>,
 ) {
+    let time0 = pi_time::Instant::now();
     let mut dirtyids = vec![];
     let mut item = loader.bufferqueue.pop();
     while let Some(buffer) = item {
@@ -879,6 +886,8 @@ pub fn sys_gltf_analy(
 
         item = loader.errorqueue.pop();
     }
+
+    performance.gltfanaly = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 

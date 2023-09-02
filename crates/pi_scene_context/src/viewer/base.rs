@@ -210,3 +210,11 @@ pub trait TViewerViewMatrix {
 pub trait TViewerProjectMatrix {
     fn project_matrix(&self, ratio: f32) -> ViewerProjectionMatrix;
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageViewer {
+    ViewerCommand,
+    ViewerRendererCommand,
+    ViewerMatrix,
+    ViewerRenderer,
+}

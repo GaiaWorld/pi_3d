@@ -9,8 +9,8 @@ use super::update_data;
 const MAX: u8 = 128;
 /// 最多 32 个 vec4 - 共 512 byte
 pub struct Vec4Uniform {
-    slot: u8,
-    data: [Number; 128], // MAX as usize],
+    pub(crate) slot: u8,
+    pub(crate) data: [Number; 128], // MAX as usize],
     begin: u32,
 }
 impl FromValueUniformStatistics for Vec4Uniform {
@@ -24,7 +24,7 @@ impl FromValueUniformStatistics for Vec4Uniform {
     }
 }
 impl Vec4Uniform {
-    const N: usize = 4;
+    pub const N: usize = 4;
     // const M: [Number; Self::N] = [0., 0., 0., 0.];
     pub fn init(&mut self, desc: &Vec<UniformPropertyVec4>) {
         let mut index = 0;
@@ -56,7 +56,7 @@ impl Vec4Uniform {
     pub fn value_mut(&mut self, slot: usize) -> Option<&mut [Number]> {
         if slot < self.slot as usize {
             let range = Range { start: slot * Self::N, end: (slot + 1) * Self::N };
-            Some(&mut self.data[range])
+            Some(&mut self.data.as_mut_slice()[range])
         } else {
             None
         }

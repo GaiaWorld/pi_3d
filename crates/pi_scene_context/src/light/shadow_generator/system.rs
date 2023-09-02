@@ -26,14 +26,14 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
         >,
         mut materails: Query<
             (&mut BindEffect, &mut BindEffectValueDirty),
-            Changed<BindEffect>,
+            Changed<BindEffectReset>,
         >,
     ) {
         shadows.iter().for_each(|(id_mat, _enable, minz, maxz, bias, normal_bias, depth_scale)| {
-            if let Ok((bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
+            if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
                 bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
                 bind.vec2(0, &[**minz, **minz + **maxz]);
-                *flag = BindEffectValueDirty(true);
+                *flag = BindEffectValueDirty;
             }
         });
     }
@@ -63,7 +63,7 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
     ) {
         shadows.iter().for_each(|(id_mat, enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if enable.0 {
-                if let Ok((bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
+                if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_DEPTH_BIAS)) {
                         bind.float(slot, **bias);
                     }
@@ -79,7 +79,7 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_MAXZ)) {
                         bind.float(slot, **maxz + **minz);
                     }
-                    *flag = BindEffectValueDirty(true);
+                    *flag = BindEffectValueDirty;
                 }
             }
         });

@@ -13,6 +13,13 @@ use super::vertex_buffer_useinfo::{
     AssetResVBSlot05, AssetDescVBSlot05
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageGeometry {
+    VertexBufferLoaded,
+    VertexBufferLoadedApply,
+    GeometryLoaded,
+}
+
 #[derive(Component)]
 pub struct RenderGeometryEable(pub bool);
 

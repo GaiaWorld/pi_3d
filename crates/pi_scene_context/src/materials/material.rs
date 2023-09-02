@@ -2,7 +2,8 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Number, Matrix, Vector4, Vector2, Matrix2};
 
-use crate::{renderers::prelude::*};
+use crate::renderers::prelude::*;
+
 
 pub trait TMaterial {
     fn render_mode(&self) -> ERenderMode;

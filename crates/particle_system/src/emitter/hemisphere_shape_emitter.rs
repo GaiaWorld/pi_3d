@@ -1,4 +1,4 @@
-use pi_scene_math::{Matrix, Vector3};
+use pi_scene_math::{Matrix, Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 use pi_wy_rng::WyRng;
 use rand::{SeedableRng, Rng};
 
@@ -53,7 +53,7 @@ pub struct HemisphereShapeEmitter {
     pub(crate)  position: Vector3,
     pub(crate)  scaling: Vector3,
 
-    local_matrix: Matrix,
+    pub(crate) local_matrix: Matrix,
     pub(crate) align_direction: bool,
     pub(crate) randomize_direction: f32,
     pub(crate) spherize_direction: f32,
@@ -180,7 +180,7 @@ impl HemisphereShapeEmitter {
         rand_z += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
         rand_y += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
 
-        *position_to_update = Vector3::new(rand_x, rand_y.abs(), rand_z);
+        CoordinateSytem3::transform_coordinates(&Vector3::new(rand_x, rand_y, rand_z.abs()), &self.local_matrix, position_to_update);
     }
 }
 impl IShapeEmitterType for HemisphereShapeEmitter {

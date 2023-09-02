@@ -1,4 +1,5 @@
 use pi_engine_shell::prelude::*;
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::tools::OrbitVelocity;
 
@@ -25,5 +26,6 @@ impl OrbitVelocityModifier {
         self.orbital_rotate_speed.compute(amount, randoms, &mut item.orbit);
         self.orbital_offset.compute(amount, randoms, &mut item.offset);
         item.radial = self.radial.interpolate(amount, randoms.x);
+        item.orbit_len = CoordinateSytem3::length_squared(&item.orbit);
     }
 }

@@ -73,3 +73,18 @@ pub type Pipeline3DUsage = Handle<Pipeline3D>;
 
 pub type DrawObj3D = DrawObj;
 pub type DrawList3D = DrawList;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageRenderer {
+    RenderStateCommand,
+    RendererCommand,
+    PassBindGroup,
+    // PassBindGroupLoaded,
+    PassBindGroups,
+    PassShader,
+    // PassShaderLoaded,
+    PassPipeline,
+    // PassPipelineLoaded,
+    PassDraw,
+    DrawList,
+}

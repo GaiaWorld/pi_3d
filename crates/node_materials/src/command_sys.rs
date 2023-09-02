@@ -5,9 +5,10 @@ use pi_scene_math::Vector3;
 use crate::{command::*, animation::*};
 
 pub fn sys_node_material_uniform_update(
-    mut materials: Query<(&MaterialAnimeSlots, &BindEffect, &mut BindEffectValueDirty)>,
+    mut materials: Query<(&MaterialAnimeSlots, &mut BindEffect, &mut BindEffectValueDirty)>,
     items: (
-        (Query<(Entity, &MainTexUScale),      Changed<MainTexUScale>>,
+        (
+            Query<(Entity, &MainTexUScale),      Changed<MainTexUScale>>,
             Query<(Entity, &MainTexVScale),      Changed<MainTexVScale>>,
             Query<(Entity, &MainTexUOffset),     Changed<MainTexUOffset>>,
             Query<(Entity, &MainTexVOffset),     Changed<MainTexVOffset>>,
@@ -30,110 +31,115 @@ pub fn sys_node_material_uniform_update(
         Query<(Entity, &LightDiffuse),       Changed<LightDiffuse>>,
         Query<(Entity, &MaskCutoff),         Changed<MaskCutoff>>,
     ),
+    mut performance: ResMut<Performance>,
 ) {
+    let time0 = pi_time::Instant::now();
     items.0.0.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.0.1.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.0.2.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.0.3.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.1.0.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.1.1.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.1.2.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.1.3.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     
     items.2.0.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.2.1.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.2.2.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.2.3.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.3.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.4.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.5.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            // log::debug!("{:?}", item);
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.6.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
     items.7.iter().for_each(|(entity, item)| {
-        if let Ok((slots, bind, mut flag)) = materials.get_mut(entity) {
-            item.apply(slots, bind);
-            *flag = BindEffectValueDirty(true);
+        if let Ok((slots, mut bind, mut flag)) = materials.get_mut(entity) {
+            item.apply(slots, &mut bind);
+            *flag = BindEffectValueDirty;
         }
     });
+
+    performance.uniformupdate = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_act_maintex_tilloff(

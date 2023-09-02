@@ -12,6 +12,7 @@ pub struct StateScene {
     pub count_animationgroup: usize,
     pub count_transform: usize,
     pub count_mesh: usize,
+    pub count_mesh_ok: usize,
     pub count_geometry: usize,
     pub count_material: usize,
     pub count_instance: usize,
@@ -28,9 +29,8 @@ pub struct StateScene {
 
 pub fn sys_state_scene(
     geometrys: Query<(&MeshID, &RenderGeometryComp)>,
-    materials: Query<(Entity, &BindEffect, &AssetResShaderEffectMeta), With<MaterialRefs>>,
     transformnodes: Query<Entity, With<TransformNode>>,
-    meshes: Query<Entity, With<Mesh>>,
+    meshes: Query<(Entity, Option<&BindModel>), With<Mesh>>,
     instancemeshes: Query<Entity, With<InstanceMesh>>,
     cameras: Query<Entity, With<Camera>>,
     lights: Query<Entity, With<Light>>,
@@ -58,14 +58,6 @@ pub fn sys_state_scene(
             }
         }
     });
-
-    materials.iter().for_each(|(entity, _, _)| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_material += 1;
-            }
-        }
-    });
     transformnodes.iter().for_each(|entity| {
         if let Ok(idscene) = idscenes.get(entity) {
             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
@@ -73,10 +65,13 @@ pub fn sys_state_scene(
             }
         }
     });
-    meshes.iter().for_each(|entity| {
+    meshes.iter().for_each(|(entity, bind)| {
         if let Ok(idscene) = idscenes.get(entity) {
             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
                 state.count_mesh += 1;
+                if bind.is_some() {
+                    state.count_mesh_ok += 1;
+                }
             }
         }
     });
@@ -148,16 +143,30 @@ pub struct StateGlobal {
     pub count_gltf: usize,
     pub count_texture: usize,
     pub count_imgtexture: usize,
+    pub mem_imgtexture: usize,
     pub count_bindgroup: usize,
     pub count_pipeline: usize,
     pub count_shadermeta: usize,
+    pub mem_shadermeta: usize,
     pub count_shader: usize,
+    pub mem_shader: usize,
     pub count_bindbuffer: usize,
+    pub mem_bindbuffer: usize,
     pub count_geometrybuffer: usize,
     pub size_geometrybuffer: u64,
+    pub count_passmat: u32,
+    pub count_passtexs: u32,
+    pub count_passset0: u32,
+    pub count_passset1: u32,
+    pub count_passset2: u32,
+    pub count_passbindgroups: u32,
+    pub count_passshader: u32,
+    pub count_passpipeline: u32,
+    pub count_passdraw: u32,
+    pub count_rendergeometryenable: u32,
+    pub count_material: u32,
     pub scenes: XHashMap<Entity, StateScene>,
 }
-
 
 pub fn sys_state_global(
     asset_gltf: Res<ShareAssetMgr<GLTF>>,
@@ -168,27 +177,111 @@ pub fn sys_state_global(
     pipelines: Res<AssetDataCenterPipeline3D>,
     imagetextures: Res<ShareAssetMgr<ImageTexture>>,
     shadermetas: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    passes: (
+        Query<&PassBindGroupScene>,
+        Query<&PassBindGroupModel>,
+        Query<&PassBindGroupTextureSamplers>,
+        Query<&PassBindGroups>,
+        Query<&PassShader>,
+        Query<&PassPipeline>,
+        Query<&PassDraw>,
+        Query<&PassBindEffectTextures>,
+        Query<&MaterialID>,
+    ),
     mut stateglobal: ResMut<StateGlobal>,
+    mut performance: ResMut<Performance>,
+    particlesysperformance: Res<ParticleSystemPerformance>,
+    empty: Res<SingleEmptyEntity>,
 ) {
     if stateglobal.debug == false { return };
 
     stateglobal.count_gltf = asset_gltf.len();
     stateglobal.count_bindbuffer = bindbuffers.asset_mgr().len();
+    stateglobal.mem_bindbuffer = bindbuffers.asset_mgr().size();
     stateglobal.count_bindgroup = asset_mgr_bindgroup.0.len();
     stateglobal.count_pipeline = pipelines.asset_mgr().len();
     stateglobal.count_geometrybuffer = vertexbuffers.total_buffer_count();
     stateglobal.size_geometrybuffer = vertexbuffers.total_buffer_size();
     stateglobal.count_shader = shaders.asset_mgr().len();
+    stateglobal.mem_shader = shaders.asset_mgr().size();
     stateglobal.count_imgtexture = imagetextures.len();
+    stateglobal.mem_imgtexture = imagetextures.size();
     stateglobal.count_shadermeta = shadermetas.len();
+    stateglobal.mem_shadermeta = shadermetas.size();
+
+    let mut count;
+
+    count = 0;
+    passes.0.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passset0 = count;
+
+    count = 0;
+    passes.1.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passset1 = count;
+
+    count = 0;
+    passes.2.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passset2 = count;
+
+    count = 0;
+    passes.3.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passbindgroups = count;
+
+    count = 0;
+    passes.4.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passshader = count;
+
+    count = 0;
+    passes.5.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passpipeline = count;
+
+    count = 0;
+    passes.6.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passdraw = count;
+
+    count = 0;
+    passes.7.iter().for_each(|item| {
+        if item.0.is_some() { count += 1; }
+    });
+    stateglobal.count_passtexs = count;
+
+    count = 0;
+    passes.8.iter().for_each(|item| {
+        if item.0 != empty.id() { count += 1; }
+    });
+    stateglobal.count_passmat = count;
+
+    // *performance = Performance::default();
+    performance.particlesystem = particlesysperformance.total();
+    // *particlesysperformance = ParticleSystemPerformance::default();
 }
 
 pub struct PluginStateGlobal;
 impl Plugin for PluginStateGlobal {
     fn build(&self, app: &mut App) {
+        app.insert_resource(Performance::default());
         app.insert_resource(StateGlobal::default());
-        app.add_systems(Update, sys_state_scene.run_if(should_run).in_set(ERunStageChap::StateCheck));  
-        app.add_systems(Update, sys_state_global.run_if(should_run).in_set(ERunStageChap::StateCheck));
+        app.add_systems(
+            Update,
+            (
+                sys_state_scene,
+                sys_state_global
+            ).chain().run_if(should_run).in_set(ERunStageChap::StateCheck)
+        );
 
         // let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         // let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();

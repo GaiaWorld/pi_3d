@@ -91,11 +91,11 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
         config.stretched_velocity_scale = stretched_velocity_scale.as_f64().unwrap() as f32;
     }
 
-    if let Some(stretched_velocity_scale) = mesh_particle_cfg.get("renderPivot") {
+    if let Some(render_pivot) = mesh_particle_cfg.get("renderPivot") {
         config.render_pivot = Some([
-            stretched_velocity_scale[0].as_f64().unwrap() as f32,
-            stretched_velocity_scale[1].as_f64().unwrap() as f32,
-            stretched_velocity_scale[2].as_f64().unwrap() as f32,
+            render_pivot[0].as_f64().unwrap() as f32,
+            render_pivot[1].as_f64().unwrap() as f32,
+            render_pivot[2].as_f64().unwrap() as f32,
         ]);
     }
 
@@ -239,14 +239,6 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
         config.speed_modifier = Some(format_one_param_info(cfg));
     }
 
-    if let Some(cfg) = mesh_particle_cfg.get("renderPivot") {
-        config.render_pivot = Some([
-            cfg[0].as_f64().unwrap() as f32,
-            cfg[1].as_f64().unwrap() as f32,
-            cfg[2].as_f64().unwrap() as f32,
-        ]);
-    }
-
     if let Some(cfg) = mesh_particle_cfg.get("custom1") {
         config.custom1 = Some([
             format_one_param_info(&cfg[0]),
@@ -368,7 +360,7 @@ fn format_three_param_info(config: &Value) -> ThreeParamInfo {
             )
         },
         _ => {
-            panic!("config of ThreeParamInfo: {} is exits!!!!", config)
+            ThreeParamInfo::TInterpolateConstant([0., 0., 0.])
         }
     }
 }
@@ -377,9 +369,7 @@ fn format_param_info(config: &Value) -> ParamInfo {
     match config[0].as_i64().unwrap() as u8 {
         VALUE_1 => ParamInfo::OneParamInfo(format_one_param_info(config)),
         VALUE_3 => ParamInfo::ThreeParamInfo(format_three_param_info(config)),
-        _ => {
-            panic!("config of ParamInfo: {} is exits!!!!", config)
-        }
+        _ => ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(0.))
     }
 }
 
@@ -535,24 +525,25 @@ fn format_shape(config: &Value) -> IShape {
     };
 
     let mut emit_as_volume = true;
-    if let Some(vemit_as_volume) = config.get("emit_as_volume") {
-        if vemit_as_volume.as_i64().unwrap() == 0 {
-            emit_as_volume = false;
-        }
+    if let Some(vemit_as_volume) = config.get("emitAsVolume") {
+        emit_as_volume = vemit_as_volume.as_bool().unwrap();
+        // if vemit_as_volume.as_i64().unwrap() == 0 {
+        //     emit_as_volume = false;
+        // }
     };
 
     let mut is_volume = 0;
-    if let Some(v) = config.get("is_volume") {
+    if let Some(v) = config.get("isVolume") {
         is_volume = v.as_i64().unwrap() as u32;
     };
 
     let mut box_emit_mode = None;
-    if let Some(v) = config.get("box_emit_mode") {
+    if let Some(v) = config.get("boxEmitMode") {
         match v.as_i64().unwrap() {
             0 => box_emit_mode = Some(EBoxShapeMode::Volume),
             1 => box_emit_mode = Some(EBoxShapeMode::Shell),
             2 => box_emit_mode = Some(EBoxShapeMode::Edge),
-            _ => panic!("box_emit_mode is not exits"),
+            _ => box_emit_mode = Some(EBoxShapeMode::Volume),
         }
     };
 

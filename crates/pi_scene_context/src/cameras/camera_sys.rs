@@ -19,22 +19,17 @@ use super::camera::*;
     // }
 
     pub(crate) fn sys_update_camera_param(
-        cameras: Query<
+        mut cameras: Query<
             (
-                ObjectID,
-                &EFreeCameraMode, &CameraFov, &CameraNearFar, &CameraOrthSize, &EFixedMode, &CameraViewport
+                &EFreeCameraMode, &CameraFov, &CameraNearFar, &CameraOrthSize, &EFixedMode, &CameraViewport, &mut CameraParam,
             ),
             Or<(Changed<EFreeCameraMode>, Changed<CameraFov>, Changed<CameraNearFar>, Changed<CameraOrthSize>, Changed<EFixedMode>, Changed<CameraViewport>)>
         >,
-        mut commands: Commands,
     ) {
         // log::debug!("CameraParam :");
-        cameras.iter().for_each(|(id_camera, mode, fov, nearfar, size, fixmode, viewport)| {
+        cameras.iter_mut().for_each(|(mode, fov, nearfar, size, fixmode, viewport, mut param)| {
             // log::debug!("CameraParam : 0");
-            let param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
-            if let Some(mut cmd) = commands.get_entity(id_camera) {
-                cmd.insert(param);
-            }
+            *param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
         });
     }
 

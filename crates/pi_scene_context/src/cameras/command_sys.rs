@@ -15,7 +15,7 @@ use super::{
     command::*,
 };
 
-pub fn sys_camera_create(
+pub fn sys_create_camera(
     mut cmds: ResMut<ActionListCameraCreate>,
     mut commands: Commands,
     mut dynallocator: ResMut<ResBindBufferAllocator>,
@@ -34,7 +34,7 @@ pub fn sys_camera_create(
 }
 
 
-pub fn sys_camera_mode(
+pub fn sys_act_camera_mode(
     mut cmds: ResMut<ActionListCameraMode>,
     mut cameras: Query<&mut EFreeCameraMode>,
 ) {
@@ -50,7 +50,7 @@ pub fn sys_camera_mode(
 }
 
 
-pub fn sys_camera_active(
+pub fn sys_act_camera_active(
     mut cmds: ResMut<ActionListCameraActive>,
     mut cameras: Query<(&SceneID, &mut Camera, &mut ViewerActive)>,
     mut scenes: Query<&mut SceneMainCameraID>,
@@ -75,7 +75,7 @@ pub fn sys_camera_active(
     });
 }
 
-pub fn sys_camera_fixed_mode(
+pub fn sys_act_camera_fixed_mode(
     mut cmds: ResMut<ActionListCameraFixedMode>,
     mut cameras: Query<&mut EFixedMode>,
 ) {
@@ -90,7 +90,7 @@ pub fn sys_camera_fixed_mode(
     });
 }
 
-pub fn sys_camera_nearfar(
+pub fn sys_act_camera_nearfar(
     mut cmds: ResMut<ActionListCameraNearFar>,
     mut cameras: Query<&mut CameraNearFar>,
 ) {
@@ -103,7 +103,7 @@ pub fn sys_camera_nearfar(
     });
 }
 
-pub fn sys_camera_fov(
+pub fn sys_act_camera_fov(
     mut cmds: ResMut<ActionListCameraFov>,
     mut cameras: Query<(&mut CameraFov, &mut RecordCameraFov)>,
 ) {
@@ -117,7 +117,7 @@ pub fn sys_camera_fov(
     });
 }
 
-pub fn sys_camera_orth_size(
+pub fn sys_act_camera_orth_size(
     mut cmds: ResMut<ActionListCameraOrthSize>,
     mut cameras: Query<(&mut CameraOrthSize, &mut RecordCameraOrthSize)>,
 ) {
@@ -131,7 +131,7 @@ pub fn sys_camera_orth_size(
     });
 }
 
-pub fn sys_camera_aspect(
+pub fn sys_act_camera_aspect(
     mut cmds: ResMut<ActionListCameraAspect>,
     mut cameras: Query<&mut ViewerAspect>,
 ) {
@@ -145,7 +145,7 @@ pub fn sys_camera_aspect(
 }
 
 
-pub fn sys_camera_pixel_size(
+pub fn sys_act_camera_pixel_size(
     mut cmds: ResMut<ActionListCameraPixelSize>,
     mut cameras: Query<&mut ViewerSize>,
 ) {
@@ -158,7 +158,7 @@ pub fn sys_camera_pixel_size(
     });
 }
 
-pub fn sys_camera_toscreen(
+pub fn sys_act_camera_toscreen(
     mut cmds: ResMut<ActionListCameraToScreen>,
     mut cameras: Query<(&mut CameraToScreen, &ViewerRenderersInfo)>,
     mut renderercmds: ResMut<ActionListRendererModify>,
@@ -175,7 +175,7 @@ pub fn sys_camera_toscreen(
     });
 }
 
-pub fn sys_camera_target(
+pub fn sys_act_camera_target(
     mut cameras: Query<&mut CameraTarget>,
     mut cmds: ResMut<ActionListCameraTarget>,
 ) {
@@ -188,20 +188,20 @@ pub fn sys_camera_target(
     });
 }
 
-pub fn sys_camera_renderer_action(
+pub fn sys_create_camera_renderer(
     mut cmds: ResMut<ActionListCameraRenderer>,
     mut commands: Commands,
     mut viewers: Query<
         (
-            &mut ViewerRenderersInfo, &CameraToScreen
+            &mut ViewerRenderersInfo, &CameraToScreen, &mut DirtyViewerRenderersInfo
         )
     >,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count)| {
-        // log::warn!("OpsCameraRenderer: {:?}", graphic_desc.curr);
+        log::warn!("OpsCameraRenderer: A");
 
-        if let Ok((mut viewer_renderers, toscreen)) = viewers.get_mut(id_viewer) {
-            // log::warn!("OpsCameraRenderer: {:?} Camera {:?}", graphic_desc.curr, &name.0);
+        if let Ok((mut viewer_renderers, toscreen, mut dirtyflag)) = viewers.get_mut(id_viewer) {
+            log::warn!("OpsCameraRenderer: AA");
 
             if let Some((_, id_render)) = viewer_renderers.map.get(&rendername) {
                 if let Some(mut cmd) = commands.get_entity(id_render.0) {
@@ -209,11 +209,8 @@ pub fn sys_camera_renderer_action(
                 }
             }
 
-            // log::warn!("Camera Renderer Init!! {:?}", &rendername);
-
-            if let Some(mut cmd) = commands.get_entity(id_viewer) {
-                cmd.insert(DirtyViewerRenderersInfo);
-            }
+            log::warn!("Camera Renderer Init!! ");
+            *dirtyflag = DirtyViewerRenderersInfo;
 
             viewer_renderers.map.insert(rendername.clone(), (passorders.clone(), RendererID(id_renderer)));
 
@@ -245,18 +242,21 @@ impl ActionCamera {
         toscreen: bool,
     ) {
         commands.insert(Camera(false))
-            .insert(EFreeCameraMode::Orthograhic)
-            .insert(EFixedMode::HorizontalFixed)
+            .insert(EFreeCameraMode::default())
+            .insert(EFixedMode::default())
             .insert(CameraFov::default())
             .insert(CameraOrthSize::default())
             .insert(RecordCameraFov::default())
             .insert(RecordCameraOrthSize::default()) 
-            .insert(CameraNearFar(0.1, 1000.0))
+            .insert(CameraNearFar::default())
             .insert(CameraToScreen(toscreen))
             .insert(CameraViewport::default())
             .insert(LayerMask::default())
             .insert(CameraUp(CoordinateSytem3::up()))
-            .insert(CameraTarget(Vector3::new(0., 0., 1.)));
+            .insert(CameraTarget(Vector3::new(0., 0., 1.)))
+            .insert(TargetCameraParam::default())
+            .insert(CameraParam::default())
+            ;
         
         ActionViewer::as_viewer(commands);
         commands.insert(ViewerSize::default());
@@ -287,26 +287,20 @@ impl ActionCamera {
 
 }
 
-    pub fn sys_cmds_target_camera_modify(
-        cameras: Query<(Entity, &CameraUp, &CameraTarget), Or<(Changed<CameraUp>, Changed<CameraTarget>)>>,
-        mut commands: Commands,
+    pub fn sys_update_target_camera_modify(
+        mut cameras: Query<(&CameraUp, &CameraTarget, &mut TargetCameraParam), Or<(Changed<CameraUp>, Changed<CameraTarget>)>>,
     ) {
-        cameras.iter().for_each(|(entity, up, target)| {
-            // log::debug!("TargetCameraParam : 0");
-            if let Some(mut cmd) = commands.get_entity(entity) {
-                cmd.insert(
-                    TargetCameraParam::create(up.0.clone(), target.0.clone())
-                );
-            }
+        cameras.iter_mut().for_each(|(up, target, mut param)| {
+            *param = TargetCameraParam::create(up.0.clone(), target.0.clone());
         });
     }
 
-    pub fn sys_camera_renderer_modify(
+    pub fn sys_update_camera_renderer(
+        mut renderercmds: ResMut<ActionListRendererModify>,
         cameras: Query<
             (&Camera, &ViewerRenderersInfo, &CameraToScreen),
             Or<(Changed<Camera>, Changed<DirtyViewerRenderersInfo>)>
         >,
-        mut renderercmds: ResMut<ActionListRendererModify>,
     ) {
         cameras.iter().for_each(|(enable, renderers, toscreen)| {
             let enable = enable.0;

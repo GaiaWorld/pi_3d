@@ -1,4 +1,4 @@
-use pi_scene_math::{Matrix, Vector3};
+use pi_scene_math::{Matrix, Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::tools::{normalize, Random};
 
@@ -46,7 +46,7 @@ pub struct CircleShapeEmitter {
     pub(crate) position: Vector3,
     pub(crate) rotation: Vector3,
     pub(crate) scaling: Vector3,
-    local_matrix: Matrix,
+    pub(crate) local_matrix: Matrix,
     pub(crate) align_direction: bool,
     pub(crate) randomize_direction: f32,
     pub(crate) spherize_direction: f32,
@@ -165,7 +165,7 @@ impl IShapeEmitterType for CircleShapeEmitter {
         rand_z += (random.random() * 2.0 - 1.0) * self.randomize_position;
         rand_y += (random.random() * 2.0 - 1.0) * self.randomize_position;
 
-            *position_to_update = Vector3::new(rand_x, rand_y, rand_z)
+        CoordinateSytem3::transform_coordinates(&Vector3::new(rand_x, rand_y, rand_z), &self.local_matrix, position_to_update);
     }
 
     fn get_class_name() -> String

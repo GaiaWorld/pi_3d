@@ -8,7 +8,7 @@ use self::{
     command_sys::*,
     transform_node_sys::*,
     animation::*,
-
+    prelude::*,
 };
 
 pub mod transform_node;
@@ -31,22 +31,26 @@ impl Plugin for PluginTransformNode {
             .insert_resource(ActionListTransformNodeLocalRotationQuaternion::default())
             .insert_resource(ActionListTransformNodeLocalScaling::default())
             .insert_resource(ActionListTransformNodeParent::default())
-            .insert_resource(TransformRecord::default())
+            .insert_resource(StateTransform::default())
             ;
+
+        app.configure_set(Update, StageTransform::TransformCommand.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
+        app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommandApply).before(ERunStageChap::Uniform));
 
         app.add_systems(Update, 
             sys_create_transform_node.in_set(ERunStageChap::Initial),
         );
         app.add_systems(Update, 
-            sys_act_transform_parent.in_set(ERunStageChap::SecondInitial),
+            sys_act_transform_parent.in_set(StageTransform::TransformCommand),
         );
         app.add_systems(
 			Update,
             (
-                sys_act_local_euler.in_set(ERunStageChap::Command),
-                sys_act_local_position.in_set(ERunStageChap::Command),
-                sys_act_local_scaling.in_set(ERunStageChap::Command),
-            )
+                sys_act_local_euler,
+                sys_act_local_position,
+                sys_act_local_scaling,
+            ).in_set(StageTransform::TransformCommand)
         );
         app.add_systems(
 			Update,
@@ -56,12 +60,12 @@ impl Plugin for PluginTransformNode {
                 sys_local_matrix_calc,
                 sys_world_matrix_calc,
                 sys_world_matrix_calc2,
-            ).chain().in_set(ERunStageChap::CalcWorldMatrix)
+            ).chain().run_if(should_run).in_set(StageTransform::TransformCalcMatrix)
         );
 
         app.add_systems(
 			Update,
-            sys_dispose_about_transform_node.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            sys_dispose_about_transform_node.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
     }
 }

@@ -22,6 +22,12 @@ mod base;
 mod system;
 pub mod prelude;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageScene {
+    SceneCreate,
+    SceneCreateAplly,
+    SceneCommand,
+}
 
 pub struct PluginScene;
 impl Plugin for PluginScene {
@@ -37,6 +43,15 @@ impl Plugin for PluginScene {
         app.insert_resource(ActionListSceneFogParam::default());
         app.insert_resource(ActionListSceneAnimationEnable::default());
 
+        app.configure_sets(
+            Update,
+            (
+                StageScene::SceneCreate,
+                StageScene::SceneCreateAplly,
+                StageScene::SceneCommand.after(ERunStageChap::_InitialApply)
+            ).chain()
+        );
+
         app.add_systems(Update, 
             sys_create_scene.in_set(ERunStageChap::Initial)
         );
@@ -50,7 +65,7 @@ impl Plugin for PluginScene {
                 sys_act_scene_fogcolor,
                 sys_act_scene_fogparam,
                 sys_act_scene_animation_enable,
-            ).in_set(ERunStageChap::Command)
+            ).in_set(StageScene::SceneCommand)
         );
 
         app.add_systems(
@@ -62,7 +77,7 @@ impl Plugin for PluginScene {
             ).in_set(ERunStageChap::Uniform)
         );
 
-        app.add_systems(Update, sys_dispose_about_scene.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     
 }

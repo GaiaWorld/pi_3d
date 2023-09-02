@@ -97,7 +97,7 @@ impl IShapeEmitterType for PointShapeEmitter {
         let rand_z = random.random() * (self.direction2[1] - self.direction1[1]) + self.direction1[0];
         let rand_y = random.random() * (self.direction2[2] - self.direction1[2]) + self.direction1[0];
 
-            *direction_to_update = Vector3::new(rand_x, rand_y, rand_z);
+        *direction_to_update = Vector3::new(0., 0., 1.);
     }
 
     fn start_position_function(

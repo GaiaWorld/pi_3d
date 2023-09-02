@@ -26,7 +26,7 @@ pub fn sys_create_renderer(
             },
             Err(_e) => {
                 // log::error!("Renderer Error: {:?}", e);
-                log::error!("Renderer Error:");
+                log::debug!("Renderer Error:");
             },
         }
     });
@@ -116,7 +116,7 @@ pub fn sys_act_renderer_connect(
         if let (Ok(before), Ok(after)) = (renderers.get(before), renderers.get(after)) {
             if let Err(_e) = render_graphic.add_depend(before.0, after.0) {
                 // log::error!("{:?}", e);
-                log::error!("sys_act_renderer_connect add_depend Error");
+                log::debug!("sys_act_renderer_connect add_depend Error");
             }
         } else {
             if count < 4 {
@@ -171,7 +171,7 @@ impl ActionRenderer {
             },
             Err(_e) => {
                 // log::error!("{:?}", e);
-                log::error!("create_graphic_node fail");
+                log::debug!("create_graphic_node fail");
             },
         }
 
@@ -194,18 +194,18 @@ impl ActionRenderer {
             // log::warn!("Add Node {:?} > {:?}", key_pre, nodeid);
             if let Err(_e) = render_graphic.add_depend(key_pre, nodeid) {
                 // log::error!("{:?}", e);
-                log::error!("render_graphic.add_depend faile");
+                log::debug!("render_graphic.add_depend faile");
             }
         }
         if let Some(key_next) = next {
             // log::warn!("Add Node {:?} > {:?}", nodeid, key_next);
             if let Err(_e) = render_graphic.add_depend(nodeid, key_next) {
                 // log::error!("{:?}", e);
-                log::error!("render_graphic.add_depend faile");
+                log::debug!("render_graphic.add_depend faile");
             }
         } else {
             // if let Err(e) = render_graphic.set_finish(nodeid, true) {
-            //     log::error!("{:?}", e);
+            //     log::debug!("{:?}", e);
             // }
         }
         render_graphic.dump_graphviz();

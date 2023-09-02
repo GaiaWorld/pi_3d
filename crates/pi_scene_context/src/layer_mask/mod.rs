@@ -35,7 +35,7 @@ impl Plugin for PluginLayerMask {
 
     fn build(&self, app: &mut pi_engine_shell::prelude::App) {
         app.insert_resource(ActionListLayerMask::default());
-        app.add_systems(Update, sys_act_layer_mask.in_set(ERunStageChap::Command));
+        app.add_systems(Update, sys_act_layer_mask.run_if(should_run).in_set(ERunStageChap::Command));
 
         // app.world.insert_resource(SingleLayerMaskCommandList::default());
     }

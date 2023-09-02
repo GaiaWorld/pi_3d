@@ -13,6 +13,7 @@ impl DefaultShader {
         nodemat.vs = String::from(include_str!("./default.vert"));
         nodemat.fs = String::from(include_str!("./default.frag"));
 
+        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(BlockMainTexture::KEY_COLOR), [1., 1., 1., 1.]));
         nodemat.varyings = Varyings(
             vec![
                 Varying { 

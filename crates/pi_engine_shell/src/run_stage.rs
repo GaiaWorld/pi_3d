@@ -114,6 +114,7 @@ pub trait TSystemStageInfo {
 /// * 一个章节内阶段结束才能进入下个章节
 /// * 当 一个System需要等待多个System的结束, 且编码时无法确定依赖的System时, 应该将该System放入下一章节
 pub enum ERunStageChap {
+    New,
     // 场景中的 节点, Mesh, Light, Camera [一级实体]
     Initial,
     _InitialApply,
@@ -125,6 +126,7 @@ pub enum ERunStageChap {
     _ThirdInitialApply,
     Command,
     _CommandApply,
+    LoadRequest,
     AnimeAmount,
     Anime,
     Logic01,
@@ -133,15 +135,6 @@ pub enum ERunStageChap {
     CalcRenderMatrix,
     Uniform,
     DrawUniformToGPU,
-    DrawBindsAndCulling,
-    DrawBindGroups,
-    DrawBindGroupsLoaded,
-    DrawShader,
-    DrawShaderLoaded,
-    DrawPipeline,
-    DrawPipelineLoaded,
-    DrawCall,
-    Draw,
     Dispose,
     _DisposeApply,
     StateCheck,
@@ -150,7 +143,8 @@ pub enum ERunStageChap {
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.configure_set(Update, ERunStageChap::Initial);
+        app.configure_set(Update, ERunStageChap::New);
+        app.configure_set(Update, ERunStageChap::Initial.after(ERunStageChap::New));
         app.configure_set(Update, ERunStageChap::_InitialApply.after(ERunStageChap::Initial));
         app.configure_set(Update, ERunStageChap::SecondInitial.after(ERunStageChap::_InitialApply));
         app.configure_set(Update, ERunStageChap::_SecondInitialApply.after(ERunStageChap::SecondInitial));
@@ -158,7 +152,8 @@ impl Plugin for PluginRunstage {
         app.configure_set(Update, ERunStageChap::_ThirdInitialApply.after(ERunStageChap::ThirdInitial));
         app.configure_set(Update, ERunStageChap::Command.after(ERunStageChap::_ThirdInitialApply));
         app.configure_set(Update, ERunStageChap::_CommandApply.after(ERunStageChap::Command));
-        app.configure_set(Update, ERunStageChap::AnimeAmount.after(ERunStageChap::_CommandApply));
+        app.configure_set(Update, ERunStageChap::LoadRequest.after(ERunStageChap::_CommandApply));
+        app.configure_set(Update, ERunStageChap::AnimeAmount.after(ERunStageChap::LoadRequest));
         app.configure_set(Update, ERunStageChap::Anime.after(ERunStageChap::AnimeAmount));
         app.configure_set(Update, ERunStageChap::Logic01.after(ERunStageChap::Anime));
         app.configure_set(Update, ERunStageChap::Logic02.after(ERunStageChap::Logic01));
@@ -166,16 +161,7 @@ impl Plugin for PluginRunstage {
         app.configure_set(Update, ERunStageChap::CalcRenderMatrix.after(ERunStageChap::CalcWorldMatrix));
         app.configure_set(Update, ERunStageChap::Uniform.after(ERunStageChap::CalcRenderMatrix));
         app.configure_set(Update, ERunStageChap::DrawUniformToGPU.after(ERunStageChap::Uniform));
-        app.configure_set(Update, ERunStageChap::DrawBindsAndCulling.after(ERunStageChap::DrawUniformToGPU));
-        app.configure_set(Update, ERunStageChap::DrawBindGroups.after(ERunStageChap::DrawBindsAndCulling));
-        app.configure_set(Update, ERunStageChap::DrawBindGroupsLoaded.after(ERunStageChap::DrawBindGroups));
-        app.configure_set(Update, ERunStageChap::DrawShader.after(ERunStageChap::DrawBindGroupsLoaded));
-        app.configure_set(Update, ERunStageChap::DrawShaderLoaded.after(ERunStageChap::DrawShader));
-        app.configure_set(Update, ERunStageChap::DrawPipeline.after(ERunStageChap::DrawShaderLoaded));
-        app.configure_set(Update, ERunStageChap::DrawPipelineLoaded.after(ERunStageChap::DrawPipeline));
-        app.configure_set(Update, ERunStageChap::DrawCall.after(ERunStageChap::DrawPipelineLoaded));
-        app.configure_set(Update, ERunStageChap::Draw.after(ERunStageChap::DrawCall));
-        app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::Draw));
+        app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::DrawUniformToGPU));
         app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
         app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
         

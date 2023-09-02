@@ -1,7 +1,6 @@
-use bevy::prelude::{Query, Entity, Changed, ResMut};
-use pi_engine_shell::prelude::SceneID;
+use pi_engine_shell::prelude::*;
 
-use crate::{commands::{DisposeReady, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeCan, OpsDisposeReady}, prelude::ScenePassRenderCfg};
+use crate::{commands::*, prelude::ScenePassRenderCfg};
 
 
 pub fn sys_dispose_about_scene(

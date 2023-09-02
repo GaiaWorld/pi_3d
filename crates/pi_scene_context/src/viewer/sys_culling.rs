@@ -28,7 +28,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
 
     pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
         mut viewers: Query<
-            (Entity, &ViewerActive, &SceneID, &LayerMask, &mut ModelList, &T, &T2),
+            (Entity, &ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList, &T, &T2),
             Or<(Changed<LayerMask>, Changed<ViewerActive>)>
         >,
         items: Query<
@@ -39,7 +39,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
 
         // log::debug!("CameraModelListByViewer :");
         // log::debug!("SysModelListUpdateByCamera: ");
-        viewers.iter_mut().for_each(|(_camera, vieweractive, scene, layer, mut list_model, _, _)| {
+        viewers.iter_mut().for_each(|(_camera, vieweractive, scene, layer, mut list_model, mut flag_list_model, _, _)| {
             list_model.0.clear();
             // log::debug!("CameraModelListByViewer : 0");
             if vieweractive.0 {
@@ -52,6 +52,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
                             // log::warn!("Has Include {:?}", id_obj);
                         } else {
                             list_model.0.insert(id_obj);
+                            *flag_list_model = FlagModelList::default();
                         }
                     }
                 });
@@ -63,7 +64,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
 
     pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
         mut viewers: Query<
-            (&ViewerActive, &SceneID, &LayerMask, &mut ModelList, &T, &T2),
+            (&ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList, &T, &T2),
         >,
         items: Query<
             (Entity, &SceneID, &LayerMask, &Mesh),
@@ -75,7 +76,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
 
         items.iter().for_each(|(id_obj, iscene, ilayer, _)| {
             // log::debug!("CameraModelListByModel : 0");
-            viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, _, _)| {
+            viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, mut flag_list_model, _, _)| {
                 // log::debug!("CameraModelListByModel : 1");
                 if vieweractive.0 {
                     if iscene == scene && layer.include(ilayer) {
@@ -83,6 +84,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
                             // log::warn!("Has Include {:?}", id_obj);
                         } else {
                             list_model.0.insert(id_obj);
+                            *flag_list_model = FlagModelList::default();
                         }
                     } else {
                         list_model.0.remove(&id_obj);
@@ -106,8 +108,9 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
         scenes: Query<
             &SceneBoundingPool
         >,
+        mut performance: ResMut<Performance>
     ) {
-        // let time1 = pi_time::Instant::now();
+        let time1 = pi_time::Instant::now();
         // log::debug!("SysModelListAfterCullinUpdateByCamera: ");
         viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, mut cullings)| {
             // log::warn!("SysViewerCulling: {:?}", vieweractive);
@@ -135,6 +138,8 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
             }
             // log::warn!("Moldellist: {:?}, {:?}, {:?}", vieweractive.0, liet_model.0.len(), cullings.0.len());
         });
+
+        performance.culling = (pi_time::Instant::now() - time1).as_micros() as u32;
         
         // log::debug!("SysModelListAfterCullingTick: {:?}", pi_time::Instant::now() - time1);
     }

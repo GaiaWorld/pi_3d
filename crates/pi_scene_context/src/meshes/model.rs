@@ -6,6 +6,11 @@ use pi_scene_math::{Matrix, Vector3};
 
 use crate::prelude::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageModel {
+    AbstructMeshCommand,
+    InstanceEffectMesh,
+}
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum EScalingMode {

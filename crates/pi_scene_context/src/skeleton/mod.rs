@@ -49,7 +49,7 @@ impl Plugin for PluginSkeleton {
                 sys_skin_buffer_update,
             ).chain().in_set(ERunStageChap::Uniform)
         );
-        app.add_systems(Update, sys_dispose_about_skeleton.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     // fn init(
     //     &mut self,

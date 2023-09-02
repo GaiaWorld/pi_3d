@@ -1,5 +1,5 @@
 use pi_engine_shell::prelude::*;
-use pi_scene_math::*;
+use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::TToolMatrix};
 
 use crate::{
     emitter::*,
@@ -722,9 +722,9 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
 
 pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
     let emitter = if let Some(shape) = &shape {
-        let mut _pos = None;
-        let mut _rotation = None;
-        let mut _scale = None;
+        let mut _pos = Vector3::zeros();
+        let mut _rotation = Vector3::new(1., 1., 1.);
+        let mut _scale = Vector3::zeros();
         let mut _randomize = None;
         let mut _align_dir = 0;
         let mut shape_emitter: ShapeEmitter = match shape {
@@ -736,11 +736,15 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
                 } else {
                     EBoxShapeMode::Volume
                 };
-                _pos = shape.position.clone();
-                _rotation = shape.rotation.clone();
-                _scale = shape.scale.clone();
+                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // _pos = shape.position.clone();
+                // _rotation = shape.rotation.clone();
+                // _scale = shape.scale.clone();
                 _randomize = shape.randomize.clone();
                 _align_dir = shape.align_dir;
+                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
                 ShapeEmitter::Box(temp)
             }
             // 3
@@ -765,11 +769,15 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
                 temp.arc_spread = spread;
                 temp.arc_speed = speed;
 
-                _pos = shape.position.clone();
-                _rotation = shape.rotation.clone();
-                _scale = shape.scale.clone();
+                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // _pos = shape.position.clone();
+                // _rotation = shape.rotation.clone();
+                // _scale = shape.scale.clone();
                 _randomize = shape.randomize.clone();
                 _align_dir = shape.align_dir;
+                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
                 ShapeEmitter::Circle(temp)
             }
             // 0
@@ -799,11 +807,15 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
                 temp.arc_spread = spread;
                 temp.arc_speed = speed;
 
-                _pos = shape.position.clone();
-                _rotation = shape.rotation.clone();
-                _scale = shape.scale.clone();
+                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // _pos = shape.position.clone();
+                // _rotation = shape.rotation.clone();
+                // _scale = shape.scale.clone();
                 _randomize = shape.randomize.clone();
                 _align_dir = shape.align_dir;
+                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
                 ShapeEmitter::Cone(temp)
             }
             //5
@@ -829,12 +841,15 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
                 temp.arc_spread = spread;
                 temp.arc_speed = speed;
 
-                _pos = shape.position.clone();
-                _rotation = shape.rotation.clone();
-                _scale = shape.scale.clone();
+                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // _pos = shape.position.clone();
+                // _rotation = shape.rotation.clone();
+                // _scale = shape.scale.clone();
                 _randomize = shape.randomize.clone();
                 _align_dir = shape.align_dir;
-
+                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
                 ShapeEmitter::Edge(temp)
             }
             //4
@@ -859,24 +874,30 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
                 temp.arc_spread = spread;
                 temp.arc_speed = speed;
 
-                _pos = shape.position.clone();
-                _rotation = shape.rotation.clone();
-                _scale = shape.scale.clone();
+                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // _pos = shape.position.clone();
+                // _rotation = shape.rotation.clone();
+                // _scale = shape.scale.clone();
                 _randomize = shape.randomize.clone();
                 _align_dir = shape.align_dir;
-
+                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
                 ShapeEmitter::Hemisphere(temp)
             }
             // 6
             IShape::ShapeRectangle(shape) => {
-                let temp = RectangleShapeEmitter::new();
+                let mut temp = RectangleShapeEmitter::new();
 
-                _pos = shape.position.clone();
-                _rotation = shape.rotation.clone();
-                _scale = shape.scale.clone();
+                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // _pos = shape.position.clone();
+                // _rotation = shape.rotation.clone();
+                // _scale = shape.scale.clone();
                 _randomize = shape.randomize.clone();
                 _align_dir = shape.align_dir;
-
+                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
                 ShapeEmitter::Rectangle(temp)
             }
             // 1
@@ -902,12 +923,15 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
                 temp.arc_spread = spread;
                 temp.arc_speed = speed;
 
-                _pos = shape.position.clone();
-                _rotation = shape.rotation.clone();
-                _scale = shape.scale.clone();
+                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // _pos = shape.position.clone();
+                // _rotation = shape.rotation.clone();
+                // _scale = shape.scale.clone();
                 _randomize = shape.randomize.clone();
                 _align_dir = shape.align_dir;
-
+                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
                 ShapeEmitter::Sphere(temp)
             }
             IShape::Point() => {
@@ -915,11 +939,11 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
             },
         };
 
-        if let (Some(pos), Some(rotation), Some(scale)) = (_pos, _rotation, _scale) {
-            shape_emitter.position(Vector3::new(pos[0], pos[1], pos[2]));
-            shape_emitter.rotation(Vector3::new(rotation[0], rotation[1], rotation[2]));
-            shape_emitter.scaling(Vector3::new(scale[0], scale[1], scale[2]));
-        }
+        // if let (Some(pos), Some(rotation), Some(scale)) = (_pos, _rotation, _scale) {
+        //     shape_emitter.position(Vector3::new(pos[0], pos[1], pos[2]));
+        //     shape_emitter.rotation(Vector3::new(rotation[0], rotation[1], rotation[2]));
+        //     shape_emitter.scaling(Vector3::new(scale[0], scale[1], scale[2]));
+        // }
 
         shape_emitter.align_direction(_align_dir != 0);
 

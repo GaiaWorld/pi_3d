@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     renderers::prelude::*,
     geometry::command::*,
-    cullings::prelude::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}
+    cullings::prelude::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}, prelude::{GlobalEnable, RenderGeometryEable, InstanceMesh}
 };
 
 pub use super::{
@@ -60,4 +60,44 @@ pub struct ActionSetAbstructMesh<'w> {
     pub scaling_mode: ResMut<'w, ActionListAbstructMeshScalingMode>,
     pub velocity: ResMut<'w, ActionListAbstructMeshVelocity>,
     pub boneoffset: ResMut<'w, ActionListBoneOffset>,
+}
+
+#[derive(Resource, Default)]
+pub struct StateMesh {
+    pub scene: Option<Entity>,
+    pub abstructmesh: u32,
+    pub meshes: u32,
+    pub instances: u32,
+    pub abstructenable_count: u32,
+    pub geometry_enable: u32,
+}
+
+
+pub type StateMeshQuery = QueryState<(&'static SceneID, &'static GlobalEnable, Option<&'static RenderGeometryEable>, Option<&'static InstanceMesh>), With<AbstructMesh>>;
+
+pub fn sys_state_mesh(
+    mut state: ResMut<StateMesh>,
+    meshes: Query<(&SceneID, &GlobalEnable, Option<&RenderGeometryEable>, Option<&InstanceMesh>), With<AbstructMesh>>,
+) {
+    state.abstructmesh = 0;
+    state.meshes = 0;
+    state.instances = 0;
+    state.abstructenable_count = 0;
+    state.geometry_enable = 0;
+    if let Some(scene) = state.scene {
+        meshes.iter().for_each(|(idscene, enable, geoenable, instance)| {
+            if scene == idscene.0 {
+                state.abstructmesh += 1;
+                if enable.0 { state.abstructenable_count += 1; }
+                if instance.is_some() {
+                    state.instances += 1;
+                } else if let Some(geoenable) = geoenable {
+                    state.meshes += 1;
+                    if geoenable.0 {
+                        state.geometry_enable += 1;
+                    }
+                }
+            }
+        });
+    }
 }

@@ -8,8 +8,11 @@ use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix
 use crate::base::*;
 
 pub fn sys_particle_active(
-    mut items: Query<(&GlobalEnable, &ParticleActive, &mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission), Or<(Changed<GlobalEnable>, Changed<ParticleActive>)>>
+    mut items: Query<(&GlobalEnable, &ParticleActive, &mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission), Or<(Changed<GlobalEnable>, Changed<ParticleActive>)>>,
+    performance: Res<ParticleSystemPerformance>,
+    mut globalperformance: ResMut<Performance>,
 ) {
+    // let time0 = pi_time::Instant::now();
     items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission)| {
         
         if enable.0 == true && active.0 == true {
@@ -28,6 +31,8 @@ pub fn sys_particle_active(
             state.start = false;
         }
     });
+
+    globalperformance.particlesystem = performance.total();
 }
 
 /// 系统的启动
@@ -35,7 +40,9 @@ pub fn sys_emission(
     scenes: Query<&SceneTime>,
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorEmission)>,
     mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emission, mut randoms)| {
         if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.0)) {
             let delta_ms = scenetime.delta_ms() as u32;
@@ -68,13 +75,17 @@ pub fn sys_emission(
             }
         }
     });
+    performance.sys_emission = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_emitmatrix(
     calculators: Query<&ParticleCalculatorBase>,
-    mut particle_sys: Query<(&LocalScaling, &WorldMatrix, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix)>,
+    mut particle_sys: Query<(&LocalScaling, &WorldMatrix, &WorldMatrixInv, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    particle_sys.iter_mut().for_each(|(local_scaling, world_matrix, mut transform, ids, time, mut emitmatrix)| {
+    let time0 = pi_time::Instant::now();
+    let global_position = Vector3::zeros();
+    particle_sys.iter_mut().for_each(|(local_scaling, world_matrix, world_matrix_inv, mut transform, ids, time, mut emitmatrix)| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(base) = calculators.get(ids.calculator.0) {
@@ -82,17 +93,27 @@ pub fn sys_emitmatrix(
             let activeids = &ids.actives;
             let global_rotation = transform.rotation().clone();
             let global_scaling = transform.scaling().clone();
-            let global_position = transform.position();
+            // let global_position = transform.position().clone();
             // log::warn!("Position: {:?} {:?}", &localpos.0, global_position);
-            emitmatrix.emit(newids, activeids, &base.simulation_space, &base.scaling_space, &world_matrix.0, global_position, &global_rotation, &global_scaling, &local_scaling.0);
+
+            let iso = transform.iso();
+
+            emitmatrix.emit(
+                newids, activeids, &base.simulation_space, &base.scaling_space,
+                &world_matrix.0, &world_matrix_inv.0, iso, &global_position, &global_rotation, &global_scaling,
+                &local_scaling.0
+            );
         }
     });
+    performance.sys_emitmatrix = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_emitter(
     calculators: Query<(&ParticleCalculatorShapeEmitter, &ParticleCalculatorStartSpeed)>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     // let time = pi_time::Instant::now();
 
     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut locpos, mut directions)| {
@@ -107,6 +128,7 @@ pub fn sys_emitter(
         }
     });
     
+    performance.sys_emitter = (pi_time::Instant::now() - time0).as_micros() as u32;
     // let time1 = pi_time::Instant::now();
     // log::warn!("emitter: {:?}", time1 - time);
 }
@@ -116,7 +138,9 @@ pub fn sys_start_lifetime(
     mut particle_sys: Query<(Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime, &mut ParticleDieWaitTime)>,
     calculators_trail: Query<&ParticleCalculatorTrail>,
     mut particle_sys_trail: Query<&mut ParticleTrail>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(entity, ids, time, randoms, mut items, mut diewaittimes)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -132,12 +156,15 @@ pub fn sys_start_lifetime(
             }
         }
     });
+    performance.sys_start_lifetime = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_start_size(
     calculators: Query<&ParticleCalculatorStartSize>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartScaling, &mut ParticleLocalScaling)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items, mut localscalings)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -148,12 +175,15 @@ pub fn sys_start_size(
             items.start(newids, &mut localscalings, &randoms, time, calculator, );
         }
     });
+    performance.sys_start_size = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_start_rotation(
     calculators: Query<&ParticleCalculatorStartRotation>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalRotation)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -163,12 +193,15 @@ pub fn sys_start_rotation(
             items.start(newids, &randoms, time, calculator);
         }
     });
+    performance.sys_start_rotation = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_start_color(
     calculators: Query<&ParticleCalculatorStartColor>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartColor, &mut ParticleColor)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items, mut colors)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -178,12 +211,15 @@ pub fn sys_start_color(
             items.start(newids, &mut colors, &randoms, time, calculator);
         }
     });
+    performance.sys_start_color = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_start_texture_sheet(
     calculators: Query<&ParticleCalculatorTextureSheet>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleUV)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -193,12 +229,15 @@ pub fn sys_start_texture_sheet(
             items.start(newids, &randoms, calculator);
         }
     });
+    performance.sys_start_texture_sheet = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 /// =================================== over life time
 pub fn sys_color_over_life_time(
     calculators: Query<&ParticleCalculatorColorOverLifetime>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartColor, &mut ParticleColor)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, startcolors, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -209,12 +248,15 @@ pub fn sys_color_over_life_time(
             items.run(activeids, ages, startcolors, randoms, calculator);
         }
     });
+    performance.sys_color_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_rotation_over_life_time(
     calculators: Query<&ParticleCalculatorRotationOverLifetime>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalRotation)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -225,13 +267,16 @@ pub fn sys_rotation_over_life_time(
             items.run(activeids, ages, randoms, time, calculator);
         }
     });
+    performance.sys_rotation_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 
 pub fn sys_size_over_life_time(
     calculators: Query<&ParticleCalculatorSizeOverLifetime>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalScaling)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -242,13 +287,16 @@ pub fn sys_size_over_life_time(
             items.run(activeids, ages, randoms, calculator);
         }
     });
+    performance.sys_size_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 
 pub fn sys_velocity_over_life_time(
     calculators: Query<&ParticleCalculatorVelocityOverLifetime>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleVelocity)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -259,6 +307,7 @@ pub fn sys_velocity_over_life_time(
             items.run(activeids, ages, randoms, time, calculator);
         }
     });
+    performance.sys_velocity_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_orbit_over_life_time(
@@ -266,7 +315,9 @@ pub fn sys_orbit_over_life_time(
     velocitys: Query<&ParticleCalculatorOrbitVelocity>,
     radials: Query<&ParticleCalculatorOrbitRadial>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleOrbitVelocity)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -278,12 +329,15 @@ pub fn sys_orbit_over_life_time(
         let activeids = &ids.actives;
         items.run(activeids, ages, randoms, time, offset, velocity, radial);
     });
+    performance.sys_orbit_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_speed_modifier_over_life_time(
     calculators: Query<&ParticleCalculatorSpeedModifier>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleSpeedFactor)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -294,12 +348,15 @@ pub fn sys_speed_modifier_over_life_time(
             items.run(activeids, ages, randoms, time, calculator);
         }
     });
+    performance.sys_speed_modifier_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_limit_velocity_over_life_time(
     calculators: Query<&ParticleCalculatorLimitVelocityOverLifetime>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLimitVelocityScalar)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -310,6 +367,7 @@ pub fn sys_limit_velocity_over_life_time(
             items.run(activeids, ages, randoms, time, calculator);
         }
     });
+    performance.sys_limit_velocity_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_direction(
@@ -319,7 +377,9 @@ pub fn sys_direction(
         &ParticleVelocity, &ParticleGravityFactor, &ParticleForce, &ParticleOrbitVelocity, &ParticleSpeedFactor, &ParticleLimitVelocityScalar,
         &mut ParticleDirection, &mut ParticleLocalPosition
     )>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(
         |(
             ids, time,
@@ -336,13 +396,16 @@ pub fn sys_direction(
             }
         }
     );
+    performance.sys_direction = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 // 
 pub fn sys_color_by_speed(
     calculators: Query<&ParticleCalculatorColorBySpeed>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleColor)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, directions, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -352,13 +415,16 @@ pub fn sys_color_by_speed(
             items.speed(activeids, directions, randoms, calculator);
         }
     });
+    performance.sys_color_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 // 
 pub fn sys_size_by_speed(
     calculators: Query<&ParticleCalculatorSizeBySpeed>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalScaling)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, directions, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -368,13 +434,16 @@ pub fn sys_size_by_speed(
             items.speed(activeids, directions, randoms, calculator);
         }
     });
+    performance.sys_size_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 // 
 pub fn sys_rotation_by_speed(
     calculators: Query<&ParticleCalculatorRotationBySpeed>,
     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalRotation)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(ids, time, directions, randoms, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
@@ -384,34 +453,51 @@ pub fn sys_rotation_by_speed(
             items.speed(activeids, directions, randoms, time, calculator);
         }
     });
+    performance.sys_rotation_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_ids(
     mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime, &ParticleDieWaitTime)>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(mut ids, ages, time, diewaittimes)| {
         if time.running_delta_ms <= 0 { return; }
 
         ids.newids.clear();
 
-        let mut items = [ids.actives.clone(), ids.dies.clone()].concat();
+        let items = [ids.actives.clone(), ids.dies.clone()].concat();
+
         ids.actives.clear();
         ids.dies.clear();
-        items.drain(..).for_each(|idx| {
-            let age = ages.get(idx).unwrap();
-            let diewait = diewaittimes.0.get(idx).unwrap();
+        items.iter().for_each(|idx| {
+            let age = ages.get(*idx).unwrap();
+            let diewait = diewaittimes.0.get(*idx).unwrap();
             // log::warn!("Age: {:?}, Lifetime: {:?}", age.age, age.lifetime);
             if age.age <= age.lifetime {
-                ids.actives.push(idx);
+                ids.actives.push(*idx);
             } else if age.age < age.lifetime + diewait {
-                ids.dies.push(idx);
+                ids.dies.push(*idx);
             } else {
-                ids.unactives.push(idx);
+                ids.unactives.push(*idx);
             }
         });
+        // ids.dies.clone().drain(..).for_each(|idx| {
+        //     let age = ages.get(idx).unwrap();
+        //     let diewait = diewaittimes.0.get(idx).unwrap();
+        //     // log::warn!("Age: {:?}, Lifetime: {:?}", age.age, age.lifetime);
+        //     if age.age <= age.lifetime {
+        //         ids.actives.push(idx);
+        //     } else if age.age < age.lifetime + diewait {
+        //         ids.dies.push(idx);
+        //     } else {
+        //         ids.unactives.push(idx);
+        //     }
+        // });
 
         // log::warn!("actives: {:?}", ids.actives);
     });
+    performance.sys_ids = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_texturesheet(
@@ -419,7 +505,9 @@ pub fn sys_texturesheet(
     mut particle_sys: Query<
         (&ParticleIDs, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleUV),
     >,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(
         |(
             ids, ages, baserandoms,
@@ -431,6 +519,7 @@ pub fn sys_texturesheet(
             }
         }
     );
+    performance.sys_texturesheet = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
 pub fn sys_update_buffer(
@@ -461,13 +550,23 @@ pub fn sys_update_buffer(
     ),
     mut instancedcache: ResMut<InstanceBufferAllocator>,
     mut allocator: ResMut<VertexBufferAllocator3D>,
+    commonbuffer: Res<ResParticleCommonBuffer>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     // let mut ptime = pi_time::Instant::now();
     // let mut ptime1 = pi_time::Instant::now();
 
     // log::warn!("ParticleBuffer: ");
+    let mut count_particles = 0;
+    let mut collectdata: Vec<f32> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16));
+    let common_f32 = commonbuffer.f32_count();
+    let mut common_f32_use = 0;
+    let mut flag_common = common_f32 > common_f32_use;
+    // let mut collectdata: Vec<u8> = Vec::with_capacity(100 * (4 + 4 + 16) * 4);
+    let mut collect_common: Vec<f32> = Vec::with_capacity(common_f32);
     particle_sys.iter().for_each(
         |(
             entity, state, _time, ids, scalings, rotations, positions, directions, emitmatrixs,
@@ -489,80 +588,114 @@ pub fn sys_update_buffer(
                 let id_geo = idgeo.0;
                 if let Ok(instanceinfo) = instanceinfos.get(id_geo) {
 
-                    let length = ids.actives.len();
+                    let particle_count = ids.actives.len();
+                    count_particles += particle_count;
 
                     // log::warn!("sys_update_buffer B");
                     if let Ok(calculator) = calculators.get(ids.calculator.0) {
-                        let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
+                        collectdata.clear();
+                        // let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
                         
                         let renderalign = calculator.render_align();
                         let updatebuffer = renderalign.is_some();
                         // log::warn!("ActiveCount: {:?}", length);
 
-                        let mut emitposition = Vector3::zeros();
-                        let zero = Vector3::zeros();
-
-                        ids.actives.iter().for_each(|idx| {
-                            let scaling = scalings.get(*idx).unwrap();
-                            let eulers = rotations.get(*idx).unwrap();
-
-                            let mut translation = positions.get(*idx).unwrap().clone();
-                            // log::warn!("LOCAL: {:?}", translation);
-
-                            translation = translation + calculator.pivot.clone();
-
-                            let direction = directions.get(*idx).unwrap();
-                            let emitmatrix = emitmatrixs.get(*idx).unwrap();
-                            let color = colors.get(*idx).unwrap();
-                            let uv = uvs.get(*idx).unwrap();
-                            let mut g_velocity = Vector3::zeros();
-
-                            CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
-                            CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
-                            // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
-                            let vlen = CoordinateSytem3::length(&g_velocity);
-                            // log::warn!("Velocity: {:?}", g_velocity);
-
-                            let matrix = if let Some(renderalign) = renderalign {
-                                let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
-                                // log::warn!("rotation : {:?}", rotation);
-                                let mut matrix = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
-                                
-                                let mut local = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
-                                // log::warn!("a MAREIX: {:?}", matrix);
-                                matrix = matrix * local;
-                    
-                                if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
-                                    matrix = matrix * local;
-                                }
-                                matrix
-                            } else {
-                                // let mut matrix = Matrix::identity();
-                                // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
-                                let matrix = &emitmatrix.matrix;
-                                let mut local = Matrix::identity();
-                                CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
-                                // log::warn!("MAREIX: {:?}", matrix);
-                                // log::warn!("LOCAL: {:?}", local);
-                                matrix * local
-                            };
-
-                            if updatebuffer {
-                                // log::warn!("MAREIX: {:?}", matrix);
-                                // log::warn!("Color: {:?}", color);
-                                // log::warn!("UV: {:?}", uv);
-                                matrix.as_slice().iter().for_each(|v| { collectdata.push(*v); });
-                                color.as_slice().iter().for_each(|v| { collectdata.push(*v); });
-                                collectdata.push(uv.uscale);collectdata.push(uv.vscale);collectdata.push(uv.uoffset);collectdata.push(uv.voffset);
-                            }
-                        });
-
                         if updatebuffer {
-                            // log::warn!("sys_update_buffer {}", updatebuffer);
-                            let collected = bytemuck::cast_slice(&collectdata);
-                            reset_instances_buffer(id_geo, &instanceinfo, collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
+                            let mut emitposition = Vector3::zeros();
+                            // let zero = Vector3::zeros();
+                            let mut g_velocity = Vector3::zeros();
+                            
+                            let f32_count = particle_count * instanceinfo.bytes_per_instance() as usize / 4;
+                            let collect = if common_f32_use + f32_count <= common_f32 {
+                                flag_common = true;
+                                &mut collect_common
+                            } else {
+                                flag_common = false;
+                                &mut collectdata
+                            };
+    
+                            ids.actives.iter().for_each(|idx| {
+                                let scaling = scalings.get(*idx).unwrap();
+                                let eulers = rotations.get(*idx).unwrap();
+    
+                                let mut translation = positions.get(*idx).unwrap().clone();
+                                // log::warn!("LOCAL: {:?}", translation);
+    
+                                translation = translation + calculator.pivot.clone();
+    
+                                let direction = directions.get(*idx).unwrap();
+                                let emitmatrix = emitmatrixs.get(*idx).unwrap();
+    
+                                CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
+                                CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
+                                // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
+                                let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
+                                // log::warn!("Velocity: {:?}", g_velocity);
+                                // log::warn!("Translation: {:?}", emitposition);
+    
+                                let matrix = if let Some(renderalign) = renderalign {
+                                    let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
+                                    // log::warn!("rotation : {:?}", rotation);
+                                    let mut matrix = Matrix::identity();
+                                    {
+                                        matrix.append_nonuniform_scaling_mut(&emitmatrix.scaling);
+                                        matrix.append_translation_mut(&emitposition);
+                                        matrix = matrix * rotation.to_homogeneous();
+                                    }
+                                    // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
+                                    
+                                    let mut local = Matrix::identity();
+                                    {
+                                        let rotation = Rotation3::from_euler_angles(eulers.z, eulers.x, eulers.y);
+                                        local.append_nonuniform_scaling_mut(scaling);
+                                        local = local * rotation.to_homogeneous();
+                                    }
+                                    // CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
+                                    // log::warn!("a MAREIX: {:?}", matrix);
+                                    matrix = matrix * local;
+                        
+                                    if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
+                                        matrix = matrix * local;
+                                    }
+                                    matrix
+                                } else {
+                                    // let mut matrix = Matrix::identity();
+                                    // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
+                                    let matrix = &emitmatrix.matrix;
+                                    let mut local = Matrix::identity();
+                                    CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
+                                    // log::warn!("MAREIX: {:?}", matrix);
+                                    // log::warn!("LOCAL: {:?}", local);
+                                    matrix * local
+                                };
+    
+                                let color = colors.get(*idx).unwrap();
+                                let uv = uvs.get(*idx).unwrap();
+
+                                if instanceinfo.state & InstanceState::INSTANCE_BASE == InstanceState::INSTANCE_BASE {
+                                    matrix.as_slice().iter().for_each(|v| { collect.push(*v); });
+                                }
+                                if instanceinfo.state & InstanceState::INSTANCE_COLOR == InstanceState::INSTANCE_COLOR {
+                                    color.as_slice().iter().for_each(|v| { collect.push(*v); });
+                                }
+                                if instanceinfo.state & InstanceState::INSTANCE_TILL_OFF_1 == InstanceState::INSTANCE_TILL_OFF_1 {
+                                    collect.push(uv.uscale); collect.push(uv.vscale); collect.push(uv.uoffset); collect.push(uv.voffset);
+                                }
+                            });
+
+                            if flag_common {
+                                let newsize = collect_common.len();
+                                if newsize > common_f32_use {
+                                    // log::warn!("Common: {:?}", (common_f32_use as u32 * 4, newsize as u32 * 4));
+                                    let data = commonbuffer.buffer(common_f32_use as u32 * 4, newsize as u32 * 4);
+                                    reset_instances_buffer_range(id_geo, &instanceinfo, &mut slots, data);
+                                    common_f32_use = newsize;
+                                }
+                            } else {
+                                // log::warn!("Single: >>>>>>>>>>>>>");
+                                let collected = bytemuck::cast_slice(&collectdata);
+                                reset_instances_buffer(id_geo, &instanceinfo, collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
+                            }
                         }
                     }
                 }
@@ -570,6 +703,14 @@ pub fn sys_update_buffer(
         }
     );
 
+    if collect_common.len() > 0 {
+        // log::warn!("Common: {:?}", collect_common.len());
+        let data = bytemuck::cast_slice(&collect_common);
+        commonbuffer.update(data, &queue);
+    }
+
+    performance.particles = count_particles as u32;
+    performance.sys_update_buffer = (pi_time::Instant::now() - time0).as_micros() as u32;
     // ptime1 = pi_time::Instant::now();
     // log::warn!("update_buffer: {:?}", ptime1 - ptime);
     // log::warn!("ParticleBuffer: End");
@@ -584,7 +725,9 @@ pub fn sys_update_buffer_trail(
     mut meshes: Query<&mut RenderGeometryEable>,
     mut trailbuffer: ResMut<ResParticleTrailBuffer>,
     queue: Res<PiRenderQueue>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    let time0 = pi_time::Instant::now();
     if let Some(trailbuffer) = &mut trailbuffer.0 {
         particle_sys.iter_mut().for_each(
             |(
@@ -626,6 +769,7 @@ pub fn sys_update_buffer_trail(
             }
         );
         trailbuffer.after_collect(&queue);
+        performance.sys_update_buffer_trail = (pi_time::Instant::now() - time0).as_micros() as u32;
     }
 }
 

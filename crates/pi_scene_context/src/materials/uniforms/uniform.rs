@@ -17,7 +17,10 @@ use super::{
 };
 
 #[derive(Component)]
-pub struct BindEffectValueDirty(pub bool);
+pub struct BindEffectValueDirty;
+
+#[derive(Component)]
+pub struct BindEffectReset;
 
 
 #[derive(Component, Deref, DerefMut)]
@@ -102,8 +105,8 @@ impl BindEffectValues {
         }
     }
 
-    pub fn mat4(& self, slot: usize, value: &[Number]) {
-        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+    pub fn mat4(&mut self, slot: usize, value: &[Number]) {
+        let item = self; // unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.mat4_.set(slot, value);
     }
@@ -114,20 +117,20 @@ impl BindEffectValues {
     //     item.mat2_.set(slot, value);
     // }
     
-    pub fn vec4(& self, slot: usize, value: &[Number]) {
-        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+    pub fn vec4(&mut self, slot: usize, value: &[Number]) {
+        let item = self; // unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.vec4_.set(slot, value);
     }
     
-    pub fn vec2(& self, slot: usize, value: &[Number]) {
-        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+    pub fn vec2(&mut self, slot: usize, value: &[Number]) {
+        let item = self; // unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.vec2_.set(slot, value);
     }
     
-    pub fn float(& self, slot: usize, value: Number) {
-        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+    pub fn float(&mut self, slot: usize, value: Number) {
+        let item = self; // unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.float.set(slot, value);
     }
@@ -138,8 +141,8 @@ impl BindEffectValues {
     //     item.int__.set(slot, value);
     // }
     
-    pub fn uint(& self, slot: usize, value: u32) {
-        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+    pub fn uint(&mut self, slot: usize, value: u32) {
+        let item = self; // unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         item.uint_.set(slot, value);
     }
@@ -153,6 +156,7 @@ impl BindEffectValues {
         self.float.update(range);
         // self.int__.update(range);
         self.uint_.update(range);
+        // log::warn!("{:?}", self.vec4_.data);
     }
 
     // pub fn mat4_one(& self, slot: usize, offset: usize, value: Number) {
@@ -171,16 +175,22 @@ impl BindEffectValues {
     //     }
     // }
 
-    pub fn vec4_one(& self, slot: usize, offset: usize, value: Number) {
-        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+    pub fn vec4_one(&mut self, slot: usize, offset: usize, value: Number) {
+        let item = self; // unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
-        if let Some(data) = item.vec4_.value_mut(slot) {
-            data[offset] = value;
+        if slot < item.vec4_.slot as usize {
+            // log::warn!("{:?}: {:?}", slot * Vec4Uniform::N + offset, value);
+            item.vec4_.data[slot * Vec4Uniform::N + offset] = value;
+            // log::warn!("{:?}", item.vec4_.data[slot * Vec4Uniform::N + offset]);
         }
+        // log::warn!("{:?}", item.vec4_.data);
+        // if let Some(data) = item.vec4_.value_mut(slot) {
+        //     data[offset] = value;
+        // }
     }
 
-    pub fn vec2_one(& self, slot: usize, offset: usize, value: Number) {
-        let item = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+    pub fn vec2_one(&mut self, slot: usize, offset: usize, value: Number) {
+        let item = self; // unsafe { &mut *(self as *const Self as usize as *mut Self) };
         item.dirty = true;
         if let Some(data) = item.vec2_.value_mut(slot) {
             data[offset] = value;

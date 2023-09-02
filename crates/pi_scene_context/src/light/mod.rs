@@ -70,9 +70,15 @@ impl Plugin for PluginLighting {
 			Update,
             (
                 sys_light_render_modify,
+            ).in_set(ERunStageChap::Command)
+        );
+        
+        app.add_systems(
+			Update,
+            (
                 sys_shadow_param_update,
                 sys_shadow_param_update_while_mat_create,
-            ).in_set(ERunStageChap::Command)
+            ).chain().in_set(ERunStageChap::CalcWorldMatrix)
         );
         
         app.add_systems(
@@ -115,8 +121,8 @@ impl Plugin for PluginLighting {
         app.add_systems(
 			Update,
             (
-                sys_update_viewer_model_list_by_viewer::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
-                sys_update_viewer_model_list_by_model::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
+                sys_update_viewer_model_list_by_viewer::<LightDirection, DirectionalShadowProjection>,
+                sys_update_viewer_model_list_by_model::<LightDirection, DirectionalShadowProjection>,
             ).chain().in_set(ERunStageChap::CalcRenderMatrix)
         );
 
@@ -129,10 +135,10 @@ impl Plugin for PluginLighting {
         app.add_systems(
 			Update,
             (
-                sys_update_viewer_uniform::<LightDirection, DirectionalShadowProjection>.run_if(should_run),
+                sys_update_viewer_uniform::<LightDirection, DirectionalShadowProjection>,
             ).chain().in_set(ERunStageChap::Uniform)
         );
 
-        app.add_systems(Update, sys_dispose_about_light.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

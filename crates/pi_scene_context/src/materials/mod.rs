@@ -15,7 +15,7 @@ use self::{
         set_up_uniforms
     },
     system::sys_dispose_about_material,
-    prelude::SingleIDBaseDefaultMaterial
+    prelude::{SingleIDBaseDefaultMaterial, StageMaterial, StateMaterial}
 };
 
 mod material;
@@ -92,18 +92,33 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListUniformMat2::default());
         app.insert_resource(ActionListUniformMat4::default());
         app.insert_resource(ActionListUniformTexture::default());
+        app.insert_resource(StateMaterial::default());
+
+        app.configure_set(Update, StageMaterial::MaterialUse.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageMaterial::MaterialUseApply.after(StageMaterial::MaterialUse));
+        app.configure_set(Update, StageMaterial::MaterialCommand.after(StageMaterial::MaterialUseApply));
+        app.configure_set(Update, StageMaterial::MaterialCommandApply.after(StageMaterial::MaterialCommand).before(StageTextureLoad::TextureRequest));
+        app.configure_set(Update, StageMaterial::MaterialReady.after(StageMaterial::MaterialCommandApply).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageMaterial::MaterialUseApply));
+        app.add_systems(Update, apply_deferred.in_set(StageMaterial::MaterialCommandApply));
 
         app.add_systems(
 			Update,
             (
-                sys_create_material.run_if(should_run),
-                // sys_sync_load_create::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
-                // sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>,
-            ).chain().in_set(ERunStageChap::Initial)
+                sys_create_material,
+            ).in_set(ERunStageChap::Initial)
         );
         
         app.add_systems(Update, 
-            sys_act_material_use.run_if(should_run).in_set(ERunStageChap::SecondInitial)
+            (
+                sys_act_material_use,
+            ).in_set(StageMaterial::MaterialUse)
+        );
+
+        app.add_systems(Update, 
+            (
+                sys_material_textures_modify,
+            ).in_set(StageMaterial::MaterialCommand)
         );
 
         app.add_systems(
@@ -111,107 +126,46 @@ impl Plugin for PluginMaterial {
             (
                 // sys_act_uniform,
                 // sys_act_uniform_by_name,
-                sys_act_material_mat4.run_if(should_run),
+                sys_act_material_mat4,
                 // sys_act_material_mat2.run_if(should_run),
-                sys_act_material_vec4.run_if(should_run),
-                sys_act_material_vec2.run_if(should_run),
-                sys_act_material_float.run_if(should_run),
+                sys_act_material_vec4,
+                sys_act_material_vec2,
+                sys_act_material_float,
                 // sys_act_material_int.run_if(should_run),
-                sys_act_material_uint.run_if(should_run),
-                sys_act_material_texture.run_if(should_run),
-            ).in_set(ERunStageChap::SecondInitial)
+                sys_act_material_uint,
+                sys_act_material_texture,
+            ).before(sys_material_textures_modify).chain().in_set(StageMaterial::MaterialCommand)
             // .after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
-        
+
         app.add_systems(
 			Update,
             (
-                // sys_material_init,
-                sys_material_textures_modify,
-            ).in_set(ERunStageChap::Command)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_texture_ready01.run_if(should_run),
-                sys_texture_ready02.run_if(should_run),
-                sys_texture_ready03.run_if(should_run),
-                sys_texture_ready04.run_if(should_run),
-                sys_texture_ready05.run_if(should_run),
-                sys_texture_ready06.run_if(should_run),
-                sys_texture_ready07.run_if(should_run),
-                sys_texture_ready08.run_if(should_run),
-            ).in_set(ERunStageChap::Command)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_effect_bind_to_model_while_mat_modify.run_if(should_run), // ::<PassID01>,
-                // sys_effect_bind_to_model_while_mat_modify::<PassID02>,
-                // sys_effect_bind_to_model_while_mat_modify::<PassID03>,
-                // sys_effect_bind_to_model_while_mat_modify::<PassID04>,
-                // sys_effect_bind_to_model_while_mat_modify::<PassID05>,
-                // sys_effect_bind_to_model_while_mat_modify::<PassID06>,
-                // sys_effect_bind_to_model_while_mat_modify::<PassID07>,
-                // sys_effect_bind_to_model_while_mat_modify::<PassID08>,
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_effect_tex_to_model_while_mat_modify.run_if(should_run), //::<PassID01>,
-                // sys_effect_tex_to_model_while_mat_modify::<PassID02>,
-                // sys_effect_tex_to_model_while_mat_modify::<PassID03>,
-                // sys_effect_tex_to_model_while_mat_modify::<PassID04>,
-                // sys_effect_tex_to_model_while_mat_modify::<PassID05>,
-                // sys_effect_tex_to_model_while_mat_modify::<PassID06>,
-                // sys_effect_tex_to_model_while_mat_modify::<PassID07>,
-                // sys_effect_tex_to_model_while_mat_modify::<PassID08>,
-            ).in_set(ERunStageChap::DrawBindsAndCulling)
+                sys_texture_ready07,
+                sys_effect_bind_to_model_while_mat_modify,
+                sys_effect_tex_to_model_while_mat_modify
+            ).chain().in_set(StageMaterial::MaterialReady)
         );
         app.add_systems(Update, 
-            sys_material_uniform_apply.run_if(should_run).in_set(ERunStageChap::Uniform)
+            sys_material_uniform_apply.in_set(ERunStageChap::Uniform)
         );
 
         app.add_systems(Update, 
-            sys_dispose_about_material.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
-        // PluginMaterialUniforms.build(app);
-        // app.add_plugins(PluginMaterialUniforms);
     }
-    // fn init(
-    //     &mut self,
-    //     engine: &mut crate::engine::Engine,
-    //     stages: &mut crate::run_stage::RunStage,
-    // ) -> Result<(), crate::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-    //     world.insert_resource(SingleMatCreateCommands::default());
-    //     world.insert_resource(SingleMaterialIDCommandList::default());
-
-    //     SysMaterailCreateCommands::setup(world, stages.query_stage::<SysMaterailCreateCommands>(ERunStageChap::Initial));
-
-    //     PluginAssetSyncNotNeedLoad::<KeyShader3D, Shader3D>::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
-    //     PluginAssetShaderEffectLoad::new(false, 10 * 1024 * 1024, 60 * 1000).init(engine, stages);
-
-    //     let world = engine.world_mut();
-    //     SysMaterialIDCommand::setup(world, stages.query_stage::<SysMaterialIDCommand>(ERunStageChap::Initial));
-
-    //     PluginMaterialUniforms.init(engine, stages);
-
-    //     Ok(())
-    // }
 }
 
 pub struct PluginGroupMaterial;
 impl PluginGroupMaterial {
     pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {
         group
-            .add(PluginMaterial)
             .add(PluginTextureSlot01Load::default())
             .add(PluginTextureSlot02Load::default())
             .add(PluginTextureSlot03Load::default())
             .add(PluginTextureSlot04Load::default())
             .add(PluginTextureSlot05Load::default())
             .add(PluginTextureSlot06Load::default())
+            .add(PluginMaterial)
     }
 }

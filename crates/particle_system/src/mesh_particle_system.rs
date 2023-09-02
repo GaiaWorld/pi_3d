@@ -150,7 +150,7 @@
 //         self.ps_tool.var_compute(std::time::SystemTime::now()
 //         .duration_since(UNIX_EPOCH)
 //         .unwrap()
-//         .as_millis() as u64, world_matrix, local_matrix);
+//         .as_micros() as u64, world_matrix, local_matrix);
 //         // self._mpDirty = true;
 
 //         // self._recycleCall();

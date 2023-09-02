@@ -26,6 +26,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
     }
     fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number)) {
         self.fast.remove(&key);
+        self.tree.remove(BoundingKey(key));
         // let box_point = info.bounding_box.vectors_world;
         let points = vec![
             Point3::new(min.0, min.1, min.2),

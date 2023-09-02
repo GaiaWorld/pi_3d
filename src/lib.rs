@@ -1,6 +1,7 @@
 use pi_3d_state::{PluginStateGlobal, StateGlobal};
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
+use pi_particle_system::prelude::ParticleSystemPerformance;
 use pi_scene_context::{
     prelude::*,
     scene::PluginScene,
@@ -31,11 +32,10 @@ pub fn sys_info_node(
     scenes.iter().for_each(|entity| {
         if let Some(state) = states.scenes.get(&entity) {
             log::warn!(
-                "Scene: {:?}, Draw: {:?}, Vertex: {:?}, Materials: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Light: {:?}, Skeleton: {:?}, ParticleSys: {:?}, Trail: {:?}, AnimeGroup: {:?}",
+                "Scene: {:?}, Draw: {:?}, Vertex: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Light: {:?}, Skeleton: {:?}, ParticleSys: {:?}, Trail: {:?}, AnimeGroup: {:?}",
                 entity,
                 state.count_drawobj,
                 state.count_vertex,
-                state.count_material,
                 state.count_transform,
                 state.count_mesh,
                 state.count_instance,
@@ -102,10 +102,17 @@ pub fn sys_info_draw(
 
 pub fn sys_info_resource(
     states: Res<StateGlobal>,
+    psperformance: Res<ParticleSystemPerformance>,
+    performance: Res<Performance>,
 ) {
     log::warn!(
-        "BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
-        states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
+        "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
+        states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
+    );
+    log::warn!(
+        "PSCount: {:?}, PSPerformance: {:?}, PSEmitMatrix: {:?}, PSDirection: {:?}, PSUpdate: {:?}, PSUpdateTrail: {:?}, {:?}, {:?}, {:?}, {:?}",
+        psperformance.particles, performance.particlesystem, psperformance.sys_emitmatrix, psperformance.sys_direction, psperformance.sys_update_buffer, psperformance.sys_update_buffer_trail
+        , psperformance.sys_emission, psperformance.sys_emitter, psperformance.sys_ids, psperformance.sys_orbit_over_life_time
     );
 }
 

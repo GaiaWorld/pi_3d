@@ -19,6 +19,9 @@ pub enum ETextureSlot {
 #[derive(Debug, Clone, Default, Component)]
 pub struct UniformTextureWithSamplerParams(pub XHashMap<Atom, Arc<UniformTextureWithSamplerParam>>);
 
+#[derive(Component)]
+pub struct UniformTextureWithSamplerParamsDirty;
+
 pub trait ValueTextureKey: ThreadSync + 'static {
     fn new(param: UniformTextureWithSamplerParam) -> Self;
     fn key(&self) -> &EKeyTexture;

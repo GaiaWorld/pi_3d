@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    geometry::prelude::*, object::sys_dispose_ready
+    geometry::prelude::*, object::sys_dispose_ready, transforms::prelude::*
 };
 
 use self::{
@@ -47,6 +47,9 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListMeshRenderIndiceRange::default());
         app.insert_resource(ActionListBoneOffset::default());
 
+        app.configure_set(Update, StageModel::AbstructMeshCommand.after(ERunStageChap::_InitialApply).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform).before(StageGeometry::GeometryLoaded));
+
         app.add_systems(Update, 
             sys_create_mesh.in_set(ERunStageChap::Initial)
         );
@@ -54,7 +57,7 @@ impl crate::Plugin for PluginMesh {
             sys_act_instanced_mesh_create.in_set(ERunStageChap::Initial)
         );
         app.add_systems(Update, 
-            sys_instance_color.in_set(ERunStageChap::Command)
+            sys_instance_color.in_set(StageModel::AbstructMeshCommand)
         );
         app.add_systems(
 			Update,
@@ -68,52 +71,39 @@ impl crate::Plugin for PluginMesh {
                 sys_act_instance_alpha,
                 sys_act_instance_tilloff,
                 sys_act_mesh_render_indice,
-            ).before(sys_instance_color).in_set(ERunStageChap::Command)
+            ).before(sys_instance_color).in_set(StageModel::AbstructMeshCommand)
         );
         app.add_systems(Update, 
-            sys_enable_about_instance.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
+            sys_enable_about_instance.in_set(StageModel::InstanceEffectMesh)
         );
         app.add_systems(Update, 
-            sys_calc_render_matrix.run_if(should_run).in_set(ERunStageChap::CalcRenderMatrix)
+            sys_calc_render_matrix.in_set(StageModel::InstanceEffectMesh)
         );
         app.add_systems(Update, 
-            sys_calc_render_matrix_instance.run_if(should_run).after(sys_calc_render_matrix).in_set(ERunStageChap::CalcRenderMatrix)
+            sys_calc_render_matrix_instance.after(sys_calc_render_matrix).in_set(StageModel::InstanceEffectMesh)
         );
         app.add_systems(
 			Update,
             (
-                sys_render_matrix_for_uniform.run_if(should_run),
-                sys_velocity_for_uniform.run_if(should_run),
-                sys_skinoffset_for_uniform.run_if(should_run),
+                sys_render_matrix_for_uniform,
+                sys_velocity_for_uniform,
+                sys_skinoffset_for_uniform,
             ).in_set(ERunStageChap::Uniform)
         );
         app.add_systems(
 			Update,
             (
-                // sys_tick_instance_buffer_update::<InstanceColor, InstanceBufferColor, InstanceColorDirty>.run_if(should_run),
-                // sys_tick_instance_buffer_update::<InstanceTillOff, InstanceBufferTillOff, InstanceTillOffDirty>.run_if(should_run),
-                // sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>.run_if(should_run),
                 sys_tick_instanced_buffer_update.run_if(should_run),
-                sys_tick_instanced_buffer_update_single.run_if(should_run),
-            ).chain().after(sys_calc_render_matrix_instance).in_set(ERunStageChap::CalcRenderMatrix)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_act_geomettry_instance_world_matrix.run_if(should_run),
-                sys_act_geomettry_instance_color.run_if(should_run),
-                sys_act_geomettry_instance_tilloff.run_if(should_run),
-            // ).chain().before(sys_tick_instance_buffer_update::<RenderWorldMatrix, InstanceBufferWorldMatrix, InstanceWorldMatrixDirty>)
-            ).chain().in_set(ERunStageChap::Command)
-            // .before(sys_tick_instanced_buffer_update)
+                sys_tick_instanced_buffer_update_single,
+            ).chain().after(sys_calc_render_matrix_instance).in_set(StageModel::InstanceEffectMesh)
         );
 
         app.add_systems(
 			Update,
             (
-                sys_dispose_about_mesh.run_if(should_run),
-                sys_dispose_about_instance.run_if(should_run),
-                sys_dispose_about_pass.run_if(should_run),
+                sys_dispose_about_mesh,
+                sys_dispose_about_instance,
+                sys_dispose_about_pass,
             ).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
         );
     }

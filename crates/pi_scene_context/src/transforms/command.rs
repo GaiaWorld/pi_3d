@@ -74,7 +74,7 @@ pub struct BundleTransformNode(
 );
 
 #[derive(Default, Resource)]
-pub struct TransformRecord {
+pub struct TransformPerformance {
     pub wmcompute: XHashMap<Entity, u32>,
     pub all_wmcompute: u32,
 }

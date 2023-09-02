@@ -1,5 +1,5 @@
 
-use std::ops::Sub;
+use std::{ops::Sub, sync::Arc};
 
 use bevy::prelude::Deref;
 use crossbeam::queue::SegQueue;
@@ -16,6 +16,18 @@ use crate::{
     modifier::*,
     emitter::ShapeEmitter,
 };
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageParticleSystem {
+    ParticleSysCommand,
+    ParticleSysEmission,
+    ParticleSysParamStart,
+    ParticleSysParamOverLifetime,
+    ParticleSysDirection,
+    ParticleSysParamBySpeed,
+    ParticleSysMatrix,
+    ParticleSysUpdate,
+}
 
 pub type IdxParticle = usize;
 
@@ -63,6 +75,62 @@ pub enum TGradienMode {
      */
     TwoGradients,
     Random,
+}
+
+#[derive(Resource, Default)]
+pub struct ParticleSystemPerformance {
+    pub sys_ids: u32,
+    pub sys_emission: u32,
+    pub sys_emitter: u32,
+    pub sys_start_lifetime: u32,
+    pub sys_start_size: u32,
+    pub sys_start_rotation: u32,
+    pub sys_start_color: u32,
+    pub sys_start_texture_sheet: u32,
+    pub sys_size_over_life_time: u32,
+    pub sys_color_over_life_time: u32,
+    pub sys_rotation_over_life_time: u32,
+    pub sys_velocity_over_life_time: u32,
+    pub sys_orbit_over_life_time: u32,
+    pub sys_speed_modifier_over_life_time: u32,
+    pub sys_limit_velocity_over_life_time: u32,
+    pub sys_texturesheet: u32,
+    pub sys_direction: u32,
+    pub sys_color_by_speed: u32,
+    pub sys_size_by_speed: u32,
+    pub sys_rotation_by_speed: u32,
+    pub sys_emitmatrix: u32,
+    pub sys_update_buffer: u32,
+    pub sys_update_buffer_trail: u32,
+    pub particles: u32,
+    pub maxparticles: u32,
+}
+impl ParticleSystemPerformance {
+    pub fn total(&self) -> u32 {
+        self.sys_ids
+        + self.sys_emission
+        + self.sys_emitter
+        + self.sys_start_lifetime
+        + self.sys_start_size
+        + self.sys_start_rotation
+        + self.sys_start_color
+        + self.sys_start_texture_sheet
+        + self.sys_size_over_life_time
+        + self.sys_color_over_life_time
+        + self.sys_rotation_over_life_time
+        + self.sys_velocity_over_life_time
+        + self.sys_orbit_over_life_time
+        + self.sys_speed_modifier_over_life_time
+        + self.sys_limit_velocity_over_life_time
+        + self.sys_texturesheet
+        + self.sys_direction
+        + self.sys_color_by_speed
+        + self.sys_size_by_speed
+        + self.sys_rotation_by_speed
+        + self.sys_emitmatrix
+        + self.sys_update_buffer
+        + self.sys_update_buffer_trail
+    }
 }
 
 // pub struct ICurveKey(TCurveTime, TCurveValue, TCurveInTangent, TCurveOutTangent, TCurveMode);
@@ -227,6 +295,54 @@ impl ParticleCalculatorBase {
                     },
                 }
             },
+        }
+    }
+}
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct ResParticleCommonBuffer(pub Option<Arc<NotUpdatableBufferRange>>);
+impl TAssetCapacity for ResParticleCommonBuffer {
+    const ASSET_TYPE: &'static str = "PARTICLE_COMMON_BUFFER";
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 1024 * 1024, timeout: 1000 }
+    }
+}
+impl ResParticleCommonBuffer {
+    pub fn new(
+        maxbytes: u32, 
+        allocator: &mut VertexBufferAllocator,
+        device: &RenderDevice,
+        queue: &RenderQueue,
+    ) -> Self {
+        let size = maxbytes;
+        let mut data = Vec::with_capacity(size as usize);
+        for _ in 0..size {
+            data.push(0);
+        }
+
+        let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None);
+        Self(buffer)
+    }
+    pub fn f32_count(&self) -> usize {
+        if let Some(item) = &self.0 {
+            item.size() as usize / 4 
+        } else {
+            0
+        }
+    }
+    pub fn buffer(&self, start: u32, end: u32) -> EVerticesBufferUsage {
+        EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(self.0.as_ref().unwrap().clone(), start, end)))
+    }
+    pub fn update(&self, data: &[u8], queue: &RenderQueue) -> bool {
+        if let Some(item) = &self.0 {
+            if data.len() as u32 <= item.size()  {
+                queue.write_buffer(item.buffer(), 0, data);
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
         }
     }
 }
@@ -898,6 +1014,7 @@ impl ParticleLocalPosition {
 
             let startspeed = startspeed.0.interpolate(time.emission_progress, randoms.base);
             direction_to_update.velocity_start.scale_mut(startspeed);
+            direction_to_update.value.copy_from(&direction_to_update.velocity_start);
 
             // log::warn!("StartPosition: {:?}, Direction: {:?}", position_to_update, direction_to_update.velocity_start);
 
@@ -1073,36 +1190,48 @@ impl ParticleEmitMatrix {
         simulation: &EParticleSimulationSpace,
         scalingmode: &EScalingMode,
         _world_matrix: &Matrix,
-        global_position: &Vector3,
+        _world_matrix_inv: &Matrix,
+        _iso: &Isometry3,
+        _global_position: &Vector3,
         global_rotation: &Rotation3,
         global_scaling: &Vector3,
         local_scaling: &Vector3,
     ) {
         // log::warn!("EmitMatrix:");
         let mut scaling = global_scaling.clone();
+        let mut emitscaling = global_scaling.clone();
         // let mut pose_invert = if let Some(temp) = world_matrix.append_translation(&global_position.scale(-1.)).try_inverse() {
         //     temp
         // } else { Matrix::identity() };
 
-        match scalingmode {
+        let (emittermatrix, emittermatrix_invert) = match scalingmode {
             EScalingMode::Hierarchy => {
-                //
+                (_world_matrix.clone(), _world_matrix_inv.clone())
             },
             EScalingMode::Local => {
                 scaling.copy_from(local_scaling);
-                // CoordinateSytem3::matrix4_compose_rotation(local_scaling, &global_rotation, &global_position, &mut matrix);
+                emitscaling.copy_from(local_scaling);
+
+                let mut emittermatrix = _iso.to_matrix(); // Matrix::identity();
+                emittermatrix.append_nonuniform_scaling_mut(&emitscaling);
+                // CoordinateSytem3::matrix4_compose_rotation(&emitscaling, &global_rotation, &global_position, &mut emittermatrix);
+                let emittermatrix_invert = if let Some(temp) = emittermatrix.try_inverse() {
+                    temp
+                } else { Matrix::identity() };
+                (emittermatrix, emittermatrix_invert)
             },
             EScalingMode::Shape => {
                 scaling.copy_from_slice(&[1., 1., 1.]);
-                // CoordinateSytem3::matrix4_compose_rotation(&Vector3::new(1., 1., 1.), &global_rotation, &global_position, &mut matrix);
+
+                let mut emittermatrix = _iso.to_matrix(); // Matrix::identity();
+                emittermatrix.append_nonuniform_scaling_mut(&emitscaling);
+                // CoordinateSytem3::matrix4_compose_rotation(&emitscaling, &global_rotation, &global_position, &mut emittermatrix);
+                let emittermatrix_invert = if let Some(temp) = emittermatrix.try_inverse() {
+                    temp
+                } else { Matrix::identity() };
+                (emittermatrix, emittermatrix_invert)
             },
-        }
-        
-        let mut emittermatrix = Matrix::identity();
-        CoordinateSytem3::matrix4_compose_rotation(&scaling, &global_rotation, &global_position, &mut emittermatrix);
-        let emittermatrix_invert = if let Some(temp) = emittermatrix.try_inverse() {
-            temp
-        } else { Matrix::identity() };
+        };
 
         match simulation {
             EParticleSimulationSpace::Local => {
@@ -1294,6 +1423,7 @@ impl ParticleOrbitVelocity {
             }
             if let Ok(calculator) = velocity {
                 calculator.0.compute(age.progress, randoms, &mut item.orbit);
+                item.orbit_len = CoordinateSytem3::length_squared(&item.orbit);
             }
             if let Ok(calculator) = radial {
                 item.radial = calculator.0.interpolate(age.progress, randoms.w);
@@ -1357,20 +1487,21 @@ impl ParticleDirection {
     ) {
         // log::warn!("Direction: ");
         let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        let half_delta_seconds = delta_seconds * 0.5;
         let origin = Vector3::zeros();
         ids.iter().for_each(|idx| {
-            let force = forces.get(*idx).unwrap();
-            let gravity = gravities.get(*idx).unwrap();
-            let velocity = velocities.get(*idx).unwrap();
-            let limitscalar = limitscalars.get(*idx).unwrap();
-            let orbit = orbits.get(*idx).unwrap();
-            let speedfactor = speedfactors.get(*idx).unwrap();
+            let force: &Force = forces.get(*idx).unwrap();
+            let gravity: &GravityFactor = gravities.get(*idx).unwrap();
+            let velocity: &Velocity = velocities.get(*idx).unwrap();
+            let limitscalar: &LimitVelocityScalar = limitscalars.get(*idx).unwrap();
+            let orbit: &OrbitVelocity = orbits.get(*idx).unwrap();
+            let speedfactor: &SpeedFactor = speedfactors.get(*idx).unwrap();
+            let direction: &mut Direction = self.0.get_mut(*idx).unwrap();
             let position = positions.get_mut(*idx).unwrap();
-            let direction = self.0.get_mut(*idx).unwrap();
 
             // 力 -> 加速度
             let a = force.value + gravity.value; //  / 1.; // 质量为 1
-            direction.velocity_force += a.scale(delta_seconds * 0.5);
+            direction.velocity_force += a.scale(half_delta_seconds);
 
             let mut velocity = velocity.value + direction.velocity_force + direction.velocity_start;
 
@@ -1378,7 +1509,7 @@ impl ParticleDirection {
             let mut orbit_center: Vector3 = Vector3::zeros();
             emitter.orbit_center(&position, &orbit.offset, &mut orbit_center);
             let radial_vec: Vector3 = position.sub(&orbit_center);
-            let orbit_direction = if CoordinateSytem3::length_squared(&orbit.orbit) < 0.00000001 {
+            let orbit_direction = if orbit.orbit_len < 0.00000001 {
                 let temp = delta_seconds * speedfactor.value;
                 let orbit_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(orbit.orbit.x * temp, orbit.orbit.y * temp, orbit.orbit.z * temp);
                 orbit_rotation.transform_vector(&radial_vec) - radial_vec
@@ -1387,26 +1518,35 @@ impl ParticleDirection {
                 Vector3::zeros()
             };
 
-            let radial_len = CoordinateSytem3::length(&radial_vec);
-            if 0.00000001 < radial_len {
-                velocity += radial_vec.scale(1. / radial_len).scale(orbit.radial);
-            };
+            if 0.00000001 < orbit.radial.abs() {
+                let radial_len = CoordinateSytem3::length(&radial_vec);
+                if 0.00000001 < radial_len {
+                    velocity += radial_vec.scale(1. / radial_len).scale(orbit.radial);
+                };
+            }
 
             velocity.scale_mut(speedfactor.value);
 
             let mut new_direction = velocity.scale( delta_seconds) + orbit_direction;
+            // log::warn!("velocity: {:?}, {:?}, {:?}", velocity, new_direction, delta_seconds);
 
-            let directionscalar = new_direction.metric_distance(&origin);
-            if directionscalar > limitscalar.value * delta_seconds {
-                let factor = 1.0 - limitscalar.dampen * (directionscalar - limitscalar.value * delta_seconds) / directionscalar * (0.66);
-                new_direction.scale_mut(factor);
+            let mut directionscalar = new_direction.metric_distance(&origin);
+            if limitscalar.value < Number::MAX {
+                let limitscalarval = limitscalar.value * delta_seconds;
+                let delta = directionscalar - limitscalarval;
+                if 0.00000001 < delta {
+                    let factor = limitscalarval + (delta) * Number::exp(Number::ln(delta + 1.0) * (0. - limitscalar.dampen));
+                    // let factor = 1.0 - limitscalar.dampen * (directionscalar - limitscalar.value * delta_seconds) / directionscalar * (0.66);
+                    new_direction.scale_mut(factor / directionscalar);
+                    directionscalar = factor;
+                    // log::warn!("Limit: {:?}, {:?}, {:?}", limitscalarval, directionscalar, factor);
+                }
             }
 
-
             direction.value = new_direction.scale(1. / delta_seconds);
-            direction.length = direction.value.metric_distance(&Vector3::zeros());
+            direction.length = directionscalar / delta_seconds;
 
-            // log::warn!("Direction: {:?}, {:?}", direction.value, delta_seconds);
+            // log::warn!("Direction: {:?}, {:?}, {:?}", direction.value, new_direction, delta_seconds);
 
             *position += new_direction;
         });

@@ -40,6 +40,7 @@ impl InstancedInfo {
 
 pub struct InstanceCacheBuffer {
     vertices: Vec<u8>,
+    used_bytes: usize,
     buffer: (Arc<NotUpdatableBufferRange>, u32, u32),
 }
 
@@ -70,6 +71,7 @@ impl InstanceBufferAllocator {
 
         let first = InstanceCacheBuffer {
             vertices: vec![],
+            used_bytes: 0,
             buffer: (buffer, 0, one_mesh_max_instance_bytes),
         };
         Self {
@@ -87,8 +89,13 @@ impl InstanceBufferAllocator {
         let byte_size = data.len().min((max_count * bytes_per_instance) as usize);
         let bytes = &data[0..byte_size];
 
-        if let Some(buffer) = self.list.get(self.used_index) {
-            if buffer.vertices.len() + bytes.len() > buffer.buffer.2 as usize {
+        if let Some(buffer) = self.list.get_mut(self.used_index) {
+            if buffer.vertices.len() + buffer.used_bytes + bytes.len() > buffer.buffer.2 as usize {
+                buffer.used_bytes = buffer.vertices.len();
+                if buffer.vertices.len() > 0 {
+                    queue.write_buffer(buffer.buffer.0.buffer(), 0, &buffer.vertices);
+                    buffer.vertices.clear();
+                }
                 self.used_index += 1;
             }
         };
@@ -107,6 +114,7 @@ impl InstanceBufferAllocator {
             if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
                 self.list.push(InstanceCacheBuffer {
                     vertices,
+                    used_bytes: 0,
                     buffer: (buffer, 0, self.one_mesh_max_instance_bytes as u32),
                     // key: KeyVertexBuffer::from(self.used_index.to_string().as_str()),
                 });
@@ -124,8 +132,9 @@ impl InstanceBufferAllocator {
             if let Some(buffer) = self.list.get_mut(idx) {
                 if buffer.vertices.len() > 0 {
                     queue.write_buffer(buffer.buffer.0.buffer(), 0, &buffer.vertices);
+                    buffer.vertices.clear();
                 }
-                buffer.vertices.clear();
+                buffer.used_bytes = 0;
             }
         }
         self.used_index = 0;

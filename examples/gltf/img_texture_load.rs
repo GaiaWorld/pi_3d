@@ -15,12 +15,12 @@ fn sys_load_check(
 ) {
     let mut item = loader.fails.pop();
     while let Some(param) = item {
-        log::error!("Failed: {:?}, Error: {:?}", param, loader.query_failed_reason(param));
+        log::debug!("Failed: {:?}, Error: {:?}", param, loader.query_failed_reason(param));
         item = loader.fails.pop();
     }
     let mut item = loader.success_load.pop();
     while let Some(param) = item {
-        log::error!("Successed: {:?}, {:?}", param, loader.query_success(param).is_some());
+        log::debug!("Successed: {:?}, {:?}", param, loader.query_success(param).is_some());
         // log::error!("Successed: {:?}", param.1.errors.len());
         item = loader.success_load.pop();
     }

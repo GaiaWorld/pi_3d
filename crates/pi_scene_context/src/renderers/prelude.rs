@@ -20,3 +20,5 @@ pub struct ActionSetRenderer<'w> {
     pub connect: ResMut<'w, ActionListRendererConnect>,
     pub modify: ResMut<'w, ActionListRendererModify>,
 }
+
+// pub type StateTransformQuery = QueryState<(&'static SceneID, &'static Enable, &'static GlobalEnable)>;

@@ -127,6 +127,8 @@ impl Default for Velocity {
 pub struct OrbitVelocity {
     /// 角速度
     pub(crate) orbit: Vector3,
+    /// 角速度
+    pub(crate) orbit_len: f32,
     /// 中心偏移
     pub(crate) offset: Vector3,
     /// 径向速度量
@@ -137,7 +139,8 @@ impl Default for OrbitVelocity {
         Self {
             orbit: Vector3::zeros(),
             offset: Vector3::zeros(),
-            radial: 0.
+            radial: 0.,
+            orbit_len: 0.,
         }
     }
 }

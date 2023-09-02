@@ -1,4 +1,5 @@
 pub use pi_engine_shell::prelude::*;
+use pi_bevy_ecs_extend::prelude::EntityTreeMut;
 
 use crate::{
     commands::*, prelude::*,
@@ -51,10 +52,13 @@ pub fn sys_dispose_can(
 pub fn sys_dispose(
     mut commands: Commands,
     items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
+    mut tree: EntityTreeMut,
 ) {
     items.iter().for_each(|(entity, state)| {
         if state.0 == true {
             if let Some(mut commands) = commands.get_entity(entity) {
+                log::debug!("despawn====={:?}", commands.id());
+                tree.remove(entity);
                 commands.despawn();
             }
         }
@@ -258,9 +262,9 @@ impl Plugin for PluginDispose {
         app.insert_resource(ActionListSceneDispose::default());
         app.insert_resource(ActionListDispose::default());
         app.insert_resource(ActionListDisposeCan::default());
-        app.add_systems(Update, sys_act_scene_dispose.run_if(should_run).in_set(ERunStageChap::Initial));
-        app.add_systems(Update, sys_dispose_ready.run_if(should_run).in_set(ERunStageChap::Dispose));
-        app.add_systems(Update, sys_dispose_can.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
-        app.add_systems(Update, sys_dispose.run_if(should_run).after(sys_dispose_can).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_act_scene_dispose.in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_dispose_ready.in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_can.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose.after(sys_dispose_can).in_set(ERunStageChap::Dispose));
     }
 }

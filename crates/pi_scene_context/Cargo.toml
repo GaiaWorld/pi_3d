@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["3d scene"]
 
 [dependencies]
-wgpu            = "0.16"
+wgpu            = { version = "0.16", default-features = false }
 env_logger      = "0.9"
 log             = "0.4"
 smallvec        = "1.9"

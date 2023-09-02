@@ -1,5 +1,5 @@
 
-vec4 baseColor = v_color;
+vec4 baseColor = v_color * uMainInfo;
 
 float alpha = 1.0;
 

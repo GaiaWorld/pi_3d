@@ -7,7 +7,7 @@ use pi_scene_math::*;
 
 use crate::{command::*, base::*, extend::format};
 
-pub fn sys_act_particle_calculator(
+pub fn sys_create_particle_calculator(
     mut cmds: ResMut<ActionListCPUParticleCalculator>,
     mut commands: Commands,
 ) {
@@ -21,7 +21,7 @@ pub fn sys_act_particle_calculator(
     });
 }
 
-pub fn sys_act_create_cpu_partilce_system(
+pub fn sys_create_cpu_partilce_system(
     mut cmds: ResMut<ActionListCPUParticleSystem>,
     mut commands: Commands,
     calculators: Query<&ParticleCalculatorBase>,
@@ -30,7 +30,8 @@ pub fn sys_act_create_cpu_partilce_system(
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
     mut disposeready: ResMut<ActionListDisposeReady>,
-    mut meshes: ResMut<ActionListMeshRenderAlignment>
+    mut meshes: ResMut<ActionListMeshRenderAlignment>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -47,6 +48,8 @@ pub fn sys_act_create_cpu_partilce_system(
         if let Ok(base) = calculators.get(idcalculator) {
             // log::warn!("create_cpu_partilce_system");
             let maxcount = base.maxcount;
+            performance.maxparticles = (performance.maxparticles.max(maxcount as u32) / 64 + 1) * 64;
+
             let mut vec_vec3_arr: Vec<Vec<Vector3>> = Vec::with_capacity(maxcount);
             for _ in 0..maxcount {
                 vec_vec3_arr.push(vec![]);
@@ -122,7 +125,7 @@ pub fn sys_act_create_cpu_partilce_system(
                 
                 commands.entity(entity).insert(ParticleTrail::new(maxcount));
             }
-        } else if count < 1 {
+        } else if count < 2 {
             // log::warn!("create_cpu_partilce_system FAIL");
             cmds.push(OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count + 1));
         } else {

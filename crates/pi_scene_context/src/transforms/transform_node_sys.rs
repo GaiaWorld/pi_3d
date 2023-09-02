@@ -4,20 +4,11 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, Matrix, Rotation3, Quaternion};
 
-use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::{TransformRecord, Enable, GlobalEnable, NodeParent, NodeChilds}, commands::{DisposeReady, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeCan}};
+use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::{Enable, GlobalEnable, NodeParent, NodeChilds}, commands::{DisposeReady, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeCan}};
 
 use super::transform_node::*;
+use super::prelude::*;
 
-// pub struct SysLocalEulerModifyCalc;
-// impl TSystemStageInfo for SysLocalEulerModifyCalc {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysLocalEulerModifyCalc {
-//     #[system]
     pub fn sys_local_euler_calc_rotation(
         localmatrixs: Query<(Entity, &LocalEulerAngles), Changed<LocalEulerAngles>>,
         mut loacl_quaternions: Query<(&mut LocalRotationQuaternion, &mut LocalRotation)>,
@@ -31,19 +22,7 @@ use super::transform_node::*;
             }
         });
     }
-// }
 
-// pub struct SysLocalQuaternionModifyCalc;
-// impl TSystemStageInfo for SysLocalQuaternionModifyCalc {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             SysLocalEulerModifyCalc::key(), 
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysLocalQuaternionModifyCalc {
-//     #[system]
     pub fn sys_local_quaternion_calc_rotation(
         localmatrixs: Query<(Entity, &LocalRotationQuaternion), Changed<LocalRotationQuaternion>>,
         mut loacl_eulers: Query<&mut LocalRotation>,
@@ -60,26 +39,12 @@ use super::transform_node::*;
             }
         });
     }
-// }
 
-
-// pub struct SysLocalMatrixCalc;
-// impl TSystemStageInfo for SysLocalMatrixCalc {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             SysLocalEulerModifyCalc::key(), 
-//             SysLocalQuaternionModifyCalc::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysLocalMatrixCalc {
-//     #[system]
     pub fn sys_local_matrix_calc(
         mut localmatrixs: Query<(Entity, &LocalPosition, &LocalScaling, &LocalRotation, &mut LocalMatrix), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
     ) {
         // log::warn!("LocalMatrix: ");
-        // let time = pi_time::Instant::now();
+        let time = pi_time::Instant::now();
         localmatrixs.iter_mut().for_each(|(_entity, position, scaling, rotation, mut localmatrix)| {
             // log::warn!("LocalMatrixCalc: {:?}", entity);
             let mut matrix = Matrix::identity();
@@ -87,12 +52,11 @@ use super::transform_node::*;
             // commands.entity(obj).insert(LocalMatrix(matrix, true));
             // localmatrix.0 = matrix;
             // localmatrix.1 = true;
-            *localmatrix = LocalMatrix(matrix, true);
+            *localmatrix = LocalMatrix(matrix);
         });
-        // let time1 = pi_time::Instant::now();
+        let time1 = pi_time::Instant::now();
         // log::warn!("Local Matrix Calc: {:?}", time1 - time);
     }
-// }
 
 #[derive(Debug, Clone)]
 struct TmpCalcWorldMatrix {
@@ -102,124 +66,98 @@ struct TmpCalcWorldMatrix {
     enable: bool,
 }
 
-/// 经过测试 temp_ids.push((v, true, Some(g_transform.matrix.clone()))); 拷贝父矩阵 比 临时取 父矩阵更高效 - 200ms : 300ms 
-// pub struct SysWorldMatrixCalc;
-// impl TSystemStageInfo for SysWorldMatrixCalc {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             SysLocalMatrixCalc::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysWorldMatrixCalc {
-//     #[system]
     pub fn sys_world_matrix_calc(
         query_scenes: Query<(Entity, &SceneCoordinateSytem3D)>,
-        mut nodes: Query<(&mut LocalMatrix, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable)>,
+        // mut nodes: Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
+        mut nodes: Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<Up>)>,
         mut transforms: Query<&mut GlobalTransform>,
-        mut record: ResMut<TransformRecord>,
-        parents: Query<&NodeChilds>,
-        node_parent_changes: Query<&NodeParent, Changed<NodeParent>>,
+        mut state: ResMut<StateTransform>,
+        // parents: Query<&NodeChilds>,
+        tree: EntityTree,
     ) {
         let time = pi_time::Instant::now();
+        let mut level = 1;
 
-        // log::warn!("World Matrix Calc:");
-        for (root, _) in query_scenes.iter() {
-            let mut temp_ids: Vec<TmpCalcWorldMatrix> = vec![];
-            if let Ok(childs) = parents.get(root) {
-                childs.iter().for_each(|child| {
-                    let tmp = calc_world_root(
-                        &mut nodes,
-                        &mut transforms,
-                        &node_parent_changes,
-                        *child,
-                    );
+        {
+            // // log::warn!("World Matrix Calc:");
+            // for (root, _) in query_scenes.iter() {
+            //     let mut temp_ids: Vec<TmpCalcWorldMatrix> = vec![];
+            //     if let Ok(childs) = parents.get(root) {
+            //         childs.iter().for_each(|child| {
+            //             let tmp = calc_world_root(
+            //                 &mut nodes,
+            //                 &mut transforms,
+            //                 *child,
+            //             );
 
-                    if let Ok(childs) = parents.get(tmp.node) {
-                        childs.iter().for_each(|child| {
-                            calc_world_one(
-                                *child,
-                                &mut nodes,
-                                &mut transforms,
-                                &node_parent_changes,
-                                &mut temp_ids,
-                                &tmp,
-                            );
-                        });
-                    }
-                });
-            }
-            
-            calc_world(
-                &mut nodes,
-                &mut transforms,
-                & parents,
-                &node_parent_changes,
-                temp_ids
-            );
-
-            // // let mut idflag: usize = 0;
-            // // log::warn!("World Matrix Calc: 0");
-            // tree.iter(root).for_each(|entity| {
-            //     let (p_id, p_dirty, p_m, p_enable) = calc_world_root(
-            //         &mut nodes,
-            //         &mut transforms,
-            //         entity,
-            //     );
-            //     // log::warn!("World Matrix Calc: Root {:?}", entity);
-            //     match tree.get_down(p_id) {
-            //         Some(node_children_head) => {
-            //             // log::warn!("World Matrix Calc: 2");
-            //             let node_children_head = node_children_head.head.0;
-            //             tree.iter(node_children_head).for_each(|entity| {
-            //                 // log::warn!("World Matrix Calc: 2 {:?}", entity);
-            //                 // idflag += 1;
-            //                 // if idflag % 2 == 0 {
+            //             if let Ok(childs) = parents.get(tmp.node) {
+            //                 childs.iter().for_each(|child| {
             //                     calc_world_one(
+            //                         *child,
             //                         &mut nodes,
             //                         &mut transforms,
             //                         &mut temp_ids,
-            //                         entity,
-            //                         p_dirty, p_enable,
-            //                         &p_m,
+            //                         &tmp,
             //                     );
-            //                 // }
-            //             });
-            //         },
-            //         None => {
-            //         },
+            //                 });
+            //             }
+            //         });
             //     }
-            // });
+                
+            //     calc_world(
+            //         &mut nodes,
+            //         &mut transforms,
+            //         & parents,
+            //         temp_ids
+            //     );
+            // }
+        }
+        {
+            
+            // log::warn!("World Matrix Calc:");
+            for (root, _) in query_scenes.iter() {
+                let mut temp_ids: Vec<TmpCalcWorldMatrix> = vec![];
+                    if let Some(node_children_head) = tree.get_down(root) {
+                        tree.iter(node_children_head.head()).for_each(|child| {
+                        let tmp = calc_world_root_bytree(
+                            &mut nodes,
+                            &mut transforms,
+                            child,
+                        );
 
-            // // log::warn!("World Matrix Calc: Level 1 ");
-            // calc_world(
-            //     &mut nodes,
-            //     &mut transforms,
-            //     & tree,
-            //     temp_ids
-            // );
+                        if let Some(node_children_head) = tree.get_down(tmp.node) {
+                            tree.iter(node_children_head.head()).for_each(|child| {
+                                calc_world_one_bytree(
+                                    child,
+                                    &mut nodes,
+                                    &mut transforms,
+                                    &mut temp_ids,
+                                    &tmp,
+                                );
+                            });
+                        }
+                    });
+                }
+                
+                let templevel = calc_world_bytree(
+                    &mut nodes,
+                    &mut transforms,
+                    &tree,
+                    temp_ids
+                );
+
+                level = level.max(templevel);
+            }
 
         }
 
         let time1 = pi_time::Instant::now();
 
-        record.all_wmcompute = (time1 - time).as_millis() as u32;
+        state.max_level = level;
+        state.calc_world_time = (time1 - time).as_micros() as u32;
         // log::warn!("World Matrix Calc: {:?}", time1 - time);
     }
-// }
 
-// pub struct SysWorldMatrixCalc2;
-// impl TSystemStageInfo for SysWorldMatrixCalc2 {
-//     fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-//         vec![
-//             SysLocalMatrixCalc::key()
-//         ]
-//     }
-// }
-// #[setup]
-// impl SysWorldMatrixCalc2 {
-//     #[system]
     pub fn sys_world_matrix_calc2(
         // query_scenes: Query<(Entity, &SceneCoordinateSytem3D)>,
         // mut nodes: Query<(&mut LocalMatrix, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable)>,
@@ -278,12 +216,11 @@ struct TmpCalcWorldMatrix {
 // }
 
 fn calc_world(
-    nodes: &mut Query<(&mut LocalMatrix, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable)>,
+    nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
     transforms: &mut Query<&mut GlobalTransform>,
     parents: &Query<&NodeChilds>,
-    node_parent_changes: &Query<&NodeParent, Changed<NodeParent>>,
     mut temp_ids: Vec<TmpCalcWorldMatrix>
-) {
+) -> u32 {
         // 广度优先遍历 - 最大遍历到深度 65535
         let max = 65535;
         let mut deep = 0;
@@ -297,29 +234,11 @@ fn calc_world(
                                 *child,
                                 nodes,
                                 transforms,
-                                node_parent_changes,
                                 &mut temp_list,
                                 &tmp
                             );
                         });
                     }
-                    // match tree.get_down(p_id) {
-                    //     Some(node_children_head) => {
-                    //         let node_children_head = node_children_head.head.0;
-                    //         tree.iter(node_children_head).for_each(|entity| {
-                    //             // log::warn!("calc_world 2: {:?}", entity);
-                    //             calc_world_one(
-                    //                 nodes,
-                    //                 transforms,
-                    //                 &mut temp_list,
-                    //                 entity,
-                    //                 p_dirty, p_enable,
-                    //                 &p_m
-                    //             );
-                    //         }); 
-                    //     },
-                    //     None => {},
-                    // }
                 });
                 deep += 1;
             } else {
@@ -327,30 +246,26 @@ fn calc_world(
             }
             temp_ids = temp_list;
         }
+
+        return deep;
 }
 
 fn calc_world_one(
     entity: Entity,
-    nodes: &mut Query<(&mut LocalMatrix, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable)>,
+    nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
     transforms: &mut Query<&mut GlobalTransform>,
-    node_parent_changes: &Query<&NodeParent, Changed<NodeParent>>,
     temp_list: &mut Vec<TmpCalcWorldMatrix>,
     tmp: &TmpCalcWorldMatrix,
 ) {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((mut lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
             globalenable.0 = enable.bool() && tmp.enable;
 
-            let dirty = tmp.dirty || lmatrix.1 || node_parent_changes.contains(entity);
-            lmatrix.1 = false;
+            let dirty = tmp.dirty || lmatrix.is_changed() || parent.is_changed();
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
                 let transform = GlobalTransform::calc(&tmp.matrix, &lmatrix);
-                // let matrix = transform.matrix.clone();
-                // let matrix = lmatrix.0.clone();
-                
-                // log::warn!("Calc WM: {:?}", entity);
 
                 *wmatrix = WorldMatrix::new(transform.matrix.clone());
                 
@@ -370,23 +285,131 @@ fn calc_world_one(
 }
 
 fn calc_world_root(
-    nodes: &mut Query<(&mut LocalMatrix, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable)>,
+    nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
     transforms: &mut Query<&mut GlobalTransform>,
-    node_parent_changes: &Query<&NodeParent, Changed<NodeParent>>,
     entity: Entity,
 ) -> TmpCalcWorldMatrix {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((mut lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
             globalenable.0 = enable.bool();
 
-            let dirty = lmatrix.1 || node_parent_changes.contains(entity);
-            lmatrix.1 = false;
+            let dirty = lmatrix.is_changed() || parent.is_changed();
+
+            if dirty {
+                let transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
+
+                *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                match transform.matrix.try_inverse() {
+                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
+                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
+                };
+                *gtransform = transform;
+            }
+
+            TmpCalcWorldMatrix {
+                node: entity,
+                dirty,
+                matrix: gtransform.matrix.clone(),
+                enable: globalenable.0
+            }
+        },
+        (_, _) => {
+            // log::debug!(">>>>> WorldMatrixCalc Root");
+            // (entity, false, Matrix::identity(), true)
+            TmpCalcWorldMatrix {
+                node: entity,
+                dirty: false,
+                matrix: Matrix::identity(),
+                enable: true
+            }
+        },
+    }
+}
+
+fn calc_world_bytree(
+    nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<Up>)>,
+    transforms: &mut Query<&mut GlobalTransform>,
+    tree: &EntityTree,
+    mut temp_ids: Vec<TmpCalcWorldMatrix>
+) -> u32 {
+        // 广度优先遍历 - 最大遍历到深度 65535
+        let max = 65535;
+        let mut deep = 0;
+        loop {
+            let mut temp_list = vec![];
+            if temp_ids.len() > 0 && deep < max {
+                temp_ids.into_iter().for_each(|tmp| {
+                    if let Some(node_children_head) = tree.get_down(tmp.node) {
+                        tree.iter(node_children_head.head()).for_each(|child| {
+                            calc_world_one_bytree(
+                                child,
+                                nodes,
+                                transforms,
+                                &mut temp_list,
+                                &tmp
+                            );
+                        });
+                    }
+                });
+                deep += 1;
+            } else {
+                break;
+            }
+            temp_ids = temp_list;
+        }
+
+        return deep;
+}
+
+fn calc_world_one_bytree(
+    entity: Entity,
+    nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<Up>)>,
+    transforms: &mut Query<&mut GlobalTransform>,
+    temp_list: &mut Vec<TmpCalcWorldMatrix>,
+    tmp: &TmpCalcWorldMatrix,
+) {
+    match (nodes.get_mut(entity), transforms.get_mut(entity)) {
+        (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
+            globalenable.0 = enable.bool() && tmp.enable;
+
+            
+            let dirty = tmp.dirty || lmatrix.is_changed() || parent.is_changed();
+    
+            // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
+            if dirty {
+                let transform = GlobalTransform::calc(&tmp.matrix, &lmatrix);
+
+                *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                
+                match transform.matrix.try_inverse() {
+                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
+                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
+                };
+                *gtransform = transform;
+            };
+
+            temp_list.push(TmpCalcWorldMatrix { node: entity, dirty, matrix: gtransform.matrix.clone(), enable: globalenable.0 });
+        },
+        (_, _) => {
+            
+        },
+    }
+}
+
+fn calc_world_root_bytree(
+    nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<Up>)>,
+    transforms: &mut Query<&mut GlobalTransform>,
+    entity: Entity,
+) -> TmpCalcWorldMatrix {
+    match (nodes.get_mut(entity), transforms.get_mut(entity)) {
+        (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
+            globalenable.0 = enable.bool();
+
+            let dirty = lmatrix.is_changed() || parent.is_changed();
 
             if dirty {
                 // log::debug!(">>>>> GlobalTransform 0");
                 let transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
-                // let matrix = transform.matrix.clone();
-                // let matrix = lmatrix.0.clone();
 
                 *wmatrix = WorldMatrix::new(transform.matrix.clone());
                 match transform.matrix.try_inverse() {

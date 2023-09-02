@@ -120,7 +120,7 @@ impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListNodeEnable::default());
         app.add_systems(Update, 
-            sys_act_node_enable.in_set(ERunStageChap::Command)
+            sys_act_node_enable.run_if(should_run).in_set(ERunStageChap::Command)
         );
     }
 }

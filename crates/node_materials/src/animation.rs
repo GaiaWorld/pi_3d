@@ -69,7 +69,7 @@ impl MaterialAnimeSlots {
 }
 
 pub trait TMaterialAnimeValue {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues);
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues);
 }
 
 #[derive(Clone, Copy, Component, Default)]
@@ -84,7 +84,7 @@ impl TAnimatableCompRecord<MainTexUScale> for RecordMainTexUScale{
 pub struct MainTexUScale(pub f32);
 impl Default for MainTexUScale { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for MainTexUScale {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.main_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.main_tex_tilloff as usize, 0, self.0);
         }
@@ -128,7 +128,7 @@ impl TAnimatableCompRecord<MainTexVScale> for RecordMainTexVScale{
 pub struct MainTexVScale(pub f32);
 impl Default for MainTexVScale { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for MainTexVScale {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.main_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.main_tex_tilloff as usize, 1, self.0);
         }
@@ -170,7 +170,7 @@ impl TAnimatableCompRecord<MainTexUOffset> for RecordMainTexUOffset{
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MainTexUOffset(pub f32);
 impl TMaterialAnimeValue for MainTexUOffset {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.main_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.main_tex_tilloff as usize, 2, self.0);
         }
@@ -212,7 +212,7 @@ impl TAnimatableCompRecord<MainTexVOffset> for RecordMainTexVOffset {
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MainTexVOffset(pub f32);
 impl TMaterialAnimeValue for MainTexVOffset {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.main_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.main_tex_tilloff as usize, 3, self.0);
         }
@@ -255,7 +255,7 @@ impl TAnimatableCompRecord<OpacityTexUScale> for RecordOpacityTexUScale {
 pub struct OpacityTexUScale(pub f32);
 impl Default for OpacityTexUScale { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for OpacityTexUScale {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.opacity_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.opacity_tex_tilloff as usize, 0, self.0);
         }
@@ -298,7 +298,7 @@ impl TAnimatableCompRecord<OpacityTexVScale> for RecordOpacityTexVScale {
 pub struct OpacityTexVScale(pub f32);
 impl Default for OpacityTexVScale { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for OpacityTexVScale {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.opacity_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.opacity_tex_tilloff as usize, 1, self.0);
         }
@@ -340,7 +340,7 @@ impl TAnimatableCompRecord<OpacityTexUOffset> for RecordOpacityTexUOffset {
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct OpacityTexUOffset(pub f32);
 impl TMaterialAnimeValue for OpacityTexUOffset {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.opacity_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.opacity_tex_tilloff as usize, 2, self.0);
         }
@@ -382,7 +382,7 @@ impl TAnimatableCompRecord<OpacityTexVOffset> for RecordOpacityTexVOffset {
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct OpacityTexVOffset(pub f32);
 impl TMaterialAnimeValue for OpacityTexVOffset {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.opacity_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.opacity_tex_tilloff as usize, 3, self.0);
         }
@@ -425,7 +425,7 @@ impl TAnimatableCompRecord<MaskTexUScale> for RecordMaskTexUScale {
 pub struct MaskTexUScale(pub f32);
 impl Default for MaskTexUScale { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for MaskTexUScale {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.mask_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.mask_tex_tilloff as usize, 0, self.0);
         }
@@ -468,7 +468,7 @@ impl TAnimatableCompRecord<MaskTexVScale> for RecordMaskTexVScale {
 pub struct MaskTexVScale(pub f32);
 impl Default for MaskTexVScale { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for MaskTexVScale {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.mask_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.mask_tex_tilloff as usize, 1, self.0);
         }
@@ -510,7 +510,7 @@ impl TAnimatableCompRecord<MaskTexUOffset> for RecordMaskTexUOffset {
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MaskTexUOffset(pub f32);
 impl TMaterialAnimeValue for MaskTexUOffset {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.mask_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.mask_tex_tilloff as usize, 2, self.0);
         }
@@ -552,7 +552,7 @@ impl TAnimatableCompRecord<MaskTexVOffset> for RecordMaskTexVOffset {
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MaskTexVOffset(pub f32);
 impl TMaterialAnimeValue for MaskTexVOffset {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.mask_tex_tilloff < u8::MAX {
             bind.vec4_one(slots.mask_tex_tilloff as usize, 3, self.0);
         }
@@ -595,8 +595,10 @@ impl TAnimatableCompRecord<MainColor> for RecordMainColor {
 pub struct MainColor(pub Vector3);
 impl Default for MainColor { fn default() -> Self { Self(Vector3::new(1., 1., 1.)) } }
 impl TMaterialAnimeValue for MainColor {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
+        // log::debug!("{:?}", self);
         if slots.main_color < u8::MAX {
+            // log::warn!("{:?}", self);
             bind.vec4_one(slots.main_color as usize, 0, self.0.x);
             bind.vec4_one(slots.main_color as usize, 1, self.0.y);
             bind.vec4_one(slots.main_color as usize,2, self.0.z);
@@ -640,7 +642,7 @@ impl TAnimatableCompRecord<Alpha> for RecordAlpha {
 pub struct Alpha(pub f32);
 impl Default for Alpha { fn default() -> Self { Self(1.) } }
 impl TMaterialAnimeValue for Alpha {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         // log::warn!("Material Anime Apply Slot {}", slots.alpha);
         if slots.alpha < u8::MAX {
             bind.float(slots.alpha as usize, self.0);
@@ -684,7 +686,7 @@ impl TAnimatableCompRecord<LightDiffuse> for RecordLightDiffuse {
 pub struct LightDiffuse(pub Vector3);
 impl Default for LightDiffuse { fn default() -> Self { Self(Vector3::new(1., 1., 1.)) } }
 impl TMaterialAnimeValue for LightDiffuse {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.light_diffuse < u8::MAX {
             bind.vec4_one(slots.light_diffuse as usize, 0, self.0.x);
             bind.vec4_one(slots.light_diffuse as usize, 1, self.0.y);
@@ -728,7 +730,7 @@ impl TAnimatableCompRecord<Cutoff> for RecordCutoff {
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct Cutoff(pub f32);
 impl TMaterialAnimeValue for Cutoff {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.cutoff < u8::MAX {
             bind.float(slots.cutoff as usize, self.0);
             // log::warn!("Anime: Cutoff {:?}", self.0);
@@ -771,7 +773,7 @@ impl TAnimatableCompRecord<MaskCutoff> for RecordMaskCutoff {
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct MaskCutoff(pub f32);
 impl TMaterialAnimeValue for MaskCutoff {
-    fn apply(&self, slots: &MaterialAnimeSlots, bind: &BindEffectValues) {
+    fn apply(&self, slots: &MaterialAnimeSlots, bind: &mut BindEffectValues) {
         if slots.mask_cutoff < u8::MAX {
             bind.float(slots.mask_cutoff as usize, self.0);
         }

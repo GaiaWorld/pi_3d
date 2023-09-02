@@ -31,6 +31,7 @@ pub fn sys_scene_anime_ctx(
     mut animeglobal: ResMut<GlobalAnimeAbout>,
     mut scenectxs: ResMut<SceneAnimationContextMap>,
     mut animeevents: ResMut<GlobalAnimeEvents>,
+    mut performance: ResMut<Performance>,
 ) {
     let time0 = pi_time::Instant::now();
 
@@ -89,6 +90,7 @@ pub fn sys_scene_anime_ctx(
     });
 
     let time1 = pi_time::Instant::now();
+    performance.animationgroup = (time1 - time0).as_micros() as u32;
     log::debug!("SysSceneAnime: {:?}", time1 - time0);
 }
 

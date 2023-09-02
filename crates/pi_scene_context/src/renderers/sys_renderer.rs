@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
@@ -7,7 +8,7 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    transforms::prelude::*, prelude::{RenderAlignment, RendererDrawCallRecord, IndiceRenderRange, DisposeReady},
+    transforms::prelude::*, prelude::{RenderAlignment, IndiceRenderRange, DisposeReady},
 };
 
 use super::{
@@ -36,17 +37,17 @@ use super::{
                         if bindgroups.val().is_some() {
                             *bindgroups = PassBindGroups::new(None);
                         }
-                        // log::error!("Bindgroups: {:?}", false);
+                        log::debug!("Bindgroups: {:?}", false);
                     } else {
                         *bindgroups = PassBindGroups::new(Some(
                             BindGroups3D::create(set0.clone(), set1.clone(), set2.val().clone())
                         ));
-                        // log::error!("Bindgroups: {:?}", true);
+                        log::debug!("Bindgroups: {:?}", true);
                     }
                     return;
                 }
             } else {
-                // log::error!("Bindgroups: Ready False");
+                log::debug!("Bindgroups: Ready False");
             }
             
             if bindgroups.val().is_some() {
@@ -93,59 +94,9 @@ use super::{
                     if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
                         // log::error!("Shader: 2");
                         // log::debug!("SysPassShaderRequestByModel: 3");
-                        let key_attributes = vb.as_key_shader_from_attributes();
-                        let key_shader_defines = 0;
-
-                        let key_set_blocks = bindgroups.key_set_blocks();
-
-                        let key_shader = KeyShader3D {
-                            key_meta: key_meta.clone(),
-                            key_attributes,
-                            key_set_blocks,
-                            defines: key_shader_defines,
-                            renderalignment: renderalignment.0
-                        };
-
-                        let (set0, set1, set2) = (&bindgroups.scene, &bindgroups.model, bindgroups.textures.as_ref());
-                        let mut vs_defines = vec![];
-                        vs_defines.push(set0.vs_define_code());
-                        vs_defines.push(set1.vs_define_code());
-                        let mut fs_defines = vec![];
-                        fs_defines.push(set0.fs_define_code());
-                        fs_defines.push(set1.fs_define_code());
-                        // let set2 = 
-                        if let Some(set2) = set2 {
-                            vs_defines.push(set2.vs_define_code());
-                            fs_defines.push(set2.fs_define_code());
-                            // Some(set2.as_ref())
-                        }
-                        //  else { None };
-                
-                        if shader_center.request(&key_shader, None) {
-                            // log::debug!("SysPassShaderRequestByModel: 4");
-                            shader_loader.request(id_pass, &key_shader);
-                        } else {
-                            // log::debug!("SysPassShaderRequestByModel: 5");
-                            if !shader_center.check(&key_shader) {
-
-                                let shader = meta.build_2(
-                                    &device,
-                                    &key_meta,
-                                    &key_shader.key_attributes,
-                                    &instance,
-                                    &renderalignment,
-                                    &set1.key().key.skin,
-                                    &vs_defines,
-                                    &[], &[],
-                                    &fs_defines,
-                                    &[], &[],
-                                );
-
-                                // let shader = meta.build(&device, &key_shader.key_meta, &key_shader.key_attributes, &instance, set0.as_ref(), set1.as_ref(), set2, None);
-                                shader_center.add(&key_shader, shader, None);
-                            }
-                            shader_loader.request(id_pass, &key_shader);
-                        }
+                        shader(
+                            id_pass, meta, key_meta, &instance, vb, bindgroups, renderalignment, &mut shader_center, &mut shader_loader, &device
+                        );
                     } else {
                         // log::error!("Shader: 00");
                         // if old_shader.val().is_some() {
@@ -197,59 +148,9 @@ use super::{
                         // log::debug!("SysPassShaderRequestByPass: 11");
                         return;
                     };
-                    // log::error!("Shader: {:?}", 2);
-                    let key_attributes = vb.as_key_shader_from_attributes();
-                    // let key_shader_defines = 0;
-    
-                    let key_set_blocks = bindgroups.key_set_blocks();
-    
-                    let key_shader = KeyShader3D {
-                        key_meta: key_meta.clone(),
-                        key_attributes,
-                        key_set_blocks,
-                        defines: 0,
-                        renderalignment: renderalignment.0
-                    };
-    
-                    let (set0, set1, set2) = (&bindgroups.scene, &bindgroups.model, bindgroups.textures.as_ref());
-                    let mut vs_defines = vec![];
-                    vs_defines.push(set0.vs_define_code());
-                    vs_defines.push(set1.vs_define_code());
-                    let mut fs_defines = vec![];
-                    fs_defines.push(set0.fs_define_code());
-                    fs_defines.push(set1.fs_define_code());
-                    // let set2 = 
-                    if let Some(set2) = set2 {
-                        vs_defines.push(set2.vs_define_code());
-                        fs_defines.push(set2.fs_define_code());
-                        // Some(set2.as_ref())
-                    }
-                    //  else { None };
-            
-                    if shader_center.request(&key_shader, None) {
-                        // log::debug!("SysPassShaderRequestByModel: 4");
-                        shader_loader.request(id_pass, &key_shader);
-                    } else {
-                        // log::debug!("SysPassShaderRequestByPass: 4");
-                        if !shader_center.check(&key_shader) {
-                            let shader = meta.build_2(
-                                &device,
-                                &key_meta,
-                                &key_shader.key_attributes,
-                                &instance,
-                                &renderalignment,
-                                &set1.key().key.skin,
-                                &vs_defines,
-                                &[], &[],
-                                &fs_defines,
-                                &[], &[],
-                            );
-
-                            // let shader = meta.build(&device, &key_shader.key_meta, &key_shader.key_attributes, &instance, set0.as_ref(), set1.as_ref(), set2, None);
-                            shader_center.add(&key_shader, shader, None);
-                        }
-                        shader_loader.request(id_pass, &key_shader);
-                    }
+                    shader(
+                        id_pass, meta, key_meta, &instance, vb, bindgroups, renderalignment, &mut shader_center, &mut shader_loader, &device
+                    );
                 } else {
                     // if old_shader.val().is_some() {
                     //     // log::debug!("SysPassShaderRequestByPass: No Geo");
@@ -342,58 +243,13 @@ use super::{
 
                 // log::debug!("SysPipeline: 1 Model");
                 if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
-                    let key_shader = shader.key().clone();
-                    let bind_group_layouts = bindgroups.bind_group_layouts();
-                    let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
-
-                    let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
-    
-                    let pass_blend = passcfgs.blend();
-                    let pass_color_format = passcfgs.color_format();
-                    let pass_depth_format = passcfgs.depth_format();
-                    let blend = if pass_blend { blend.clone() } else { ModelBlend::default() };
-
-                    let depth_stencil = if let Some(pass_depth_format) = pass_depth_format {
-                        Some(
-                            depth_stencil_state(
-                                pass_depth_format,
-                                depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write
-                            )
-                        )
-                    } else { None };
-
-                    let targets = RenderTargetState::color_target(pass_color_format, &blend);
-                    let key_state = KeyRenderPipelineState {
-                        primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
-                        target_state: targets[0].clone(),
-                        depth_stencil: depth_stencil,
-                        multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
-                    };
-                    // log::warn!("{:?}", key_state);
-
-                    let key_pipeline = KeyPipeline3D {
-                        key_state,
-                        key_shader,
-                        key_bindgroup_layouts,
-                        key_vertex_layouts,
-                    };
-
-                    let key_u64 = key_pipeline.to_u64();
-
-                    if pipeline_center.request(&key_u64, None) {
-                        // log::debug!("SysPipeline: 3 Model");
-                        // *oldpipeline = PassPipeline::new(Some(pipeline));
-                        pipeline_loader.request(id_pass, &key_u64);
-                        // commands.entity(id_pass).insert(PassPipeline::new(Some(pipeline)));
-                    } else {
-                        // log::debug!("SysPipeline: 4 Model");
-                        if !pipeline_center.check(&key_u64) {
-                            // log::warn!("SysPassPipeline: {:?}", key_pipeline);
-                            let pipeline = KeyPipeline3D::create(key_pipeline, shader.clone(), bind_group_layouts, &device);
-                            pipeline_center.add(&key_u64, pipeline, None);
-                        }
-                        pipeline_loader.request(id_pass, &key_u64);
-                    }
+                    pipeline(
+                        shader, bindgroups, vb, passcfgs,
+                        blend, depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write,
+                        cull, topology, polygon, face, unclip_depth,
+                        id_pass, &mut pipeline_center, &mut pipeline_loader,
+                        &device
+                    );
                 } else {
                     if old_draw.val().is_some() {
                         // *oldpipeline = PassPipeline::new(None);
@@ -454,57 +310,13 @@ use super::{
                         // commands.entity(id_pass).insert(PassPipeline::new(None));
                         return;
                     };
-                    let key_shader = shader.key().clone();
-                    let bind_group_layouts = bindgroups.bind_group_layouts();
-                    let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
-
-                    let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
-    
-                    let pass_blend = passcfgs.blend();
-                    let pass_color_format = passcfgs.color_format();
-                    let pass_depth_format = passcfgs.depth_format();
-                    let blend = if pass_blend { blend.clone() } else { ModelBlend::default() };
-                    let depth_stencil = if let Some(pass_depth_format) = pass_depth_format {
-                        Some(
-                            depth_stencil_state(
-                                pass_depth_format,
-                                depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write
-                            )
-                        )
-                    } else { None };
-    
-                    let targets = RenderTargetState::color_target(pass_color_format, &blend);
-                    let key_state = KeyRenderPipelineState {
-                        primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
-                        target_state: targets[0].clone(),
-                        depth_stencil: depth_stencil,
-                        multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
-                    };
-
-                    // log::warn!("{:?}", key_state);
-
-                    let key_pipeline = KeyPipeline3D {
-                        key_state,
-                        key_shader,
-                        key_bindgroup_layouts,
-                        key_vertex_layouts,
-                    };
-
-                    let key_u64 = key_pipeline.to_u64();
-
-                    if pipeline_center.request(&key_u64, None) {
-                        // log::debug!("SysPipeline: 3 Pass");
-                        // *oldpipeline = PassPipeline::new(Some(pipeline));
-                        pipeline_loader.request(id_pass, &key_u64);
-                    } else {
-                        // log::debug!("SysPipeline: 4 Pass");
-                        if !pipeline_center.check(&key_u64) {
-                            // log::warn!("SysPassPipeline: {:?}", key_pipeline);
-                            let pipeline = KeyPipeline3D::create(key_pipeline, shader.clone(), bind_group_layouts, &device);
-                            pipeline_center.add(&key_u64, pipeline, None);
-                        }
-                        pipeline_loader.request(id_pass, &key_u64);
-                    }
+                    pipeline(
+                        shader, bindgroups, vb, passcfgs,
+                        blend, depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write,
+                        cull, topology, polygon, face, unclip_depth,
+                        id_pass, &mut pipeline_center, &mut pipeline_loader,
+                        &device
+                    );
                 } else {
                     // log::trace!("SysPassPipelineRequest: No Geo");
                     // *oldpipeline = PassPipeline::new(None);
@@ -650,9 +462,9 @@ use super::{
         passes: Query<
             (&PassDraw, &PassPipeline)
         >,
-        mut record: ResMut<RendererDrawCallRecord>,
+        mut record: ResMut<Performance>,
     ) {
-        // let time1 = pi_time::Instant::now();
+        let time1 = pi_time::Instant::now();
 
         renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
@@ -790,12 +602,147 @@ use super::{
                         renderer.draws.list.push(entity.clone());
                     });
 
-                    record.0.insert(id, renderer.draws.list.len() as u32);
                     // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
                 }
             }
         });
 
+        record.drawobjs = (pi_time::Instant::now() - time1).as_micros() as u32;
         // log::trace!("SysRendererDraws: {:?}", pi_time::Instant::now() - time1);
     }
 
+
+fn shader(
+    id_pass: Entity,
+    meta: &Handle<ShaderEffectMeta>,
+    key_meta: &Atom,
+    instance: &EVerticeExtendCode,
+    vb: &VertexBufferLayoutsComp,
+    bindgroups: &BindGroups3D,
+    renderalignment: &RenderAlignment,
+    shader_center: &mut AssetDataCenterShader3D,
+    shader_loader: &mut AssetLoaderShader3D,
+    device: &RenderDevice,
+) {
+    
+    // log::error!("Shader: {:?}", 2);
+    let key_attributes = vb.as_key_shader_from_attributes();
+    // let key_shader_defines = 0;
+
+    let key_set_blocks = bindgroups.key_set_blocks();
+
+    let key_shader = KeyShader3D {
+        key_meta: key_meta.clone(),
+        key_attributes,
+        key_set_blocks,
+        defines: 0,
+        renderalignment: renderalignment.0
+    };
+
+    let (set0, set1, set2) = (&bindgroups.scene, &bindgroups.model, bindgroups.textures.as_ref());
+    let mut vs_defines = vec![];
+    vs_defines.push(set0.vs_define_code());
+    vs_defines.push(set1.vs_define_code());
+    let mut fs_defines = vec![];
+    fs_defines.push(set0.fs_define_code());
+    fs_defines.push(set1.fs_define_code());
+    // let set2 = 
+    if let Some(set2) = set2 {
+        vs_defines.push(set2.vs_define_code());
+        fs_defines.push(set2.fs_define_code());
+        // Some(set2.as_ref())
+    }
+    //  else { None };
+
+    if shader_center.request(&key_shader, None) {
+        // log::debug!("SysPassShaderRequestByModel: 4");
+        shader_loader.request(id_pass, &key_shader);
+    } else {
+        // log::debug!("SysPassShaderRequestByPass: 4");
+        if !shader_center.check(&key_shader) {
+            let shader = meta.build_2(
+                &device,
+                &key_meta,
+                &key_shader.key_attributes,
+                &instance,
+                &renderalignment,
+                &set1.key().key.skin,
+                &vs_defines,
+                &[], &[],
+                &fs_defines,
+                &[], &[],
+            );
+
+            // let shader = meta.build(&device, &key_shader.key_meta, &key_shader.key_attributes, &instance, set0.as_ref(), set1.as_ref(), set2, None);
+            shader_center.add(&key_shader, shader, None);
+        }
+        shader_loader.request(id_pass, &key_shader);
+    }
+}
+
+fn pipeline(
+    shader: &Handle<Shader3D>,
+    bindgroups: &BindGroups3D,
+    vb: &VertexBufferLayoutsComp,
+    passcfgs: &PassRenderInfo,
+    blend: &ModelBlend,
+    depth_write: &DepthWrite, compare: &DepthCompare, bias: &DepthBias, stencil_front: &StencilFront, stencil_back: &StencilBack, stencil_read: &StencilRead, stencil_write: &StencilWrite,
+    cull: &CCullMode, topology: &Topology, polygon: &CPolygonMode, face: &CFrontFace, unclip_depth: &CUnClipDepth,
+    id_pass: Entity,
+    pipeline_center: &mut AssetDataCenterPipeline3D,
+    pipeline_loader: &mut AssetLoaderPipeline3D,
+    device: &RenderDevice,
+) {
+    
+    let key_shader = shader.key().clone();
+    let bind_group_layouts = bindgroups.bind_group_layouts();
+    let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
+
+    let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
+
+    let pass_blend = passcfgs.blend();
+    let pass_color_format = passcfgs.color_format();
+    let pass_depth_format = passcfgs.depth_format();
+    let blend = if pass_blend { blend.clone() } else { ModelBlend::default() };
+    let depth_stencil = if let Some(pass_depth_format) = pass_depth_format {
+        Some(
+            depth_stencil_state(
+                pass_depth_format,
+                depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write
+            )
+        )
+    } else { None };
+
+    let targets = RenderTargetState::color_target(pass_color_format, &blend);
+    let key_state = KeyRenderPipelineState {
+        primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
+        target_state: targets[0].clone(),
+        depth_stencil: depth_stencil,
+        multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }
+    };
+
+    // log::warn!("{:?}", key_state);
+
+    let key_pipeline = KeyPipeline3D {
+        key_state,
+        key_shader,
+        key_bindgroup_layouts,
+        key_vertex_layouts,
+    };
+
+    let key_u64 = key_pipeline.to_u64();
+
+    if pipeline_center.request(&key_u64, None) {
+        // log::debug!("SysPipeline: 3 Pass");
+        // *oldpipeline = PassPipeline::new(Some(pipeline));
+        pipeline_loader.request(id_pass, &key_u64);
+    } else {
+        // log::debug!("SysPipeline: 4 Pass");
+        if !pipeline_center.check(&key_u64) {
+            // log::warn!("SysPassPipeline: {:?}", key_pipeline);
+            let pipeline = KeyPipeline3D::create(key_pipeline, shader.clone(), bind_group_layouts, &device);
+            pipeline_center.add(&key_u64, pipeline, None);
+        }
+        pipeline_loader.request(id_pass, &key_u64);
+    }
+}

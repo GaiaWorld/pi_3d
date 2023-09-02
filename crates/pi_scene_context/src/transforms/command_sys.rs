@@ -31,46 +31,62 @@ pub fn sys_create_transform_node(
 
 pub fn sys_act_transform_parent(
     mut cmds: ResMut<ActionListTransformNodeParent>,
-    mut parents: Query<&mut NodeChilds>,
-    mut childrens: Query<(&SceneID, &mut NodeParent)>,
+    // mut parents: Query<&mut NodeChilds>,
+    // mut childrens: Query<(&SceneID, &mut NodeParent)>,
     nodes: Query<&DisposeReady>,
+    mut tree: EntityTreeMut,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, idparent, count)| {
-        if let Ok(state0) = nodes.get(entity) {
-            if state0.0 { return; }
-            let mut oldparent = None;
-            let mut newparent = None;
-            if let Ok(state1) = nodes.get(idparent) {
-                if state1.0 == false && parents.contains(idparent) {
-                    if let Ok((_, mut parent)) = childrens.get_mut(entity) {
-                        oldparent = parent.0;
-                        newparent = Some(idparent);
-                        parent.0 = newparent;
-                    }
-                } else if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
-                        oldparent = parent.0;
-                        newparent = Some(idscene.0);
-                        parent.0 = newparent;
-                }
-            } else {
-                if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
-                    oldparent = parent.0;
-                    newparent = Some(idscene.0);
-                    parent.0 = newparent;
+    // cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, idparent, count)| {
+    //     if let Ok(state0) = nodes.get(entity) {
+    //         if state0.0 { return; }
+    //         let mut oldparent = None;
+    //         let mut newparent = None;
+    //         if let Ok(state1) = nodes.get(idparent) {
+    //             if state1.0 == false && parents.contains(idparent) {
+    //                 if let Ok((_, mut parent)) = childrens.get_mut(entity) {
+    //                     oldparent = parent.0;
+    //                     newparent = Some(idparent);
+    //                     parent.0 = newparent;
+    //                 }
+    //             } else if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
+    //                     oldparent = parent.0;
+    //                     newparent = Some(idscene.0);
+    //                     parent.0 = newparent;
+    //             }
+    //         } else {
+    //             if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
+    //                 oldparent = parent.0;
+    //                 newparent = Some(idscene.0);
+    //                 parent.0 = newparent;
+    //             }
+    //         }
+    //         if let Some(oldparent) = oldparent {
+    //             if let Ok(mut childs) = parents.get_mut(oldparent) {
+    //                 childs.remove(&entity);
+    //             }
+    //         }
+    //         if let Some(newparent) = newparent {
+    //             if let Ok(mut childs) = parents.get_mut(newparent) {
+    //                 childs.insert(entity);
+    //             }
+    //         }
+    //     } else if count < 2 {
+    //         cmds.push(OpsTransformNodeParent(entity, idparent, count + 1));
+    //     }
+    // });
+    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val, count)| {
+        if tree.get_down(val).is_some() && tree.get_up(entity).is_some() {
+            // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
+            // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
+            if let (Ok(state0), Ok(state1)) = (nodes.get(entity), nodes.get(val)) {
+                if state0.0 == false && state1.0 == false {
+                    ActionTransformNode::tree_modify(&mut tree, entity, val);
                 }
             }
-            if let Some(oldparent) = oldparent {
-                if let Ok(mut childs) = parents.get_mut(oldparent) {
-                    childs.remove(&entity);
-                }
+        } else {
+            if count < 2 {
+                cmds.push(OpsTransformNodeParent(entity, val, count + 1));
             }
-            if let Some(newparent) = newparent {
-                if let Ok(mut childs) = parents.get_mut(newparent) {
-                    childs.insert(entity);
-                }
-            }
-        } else if count < 2 {
-            cmds.push(OpsTransformNodeParent(entity, idparent, count + 1));
         }
     });
 }
@@ -177,27 +193,29 @@ impl ActionTransformNode {
     pub(crate) fn init_for_tree(
         commands: &mut EntityCommands,
     ) {
+        log::debug!("init_for_tree====={:?}", commands.id());
         commands
-            // .insert(Down::default())
-            // .insert(Up::default())
-            // .insert(Layer::default())
-            .insert(NodeChilds::default())
-            .insert(NodeParent(None))
+            .insert(Down::default())
+            .insert(Up::default())
+            .insert(Layer::default())
+            // .insert(NodeChilds::default())
+            // .insert(NodeParent(None))
             .insert(Enable::default())
             .insert(RecordEnable::default())
             .insert(GlobalEnable(true))
             ;
     }
 
-    // pub(crate) fn tree_modify(
-    //     tree: &mut EntityTreeMut,
-    //     child: Entity,
-    //     parent: Entity,
-    // ) {
-    //     // log::warn!("InsertChild");
-    //     // log::warn!("Tree Remove {:?}", child);
-    //     tree.remove(child);
-    //     // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
-    //     tree.insert_child(child, parent, 0);
-    // }
+    pub(crate) fn tree_modify(
+        tree: &mut EntityTreeMut,
+        child: Entity,
+        parent: Entity,
+    ) {
+        // log::warn!("InsertChild");
+        // log::warn!("Tree Remove {:?}", child);
+        tree.remove(child);
+        log::debug!("insert_child=====child: {:?}, parent: {:?}",child, parent);
+        // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
+        tree.insert_child(child, parent, 0);
+    }
 }

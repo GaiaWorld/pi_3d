@@ -1,5 +1,6 @@
 use pi_bevy_asset::TAssetCapacity;
 use pi_engine_shell::prelude::*;
+use pi_hash::XHashMap;
 use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
 
 use crate::viewer::prelude::*;
@@ -36,20 +37,27 @@ impl Default for CameraViewport {
     }
 }
 
-#[derive(Debug, Clone, Copy, Component, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, Default)]
 pub enum EFixedMode {
+    #[default]
     VerticalFixed,
     HorizontalFixed,
 }
 
-#[derive(Debug, Clone, Copy, Component, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, Default)]
 pub enum EFreeCameraMode {
+    #[default]
     Perspective,
     Orthograhic,
 }
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct CameraNearFar(pub Number, pub Number);
+impl Default for CameraNearFar {
+    fn default() -> Self {
+        Self(0.1, 200.1)
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct CameraOrthograhicParam {
@@ -57,6 +65,11 @@ pub struct CameraOrthograhicParam {
     pub right: Number,
     pub top: Number,
     pub bottom: Number,
+}
+impl Default for CameraOrthograhicParam {
+    fn default() -> Self {
+        Self { left: -4., right: 4., top: 4., bottom: -4. }
+    }
 }
 
 #[derive(Clone, Copy, Component, Default)]
@@ -174,6 +187,19 @@ pub struct CameraParam {
     pub fixed_mode: EFixedMode,
     pub mode: EFreeCameraMode,
     pub viewport: CameraViewport,
+}
+impl Default for CameraParam {
+    fn default() -> Self {
+        Self {
+            up: Vector3::new(0., 1., 0.),
+            nearfar: CameraNearFar::default(),
+            orth: CameraOrthSize::default(),
+            fov: CameraFov::default(),
+            fixed_mode: EFixedMode::default(),
+            mode: EFreeCameraMode::default(),
+            viewport: CameraViewport::default(),
+        }
+    }
 }
 impl CameraParam {
     pub fn create(

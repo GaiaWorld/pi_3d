@@ -116,29 +116,29 @@ impl ShapeEmitter {
     pub fn orbit_center(&self, local_position: &Vector3, offset: &Vector3, result: &mut Vector3) {
         match self {
             ShapeEmitter::Box(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
             },
             ShapeEmitter::Circle(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
             },
             ShapeEmitter::Cone(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
                 result.z += local_position.z;
             },
             ShapeEmitter::Edge(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
             },
             ShapeEmitter::Hemisphere(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
             },
             ShapeEmitter::Point(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
             },
             ShapeEmitter::Rectangle(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
             },
             ShapeEmitter::Sphere(_) => {
-                *result = offset.clone();
+                result.copy_from(offset);
             },
         }
     }

@@ -50,23 +50,23 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         viewers.iter().for_each(|(
             _id_viewer, active, id_scene, bind_viewer, list_model, list_renderer
         )| {
-            // log::info!("Set0ByViewer {:?}:", active.0);
+            // log::warn!("Set0ByViewer {:?}:", active.0);
             if active.0 == false { return; }
 
             // log::trace!("SysSet0ModifyByRendererID: {:?}", list_model.0.len());
-            // log::info!("Set0ByViewer :");
+            // log::warn!("Set0ByViewer :");
 
             if let Ok(bind_base_effect) = scenes.get(id_scene.0) {
-                // log::info!("Set0ByViewer : 0");
+                // log::warn!("Set0ByViewer : 0");
                 let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()), &mut binds_recorder);
                 list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
                     let pass_tags = passorders;
                     if pass_tags.1 & I::TAG == I::TAG {
-                        // log::info!("Set0ByViewer : 1");
+                        // log::warn!("Set0ByViewer : 1");
                         list_model.0.iter().for_each(|id_obj| {
-                            // log::info!("Set0ByViewer : 2");
+                            // log::warn!("Set0ByViewer : 2");
                             if let Ok(passid) = models.get(id_obj.clone()) {
-                                // log::info!("Set0ByViewer : 3");
+                                // log::warn!("Set0ByViewer : 3");
                                 // log::info!("Set0ByViewer : 4");
                                 scene_wait.add(&key, passid.id());
                             }
@@ -141,15 +141,21 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 
         passes.iter().for_each(|(idpass, idmesh, _)| {
             if let Ok(idscene) = models.get(idmesh.0) {
+                // log::error!("Set0: AA");
                 if let Ok(bind_base_effect) = scenes.get(idscene.0) {
                     viewers.iter().for_each(|(
                         active, id_scene, bind_viewer, list_model, list_renderer
                     )| {
+                        // log::error!("Set0: AA1");
                         if active.0 == false { return; }
 
+                        // log::error!("Set0: AA2");
                         if id_scene.0 == idscene.0 && list_model.0.contains(&idmesh.0) {
+                            // log::error!("Set0: AA3");
                             list_renderer.map.iter().for_each(|(_, (passorders, _id_renderer))| {
+                                // log::error!("Set0: AA4");
                                 if passorders.1 & I::TAG == I::TAG {
+                                    // log::error!("Set0: AA5");
                                     let key = KeyBindGroupScene::new(bind_viewer.0.clone(), Some(bind_base_effect.0.clone()), &mut binds_recorder);
                                     scene_wait.add(&key, idpass);
                                 }
@@ -170,7 +176,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
     pub fn sys_set1_modify_by_renderer<T: TPass + Component, I: TPassID + Component>(
         viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &ModelList, &ViewerRenderersInfo),
-            Or<(Changed<ModelList>, Changed<ViewerActive>, Changed<ViewerRenderersInfo>)>,
+            Or<(Changed<FlagModelList>, Changed<ViewerActive>, Changed<ViewerRenderersInfo>)>,
         >,
         models: Query<
             (
@@ -187,6 +193,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         viewers.iter().for_each(|(
             _id_camera, active, _id_scene, list_model, list_renderer
         )| {
+            // log::error!("Set1: ");
             if active.0 == false { return; }
             // log::info!("SysSet1ModifyByRendererID: {:?}", list_model.0.len());
             // log::error!("Set1: A");
@@ -225,7 +232,6 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
         log::trace!("SysSet1ModifyByRendererID: {:?}", pi_time::Instant::now() - time1);
     }
 // }
-
 
 /// * 物体的数据变化时, 重新创建列表内物体相关Pass 的 Set1 数据
 ///   * 骨骼数据变化 - 
@@ -358,7 +364,7 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
     pub fn sys_set2_modify_by_renderer<T: TPass + Component, I: TPassID + Component>(
         viewers: Query<
             (ObjectID, &ViewerActive, &SceneID, &ModelList, &ViewerRenderersInfo),
-            Or<(Changed<ModelList>, Changed<ViewerRenderersInfo>, Changed<ViewerActive>)>,
+            Or<(Changed<FlagModelList>, Changed<ViewerRenderersInfo>, Changed<ViewerActive>)>,
         >,
         models: Query<
             &I,
@@ -386,8 +392,8 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
                         if pass_tags.1 &  I::TAG == I::TAG {
                             if let Ok((meta1, effect_texture_samplers)) = passes.get(passid.id()) {
                                 // log::error!("Set2: A4");
-                                if let Some(effect_texture_samplers) = effect_texture_samplers.val() {
-                                    let key = KeyBindGroupTextureSamplers::new(KeyShaderSetTextureSamplers::default(), effect_texture_samplers.clone(), meta1.0.as_ref().unwrap().1.clone(), &mut binds_recorder);
+                                if let (Some(effect_texture_samplers), Some(mat)) = (effect_texture_samplers.val(), meta1.0.as_ref()) {
+                                    let key = KeyBindGroupTextureSamplers::new(KeyShaderSetTextureSamplers::default(), effect_texture_samplers.clone(), mat.1.clone(), &mut binds_recorder);
                                     texturesamplers_wait.add(&key, passid.id());
                                 } else {
                                     // if let Some(mut cmd) = commands.get_entity(passid.id()) {
@@ -413,9 +419,9 @@ use super::{ViewerRenderersInfo, DirtyViewerRenderersInfo};
 
         passes.iter().for_each(|(id_pass, _id_model, meta1, effect_texture_samplers)| {
             // log::error!("Set2: AA1");
-            if let Some(effect_texture_samplers) = effect_texture_samplers.val() {
+            if let (Some(effect_texture_samplers), Some(mat)) = (effect_texture_samplers.val(), meta1.0.as_ref()) {
                 // log::error!("Set2: AA2");
-                let key = KeyBindGroupTextureSamplers::new(KeyShaderSetTextureSamplers::default(), effect_texture_samplers.clone(), meta1.0.as_ref().unwrap().1.clone(), &mut binds_recorder);
+                let key = KeyBindGroupTextureSamplers::new(KeyShaderSetTextureSamplers::default(), effect_texture_samplers.clone(), mat.1.clone(), &mut binds_recorder);
                 texturesamplers_wait.add(&key, id_pass);
             } else {
                 

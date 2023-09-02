@@ -82,7 +82,7 @@ pub use crate::extends::*;
 
 ///
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Component)]
-pub struct EffectTextureSamplersComp(pub pi_render::render_3d::bind_groups::texture_sampler::EffectTextureSamplers);
+pub struct EffectTextureSamplersComp(pub Option<EffectTextureSamplers>);
 
 /////////////////////////////////////// Global Control
 #[derive(Component)]
@@ -180,6 +180,21 @@ impl SingleEmptyEntity {
     }
 }
 
+
+#[derive(Resource, Default)]
+pub struct Performance {
+    pub worldmatrix: u32,
+    pub culling: u32,
+    pub drawobjs: u32,
+    pub gltfanaly: u32,
+    pub animation: u32,
+    pub animationgroup: u32,
+    pub particlesystem: u32,
+    pub trialcalc: u32,
+    pub uniformbufferupdate: u32,
+    pub uniformupdate: u32,
+}
+
 pub trait TRenderAlignmentCalc {
     fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3;
     fn calc_local(&self, g_velocity: &Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix>;
@@ -256,7 +271,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
         }
         m
     }
-    fn calc_local(&self, g_velocity: &Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix> {
+    fn calc_local(&self, _g_velocity: &Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix> {
         match self {
             ERenderAlignment::View => None,
             ERenderAlignment::World => None,
@@ -265,11 +280,13 @@ impl TRenderAlignmentCalc for ERenderAlignment {
             ERenderAlignment::Velocity => None,
             ERenderAlignment::StretchedBillboard => {
                 let mut result = Matrix::identity();
-                let vlen = CoordinateSytem3::length(g_velocity) + length_scale + length_modify;
+                let vlen = length_scale + length_modify;
                 let scaling = Vector3::new(vlen, 1., 1.);
-                let translation = Vector3::new(0.5 * vlen, 0., 0.);
-                CoordinateSytem3::matrix4_compose_rotation(&scaling, &Rotation3::identity(), &translation, &mut result);
-                Some(result)
+                let translation = Vector3::new(0.5, 0., 0.);
+                CoordinateSytem3::matrix4_compose_rotation(&scaling, &Rotation3::identity(), &Vector3::zeros(), &mut result);
+                let mut temp = Matrix::identity();
+                temp.append_translation_mut(&translation);
+                Some(result * temp)
             },
             ERenderAlignment::HorizontalBillboard => None,
             ERenderAlignment::VerticalBillboard => None,

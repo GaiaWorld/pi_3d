@@ -1,6 +1,6 @@
 
 
-use std::sync::Arc;
+use std::{sync::Arc, f32::consts::E};
 
 use pi_engine_shell::prelude::*;
 
@@ -159,18 +159,23 @@ use super::{
     pub fn sys_material_textures_modify(
         mut materials: Query<
             (
-                ObjectID, &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams
+                ObjectID, &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams,
+                (
+                    &mut EffectBindSampler2D01Comp, &mut EffectBindSampler2D02Comp, &mut EffectBindSampler2D03Comp, &mut EffectBindSampler2D04Comp, 
+                    &mut EffectBindSampler2D05Comp, &mut EffectBindSampler2D06Comp, &mut EffectBindSampler2D07Comp, &mut EffectBindSampler2D08Comp, 
+                )
             ),
-            Or<(Changed<AssetResShaderEffectMeta>, Changed<UniformTextureWithSamplerParams>)>
+            Or<(Changed<AssetResShaderEffectMeta>, Changed<UniformTextureWithSamplerParamsDirty>)>
         >,
-        mut commands:  Commands,
         device: Res<PiRenderDevice>,
         asset_samp: Res<ShareAssetMgr<SamplerRes>>,
+        mut commands: Commands,
     ) {
         // log::debug!("SysMaterialMetaChange: ");
         materials.iter_mut().for_each(|(
             matid,
-            effect, mut texparams
+            effect, mut texparams,
+            mut samplers
         )| {
             let mut entitycmd = if let Some(cmd) = commands.get_entity(matid) {
                 cmd
@@ -178,72 +183,77 @@ use super::{
                 return;
             };
 
-            for index in 0..effect.textures.len() {
-                let item = effect.textures.get(index).unwrap();
-                let param = if let Some(param) = texparams.0.get(&item.slotname) {
-                    param
-                } else {
-                    texparams.0.insert(
-                        item.slotname.clone(), 
-                        Arc::new(
-                                UniformTextureWithSamplerParam {
-                                slotname: item.slotname.clone(),
-                                filter: true,
-                                sample: KeySampler::default(),
-                                url: EKeyTexture::Tex(Atom::from(DefaultTexture::path(item.initial, wgpu::TextureDimension::D2))),
-                            }
-                        )
-                    );
-                    texparams.0.get(&item.slotname).unwrap()
-                };
-                // log::error!("Texture {:?} {:?}", index, &param.url);
-                
-                if index == 0 {
-                    // log::warn!("Texture 0 {:?}", &param.url);
-                    entitycmd.insert(TextureSlot01(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D01Comp(EffectBindSampler2D01(samp)));
-                    }
-                } else if index == 1 {
-                    // log::warn!("Texture 1 {:?}", &param.url);
-                    entitycmd.insert(TextureSlot02(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D02Comp(EffectBindSampler2D02(samp)));
-                    }
-                } else if index == 2 {
-                    // log::warn!("Texture 2 {:?}", &param.url);
-                    entitycmd.insert(TextureSlot03(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D03Comp(EffectBindSampler2D03(samp)));
-                    }
-                } else if index == 3 {
-                    // log::warn!("Texture 3 {:?}", &param.url);
-                    entitycmd.insert(TextureSlot04(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D04Comp(EffectBindSampler2D04(samp)));
-                    }
-                } else if index == 4 {
-                    entitycmd.insert(TextureSlot05(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D05Comp(EffectBindSampler2D05(samp)));
-                    }
-                } else if index == 5 {
-                    entitycmd.insert(TextureSlot06(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D06Comp(EffectBindSampler2D06(samp)));
-                    }
-                } else if index == 6 {
-                    entitycmd.insert(TextureSlot07(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D07Comp(EffectBindSampler2D07(samp)));
-                    }
-                } else if index == 7 {
-                    entitycmd.insert(TextureSlot08(param.clone()));
-                    if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                        entitycmd.insert(EffectBindSampler2D08Comp(EffectBindSampler2D08(samp)));
+            if effect.textures.len() == 0 {
+                //
+            } else {
+                for index in 0..effect.textures.len() {
+                    let item = effect.textures.get(index).unwrap();
+                    let param = if let Some(param) = texparams.0.get(&item.slotname) {
+                        param
+                    } else {
+                        texparams.0.insert(
+                            item.slotname.clone(), 
+                            Arc::new(
+                                    UniformTextureWithSamplerParam {
+                                    slotname: item.slotname.clone(),
+                                    filter: true,
+                                    sample: KeySampler::default(),
+                                    url: EKeyTexture::Tex(Atom::from(DefaultTexture::path(item.initial, wgpu::TextureDimension::D2))),
+                                }
+                            )
+                        );
+                        texparams.0.get(&item.slotname).unwrap()
+                    };
+                    // log::error!("Texture {:?} {:?}", index, &param.url);
+                    
+                    if index == 0 {
+                        // log::warn!("Texture 0 {:?}", &param.url);
+                        entitycmd.insert(TextureSlot01(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.0 = EffectBindSampler2D01Comp(Some(EffectBindSampler2D01(samp)));
+                        }
+                    } else if index == 1 {
+                        // log::warn!("Texture 1 {:?}", &param.url);
+                        entitycmd.insert(TextureSlot02(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.1 = EffectBindSampler2D02Comp(Some(EffectBindSampler2D02(samp)));
+                        }
+                    } else if index == 2 {
+                        // log::warn!("Texture 2 {:?}", &param.url);
+                        entitycmd.insert(TextureSlot03(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.2 = EffectBindSampler2D03Comp(Some(EffectBindSampler2D03(samp)));
+                        }
+                    } else if index == 3 {
+                        // log::warn!("Texture 3 {:?}", &param.url);
+                        entitycmd.insert(TextureSlot04(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.3 = EffectBindSampler2D04Comp(Some(EffectBindSampler2D04(samp)));
+                        }
+                    } else if index == 4 {
+                        entitycmd.insert(TextureSlot05(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.4 = EffectBindSampler2D05Comp(Some(EffectBindSampler2D05(samp)));
+                        }
+                    } else if index == 5 {
+                        entitycmd.insert(TextureSlot06(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.5 = EffectBindSampler2D06Comp(Some(EffectBindSampler2D06(samp)));
+                        }
+                    } else if index == 6 {
+                        entitycmd.insert(TextureSlot07(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.6 = EffectBindSampler2D07Comp(Some(EffectBindSampler2D07(samp)));
+                        }
+                    } else if index == 7 {
+                        entitycmd.insert(TextureSlot08(param.clone()));
+                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                            *samplers.7 = EffectBindSampler2D08Comp(Some(EffectBindSampler2D08(samp)));
+                        }
                     }
                 }
             }
+
         });
     }
 // }
@@ -265,9 +275,12 @@ use super::{
             &BindEffect,
             Changed<BindEffectValueDirty>,
         >,
+        mut performance: ResMut<Performance>,
     ) {
+        let time0 = pi_time::Instant::now();
         items.iter_mut().for_each(|bind| {
             bind.update();
         });
+        performance.uniformbufferupdate = (pi_time::Instant::now() - time0).as_micros() as u32;
     }
 // }
