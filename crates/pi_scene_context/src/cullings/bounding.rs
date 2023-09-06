@@ -39,6 +39,11 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             result.push(*item);
         });
     }
+
+    fn ray_test<F: TFilter>(&self, org: Vector3, dir: Vector3, filter: F, result: &mut Option<Entity>) {
+        todo!()
+    }
+    
 }
 
 pub fn is_in_frustum(min: (Number, Number, Number), max: (Number, Number, Number), frustum_planes: &FrustumPlanes) -> bool {
