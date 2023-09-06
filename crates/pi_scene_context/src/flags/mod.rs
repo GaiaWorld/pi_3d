@@ -45,7 +45,7 @@ impl pi_curves::curve::frame::FrameDataValue for Enable {
         Self(self.0 * (1.0 - amount) + rhs.0 * amount)
     }
 
-    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+    fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue, frame_delta: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         let _1 = 1.;
         let _2 = 2.;
         let _3 = 3.;
@@ -54,8 +54,8 @@ impl pi_curves::curve::frame::FrameDataValue for Enable {
         let cubed = amount * squared;
         let part1 = ((_2 * cubed) - (_3 * squared)) + _1;
         let part2 = (-_2 * cubed) + (_3 * squared);
-        let part3 = (cubed - (_2 * squared)) + amount;
-        let part4 = cubed - squared;
+        let part3 = ((cubed - (_2 * squared)) + amount) * frame_delta;
+        let part4 = (cubed - squared) * frame_delta;
 
         let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
         return Self(result);

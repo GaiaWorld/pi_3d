@@ -77,6 +77,9 @@ pub enum TGradienMode {
     Random,
 }
 
+#[derive(Resource)]
+pub struct ParticleSystemInstant(pub pi_time::Instant);
+
 #[derive(Resource, Default)]
 pub struct ParticleSystemPerformance {
     pub sys_ids: u32,
@@ -104,6 +107,14 @@ pub struct ParticleSystemPerformance {
     pub sys_update_buffer_trail: u32,
     pub particles: u32,
     pub maxparticles: u32,
+    /// 运行的帧间隔控制
+    pub frame_time_ms: u32,
+    /// 更新的帧间隔控制
+    pub update_frame_time_ms: u32,
+    /// 上一次运行的帧时间
+    pub last_running_time: u64,
+    /// 是否更新数据
+    pub update_buffer: bool,
 }
 impl ParticleSystemPerformance {
     pub fn total(&self) -> u32 {
@@ -677,14 +688,14 @@ pub struct ParticleSystemTime {
     pub(crate) loop_new: bool,
 }
 impl ParticleSystemTime {
-    pub fn new() -> Self {
+    pub fn new(frame_time_ms: u32) -> Self {
         Self {
             time_scale: 1.,
             last_running_timems: 0,
             running_delta_ms: 0,
             total_ms: 0,
             total_running_ms: 0,
-            half_frame_time_ms: 0,
+            half_frame_time_ms: frame_time_ms / 2,
             delay_ms: 0,
             emission_loop: 0,
             emission_progress: 0.,
@@ -710,7 +721,7 @@ impl ParticleSystemTime {
                 self.running_delta_ms = self.half_frame_time_ms;
             } else {
                 // 间隔时间到达帧运行间隔
-                if self.delay_ms + self.last_running_timems + self.half_frame_time_ms <= self.total_ms {
+                if self.delay_ms + self.last_running_timems + self.half_frame_time_ms < self.total_ms {
                     self.running_delta_ms = self.total_ms - (self.delay_ms + self.last_running_timems);
                 } else {
                     self.running_delta_ms = 0;

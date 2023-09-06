@@ -26,6 +26,16 @@ pub mod shadow_generator;
 pub mod interface;
 pub mod system;
 
+#[derive(Resource, Default)]
+pub struct StateLight {
+    pub culling_time: u32,
+}
+impl TCullingPerformance for StateLight {
+    fn culling_time(&mut self, ms: u32) {
+        self.culling_time = ms;
+    }
+}
+
 pub struct PluginLighting;
 impl Plugin for PluginLighting {
     // fn init(
@@ -54,6 +64,7 @@ impl Plugin for PluginLighting {
         // app.world.insert_resource(SingleLightCreateCommands::default());
         app.insert_resource(ActionListLightCreate::default());
         app.insert_resource(ActionListLightParam::default());
+        app.insert_resource(StateLight::default());
 
         // app.add_systems(Update, sys_cmd_light_create.in_set(ERunStageChap::Initial));
         // app.add_systems(Update, sys_cmd_light_modify.in_set(ERunStageChap::Command));
@@ -129,7 +140,7 @@ impl Plugin for PluginLighting {
         app.add_systems(
 			Update,
             (
-                sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection>.run_if(should_run)
+                sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection, StateLight>.run_if(should_run)
             ).chain().in_set(ERunStageChap::CalcRenderMatrix)
         );
         app.add_systems(

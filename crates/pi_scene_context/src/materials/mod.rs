@@ -15,7 +15,7 @@ use self::{
         set_up_uniforms
     },
     system::sys_dispose_about_material,
-    prelude::{SingleIDBaseDefaultMaterial, StageMaterial, StateMaterial}
+    prelude::*
 };
 
 mod material;
@@ -38,26 +38,73 @@ pub type MBKK = usize;
 struct PluginMaterial;
 impl Plugin for PluginMaterial {
     fn build(&self, app: &mut bevy::prelude::App) {
+        {
+            app.insert_resource(ImageTextureLoader::default());
+            app.insert_resource(StateTextureLoader::default());
+
+            app.configure_set(Update, StageTextureLoad::TextureRequest);
+            app.configure_set(Update, StageTextureLoad::TextureLoading.after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.add_systems(
+                Update,
+                (
+                    sys_image_texture_load_launch,
+                    sys_image_texture_loaded
+                ).chain().in_set(StageTextureLoad::TextureLoading)
+            );
+            app.insert_resource(ImageTextureViewLoader::<TextureSlot01>::default());
+            app.insert_resource(ImageTextureViewLoader::<TextureSlot02>::default());
+            app.insert_resource(ImageTextureViewLoader::<TextureSlot03>::default());
+            app.insert_resource(ImageTextureViewLoader::<TextureSlot04>::default());
+            app.insert_resource(ImageTextureViewLoader::<TextureSlot05>::default());
+            app.insert_resource(ImageTextureViewLoader::<TextureSlot06>::default());
+            app.add_systems(
+                Update,
+                (
+                    sys_image_texture_view_load_launch::<TextureSlot01, EffectBindTexture2D01Comp>,
+                    sys_image_texture_view_load_launch::<TextureSlot02, EffectBindTexture2D02Comp>,
+                    sys_image_texture_view_load_launch::<TextureSlot03, EffectBindTexture2D03Comp>,
+                    sys_image_texture_view_load_launch::<TextureSlot04, EffectBindTexture2D04Comp>,
+                    sys_image_texture_view_load_launch::<TextureSlot05, EffectBindTexture2D05Comp>,
+                    sys_image_texture_view_load_launch::<TextureSlot06, EffectBindTexture2D06Comp>,
+                ).chain().in_set(StageTextureLoad::TextureRequest)
+            );
+            app.add_systems(
+                Update,
+                (
+                    sys_image_texture_view_loaded_check::<TextureSlot01, EffectBindTexture2D01Comp>,
+                    sys_image_texture_view_loaded_check::<TextureSlot02, EffectBindTexture2D02Comp>,
+                    sys_image_texture_view_loaded_check::<TextureSlot03, EffectBindTexture2D03Comp>,
+                    sys_image_texture_view_loaded_check::<TextureSlot04, EffectBindTexture2D04Comp>,
+                    sys_image_texture_view_loaded_check::<TextureSlot05, EffectBindTexture2D05Comp>,
+                    sys_image_texture_view_loaded_check::<TextureSlot06, EffectBindTexture2D06Comp>,
+                ).chain().in_set(StageTextureLoad::TextureLoaded)
+            );
+        }
         if app.world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
-            let cfg = asset_capacity::<AssetCfgSamplerRes>(app);
+            // let cfg = asset_capacity::<AssetCfgSamplerRes>(app);
+            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<SamplerRes>();
             app.insert_resource(
                 ShareAssetMgr::<SamplerRes>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
         if app.world.get_resource::<ShareAssetMgr<TextureRes>>().is_none() {
-            let cfg = asset_capacity::<AssetCfgTextureRes>(app);
+            // let cfg = asset_capacity::<AssetCfgTextureRes>(app);
+            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<TextureRes>();
             app.insert_resource(
                 ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
         if app.world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
-            let cfg = asset_capacity::<AssetCfgImageTexture>(app);
+            // let cfg = asset_capacity::<AssetCfgImageTexture>(app);
+            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ImageTexture>();
             app.insert_resource(
                 ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
         if app.world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
-            let cfg = asset_capacity::<AssetCfgImageTextureView>(app);
+            // let cfg = asset_capacity::<AssetCfgImageTextureView>(app);
+            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ImageTextureView>();
             app.insert_resource(
                 ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
@@ -75,7 +122,8 @@ impl Plugin for PluginMaterial {
         let single = SingleIDBaseDefaultMaterial(entity);
         app.insert_resource(single);
 
-        let cfg = asset_capacity::<AssetCfgShaderMeta3D>(app);
+        // let cfg = asset_capacity::<AssetCfgShaderMeta3D>(app);
+        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ShaderEffectMeta>();
         app.insert_resource(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
 
         // app.insert_resource(AssetSyncWait::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>::default());
@@ -160,12 +208,12 @@ pub struct PluginGroupMaterial;
 impl PluginGroupMaterial {
     pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {
         group
-            .add(PluginTextureSlot01Load::default())
-            .add(PluginTextureSlot02Load::default())
-            .add(PluginTextureSlot03Load::default())
-            .add(PluginTextureSlot04Load::default())
-            .add(PluginTextureSlot05Load::default())
-            .add(PluginTextureSlot06Load::default())
+            // .add(PluginTextureSlot01Load::default())
+            // .add(PluginTextureSlot02Load::default())
+            // .add(PluginTextureSlot03Load::default())
+            // .add(PluginTextureSlot04Load::default())
+            // .add(PluginTextureSlot05Load::default())
+            // .add(PluginTextureSlot06Load::default())
             .add(PluginMaterial)
     }
 }

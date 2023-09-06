@@ -42,7 +42,6 @@ pub fn sys_update_culling_by_cullinginfo(
     mut scenes: Query<&mut SceneBoundingPool>,
     items: Query<(&WorldMatrix, &DisposeReady), Changed<WorldMatrix>>,
     boundings: Query<(Entity, &SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs), Or<(Changed<GeometryBounding>, Changed<GeometryCullingMode>)>>,
-    instances: Query<&InstanceMesh>,
 ) {
     boundings.iter().for_each(|(entity, idscene, info, mode, instances)| {
         if let Ok(mut pool) = scenes.get_mut(idscene.0) {

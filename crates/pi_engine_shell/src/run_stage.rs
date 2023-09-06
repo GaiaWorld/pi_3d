@@ -3,6 +3,8 @@
 use bevy::prelude::{SystemSet, Plugin, IntoSystemSetConfig, IntoSystemConfigs, Update, apply_deferred};
 use pi_bevy_render_plugin::PiRenderSystemSet;
 
+use crate::prelude::EngineInstant;
+
 // pub struct RunStage {
 //     list: Vec<StageBuilder>,
 // }
@@ -215,6 +217,8 @@ impl Plugin for PluginRunstage {
         // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::DrawCall));
         // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Draw));
         // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::StateCheck));
+
+        app.insert_resource(EngineInstant(pi_time::Instant::now()));
     }
 }
 

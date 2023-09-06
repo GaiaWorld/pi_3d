@@ -93,6 +93,7 @@ pi_assets = {path = "../pi_assets"}
 [patch.yn]
 # winit = { path = "../winit" }
 pi_hal = { path = "../pi_hal" }
+pi_curves = { path = "../pi_curves" }
 # pi_render
 pi_render = { path = "../pi_render" }
 render_utils = { path = "../pi_render/crates/render_utils" }
@@ -203,6 +204,10 @@ path = "examples/anime/color.rs"
 [[example]]
 name = "anime_camera"
 path = "examples/anime/camera.rs"
+
+[[example]]
+name = "anime_rotation_quaternion"
+path = "examples/anime/rotation_quaternion.rs"
 
 [[example]]
 name = "anime_performance"

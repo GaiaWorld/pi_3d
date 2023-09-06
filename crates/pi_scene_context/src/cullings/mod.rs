@@ -3,7 +3,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Vector3;
 
-use crate::{transforms::transform_node_sys::sys_world_matrix_calc, prelude::{StageTransform, StageModel}};
+use crate::{transforms::transform_node_sys::sys_world_matrix_calc, prelude::{StageTransform, StageModel}, viewer::prelude::sys_abstructmesh_culling_flag_reset};
 
 use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::{sys_update_culling_by_worldmatrix, sys_update_culling_by_cullinginfo}, command::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}, command_sys::{sys_act_mesh_bounding, sys_act_mesh_bounding_culling}};
 
@@ -46,7 +46,8 @@ impl Plugin for PluginCulling {
             Update,
             (
                 sys_update_culling_by_worldmatrix,
-                sys_update_culling_by_cullinginfo
+                sys_update_culling_by_cullinginfo,
+                sys_abstructmesh_culling_flag_reset,
             ).chain().after(sys_world_matrix_calc).in_set(StageTransform::TransformCalcMatrix)
         );
     }

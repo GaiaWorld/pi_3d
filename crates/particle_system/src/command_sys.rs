@@ -62,7 +62,7 @@ pub fn sys_create_cpu_partilce_system(
                 .insert(ParticleActive(true))
                 .insert(ParticleState { start: false, playing: false })
                 .insert(ParticleRandom::new(0))
-                .insert(ParticleSystemTime::new())
+                .insert(ParticleSystemTime::new(performance.frame_time_ms))
                 .insert(ParticleSystemEmission::new())
                 .insert(ParticleIDs::new(calculator, maxcount))
                 .insert(ParticleBaseRandom::new(maxcount))

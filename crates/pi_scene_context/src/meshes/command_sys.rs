@@ -328,7 +328,7 @@ impl ActionMesh {
             .insert(PassDirtyBindEffectTextures(0))
             .insert(FlagPassDirtyBindEffectTextures)
             .insert(LayerMask::default())
-            .insert(Opaque)
+            .insert(AbstructMeshCullingFlag(false))
             .insert(TransparentSortParam::opaque())
             .insert(CCullMode(CullMode::Back))
             .insert(CFrontFace(FrontFace::Ccw))
@@ -353,6 +353,7 @@ impl ActionMesh {
             .insert(RecordIndiceRenderRange::default())
             .insert(GeometryBounding::default())
             .insert(GeometryCullingMode::default())
+            .insert(InstancedMeshTransparentSortCollection(vec![]))
             ;
     }
     // pub fn create(
@@ -422,6 +423,8 @@ impl ActionInstanceMesh {
         source: Entity,
     ) {
         commands.insert(AbstructMesh);
+        commands.insert(AbstructMeshCullingFlag(false));
+        commands.insert(InstanceTransparentIndex(0));
         commands.insert(InstanceMesh(source));
         commands.insert(InstanceRGB(1., 1., 1.));
         commands.insert(InstanceAlpha(1.));

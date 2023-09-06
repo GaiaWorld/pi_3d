@@ -23,7 +23,7 @@ pub fn sys_particle_active(
     
                 ids.reset();
                 let timescale = time.time_scale;
-                *time = ParticleSystemTime::new(); time.time_scale = timescale;
+                *time = ParticleSystemTime::new(performance.frame_time_ms); time.time_scale = timescale;
                 *emission = ParticleSystemEmission::new();
             }
         } else {
@@ -554,162 +554,168 @@ pub fn sys_update_buffer(
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
     mut performance: ResMut<ParticleSystemPerformance>,
+    instant: Res<EngineInstant>,
 ) {
     let time0 = pi_time::Instant::now();
     // let mut ptime = pi_time::Instant::now();
     // let mut ptime1 = pi_time::Instant::now();
+    let currms = (time0 - instant.0).as_millis() as u64;
+    performance.update_buffer = (performance.last_running_time + performance.update_frame_time_ms as u64) < currms;
+    if performance.update_buffer {
+        performance.last_running_time = currms;
+        // log::warn!("ParticleBuffer: ");
+        let mut count_particles = 0;
+        let mut collectdata: Vec<f32> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16));
+        let common_f32 = commonbuffer.f32_count();
+        let mut common_f32_use = 0;
+        let mut flag_common = common_f32 > common_f32_use;
+        // let mut collectdata: Vec<u8> = Vec::with_capacity(100 * (4 + 4 + 16) * 4);
+        let mut collect_common: Vec<f32> = Vec::with_capacity(common_f32);
+        particle_sys.iter().for_each(
+            |(
+                entity, state, _time, ids, scalings, rotations, positions, directions, emitmatrixs,
+                colors, uvs
+            )| {
+                let particle_count = ids.actives.len();
 
-    // log::warn!("ParticleBuffer: ");
-    let mut count_particles = 0;
-    let mut collectdata: Vec<f32> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16));
-    let common_f32 = commonbuffer.f32_count();
-    let mut common_f32_use = 0;
-    let mut flag_common = common_f32 > common_f32_use;
-    // let mut collectdata: Vec<u8> = Vec::with_capacity(100 * (4 + 4 + 16) * 4);
-    let mut collect_common: Vec<f32> = Vec::with_capacity(common_f32);
-    particle_sys.iter().for_each(
-        |(
-            entity, state, _time, ids, scalings, rotations, positions, directions, emitmatrixs,
-            colors, uvs
-        )| {
-            // log::warn!("sys_update_buffer A");
-            if state.playing == false {
-                if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
-                    *rendergeometry = RenderGeometryEable(false);
-                    return;
+                // log::warn!("sys_update_buffer A");
+                if state.playing == false || particle_count == 0 {
+                    if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
+                        *rendergeometry = RenderGeometryEable(false);
+                        return;
+                    }
                 }
-            }
 
-            // if time.running_delta_ms <= 0 { return; }
-            if let Ok((enable, idgeo)) = meshes.get(entity) {
+                // if time.running_delta_ms <= 0 { return; }
+                if let Ok((enable, idgeo)) = meshes.get(entity) {
 
-                if enable.0 == false { return; }
-                
-                let id_geo = idgeo.0;
-                if let Ok(instanceinfo) = instanceinfos.get(id_geo) {
+                    if enable.0 == false { return; }
+                    
+                    let id_geo = idgeo.0;
+                    if let Ok(instanceinfo) = instanceinfos.get(id_geo) {
 
-                    let particle_count = ids.actives.len();
-                    count_particles += particle_count;
+                        count_particles += particle_count;
 
-                    // log::warn!("sys_update_buffer B");
-                    if let Ok(calculator) = calculators.get(ids.calculator.0) {
-                        collectdata.clear();
-                        // let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
-                        
-                        let renderalign = calculator.render_align();
-                        let updatebuffer = renderalign.is_some();
-                        // log::warn!("ActiveCount: {:?}", length);
-
-                        if updatebuffer {
-                            let mut emitposition = Vector3::zeros();
-                            // let zero = Vector3::zeros();
-                            let mut g_velocity = Vector3::zeros();
+                        // log::warn!("sys_update_buffer B");
+                        if let Ok(calculator) = calculators.get(ids.calculator.0) {
+                            collectdata.clear();
+                            // let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
                             
-                            let f32_count = particle_count * instanceinfo.bytes_per_instance() as usize / 4;
-                            let collect = if common_f32_use + f32_count <= common_f32 {
-                                flag_common = true;
-                                &mut collect_common
-                            } else {
-                                flag_common = false;
-                                &mut collectdata
-                            };
-    
-                            ids.actives.iter().for_each(|idx| {
-                                let scaling = scalings.get(*idx).unwrap();
-                                let eulers = rotations.get(*idx).unwrap();
-    
-                                let mut translation = positions.get(*idx).unwrap().clone();
-                                // log::warn!("LOCAL: {:?}", translation);
-    
-                                translation = translation + calculator.pivot.clone();
-    
-                                let direction = directions.get(*idx).unwrap();
-                                let emitmatrix = emitmatrixs.get(*idx).unwrap();
-    
-                                CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
-                                CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
-                                // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
-                                let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
-                                // log::warn!("Velocity: {:?}", g_velocity);
-                                // log::warn!("Translation: {:?}", emitposition);
-    
-                                let matrix = if let Some(renderalign) = renderalign {
-                                    let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
-                                    // log::warn!("rotation : {:?}", rotation);
-                                    let mut matrix = Matrix::identity();
-                                    {
-                                        matrix.append_nonuniform_scaling_mut(&emitmatrix.scaling);
-                                        matrix.append_translation_mut(&emitposition);
-                                        matrix = matrix * rotation.to_homogeneous();
-                                    }
-                                    // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
-                                    
-                                    let mut local = Matrix::identity();
-                                    {
-                                        let rotation = Rotation3::from_euler_angles(eulers.z, eulers.x, eulers.y);
-                                        local.append_nonuniform_scaling_mut(scaling);
-                                        local = local * rotation.to_homogeneous();
-                                    }
-                                    // CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
-                                    // log::warn!("a MAREIX: {:?}", matrix);
-                                    matrix = matrix * local;
-                        
-                                    if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
-                                        matrix = matrix * local;
-                                    }
-                                    matrix
+                            let renderalign = calculator.render_align();
+                            let updatebuffer = renderalign.is_some();
+                            // log::warn!("ActiveCount: {:?}", length);
+
+                            if updatebuffer {
+                                let mut emitposition = Vector3::zeros();
+                                // let zero = Vector3::zeros();
+                                let mut g_velocity = Vector3::zeros();
+                                
+                                let f32_count = particle_count * instanceinfo.bytes_per_instance() as usize / 4;
+                                let collect = if common_f32_use + f32_count <= common_f32 {
+                                    flag_common = true;
+                                    &mut collect_common
                                 } else {
-                                    // let mut matrix = Matrix::identity();
-                                    // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
-                                    let matrix = &emitmatrix.matrix;
-                                    let mut local = Matrix::identity();
-                                    CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
-                                    // log::warn!("MAREIX: {:?}", matrix);
-                                    // log::warn!("LOCAL: {:?}", local);
-                                    matrix * local
+                                    flag_common = false;
+                                    &mut collectdata
                                 };
-    
-                                let color = colors.get(*idx).unwrap();
-                                let uv = uvs.get(*idx).unwrap();
+        
+                                ids.actives.iter().for_each(|idx| {
+                                    let scaling = scalings.get(*idx).unwrap();
+                                    let eulers = rotations.get(*idx).unwrap();
+        
+                                    let mut translation = positions.get(*idx).unwrap().clone();
+                                    // log::warn!("LOCAL: {:?}", translation);
+        
+                                    translation = translation + calculator.pivot.clone();
+        
+                                    let direction = directions.get(*idx).unwrap();
+                                    let emitmatrix = emitmatrixs.get(*idx).unwrap();
+        
+                                    CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
+                                    CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
+                                    // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
+                                    let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
+                                    // log::warn!("Velocity: {:?}", g_velocity);
+                                    // log::warn!("Translation: {:?}", emitposition);
+        
+                                    let matrix = if let Some(renderalign) = renderalign {
+                                        let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
+                                        // log::warn!("rotation : {:?}", rotation);
+                                        let mut matrix = Matrix::identity();
+                                        {
+                                            matrix.append_nonuniform_scaling_mut(&emitmatrix.scaling);
+                                            matrix.append_translation_mut(&emitposition);
+                                            matrix = matrix * rotation.to_homogeneous();
+                                        }
+                                        // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
+                                        
+                                        let mut local = Matrix::identity();
+                                        {
+                                            let rotation = Rotation3::from_euler_angles(eulers.z, eulers.x, eulers.y);
+                                            local.append_nonuniform_scaling_mut(scaling);
+                                            local = local * rotation.to_homogeneous();
+                                        }
+                                        // CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
+                                        // log::warn!("a MAREIX: {:?}", matrix);
+                                        matrix = matrix * local;
+                            
+                                        if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
+                                            matrix = matrix * local;
+                                        }
+                                        matrix
+                                    } else {
+                                        // let mut matrix = Matrix::identity();
+                                        // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
+                                        let matrix = &emitmatrix.matrix;
+                                        let mut local = Matrix::identity();
+                                        CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
+                                        // log::warn!("MAREIX: {:?}", matrix);
+                                        // log::warn!("LOCAL: {:?}", local);
+                                        matrix * local
+                                    };
+        
+                                    let color = colors.get(*idx).unwrap();
+                                    let uv = uvs.get(*idx).unwrap();
 
-                                if instanceinfo.state & InstanceState::INSTANCE_BASE == InstanceState::INSTANCE_BASE {
-                                    matrix.as_slice().iter().for_each(|v| { collect.push(*v); });
-                                }
-                                if instanceinfo.state & InstanceState::INSTANCE_COLOR == InstanceState::INSTANCE_COLOR {
-                                    color.as_slice().iter().for_each(|v| { collect.push(*v); });
-                                }
-                                if instanceinfo.state & InstanceState::INSTANCE_TILL_OFF_1 == InstanceState::INSTANCE_TILL_OFF_1 {
-                                    collect.push(uv.uscale); collect.push(uv.vscale); collect.push(uv.uoffset); collect.push(uv.voffset);
-                                }
-                            });
+                                    if instanceinfo.state & InstanceState::INSTANCE_BASE == InstanceState::INSTANCE_BASE {
+                                        matrix.as_slice().iter().for_each(|v| { collect.push(*v); });
+                                    }
+                                    if instanceinfo.state & InstanceState::INSTANCE_COLOR == InstanceState::INSTANCE_COLOR {
+                                        color.as_slice().iter().for_each(|v| { collect.push(*v); });
+                                    }
+                                    if instanceinfo.state & InstanceState::INSTANCE_TILL_OFF_1 == InstanceState::INSTANCE_TILL_OFF_1 {
+                                        collect.push(uv.uscale); collect.push(uv.vscale); collect.push(uv.uoffset); collect.push(uv.voffset);
+                                    }
+                                });
 
-                            if flag_common {
-                                let newsize = collect_common.len();
-                                if newsize > common_f32_use {
-                                    // log::warn!("Common: {:?}", (common_f32_use as u32 * 4, newsize as u32 * 4));
-                                    let data = commonbuffer.buffer(common_f32_use as u32 * 4, newsize as u32 * 4);
-                                    reset_instances_buffer_range(id_geo, &instanceinfo, &mut slots, data);
-                                    common_f32_use = newsize;
+                                if flag_common {
+                                    let newsize = collect_common.len();
+                                    if newsize > common_f32_use {
+                                        // log::warn!("Common: {:?}", (common_f32_use as u32 * 4, newsize as u32 * 4));
+                                        let data = commonbuffer.buffer(common_f32_use as u32 * 4, newsize as u32 * 4);
+                                        reset_instances_buffer_range(id_geo, &instanceinfo, &mut slots, data);
+                                        common_f32_use = newsize;
+                                    }
+                                } else {
+                                    // log::warn!("Single: >>>>>>>>>>>>>");
+                                    let collected = bytemuck::cast_slice(&collectdata);
+                                    reset_instances_buffer(id_geo, &instanceinfo, collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
                                 }
-                            } else {
-                                // log::warn!("Single: >>>>>>>>>>>>>");
-                                let collected = bytemuck::cast_slice(&collectdata);
-                                reset_instances_buffer(id_geo, &instanceinfo, collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
                             }
                         }
                     }
                 }
             }
-        }
-    );
+        );
 
-    if collect_common.len() > 0 {
-        // log::warn!("Common: {:?}", collect_common.len());
-        let data = bytemuck::cast_slice(&collect_common);
-        commonbuffer.update(data, &queue);
+        if collect_common.len() > 0 {
+            // log::warn!("Common: {:?}", collect_common.len());
+            let data = bytemuck::cast_slice(&collect_common);
+            commonbuffer.update(data, &queue);
+        }
+        performance.particles = count_particles as u32;
     }
 
-    performance.particles = count_particles as u32;
     performance.sys_update_buffer = (pi_time::Instant::now() - time0).as_micros() as u32;
     // ptime1 = pi_time::Instant::now();
     // log::warn!("update_buffer: {:?}", ptime1 - ptime);
@@ -728,48 +734,50 @@ pub fn sys_update_buffer_trail(
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
-    if let Some(trailbuffer) = &mut trailbuffer.0 {
-        particle_sys.iter_mut().for_each(
-            |(
-                state, time, ids, emitmatrixs, randoms, colors, positions, scalings, rotations, directions, trailmesh, mut trails
-            )| {
-                // log::warn!("Trail Update: 00");
-                if let Ok(mut geometry) = geometries.get_mut(trailmesh.geo){
-                    if state.playing == false {
-                        if let Ok(mut rendergeometry) = meshes.get_mut(trailmesh.mesh) {
-                            *rendergeometry = RenderGeometryEable(false);
+    if performance.update_buffer {
+        if let Some(trailbuffer) = &mut trailbuffer.0 {
+            particle_sys.iter_mut().for_each(
+                |(
+                    state, time, ids, emitmatrixs, randoms, colors, positions, scalings, rotations, directions, trailmesh, mut trails
+                )| {
+                    // log::warn!("Trail Update: 00");
+                    if let Ok(mut geometry) = geometries.get_mut(trailmesh.geo){
+                        if state.playing == false {
+                            if let Ok(mut rendergeometry) = meshes.get_mut(trailmesh.mesh) {
+                                *rendergeometry = RenderGeometryEable(false);
+                            }
+                            return;
                         }
-                        return;
-                    }
-                    if let Ok(trailmodifier) = trailmodifiers.get(ids.calculator.0) {
-                        let newids = &ids.newids;
-                        trails.run_new(newids, randoms, colors, positions, scalings, rotations, emitmatrixs, directions, &trailmodifier.0);
+                        if let Ok(trailmodifier) = trailmodifiers.get(ids.calculator.0) {
+                            let newids = &ids.newids;
+                            trails.run_new(newids, randoms, colors, positions, scalings, rotations, emitmatrixs, directions, &trailmodifier.0);
 
-                        let activeids = [ids.actives.clone(), ids.dies.clone()].concat();
-                        // log::warn!("Trail Update: {:?}", activeids.len());
-                        let (start, end) = trails.run(&activeids, randoms, colors, positions, scalings, rotations, emitmatrixs, time, &trailmodifier.0, trailbuffer);
-                    
-                        if let Some(geometry) = &mut geometry.0 {
-                            if let Some(vertices) = geometry.vertices.get_mut(0) {
-                                if start < end {
-                                    vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
-                                } else {
+                            let activeids = [ids.actives.clone(), ids.dies.clone()].concat();
+                            // log::warn!("Trail Update: {:?}", activeids.len());
+                            let (start, end) = trails.run(&activeids, randoms, colors, positions, scalings, rotations, emitmatrixs, time, &trailmodifier.0, trailbuffer);
+                        
+                            if let Some(geometry) = &mut geometry.0 {
+                                if let Some(vertices) = geometry.vertices.get_mut(0) {
+                                    if start < end {
+                                        vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
+                                    } else {
+                                        vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
+                                    }
+                                }
+                            }
+                        } else {
+                            if let Some(geometry) = &mut geometry.0 {
+                                if let Some(vertices) = geometry.vertices.get_mut(0) {
                                     vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
                                 }
                             }
                         }
-                    } else {
-                        if let Some(geometry) = &mut geometry.0 {
-                            if let Some(vertices) = geometry.vertices.get_mut(0) {
-                                vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
-                            }
-                        }
                     }
                 }
-            }
-        );
-        trailbuffer.after_collect(&queue);
-        performance.sys_update_buffer_trail = (pi_time::Instant::now() - time0).as_micros() as u32;
+            );
+            trailbuffer.after_collect(&queue);
+            performance.sys_update_buffer_trail = (pi_time::Instant::now() - time0).as_micros() as u32;
+        }   
     }
 }
 

@@ -17,7 +17,7 @@ use self::{
     render_depth_and_stencil::*,
     command::*,
     command_sys::*,
-    render_sort::*, base::StageRenderer
+    render_sort::*, base::{StageRenderer, Pipeline3D}
 };
 
 mod render_object;
@@ -60,11 +60,13 @@ impl Plugin for PluginRenderer {
         }
         
         if app.world.get_resource::<AssetDataCenterShader3D>().is_none() {
-            let cfg = asset_capacity::<AssetCfgShader3D>(app);
+            // let cfg = asset_capacity::<AssetCfgShader3D>(app);
+            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<Shader3D>();
             app.insert_resource(AssetDataCenterShader3D::new(cfg.flag, cfg.min, cfg.timeout));
         }
         if app.world.get_resource::<AssetDataCenterPipeline3D>().is_none() {
-            let cfg = asset_capacity::<AssetCfgRenderPipeline>(app);
+            // let cfg = asset_capacity::<AssetCfgRenderPipeline>(app);
+            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<Pipeline3D>();
             app.insert_resource(AssetDataCenterPipeline3D::new(cfg.flag, cfg.min, cfg.timeout));
         }
         if app.world.get_resource::<AssetLoaderShader3D>().is_none() {

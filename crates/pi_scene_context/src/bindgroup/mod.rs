@@ -89,11 +89,13 @@ impl Plugin for PluginRenderBindGroup {
         
         // log::debug!("{:?}", device.limits());
         
-        let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgBindGroup>() { cfg.0.clone() } else {
-            app.insert_resource(AssetCfgBindGroup::default());
-            app.world.get_resource::<AssetCfgBindGroup>().unwrap().0.clone()
-        };
+        // let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgBindGroup>() { cfg.0.clone() } else {
+        //     app.insert_resource(AssetCfgBindGroup::default());
+        //     app.world.get_resource::<AssetCfgBindGroup>().unwrap().0.clone()
+        // };
+        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<BindGroup>();
         app.insert_resource(ShareAssetMgr::<BindGroup>::create(GarbageEmpty(), false, &cfg));
+        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<BindGroupLayout>();
         app.insert_resource(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg));
         
         if app.world.get_resource::<ResBindsRecorder>().is_none() {

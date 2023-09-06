@@ -108,7 +108,7 @@ impl Plugin for PluginCamera {
         app.add_systems(
 			Update,
             (
-                sys_tick_viewer_culling::<TargetCameraParam, CameraParam>.run_if(should_run)
+                sys_tick_viewer_culling::<TargetCameraParam, CameraParam, StateCamera>.run_if(should_run)
             ).chain().in_set(StageCamera::CameraCulling)
         );
 
