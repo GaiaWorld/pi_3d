@@ -148,7 +148,7 @@ impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {
         }
     }
 
-    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue, frame_delta: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue, _frame_delta: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         if amount < 0.5 {
             value1.clone()
         } else {
@@ -175,6 +175,27 @@ impl TAssetCapacity for IndiceRenderRange {
 }
 impl TAnimatableComp for IndiceRenderRange {
 
+}
+
+#[derive(Debug, Component, Clone)]
+pub struct VertexRenderRange(pub Option<(u32, u32)>);
+impl VertexRenderRange {
+    pub fn apply(&self, geo: &RenderGeometry) -> Range<u32> {
+        if let Some((start, count)) = &self.0 {
+            let range0 = geo.vertex_range();
+            let start = (*start + range0.start).min(range0.end);
+            let end = (*count + start).min(range0.end);
+
+            Range { start, end }
+        } else {
+            geo.vertex_range()
+        }
+    }
+}
+impl Default for VertexRenderRange {
+    fn default() -> Self {
+        Self(None)
+    }
 }
 
 #[derive(Component)]

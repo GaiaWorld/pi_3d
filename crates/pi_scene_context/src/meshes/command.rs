@@ -106,7 +106,7 @@ pub struct OpsMeshRenderIndiceRange(pub(crate) Entity, pub(crate) Option<Range<u
 impl OpsMeshRenderIndiceRange {
     pub fn ops(entity: Entity, start: Option<u32>, end: Option<u32>) -> Self {
         if let (Some(start), Some(end)) = (start, end) {
-            Self(entity, Some(Range{ start, end }), 0)
+            Self(entity, Some(Range { start, end }), 0)
         } else {
             Self(entity, None, 0)
         }
@@ -121,6 +121,18 @@ impl OpsAbstructMeshVelocity {
     }
 }
 pub type ActionListAbstructMeshVelocity = ActionList<OpsAbstructMeshVelocity>;
+
+pub struct OpsMeshRenderVertexRange(pub(crate) Entity, pub(crate) Option<(u32, u32)>, pub u8);
+impl OpsMeshRenderVertexRange {
+    pub fn ops(entity: Entity, start: Option<u32>, count: Option<u32>) -> Self {
+        if let (Some(start), Some(count)) = (start, count) {
+            Self(entity, Some((start, count)), 0)
+        } else {
+            Self(entity, None, 0)
+        }
+    }
+}
+pub type ActionListMeshRenderVertexRange = ActionList<OpsMeshRenderVertexRange>;
 
 
 pub struct BundleMesh(

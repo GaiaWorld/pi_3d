@@ -8,7 +8,7 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    transforms::prelude::*, prelude::{RenderAlignment, IndiceRenderRange, DisposeReady, GlobalEnable, InstancedMeshTransparentSortCollection},
+    transforms::prelude::*, meshes::prelude::*, prelude::{DisposeReady, GlobalEnable},
 };
 
 use super::{
@@ -199,7 +199,7 @@ use super::{
                 return;
             };
             let id_pass = passid.id();
-            if let Ok((shader, bindgroups, old_draw, _, _)) = passes.get(id_pass) {
+            if let Ok((shader, bindgroups, _old_draw, _, _)) = passes.get(id_pass) {
                 // log::debug!("SysPipeline: 0 Model");
                 let vb = if let Ok(vb) = geometrys.get(id_geo.0.clone()) {
                     vb
@@ -304,7 +304,7 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &IndiceRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady)>,
+        models: Query<(&GeometryID, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady)>,
         geometrys: Query<&RenderGeometryComp>,
         mut passes: Query<(ObjectID, &ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
         // mut commands: Commands,
@@ -313,7 +313,7 @@ use super::{
 
         passes.iter_mut().for_each(|(_, id_model, bindgroups, pipeline, mut old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                if let Ok((id_geo, renderindices, geoenable, instances, disposed)) = models.get(id_model.0) {
+                if let Ok((id_geo, renderindices, rendervertex, geoenable, instances, disposed)) = models.get(id_model.0) {
                     if geoenable.0 == false || disposed.0 == true {
                         if old_draw.val().is_some() { *old_draw = PassDraw(None); };
                         return;
@@ -327,7 +327,7 @@ use super::{
                                     bindgroups: bindgroups.groups(),
                                     vertices: rendergeo.vertices(),
                                     instances: rendergeo.instances(),
-                                    vertex: rendergeo.vertex_range(),
+                                    vertex: rendervertex.apply(rendergeo),
                                     indices: renderindices.apply(rendergeo),
                                 }))
                             } else {
@@ -336,7 +336,7 @@ use super::{
                                     bindgroups: bindgroups.clone(),
                                     vertices: rendergeo.vertices(),
                                     instances: rendergeo.instances(),
-                                    vertex: rendergeo.vertex_range(),
+                                    vertex: rendervertex.apply(rendergeo),
                                     indices: renderindices.apply(rendergeo),
                                 })
                             };
@@ -365,14 +365,14 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &I, &IndiceRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<DisposeReady>)>>,
+        models: Query<(&GeometryID, &I, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<VertexRenderRange>, Changed<DisposeReady>)>>,
         geometrys: Query<&RenderGeometryComp>,
         mut passes: Query<(&ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
         // let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable, instances, disposed)| {
+        models.iter().for_each(|(id_geo, id_pass, renderindices, rendervertex, geoenable, instances, disposed)| {
 
             if let Ok((_, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if geoenable.0 == false || disposed.0 == true { 
@@ -388,7 +388,7 @@ use super::{
                                     bindgroups: bindgroups.groups(),
                                     vertices: rendergeo.vertices(),
                                     instances: rendergeo.instances(),
-                                    vertex: rendergeo.vertex_range(),
+                                    vertex: rendervertex.apply(rendergeo),
                                     indices: renderindices.apply(rendergeo),
                                 }))
                             } else {
@@ -397,7 +397,7 @@ use super::{
                                     bindgroups: bindgroups.clone(),
                                     vertices: rendergeo.vertices(),
                                     instances: rendergeo.instances(),
-                                    vertex: rendergeo.vertex_range(),
+                                    vertex: rendervertex.apply(rendergeo),
                                     indices: renderindices.apply(rendergeo),
                                 })
                             };

@@ -129,9 +129,6 @@ impl GLTFBase {
 }
 pub struct GLTFBaseDesc {
     path: Atom,
-    textures_mgr: Share<AssetMgr<ImageTexture>>,
-    device: RenderDevice,
-    queue: RenderQueue,
 }
 impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase  {
 	fn async_load(desc: GLTFBaseDesc, result: LoadResult<'a, Self, G>) -> BoxFuture<'a, std::io::Result<Handle<Self>>> {
@@ -162,7 +159,7 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase
                             // textures.iter().for_each(|val| { size += val.size(); });
                             GLTFBase { gltf, buffers, textures, size }
                         },
-                        Err(e) => {
+                        Err(_e) => {
                             return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
                         },
                     };
@@ -909,9 +906,6 @@ pub fn sys_load_gltf_launch(
 pub fn sys_gltf_base_loaded_launch(
     loader: Res<GLTFResLoader>,
     base_assets_mgr: Res<ShareAssetMgr<GLTFBase>>,
-    texture_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
-    device: Res<PiRenderDevice>,
-    queue: Res<PiRenderQueue>,
 ) {
     let mut item = loader.waitbase.pop();
     while let Some((id, param)) = item {
@@ -934,9 +928,6 @@ pub fn sys_gltf_base_loaded_launch(
                 _ => {
                     let desc = GLTFBaseDesc{
                         path: param.base_url.clone(),
-                        textures_mgr: texture_assets_mgr.0.clone(),
-                        device: device.clone(),
-                        queue: queue.clone(),
                     };
                     MULTI_MEDIA_RUNTIME
                     .spawn(async move {

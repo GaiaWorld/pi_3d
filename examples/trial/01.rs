@@ -109,8 +109,9 @@ fn setup(
         transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(source, 3., 0., 0.));
 
         let trail = commands.spawn_empty().id();
-        trailcmds.create.push(OpsTrail::ops(scene, source, idmat, trail));
+        trailcmds.create.push(OpsTrail::ops(scene, source, trail));
         trailcmds.age.push(OpsTrailAgeControl::ops(trail, 500));
+        matcmds.usemat.push(OpsMaterialUse::ops(trail, idmat));
         let mut blend = ModelBlend::default(); blend.combine();
         meshcmds.blend.push(OpsRenderBlend::ops(trail, blend));
         meshcmds.depth_compare.push(OpsDepthCompare::ops(trail, CompareFunction::Always));
