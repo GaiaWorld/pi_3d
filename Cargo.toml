@@ -76,8 +76,8 @@ pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
 [patch."https://github.com/GaiaWorld/pi_animation"]
 pi_animation = { path = "../pi_animation" }
 
-[patch."https://github.com/GaiaWorld/pi_curves"]
-pi_curves = { path = "../pi_curves" }
+# [patch."https://github.com/GaiaWorld/pi_curves"]
+# pi_curves = { path = "../pi_curves" }
 
 [patch."https://github.com/GaiaWorld/pi_post_process.git"]
 pi_postprocess = { path = "../pi_post_process" }

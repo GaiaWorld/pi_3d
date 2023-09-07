@@ -5,11 +5,12 @@
 use parry3d::{
     bounding_volume::Aabb,
     na::{Isometry3, Point3},
+    query::{Ray, RayCast},
     shape::{ConvexPolyhedron, Cuboid},
 };
 use pi_engine_shell::prelude::*;
 use pi_hash::XHashSet;
-use pi_scene_math::{Vector4, Number, Matrix};
+use pi_scene_math::{Matrix, Number, Vector3, Vector4};
 use pi_spatial::oct_helper::OctTree;
 
 use super::base::{TBoundingInfoCalc, BoundingKey, TFilter};
@@ -76,6 +77,25 @@ impl TBoundingInfoCalc for BoundingOctTree {
             result.push(*item);
         });
     }
+
+    fn ray_test<F: TFilter>(
+        &self,
+        origin: Vector3,
+        dir: Vector3,
+        filter: F,
+        result: &mut Option<Entity>,
+    ) {
+        let origin = Point3::new(origin.x, origin.y, origin.z);
+        let ray = Ray::new(origin.clone(), dir);
+
+        let temp = dir.normalize() * 10000000.;
+        let max = Point3::new(origin.x + temp.x, origin.y + temp.y, origin.z + temp.z);
+        let aabb = Aabb::new(origin, max);
+
+        let mut args: (Ray, f32, &mut Option<Entity>, F) = (ray, 0., result, filter);
+
+        self.tree.query(&aabb, intersects, &mut args, ray_test_func);
+    }
 }
 
 pub fn ab_query_func<F: TFilter>(
@@ -90,6 +110,22 @@ pub fn ab_query_func<F: TFilter>(
             .unwrap()
         {
             arg.1.push(id.0);
+        }
+    }
+}
+
+pub fn ray_test_func<F: TFilter>(
+    arg: &mut (Ray, f32, &mut Option<Entity>, F),
+    id: BoundingKey,
+    _aabb: &Aabb,
+    bind: &(Isometry3<f32>, Cuboid),
+) {
+    if arg.3.filter(id.0) {
+        if let Some(distance) = bind.1.cast_ray(&bind.0, &arg.0, f32::MAX, false) {
+            if distance < arg.1 {
+                arg.1 = distance;
+                arg.2.replace(id.0);
+            }
         }
     }
 }

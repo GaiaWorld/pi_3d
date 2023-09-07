@@ -14,6 +14,13 @@ pub trait TBoundingInfoCalc {
     fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number));
     fn remove(&mut self, key: Entity);
     fn culling<F: TFilter>(&self, vp: &Matrix, filter: F, result: &mut Vec<Entity>);
+    fn ray_test<F: TFilter>(
+        &self,
+        org: Vector3,
+        dir: Vector3,
+        filter: F,
+        result: &mut Option<Entity>,
+    );
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -171,6 +178,20 @@ impl SceneBoundingPool {
             SceneBoundingPool::OctTree(item) => {
                 item.culling(&transform.0, filter, result);
             },
+        }
+    }
+
+    pub fn ray_test<F: TFilter>(
+        &self,
+        org: Vector3,
+        dir: Vector3,
+        filter: F,
+        result: &mut Option<Entity>,
+    ) {
+        match self {
+            SceneBoundingPool::List(_) => todo!(),
+            SceneBoundingPool::QuadTree() => todo!(),
+            SceneBoundingPool::OctTree(item) => item.ray_test(org, dir, filter, result),
         }
     }
 }
