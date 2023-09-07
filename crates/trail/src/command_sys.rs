@@ -7,21 +7,21 @@ use pi_scene_math::Vector4;
 use crate::{base::*, command::*, ResTrailBuffer};
 
 
-pub fn sys_act_trail_mesh_geometry(
+pub fn sys_create_trail_mesh(
     mut cmds: ResMut<ActionListTrail>,
     mut commands: Commands,
     trailbuffer: Res<ResTrailBuffer>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
-    mut matuse: ResMut<ActionListMaterialUse>,
+    // mut matuse: ResMut<ActionListMaterialUse>,
 ) {
     if let Some(trailbuffer) = &trailbuffer.0 {
-        cmds.drain().drain(..).for_each(|OpsTrail(id_scene, id_linked, id_mat, entity)| {
+        cmds.drain().drain(..).for_each(|OpsTrail(id_scene, id_linked, entity)| {
 
             let id_mesh = entity;
             let id_geo = commands.spawn_empty().id();
 
-            matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
+            // matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 
             // meshcreate.push(OpsMeshCreation::ops(id_scene, id_mesh, String::from("")));
             ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default());

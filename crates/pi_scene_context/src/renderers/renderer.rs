@@ -155,6 +155,7 @@ pub struct Renderer {
     pub ready: bool,
     pub viewport: Viewport,
     pub draws: DrawList3D,
+    pub vertexs: usize,
 }
 impl Renderer {
     pub fn new() -> Self {
@@ -162,11 +163,13 @@ impl Renderer {
             viewport: Viewport::default(),
             draws: DrawList3D { list: vec![], viewport: (0., 0., 1., 1., 0., 1.) },
             ready: false,
+            vertexs: 0,
         }
     }
     pub fn clear(&mut self) {
         self.draws.list.clear();
         self.ready = false;
+        self.vertexs = 0;
     }
 
     pub fn reset(&mut self) {

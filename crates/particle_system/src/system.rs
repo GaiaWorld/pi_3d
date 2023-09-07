@@ -8,18 +8,16 @@ use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix
 use crate::base::*;
 
 pub fn sys_particle_active(
-    mut items: Query<(&GlobalEnable, &ParticleActive, &mut ParticleState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission), Or<(Changed<GlobalEnable>, Changed<ParticleActive>)>>,
+    mut items: Query<(&GlobalEnable, &ParticleActive, &mut ParticleRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleActive>)>>,
     performance: Res<ParticleSystemPerformance>,
     mut globalperformance: ResMut<Performance>,
 ) {
     // let time0 = pi_time::Instant::now();
-    items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission)| {
-        
+    items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission, mut instancestate)| {
         if enable.0 == true && active.0 == true {
-            if state.start == false {
-                // log::warn!("{:?}, {:?}, {:?}, ", enable.0, active.0, state.playing);
-                state.playing = true;
-                state.start = true;
+            if state.0 == false {
+                instancestate.use_single_instancebuffer = true;
+                state.0 = true;
     
                 ids.reset();
                 let timescale = time.time_scale;
@@ -27,8 +25,7 @@ pub fn sys_particle_active(
                 *emission = ParticleSystemEmission::new();
             }
         } else {
-            state.playing = false;
-            state.start = false;
+            state.0 = false;
         }
     });
 
@@ -39,17 +36,17 @@ pub fn sys_particle_active(
 pub fn sys_emission(
     scenes: Query<&SceneTime>,
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorEmission)>,
-    mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom)>,
+    mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleRunningState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleModifyState)>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
-    particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emission, mut randoms)| {
+    particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emission, mut randoms, mut modifystate)| {
         if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.0)) {
             let delta_ms = scenetime.delta_ms() as u32;
 
             // log::warn!("{:?}, {:?}, {:?}, ", delta_ms, state.playing, disposestate.0);
 
-            if state.playing && disposestate.0 == false {
+            if state.0 && disposestate.0 == false {
                 particlesystime.run(delta_ms, 1000, base.duration);
             } else {
                 particlesystime.run(0, 1000, base.duration);
@@ -59,6 +56,8 @@ pub fn sys_emission(
 
             // 间隔时间到达帧运行间隔
             if particlesystime.running_delta_ms > 0 {
+                *modifystate = ParticleModifyState(true);
+
                 let rate_over_time = calcemission.rateovertime.interpolate(particlesystime.emission_progress, random.random()) as usize;
                 // log::warn!("Emission Rate: {:?}, ", rate_over_time);
                 emission.start(
@@ -80,7 +79,7 @@ pub fn sys_emission(
 
 pub fn sys_emitmatrix(
     calculators: Query<&ParticleCalculatorBase>,
-    mut particle_sys: Query<(&LocalScaling, &WorldMatrix, &WorldMatrixInv, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix)>,
+    mut particle_sys: Query<(&LocalScaling, &WorldMatrix, &WorldMatrixInv, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -110,7 +109,7 @@ pub fn sys_emitmatrix(
 
 pub fn sys_emitter(
     calculators: Query<(&ParticleCalculatorShapeEmitter, &ParticleCalculatorStartSpeed)>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -135,7 +134,7 @@ pub fn sys_emitter(
 
 pub fn sys_start_lifetime(
     calculators: Query<&ParticleCalculatorStartLifetime>,
-    mut particle_sys: Query<(Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime, &mut ParticleDieWaitTime)>,
+    mut particle_sys: Query<(Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime, &mut ParticleDieWaitTime), Changed<ParticleModifyState>>,
     calculators_trail: Query<&ParticleCalculatorTrail>,
     mut particle_sys_trail: Query<&mut ParticleTrail>,
     mut performance: ResMut<ParticleSystemPerformance>,
@@ -161,7 +160,7 @@ pub fn sys_start_lifetime(
 
 pub fn sys_start_size(
     calculators: Query<&ParticleCalculatorStartSize>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartScaling, &mut ParticleLocalScaling)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -180,7 +179,7 @@ pub fn sys_start_size(
 
 pub fn sys_start_rotation(
     calculators: Query<&ParticleCalculatorStartRotation>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalRotation)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -198,7 +197,7 @@ pub fn sys_start_rotation(
 
 pub fn sys_start_color(
     calculators: Query<&ParticleCalculatorStartColor>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartColor, &mut ParticleColor)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartColor, &mut ParticleColor), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -216,7 +215,7 @@ pub fn sys_start_color(
 
 pub fn sys_start_texture_sheet(
     calculators: Query<&ParticleCalculatorTextureSheet>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleUV)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleUV), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -234,7 +233,7 @@ pub fn sys_start_texture_sheet(
 /// =================================== over life time
 pub fn sys_color_over_life_time(
     calculators: Query<&ParticleCalculatorColorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartColor, &mut ParticleColor)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartColor, &mut ParticleColor), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -253,7 +252,7 @@ pub fn sys_color_over_life_time(
 
 pub fn sys_rotation_over_life_time(
     calculators: Query<&ParticleCalculatorRotationOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalRotation)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -273,7 +272,7 @@ pub fn sys_rotation_over_life_time(
 
 pub fn sys_size_over_life_time(
     calculators: Query<&ParticleCalculatorSizeOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalScaling)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -293,7 +292,7 @@ pub fn sys_size_over_life_time(
 
 pub fn sys_velocity_over_life_time(
     calculators: Query<&ParticleCalculatorVelocityOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleVelocity)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleVelocity), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -314,7 +313,7 @@ pub fn sys_orbit_over_life_time(
     offsets: Query<&ParticleCalculatorOrbitOffset>,
     velocitys: Query<&ParticleCalculatorOrbitVelocity>,
     radials: Query<&ParticleCalculatorOrbitRadial>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleOrbitVelocity)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleOrbitVelocity), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -334,7 +333,7 @@ pub fn sys_orbit_over_life_time(
 
 pub fn sys_speed_modifier_over_life_time(
     calculators: Query<&ParticleCalculatorSpeedModifier>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleSpeedFactor)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleSpeedFactor), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -353,7 +352,7 @@ pub fn sys_speed_modifier_over_life_time(
 
 pub fn sys_limit_velocity_over_life_time(
     calculators: Query<&ParticleCalculatorLimitVelocityOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLimitVelocityScalar)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLimitVelocityScalar), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -376,7 +375,7 @@ pub fn sys_direction(
         &ParticleIDs, &ParticleSystemTime,
         &ParticleVelocity, &ParticleGravityFactor, &ParticleForce, &ParticleOrbitVelocity, &ParticleSpeedFactor, &ParticleLimitVelocityScalar,
         &mut ParticleDirection, &mut ParticleLocalPosition
-    )>,
+    ), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -402,7 +401,7 @@ pub fn sys_direction(
 // 
 pub fn sys_color_by_speed(
     calculators: Query<&ParticleCalculatorColorBySpeed>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleColor)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleColor), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -421,7 +420,7 @@ pub fn sys_color_by_speed(
 // 
 pub fn sys_size_by_speed(
     calculators: Query<&ParticleCalculatorSizeBySpeed>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalScaling)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -440,7 +439,7 @@ pub fn sys_size_by_speed(
 // 
 pub fn sys_rotation_by_speed(
     calculators: Query<&ParticleCalculatorRotationBySpeed>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalRotation)>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -457,7 +456,7 @@ pub fn sys_rotation_by_speed(
 }
 
 pub fn sys_ids(
-    mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime, &ParticleDieWaitTime)>,
+    mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime, &ParticleDieWaitTime), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -503,7 +502,7 @@ pub fn sys_ids(
 pub fn sys_texturesheet(
     texturesheets: Query<&ParticleCalculatorTextureSheet>,
     mut particle_sys: Query<
-        (&ParticleIDs, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleUV),
+        (&ParticleIDs, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleUV), Changed<ParticleModifyState>
     >,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
@@ -525,7 +524,7 @@ pub fn sys_texturesheet(
 pub fn sys_update_buffer(
     calculators: Query<&ParticleCalculatorBase>,
     particle_sys: Query<
-        (Entity, &ParticleState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColor, &ParticleUV),
+        (Entity, &ParticleRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColor, &ParticleUV),
     >,
     meshes: Query<(&GlobalEnable, &GeometryID)>,
     mut meshrenderenables: Query<&mut RenderGeometryEable>,
@@ -579,7 +578,7 @@ pub fn sys_update_buffer(
                 let particle_count = ids.actives.len();
 
                 // log::warn!("sys_update_buffer A");
-                if state.playing == false || particle_count == 0 {
+                if state.0 == false || particle_count == 0 {
                     if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
                         *rendergeometry = RenderGeometryEable(false);
                         return;
@@ -725,7 +724,7 @@ pub fn sys_update_buffer(
 pub fn sys_update_buffer_trail(
     trailmodifiers: Query<&ParticleCalculatorTrail>,
     mut particle_sys: Query<
-        (&ParticleState, &ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColor, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
+        (&ParticleRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColor, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut meshes: Query<&mut RenderGeometryEable>,
@@ -742,7 +741,7 @@ pub fn sys_update_buffer_trail(
                 )| {
                     // log::warn!("Trail Update: 00");
                     if let Ok(mut geometry) = geometries.get_mut(trailmesh.geo){
-                        if state.playing == false {
+                        if state.0 == false {
                             if let Ok(mut rendergeometry) = meshes.get_mut(trailmesh.mesh) {
                                 *rendergeometry = RenderGeometryEable(false);
                             }

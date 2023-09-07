@@ -54,7 +54,7 @@ impl Plugin for PluginParticleSystem {
         app.configure_set(Update, StageParticleSystem::ParticleSysDirection.after(StageParticleSystem::ParticleSysParamOverLifetime));
         app.configure_set(Update, StageParticleSystem::ParticleSysParamBySpeed.after(StageParticleSystem::ParticleSysDirection));
         app.configure_set(Update, StageParticleSystem::ParticleSysMatrix.after(StageParticleSystem::ParticleSysParamBySpeed).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectMesh).before(ERunStageChap::Uniform).after(StageGeometry::VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded));
+        app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform));
 
         app.add_systems(Update, 
             sys_create_particle_calculator.in_set(ERunStageChap::Initial),

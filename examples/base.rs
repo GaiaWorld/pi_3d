@@ -1,7 +1,7 @@
 
 
 use pi_3d::PluginBundleDefault;
-use pi_3d_state::StateGlobal;
+use pi_3d_state::StateResource;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
@@ -167,7 +167,7 @@ pub fn test_plugins() -> App {
     );
     app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
-    app.world.get_resource_mut::<StateGlobal>().unwrap().debug = true;
+    app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     
@@ -224,7 +224,7 @@ pub fn test_plugins_with_gltf() -> App {
     );
     app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
-    app.world.get_resource_mut::<StateGlobal>().unwrap().debug = true;
+    app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
 
     app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
     

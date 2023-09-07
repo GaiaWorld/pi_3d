@@ -598,10 +598,10 @@ impl ParticleDieWaitTime {
 pub struct ParticleActive(pub bool);
 
 #[derive(Component)]
-pub struct ParticleState {
-    pub(crate) start: bool,
-    pub(crate) playing: bool,
-}
+pub struct ParticleRunningState(pub(crate) bool);
+
+#[derive(Component)]
+pub struct ParticleModifyState(pub(crate) bool);
 
 /// 存活的粒子ID列表
 #[derive(Component)]
@@ -656,6 +656,9 @@ impl ParticleIDs {
         self.actives.clear();
         self.newids.clear();
         self.unactives = unactives;
+    }
+    pub fn count(&self) -> usize {
+        self.actives.len()
     }
 }
 

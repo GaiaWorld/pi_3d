@@ -1,4 +1,4 @@
-use pi_3d_state::{PluginStateGlobal, StateGlobal};
+use pi_3d_state::{PluginStateGlobal, StateResource};
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
 use pi_particle_system::prelude::ParticleSystemPerformance;
@@ -26,28 +26,28 @@ pub struct Limit(pub wgpu::Limits);
 
 
 pub fn sys_info_node(
-    scenes: Query<Entity, With<SceneTime>>,
-    states: Res<StateGlobal>,
+    _scenes: Query<Entity, With<SceneTime>>,
+    _states: Res<StateResource>,
 ) {
-    scenes.iter().for_each(|entity| {
-        if let Some(state) = states.scenes.get(&entity) {
-            log::warn!(
-                "Scene: {:?}, Draw: {:?}, Vertex: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Light: {:?}, Skeleton: {:?}, ParticleSys: {:?}, Trail: {:?}, AnimeGroup: {:?}",
-                entity,
-                state.count_drawobj,
-                state.count_vertex,
-                state.count_transform,
-                state.count_mesh,
-                state.count_instance,
-                state.count_camera,
-                state.count_light,
-                state.count_skeleton,
-                state.count_particlesys,
-                state.count_trail,
-                state.count_animationgroup,
-            );
-        }
-    });
+    // scenes.iter().for_each(|entity| {
+    //     if let Some(state) = states.scenes.get(&entity) {
+    //         log::warn!(
+    //             "Scene: {:?}, Draw: {:?}, Vertex: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Light: {:?}, Skeleton: {:?}, ParticleSys: {:?}, Trail: {:?}, AnimeGroup: {:?}",
+    //             entity,
+    //             state.count_drawobj,
+    //             state.count_vertex,
+    //             state.count_transform,
+    //             state.count_mesh,
+    //             state.count_instance,
+    //             state.count_camera,
+    //             state.count_light,
+    //             state.count_skeleton,
+    //             state.count_particlesys,
+    //             state.count_trail,
+    //             state.count_animationgroup,
+    //         );
+    //     }
+    // });
 }
 
 pub fn sys_info_draw(
@@ -104,7 +104,7 @@ pub fn sys_info_draw(
 }
 
 pub fn sys_info_resource(
-    states: Res<StateGlobal>,
+    states: Res<StateResource>,
     psperformance: Res<ParticleSystemPerformance>,
     performance: Res<Performance>,
 ) {

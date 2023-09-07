@@ -991,7 +991,7 @@ pub fn sys_gltf_analy(
     while let Some(temp) = &base {
         let key_u64 = temp.id.asset_u64();
         let result = AssetMgr::load(&assets_mgr, &key_u64);
-        log::warn!("OK -1");
+        // log::warn!("OK -1");
         match result {
             LoadResult::Ok(data) => {
                 loader.successed_temp.push(data);

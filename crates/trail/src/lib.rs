@@ -6,7 +6,7 @@ mod command_sys;
 mod command;
 mod system;
 
-use pi_scene_context::prelude::sys_dispose_ready;
+use pi_scene_context::prelude::{sys_dispose_ready, StageGeometry};
 
 pub use base::*;
 pub use command::*;
@@ -23,6 +23,19 @@ pub struct ActionSetTrailRenderer<'w> {
     pub age: ResMut<'w, ActionListTrailAge>,
 }
 
+#[derive(Debug, SystemSet, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum StageTrail {
+    TrailCommand,
+    TrailUpdate,
+}
+
+#[derive(Resource, Default)]
+pub struct StateTrail {
+    pub count: u32,
+    pub vertexs: u32,
+    pub calc_time: u32,
+}
+
 pub struct PluginTrail;
 impl Plugin for PluginTrail {
     fn build(&self, app: &mut App) {
@@ -37,11 +50,14 @@ impl Plugin for PluginTrail {
 
         app.insert_resource(ActionListTrail::default());
         app.insert_resource(ActionListTrailAge::default());
+        app.insert_resource(StateTrail::default());
 
-        app.add_systems(Update, sys_act_trail_mesh_geometry.in_set(ERunStageChap::Initial));
-        app.add_systems(Update, sys_act_trail_age.run_if(should_run).in_set(ERunStageChap::Command));
-        
-        app.add_systems(Update, sys_trail_update.run_if(should_run).in_set(ERunStageChap::Uniform));
+        app.configure_set(Update, StageTrail::TrailCommand.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageTrail::TrailUpdate.after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
+
+        app.add_systems(Update, sys_create_trail_mesh.in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_act_trail_age.run_if(should_run).in_set(StageTrail::TrailCommand));
+        app.add_systems(Update, sys_trail_update.run_if(should_run).in_set(StageTrail::TrailUpdate));
         app.add_systems(
 			Update,
             (

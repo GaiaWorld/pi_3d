@@ -39,7 +39,10 @@ impl Plugin for PluginGlobalAnimation {
         );
         
         app.add_systems(Update, 
-            sys_animation_removed_data_clear.run_if(should_run).in_set(ERunStageChap::Initial)
+            (
+                sys_animation_removed_data_clear,
+                sys_reset_anime_performance
+            ).run_if(should_run).in_set(ERunStageChap::Initial)
         );
 
         let globalaboput = GlobalAnimeAbout {

@@ -5,7 +5,7 @@ use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use rand::Rng;
 
-use crate::{base::*, ResTrailBuffer};
+use crate::{base::*, ResTrailBuffer, StateTrail};
 
 
 pub fn sys_trail_update(
@@ -23,8 +23,9 @@ pub fn sys_trail_update(
     >,
     mut buffer: ResMut<ResTrailBuffer>,
     queue: Res<PiRenderQueue>,
+    mut state: ResMut<StateTrail>,
 ) {
-    // let mut time1 = pi_time::Instant::now();
+    let time1 = pi_time::Instant::now();
     if let Some(trailbuffer) = &mut buffer.0 {
         items.iter_mut().for_each(|(
             idscene, idlinked, idgeo, mut base, mut points,
@@ -74,7 +75,8 @@ pub fn sys_trail_update(
         trailbuffer.after_collect(&queue);
     }
     
-    // let time2 = pi_time::Instant::now();
+    let time2 = pi_time::Instant::now();
+    state.calc_time = (time2 - time1).as_millis() as u32;
     // log::warn!("Trail Update: {:?}", time2 - time1);
 }
 

@@ -7,138 +7,138 @@ use pi_particle_system::prelude::*;
 use pi_scene_context::{prelude::*, light::base::Light};
 use pi_trail_renderer::TrailBase;
 
-#[derive(Default)]
-pub struct StateScene {
-    pub count_animationgroup: usize,
-    pub count_transform: usize,
-    pub count_mesh: usize,
-    pub count_mesh_ok: usize,
-    pub count_geometry: usize,
-    pub count_material: usize,
-    pub count_instance: usize,
-    pub count_skeleton: usize,
-    pub count_camera: usize,
-    pub count_light: usize,
-    pub count_pointlight: usize,
-    pub count_drawobj: usize,
-    pub count_vertex: usize,
-    pub count_particlesys: usize,
-    pub count_trail: usize,
-    // pub entity: Entity,
-}
+// #[derive(Default)]
+// pub struct StateScene {
+//     pub count_animationgroup: usize,
+//     pub count_transform: usize,
+//     pub count_mesh: usize,
+//     pub count_mesh_ok: usize,
+//     pub count_geometry: usize,
+//     pub count_material: usize,
+//     pub count_instance: usize,
+//     pub count_skeleton: usize,
+//     pub count_camera: usize,
+//     pub count_light: usize,
+//     pub count_pointlight: usize,
+//     pub count_drawobj: usize,
+//     pub count_vertex: usize,
+//     pub count_particlesys: usize,
+//     pub count_trail: usize,
+//     // pub entity: Entity,
+// }
 
-pub fn sys_state_scene(
-    geometrys: Query<(&MeshID, &RenderGeometryComp)>,
-    transformnodes: Query<Entity, With<TransformNode>>,
-    meshes: Query<(Entity, Option<&BindModel>), With<Mesh>>,
-    instancemeshes: Query<Entity, With<InstanceMesh>>,
-    cameras: Query<Entity, With<Camera>>,
-    lights: Query<Entity, With<Light>>,
-    skeletons: Query<Entity, With<Skeleton>>,
-    particlesys: Query<Entity, With<ParticleSystemTime>>,
-    trails: Query<Entity, With<TrailBase>>,
-    renderers: Query<(&ViewerID, &Renderer)>,
-    idscenes: Query<&SceneID>,
-    scenes: Query<Entity, With<SceneTime>>,
-    scenectxs: Res<SceneAnimationContextMap>,
-    mut stateglobal: ResMut<StateGlobal>,
-) {
-    scenes.iter().for_each(|entity| {
-        stateglobal.scenes.insert(entity, StateScene::default());
-    });
+// pub fn sys_state_scene(
+//     geometrys: Query<(&MeshID, &RenderGeometryComp)>,
+//     transformnodes: Query<Entity, With<TransformNode>>,
+//     meshes: Query<(Entity, Option<&BindModel>), With<Mesh>>,
+//     instancemeshes: Query<Entity, With<InstanceMesh>>,
+//     cameras: Query<Entity, With<Camera>>,
+//     lights: Query<Entity, With<Light>>,
+//     skeletons: Query<Entity, With<Skeleton>>,
+//     particlesys: Query<Entity, With<ParticleSystemTime>>,
+//     trails: Query<Entity, With<TrailBase>>,
+//     renderers: Query<(&ViewerID, &Renderer)>,
+//     idscenes: Query<&SceneID>,
+//     scenes: Query<Entity, With<SceneTime>>,
+//     scenectxs: Res<SceneAnimationContextMap>,
+//     mut stateglobal: ResMut<StateGlobal>,
+// ) {
+//     scenes.iter().for_each(|entity| {
+//         stateglobal.scenes.insert(entity, StateScene::default());
+//     });
 
-    if stateglobal.debug == false { return };
+//     if stateglobal.debug == false { return };
 
-    geometrys.iter().for_each(|(idmesh, rendergeo)| {
-        if rendergeo.is_some() {
-            if let Ok(idscene) = idscenes.get(idmesh.0) {
-                if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                    state.count_geometry += 1;
-                }
-            }
-        }
-    });
-    transformnodes.iter().for_each(|entity| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_transform += 1;
-            }
-        }
-    });
-    meshes.iter().for_each(|(entity, bind)| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_mesh += 1;
-                if bind.is_some() {
-                    state.count_mesh_ok += 1;
-                }
-            }
-        }
-    });
-    instancemeshes.iter().for_each(|entity| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_instance += 1;
-            }
-        }
-    });
-    cameras.iter().for_each(|entity| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_camera += 1;
-            }
-        }
-    });
-    lights.iter().for_each(|entity| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_light += 1;
-            }
-        }
-    });
-    skeletons.iter().for_each(|entity| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_skeleton += 1;
-            }
-        }
-    });
-    particlesys.iter().for_each(|entity| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_particlesys += 1;
-            }
-        }
-    });
-    trails.iter().for_each(|entity| {
-        if let Ok(idscene) = idscenes.get(entity) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_trail += 1;
-            }
-        }
-    });
-    renderers.iter().for_each(|(idviewer, renderer)| {
-        if let Ok(idscene) = idscenes.get(idviewer.0) {
-            if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
-                state.count_drawobj += renderer.draws.list.len();
-                renderer.draws.list.iter().for_each(|item| {
-                    let vertex = if let Some(indices) = &item.indices {
-                        indices.value_range().end - indices.value_range().start
-                    } else { item.vertex.end - item.vertex.start };
-                    state.count_vertex += (vertex * (item.instances.end - item.instances.start)) as usize;
-                });
-            }
-        }
-    });
-    scenectxs.iter().for_each(|(scene, ctx)| {
-        if let Some(state) = stateglobal.scenes.get_mut(scene) {
-            state.count_animationgroup += ctx.0.group_mgr.groups.len();
-        }
-    });
-}
+//     geometrys.iter().for_each(|(idmesh, rendergeo)| {
+//         if rendergeo.is_some() {
+//             if let Ok(idscene) = idscenes.get(idmesh.0) {
+//                 if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                     state.count_geometry += 1;
+//                 }
+//             }
+//         }
+//     });
+//     transformnodes.iter().for_each(|entity| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_transform += 1;
+//             }
+//         }
+//     });
+//     meshes.iter().for_each(|(entity, bind)| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_mesh += 1;
+//                 if bind.is_some() {
+//                     state.count_mesh_ok += 1;
+//                 }
+//             }
+//         }
+//     });
+//     instancemeshes.iter().for_each(|entity| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_instance += 1;
+//             }
+//         }
+//     });
+//     cameras.iter().for_each(|entity| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_camera += 1;
+//             }
+//         }
+//     });
+//     lights.iter().for_each(|entity| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_light += 1;
+//             }
+//         }
+//     });
+//     skeletons.iter().for_each(|entity| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_skeleton += 1;
+//             }
+//         }
+//     });
+//     particlesys.iter().for_each(|entity| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_particlesys += 1;
+//             }
+//         }
+//     });
+//     trails.iter().for_each(|entity| {
+//         if let Ok(idscene) = idscenes.get(entity) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_trail += 1;
+//             }
+//         }
+//     });
+//     renderers.iter().for_each(|(idviewer, renderer)| {
+//         if let Ok(idscene) = idscenes.get(idviewer.0) {
+//             if let Some(state) = stateglobal.scenes.get_mut(&idscene.0) {
+//                 state.count_drawobj += renderer.draws.list.len();
+//                 renderer.draws.list.iter().for_each(|item| {
+//                     let vertex = if let Some(indices) = &item.indices {
+//                         indices.value_range().end - indices.value_range().start
+//                     } else { item.vertex.end - item.vertex.start };
+//                     state.count_vertex += (vertex * (item.instances.end - item.instances.start)) as usize;
+//                 });
+//             }
+//         }
+//     });
+//     scenectxs.iter().for_each(|(scene, ctx)| {
+//         if let Some(state) = stateglobal.scenes.get_mut(scene) {
+//             state.count_animationgroup += ctx.0.group_mgr.groups.len();
+//         }
+//     });
+// }
 
 #[derive(Resource, Default)]
-pub struct StateGlobal {
+pub struct StateResource {
     pub debug: bool,
     pub count_gltf: usize,
     pub count_texture: usize,
@@ -165,10 +165,11 @@ pub struct StateGlobal {
     pub count_passdraw: u32,
     pub count_rendergeometryenable: u32,
     pub count_material: u32,
-    pub scenes: XHashMap<Entity, StateScene>,
+    pub count_vertex: u32,
+    // pub scenes: XHashMap<Entity, StateScene>,
 }
 
-pub fn sys_state_global(
+pub fn sys_state_resource(
     asset_gltf: Res<ShareAssetMgr<GLTF>>,
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
     bindbuffers: Res<ResBindBufferAllocator>,
@@ -177,109 +178,112 @@ pub fn sys_state_global(
     pipelines: Res<AssetDataCenterPipeline3D>,
     imagetextures: Res<ShareAssetMgr<ImageTexture>>,
     shadermetas: Res<ShareAssetMgr<ShaderEffectMeta>>,
-    passes: (
-        Query<&PassBindGroupScene>,
-        Query<&PassBindGroupModel>,
-        Query<&PassBindGroupTextureSamplers>,
-        Query<&PassBindGroups>,
-        Query<&PassShader>,
-        Query<&PassPipeline>,
-        Query<&PassDraw>,
-        Query<&PassBindEffectTextures>,
-        Query<&MaterialID>,
-    ),
-    mut stateglobal: ResMut<StateGlobal>,
-    mut performance: ResMut<Performance>,
-    particlesysperformance: Res<ParticleSystemPerformance>,
-    empty: Res<SingleEmptyEntity>,
+    // passes: (
+    //     Query<&PassBindGroupScene>,
+    //     Query<&PassBindGroupModel>,
+    //     Query<&PassBindGroupTextureSamplers>,
+    //     Query<&PassBindGroups>,
+    //     Query<&PassShader>,
+    //     Query<&PassPipeline>,
+    //     Query<&PassDraw>,
+    //     Query<&PassBindEffectTextures>,
+    //     Query<&MaterialID>,
+    // ),
+    mut stateglobal: ResMut<StateResource>,
+    renderers: Query<&Renderer>,
 ) {
-    if stateglobal.debug == false { return };
+    // if stateglobal.debug == false { return };
 
-    stateglobal.count_gltf = asset_gltf.len();
-    stateglobal.count_bindbuffer = bindbuffers.asset_mgr().len();
-    stateglobal.mem_bindbuffer = bindbuffers.asset_mgr().size();
-    stateglobal.count_bindgroup = asset_mgr_bindgroup.0.len();
-    stateglobal.count_pipeline = pipelines.asset_mgr().len();
-    stateglobal.count_geometrybuffer = vertexbuffers.total_buffer_count();
-    stateglobal.size_geometrybuffer = vertexbuffers.total_buffer_size();
-    stateglobal.count_shader = shaders.asset_mgr().len();
-    stateglobal.mem_shader = shaders.asset_mgr().size();
-    stateglobal.count_imgtexture = imagetextures.len();
-    stateglobal.mem_imgtexture = imagetextures.size();
-    stateglobal.count_shadermeta = shadermetas.len();
-    stateglobal.mem_shadermeta = shadermetas.size();
+    stateglobal.count_gltf              = asset_gltf.len();
+    stateglobal.count_bindbuffer        = bindbuffers.asset_mgr().len();
+    stateglobal.mem_bindbuffer          = bindbuffers.asset_mgr().size();
+    stateglobal.count_bindgroup         = asset_mgr_bindgroup.0.len();
+    stateglobal.count_pipeline          = pipelines.asset_mgr().len();
+    stateglobal.count_geometrybuffer    = vertexbuffers.total_buffer_count();
+    stateglobal.size_geometrybuffer     = vertexbuffers.total_buffer_size();
+    stateglobal.count_shader            = shaders.asset_mgr().len();
+    stateglobal.mem_shader              = shaders.asset_mgr().size();
+    stateglobal.count_imgtexture        = imagetextures.len();
+    stateglobal.mem_imgtexture          = imagetextures.size();
+    stateglobal.count_shadermeta        = shadermetas.len();
+    stateglobal.mem_shadermeta          = shadermetas.size();
 
-    let mut count;
+    // let mut count;
 
-    count = 0;
-    passes.0.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passset0 = count;
+    // count = 0;
+    // passes.0.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passset0 = count;
 
-    count = 0;
-    passes.1.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passset1 = count;
+    // count = 0;
+    // passes.1.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passset1 = count;
 
-    count = 0;
-    passes.2.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passset2 = count;
+    // count = 0;
+    // passes.2.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passset2 = count;
 
-    count = 0;
-    passes.3.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passbindgroups = count;
+    // count = 0;
+    // passes.3.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passbindgroups = count;
 
-    count = 0;
-    passes.4.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passshader = count;
+    // count = 0;
+    // passes.4.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passshader = count;
 
-    count = 0;
-    passes.5.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passpipeline = count;
+    // count = 0;
+    // passes.5.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passpipeline = count;
 
-    count = 0;
-    passes.6.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passdraw = count;
+    // count = 0;
+    // passes.6.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passdraw = count;
 
-    count = 0;
-    passes.7.iter().for_each(|item| {
-        if item.0.is_some() { count += 1; }
-    });
-    stateglobal.count_passtexs = count;
+    // count = 0;
+    // passes.7.iter().for_each(|item| {
+    //     if item.0.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passtexs = count;
 
-    count = 0;
-    passes.8.iter().for_each(|item| {
-        if item.0 != empty.id() { count += 1; }
-    });
-    stateglobal.count_passmat = count;
+    // count = 0;
+    // passes.8.iter().for_each(|item| {
+    //     if item.0 != empty.id() { count += 1; }
+    // });
+    // stateglobal.count_passmat = count;
 
     // *performance = Performance::default();
-    performance.particlesystem = particlesysperformance.total();
     // *particlesysperformance = ParticleSystemPerformance::default();
+
+    let mut count_vertex = 0;
+    renderers.iter().for_each(|renderer| {
+        count_vertex += renderer.vertexs;
+    });
+    stateglobal.count_vertex = count_vertex as u32;
 }
 
 pub struct PluginStateGlobal;
 impl Plugin for PluginStateGlobal {
     fn build(&self, app: &mut App) {
         app.insert_resource(Performance::default());
-        app.insert_resource(StateGlobal::default());
+        app.insert_resource(StateResource::default());
         app.add_systems(
             Update,
             (
-                sys_state_scene,
-                sys_state_global
+                // sys_state_scene,
+                sys_state_resource
             ).chain().run_if(should_run).in_set(ERunStageChap::StateCheck)
         );
 

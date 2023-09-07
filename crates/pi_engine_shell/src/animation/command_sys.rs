@@ -233,3 +233,9 @@ pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(
 ) {
     scenes.apply_removed_animations(&mut type_ctx.ctx);
 }
+
+pub fn sys_reset_anime_performance(
+    mut performance: ResMut<Performance>,
+) {
+    performance.animation = 0;
+}

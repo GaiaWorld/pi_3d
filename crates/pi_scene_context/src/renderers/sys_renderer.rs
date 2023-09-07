@@ -314,7 +314,10 @@ use super::{
         passes.iter_mut().for_each(|(_, id_model, bindgroups, pipeline, mut old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                 if let Ok((id_geo, renderindices, geoenable, instances, disposed)) = models.get(id_model.0) {
-                    if geoenable.0 == false || disposed.0 == true { return; }
+                    if geoenable.0 == false || disposed.0 == true {
+                        if old_draw.val().is_some() { *old_draw = PassDraw(None); };
+                        return;
+                    }
         
                     if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
@@ -370,9 +373,12 @@ use super::{
         // let time1 = pi_time::Instant::now();
 
         models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable, instances, disposed)| {
-            if geoenable.0 == false || disposed.0 == true { return; }
 
             if let Ok((_, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
+                if geoenable.0 == false || disposed.0 == true { 
+                    if old_draw.val().is_some() { *old_draw = PassDraw(None); };
+                    return;
+                }
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
@@ -437,12 +443,13 @@ use super::{
     ) {
         let time1 = pi_time::Instant::now();
 
-        renderers.iter_mut().for_each(|(id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
+        renderers.iter_mut().for_each(|(_id, id_viewer, mut renderer, passtag_orders, enable, mut rendersize)| {
             renderer.clear();
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", id, id_viewer.0, enable.0);
             if enable.0 == false {
                 return;
             }
+            let mut count_vertex = 0;
             // let mut list_sort_opaque: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
             // let mut list_sort_blend: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
             let mut opaque_list: Vec<TmpSortDrawOpaque> = vec![];
@@ -453,15 +460,13 @@ use super::{
 
                 if let Ok(passcfg) = scenes.get(idscene.0) {
                     *rendersize = RenderSize(viewersize.0, viewersize.1);
-                    
-    
+
                     if let Some(viewport) = viewport {
                         renderer.draws.viewport = (viewport.x, viewport.y, viewport.w, viewport.h, viewport.mindepth, viewport.maxdepth);
                     } else {
                         renderer.draws.viewport = (0., 0., 1., 1., 0., 1.);
                     }
                     list_model.0.iter().for_each(|id_obj| {
-    
                         if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passrecord)) = models.get(id_obj.clone()) {
                             // log::warn!("Renderer: A");
                             if disposed.0 == true || globalenable.0 == false { return; }
@@ -566,48 +571,6 @@ use super::{
                             }
                         }
                     });
-    
-                    // list_sort_opaque.sort_by(|a, b| {
-                    //     match a.3.cmp(&b.3) {
-                    //         std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
-                    //         std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
-                    //         std::cmp::Ordering::Equal => {
-                    //             match a.1.partial_cmp(&b.1) {
-                    //                 Some(ord) => ord,
-                    //                 None => {
-                    //                     b.4.cmp(&a.4)
-                    //                 },
-                    //             }
-                    //         }
-                    //     }
-                    // });
-                    // list_sort_blend.sort_by(|a, b| {
-                    //     match a.3.cmp(&b.3) {
-                    //         std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
-                    //         std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
-                    //         std::cmp::Ordering::Equal => {
-                    //             match a.2.cmp(&b.2) {
-                    //                 std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
-                    //                 std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
-                    //                 std::cmp::Ordering::Equal => {
-                    //                     match b.1.partial_cmp(&a.1) {
-                    //                         Some(ord) => ord,
-                    //                         None => {
-                    //                             b.4.cmp(&a.4)
-                    //                         },
-                    //                     }
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    // });
-    
-                    // list_sort_opaque.iter().for_each(|(entity, _ , _ , _, _)| {
-                    //     renderer.draws.list.push(entity.clone());
-                    // });
-                    // list_sort_blend.iter().for_each(|(entity, _ , _ , _, _)| {
-                    //     renderer.draws.list.push(entity.clone());
-                    // });
 
                     opaque_list.sort();
                     transparent_list.sort();
@@ -615,17 +578,27 @@ use super::{
                     opaque_list.iter().for_each(|tmp| {
                         if let Some(draw) = draws.get(tmp.idx as usize) {
                             renderer.draws.list.push(draw.clone());
+                            let vertex = if let Some(indices) = &draw.indices {
+                                indices.value_range().end - indices.value_range().start
+                            } else { draw.vertex.end - draw.vertex.start };
+                            count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
                         }
                     });
                     transparent_list.iter().for_each(|tmp| {
                         if let Some(draw) = draws.get(tmp.idx as usize) {
                             renderer.draws.list.push(draw.clone());
+                            let vertex = if let Some(indices) = &draw.indices {
+                                indices.value_range().end - indices.value_range().start
+                            } else { draw.vertex.end - draw.vertex.start };
+                            count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
                         }
                     });
 
                     // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
                 }
             }
+
+            renderer.vertexs = count_vertex;
         });
 
         record.drawobjs = (pi_time::Instant::now() - time1).as_micros() as u32;
