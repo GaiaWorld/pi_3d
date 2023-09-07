@@ -10,6 +10,7 @@ use crate::prelude::*;
 pub enum StageModel {
     AbstructMeshCommand,
     InstanceEffectMesh,
+    InstanceEffectGeometry,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -27,6 +28,13 @@ impl Default for EScalingMode {
 
 #[derive(Component)]
 pub struct Mesh;
+
+#[derive(Component)]
+/// 相对于 SourceMesh 的 AlphaIndex
+pub struct InstanceTransparentIndex(pub i32);
+
+#[derive(Component)]
+pub struct AbstructMeshCullingFlag(pub bool);
 
 #[derive(Component)]
 pub struct MeshInstanceState {
@@ -140,7 +148,7 @@ impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {
         }
     }
 
-    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue, frame_delta: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         if amount < 0.5 {
             value1.clone()
         } else {
@@ -225,3 +233,6 @@ impl RenderWorldMatrixInv {
         Self(m)
     }
 }
+
+#[derive(Debug, Clone, Component)]
+pub struct InstancedMeshTransparentSortCollection(pub Vec<(i32, Range<u32>)>);

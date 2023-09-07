@@ -26,10 +26,11 @@ pub fn sys_create_material(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, passtag)| {
-        // log::error!("Material: ");
+        // log::warn!("MaterialInit: {:?}", entity);
         let mut matcmds = if let Some(cmd) = commands.get_entity(entity) { 
             cmd
         } else {
+            // log::error!("Material: Not Found!!");
             disposereadylist.push(OpsDisposeReady::ops(entity));
             return;
         };
@@ -77,6 +78,8 @@ pub fn sys_create_material(
             .insert(EffectBindSampler2D08Comp::default())
             .insert(EffectTextureSamplersComp::default())
             ;
+        
+        // log::warn!("MaterialInit Ok: {:?}", entity);
     });
 }
 

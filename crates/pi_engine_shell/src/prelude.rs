@@ -80,6 +80,9 @@ pub use crate::animation::*;
 pub use crate::interpolation::*;
 pub use crate::extends::*;
 
+#[derive(Resource)]
+pub struct EngineInstant(pub pi_time::Instant);
+
 ///
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Component)]
 pub struct EffectTextureSamplersComp(pub Option<EffectTextureSamplers>);

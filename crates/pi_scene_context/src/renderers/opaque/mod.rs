@@ -3,31 +3,31 @@
 use pi_engine_shell::prelude::*;
 
 
-#[derive(Debug, Clone, Copy, Component)]
-pub struct Opaque;
+// #[derive(Debug, Clone, Copy, Component)]
+// pub struct Opaque;
 
-#[derive(Debug, Clone, Copy)]
-pub enum OpaqueCommand {
-    Apply(),
-    Undo(),
-}
+// #[derive(Debug, Clone, Copy)]
+// pub enum OpaqueCommand {
+//     Apply(),
+//     Undo(),
+// }
 
-pub struct ActionRenderOpaque;
-impl ActionRenderOpaque {
-    pub fn modify(
-        commands: &mut EntityCommands,
-        val: OpaqueCommand,
-    ) {
-        match val {
-            OpaqueCommand::Apply() => {
-                commands.insert(Opaque);
-            },
-            OpaqueCommand::Undo() => {
-                commands.remove::<Opaque>();
-            },
-        }
-    }
-}
+// pub struct ActionRenderOpaque;
+// impl ActionRenderOpaque {
+//     pub fn modify(
+//         commands: &mut EntityCommands,
+//         val: OpaqueCommand,
+//     ) {
+//         match val {
+//             OpaqueCommand::Apply() => {
+//                 commands.insert(Opaque);
+//             },
+//             OpaqueCommand::Undo() => {
+//                 commands.remove::<Opaque>();
+//             },
+//         }
+//     }
+// }
 
 // #[derive(Debug, Default)]
 // pub struct SingleOpaqueCommandList {

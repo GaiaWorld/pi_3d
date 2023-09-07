@@ -5,17 +5,25 @@ use pi_hash::XHashSet;
 
 use crate::{
     layer_mask::prelude::*,
-    meshes::prelude::*, prelude::GlobalEnable, cullings::prelude::*
+    meshes::prelude::*, prelude::{GlobalEnable, DisposeReady, InstanceSourceRefs}, cullings::prelude::*
 };
 
 use super::base::*;
 
-struct SceneBoundingFilter<'a, 'w, 's>(pub &'a Query<'w, 's, &'static GlobalEnable, With<AbstructMesh>>, pub &'a XHashSet<Entity>);
+struct SceneBoundingFilter<'a, 'w, 's>(pub &'a Query<'w, 's, (&'static GlobalEnable, Option<&'static InstanceSourceRefs>), With<AbstructMesh>>, pub &'a XHashSet<Entity>);
 impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
     fn filter(&self, entity: Entity) -> bool {
         if self.1.contains(&entity) {
-            if let Ok(enable) = self.0.get(entity) {
-                enable.0
+            if let Ok((enable, instances)) = self.0.get(entity) {
+                if let Some(instances) = instances {
+                    if instances.len() > 0 {
+                        true
+                    } else {
+                        enable.0
+                    }
+                } else {
+                    enable.0
+                }
             } else {
                 false
             }
@@ -25,6 +33,13 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
     }
 }
 
+pub fn sys_abstructmesh_culling_flag_reset(
+    mut items: Query<&mut AbstructMeshCullingFlag>,
+) {
+    items.iter_mut().for_each(|mut item| {
+        *item = AbstructMeshCullingFlag(false);
+    });
+}
 
     pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
         mut viewers: Query<
@@ -32,7 +47,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
             Or<(Changed<LayerMask>, Changed<ViewerActive>)>
         >,
         items: Query<
-            (Entity, &SceneID, &LayerMask, &Mesh),
+            (Entity, &SceneID, &LayerMask, &InstanceSourceRefs),
         >,
     ) {
         // let time1 = pi_time::Instant::now();
@@ -44,7 +59,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
             // log::debug!("CameraModelListByViewer : 0");
             if vieweractive.0 {
                 // log::debug!("SysModelListUpdateByCamera: 0");
-                items.iter().for_each(|(id_obj, iscene, ilayer, _)| {
+                items.iter().for_each(|(id_obj, iscene, ilayer, instances)| {
                     // log::debug!("SysModelListUpdateByCamera: 1");
                     if iscene == scene && layer.include(ilayer) {
                         // log::debug!("SysModelListUpdateByCamera: 2");
@@ -54,6 +69,10 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
                             list_model.0.insert(id_obj);
                             *flag_list_model = FlagModelList::default();
                         }
+                        instances.iter().for_each(|entity| {
+                            list_model.0.insert(*entity);
+                        });
+                        *flag_list_model = FlagModelList::default();
                     }
                 });
             }
@@ -67,24 +86,32 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
             (&ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList, &T, &T2),
         >,
         items: Query<
-            (Entity, &SceneID, &LayerMask, &Mesh),
-            Changed<LayerMask>,
+            (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh),
+            Or<(Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
         >,
     ) {
         // let time1 = pi_time::Instant::now();
         // log::debug!("CameraModelListByModel :");
 
-        items.iter().for_each(|(id_obj, iscene, ilayer, _)| {
+        items.iter().for_each(|(id_obj, iscene, ilayer, instances, disposestate, _)| {
             // log::debug!("CameraModelListByModel : 0");
             viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, mut flag_list_model, _, _)| {
                 // log::debug!("CameraModelListByModel : 1");
                 if vieweractive.0 {
-                    if iscene == scene && layer.include(ilayer) {
-                        if list_model.0.contains(&id_obj) {
-                            // log::warn!("Has Include {:?}", id_obj);
-                        } else {
-                            list_model.0.insert(id_obj);
-                            *flag_list_model = FlagModelList::default();
+                    if iscene == scene && disposestate.0 == false {
+                        if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
+                            if layer.include(ilayer) {
+                                list_model.0.insert(id_obj);
+                                *flag_list_model = FlagModelList::default();
+                                instances.iter().for_each(|entity| {
+                                    list_model.0.insert(*entity);
+                                });
+                            } else {
+                                list_model.0.remove(&id_obj);
+                                instances.iter().for_each(|entity| {
+                                    list_model.0.remove(entity);
+                                });
+                            }
                         }
                     } else {
                         list_model.0.remove(&id_obj);
@@ -96,22 +123,23 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
         // log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
-    pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+    pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, R: TCullingPerformance + Resource>(
         mut viewers: Query<
             (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &mut ModelListAfterCulling),
             (With<T>, With<T2>)
         >,
         items: Query<
-            &'static GlobalEnable,
+            (&'static GlobalEnable, Option<&'static InstanceSourceRefs>),
             With<AbstructMesh>
         >,
+        mut flags: Query<&mut AbstructMeshCullingFlag>,
         scenes: Query<
             &SceneBoundingPool
         >,
-        mut performance: ResMut<Performance>
+        mut performance: ResMut<R>
     ) {
         let time1 = pi_time::Instant::now();
-        // log::debug!("SysModelListAfterCullinUpdateByCamera: ");
+        // log::warn!("SysModelListAfterCullinUpdateByCamera: ");
         viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, mut cullings)| {
             // log::warn!("SysViewerCulling: {:?}", vieweractive);
             cullings.0.clear();
@@ -126,20 +154,34 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
                     // log::warn!("ModelList: {:?}", liet_model.0.len());
                     list_model.0.iter().for_each(|objid| {
                         // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
-                        if let Ok(enable) = items.get(objid.clone()) {
+                        if let Ok((enable, instances)) = items.get(objid.clone()) {
                             // log::warn!("Moldellist Geo: {:?}, {:?}", enable.0, geo_enable.0);
                             // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
-                            if enable.0 {
-                                cullings.0.push(objid.clone());
+                            if let Some(instances) = instances {
+                                if instances.len() > 0 {
+                                    cullings.0.push(objid.clone());
+                                } else if enable.0 {
+                                    cullings.0.push(objid.clone());
+                                }
+                            } else {
+                                if enable.0 {
+                                    cullings.0.push(objid.clone());
+                                }
                             }
                         }
                     });
                 }
+                
+                cullings.0.iter().for_each(|id| {
+                    if let Ok(mut flag) = flags.get_mut(*id) {
+                        *flag = AbstructMeshCullingFlag(true);
+                    }
+                });
             }
             // log::warn!("Moldellist: {:?}, {:?}, {:?}", vieweractive.0, liet_model.0.len(), cullings.0.len());
         });
 
-        performance.culling = (pi_time::Instant::now() - time1).as_micros() as u32;
+        performance.culling_time((pi_time::Instant::now() - time1).as_micros() as u32);
         
         // log::debug!("SysModelListAfterCullingTick: {:?}", pi_time::Instant::now() - time1);
     }

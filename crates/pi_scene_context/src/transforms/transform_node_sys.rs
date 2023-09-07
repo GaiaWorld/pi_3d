@@ -44,7 +44,7 @@ use super::prelude::*;
         mut localmatrixs: Query<(Entity, &LocalPosition, &LocalScaling, &LocalRotation, &mut LocalMatrix), Or<(Changed<LocalPosition>, Changed<LocalScaling>, Changed<LocalRotation>)>>,
     ) {
         // log::warn!("LocalMatrix: ");
-        let time = pi_time::Instant::now();
+        // let time = pi_time::Instant::now();
         localmatrixs.iter_mut().for_each(|(_entity, position, scaling, rotation, mut localmatrix)| {
             // log::warn!("LocalMatrixCalc: {:?}", entity);
             let mut matrix = Matrix::identity();
@@ -54,7 +54,7 @@ use super::prelude::*;
             // localmatrix.1 = true;
             *localmatrix = LocalMatrix(matrix);
         });
-        let time1 = pi_time::Instant::now();
+        // let time1 = pi_time::Instant::now();
         // log::warn!("Local Matrix Calc: {:?}", time1 - time);
     }
 

@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 
 use crate::{
-    geometry::prelude::*, object::sys_dispose_ready, transforms::prelude::*
+    geometry::prelude::*, object::sys_dispose_ready, transforms::prelude::*, prelude::StageCamera
 };
 
 use self::{
@@ -48,7 +48,8 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListBoneOffset::default());
 
         app.configure_set(Update, StageModel::AbstructMeshCommand.after(ERunStageChap::_InitialApply).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform).before(StageGeometry::GeometryLoaded));
+        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix));
+        app.configure_set(Update, StageModel::InstanceEffectGeometry.after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).before(ERunStageChap::Uniform));
 
         app.add_systems(Update, 
             sys_create_mesh.in_set(ERunStageChap::Initial)
@@ -95,7 +96,7 @@ impl crate::Plugin for PluginMesh {
             (
                 sys_tick_instanced_buffer_update.run_if(should_run),
                 sys_tick_instanced_buffer_update_single,
-            ).chain().after(sys_calc_render_matrix_instance).in_set(StageModel::InstanceEffectMesh)
+            ).chain().in_set(StageModel::InstanceEffectGeometry)
         );
 
         app.add_systems(

@@ -7,7 +7,7 @@ use crate::{prelude::{RenderGeometryComp, ActionListDisposeCan, ActionListDispos
 use super::{
     vertex_buffer_useinfo::*,
     base::*,
-    instance::{instance_world_matrix::InstanceBufferWorldMatrix, instance_color::InstanceBufferColor, instance_tilloff::InstanceBufferTillOff, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}},
+    instance::instanced_buffer::{InstancedInfo, InstanceBufferAllocator},
 };
 
 use super::command::*;

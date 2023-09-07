@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{prelude::GlobalEnable, viewer::prelude::{ModelListAfterCulling, ModelList}};
+use crate::{prelude::GlobalEnable, viewer::prelude::{ModelListAfterCulling, ModelList, TCullingPerformance}};
 
 pub use super::{
     target_camera::*,
@@ -25,6 +25,12 @@ pub struct StateCamera {
     pub camera: Option<Entity>,
     pub includes: u32,
     pub culling: u32,
+    pub culling_time: u32,
+}
+impl TCullingPerformance for StateCamera {
+    fn culling_time(&mut self, ms: u32) {
+        self.culling_time = ms;
+    }
 }
 
 #[derive(SystemParam)]

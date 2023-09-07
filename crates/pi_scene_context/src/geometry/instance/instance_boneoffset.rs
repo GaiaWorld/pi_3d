@@ -45,7 +45,7 @@ impl pi_curves::curve::frame::FrameDataValue for InstanceBoneoffset {
         }
     }
 
-    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+    fn hermite(value1: &Self, _tangent1: &Self, value2: &Self, _tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue, frame_delta: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         if amount < 0.5 {
             value1.clone()
         } else {

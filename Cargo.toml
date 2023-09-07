@@ -66,46 +66,47 @@ crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
 
-# [patch."https://github.com/GaiaWorld/pi_bevy"]
-# pi_bevy_post_process = { path="../pi_bevy/crates/post_process" }
+[patch."https://github.com/GaiaWorld/pi_bevy"]
+pi_bevy_post_process = { path="../pi_bevy/crates/post_process" }
 
-# [patch."https://github.com/GaiaWorld/pi_scene"]
-# pi_scene = { path = "../pi_scene" }
-# pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
+[patch."https://github.com/GaiaWorld/pi_scene"]
+pi_scene = { path = "../pi_scene" }
+pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
 
-# [patch."https://github.com/GaiaWorld/pi_animation"]
-# pi_animation = { path = "../pi_animation" }
+[patch."https://github.com/GaiaWorld/pi_animation"]
+pi_animation = { path = "../pi_animation" }
 
 # [patch."https://github.com/GaiaWorld/pi_curves"]
 # pi_curves = { path = "../pi_curves" }
 
-# [patch."https://github.com/GaiaWorld/pi_post_process.git"]
-# pi_postprocess = { path = "../pi_post_process" }
+[patch."https://github.com/GaiaWorld/pi_post_process.git"]
+pi_postprocess = { path = "../pi_post_process" }
 
-# [patch."https://github.com/GaiaWorld/pi_gltf.git"]
-# pi_gltf = { path = "../pi_gltf" }
+[patch."https://github.com/GaiaWorld/pi_gltf.git"]
+pi_gltf = { path = "../pi_gltf" }
 
-# [patch.crates-io]
+[patch.crates-io]
 # pi_spatial = { path = "../pi_spatial" }
-# pi_assets = {path = "../pi_assets"}
+pi_assets = {path = "../pi_assets"}
 # pi_async_graph = {path = "../pi_async_graph"}
 
-# [patch.yn]
+[patch.yn]
 # winit = { path = "../winit" }
-# pi_hal = { path = "../pi_hal" }
+pi_hal = { path = "../pi_hal" }
+pi_curves = { path = "../pi_curves" }
 # pi_render
-# pi_render = { path = "../pi_render" }
-# render_utils = { path = "../pi_render/crates/render_utils" }
-# render_derive = { path = "../pi_render/crates/render_derive" }
-# render_compile = { path = "../pi_render/crates/render_compile" }
+pi_render = { path = "../pi_render" }
+render_utils = { path = "../pi_render/crates/render_utils" }
+render_derive = { path = "../pi_render/crates/render_derive" }
+render_compile = { path = "../pi_render/crates/render_compile" }
 
 # pi_bevy
-# pi_bevy_render_plugin = { path="../pi_bevy/crates/render" }
-# pi_bevy_winit_window = { path="../pi_bevy/crates/winit_window" }
-# pi_bevy_ecs_extend = { path="../pi_bevy/crates/ecs_extend" }
-# pi_bevy_ecs_macro = { path="../pi_bevy/crates/ecs_extend/macro" }
-# pi_bevy_asset = { path="../pi_bevy/crates/asset" }
-# pi_window_renderer = { path="../pi_bevy/crates/window_renderer" }
+pi_bevy_render_plugin = { path="../pi_bevy/crates/render" }
+pi_bevy_winit_window = { path="../pi_bevy/crates/winit_window" }
+pi_bevy_ecs_extend = { path="../pi_bevy/crates/ecs_extend" }
+pi_bevy_ecs_macro = { path="../pi_bevy/crates/ecs_extend/macro" }
+pi_bevy_asset = { path="../pi_bevy/crates/asset" }
+pi_window_renderer = { path="../pi_bevy/crates/window_renderer" }
 
 [dev-dependencies]
 rand            = "0.8"
@@ -203,6 +204,10 @@ path = "examples/anime/color.rs"
 [[example]]
 name = "anime_camera"
 path = "examples/anime/camera.rs"
+
+[[example]]
+name = "anime_rotation_quaternion"
+path = "examples/anime/rotation_quaternion.rs"
 
 [[example]]
 name = "anime_performance"

@@ -198,10 +198,10 @@ pub fn sys_create_camera_renderer(
     >,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count)| {
-        log::warn!("OpsCameraRenderer: A");
+        // log::warn!("OpsCameraRenderer: A");
 
         if let Ok((mut viewer_renderers, toscreen, mut dirtyflag)) = viewers.get_mut(id_viewer) {
-            log::warn!("OpsCameraRenderer: AA");
+            // log::warn!("OpsCameraRenderer: AA");
 
             if let Some((_, id_render)) = viewer_renderers.map.get(&rendername) {
                 if let Some(mut cmd) = commands.get_entity(id_render.0) {
@@ -209,7 +209,7 @@ pub fn sys_create_camera_renderer(
                 }
             }
 
-            log::warn!("Camera Renderer Init!! ");
+            // log::warn!("Camera Renderer Init!! ");
             *dirtyflag = DirtyViewerRenderersInfo;
 
             viewer_renderers.map.insert(rendername.clone(), (passorders.clone(), RendererID(id_renderer)));

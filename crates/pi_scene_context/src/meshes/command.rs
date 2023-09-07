@@ -137,7 +137,7 @@ pub struct BundleMesh(
     PassDirtyBindEffectTextures,
     FlagPassDirtyBindEffectTextures,
     LayerMask,
-    Opaque,
+    // Opaque,
     TransparentSortParam,
     CCullMode,
     FrontFace,

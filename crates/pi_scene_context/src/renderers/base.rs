@@ -1,7 +1,11 @@
-use std::sync::Arc;
+use std::{sync::Arc, ops::Range};
 
+use approx::RelativeEq;
 use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
+use pi_map::smallvecmap::SmallVecMap;
+
+use crate::prelude::TransparentSortParam;
 
 #[derive(Debug, Clone)]
 pub struct BindGroups3D {
@@ -71,8 +75,112 @@ pub type KeyPipeline3D = KeyRenderPipeline<4, EKeyShader3DSetBlock>;
 pub type Pipeline3D = RenderRes<RenderPipeline>;
 pub type Pipeline3DUsage = Handle<Pipeline3D>;
 
-pub type DrawObj3D = DrawObj;
+// pub type DrawObj3D = DrawObj;
 pub type DrawList3D = DrawList;
+
+pub enum DrawObj3D {
+    Tmp(DrawObjTmp),
+    Draw(Arc<DrawObj>)
+}
+
+pub struct DrawObjTmp {
+    pub pipeline: Option<Handle<RenderRes<RenderPipeline>>>,
+    pub bindgroups: BindGroups3D,
+    ///
+    /// * MAX_VERTEX_BUFFER : 可能的最大顶点Buffer数目, 本地电脑 16
+    pub vertices: SmallVecMap<RenderVertices, 3>,
+    pub instances: Range<u32>,
+    pub vertex: Range<u32>,
+    pub indices: Option<RenderIndices>,
+}
+
+pub struct TmpSortDrawOpaque {
+    pub idx: u16,
+    pub pass: u8,
+    pub distance: f32,
+    pub pipeline: u64,
+}
+impl PartialEq for TmpSortDrawOpaque {
+    fn eq(&self, other: &Self) -> bool {
+        self.pass == other.pass && self.pipeline == other.pipeline && self.distance.eq(&other.distance)
+    }
+}
+impl Eq for TmpSortDrawOpaque {
+    fn assert_receiver_is_total_eq(&self) {
+
+    }
+}
+impl PartialOrd for TmpSortDrawOpaque {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for TmpSortDrawOpaque {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.pass.cmp(&other.pass) {
+            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+            std::cmp::Ordering::Equal => {
+                match self.pipeline.cmp(&other.pipeline) {
+                    std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                    std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                    std::cmp::Ordering::Equal => {
+                        match self.distance.partial_cmp(&other.distance) {
+                            Some(order) => order,
+                            None => std::cmp::Ordering::Equal,
+                        }
+                    },
+                }
+            },
+        }
+    }
+}
+
+pub struct TmpSortDrawTransparent {
+    pub idx: u16,
+    pub pass: u8,
+    pub distance: f32,
+    pub queue: TransparentSortParam,
+    pub pipeline: u64,
+}
+impl PartialEq for TmpSortDrawTransparent {
+    fn eq(&self, other: &Self) -> bool {
+        self.pass == other.pass && self.pipeline == other.pipeline && self.queue == other.queue && self.distance == other.distance
+    }
+}
+impl Eq for TmpSortDrawTransparent {
+    fn assert_receiver_is_total_eq(&self) {
+
+    }
+}
+impl PartialOrd for TmpSortDrawTransparent {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for TmpSortDrawTransparent {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.pass.cmp(&other.pass) {
+            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+            std::cmp::Ordering::Equal => {
+                match self.queue.cmp(&other.queue) {
+                    std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                    std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                    std::cmp::Ordering::Equal => {
+                        match other.distance.partial_cmp(&self.distance) {
+                            Some(order) => order,
+                            None => {
+                                self.pipeline.cmp(&other.pipeline)
+                            },
+                        }
+                    },
+                }
+            },
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageRenderer {

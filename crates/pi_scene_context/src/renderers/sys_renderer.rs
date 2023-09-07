@@ -8,7 +8,7 @@ use crate::{
     geometry::prelude::*,
     cameras::prelude::*,
     scene::prelude::*,
-    transforms::prelude::*, prelude::{RenderAlignment, IndiceRenderRange, DisposeReady},
+    transforms::prelude::*, prelude::{RenderAlignment, IndiceRenderRange, DisposeReady, GlobalEnable, InstancedMeshTransparentSortCollection},
 };
 
 use super::{
@@ -81,11 +81,6 @@ use super::{
                 let (instance, vb) = if let Ok(val) = geometrys.get(id_geo.0) {
                     val
                 } else {
-                    // log::error!("Shader: {:?}", -1);
-                    // log::debug!("SysPassShaderRequestByModel: 11");
-                            // if let Some(mut cmd) = commands.get_entity(id_pass) {
-                            //     cmd.insert(PassShader(None));
-                            // }
                     return;
                 };
                 if let Ok((ready, bindgroups, _old_shader)) = passes.get(id_pass.clone()) {
@@ -97,14 +92,6 @@ use super::{
                         shader(
                             id_pass, meta, key_meta, &instance, vb, bindgroups, renderalignment, &mut shader_center, &mut shader_loader, &device
                         );
-                    } else {
-                        // log::error!("Shader: 00");
-                        // if old_shader.val().is_some() {
-                        //     log::debug!("SysPassShaderRequestByModel: No Ready");
-                        //     if let Some(mut cmd) = commands.get_entity(id_pass) {
-                        //         cmd.insert(PassShader(None));
-                        //     }
-                        // }
                     }
                 }
             }
@@ -141,31 +128,12 @@ use super::{
                     let (instance, vb) = if let Ok(val) = geometrys.get(id_geometry.0) {
                         val
                     } else {
-                        // log::error!("Shader: {:?}", -1);
-                        // if let Some(mut cmd) = commands.get_entity(id_pass) {
-                        //     cmd.insert(PassShader(None));
-                        // }
-                        // log::debug!("SysPassShaderRequestByPass: 11");
                         return;
                     };
                     shader(
                         id_pass, meta, key_meta, &instance, vb, bindgroups, renderalignment, &mut shader_center, &mut shader_loader, &device
                     );
-                } else {
-                    // if old_shader.val().is_some() {
-                    //     // log::debug!("SysPassShaderRequestByPass: No Geo");
-                    //         if let Some(mut cmd) = commands.get_entity(id_pass) {
-                    //             cmd.insert(PassShader(None));
-                    //         }
-                    // }
                 }
-            } else {
-                // if old_shader.val().is_some() {
-                //     // log::debug!("SysPassShaderRequestByPass: No Ready");
-                //             if let Some(mut cmd) = commands.get_entity(id_pass) {
-                //                 cmd.insert(PassShader(None));
-                //             }
-                // }
             }
         });
 
@@ -236,8 +204,6 @@ use super::{
                 let vb = if let Ok(vb) = geometrys.get(id_geo.0.clone()) {
                     vb
                 } else {
-                    // log::debug!("SysPipeline: 11 Model");
-                    // *oldpipeline = PassPipeline::new(None);
                     return;
                 };
 
@@ -250,12 +216,6 @@ use super::{
                         id_pass, &mut pipeline_center, &mut pipeline_loader,
                         &device
                     );
-                } else {
-                    if old_draw.val().is_some() {
-                        // *oldpipeline = PassPipeline::new(None);
-                        // log::trace!("SysPassPipelineRequest: No Shader");
-                        // commands.entity(id_pass).insert(PassPipeline::new(None));
-                    }
                 }
             }
         });
@@ -305,9 +265,6 @@ use super::{
                     let vb = if let Ok(vb) = geometrys.get(id_geo.0.clone()) {
                         vb
                     } else {
-                        // *oldpipeline = PassPipeline::new(None);
-                        // log::debug!("SysPipeline: 11 Pass");
-                        // commands.entity(id_pass).insert(PassPipeline::new(None));
                         return;
                     };
                     pipeline(
@@ -317,15 +274,7 @@ use super::{
                         id_pass, &mut pipeline_center, &mut pipeline_loader,
                         &device
                     );
-                } else {
-                    // log::trace!("SysPassPipelineRequest: No Geo");
-                    // *oldpipeline = PassPipeline::new(None);
-                    // commands.entity(id_pass).insert(PassPipeline::new(None));
                 }
-            } else {
-                // log::trace!("SysPassPipelineRequest: No Shader");
-                // *oldpipeline = PassPipeline::new(None);
-                // commands.entity(id_pass).insert(PassPipeline::new(None));
             }
         });
 
@@ -355,7 +304,7 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_pass<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &IndiceRenderRange, &RenderGeometryEable, &DisposeReady)>,
+        models: Query<(&GeometryID, &IndiceRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady)>,
         geometrys: Query<&RenderGeometryComp>,
         mut passes: Query<(ObjectID, &ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T), Changed<PassPipeline>>,
         // mut commands: Commands,
@@ -364,21 +313,32 @@ use super::{
 
         passes.iter_mut().for_each(|(_, id_model, bindgroups, pipeline, mut old_draw, _)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                if let Ok((id_geo, renderindices, geoenable, disposed)) = models.get(id_model.0) {
+                if let Ok((id_geo, renderindices, geoenable, instances, disposed)) = models.get(id_model.0) {
                     if geoenable.0 == false || disposed.0 == true { return; }
         
                     if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
-                            let draw = DrawObj3D {
-                                pipeline: Some(pipeline.clone()),
-                                bindgroups: bindgroups.groups(),
-                                vertices: rendergeo.vertices(),
-                                instances: rendergeo.instances(),
-                                vertex: rendergeo.vertex_range(),
-                                indices: renderindices.apply(rendergeo),
+                            let draw = if instances.len() == 0 {
+                                DrawObj3D::Draw( Arc::new(DrawObj {
+                                    pipeline: Some(pipeline.clone()),
+                                    bindgroups: bindgroups.groups(),
+                                    vertices: rendergeo.vertices(),
+                                    instances: rendergeo.instances(),
+                                    vertex: rendergeo.vertex_range(),
+                                    indices: renderindices.apply(rendergeo),
+                                }))
+                            } else {
+                                DrawObj3D::Tmp( DrawObjTmp {
+                                    pipeline: Some(pipeline.clone()),
+                                    bindgroups: bindgroups.clone(),
+                                    vertices: rendergeo.vertices(),
+                                    instances: rendergeo.instances(),
+                                    vertex: rendergeo.vertex_range(),
+                                    indices: renderindices.apply(rendergeo),
+                                })
                             };
                             
-                            *old_draw = PassDraw(Some(Arc::new(draw)));
+                            *old_draw = PassDraw(Some(draw));
                         } else {
                             *old_draw = PassDraw(None);
                         }
@@ -402,29 +362,40 @@ use super::{
     }
 
     pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        models: Query<(&GeometryID, &I, &IndiceRenderRange, &RenderGeometryEable, &DisposeReady), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<DisposeReady>)>>,
+        models: Query<(&GeometryID, &I, &IndiceRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady), Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<DisposeReady>)>>,
         geometrys: Query<&RenderGeometryComp>,
         mut passes: Query<(&ModelPass, &PassBindGroups, &PassPipeline, &mut PassDraw, &T)>,
         // mut commands: Commands,
     ) {
         // let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable, disposed)| {
+        models.iter().for_each(|(id_geo, id_pass, renderindices, geoenable, instances, disposed)| {
             if geoenable.0 == false || disposed.0 == true { return; }
 
             if let Ok((_, bindgroups, pipeline, mut old_draw, _)) = passes.get_mut(id_pass.id()) {
                 if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
-                            let draw = DrawObj3D {
-                                pipeline: Some(pipeline.clone()),
-                                bindgroups: bindgroups.groups(),
-                                vertices: rendergeo.vertices(),
-                                instances: rendergeo.instances(),
-                                vertex: rendergeo.vertex_range(),
-                                indices: renderindices.apply(rendergeo),
+                            let draw = if instances.len() == 0 {
+                                DrawObj3D::Draw( Arc::new(DrawObj {
+                                    pipeline: Some(pipeline.clone()),
+                                    bindgroups: bindgroups.groups(),
+                                    vertices: rendergeo.vertices(),
+                                    instances: rendergeo.instances(),
+                                    vertex: rendergeo.vertex_range(),
+                                    indices: renderindices.apply(rendergeo),
+                                }))
+                            } else {
+                                DrawObj3D::Tmp( DrawObjTmp {
+                                    pipeline: Some(pipeline.clone()),
+                                    bindgroups: bindgroups.clone(),
+                                    vertices: rendergeo.vertices(),
+                                    instances: rendergeo.instances(),
+                                    vertex: rendergeo.vertex_range(),
+                                    indices: renderindices.apply(rendergeo),
+                                })
                             };
-                            *old_draw = PassDraw(Some(Arc::new(draw)));
+                            *old_draw = PassDraw(Some(draw));
                             // log::warn!("PassDraw: {:?}", id_pass.id());
                             // log::debug!("PassDrawLoaded: 1 Model");
                             // commands.entity(id_pass.id()).insert(PassDraw(Some(Arc::new(draw))));
@@ -455,7 +426,7 @@ use super::{
         >,
         models: Query<
             (
-                &DisposeReady, &GlobalTransform, &TransparentSortParam,
+                &GlobalEnable, &DisposeReady, &GlobalTransform, &TransparentSortParam, &InstancedMeshTransparentSortCollection,
                 (&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08)
             )
         >,
@@ -472,8 +443,11 @@ use super::{
             if enable.0 == false {
                 return;
             }
-            let mut list_sort_opaque: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
-            let mut list_sort_blend: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
+            // let mut list_sort_opaque: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
+            // let mut list_sort_blend: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
+            let mut opaque_list: Vec<TmpSortDrawOpaque> = vec![];
+            let mut transparent_list: Vec<TmpSortDrawTransparent> = vec![];
+            let mut draws: Vec<Arc<DrawObj>> = vec![];
             if let Ok((idscene, list_model, viewersize, viewport, viewposition, disposed)) = viewers.get(id_viewer.0) {
                 if disposed.0 { return; }
 
@@ -488,9 +462,9 @@ use super::{
                     }
                     list_model.0.iter().for_each(|id_obj| {
     
-                        if let Ok((disposed, nodeposition, rendersort, passrecord)) = models.get(id_obj.clone()) {
+                        if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passrecord)) = models.get(id_obj.clone()) {
                             // log::warn!("Renderer: A");
-                            if disposed.0 == true { return; }
+                            if disposed.0 == true || globalenable.0 == false { return; }
                             
                             let temp = nodeposition.position() - &viewposition.0;
                             let distance = temp.x * temp.x + temp.y * temp.y + temp.z * temp.z;
@@ -499,59 +473,92 @@ use super::{
                             for tag in passtag_orders.0.iter() {
                                 let pass = tag.as_pass();
 
+                                let is_transparent = passcfg.query(pass).blend();
 
-                                let list = if passcfg.query(pass).blend() {
-                                    &mut list_sort_blend
-                                } else {
-                                    &mut list_sort_opaque
-                                };
+                                // let list = if passcfg.query(pass).blend() {
+                                //     &mut list_sort_blend
+                                // } else {
+                                //     &mut list_sort_opaque
+                                // };
 
                                 if pass == EPassTag::PASS_TAG_01 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.0.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.0.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_02 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.1.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.1.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_03 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.2.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.2.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_04 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.3.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.3.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_05 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.4.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.4.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_06 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.5.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.5.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_07 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.6.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.6.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
                                 else if pass == EPassTag::PASS_TAG_08 {
                                     if let Ok((PassDraw(Some(draw)), pipeline)) = passes.get(passrecord.7.0) {
                                         // log::warn!("Renderer: B {:?}, {:?}", tag, passrecord.7.0);
-                                        list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        // list.push((draw.clone(), distance, rendersort.clone(), index, pipeline.key()));
+                                        collect_draw(
+                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
+                                        );
                                     }
                                 }
     
@@ -560,46 +567,60 @@ use super::{
                         }
                     });
     
-                    list_sort_opaque.sort_by(|a, b| {
-                        match a.3.cmp(&b.3) {
-                            std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
-                            std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
-                            std::cmp::Ordering::Equal => {
-                                match a.1.partial_cmp(&b.1) {
-                                    Some(ord) => ord,
-                                    None => {
-                                        b.4.cmp(&a.4)
-                                    },
-                                }
-                            }
-                        }
-                    });
-                    list_sort_blend.sort_by(|a, b| {
-                        match a.3.cmp(&b.3) {
-                            std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
-                            std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
-                            std::cmp::Ordering::Equal => {
-                                match a.2.cmp(&b.2) {
-                                    std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
-                                    std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
-                                    std::cmp::Ordering::Equal => {
-                                        match b.1.partial_cmp(&a.1) {
-                                            Some(ord) => ord,
-                                            None => {
-                                                b.4.cmp(&a.4)
-                                            },
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
+                    // list_sort_opaque.sort_by(|a, b| {
+                    //     match a.3.cmp(&b.3) {
+                    //         std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
+                    //         std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
+                    //         std::cmp::Ordering::Equal => {
+                    //             match a.1.partial_cmp(&b.1) {
+                    //                 Some(ord) => ord,
+                    //                 None => {
+                    //                     b.4.cmp(&a.4)
+                    //                 },
+                    //             }
+                    //         }
+                    //     }
+                    // });
+                    // list_sort_blend.sort_by(|a, b| {
+                    //     match a.3.cmp(&b.3) {
+                    //         std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
+                    //         std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
+                    //         std::cmp::Ordering::Equal => {
+                    //             match a.2.cmp(&b.2) {
+                    //                 std::cmp::Ordering::Less => { std::cmp::Ordering::Less },
+                    //                 std::cmp::Ordering::Greater => { std::cmp::Ordering::Greater },
+                    //                 std::cmp::Ordering::Equal => {
+                    //                     match b.1.partial_cmp(&a.1) {
+                    //                         Some(ord) => ord,
+                    //                         None => {
+                    //                             b.4.cmp(&a.4)
+                    //                         },
+                    //                     }
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // });
     
-                    list_sort_opaque.iter().for_each(|(entity, _ , _ , _, _)| {
-                        renderer.draws.list.push(entity.clone());
+                    // list_sort_opaque.iter().for_each(|(entity, _ , _ , _, _)| {
+                    //     renderer.draws.list.push(entity.clone());
+                    // });
+                    // list_sort_blend.iter().for_each(|(entity, _ , _ , _, _)| {
+                    //     renderer.draws.list.push(entity.clone());
+                    // });
+
+                    opaque_list.sort();
+                    transparent_list.sort();
+
+                    opaque_list.iter().for_each(|tmp| {
+                        if let Some(draw) = draws.get(tmp.idx as usize) {
+                            renderer.draws.list.push(draw.clone());
+                        }
                     });
-                    list_sort_blend.iter().for_each(|(entity, _ , _ , _, _)| {
-                        renderer.draws.list.push(entity.clone());
+                    transparent_list.iter().for_each(|tmp| {
+                        if let Some(draw) = draws.get(tmp.idx as usize) {
+                            renderer.draws.list.push(draw.clone());
+                        }
                     });
 
                     // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
@@ -744,5 +765,78 @@ fn pipeline(
             pipeline_center.add(&key_u64, pipeline, None);
         }
         pipeline_loader.request(id_pass, &key_u64);
+    }
+}
+
+fn collect_draw(
+    is_transparent: bool,
+    pass: u8,
+    pipeline: u64,
+    distance: f32,
+    draw: &DrawObj3D,
+    sort_param: &TransparentSortParam,
+    opaque_list: &mut Vec<TmpSortDrawOpaque>,
+    transparent_list: &mut Vec<TmpSortDrawTransparent>,
+    instancessortinfo: &InstancedMeshTransparentSortCollection,
+    draws: &mut Vec<Arc<DrawObj>>,
+) {
+    if is_transparent == false {
+        let index = draws.len();
+        let tmpdraw =  match draw {
+            DrawObj3D::Tmp(draw) => {
+                Arc::new(DrawObj {
+                    pipeline: draw.pipeline.clone(),
+                    bindgroups: draw.bindgroups.groups(),
+                    vertices: draw.vertices.clone(),
+                    instances: draw.instances.clone(),
+                    vertex: draw.vertex.clone(),
+                    indices: draw.indices.clone(),
+                })
+            },
+            DrawObj3D::Draw(draw) => draw.clone(),
+        };
+        draws.push(tmpdraw);
+        opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline });
+    } else {
+        match draw {
+            DrawObj3D::Tmp(draw) => {
+                if instancessortinfo.0.len() <= 1 || draw.instances.end == 1 {
+                    let index = draws.len();
+                    let tmpdraw = DrawObj {
+                        pipeline: draw.pipeline.clone(),
+                        bindgroups: draw.bindgroups.groups(),
+                        vertices: draw.vertices.clone(),
+                        instances: draw.instances.clone(),
+                        vertex: draw.vertex.clone(),
+                        indices: draw.indices.clone(),
+                    };
+                    draws.push(Arc::new(tmpdraw));
+                    transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue: sort_param.clone() });
+                } else {
+                    instancessortinfo.0.iter().for_each(|(alphaindex, range)| {
+                        if range.start < range.end && range.end <= draw.instances.end {
+                            let tmpdraw = DrawObj {
+                                pipeline: draw.pipeline.clone(),
+                                bindgroups: draw.bindgroups.groups(),
+                                vertices: draw.vertices.clone(),
+                                instances: range.clone(),
+                                vertex: draw.vertex.clone(),
+                                indices: draw.indices.clone(),
+                            };
+                            let index = draws.len();
+                            draws.push(Arc::new(tmpdraw));
+                            let mut queue = sort_param.clone();
+                            queue.index += *alphaindex;
+                            transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue });
+                        }
+                    });
+                }
+            },
+            DrawObj3D::Draw(draw) => {
+                let index = draws.len();
+                draws.push(draw.clone());
+                transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue: sort_param.clone() });
+            }
+        };
     }
 }

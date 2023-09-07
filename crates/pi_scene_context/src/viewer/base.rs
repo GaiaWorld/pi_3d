@@ -218,3 +218,7 @@ pub enum StageViewer {
     ViewerMatrix,
     ViewerRenderer,
 }
+
+pub trait TCullingPerformance {
+    fn culling_time(&mut self, ms: u32);
+}

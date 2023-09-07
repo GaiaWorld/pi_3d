@@ -34,7 +34,8 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(ActionListCPUParticleSystem::default());
         app.insert_resource(ActionListCPUParticleSystemState::default());
         app.insert_resource(ActionListCPUParticleSystemTrailMaterial::default());
-        app.insert_resource(ParticleSystemPerformance::default());
+        let mut temp = ParticleSystemPerformance::default(); temp.frame_time_ms = 16; temp.update_frame_time_ms = 33;
+        app.insert_resource(temp);
 
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleTrailBuffer>();
         let cfg2 = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleCommonBuffer>();
@@ -53,7 +54,7 @@ impl Plugin for PluginParticleSystem {
         app.configure_set(Update, StageParticleSystem::ParticleSysDirection.after(StageParticleSystem::ParticleSysParamOverLifetime));
         app.configure_set(Update, StageParticleSystem::ParticleSysParamBySpeed.after(StageParticleSystem::ParticleSysDirection));
         app.configure_set(Update, StageParticleSystem::ParticleSysMatrix.after(StageParticleSystem::ParticleSysParamBySpeed).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectMesh).before(ERunStageChap::Uniform).before(StageGeometry::GeometryLoaded));
+        app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectMesh).before(ERunStageChap::Uniform).after(StageGeometry::VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded));
 
         app.add_systems(Update, 
             sys_create_particle_calculator.in_set(ERunStageChap::Initial),
@@ -120,7 +121,7 @@ impl Plugin for PluginParticleSystem {
             (
                 sys_update_buffer.run_if(should_run),
                 sys_update_buffer_trail.run_if(should_run),
-            ).in_set(StageParticleSystem::ParticleSysUpdate),
+            ).chain().in_set(StageParticleSystem::ParticleSysUpdate),
         );
 
         app.add_systems(

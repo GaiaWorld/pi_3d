@@ -61,10 +61,10 @@ impl PassPipeline {
     }
 }
 #[derive(Component)]
-pub struct PassDraw(pub Option<Arc<DrawObj3D>>);
-impl TPassData<Option<Arc<DrawObj3D>>> for PassDraw {
-    fn new(val: Option<Arc<DrawObj3D>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<DrawObj3D>> { &self.0 }
+pub struct PassDraw(pub Option<DrawObj3D>);
+impl PassDraw {
+    pub fn new(val: Option<DrawObj3D>) -> Self { Self(val) }
+    pub fn val(&self) -> &Option<DrawObj3D> { &self.0 }
 }
 
 #[derive(Deref, DerefMut, Resource)]

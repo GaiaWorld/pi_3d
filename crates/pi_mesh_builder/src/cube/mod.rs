@@ -2,6 +2,7 @@
 
 use std::ops::Range;
 
+use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 
 use pi_scene_context::prelude::*;
@@ -182,6 +183,10 @@ impl CubeBuilder {
     // }
 // }
 
+
+#[derive(Resource, Default)]
+pub struct SingleCube(pub Option<Handle<EVertexBufferRange>>, pub Option<Handle<EVertexBufferRange>>);
+
 pub struct PluginCubeBuilder;
 impl Plugin for PluginCubeBuilder {
     // fn init(
@@ -196,15 +201,32 @@ impl Plugin for PluginCubeBuilder {
 
     fn build(&self, app: &mut App) {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
-        let mut data_map = app.world.get_resource_mut::<VertexBufferDataMap3D>().unwrap();
+        // let mut data_map = app.world.get_resource_mut::<VertexBufferDataMap3D>().unwrap();
 
-        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER)) {
-            ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        // if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER)) {
+        //     ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER), bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        // }
+        // if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES)) {
+        //     // log::warn!("CubeBuilder::KEY_BUFFER_INDICES");
+        //     ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        // }
+        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+        let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
+        let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        let mut singequad = SingleCube::default();
+        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER);
+        if let Some(bufferrange) = allocator.create_not_updatable_buffer(&device, &queue, &bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>(), None) {
+            if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
+                singequad.0 = Some(range);
+            }
         }
-        if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES)) {
-            // log::warn!("CubeBuilder::KEY_BUFFER_INDICES");
-            ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
+        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
+        if let Some(bufferrange) = allocator.create_not_updatable_buffer_for_index(&device, &queue, &bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>()) {
+            if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
+                singequad.1 = Some(range);
+            }
         }
+        app.insert_resource(singequad);
         // app.add_startup_system(setup);
     }
 }

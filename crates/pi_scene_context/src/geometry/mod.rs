@@ -49,7 +49,8 @@ impl Plugin for PluginGeometry {
         let instanceallocator = InstanceBufferAllocator::new(1024 * 1024, &mut allocator, device, queue);
         app.insert_resource(allocator);
         app.insert_resource(instanceallocator);
-        app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::new(GarbageEmpty(), false, 10 * 1024, 10 * 1000));
+        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<EVertexBufferRange>();
+        app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::create(GarbageEmpty(), cfg.flag, &cfg));
         app.insert_resource(GeometryVBLoader::default());
 
         app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(ERunStageChap::_InitialApply));
@@ -64,8 +65,18 @@ impl Plugin for PluginGeometry {
                 sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded),
             )
         );
-        app.add_systems(
-			Update,
+        // app.add_systems(
+		// 	Update,
+        //     (
+        //         sys_vertex_buffer_loaded_01,
+        //         sys_vertex_buffer_loaded_02,
+        //         sys_vertex_buffer_loaded_03,
+        //         sys_vertex_buffer_loaded_04,
+        //         sys_vertex_buffer_loaded_05,
+        //         sys_vertex_buffer_loaded_06,
+        //     ).chain().after(apply_deferred).in_set(StageGeometry::GeometryLoaded)
+        // );
+        app.add_systems(Update, 
             (
                 sys_vertex_buffer_loaded_01,
                 sys_vertex_buffer_loaded_02,
@@ -73,10 +84,8 @@ impl Plugin for PluginGeometry {
                 sys_vertex_buffer_loaded_04,
                 sys_vertex_buffer_loaded_05,
                 sys_vertex_buffer_loaded_06,
+                sys_geometry_enable
             ).chain().in_set(StageGeometry::GeometryLoaded)
-        );
-        app.add_systems(Update, 
-            sys_geometry_enable.after(sys_vertex_buffer_loaded_06).in_set(StageGeometry::GeometryLoaded)
         );
 
         app.add_systems(Update, 

@@ -54,7 +54,8 @@ pub fn sys_info_draw(
     draws: Query<(&PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue, &PassShader, &PassBindGroups, &PassPipeline, &PassDraw)>,
     geometries: Query<&RenderGeometryComp>,
     meshes: Query<&RenderGeometryEable>,
-    viewers: Query<&ModelListAfterCulling>,
+    viewers: Query<(&ModelList, &ModelListAfterCulling)>,
+    statecamera: Res<StateCamera>,
 ) {
     let mut count_set0 = 0;
     let mut count_set1 = 0;
@@ -90,13 +91,15 @@ pub fn sys_info_draw(
     });
 
     let mut viewer_cullings = vec![];
-    viewers.iter().for_each(|item| {
+    let mut viewer_includes = vec![];
+    viewers.iter().for_each(|(models, item)| {
         viewer_cullings.push(item.0.len());
+        viewer_includes.push(models.0.len())
     });
 
     log::warn!(
-        "ReadyGeo: {:?}-{:?}, Cullings: {:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-        count_ready_geo, count_ready_geo_mesh, viewer_cullings, count_set0, count_set1, count_effect, count_bindgroups, count_shader, count_pipeline, count_draw
+        "ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+        count_ready_geo, count_ready_geo_mesh, viewer_includes, viewer_cullings, statecamera.culling_time, count_set0, count_set1, count_effect, count_bindgroups, count_shader, count_pipeline, count_draw
     );
 }
 

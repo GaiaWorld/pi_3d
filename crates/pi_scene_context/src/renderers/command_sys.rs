@@ -208,6 +208,6 @@ impl ActionRenderer {
             //     log::debug!("{:?}", e);
             // }
         }
-        render_graphic.dump_graphviz();
+        // render_graphic.dump_graphviz();
     }
 }
