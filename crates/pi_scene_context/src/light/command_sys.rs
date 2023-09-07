@@ -73,7 +73,7 @@ pub fn sys_create_light(
         let passorders = PassTagOrders::new(vec![EPassTag::ShadowCast]);
 
         let render_node = RenderNode::new(id_renderer);
-        match render_graphic.add_node(entity.to_bits().to_string(), render_node) {
+        match render_graphic.add_node(id_renderer.to_bits().to_string(), render_node) {
             Ok(nodeid) => {
                 if let Some(mut cmd) = commands.get_entity(id_renderer) {
                     cmd.insert(GraphId(nodeid));

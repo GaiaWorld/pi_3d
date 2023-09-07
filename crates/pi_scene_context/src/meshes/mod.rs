@@ -45,6 +45,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceTilloffs::default());
         app.insert_resource(ActionListInstanceWorldMatrixs::default());
         app.insert_resource(ActionListMeshRenderIndiceRange::default());
+        app.insert_resource(ActionListMeshRenderVertexRange::default());
         app.insert_resource(ActionListBoneOffset::default());
 
         app.configure_set(Update, StageModel::AbstructMeshCommand.after(ERunStageChap::_InitialApply).before(ERunStageChap::Uniform));

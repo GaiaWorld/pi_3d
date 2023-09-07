@@ -6,8 +6,6 @@ use pi_scene_math::*;
 use crate::flags::*;
 use crate::object::ActionEntity;
 use crate::prelude::DisposeReady;
-use crate::prelude::NodeChilds;
-use crate::prelude::NodeParent;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;

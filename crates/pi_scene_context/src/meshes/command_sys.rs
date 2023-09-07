@@ -259,6 +259,23 @@ pub fn sys_act_mesh_render_indice(
     });
 }
 
+pub fn sys_act_mesh_render_vertex_range(
+    mut cmds: ResMut<ActionListMeshRenderVertexRange>,
+    mut items: Query<&mut VertexRenderRange>,
+    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshRenderVertexRange(entity, val, count)| {
+        // log::warn!("Range: {:?}", val);
+        if let Ok(mut item) = items.get_mut(entity) {
+            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+            *item = VertexRenderRange(val);
+        } else {
+            if count < 2 {
+                cmds.push(OpsMeshRenderVertexRange(entity, val, count + 1));
+            }
+        }
+    });
+}
 
 
 pub struct ActionMesh;
@@ -351,6 +368,7 @@ impl ActionMesh {
             .insert(RecordInstanceBoneoffset::default())
             .insert(IndiceRenderRange::default())
             .insert(RecordIndiceRenderRange::default())
+            .insert(VertexRenderRange::default())
             .insert(GeometryBounding::default())
             .insert(GeometryCullingMode::default())
             .insert(InstancedMeshTransparentSortCollection(vec![]))

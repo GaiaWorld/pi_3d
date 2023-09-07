@@ -3,7 +3,6 @@ use pi_engine_shell::prelude::*;
 
 use crate::materials::shader_effect::*;
 
-use super::texture::*;
 
 // pub type PluginTextureSlot01Load = PluginImageTextureViewLoad<TextureSlot01, EffectBindTexture2D01Comp>;
 // pub type PluginTextureSlot02Load = PluginImageTextureViewLoad<TextureSlot02, EffectBindTexture2D02Comp>;

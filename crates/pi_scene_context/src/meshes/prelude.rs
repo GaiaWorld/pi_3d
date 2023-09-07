@@ -40,6 +40,7 @@ pub struct ActionSetMesh<'w> {
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
     pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
     pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
+    pub vertexrange: ResMut<'w, ActionListMeshRenderVertexRange>,
     pub bounding: ResMut<'w, ActionListMeshBounding>,
     pub boundingculling: ResMut<'w, ActionListMeshBoundingCullingMode>,
 }
