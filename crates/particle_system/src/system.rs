@@ -272,18 +272,18 @@ pub fn sys_rotation_over_life_time(
 
 pub fn sys_size_over_life_time(
     calculators: Query<&ParticleCalculatorSizeOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
-    particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items)| {
+    particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, startsizes, mut items)| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(calculator) = calculators.get(ids.calculator.0) {
             let calculator = &calculator.0;
             // let newids = &ids.newids;
             let activeids = &ids.actives;
-            items.run(activeids, ages, randoms, calculator);
+            items.run(activeids, ages, &startsizes.0, randoms, calculator);
         }
     });
     performance.sys_size_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;

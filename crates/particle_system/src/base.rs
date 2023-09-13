@@ -1115,13 +1115,16 @@ impl ParticleLocalScaling {
         &mut self,
         activeids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
+        startsizes: &Vec<Vector3>,
         randomlist: &Vec<BaseRandom>,
         calculator: &SizeOverLifetime,
     ) {
         activeids.iter().for_each(|idx| {
             let age = ages.get(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
+            let startsize = startsizes.get(*idx).unwrap();
             let item = self.0.get_mut(*idx).unwrap();
+            item.copy_from(startsize);
             calculator.modify(item, age.progress, randoms);
         });
     }
