@@ -40,7 +40,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         });
     }
 
-    fn ray_test<F: TFilter>(&self, org: Vector3, dir: Vector3, filter: F, result: &mut Option<Entity>) {
+    fn ray_test<F: TFilter>(&self, org: Vector3, dir: Vector3, result: &mut Option<Entity>) {
         todo!()
     }
     

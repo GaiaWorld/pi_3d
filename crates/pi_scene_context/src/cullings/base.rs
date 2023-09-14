@@ -18,7 +18,6 @@ pub trait TBoundingInfoCalc {
         &self,
         org: Vector3,
         dir: Vector3,
-        filter: F,
         result: &mut Option<Entity>,
     );
 }
@@ -181,17 +180,16 @@ impl SceneBoundingPool {
         }
     }
 
-    pub fn ray_test<F: TFilter>(
+    pub fn ray_test(
         &self,
         org: Vector3,
         dir: Vector3,
-        filter: F,
         result: &mut Option<Entity>,
     ) {
         match self {
             SceneBoundingPool::List(_) => todo!(),
             SceneBoundingPool::QuadTree() => todo!(),
-            SceneBoundingPool::OctTree(item) => item.ray_test(org, dir, filter, result),
+            SceneBoundingPool::OctTree(item) => item.ray_test(org, dir, result),
         }
     }
 }

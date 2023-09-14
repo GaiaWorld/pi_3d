@@ -13,11 +13,11 @@ use pi_hash::XHashSet;
 use pi_scene_math::{Matrix, Number, Vector3, Vector4};
 use pi_spatial::oct_helper::OctTree;
 
-use super::base::{TBoundingInfoCalc, BoundingKey, TFilter};
+use super::base::{BoundingKey, TBoundingInfoCalc, TFilter};
 
 pub struct BoundingOctTree {
     pub fast: XHashSet<Entity>,
-    pub tree: OctTree<BoundingKey, (Isometry3<f32>, Cuboid)>
+    pub tree: OctTree<BoundingKey, (Isometry3<f32>, Cuboid)>,
 }
 
 impl TBoundingInfoCalc for BoundingOctTree {
@@ -62,14 +62,14 @@ impl TBoundingInfoCalc for BoundingOctTree {
     fn culling<F: TFilter>(&self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
         if let Some(frustum) = compute_frustum(transform) {
             let aabb = frustum.local_aabb();
-    
+
             let aabb = Aabb::new(
                 Point3::new(aabb.mins.x, aabb.mins.y, aabb.mins.z),
                 Point3::new(aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
             );
-    
+
             let mut args: (ConvexPolyhedron, &mut Vec<Entity>, F) = (frustum, result, filter);
-    
+
             self.tree.query(&aabb, intersects, &mut args, ab_query_func);
         }
 
@@ -82,7 +82,6 @@ impl TBoundingInfoCalc for BoundingOctTree {
         &self,
         origin: Vector3,
         dir: Vector3,
-        filter: F,
         result: &mut Option<Entity>,
     ) {
         let origin = Point3::new(origin.x, origin.y, origin.z);
@@ -92,7 +91,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
         let max = Point3::new(origin.x + temp.x, origin.y + temp.y, origin.z + temp.z);
         let aabb = Aabb::new(origin, max);
 
-        let mut args: (Ray, f32, &mut Option<Entity>, F) = (ray, 0., result, filter);
+        let mut args: (Ray, f32, &mut Option<Entity>) = (ray, 0., result);
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
@@ -114,18 +113,16 @@ pub fn ab_query_func<F: TFilter>(
     }
 }
 
-pub fn ray_test_func<F: TFilter>(
-    arg: &mut (Ray, f32, &mut Option<Entity>, F),
+pub fn ray_test_func(
+    arg: &mut (Ray, f32, &mut Option<Entity>),
     id: BoundingKey,
     _aabb: &Aabb,
     bind: &(Isometry3<f32>, Cuboid),
 ) {
-    if arg.3.filter(id.0) {
-        if let Some(distance) = bind.1.cast_ray(&bind.0, &arg.0, f32::MAX, false) {
-            if distance < arg.1 {
-                arg.1 = distance;
-                arg.2.replace(id.0);
-            }
+    if let Some(distance) = bind.1.cast_ray(&bind.0, &arg.0, f32::MAX, false) {
+        if distance < arg.1 {
+            arg.1 = distance;
+            arg.2.replace(id.0);
         }
     }
 }
@@ -140,9 +137,7 @@ fn intersects(a: &Aabb, b: &Aabb) -> bool {
         && a.maxs.z > b.mins.z
 }
 
-pub fn compute_frustum(
-    view_projection: &Matrix
-) -> Option<ConvexPolyhedron> {
+pub fn compute_frustum(view_projection: &Matrix) -> Option<ConvexPolyhedron> {
     let t = view_projection.try_inverse().unwrap();
 
     let p0 = t * Vector4::new(1., 1., 1., 1.);
@@ -210,8 +205,8 @@ impl Plugin for PluginBoundingOctTree {
         // app.insert_resource(ActionListRemoveBindingInfo::default());
 
         // app.add_systems(
-		// 	Update,
-		// 	(
+        // 	Update,
+        // 	(
         //     sys_add_binding_info,
         //     sys_remove_binding_info,
         //     sys_check_binding_info,

@@ -16,6 +16,7 @@ mod quad_tree;
 mod base;
 mod command;
 mod command_sys;
+mod ray_test;
 
 pub mod prelude;
 
