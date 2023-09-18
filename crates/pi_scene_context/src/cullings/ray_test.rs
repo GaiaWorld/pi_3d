@@ -13,17 +13,21 @@ use crate::{
 pub struct RayTest(Entity, Entity, f32, f32);
 pub type ActionListRayTest = ActionList<RayTest>;
 
+#[derive(Resource, Default)]
+pub struct RayTestID(Option<Entity>);
+
 pub struct PluginRayTest;
 impl Plugin for PluginRayTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListRayTest::default());
+        app.insert_resource(RayTestID::default());
     }
 }
 
 pub fn sys_ray_test(
     mut rays: ResMut<ActionListRayTest>,
+    mut res : ResMut<RayTestID>,
     transforms: Query<&WorldMatrix>,
-    // mut viewers: Query<&ViewerTransformMatrix>,
     scenes: Query<(&SceneBoundingPool, &ViewerTransformMatrix)>,
 ) {
     rays.drain()
@@ -43,6 +47,7 @@ pub fn sys_ray_test(
                     let dir = pos - org;
                     let mut result = None;
                     pool.ray_test(org, dir, &mut result);
+                    res.0 = result;
                 }
             }
         });

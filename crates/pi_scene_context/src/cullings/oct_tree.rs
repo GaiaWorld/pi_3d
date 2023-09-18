@@ -78,7 +78,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
         });
     }
 
-    fn ray_test<F: TFilter>(
+    fn ray_test(
         &self,
         origin: Vector3,
         dir: Vector3,

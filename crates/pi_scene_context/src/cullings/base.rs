@@ -14,7 +14,7 @@ pub trait TBoundingInfoCalc {
     fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number));
     fn remove(&mut self, key: Entity);
     fn culling<F: TFilter>(&self, vp: &Matrix, filter: F, result: &mut Vec<Entity>);
-    fn ray_test<F: TFilter>(
+    fn ray_test(
         &self,
         org: Vector3,
         dir: Vector3,
