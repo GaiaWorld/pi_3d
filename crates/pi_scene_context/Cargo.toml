@@ -20,7 +20,7 @@ serde_derive    = "1.0"
 
 parry3d         = "0.13"
 lazy_static     = "1.4"
-pi_spatial      = "0.4"
+pi_spatial      = "0.5"
 
 
 approx          = "0.5"
