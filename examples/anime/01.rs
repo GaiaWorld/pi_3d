@@ -121,7 +121,8 @@ pub fn main() {
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     // bevy_mod_debugdump::print_main_schedule(&mut app);
-    
-    app.run()
+
+    // app.run()
+    loop { app.update(); }
 
 }

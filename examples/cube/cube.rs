@@ -118,6 +118,7 @@ fn setup(
     let instancestate = 0;
     meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
     meshcmds.indexrange.push(OpsMeshRenderIndiceRange::ops(cube, Some(3), Some(12)));
+    // meshcmds.vertexrange.push(OpsMeshRenderVertexRange::ops(cube, Some(0), Some(12)));
     meshcmds.cullmode.push(OpsCullMode::ops(cube, CullMode::Off));
     
     let id_geo = commands.spawn_empty().id();
@@ -140,7 +141,8 @@ pub fn main() {
     app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
-    app.run()
+    // app.run()
+    loop { app.update(); }
 
     // let mut shell = App::new(
     //     RenderOptions {

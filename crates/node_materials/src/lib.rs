@@ -34,10 +34,10 @@ pub mod prelude;
 pub mod animation_sys;
 
 #[derive(Default, Resource, Deref, DerefMut)]
-pub struct NodeMaterialBlocks(pub XHashMap<&'static str, NodeMaterialBlockInfo>);
+pub struct NodeMaterialBlocks(pub XHashMap<Atom, NodeMaterialBlockInfo>);
 impl NodeMaterialBlocks {
     pub fn regist<T: TNodeMaterialBlock>(&mut self) {
-        self.0.insert(T::KEY, T::info());
+        self.0.insert(Atom::from(T::KEY), T::info());
     }
 }
 

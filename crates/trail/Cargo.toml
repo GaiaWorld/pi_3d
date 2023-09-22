@@ -15,7 +15,7 @@ pi_hash         = "0.1"
 pi_assets       = "0.13"
 pi_atom         = { version = "0.2", features = ["serde"] }
 
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
+wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
 bevy            = { version = "0.11", default-features = false }
 bytemuck        = { version = "1.4", features = ["derive"] }
 

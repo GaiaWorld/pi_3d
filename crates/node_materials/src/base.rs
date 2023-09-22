@@ -5,7 +5,7 @@ pub trait TNodeMaterialBlock {
     const KEY: &'static str;
     const FS_DEFINED: &'static str;
     const VS_DEFINED: &'static str;
-    // fn mat4() -> Vec<UniformPropertyMat4> { vec![] }
+    fn mat4() -> Vec<UniformPropertyMat4> { vec![] }
     // fn mat2() -> Vec<UniformPropertyMat2> { vec![] }
     fn vec4() -> Vec<UniformPropertyVec4> { vec![] }
     fn vec2() -> Vec<UniformPropertyVec2> { vec![] }
@@ -14,12 +14,12 @@ pub trait TNodeMaterialBlock {
     fn uint() -> Vec<UniformPropertyUint> { vec![] }
     fn textures() -> Vec<UniformTexture2DDesc> { vec![] }
     fn varyings() -> Vec<Varying> { vec![] }
-    fn depends() -> Vec<&'static str> { vec![] }
+    fn depends() -> Vec<Atom> { vec![] }
     fn info() -> NodeMaterialBlockInfo {
         NodeMaterialBlockInfo {
-            fs: Self::FS_DEFINED,
-            vs: Self::VS_DEFINED,
-            // mat4: Self::mat4(),
+            fs: String::from(Self::FS_DEFINED),
+            vs: String::from(Self::VS_DEFINED),
+            mat4: Self::mat4(),
             // mat2: Self::mat2(),
             vec4: Self::vec4(),
             vec2: Self::vec2(),
@@ -33,10 +33,11 @@ pub trait TNodeMaterialBlock {
     }
 }
 
+#[derive(Clone)]
 pub struct NodeMaterialBlockInfo {
-    pub fs: &'static str,
-    pub vs: &'static str,
-    // pub mat4: Vec<UniformPropertyMat4>,
+    pub fs: String,
+    pub vs: String,
+    pub mat4: Vec<UniformPropertyMat4>,
     // pub mat2: Vec<UniformPropertyMat2>,
     pub vec4: Vec<UniformPropertyVec4>,
     pub vec2: Vec<UniformPropertyVec2>,
@@ -45,11 +46,11 @@ pub struct NodeMaterialBlockInfo {
     pub uint: Vec<UniformPropertyUint>,
     pub textures: Vec<UniformTexture2DDesc>,
     pub varyings: Vec<Varying>,
-    pub depends: Vec<&'static str>,
+    pub depends: Vec<Atom>,
 }
 
 pub struct NodeMaterialBuilder {
-    pub blocks: XHashSet<&'static str>,
+    pub blocks: XHashSet<Atom>,
     pub values: MaterialValueBindDesc,
     pub textures: Vec<UniformTexture2DDesc>,
     pub varyings: Varyings,
@@ -73,9 +74,9 @@ impl NodeMaterialBuilder {
             defines: ShaderDefinesSet::default(),
         }
     }
-    pub fn include(&mut self, key: &'static str, infos: &XHashMap<&'static str, NodeMaterialBlockInfo>) {
-        let mut keys: Vec<&str> = vec![key];
-        let mut tempkeys = vec![key];
+    pub fn include(&mut self, key: &Atom, infos: &XHashMap<Atom, NodeMaterialBlockInfo>) {
+        let mut keys: Vec<Atom> = vec![key.clone()];
+        let mut tempkeys = vec![key.clone()];
 
         loop {
             if tempkeys.len() == 0 {
@@ -84,10 +85,10 @@ impl NodeMaterialBuilder {
 
             let mut temp = vec![];
             tempkeys.drain(..).for_each(|key| {
-                if let Some(info) = infos.get(key) {
+                if let Some(info) = infos.get(&key) {
                     info.depends.iter().for_each(|v| {
-                        temp.push(*v);
-                        keys.push(*v);
+                        temp.push(v.clone());
+                        keys.push(v.clone());
                     });
                 }
             });
@@ -96,15 +97,15 @@ impl NodeMaterialBuilder {
 
         let len = keys.len();
         for i in 0..len {
-            let key: &str = keys[len - i - 1];
-            if !self.blocks.contains(key) {
+            let key: &Atom = keys.get(len - i - 1).unwrap();
+            if !self.blocks.contains(&key) {
                 if let Some(info) = infos.get(key) {
     
-                    self.blocks.insert(key);
+                    self.blocks.insert(key.clone());
     
-                    // info.mat4.iter().for_each(|v| {
-                    //     self.values.mat4_list.push(v.clone());
-                    // });
+                    info.mat4.iter().for_each(|v| {
+                        self.values.mat4_list.push(v.clone());
+                    });
                     // info.mat2.iter().for_each(|v| {
                     //     self.values.mat2_list.push(v.clone());
                     // });
@@ -132,15 +133,16 @@ impl NodeMaterialBuilder {
                         self.varyings.0.push(v.clone());
                     });
         
-                    self.fs_define += info.fs;
-                    self.vs_define += info.vs;
+                    self.fs_define += info.fs.as_str();
+                    self.vs_define += info.vs.as_str();
                 }
             }
         }
     }
     pub fn apply<T: TNodeMaterialBlock>(&mut self) {
-        if !self.blocks.contains(T::KEY) {
-            self.blocks.insert(T::KEY);
+        let key = Atom::from(T::KEY);
+        if !self.blocks.contains(&key) {
+            self.blocks.insert(key);
 
             // T::mat4().drain(..).for_each(|v| {
             //     self.values.mat4_list.push(v);

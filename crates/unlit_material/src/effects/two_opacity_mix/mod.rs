@@ -47,27 +47,27 @@ impl TwoOpacityMixShader {
             UniformPropertyUint(Atom::from(Self::KEY_MIX_CHANNEL), BlockTextureChannel::CHANNEL_A)  
         );
 
-        nodemat.include(BlockFloat::KEY, infos);
-        nodemat.include(BlockColorGray::KEY, infos);
-        nodemat.include(BlockTextureChannel::KEY, infos);
-        nodemat.include(BlockFresnel::KEY, infos);
-        nodemat.include(BlockViewDirection::KEY, infos);
-        nodemat.include(BlockUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockMainTexture::KEY, infos);
-        nodemat.include(BlockMainTextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockOpacity::KEY, infos);
-        nodemat.include(BlockOpacityTexture::KEY, infos);
-        nodemat.include(BlockOpacityTextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockOpacity2Texture::KEY, infos);
-        nodemat.include(BlockOpacity2TextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockMixTexture::KEY, infos);
-        nodemat.include(BlockMixTextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockOpacityFresnel::KEY, infos);
-        nodemat.include(BlockEmissiveTexture::KEY, infos);
-        nodemat.include(BlockEmissiveTextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockEmissiveFresnel::KEY, infos);
-        nodemat.include(BlockMaskTexture::KEY, infos);
-        nodemat.include(BlockMaskTextureUVOffsetSpeed::KEY, infos);
+        nodemat.include(&Atom::from(BlockFloat::KEY), infos);
+        nodemat.include(&Atom::from(BlockColorGray::KEY), infos);
+        nodemat.include(&Atom::from(BlockTextureChannel::KEY), infos);
+        nodemat.include(&Atom::from(BlockFresnel::KEY), infos);
+        nodemat.include(&Atom::from(BlockViewDirection::KEY), infos);
+        nodemat.include(&Atom::from(BlockUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockMainTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockMainTextureUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacity::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacityTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacityTextureUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacity2Texture::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacity2TextureUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockMixTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockMixTextureUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacityFresnel::KEY), infos);
+        nodemat.include(&Atom::from(BlockEmissiveTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockEmissiveTextureUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockEmissiveFresnel::KEY), infos);
+        nodemat.include(&Atom::from(BlockMaskTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockMaskTextureUVOffsetSpeed::KEY), infos);
         
         nodemat.meta()
     }

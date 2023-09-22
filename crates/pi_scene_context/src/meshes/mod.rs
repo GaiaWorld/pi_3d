@@ -73,6 +73,7 @@ impl crate::Plugin for PluginMesh {
                 sys_act_instance_alpha,
                 sys_act_instance_tilloff,
                 sys_act_mesh_render_indice,
+                sys_act_mesh_render_vertex_range,
             ).before(sys_instance_color).in_set(StageModel::AbstructMeshCommand)
         );
         app.add_systems(Update, 

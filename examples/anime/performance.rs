@@ -143,6 +143,7 @@ pub fn main() {
 
     app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
     
-    app.run()
+    // app.run()
+    loop { app.update(); }
 
 }

@@ -124,18 +124,31 @@ pub fn test_plugins() -> App {
 
     let mut app = App::default();
 
+    let width = 800;
+    let height = 600;
+
 	let mut window_plugin = WindowPlugin::default();
     if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(800, 600);
+        primary_window.resolution.set_physical_resolution(width, height);
     }
+	let (w, eventloop) = {
+		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
+		let event_loop = pi_winit::event_loop::EventLoopBuilder::new().with_any_thread(true).build();
+		let window = pi_winit::window::Window::new(&event_loop).unwrap();
+		(window, event_loop)
+	};
 
     app.insert_resource(AssetMgrConfigs::default());
     app.add_plugins(
         (
             InputPlugin::default(),
             window_plugin,
+        )
+    );
+    app.add_plugins(
+        (
             AccessibilityPlugin,
-            bevy::winit::WinitPlugin::default(),
+            pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
             pi_bevy_asset::PiAssetPlugin::default(),
             PiRenderPlugin::default(),
             PluginLocalLoad,
@@ -178,11 +191,20 @@ pub fn test_plugins_with_gltf() -> App {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut app = App::default();
+    let width = 800;
+    let height = 600;
 
 	let mut window_plugin = WindowPlugin::default();
     if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(800, 600);
+        primary_window.resolution.set_physical_resolution(width, height);
     }
+    
+	let w = {
+		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
+		let event_loop = pi_winit::event_loop::EventLoopBuilder::new().with_any_thread(true).build();
+		let window = pi_winit::window::Window::new(&event_loop).unwrap();
+		window
+	};
 
     let mut cfg = AssetMgrConfigs::default();
     cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 100  });
@@ -191,8 +213,12 @@ pub fn test_plugins_with_gltf() -> App {
         (
             InputPlugin::default(),
             window_plugin,
+        )
+    );
+    app.add_plugins(
+        (
             AccessibilityPlugin,
-            bevy::winit::WinitPlugin::default(),
+            pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
             pi_bevy_asset::PiAssetPlugin::default(),
             PiRenderPlugin::default(),
             PluginLocalLoad,

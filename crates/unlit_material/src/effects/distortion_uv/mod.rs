@@ -41,16 +41,16 @@ impl DistortionUVShader {
         nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_MODE), 0.));
         nodemat.values.vec2_list.push(UniformPropertyVec2(Atom::from(Self::KEY_STRENGTH), [0.1, 0.1]));
 
-        nodemat.include(BlockFloat::KEY, infos);
-        nodemat.include(BlockTextureChannel::KEY, infos);
-        nodemat.include(BlockUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockMainTexture::KEY, infos);
-        nodemat.include(BlockMainTextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockOpacity::KEY, infos);
-        nodemat.include(BlockOpacityTexture::KEY, infos);
-        nodemat.include(BlockOpacityTextureUVOffsetSpeed::KEY, infos);
-        nodemat.include(BlockMaskTexture::KEY, infos);
-        nodemat.include(BlockMaskTextureUVOffsetSpeed::KEY, infos);
+        nodemat.include(&Atom::from(BlockFloat::KEY), infos);
+        nodemat.include(&Atom::from(BlockTextureChannel::KEY), infos);
+        nodemat.include(&Atom::from(BlockUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockMainTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockMainTextureUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacity::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacityTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockOpacityTextureUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockMaskTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockMaskTextureUVOffsetSpeed::KEY), infos);
         
         nodemat.meta()
     }

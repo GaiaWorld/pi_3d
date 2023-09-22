@@ -124,7 +124,15 @@ pub fn main() {
 
     app.add_systems(Startup, setup);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
-    
-    app.run()
+
+    while !app.ready() {
+        #[cfg(not(target_arch = "wasm32"))]
+        bevy::tasks::tick_global_task_pools_on_main_thread();
+    }
+    app.finish();
+    app.cleanup();
+
+    // app.run()
+    loop { app.update(); }
 
 }

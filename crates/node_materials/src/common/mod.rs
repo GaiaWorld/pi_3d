@@ -1,3 +1,5 @@
+use pi_atom::Atom;
+
 use crate::base::TNodeMaterialBlock;
 
 
@@ -44,9 +46,9 @@ impl TNodeMaterialBlock for BlockTextureChannel {
 
     const VS_DEFINED: &'static str = "";
 
-    fn depends() -> Vec<&'static str> {
+    fn depends() -> Vec<Atom> {
         vec![
-            BlockColorGray::KEY
+            Atom::from(BlockColorGray::KEY)
         ]
     }
 }

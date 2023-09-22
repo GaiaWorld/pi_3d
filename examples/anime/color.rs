@@ -141,6 +141,7 @@ pub fn main() {
 
     // bevy_mod_debugdump::print_main_schedule(&mut app);
 
-    app.run()
+    // app.run()
+    loop { app.update(); }
 
 }

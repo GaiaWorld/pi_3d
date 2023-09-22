@@ -48,15 +48,15 @@ pi_animation            = { version = "0.1", registry = "yn" }
 pi_curves               = { version = "0.1", registry = "yn" }
 pi_postprocess          = { version = "0.1", registry = "yn" }
 
-pi_atom                 = { version="0.2", features = ["serde"] }
+pi_atom                 = { version = "0.2", features = ["serde"] }
 pi_hal                  = { version = "0.1", registry = "yn" }
 
 pi_assets               = "0.13"
 pi-async-rt             = "0.1"
 
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
-bevy                = { version="0.11", default-features = false }
-bevy_mod_debugdump  = { version="0.8" }
+wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
+bevy                = { version = "0.11", default-features = false }
+bevy_mod_debugdump  = { version = "0.8" }
 
 log                 = "0.4"
 env_logger          = "0.9"
@@ -100,8 +100,11 @@ pi_window_renderer = { path="../pi_bevy/crates/window_renderer" }
 pi_bevy_post_process = { path="../pi_bevy/crates/post_process" }
 
 [dev-dependencies]
+wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["wgpu"] }
+wgpu1           = { version = "0.16", features = ["glsl"],  package = "wgpu" }
+pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
-bevy            = { version="0.11", default-features = false, features=["bevy_winit"] }
+bevy            = { version = "0.11", default-features = false, features = ["bevy_winit"] }
 pi_wy_rng       = "0.1"
 pi_gltf         = { git = "https://github.com/GaiaWorld/pi_gltf.git", features = ["extras"] }
 

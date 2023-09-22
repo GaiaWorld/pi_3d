@@ -187,6 +187,7 @@ pub fn main() {
     log::warn!("State: {}", InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1);
     log::warn!("State: {}", InstanceState::INSTANCE_BASE & InstanceState::INSTANCE_COLOR & InstanceState::INSTANCE_TILL_OFF_1);
     
-    app.run()
+    // app.run()
+    loop { app.update(); }
 
 }

@@ -47,9 +47,9 @@ unsafe impl pi_slotmap::Key for BoundingKey {
 #[derive(Default)]
 pub enum ECullingStrategy {
     /// 不用检测直接通过检测
-    #[default]
     None,
     /// 检测 包围球中心 在不在 视锥, 检测 包围球 在不在 视锥
+    #[default]
     Optimistic,
     /// 检测 包围球中心 在不在 视锥, 检测 包围球 在不在 视锥, 检测 包围盒 在不在 视锥
     STANDARD,
@@ -73,8 +73,8 @@ impl GeometryBounding {
         CoordinateSytem3::transform_coordinates(&self.maximum, matrix, &mut temp);
         let max = (temp.x, temp.y, temp.z);
         (
-            (Number::min(min.0, max.0), Number::min(min.0, max.0), Number::min(min.0, max.0)),
-            (Number::max(min.0, max.0), Number::max(min.0, max.0), Number::max(min.0, max.0))
+            (Number::min(min.0, max.0), Number::min(min.1, max.1), Number::min(min.2, max.2)),
+            (Number::max(min.0, max.0), Number::max(min.1, max.1), Number::max(min.2, max.2))
         )
     }
 }
@@ -137,7 +137,7 @@ impl SceneBoundingPool {
                         items.add_fast(entity);
                     },
                     ECullingStrategy::Optimistic => {
-                        // log::warn!("1111");
+                        // log::warn!("{:?}", (entity, &matrix.0));
                         let (min, max) = info.minmax(&matrix.0);
                         items.add(entity, min, max)
                     },

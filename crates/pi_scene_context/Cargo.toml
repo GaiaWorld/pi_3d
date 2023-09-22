@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["3d scene"]
 
 [dependencies]
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
+wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
 env_logger      = "0.9"
 log             = "0.4"
 smallvec        = "1.9"
@@ -20,13 +20,13 @@ serde_derive    = "1.0"
 
 parry3d         = "0.13"
 lazy_static     = "1.4"
-pi_spatial      = "0.4"
+pi_spatial      = "0.5"
 
 
 approx          = "0.5"
 naga            = { version = "0.12", features = [ "glsl-in" ] }
 bytemuck        = { version = "1.4", features = [ "derive" ] }
-bevy            = { version="0.11", default-features = false }
+bevy            = { version = "0.11", default-features = false }
 image           = "0.24"
 winit           = { version = "0.27", registry = "yn" }
 pollster        = "0.2"
