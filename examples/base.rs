@@ -120,7 +120,7 @@ impl AddEvent for App {
 }
 
 pub fn test_plugins() -> App {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    // env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut app = App::default();
 
