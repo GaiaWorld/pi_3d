@@ -10,16 +10,13 @@ use crate::{
     materials::prelude::*,
     pass::{EPassTag, PassTagOrders},
     transforms::command_sys::*,
-    prelude::{GlobalEnable, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady},
+    prelude::{GlobalEnable, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeReady, LayerMask},
 };
 
 use super::{
     base::{LightDirection, Light, LightingMode},
     point::ShadowAngle,
-    shadow_generator::{
-        base::*,
-        ShaderShadowGenerator
-    },
+    shadow_generator::*,
     command::*,
 };
 
@@ -40,7 +37,7 @@ pub fn sys_create_light(
         matcreatecmds.push(OpsMaterialCreate(mat, Atom::from(ShaderShadowGenerator::KEY), EPassTag::ShadowCast));
         matusecmds.push(OpsMaterialUse::ops(entity, mat));
 
-        let id_renderer = commands.spawn_empty().id();
+        let id_renderer = entity;
 
         let mut viewer_renderers = ViewerRenderersInfo::default();
         
@@ -92,71 +89,77 @@ pub fn sys_create_light(
                     renderercmds.push(OpsRendererCommand::AutoClearStencil(id_renderer, true));
                 }
             },
-            Err(_) => {},
+            Err(_) => {
+                log::warn!("Light render_graphic Error!");
+            },
         }
+        commands.get_entity(entity).unwrap().insert(viewer_renderers);
     });
 }
 
 
 pub fn sys_act_light_param(
     mut cmds: ResMut<ActionListLightParam>,
-    mut commands: Commands,
+    mut shadowlights: Query<(&mut ShadowMinZ, &mut ShadowMaxZ, &mut ShadowFrustumSize, &mut ShadowBias, &mut ShadowNormalBias, &mut ShadowDepthScale, &mut ShadowAtlasSize, &mut ShadowEnable, &mut ViewerSize)>,
+    mut directlights: Query<&mut LightDirection>,
+    mut lights: Query<(&mut Light, &mut LightingMode)>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             ELightModifyCommand::ShadowMinz(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowMinZ(val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.0 = ShadowMinZ(val);
                 }
             },
             ELightModifyCommand::ShadowMaxz(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowMaxZ(val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.1 = ShadowMaxZ(val);
                 }
             },
             ELightModifyCommand::ShadowFrustumSize(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowFrustumSize(val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.2 = ShadowFrustumSize(val);
                 }
             },
             ELightModifyCommand::Directional(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(LightDirection(val));
+                if let Ok(mut item) = directlights.get_mut(entity) {
+                    *item = LightDirection(val);
                 }
             },
             ELightModifyCommand::Bias(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowBias(val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.3 = ShadowBias(val);
                 }
             },
             ELightModifyCommand::NormalBias(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowNormalBias(val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.4 = ShadowNormalBias(val);
                 }
             },
             ELightModifyCommand::DepthScale(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowDepthScale(val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.5 = ShadowDepthScale(val);
                 }
             },
             ELightModifyCommand::AtlasSize(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowAtlasSize(val)).insert(ViewerSize(val, val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.6 = ShadowAtlasSize(val);
+                    *item.8 = ViewerSize(val, val);
                 }
             },
             ELightModifyCommand::LightType(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(val);
+                if let Ok(mut item) = lights.get_mut(entity) {
+                    *item.0 = val;
                 }
             },
             ELightModifyCommand::LightingType(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(val);
+                if let Ok(mut item) = lights.get_mut(entity) {
+                    *item.1 = val;
                 }
             },
             ELightModifyCommand::ShadowEnable(entity, val) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(ShadowEnable(val));
+                if let Ok(mut item) = shadowlights.get_mut(entity) {
+                    *item.7 = ShadowEnable(val);
                 }
             },
         }
@@ -164,17 +167,17 @@ pub fn sys_act_light_param(
 }
 
 pub fn sys_light_render_modify(
-    lights: Query<
+    mut lights: Query<
         (
-            ObjectID, &Light, &ShadowEnable, &GlobalEnable, &ViewerRenderersInfo, &ShadowAtlasSize,
+            ObjectID, &Light, &ShadowEnable, &GlobalEnable, &ViewerRenderersInfo, &ShadowAtlasSize, &mut ViewerActive
         ),
-        Or<(Changed<Light>, Changed<ShadowEnable>, &GlobalEnable, Changed<ShadowAtlasSize>, )>
+        Or<(Changed<Light>, Changed<ShadowEnable>, Changed<GlobalEnable>, Changed<ShadowAtlasSize>)>
     >,
     // mut render_cmds: ResMut<SingleRendererCommandList>,
-    mut commands: Commands,
     mut renderercmds: ResMut<ActionListRendererModify>,
 ) {
-    lights.iter().for_each(|(id_light, _light, shadowenable, enable, renderers, _size)| {
+    lights.iter_mut().for_each(|(id_light, _light, shadowenable, enable, renderers, _size, mut viewactive)| {
+
         renderers.map.iter().for_each(|(_, v)| {
             let id_render = v.1.0;
 
@@ -182,9 +185,7 @@ pub fn sys_light_render_modify(
 
             // log::warn!(">>>>>>>> {:?}", enable);
 
-            if let Some(mut cmd) = commands.get_entity(id_light) {
-                cmd.insert(ViewerActive(enable));
-            }
+            *viewactive = ViewerActive(enable);
 
             renderercmds.push(OpsRendererCommand::Active(id_render, enable));
         });
@@ -195,6 +196,7 @@ impl ActionLight {
     pub(crate) fn as_light(
         commands: &mut EntityCommands,
     ) {
+        log::warn!("CreateLight {:?}", commands.id());
         commands
             .insert(Light::Directional)
             .insert(LightingMode::Lambert)
@@ -205,6 +207,10 @@ impl ActionLight {
             .insert(ShadowAngle::default())
             .insert(ShadowEnable(false))
             .insert(ShadowAtlasSize::default())
+            .insert(ShadowDepthScale::default())
+            .insert(ShadowBias::default())
+            .insert(ShadowNormalBias::default())
+            .insert(LayerMask::default())
             ;
 
         ActionViewer::as_viewer(commands);

@@ -575,7 +575,11 @@ use super::{
                     opaque_list.sort();
                     transparent_list.sort();
 
+                    // log::warn!("Opaque: {:?}", opaque_list.len());
+                    // log::warn!("Transparent: {:?}", transparent_list.len());
+
                     opaque_list.iter().for_each(|tmp| {
+                        // log::warn!("{:?}", tmp);
                         if let Some(draw) = draws.get(tmp.idx as usize) {
                             renderer.draws.list.push(draw.clone());
                             let vertex = if let Some(indices) = &draw.indices {

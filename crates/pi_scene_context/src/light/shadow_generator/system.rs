@@ -31,8 +31,8 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
     ) {
         shadows.iter().for_each(|(id_mat, _enable, minz, maxz, bias, normal_bias, depth_scale)| {
             if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
-                bind.vec4(0, &[**bias, **normal_bias, **depth_scale, 0.]);
-                bind.vec2(0, &[**minz, **minz + **maxz]);
+                bind.vec4(0, &[bias.0, normal_bias.0, depth_scale.0, 0.]);
+                bind.vec2(0, &[minz.0, minz.0 + maxz.0]);
                 *flag = BindEffectValueDirty;
             }
         });
@@ -65,20 +65,21 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
             if enable.0 {
                 if let Ok((mut bind, mut flag)) = materails.get_mut(id_mat.0.clone()) {
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_DEPTH_BIAS)) {
-                        bind.float(slot, **bias);
+                        bind.float(slot, bias.0);
                     }
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_DEPTH_SCALE)) {
-                        bind.float(slot, **depth_scale);
+                        bind.float(slot, depth_scale.0);
                     }
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_NORMAL_BIAS)) {
-                        bind.float(slot, **normal_bias);
+                        bind.float(slot, normal_bias.0);
                     }
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_MINZ)) {
-                        bind.float(slot, **minz);
+                        bind.float(slot, minz.0);
                     }
                     if let Some(slot) = bind.slot(&Atom::from(KEY_SHADOW_MAXZ)) {
-                        bind.float(slot, **maxz + **minz);
+                        bind.float(slot, maxz.0 + minz.0);
                     }
+                    // log::warn!("Shadow: {:?}", (bias.0, depth_scale.0, normal_bias.0, maxz.0, minz.0));
                     *flag = BindEffectValueDirty;
                 }
             }
@@ -105,7 +106,7 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
                 Changed<MaterialID>, Changed<ShadowEnable>, Changed<FlagModelList>, 
             )>
         >,
-        mut commands: Commands,
+        mut matcmds: ResMut<ActionListMaterialUse>,
         mut materials: Query<(&EPassTag, &mut MaterialRefs, &mut DirtyMaterialRefs)>,
         meshes: Query<&P>,
     ) {
@@ -115,11 +116,19 @@ use super::base::{ShadowEnable, ShadowMinZ, ShadowMaxZ, ShadowBias, ShadowNormal
                     modelist.0.iter().for_each(|id_model| {
                         if let Ok(pass) = meshes.get(*id_model) {
                             
-                            if let Some(mut cmd) = commands.get_entity(pass.id()) {
-                                cmd.insert(id_mat.clone());
-                                materialrefs.insert(pass.id());
-                                *flag = DirtyMaterialRefs(true);
-                            }
+                            // if let Some(mut cmd) = commands.get_entity(pass.id()) {
+                            //     cmd.insert(id_mat.clone());
+
+                            //     matcmds.push(OpsMaterialUse::Use((), id_mat.0));
+
+                            //     materialrefs.insert(pass.id());
+                            //     *flag = DirtyMaterialRefs(true);
+                            // }
+
+                            matcmds.push(OpsMaterialUse::Use(*id_model, id_mat.0));
+
+                            materialrefs.insert(pass.id());
+                            *flag = DirtyMaterialRefs(true);
                         }
                     });
                 }

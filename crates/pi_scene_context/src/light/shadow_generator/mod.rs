@@ -2,11 +2,12 @@ use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 use crate::materials::prelude::*;
 
-use self::base::*;
 
+mod base;
+mod system;
 
-pub mod base;
-pub mod system;
+pub use self::base::*;
+pub use self::system::*;
 
 
 // pub struct PluginShadowGenerator;
@@ -72,13 +73,14 @@ impl ShaderShadowGenerator {
             BlockCodeAtom { 
                 define: Atom::from(""), 
                 running: Atom::from("
-                vec3 position = A_POSITION;
-                mat4 finalWorld = PI_ObjectToWorld;
+vec3 position = A_POSITION;
+mat4 finalWorld = PI_ObjectToWorld;
 
-                    vec3 positionUpdated = position;
-                    vec4 worldPos = finalWorld*vec4(positionUpdated, 1.0);
-                    gl_Position = PI_MATRIX_VP*worldPos;
-                    vDepthMetricSM = (gl_Position.z+uShadowMinZ)/uShadowMaxZ + uShadowDepthBias;
+vec3 positionUpdated = position;
+vec4 worldPos = finalWorld*vec4(positionUpdated, 1.0);
+gl_Position = PI_MATRIX_VP*worldPos;
+float depth = gl_Position.z * 0.5 + 0.5;
+vDepthMetricSM = (depth + uShadowMinZ) / uShadowMaxZ + uShadowDepthBias;
                 ")
             },
             BlockCodeAtom { 
@@ -86,8 +88,8 @@ impl ShaderShadowGenerator {
 layout(location = 0) out vec4 gl_FragColor;
                 "), 
                 running: Atom::from("
-                    float depthSM = vDepthMetricSM;
-                    gl_FragColor = vec4(depthSM, 0.0, 0.0, 1.0);
+float depthSM = vDepthMetricSM;
+gl_FragColor = vec4(depthSM, 0.0, 0.0, 1.0);
                 ")
             },
             ShaderDefinesSet::default()

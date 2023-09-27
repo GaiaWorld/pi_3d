@@ -20,5 +20,5 @@ pub use crate::{
     commands::*,
     viewer::prelude::*,
     cullings::prelude::*,
-    light::*,
+    light::prelude::*,
 };

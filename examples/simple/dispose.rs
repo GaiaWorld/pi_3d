@@ -84,7 +84,7 @@ fn setup(
     let tes_size = 6;
     fps.frame_ms = 16;
 
-    let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 1., (0., 10., -40.), true);
+    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 1., (0., 10., -40.), true);
 
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 

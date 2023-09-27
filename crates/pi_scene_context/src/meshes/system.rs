@@ -61,9 +61,10 @@ pub fn sys_calc_render_matrix(
                 m = m * local;
             }
 
-            wm.0.clone_from(&m);
-            m.try_inverse_mut();
-            wmi.0.clone_from(&m);
+            if let Some(mi) = m.try_inverse() {
+                wm.0.clone_from(&m);
+                wmi.0.clone_from(&mi);
+            }
         }
 
     });
@@ -142,7 +143,7 @@ pub fn sys_render_matrix_for_uniform(
     mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), Changed<RenderWorldMatrix>>,
 ) {
     meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, bind_model)| {
-        // log::debug!("SysModelUniformUpdate:");
+        // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
 
         bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
         bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));

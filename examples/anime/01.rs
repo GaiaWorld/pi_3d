@@ -34,7 +34,7 @@ fn setup(
 
     final_render.cleardepth = 0.0;
     
-    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 1., 0.7, (0., 10., -40.), false);
+    let (scene, camera01, id_renderer) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 1., 0.7, (0., 10., -40.), false);
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));

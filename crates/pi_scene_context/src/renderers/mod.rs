@@ -3,7 +3,7 @@ use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr}
 use pi_engine_shell::{prelude::*, engine_shell::asset_capacity};
 
 
-use crate::{pass::*, transforms::prelude::*, cameras::prelude::StageCamera};
+use crate::{pass::*, transforms::prelude::*, cameras::prelude::StageCamera, object::sys_dispose_can};
 
 use self::{
     // render_item_info::{RendererItemsModifyByMaterialChange, RendererItemsReset, RendererItemsModifyByModelChange},
@@ -345,6 +345,11 @@ impl Plugin for PluginRenderer {
         app.add_systems(
             Update,
             sys_renderer_draws_modify.in_set(StageRenderer::DrawList)
+        );
+
+        app.add_systems(
+            Update,
+            sys_dispose_renderer.after(sys_dispose_can).in_set(ERunStageChap::Dispose)
         );
     }
 }

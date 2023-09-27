@@ -56,9 +56,9 @@ pub fn sys_abstructmesh_culling_flag_reset(
         // log::debug!("SysModelListUpdateByCamera: ");
         viewers.iter_mut().for_each(|(_camera, vieweractive, scene, layer, mut list_model, mut flag_list_model, _, _)| {
             list_model.0.clear();
-            // log::debug!("CameraModelListByViewer : 0");
+            // log::warn!("CameraModelListByViewer : {:?}", _camera);
             if vieweractive.0 {
-                // log::debug!("SysModelListUpdateByCamera: 0");
+                // log::warn!("SysModelListUpdateByCamera: 0");
                 items.iter().for_each(|(id_obj, iscene, ilayer, instances)| {
                     // log::debug!("SysModelListUpdateByCamera: 1");
                     if iscene == scene && layer.include(ilayer) {
@@ -73,6 +73,8 @@ pub fn sys_abstructmesh_culling_flag_reset(
                             list_model.0.insert(*entity);
                         });
                         *flag_list_model = FlagModelList::default();
+                    } else {
+                        log::warn!("{:?}", (iscene, scene, layer, ilayer));
                     }
                 });
             }

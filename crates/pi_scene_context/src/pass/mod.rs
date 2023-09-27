@@ -28,7 +28,7 @@ impl PassTagOrders {
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum EPassTag {
-    ShadowCast,
+    ShadowCast = 1,
     Opaque,
     Sky,
     Water,
@@ -83,6 +83,20 @@ impl PassRenderInfo {
     pub fn shadow() -> Self {
         Self {
             color_format: ColorFormat::Rgba16Float,
+            depth_stencil_format: DepthStencilFormat::Depth32Float,
+            blendable: false,
+        }
+    }
+    pub fn opaque() -> Self {
+        Self {
+            color_format: ColorFormat::Rgba8Unorm,
+            depth_stencil_format: DepthStencilFormat::Depth24PlusStencil8,
+            blendable: false,
+        }
+    }
+    pub fn transparent() -> Self {
+        Self {
+            color_format: ColorFormat::Rgba8Unorm,
             depth_stencil_format: DepthStencilFormat::Depth24PlusStencil8,
             blendable: true,
         }

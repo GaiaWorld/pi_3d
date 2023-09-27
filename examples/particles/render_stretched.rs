@@ -28,7 +28,7 @@ fn setup(
     let tes_size = 20;
     // frame.frame_ms = 200;
 
-    let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 34.34, -20.), true);
+    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 34.34, -20.), true);
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // cameracmds.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -20.));

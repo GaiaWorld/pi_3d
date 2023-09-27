@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     renderers::prelude::*,
     geometry::command::*,
-    cullings::prelude::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}, prelude::{GlobalEnable, RenderGeometryEable, InstanceMesh}
+    cullings::prelude::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}, prelude::{GlobalEnable, RenderGeometryEable, InstanceMesh, ActionListLayerMask}
 };
 
 pub use super::{
@@ -43,6 +43,7 @@ pub struct ActionSetMesh<'w> {
     pub vertexrange: ResMut<'w, ActionListMeshRenderVertexRange>,
     pub bounding: ResMut<'w, ActionListMeshBounding>,
     pub boundingculling: ResMut<'w, ActionListMeshBoundingCullingMode>,
+    pub layermask: ResMut<'w, ActionListLayerMask>,
 }
 
 #[derive(SystemParam)]

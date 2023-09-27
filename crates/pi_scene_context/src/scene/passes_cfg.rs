@@ -18,9 +18,9 @@ impl Default for ScenePassRenderCfg {
     fn default() -> Self {
         Self {
             p01: PassRenderInfo::shadow(),
-            p02: PassRenderInfo::normal(),
-            p03: PassRenderInfo::normal(),
-            p04: PassRenderInfo::normal(),
+            p02: PassRenderInfo::opaque(),
+            p03: PassRenderInfo::opaque(),
+            p04: PassRenderInfo::opaque(),
             p05: PassRenderInfo::normal(),
             p06: PassRenderInfo::normal(),
             p07: PassRenderInfo::normal(),

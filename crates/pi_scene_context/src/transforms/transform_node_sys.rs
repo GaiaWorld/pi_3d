@@ -2,7 +2,7 @@
 
 // use pi_bevy_ecs_extend::prelude::EntityTree;
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, Matrix, Rotation3, Quaternion};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, Matrix, Rotation3, Quaternion, Vector3};
 
 use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::{Enable, GlobalEnable, NodeParent, NodeChilds}, commands::{DisposeReady, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeCan}};
 
@@ -259,24 +259,33 @@ fn calc_world_one(
 ) {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
         (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
-            globalenable.0 = enable.bool() && tmp.enable;
+            let mut resultenable = enable.bool() && tmp.enable;
 
             let dirty = tmp.dirty || lmatrix.is_changed() || parent.is_changed();
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let transform = GlobalTransform::calc(&tmp.matrix, &lmatrix);
-
-                *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                let mut transform = GlobalTransform::calc(&tmp.matrix, &lmatrix);
                 
                 match transform.matrix.try_inverse() {
-                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
-                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
+                    Some(inv) => {
+                        *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                        *wmatrixinv = WorldMatrixInv::new(inv);
+                    }
+                    None => {
+                        resultenable = false;
+                        transform.matrix = Matrix::identity();
+                        transform.position = Vector3::from(transform.matrix.fixed_view::<3, 1>(0, 3));
+
+                        *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                        *wmatrixinv = WorldMatrixInv::new(Matrix::identity());
+                    }
                 };
                 *gtransform = transform;
             };
 
-            temp_list.push(TmpCalcWorldMatrix { node: entity, dirty, matrix: gtransform.matrix.clone(), enable: globalenable.0 });
+            globalenable.0 = resultenable;
+            temp_list.push(TmpCalcWorldMatrix { node: entity, dirty, matrix: gtransform.matrix.clone(), enable: resultenable });
         },
         (_, _) => {
             
@@ -291,26 +300,45 @@ fn calc_world_root(
 ) -> TmpCalcWorldMatrix {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
         (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
-            globalenable.0 = enable.bool();
+            let mut resultenable = enable.bool();
 
             let dirty = lmatrix.is_changed() || parent.is_changed();
 
             if dirty {
-                let transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
+                let mut transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
 
-                *wmatrix = WorldMatrix::new(transform.matrix.clone());
-                match transform.matrix.try_inverse() {
-                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
-                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
-                };
+                if transform.matrix.as_slice()[0].is_finite() {
+                    match transform.matrix.try_inverse() {
+                        Some(inv) => {
+                            *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                            *wmatrixinv = WorldMatrixInv::new(inv);
+                        }
+                        None => {
+                            resultenable = false;
+                            transform.matrix = Matrix::identity();
+                            transform.position = Vector3::from(transform.matrix.fixed_view::<3, 1>(0, 3));
+    
+                            *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                            *wmatrixinv = WorldMatrixInv::new(Matrix::identity());
+                        }
+                    };
+                } else {
+                    resultenable = false;
+                    transform.matrix = Matrix::identity();
+                    transform.position = Vector3::from(transform.matrix.fixed_view::<3, 1>(0, 3));
+
+                    *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                    *wmatrixinv = WorldMatrixInv::new(Matrix::identity());
+                }
                 *gtransform = transform;
             }
 
+            globalenable.0 = resultenable;
             TmpCalcWorldMatrix {
                 node: entity,
                 dirty,
                 matrix: gtransform.matrix.clone(),
-                enable: globalenable.0
+                enable: resultenable 
             }
         },
         (_, _) => {
@@ -370,24 +398,42 @@ fn calc_world_one_bytree(
 ) {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
         (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
-            globalenable.0 = enable.bool() && tmp.enable;
+            let mut resultenable = enable.bool() && tmp.enable;
 
             
             let dirty = tmp.dirty || lmatrix.is_changed() || parent.is_changed();
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let transform = GlobalTransform::calc(&tmp.matrix, &lmatrix);
+                let mut transform = GlobalTransform::calc(&tmp.matrix, &lmatrix);
 
-                *wmatrix = WorldMatrix::new(transform.matrix.clone());
-                
-                match transform.matrix.try_inverse() {
-                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
-                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
-                };
+                if transform.matrix.as_slice()[0].is_finite() {
+                    match transform.matrix.try_inverse() {
+                        Some(inv) => {
+                            *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                            *wmatrixinv = WorldMatrixInv::new(inv);
+                        }
+                        None => {
+                            resultenable = false;
+                            transform.matrix = Matrix::identity();
+                            transform.position = Vector3::from(transform.matrix.fixed_view::<3, 1>(0, 3));
+    
+                            *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                            *wmatrixinv = WorldMatrixInv::new(Matrix::identity());
+                        }
+                    };
+                } else {
+                    resultenable = false;
+                    transform.matrix = Matrix::identity();
+                    transform.position = Vector3::from(transform.matrix.fixed_view::<3, 1>(0, 3));
+
+                    *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                    *wmatrixinv = WorldMatrixInv::new(Matrix::identity());
+                }
                 *gtransform = transform;
             };
 
+            globalenable.0 = resultenable;
             temp_list.push(TmpCalcWorldMatrix { node: entity, dirty, matrix: gtransform.matrix.clone(), enable: globalenable.0 });
         },
         (_, _) => {
@@ -403,22 +449,41 @@ fn calc_world_root_bytree(
 ) -> TmpCalcWorldMatrix {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
         (Ok((lmatrix, mut wmatrix, mut wmatrixinv, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
-            globalenable.0 = enable.bool();
+            let mut resultenable = enable.bool();
 
             let dirty = lmatrix.is_changed() || parent.is_changed();
 
             if dirty {
                 // log::debug!(">>>>> GlobalTransform 0");
-                let transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
+                let mut transform = GlobalTransform::calc(&Matrix::identity(), &lmatrix);
 
-                *wmatrix = WorldMatrix::new(transform.matrix.clone());
-                match transform.matrix.try_inverse() {
-                    Some(inv) => *wmatrixinv = WorldMatrixInv::new(inv),
-                    None => *wmatrixinv = WorldMatrixInv::new(Matrix::identity()),
-                };
+                if transform.matrix.as_slice()[0].is_finite() {
+                    match transform.matrix.try_inverse() {
+                        Some(inv) => {
+                            *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                            *wmatrixinv = WorldMatrixInv::new(inv);
+                        }
+                        None => {
+                            resultenable = false;
+                            transform.matrix = Matrix::identity();
+                            transform.position = Vector3::from(transform.matrix.fixed_view::<3, 1>(0, 3));
+    
+                            *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                            *wmatrixinv = WorldMatrixInv::new(Matrix::identity());
+                        }
+                    };
+                } else {
+                    resultenable = false;
+                    transform.matrix = Matrix::identity();
+                    transform.position = Vector3::from(transform.matrix.fixed_view::<3, 1>(0, 3));
+
+                    *wmatrix = WorldMatrix::new(transform.matrix.clone());
+                    *wmatrixinv = WorldMatrixInv::new(Matrix::identity());
+                }
                 *gtransform = transform;
             }
 
+            globalenable.0 = resultenable;
             TmpCalcWorldMatrix {
                 node: entity,
                 dirty,

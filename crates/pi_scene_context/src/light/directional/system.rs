@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::light::{shadow_generator::base::{ShadowMinZ, ShadowMaxZ, ShadowFrustumSize}, base::Light};
+use crate::light::{shadow_generator::{ShadowMinZ, ShadowMaxZ, ShadowFrustumSize}, base::Light};
 
 use super::DirectionalShadowProjection;
 

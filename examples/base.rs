@@ -48,7 +48,7 @@ impl DemoScene {
         camera_fov: f32,
         camera_position: (f32, f32, f32),
         orthographic_camera: bool
-    ) -> (Entity, Entity) {
+    ) -> (Entity, Entity, Entity) {
         final_render.cleardepth = 0.0;
 
         let scene = commands.spawn_empty().id();
@@ -79,7 +79,7 @@ impl DemoScene {
         renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
         cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
 
-        (scene, camera01)
+        (scene, camera01, id_renderer)
     }
 }
 

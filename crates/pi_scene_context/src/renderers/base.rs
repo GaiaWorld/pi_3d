@@ -92,7 +92,7 @@ pub struct DrawObjTmp {
     pub vertex: Range<u32>,
     pub indices: Option<RenderIndices>,
 }
-
+#[derive(Debug)]
 pub struct TmpSortDrawOpaque {
     pub idx: u16,
     pub pass: u8,

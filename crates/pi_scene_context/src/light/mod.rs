@@ -5,36 +5,27 @@ use crate::{
     viewer::prelude::*,
     transforms::transform_node_sys::*,
     pass::*,
-    object::sys_dispose_ready,
+    object::sys_dispose_ready, prelude::{StageTransform, ActionSetMaterial, ActionMaterial},
 };
 
 use self::{
     base::LightDirection,
     directional::{DirectionalShadowProjection, system::*},
-    shadow_generator::system::*,
+    shadow_generator::*,
     command::*,
-    command_sys::*, system::*,
+    command_sys::*, system::*, prelude::*,
 };
 
-pub mod base;
-pub mod directional;
-pub mod point;
-pub mod vertex;
-pub mod command;
-pub mod command_sys;
-pub mod shadow_generator;
-pub mod interface;
-pub mod system;
-
-#[derive(Resource, Default)]
-pub struct StateLight {
-    pub culling_time: u32,
-}
-impl TCullingPerformance for StateLight {
-    fn culling_time(&mut self, ms: u32) {
-        self.culling_time = ms;
-    }
-}
+mod base;
+mod directional;
+mod point;
+mod vertex;
+mod command;
+mod command_sys;
+mod shadow_generator;
+mod interface;
+mod system;
+pub mod prelude;
 
 pub struct PluginLighting;
 impl Plugin for PluginLighting {
@@ -65,6 +56,14 @@ impl Plugin for PluginLighting {
         app.insert_resource(ActionListLightCreate::default());
         app.insert_resource(ActionListLightParam::default());
         app.insert_resource(StateLight::default());
+        
+        app.configure_set(Update, StageLighting::LightingCommand.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageLighting::LightingCommandApply.after(StageLighting::LightingCommand));
+        app.configure_set(Update, StageLighting::LightingCalcMatrix.after(StageLighting::LightingCommandApply).after(StageTransform::TransformCalcMatrix));
+        app.configure_set(Update, StageLighting::LightingCulling.after(StageLighting::LightingCalcMatrix).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageLighting::LightingCommandApply));
+
+
 
         // app.add_systems(Update, sys_cmd_light_create.in_set(ERunStageChap::Initial));
         // app.add_systems(Update, sys_cmd_light_modify.in_set(ERunStageChap::Command));
@@ -73,23 +72,15 @@ impl Plugin for PluginLighting {
 			Update,
             (
                 sys_create_light,
-                sys_act_light_param,
             ).chain().in_set(ERunStageChap::Initial)
         );
-
         app.add_systems(
 			Update,
             (
+                sys_act_light_param,
                 sys_light_render_modify,
-            ).in_set(ERunStageChap::Command)
-        );
-        
-        app.add_systems(
-			Update,
-            (
-                sys_shadow_param_update,
-                sys_shadow_param_update_while_mat_create,
-            ).chain().in_set(ERunStageChap::CalcWorldMatrix)
+                sys_directional_light_shadow_modify,
+            ).chain().in_set(StageLighting::LightingCommand)
         );
         
         app.add_systems(
@@ -103,11 +94,15 @@ impl Plugin for PluginLighting {
                 sys_shadow_generator_apply_while_shadow_modify::<PassID06>,
                 sys_shadow_generator_apply_while_shadow_modify::<PassID07>,
                 sys_shadow_generator_apply_while_shadow_modify::<PassID08>,
-            ).in_set(ERunStageChap::Command)
+            ).in_set(StageLighting::LightingCommand).after(sys_act_light_param)
         );
-
-        app.add_systems(Update, 
-            sys_directional_light_shadow_modify.in_set(ERunStageChap::Command)
+        
+        app.add_systems(
+			Update,
+            (
+                sys_shadow_param_update,
+                sys_shadow_param_update_while_mat_create,
+            ).chain().in_set(StageLighting::LightingCalcMatrix)
         );
 
         // SysLightCreateCommand::setup(world, stages.query_stage::<SysLightCreateCommand>(ERunStageChap::Initial));
@@ -127,21 +122,21 @@ impl Plugin for PluginLighting {
                 sys_calc_view_matrix_by_viewer::<LightDirection>.after(sys_world_matrix_calc),
                 sys_calc_proj_matrix::<DirectionalShadowProjection>,
                 sys_calc_transform_matrix::<LightDirection, DirectionalShadowProjection>,
-            ).chain().in_set(ERunStageChap::CalcWorldMatrix)
+            ).chain().in_set(StageLighting::LightingCalcMatrix)
         );
         app.add_systems(
 			Update,
             (
                 sys_update_viewer_model_list_by_viewer::<LightDirection, DirectionalShadowProjection>,
                 sys_update_viewer_model_list_by_model::<LightDirection, DirectionalShadowProjection>,
-            ).chain().in_set(ERunStageChap::CalcRenderMatrix)
+            ).chain().in_set(StageLighting::LightingCalcMatrix)
         );
 
         app.add_systems(
 			Update,
             (
                 sys_tick_viewer_culling::<LightDirection, DirectionalShadowProjection, StateLight>.run_if(should_run)
-            ).chain().in_set(ERunStageChap::CalcRenderMatrix)
+            ).chain().in_set(StageLighting::LightingCulling)
         );
         app.add_systems(
 			Update,
@@ -151,5 +146,17 @@ impl Plugin for PluginLighting {
         );
 
         app.add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+
+        app.add_systems(Startup, setup);
     }
+}
+
+fn setup(
+    metas: Res<ShareAssetMgr<ShaderEffectMeta>>
+) {
+    ActionMaterial::regist_material_meta(
+        &metas,
+        KeyShaderMeta::from(ShaderShadowGenerator::KEY),
+        ShaderShadowGenerator::res(),
+    );
 }

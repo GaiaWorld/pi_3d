@@ -29,7 +29,7 @@ fn setup(
     let tes_size = 20;
     // frame.frame_ms = 200;
 
-    let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -50.), true);
+    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -50.), true);
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let node = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node, scene));

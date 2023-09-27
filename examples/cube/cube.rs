@@ -111,7 +111,7 @@ fn setup(
     fps.frame_ms = 200;
 
     let tes_size = 4;
-    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
+    let (scene, camera01, id_renderer) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let cube = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));

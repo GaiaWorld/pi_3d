@@ -1,6 +1,6 @@
 use pi_engine_shell::prelude::*;
 
-use crate::light::base::*;
+use crate::light::prelude::*;
 
 pub enum EMaxDirectLight {
     N004,

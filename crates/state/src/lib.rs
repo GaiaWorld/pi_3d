@@ -4,7 +4,7 @@ use pi_gltf2_load::GLTF;
 use pi_hash::XHashMap;
 use pi_node_materials::prelude::*;
 use pi_particle_system::prelude::*;
-use pi_scene_context::{prelude::*, light::base::Light};
+use pi_scene_context::prelude::*;
 use pi_trail_renderer::TrailBase;
 
 // #[derive(Default)]

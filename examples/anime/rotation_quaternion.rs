@@ -31,7 +31,7 @@ fn setup(
     fps.frame_ms = 30;
     final_render.cleardepth = 0.0;
 
-    let (scene, camera01) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 4., 0.7, (0., 0., -10.), false);
+    let (scene, camera01, id_renderer) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 4., 0.7, (0., 0., -10.), false);
     // cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 

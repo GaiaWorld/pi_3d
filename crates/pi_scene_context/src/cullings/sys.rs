@@ -44,7 +44,7 @@ pub fn sys_update_culling_by_cullinginfo(
     boundings: Query<(Entity, &SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs), Or<(Changed<GeometryBounding>, Changed<GeometryCullingMode>)>>,
 ) {
     boundings.iter().for_each(|(entity, idscene, info, mode, instances)| {
-        log::error!("AAAA");
+        // log::error!("AAAA");
         if let Ok(mut pool) = scenes.get_mut(idscene.0) {
             if let Ok((worldmatrix, disposed)) = items.get(entity) {
                 if disposed.0 == true {

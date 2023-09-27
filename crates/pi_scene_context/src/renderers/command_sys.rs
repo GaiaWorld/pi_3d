@@ -2,7 +2,7 @@
 use pi_bevy_render_plugin::component::GraphId;
 use pi_engine_shell::prelude::*;
 
-use crate::{viewer::prelude::*, postprocess::Postprocess, prelude::PassTagOrders, object::ActionEntity};
+use crate::{viewer::prelude::*, postprocess::Postprocess, prelude::{PassTagOrders, DisposeCan}, object::ActionEntity};
 
 use super::{
     renderer::*,
@@ -126,6 +126,17 @@ pub fn sys_act_renderer_connect(
     });
 }
 
+pub fn sys_dispose_renderer(
+    mut render_graphic: ResMut<PiRenderGraph>,
+    renderers: Query<(&GraphId, &RendererEnable, &DisposeCan), Changed<DisposeCan>>,
+) {
+    renderers.iter().for_each(|(nodeid, _, flag)| {
+        if flag.0 {
+            render_graphic.remove_node(nodeid.0);
+        }
+    });
+}
+
 pub struct ActionRenderer;
 impl ActionRenderer {
     pub(crate) fn init(
@@ -154,7 +165,8 @@ impl ActionRenderer {
             .insert(RenderAutoClearStencil::default())
             .insert(RenderToFinalTarget(toscreen))
             .insert(ViewerID(id_viewer))
-            .insert(Postprocess::default());
+            .insert(Postprocess::default())
+            ;
     }
     pub fn create_graphic_node(
         commands: &mut Commands,

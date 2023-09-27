@@ -206,10 +206,10 @@ path = "examples/anime/rotation_quaternion.rs"
 [[example]]
 name = "anime_performance"
 path = "examples/anime/performance.rs"
-# 
-# [[example]]
-# name = "lighting_01"
-# path = "examples/lighting/01.rs"
+
+[[example]]
+name = "lighting_01"
+path = "examples/lighting/01.rs"
 # 
 # [[example]]
 # name = "particle01"

@@ -29,7 +29,7 @@ fn setup(
     mut trailcmds: ActionSetTrailRenderer,
 ) {
     let tes_size = 50;
-    let (scene, camera01) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 10., -50.), true);
+    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 10., -50.), true);
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let idmat = commands.spawn_empty().id();
