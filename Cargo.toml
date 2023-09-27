@@ -290,3 +290,8 @@ path = "examples/particles/render_stretched.rs"
 [[example]]
 name = "trial01"
 path = "examples/trial/01.rs"
+
+
+[[example]]
+name = "ray_test"
+path = "examples/oct_tree/ray_test.rs"

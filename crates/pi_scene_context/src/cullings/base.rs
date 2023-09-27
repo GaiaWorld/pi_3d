@@ -175,6 +175,7 @@ impl SceneBoundingPool {
             },
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(item) => {
+                println!("================otctree");
                 item.culling(&transform.0, filter, result);
             },
         }
@@ -187,7 +188,7 @@ impl SceneBoundingPool {
         result: &mut Option<Entity>,
     ) {
         match self {
-            SceneBoundingPool::List(_) => todo!(),
+            SceneBoundingPool::List(item) => item.ray_test(org, dir, result),
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(item) => item.ray_test(org, dir, result),
         }
