@@ -50,6 +50,7 @@ impl Plugin for PluginTransformNode {
                 sys_act_local_euler,
                 sys_act_local_position,
                 sys_act_local_scaling,
+                sys_act_local_rotation,
             ).in_set(StageTransform::TransformCommand)
         );
         app.add_systems(

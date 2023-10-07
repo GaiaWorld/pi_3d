@@ -90,6 +90,7 @@ pub struct BundleNodeMaterialAnimatableComp (
     MaskCutoff,
     MainColor,
     MainTexUOffset,
+    MainTexVOffset,
     MainTexUScale,
     MainTexVScale,
     MaskTexUOffset,

@@ -16,8 +16,8 @@ use super::prelude::*;
         localmatrixs.iter().for_each(|(entity, euler)| {
             if let Ok((mut loacl_quaternion, mut local_rotation)) = loacl_quaternions.get_mut(entity) {
                 let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
-                let quaternion = Quaternion::from_rotation_matrix(&rotation);
-                *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone(), false);
+                // let quaternion = Quaternion::from_rotation_matrix(&rotation);
+                // *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone(), false);
                 *local_rotation = LocalRotation(rotation);
             }
         });
@@ -25,10 +25,10 @@ use super::prelude::*;
 
     pub fn sys_local_quaternion_calc_rotation(
         localmatrixs: Query<(Entity, &LocalRotationQuaternion), Changed<LocalRotationQuaternion>>,
-        mut loacl_eulers: Query<&mut LocalRotation>,
+        mut local_rotation: Query<&mut LocalRotation>,
     ) {
         localmatrixs.iter().for_each(|(entity, quat)| {
-            if let Ok(mut local_rotation) = loacl_eulers.get_mut(entity) {
+            if let Ok(mut local_rotation) = local_rotation.get_mut(entity) {
                 if quat.1 {
                     // log::warn!("Quaternion: {:?}", quat);
                     let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
@@ -49,6 +49,12 @@ use super::prelude::*;
             // log::warn!("LocalMatrixCalc: {:?}", entity);
             let mut matrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
+
+            // let mut affine = Matrix::identity();
+            // affine.append_nonuniform_scaling_mut(&scaling.0);
+            // rotation.0.to_homogeneous().mul_to(&affine, &mut matrix);
+            // matrix.append_translation_mut(&position.0);
+            
             // commands.entity(obj).insert(LocalMatrix(matrix, true));
             // localmatrix.0 = matrix;
             // localmatrix.1 = true;

@@ -82,7 +82,7 @@ pub fn sys_act_transform_parent(
                 }
             }
         } else {
-            if count < 2 {
+            if count < 4 {
                 cmds.push(OpsTransformNodeParent(entity, val, count + 1));
             }
         }
@@ -99,7 +99,7 @@ pub fn sys_act_local_rotation(
             record.0 = data.clone();
             *node = data;
         } else {
-            if count < 2 {
+            if count < 4 {
                 cmds.push(OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w, count + 1));
             }
         }
@@ -116,7 +116,7 @@ pub fn sys_act_local_position(
             record.0 = LocalPosition(val);
             *node = LocalPosition(val);
         } else {
-            if count < 2 {
+            if count < 4 {
                 cmds.push(OpsTransformNodeLocalPosition(entity, val, count + 1));
             }
         }
@@ -132,7 +132,7 @@ pub fn sys_act_local_euler(
             record.0 = LocalEulerAngles(val);
             *node = LocalEulerAngles(val);
         } else {
-            if count < 2 {
+            if count < 4 {
                 cmds.push(OpsTransformNodeLocalEuler(entity, val, count + 1));
             }
         }
