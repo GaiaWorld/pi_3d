@@ -74,7 +74,7 @@ pub fn sys_abstructmesh_culling_flag_reset(
                         });
                         *flag_list_model = FlagModelList::default();
                     } else {
-                        log::warn!("{:?}", (iscene, scene, layer, ilayer));
+                        // log::warn!("{:?}", (iscene, scene, layer, ilayer));
                     }
                 });
             }
