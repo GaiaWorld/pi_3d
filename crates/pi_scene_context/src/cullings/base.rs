@@ -35,10 +35,20 @@ impl From<pi_slotmap::KeyData> for BoundingKey {
         Self(Entity::from_bits(bits))
     }
 }
-unsafe impl pi_slotmap::Key for BoundingKey {
+impl pi_slotmap::Key for BoundingKey {
     fn data(&self) -> pi_slotmap::KeyData {
         pi_slotmap::KeyData::from_ffi(self.0.to_bits())
     }
+
+	fn index(&self) -> usize {
+		self.0.index() as usize
+	}
+}
+
+impl pi_null::Null for BoundingKey {
+	fn null() -> Self { Self(Entity::from_bits(u64::null())) }
+
+    fn is_null(&self) -> bool { self.0.to_bits().is_null() }
 }
 
 
