@@ -34,51 +34,19 @@ pub fn sys_act_transform_parent(
     nodes: Query<&DisposeReady>,
     mut tree: EntityTreeMut,
 ) {
-    // cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, idparent, count)| {
-    //     if let Ok(state0) = nodes.get(entity) {
-    //         if state0.0 { return; }
-    //         let mut oldparent = None;
-    //         let mut newparent = None;
-    //         if let Ok(state1) = nodes.get(idparent) {
-    //             if state1.0 == false && parents.contains(idparent) {
-    //                 if let Ok((_, mut parent)) = childrens.get_mut(entity) {
-    //                     oldparent = parent.0;
-    //                     newparent = Some(idparent);
-    //                     parent.0 = newparent;
-    //                 }
-    //             } else if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
-    //                     oldparent = parent.0;
-    //                     newparent = Some(idscene.0);
-    //                     parent.0 = newparent;
-    //             }
-    //         } else {
-    //             if let Ok((idscene, mut parent)) = childrens.get_mut(entity) {
-    //                 oldparent = parent.0;
-    //                 newparent = Some(idscene.0);
-    //                 parent.0 = newparent;
-    //             }
-    //         }
-    //         if let Some(oldparent) = oldparent {
-    //             if let Ok(mut childs) = parents.get_mut(oldparent) {
-    //                 childs.remove(&entity);
-    //             }
-    //         }
-    //         if let Some(newparent) = newparent {
-    //             if let Ok(mut childs) = parents.get_mut(newparent) {
-    //                 childs.insert(entity);
-    //             }
-    //         }
-    //     } else if count < 2 {
-    //         cmds.push(OpsTransformNodeParent(entity, idparent, count + 1));
-    //     }
-    // });
     cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val, count)| {
-        if tree.get_down(val).is_some() && tree.get_up(entity).is_some() {
+        if let (Some(down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
             // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
             // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
             if let (Ok(state0), Ok(state1)) = (nodes.get(entity), nodes.get(val)) {
                 if state0.0 == false && state1.0 == false {
-                    ActionTransformNode::tree_modify(&mut tree, entity, val);
+                    if nodes.contains(up.parent()) {
+                        tree.remove(entity);
+                    }
+                    log::debug!("insert_child=====child: {:?}, parent: {:?}",entity, val);
+                    // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
+                    tree.insert_child(entity, val, 0);
+                    // ActionTransformNode::tree_modify(&mut tree, entity, val);
                 }
             }
         } else {
