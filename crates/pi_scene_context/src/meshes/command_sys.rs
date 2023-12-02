@@ -5,7 +5,7 @@ use pi_scene_math::{Vector4, Matrix};
 use crate::{
     geometry::{
         prelude::*,
-        instance::instance_boneoffset::*
+        instance::{instance_boneoffset::*, instance_vec4::*, instance_float::EInstanceFloatType}
     },
     pass::*,
     renderers::prelude::*,
@@ -14,17 +14,16 @@ use crate::{
     transforms::command_sys::ActionTransformNode,
     skeleton::prelude::*,
     materials::prelude::*,
-    prelude::*,
     object::ActionEntity,
     cullings::prelude::*,
+    commands::*,
 };
 
 use super::{
     command::*,
-    model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty, BindModel},
+    model::*,
     abstract_mesh::AbstructMesh,
-    Mesh,
-    lighting::{MeshCastShadow, MeshReceiveShadow},
+    lighting::*,
 };
 
 
@@ -35,10 +34,11 @@ pub fn sys_create_mesh(
     empty: Res<SingleEmptyEntity>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
+    lightlimit: Res<ModelLightLimit>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state)| {
+    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
-        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state) == false {
+        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0) == false {
             disposereadylist.push(OpsDisposeReady::ops(entity));
         }
     });
@@ -56,6 +56,10 @@ pub fn sys_act_instanced_mesh_create(
                     .insert(InstanceColorDirty(true))
                     .insert(InstanceTillOffDirty(true))
                     .insert(InstanceWorldMatrixDirty(true))
+                    .insert(InstanceVec4ADirty(true))
+                    .insert(InstanceVec4BDirty(true))
+                    .insert(InstanceVec4CDirty(true))
+                    .insert(InstanceVec4DDirty(true))
                     ;
             } else {
                 return;
@@ -183,6 +187,48 @@ pub fn sys_act_instance_tilloff(
     });
 }
 
+
+pub fn sys_act_instance_float(
+    mut cmds: ResMut<ActionListInstanceFloat>,
+    entities: Query<Entity>,
+    mut instances: Query<(&InstanceMesh, &mut InstanceVec4A, &mut InstanceVec4B, &mut InstanceVec4C, &mut InstanceVec4D)>,
+    mut sources: Query<(&mut InstanceVec4ADirty, &mut InstanceVec4BDirty, &mut InstanceVec4CDirty, &mut InstanceVec4DDirty)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsInstanceFloat(instance, val, usetype)| {
+        if entities.contains(instance) {
+            // log::warn!("Instance Float 1");
+            if let Ok((source, mut a_data, mut b_data, mut c_data, mut d_data)) = instances.get_mut(instance) {
+                // log::warn!("Instance Float 2");
+                if let Ok((mut adirty, mut bdirty, mut cdirty, mut ddirty)) = sources.get_mut(source.0) {
+                    // log::warn!("Instance Float 3");
+                    match usetype {
+                        EInstanceFloatType::F00 => { a_data.0 = val; *adirty = InstanceVec4ADirty(true); },
+                        EInstanceFloatType::F01 => { a_data.1 = val; *adirty = InstanceVec4ADirty(true); },
+                        EInstanceFloatType::F02 => { a_data.2 = val; *adirty = InstanceVec4ADirty(true); },
+                        EInstanceFloatType::F03 => { a_data.3 = val; *adirty = InstanceVec4ADirty(true); },
+                        EInstanceFloatType::F04 => { b_data.0 = val; *bdirty = InstanceVec4BDirty(true); },
+                        EInstanceFloatType::F05 => { b_data.1 = val; *bdirty = InstanceVec4BDirty(true); },
+                        EInstanceFloatType::F06 => { b_data.2 = val; *bdirty = InstanceVec4BDirty(true); },
+                        EInstanceFloatType::F07 => { b_data.3 = val; *bdirty = InstanceVec4BDirty(true); },
+                        EInstanceFloatType::F08 => { c_data.0 = val; *cdirty = InstanceVec4CDirty(true); },
+                        EInstanceFloatType::F09 => { c_data.1 = val; *cdirty = InstanceVec4CDirty(true); },
+                        EInstanceFloatType::F10 => { c_data.2 = val; *cdirty = InstanceVec4CDirty(true); },
+                        EInstanceFloatType::F11 => { c_data.3 = val; *cdirty = InstanceVec4CDirty(true); },
+                        EInstanceFloatType::F12 => { d_data.0 = val; *ddirty = InstanceVec4DDirty(true); },
+                        EInstanceFloatType::F13 => { d_data.1 = val; *ddirty = InstanceVec4DDirty(true); },
+                        EInstanceFloatType::F14 => { d_data.2 = val; *ddirty = InstanceVec4DDirty(true); },
+                        EInstanceFloatType::F15 => { d_data.3 = val; *ddirty = InstanceVec4DDirty(true); },
+                        _ => { 
+                            // log::warn!("Instance Float 4");
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
 pub fn sys_act_bone_offset(
     mut cmds: ResMut<ActionListBoneOffset>,
     mut instances: Query<(&mut InstanceBoneoffset, &mut RecordInstanceBoneoffset)>,
@@ -203,6 +249,7 @@ pub fn sys_act_abstruct_mesh_render_alignment(
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshRenderAlignment(entity, val, count)| {
         if let Ok(mut item) = items.get_mut(entity) {
+            log::warn!("RenderAlignment: {:?}", (val));
             *item = val;
         } else {
             if count < 2 {
@@ -277,6 +324,68 @@ pub fn sys_act_mesh_render_vertex_range(
     });
 }
 
+pub fn sys_act_mesh_force_point_lighting(
+    mut cmds: ResMut<ActionListMeshForcePointLighting>,
+    mut items: Query<&mut ModelForcePointLightings>,
+    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshForcePointLighting(entity, light, isadd, count)| {
+        // log::warn!("Range: {:?}", val);
+        if let Ok(mut item) = items.get_mut(entity) {
+            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+            match item.0.binary_search(&light) {
+                Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
+                Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+            }
+        } else {
+            if count < 2 {
+                cmds.push(OpsMeshForcePointLighting(entity, light, isadd, count + 1));
+            }
+        }
+    });
+}
+
+pub fn sys_act_mesh_force_spot_lighting(
+    mut cmds: ResMut<ActionListMeshForceSpotLighting>,
+    mut items: Query<&mut ModelForceSpotLightings>,
+    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshForceSpotLighting(entity, light, isadd, count)| {
+        // log::warn!("Range: {:?}", val);
+        if let Ok(mut item) = items.get_mut(entity) {
+            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+            match item.0.binary_search(&light) {
+                Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
+                Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+            }
+        } else {
+            if count < 2 {
+                cmds.push(OpsMeshForceSpotLighting(entity, light, isadd, count + 1));
+            }
+        }
+    });
+}
+
+pub fn sys_act_mesh_force_hemi_lighting(
+    mut cmds: ResMut<ActionListMeshForceHemiLighting>,
+    mut items: Query<&mut ModelForceHemiLightings>,
+    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsMeshForceHemiLighting(entity, light, isadd, count)| {
+        // log::warn!("Range: {:?}", val);
+        if let Ok(mut item) = items.get_mut(entity) {
+            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+            match item.0.binary_search(&light) {
+                Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
+                Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+            }
+        } else {
+            if count < 2 {
+                cmds.push(OpsMeshForceHemiLighting(entity, light, isadd, count + 1));
+            }
+        }
+    });
+}
 
 pub struct ActionMesh;
 impl ActionMesh {
@@ -287,6 +396,7 @@ impl ActionMesh {
         allocator: &mut ResBindBufferAllocator,
         empty: &SingleEmptyEntity,
         state: MeshInstanceState,
+        lightlimit: &LightLimitInfo,
     ) -> bool {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
@@ -304,18 +414,31 @@ impl ActionMesh {
             entitycmd.insert(bind);
         }
 
+        entitycmd.insert(MeshLightingMode::default());
+        entitycmd.insert(ModelLightingIndexs::new(allocator, lightlimit));
+        entitycmd.insert(ModelForcePointLightings::default());
+        entitycmd.insert(ModelForceSpotLightings::default());
+        entitycmd.insert(ModelForceHemiLightings::default());
+        entitycmd.insert(ModelPointLightingDirty::default());
+        entitycmd.insert(ModelSpotLightingDirty::default());
+        entitycmd.insert(ModelHemiLightingDirty::default());
+
         entitycmd.insert(MeshStates::default());
         entitycmd.insert(DirtyMeshStates);
         entitycmd.insert(state);
 
-        create_passobj::<Pass01,PassID01>(entity, commands, &empty);
-        create_passobj::<Pass02,PassID02>(entity, commands, &empty);
-        create_passobj::<Pass03,PassID03>(entity, commands, &empty);
-        create_passobj::<Pass04,PassID04>(entity, commands, &empty);
-        create_passobj::<Pass05,PassID05>(entity, commands, &empty);
-        create_passobj::<Pass06,PassID06>(entity, commands, &empty);
-        create_passobj::<Pass07,PassID07>(entity, commands, &empty);
-        create_passobj::<Pass08,PassID08>(entity, commands, &empty);
+        create_passobj::<Pass01, PassID01>(entity, commands, empty.id(), scene );
+        create_passobj::<Pass02, PassID02>(entity, commands, empty.id(), scene );
+        create_passobj::<Pass03, PassID03>(entity, commands, empty.id(), scene );
+        create_passobj::<Pass04, PassID04>(entity, commands, empty.id(), scene );
+        create_passobj::<Pass05, PassID05>(entity, commands, empty.id(), scene );
+        create_passobj::<Pass06, PassID06>(entity, commands, empty.id(), scene );
+        create_passobj::<Pass07, PassID07>(entity, commands, empty.id(), scene );
+        create_passobj::<Pass08, PassID08>(entity, commands, empty.id(), scene );
+        // create_passobj::<Pass09, PassID09>(entity, commands, empty.id(), scene );
+        // create_passobj::<Pass10, PassID10>(entity, commands, empty.id(), scene );
+        // create_passobj::<Pass11, PassID11>(entity, commands, empty.id(), scene );
+        // create_passobj::<Pass12, PassID12>(entity, commands, empty.id(), scene );
 
         return true;
     }
@@ -423,6 +546,10 @@ impl ActionMesh {
             .insert(InstanceColorDirty(false))
             .insert(InstanceTillOffDirty(false))
             .insert(InstanceBoneOffsetDirty(false))
+            .insert(InstanceVec4ADirty(false))
+            .insert(InstanceVec4BDirty(false))
+            .insert(InstanceVec4CDirty(false))
+            .insert(InstanceVec4DDirty(false))
             ;
     }
 }
@@ -450,6 +577,11 @@ impl ActionInstanceMesh {
         commands.insert(InstanceTillOff(Vector4::new(1., 1., 0., 0.)));
         commands.insert(InstanceBoneoffset::default());
         commands.insert(RecordInstanceBoneoffset::default());
+        
+        commands.insert(InstanceVec4A::default());
+        commands.insert(InstanceVec4B::default());
+        commands.insert(InstanceVec4C::default());
+        commands.insert(InstanceVec4D::default());
 
         commands.insert(RenderMatrixDirty(true));
         commands.insert(RenderWorldMatrix(Matrix::identity()));
@@ -464,18 +596,21 @@ impl ActionInstanceMesh {
 fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
     model: Entity,
     commands: &mut Commands,
-    mat: &SingleEmptyEntity,
+    empty: Entity,
+    scene: Entity,
 ) -> ObjectID {
     let id = commands.spawn_empty().id();
 
-    commands.entity(model).insert(T2::new(id));
+    let passid = T2::new(id);
+    commands.entity(model).insert(passid);
+    // log::warn!("Model Pass: {:?}", (model, T2::TAG, id, scene));
 
     let mut entitycmd = commands.entity(id);
     ActionEntity::init(&mut entitycmd);
-    entitycmd.insert(T::new())
-        .insert(ModelPass(model))
-        .insert(MaterialID(mat.id()))
-        ;
+    ActionPassObject::init(&mut entitycmd, empty, model, scene);
+    entitycmd.insert(T::default());
+    entitycmd.insert(T::TAG);
+
 
     id
 }

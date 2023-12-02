@@ -254,19 +254,18 @@ impl TrailBuffer {
     pub const FLOAT_PER_VERTEX: u32 = (3 + 4 + 3 + 3 + 2);
     pub const SIZE_PER_VERTEX: u32 = Self::FLOAT_PER_VERTEX * 4;
     pub fn buffer_desc(&self) -> VertexBufferDesc {
-        VertexBufferDesc {
-            key: self.key.clone(),
-            range: None,
-            attrs: vec![
+        VertexBufferDesc::new(
+            self.key.clone(),
+            VertexBufferDescRange::default(),
+            vec![
                 VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
                 VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
                 VertexAttribute { kind: EVertexDataKind::TrailAxisX, format: wgpu::VertexFormat::Float32x3 },
                 VertexAttribute { kind: EVertexDataKind::TrailAxisZ, format: wgpu::VertexFormat::Float32x3 },
                 VertexAttribute { kind: EVertexDataKind::TrailInfo, format: wgpu::VertexFormat::Float32x2 },
             ],
-            step_mode: wgpu::VertexStepMode::Vertex,
-            instance: false,
-        }
+            false,
+        )
     }
     pub fn buffer(&self) -> Arc<NotUpdatableBufferRange> {
         self.buffer.0.clone()

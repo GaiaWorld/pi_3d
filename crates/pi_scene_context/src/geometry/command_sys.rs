@@ -26,7 +26,8 @@ pub fn sys_create_geometry(
 ) {
     cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, mut vertex_desc, indices_desc, count)| {
         
-        let instancestate =if let Ok((mut mesh, insstate)) = meshes.get_mut(id_mesh) {
+        let instancestate = if let Ok((mut mesh, insstate)) = meshes.get_mut(id_mesh) {
+            // log::warn!("GeometryID Apply");
             *mesh = GeometryID(entity);
             insstate.state
         } else if count < 2 {
@@ -45,13 +46,7 @@ pub fn sys_create_geometry(
         };
 
         if instancestate > 0 {
-            vertex_desc.push(VertexBufferDesc {
-                key: KeyVertexBuffer::from(""),
-                range: None,
-                attrs: InstanceState::attributes(instancestate),
-                step_mode: wgpu::VertexStepMode::Instance,
-                instance: true,
-            });
+            vertex_desc.push(VertexBufferDesc::new(KeyVertexBuffer::from(""), VertexBufferDescRange::default(), InstanceState::attributes(instancestate), true));
         }
 
         ActionGeometry::init(&mut geocommands, &vertex_desc, indices_desc.clone(), id_mesh);

@@ -4,30 +4,17 @@ use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Number;
 
-
-pub mod value_uniform;
-pub mod texture_uniform;
-// pub mod sys_mat4;
-// pub mod sys_mat2;
-// pub mod sys_float;
-// pub mod sys_int;
-// pub mod sys_uint;
-// pub mod sys_vec2;
-// pub mod sys_vec4;
 pub mod uniform;
 pub mod float;
 pub mod vec2;
 pub mod vec4;
-pub mod mat2;
+// pub mod mat2;
 pub mod mat4;
-pub mod int;
+// pub mod int;
 pub mod uint;
-pub mod boolean;
-pub mod byte;
 pub mod texture;
 pub mod sys_texture;
 pub mod sys_uniform;
-pub mod sys_pass;
 
 #[derive(Resource)]
 pub struct ResourceDefaultTextures {

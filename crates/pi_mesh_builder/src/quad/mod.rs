@@ -24,7 +24,7 @@ impl QuadBuilder {
         vec![
             VertexBufferDesc::vertices(
                 keypos, 
-                None, 
+                VertexBufferDescRange::default(),
                 vec![
                     VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
                     VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },

@@ -35,6 +35,8 @@ impl CloudShader {
                 vec![
                 ]
             ),
+            String::from(""),
+            EVerticeExtendCode::default(),
             BlockCodeAtom { 
                 define: Atom::from(""), 
                 running: Atom::from(include_str!("../assets/skybox.vert"))

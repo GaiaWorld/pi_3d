@@ -24,7 +24,7 @@ pub struct BindEffectReset;
 
 
 #[derive(Component, Deref, DerefMut)]
-pub struct BindEffect(pub BindEffectValues);
+pub struct BindEffect(pub Option<BindEffectValues>);
 
 
 pub struct BindEffectValues {

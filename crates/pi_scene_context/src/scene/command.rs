@@ -2,13 +2,13 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Number;
 
-use crate::{prelude::FogParam, cullings::prelude::*};
+use crate::cullings::prelude::*;
 
-use super::ScenePassRenderCfg;
+use super::environment::fog::*;
 
-pub struct OpsSceneCreation(pub(crate) Entity, pub(crate) ScenePassRenderCfg, pub(crate) SceneBoundingPool);
+pub struct OpsSceneCreation(pub(crate) Entity, pub(crate) SceneBoundingPool);
 impl OpsSceneCreation {
-    pub fn ops(scene: Entity, passes_cfg: ScenePassRenderCfg, cullingmode: u8, param: [i32;9]) -> Self {
+    pub fn ops(scene: Entity, cullingmode: u8, param: [i32;9]) -> Self {
         let pool = match cullingmode {
             2 => {
                 SceneBoundingPool::create_oct(
@@ -23,7 +23,7 @@ impl OpsSceneCreation {
                 SceneBoundingPool::create_vec()
             }
         };
-        Self(scene, passes_cfg, pool)
+        Self(scene, pool)
     }
 }
 pub type ActionListSceneCreate = ActionList<OpsSceneCreation>;
@@ -75,3 +75,43 @@ impl OpsSceneAnimationEnable {
     }
 }
 pub type ActionListSceneAnimationEnable = ActionList<OpsSceneAnimationEnable>;
+
+pub struct OpsSceneBRDF(pub(crate) Entity, pub(crate) Atom, pub(crate) bool);
+impl OpsSceneBRDF {
+    pub fn ops(scene: Entity, url: Atom, compressed: bool) -> Self {
+        Self(scene, url, compressed)
+    }
+}
+pub type ActionListSceneBRDF = ActionList<OpsSceneBRDF>;
+
+pub struct OpsSceneOpaqueTexture(pub(crate) Entity, pub(crate) KeyRenderTarget);
+impl OpsSceneOpaqueTexture {
+    pub fn ops(scene: Entity, key: KeyRenderTarget) -> Self {
+        Self(scene, key)
+    }
+}
+pub type ActionListSceneOpaqueTexture = ActionList<OpsSceneOpaqueTexture>;
+
+pub struct OpsSceneDepthTexture(pub(crate) Entity, pub(crate) KeyRenderTarget);
+impl OpsSceneDepthTexture {
+    pub fn ops(scene: Entity, key: KeyRenderTarget) -> Self {
+        Self(scene, key)
+    }
+}
+pub type ActionListSceneDepthTexture = ActionList<OpsSceneDepthTexture>;
+
+pub struct OpsSceneEnvTexture(pub(crate) Entity, pub(crate) Option<Atom>, pub(crate) bool);
+impl OpsSceneEnvTexture {
+    pub fn ops(scene: Entity, path: Option<Atom>, data_is_image: bool) -> Self {
+        Self(scene, path, data_is_image)
+    }
+}
+pub type ActionListSceneEnvTexture = ActionList<OpsSceneEnvTexture>;
+
+pub struct OpsSceneShadowMap(pub(crate) Entity, pub(crate) Option<KeyRenderTarget>);
+impl OpsSceneShadowMap {
+    pub fn ops(scene: Entity, key: Option<KeyRenderTarget>) -> Self {
+        Self(scene, key)
+    }
+}
+pub type ActionListSceneShadowMap = ActionList<OpsSceneShadowMap>;

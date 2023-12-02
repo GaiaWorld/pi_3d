@@ -25,6 +25,8 @@ impl AxisShader {
             Varyings(vec![
                 Varying{ format: Atom::from("vec4"), name: Atom::from("v_color") }, 
             ]),
+            String::from(""),
+            EVerticeExtendCode::default(),
             BlockCodeAtom {
                 define: Atom::from(""),
                 running: Atom::from(include_str!("./assets/axis.vert")),

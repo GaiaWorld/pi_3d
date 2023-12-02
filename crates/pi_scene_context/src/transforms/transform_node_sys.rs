@@ -4,7 +4,12 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, Matrix, Rotation3, Quaternion, Vector3};
 
-use crate::{scene::coordinate_system::SceneCoordinateSytem3D, prelude::{Enable, GlobalEnable, NodeParent, NodeChilds}, commands::{DisposeReady, ActionListDisposeReady, ActionListDisposeCan, OpsDisposeCan}};
+use crate::{
+    scene::coordinate_system::SceneCoordinateSytem3D,
+    tree::*,
+    flags::*,
+    commands::*,
+};
 
 use super::transform_node::*;
 use super::prelude::*;
@@ -16,8 +21,8 @@ use super::prelude::*;
         localmatrixs.iter().for_each(|(entity, euler)| {
             if let Ok((mut loacl_quaternion, mut local_rotation)) = loacl_quaternions.get_mut(entity) {
                 let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
-                // let quaternion = Quaternion::from_rotation_matrix(&rotation);
-                // *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone(), false);
+                let quaternion = Quaternion::from_rotation_matrix(&rotation);
+                *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone(), false);
                 *local_rotation = LocalRotation(rotation);
             }
         });
@@ -221,7 +226,7 @@ struct TmpCalcWorldMatrix {
     }
 // }
 
-fn calc_world(
+fn _calc_world(
     nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
     transforms: &mut Query<&mut GlobalTransform>,
     parents: &Query<&NodeChilds>,
@@ -289,8 +294,9 @@ fn calc_world_one(
                 };
                 *gtransform = transform;
             };
-
-            globalenable.0 = resultenable;
+            if globalenable.0 != resultenable {
+                globalenable.0 = resultenable;
+            }
             temp_list.push(TmpCalcWorldMatrix { node: entity, dirty, matrix: gtransform.matrix.clone(), enable: resultenable });
         },
         (_, _) => {
@@ -299,7 +305,7 @@ fn calc_world_one(
     }
 }
 
-fn calc_world_root(
+fn _calc_world_root(
     nodes: &mut Query<(Ref<LocalMatrix>, &mut WorldMatrix, &mut WorldMatrixInv, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
     transforms: &mut Query<&mut GlobalTransform>,
     entity: Entity,
@@ -339,7 +345,9 @@ fn calc_world_root(
                 *gtransform = transform;
             }
 
-            globalenable.0 = resultenable;
+            if globalenable.0 != resultenable {
+                globalenable.0 = resultenable;
+            }
             TmpCalcWorldMatrix {
                 node: entity,
                 dirty,
@@ -439,7 +447,9 @@ fn calc_world_one_bytree(
                 *gtransform = transform;
             };
 
-            globalenable.0 = resultenable;
+            if globalenable.0 != resultenable {
+                globalenable.0 = resultenable;
+            }
             temp_list.push(TmpCalcWorldMatrix { node: entity, dirty, matrix: gtransform.matrix.clone(), enable: globalenable.0 });
         },
         (_, _) => {
@@ -489,7 +499,9 @@ fn calc_world_root_bytree(
                 *gtransform = transform;
             }
 
-            globalenable.0 = resultenable;
+            if globalenable.0 != resultenable {
+                globalenable.0 = resultenable;
+            }
             TmpCalcWorldMatrix {
                 node: entity,
                 dirty,

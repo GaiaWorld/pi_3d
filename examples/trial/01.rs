@@ -1,5 +1,6 @@
 
 
+use base::DemoScene;
 use pi_animation::loop_mode::ELoopMode;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
@@ -13,6 +14,11 @@ use rand::Rng;
 use unlit_material::*;
 use pi_particle_system::prelude::*;
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+
 fn setup(
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
@@ -21,19 +27,27 @@ fn setup(
     mut meshcmds: ActionSetMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     mut animegroupcmd: ActionSetAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut trailcmds: ActionSetTrailRenderer,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 50;
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 10., -50.), true);
+    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 10., -50.), true
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer, demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Transparent));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
@@ -43,9 +57,9 @@ fn setup(
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = 0;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., 10., 0.));
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     let id_geo = commands.spawn_empty().id();
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
     
@@ -111,7 +125,7 @@ fn setup(
         let trail = commands.spawn_empty().id();
         trailcmds.create.push(OpsTrail::ops(scene, source, trail));
         trailcmds.age.push(OpsTrailAgeControl::ops(trail, 500));
-        matcmds.usemat.push(OpsMaterialUse::ops(trail, idmat));
+        matcmds.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));
         let mut blend = ModelBlend::default(); blend.combine();
         meshcmds.blend.push(OpsRenderBlend::ops(trail, blend));
         meshcmds.depth_compare.push(OpsDepthCompare::ops(trail, CompareFunction::Always));
@@ -147,8 +161,6 @@ impl Plugin for PluginTest {
 
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
@@ -159,7 +171,7 @@ pub fn main() {
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

@@ -3,8 +3,7 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::{Number, Vector3};
 
 use crate::{
-    viewer::prelude::*,
-    layer_mask::prelude::*, prelude::{PassTagOrders, BundleTransformNode},
+    layer_mask::prelude::*, transforms::prelude::BundleTransformNode,
 };
 
 use super::{
@@ -77,29 +76,29 @@ impl OpsCameraOrthSize {
 }
 pub type ActionListCameraOrthSize = ActionList<OpsCameraOrthSize>;
 
-pub struct OpsCameraAspect(pub(crate) Entity, pub(crate) ViewerAspect);
+pub struct OpsCameraAspect(pub(crate) Entity, pub(crate) f32);
 impl OpsCameraAspect {
-    pub fn ops(camera: Entity, value: ViewerAspect) -> Self {
+    pub fn ops(camera: Entity, value: f32) -> Self {
         Self(camera, value)
     }
 }
 pub type ActionListCameraAspect = ActionList<OpsCameraAspect>;
 
-pub struct OpsCameraPixelSize(pub(crate) Entity, pub(crate) u32, pub(crate) u32);
-impl OpsCameraPixelSize {
-    pub fn ops(camera: Entity, w: u32, h: u32) -> Self {
-        Self(camera, w, h)
-    }
-}
-pub type ActionListCameraPixelSize = ActionList<OpsCameraPixelSize>;
+// pub struct OpsCameraPixelSize(pub(crate) Entity, pub(crate) u32, pub(crate) u32);
+// impl OpsCameraPixelSize {
+//     pub fn ops(camera: Entity, w: u32, h: u32) -> Self {
+//         Self(camera, w, h)
+//     }
+// }
+// pub type ActionListCameraPixelSize = ActionList<OpsCameraPixelSize>;
 
-pub struct OpsCameraToScreen(pub(crate) Entity, pub(crate) bool);
-impl OpsCameraToScreen {
-    pub fn ops(camera: Entity, val: bool) -> Self {
-        Self(camera, val)
-    }
-}
-pub type ActionListCameraToScreen = ActionList<OpsCameraToScreen>;
+// pub struct OpsCameraToScreen(pub(crate) Entity, pub(crate) bool);
+// impl OpsCameraToScreen {
+//     pub fn ops(camera: Entity, val: bool) -> Self {
+//         Self(camera, val)
+//     }
+// }
+// pub type ActionListCameraToScreen = ActionList<OpsCameraToScreen>;
 
 pub struct OpsCameraTarget(pub(crate) Entity, pub(crate) Vector3);
 impl OpsCameraTarget {
@@ -109,20 +108,21 @@ impl OpsCameraTarget {
 }
 pub type ActionListCameraTarget = ActionList<OpsCameraTarget>;
 
-pub struct OpsCameraRendererInit(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub(crate) PassTagOrders, pub(crate) ColorFormat, pub(crate) DepthStencilFormat, pub(crate) u8);
-impl OpsCameraRendererInit {
-    pub fn ops(
-        camera: Entity,
-        renderer: Entity,
-        name: String,
-        orders: PassTagOrders,
-        render_target_color_format: ColorFormat,
-        render_target_depth_stencil_format: DepthStencilFormat,
-    ) -> Self {
-        Self(camera, renderer, name, orders, render_target_color_format, render_target_depth_stencil_format, 0)
-    }
-}
-pub type ActionListCameraRenderer = ActionList<OpsCameraRendererInit>;
+// pub struct OpsCameraRendererInit(pub(crate) Entity, pub(crate) Entity, pub(crate) String, pub(crate) PassTagOrders, pub(crate) ColorFormat, pub(crate) DepthStencilFormat, pub(crate) RenderTargetMode, pub(crate) u8);
+// impl OpsCameraRendererInit {
+//     pub fn ops(
+//         camera: Entity,
+//         renderer: Entity,
+//         name: String,
+//         orders: PassTagOrders,
+//         render_target_color_format: ColorFormat,
+//         render_target_depth_stencil_format: DepthStencilFormat,
+//         mode: RenderTargetMode,
+//     ) -> Self {
+//         Self(camera, renderer, name, orders, render_target_color_format, render_target_depth_stencil_format, mode, 0)
+//     }
+// }
+// pub type ActionListCameraRenderer = ActionList<OpsCameraRendererInit>;
 
 // pub struct OpsCameraRendererModify(Entity, String, )
 
@@ -136,7 +136,6 @@ pub struct BundleCamera(
     CameraOrthSize,
     RecordCameraFov,
     RecordCameraOrthSize,
-    CameraViewport,
     LayerMask,
     CameraUp,
     CameraTarget,

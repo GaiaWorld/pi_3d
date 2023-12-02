@@ -1,12 +1,17 @@
 
+use std::ops::Deref;
 
 use pi_bevy_render_plugin::SimpleInOut;
 use pi_engine_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_share::ShareRefCell;
 
-use crate::{renderers::renderer::*, pass::PassTagOrders, prelude::DisposeReady};
+use crate::{
+    pass::PassTagOrders,
+    commands::DisposeReady
+};
 
+use super::renderer::*;
 
 #[derive(Clone)]
 pub struct RendererGraphicParam {
@@ -35,7 +40,7 @@ pub struct QueryParam<'w, 's> (
     // Res<'w, PiRenderWindow>,
     // Res<'w, PiRenderDevice>,
     // Res<'w, PiRenderQueue>,
-    Res<'w, WindowRenderer>,
+    Res<'w, PiScreenTexture>,
     Res<'w, PiSafeAtlasAllocator>,
     Query<
         'w,
@@ -45,8 +50,8 @@ pub struct QueryParam<'w, 's> (
             &'static RenderColorFormat, &'static RenderColorClear,
             &'static RenderDepthFormat, &'static RenderDepthClear,
             &'static RenderStencilClear,
-            &'static RenderAutoClearColor,&'static RenderAutoClearDepth, &'static RenderAutoClearStencil,
-            &'static RenderToFinalTarget,
+            &'static RenderAutoClearColor, &'static RenderAutoClearDepth, &'static RenderAutoClearStencil,
+            &'static RendererRenderTarget,
         ),
     >,
 );
@@ -84,23 +89,10 @@ impl Node for RenderNode {
 
         let mut output = SimpleInOut::default();
 
-        // let window = world.get_resource::<RenderWindow>().unwrap();
-
-        // let query = QueryState::<(&Renderer, &RenderSize, &RenderColorFormat, &RenderColorClear, &RenderDepthFormat, &RenderDepthClear)>::from_world(world);
-        // let query2 = QueryState::<GameObject, &RenderSize>::new(&mut context.world);
-        // let query3 = QueryState::<GameObject, &RenderColorFormat>::new(&mut context.world);
-        // let query4 = QueryState::<GameObject, &RenderColorClear>::new(&mut context.world);
-        // let query5 = QueryState::<GameObject, &RenderDepthFormat>::new(&mut context.world);
-        // let query6 = QueryState::<GameObject, &RenderDepthClear>::new(&mut context.world);
-        //  log::debug!("SingleMainCameraOpaqueRenderNode ............. {:?}", self.renderer_id);
-        // if let Some((renderer , rendersize , rendercolor , rendercolorclear , renderdepth , renderdepthclear)) = query.get(&context.world, self.renderer_id) {
-
-        // log::warn!("Draws: Graphic");
-
         let param: QueryParam = param.get(world);
-        let (final_render_target, atlas_allocator, query) = (param.0, param.1, param.2);
+        let (screen, atlas_allocator, query) = (param.0, param.1, param.2);
         if let Ok((
-            enable, disposed, renderer, rendersize, format, color_clear, depth, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
+            enable, disposed, renderer, rendersize, colorformat, color_clear, depthstencilformat, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
         )) = query.get(self.renderer_id) {
             // query.
     
@@ -114,7 +106,7 @@ impl Node for RenderNode {
             }
     
             let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
-            let need_depth = depth.need_depth();
+            let need_depth = depthstencilformat.need_depth();
             
             let clear_color_ops = if auto_clear_color.0 {
                 wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: true }
@@ -129,238 +121,183 @@ impl Node for RenderNode {
             } else {
                 None
             };
-    
-            // log::warn!("Draws: to_final_target {:?}", to_final_target.0);
-            if to_final_target.0 {
-                let width = rendersize.width();
-                let height = rendersize.height();
-                x = width as f32 * x;
-                y = height as f32 * y;
-                w = width as f32 * w;
-                h = height as f32 * h;
-                if let Some(view) =  final_render_target.view() {
-                    // let mut vx = 0;
-                    // let mut vy = 0;
-                    // let mut vw = final_render_target.;
-                    // let mut vh = srt.rect().max.y - vy;
-                    // x = vw as f32 * x + vx;
-                    // y = vh as f32 * y + vy;
-                    // w = vw as f32 * w;
-                    // h = vh as f32 * h;
-    
-                    // log::warn!("Clear:  {:?} {:?} {:?}", auto_clear_color.0, auto_clear_depth.0, auto_clear_stencil.0);
-                    // Clear
-                    if auto_clear_color.0 || auto_clear_depth.0 || auto_clear_stencil.0 {
-                        let mut renderpass = commands.begin_render_pass(
-                            &wgpu::RenderPassDescriptor {
-                                label: None,
-                                color_attachments: &[
-                                    Some(
-                                        wgpu::RenderPassColorAttachment {
-                                            view: view,
-                                            resolve_target: None,
-                                            ops: clear_color_ops,
-                                        }
-                                    )
-                                ],
-                                depth_stencil_attachment: Some(
-                                    wgpu::RenderPassDepthStencilAttachment {
-                                        view: final_render_target.depth_view().unwrap(),
-                                        depth_ops: clear_depth_ops,
-                                        stencil_ops: clear_stencil_ops,
+
+            // let color_view = to_final_target.view();
+            let depth_view = to_final_target.depth_view();
+            
+            let can_render: bool;
+            let clear_color_attachments;
+            let color_attachments;
+            let clear_depth_stencil_attachment;
+            let depth_stencil_attachment;
+            let render_color_view;
+            let render_depth_view;
+
+            match &to_final_target {
+                RendererRenderTarget::FinalRender => {
+                    // log::warn!("Graphic: FinalRender");
+                    if let Some(screen) = &screen.0 {
+                        match (&screen.view, screen.texture()) {
+                            (Some(view), Some(texture)) => {
+                                can_render = true;
+                                let width = texture.texture.width();
+                                let height = texture.texture.height();
+                                x = width as f32 * x;
+                                y = height as f32 * y;
+                                w = width as f32 * w;
+                                h = height as f32 * h;
+                                render_color_view = view.deref();
+                                render_depth_view = None;
+                            },
+                            _ => {
+                                return Box::pin(
+                                    async move {
+                                        Ok(output)
                                     }
-                                )
-                            }
-                        );
-                        renderpass.set_viewport(x, y, w, h, min_depth, max_depth);
-                        renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                    }
-    
-                    if renderer.draws.list.len() > 0 {
-                        let mut color_attachments = vec![];
-                        color_attachments.push(
-                            Some(
-                                wgpu::RenderPassColorAttachment {
-                                    resolve_target: None,
-                                    ops: wgpu::Operations {
-                                        load: wgpu::LoadOp::Load,
-                                        store: true,
-                                    },
-                                    view: view,
-                                }
-                            )
-                        );
-            
-                        let mut renderpass = commands.begin_render_pass(
-                            &wgpu::RenderPassDescriptor {
-                                label: Some("RenderNode"),
-                                color_attachments: color_attachments.as_slice(),
-                                depth_stencil_attachment: Some(
-                                    wgpu::RenderPassDepthStencilAttachment {
-                                        view: final_render_target.depth_view().unwrap(),
-                                        depth_ops: Some(
-                                            wgpu::Operations {
-                                                load: wgpu::LoadOp::Load,
-                                                store: true,
-                                            }
-                                        ),
-                                        stencil_ops: Some(
-                                            wgpu::Operations {
-                                                load: wgpu::LoadOp::Load,
-                                                store: true,
-                                            }
-                                        ),
-                                    }
-                                ),
-                            }
-                        );
-            
-                        renderpass.set_viewport(x, y, w, h, 0., max_depth);
-                        renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
-                        // log::warn!("Draws: {:?}", renderer.draws.list.len());
-                        DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
-        
-                        // let time1 = pi_time::Instant::now();
-                        // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
-                    }
-            
-                    Box::pin(
-                        async move {
-                            Ok(output)
+                                );
+                            },
                         }
-                    )
-                } else {
-                    // let time1 = pi_time::Instant::now();
-                    // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
-            
-                    Box::pin(
-                        async move {
-                            Ok(output)
-                        }
-                    )
-                }
-            } else {
-                let currlist: Vec<ShareTargetView> = vec![];
-                let srt = if let Some(srt) = input.target.clone() {
-                    if srt.target().depth.is_none() && need_depth {
-                        // log::warn!("Render Input Not Get Depth!");
-                        None
                     } else {
-                        Some(srt)
+                        return Box::pin(
+                            async move {
+                                Ok(output)
+                            }
+                        );
                     }
-                } else {
-                    None
-                };
-                let srt = if let Some(srt) = srt {
-                    srt
-                } else {
+                },
+                RendererRenderTarget::Custom(srt) => {
+                    // log::warn!("Graphic: Custom");
                     let width = rendersize.width();
                     let height = rendersize.height();
-                    let target_type = atlas_allocator.get_or_create_type(
-                        TargetDescriptor {
-                            colors_descriptor: format.desc(),
-                            need_depth: need_depth,
-                            default_width: 2048,
-                            default_height: 2048,
-                            depth_descriptor: depth.desc()
+                    x = srt.rect().min.x as f32 + width as f32 * x;
+                    y = srt.rect().min.y as f32 + height as f32 * y;
+                    w = width as f32 * w;
+                    h = height as f32 * h;
+                    can_render = need_depth == depth_view.is_some();
+                    let view = srt.target().colors[0].0.as_ref();
+                    render_color_view = view.deref().deref();
+
+                    if let Some(view) = srt.target().depth.as_ref() {
+                        let depth_view = view.0.as_ref();
+                        render_depth_view = Some(depth_view.deref().deref());
+                    } else {
+                        render_depth_view = None;
+                    };
+                },
+                RendererRenderTarget::None => {
+                    // can_render = false;
+                    // return Box::pin(
+                    //     async move {
+                    //         Ok(output)
+                    //     }
+                    // );
+
+                    let currlist: Vec<ShareTargetView> = vec![];
+                    let srt = if let Some(srt) = input.target.clone() {
+                        match (depthstencilformat.0.val(), &srt.target().depth) {
+                            (Some(format), Some(depthview)) => {
+                                if depthview.1.format() == format {
+                                    Some(srt)
+                                } else { None }
+                            },
+                            (None, _) => { Some(srt) },
+                            _ => { None }
                         }
-                    );
-                    
-                    // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
-                    atlas_allocator.allocate(
-                        width,
-                        height,
-                        target_type.clone(),
-                        currlist.iter()
-                    )
-                };
-                let vx = srt.rect().min.x;
-                let vy = srt.rect().min.y;
-                let vw = srt.rect().max.x - srt.rect().min.x;
-                let vh = srt.rect().max.y - vy;
-                x = vw as f32 * x + vx as f32;
-                y = vh as f32 * y + vy as f32;
-                w = vw as f32 * w;
-                h = vh as f32 * h;
-                // log::warn!("Render Size: {:?}", (x, y, w, h));
-    
-                let (
-                    depth_stencil_attachment,
-                    clear_depth
-                ) = if let Some(depth) = &srt.target().depth {
-                    let depth_stencil_attachment = Some(
+                    } else {
+                        None
+                    };
+                    let srt = match srt {
+                        Some(srt) => {
+                            if srt.target().colors[0].1.format() == colorformat.0.val() {
+                                Some(srt)
+                            } else {
+                                None
+                            }
+                        },
+                        None => {
+                            None
+                        },
+                    };
+
+                    let srt = if let Some(srt) = srt {
+                        srt
+                    } else {
+                        let width = rendersize.width();
+                        let height = rendersize.height();
+                        let target_type = atlas_allocator.get_or_create_type(
+                            TargetDescriptor { colors_descriptor: colorformat.desc(), need_depth: need_depth,  default_width: 2048,  default_height: 2048, depth_descriptor: depthstencilformat.desc() }
+                        );
+                        
+                        // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
+                        atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
+                    };
+                    let width = srt.rect().max.x - srt.rect().min.x;
+                    let height = srt.rect().max.y - srt.rect().min.y;
+                    x = srt.rect().min.x as f32 + width as f32 * x;
+                    y = srt.rect().min.y as f32 + height as f32 * y;
+                    w = width as f32 * w;
+                    h = height as f32 * h;
+                    // can_render = true;
+
+                    output.target = Some(srt.clone());
+
+                    let view = output.target.as_ref().unwrap().target().colors[0].0.as_ref();
+                    render_color_view = view.deref().deref();
+
+                    if let Some(view) = output.target.as_ref().unwrap().target().depth.as_ref() {
+                        let depth_view = view.0.as_ref();
+                        render_depth_view = Some(depth_view.deref().deref());
+                    } else {
+                        render_depth_view = None;
+                    };
+
+                    can_render = true;
+                },
+            };
+
+            // log::warn!("Graphic: {:?}", (can_render, renderer.draws.list.len()));
+            if can_render {
+                clear_color_attachments = [
+                    Some( wgpu::RenderPassColorAttachment { view: render_color_view, resolve_target: None, ops: clear_color_ops, } )
+                ];
+                color_attachments = [
+                    Some( wgpu::RenderPassColorAttachment { resolve_target: None,  ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: true, }, view: render_color_view, })
+                ];
+                if let Some(depth) = render_depth_view {
+                    depth_stencil_attachment = Some(
                         wgpu::RenderPassDepthStencilAttachment {
-                            view: depth.0.as_ref(),
+                            view: depth,
                             depth_ops: Some(
-                                wgpu::Operations {
-                                    load: wgpu::LoadOp::Load,
-                                    store: true,
-                                }
+                                wgpu::Operations { load: wgpu::LoadOp::Load, store: true, }
                             ),
-                            stencil_ops: Some(
-                                wgpu::Operations {
-                                    load: wgpu::LoadOp::Load,
-                                    store: true,
-                                }
-                            ),
+                            stencil_ops: Some( wgpu::Operations { load: wgpu::LoadOp::Load, store: true, } ),
                         }
                     );
-                    let clear_depth = Some(
-                        wgpu::RenderPassDepthStencilAttachment {
-                            view: depth.0.as_ref(),
-                            depth_ops: clear_depth_ops,
-                            stencil_ops: clear_stencil_ops,
-                        }
+                    clear_depth_stencil_attachment = Some(
+                        wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: clear_depth_ops, stencil_ops: clear_stencil_ops, }
                     );
-                    (depth_stencil_attachment, clear_depth)
                 } else {
-                    (None, None)
+                    clear_depth_stencil_attachment = None;
+                    depth_stencil_attachment = None;
                 };
 
-                // log::warn!("Render color: {:?}", srt.target().colors);
-                // log::warn!("Render depth: {:?}", srt.target().depth);
-    
-                // log::warn!("Clear:  {:?} {:?} {:?} {:?}", auto_clear_color.0, auto_clear_depth.0, auto_clear_stencil.0, srt.target().depth.is_some());
-                if auto_clear_color.0 || (auto_clear_depth.0 || auto_clear_stencil.0) {
+                if auto_clear_color.0 || auto_clear_depth.0 || auto_clear_stencil.0 {
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
                             label: None,
-                            color_attachments: &[
-                                Some(
-                                    wgpu::RenderPassColorAttachment {
-                                        view: &srt.target().colors[0].0,
-                                        resolve_target: None,
-                                        ops: clear_color_ops
-                                    }
-                                )
-                            ],
-                            depth_stencil_attachment: clear_depth
+                            color_attachments: clear_color_attachments.as_slice(),
+                            depth_stencil_attachment: clear_depth_stencil_attachment
                         }
                     );
-                    renderpass.set_viewport(x, y, w, h, 0., max_depth);
+                    renderpass.set_viewport(x, y, w, h, min_depth, max_depth);
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                 }
-                
-                if renderer.draws.list.len() > 0 {
-                    // log::warn!("3D Draws: {:?}", renderer.draws.list.len());
 
-                    let mut color_attachments = vec![];
-                    color_attachments.push(
-                        Some(
-                            wgpu::RenderPassColorAttachment {
-                                resolve_target: None,
-                                ops: wgpu::Operations {
-                                    load: wgpu::LoadOp::Load,
-                                    store: true,
-                                },
-                                view: srt.target().colors[0].0.as_ref(),
-                            }
-                        )
-                    );
-        
+                // log::warn!("Draws: {:?}", renderer.draws.list.len());
+                if renderer.draws.list.len() > 0 {
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
-                            label: Some("RenderNode"),
+                            label: Some(self.renderer_id.index().to_string().as_str()),
                             color_attachments: color_attachments.as_slice(),
                             depth_stencil_attachment: depth_stencil_attachment,
                         }
@@ -369,13 +306,17 @@ impl Node for RenderNode {
                     renderpass.set_viewport(x, y, w, h, 0., max_depth);
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
-        
-                    // let time1 = pi_time::Instant::now();
-                    // log::warn!("3D Draws End: {:?}", time1 - time);
-                }
     
-                output.target = Some(srt);
+                    // let time1 = pi_time::Instant::now();
+                    // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
+                }
         
+                Box::pin(
+                    async move {
+                        Ok(output)
+                    }
+                )
+            } else {
                 Box::pin(
                     async move {
                         Ok(output)
@@ -389,7 +330,6 @@ impl Node for RenderNode {
                 }
             )
         }
-
     }
 }
 

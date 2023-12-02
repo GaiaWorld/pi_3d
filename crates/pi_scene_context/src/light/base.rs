@@ -7,16 +7,32 @@ use crate::{
     transforms::prelude::*,
 };
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
-pub enum Light {
-    Directional,
-    Point,
-    Spot,
-    Hemispheric,
+#[derive(Resource, Default)]
+pub struct StateLight {
+    pub culling_time: u32,
 }
+impl TCullingPerformance for StateLight {
+    fn culling_time(&mut self, ms: u32) {
+        self.culling_time = ms;
+    }
+}
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageLighting {
+    LightingCommand,
+    LightingCommandApply,
+    LightingUniform,
+    // LightingCalcMatrix,
+    // LightingCulling,
+}
+
 
 #[derive(Component)]
 pub struct DirectLight;
+
+#[derive(Component)]
+pub struct PointLight;
 
 #[derive(Component)]
 pub struct SpotLight;
@@ -24,11 +40,47 @@ pub struct SpotLight;
 #[derive(Component)]
 pub struct HemisphericLight;
 
+// pub struct 
+
+#[derive(Component)]
+pub struct LightColor(pub Vector3);
+impl Default for LightColor {
+    fn default() -> Self {
+        Self(Vector3::new(1., 1., 1.))
+    }
+}
+
+#[derive(Component)]
+pub struct LightRadius(pub f32);
+impl Default for LightRadius {
+    fn default() -> Self {
+        Self(5.)
+    }
+}
+
+
+#[derive(Component)]
+pub struct LightStrength(pub f32);
+impl Default for LightStrength {
+    fn default() -> Self {
+        Self(1.)
+    }
+}
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum LightingMode {
     Lambert,
     PBR,
+    PBRGLTF,
+}
+impl LightingMode {
+    pub fn val(&self) -> f32 {
+        match self {
+            LightingMode::Lambert => 0.1,
+            LightingMode::PBR => 1.1,
+            LightingMode::PBRGLTF => 2.1,
+        }
+    }
 }
 
 #[derive(Component)]

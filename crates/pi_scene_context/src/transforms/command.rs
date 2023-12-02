@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
 use pi_scene_math::*;
 
-use crate::prelude::{Enable, GlobalEnable, CullingFlag};
+use crate::flags::*;
 
 use super::transform_node::*;
 
@@ -15,42 +15,49 @@ impl OpsTransformNode {
 }
 pub type ActionListTransformNodeCreate = ActionList<OpsTransformNode>;
 
-pub struct OpsTransformNodeParent(pub Entity, pub Entity, pub u8);
+pub struct OpsTransformNodeParent(pub Entity, pub Entity);
 impl OpsTransformNodeParent {
     pub fn ops(node: Entity, parent: Entity) -> Self {
-        Self(node, parent, 0)
+        Self(node, parent)
     }
 }
 pub type ActionListTransformNodeParent = ActionList<OpsTransformNodeParent>;
 
-pub struct OpsTransformNodeLocalPosition(pub Entity, pub Vector3, pub u8);
+pub struct OpsTransformNodeLocalPosition(pub Entity, pub Vector3);
 impl OpsTransformNodeLocalPosition {
     pub fn ops(node: Entity, x: f32, y: f32, z: f32) -> Self {
-        Self(node, Vector3::new(x, y, z), 0)
+        Self(node, Vector3::new(x, y, z))
     }
 }
 pub type ActionListTransformNodeLocalPosition = ActionList<OpsTransformNodeLocalPosition>;
 
-pub struct OpsTransformNodeLocalRotationQuaternion(pub Entity, pub f32, pub f32, pub f32, pub f32, pub u8);
+
+// pub enum OpsTransformNodeLocalRotation {
+//     Euler(Entity, Number, Number, Number),
+//     Quaternion(Entity, Number, Number, Number, Number),
+// }
+// pub type ActionListTransformNodeLocalRotation = ActionList<OpsTransformNodeLocalRotation>;
+
+pub struct OpsTransformNodeLocalRotationQuaternion(pub Entity, pub f32, pub f32, pub f32, pub f32);
 impl OpsTransformNodeLocalRotationQuaternion {
     pub fn ops(node: Entity, x: f32, y: f32, z: f32, w: f32) -> Self {
-        Self(node, x, y, z, w, 0)
+        Self(node, x, y, z, w)
     }
 }
 pub type ActionListTransformNodeLocalRotationQuaternion = ActionList<OpsTransformNodeLocalRotationQuaternion>;
 
-pub struct OpsTransformNodeLocalEuler(pub Entity, pub Vector3, pub u8);
+pub struct OpsTransformNodeLocalEuler(pub Entity, pub Vector3);
 impl OpsTransformNodeLocalEuler {
     pub fn ops(node: Entity, x: f32, y: f32, z: f32) -> Self {
-        Self(node, Vector3::new(x, y, z), 0)
+        Self(node, Vector3::new(x, y, z))
     }
 }
 pub type ActionListTransformNodeLocalEuler = ActionList<OpsTransformNodeLocalEuler>;
 
-pub struct OpsTransformNodeLocalScaling(pub Entity, pub Vector3, pub u8);
+pub struct OpsTransformNodeLocalScaling(pub Entity, pub Vector3);
 impl OpsTransformNodeLocalScaling {
     pub fn ops(node: Entity, x: f32, y: f32, z: f32) -> Self {
-        Self(node, Vector3::new(x, y, z), 0)
+        Self(node, Vector3::new(x, y, z))
     }
 }
 pub type ActionListTransformNodeLocalScaling = ActionList<OpsTransformNodeLocalScaling>;

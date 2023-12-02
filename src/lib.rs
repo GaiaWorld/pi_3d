@@ -1,6 +1,7 @@
 use pi_3d_state::{PluginStateGlobal, StateResource};
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
+use pi_node_materials::PluginNodeMaterial;
 use pi_particle_system::prelude::ParticleSystemPerformance;
 use pi_scene_context::{
     prelude::*,
@@ -14,8 +15,9 @@ use pi_scene_context::{
     layer_mask::PluginLayerMask,
     materials::PluginGroupMaterial,
     renderers::PluginRenderer,
-    skeleton::PluginSkeleton, cullings::PluginCulling
+    skeleton::PluginSkeleton, cullings::PluginCulling, viewer::PluginViewerBase, shadow::PluginShadowGenerator
 };
+use pi_shadow_mapping::PluginShadowMapping;
 
 pub struct Limit(pub wgpu::Limits);
 // impl TMemoryAllocatorLimit for Limit {
@@ -51,23 +53,25 @@ pub fn sys_info_node(
 }
 
 pub fn sys_info_draw(
-    draws: Query<(&PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue, &PassShader, &PassBindGroups, &PassPipeline, &PassDraw)>,
+    draws: Query<(&PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue, &PassBindEffectTextures, &PassShader, &PassBindGroups, &PassPipeline, &PassDraw)>,
     geometries: Query<&RenderGeometryComp>,
     meshes: Query<&RenderGeometryEable>,
-    viewers: Query<(&ModelList, &ModelListAfterCulling)>,
+    viewers: Query<(&ModelList, &ForceIncludeModelList, &ModelListAfterCulling)>,
     statecamera: Res<StateCamera>,
 ) {
     let mut count_set0 = 0;
     let mut count_set1 = 0;
     let mut count_effect = 0;
+    let mut count_textures = 0;
     let mut count_bindgroups = 0;
     let mut count_shader = 0;
     let mut count_pipeline = 0;
     let mut count_draw = 0;
-    draws.iter().for_each(|(bindgroup_scene, bindgroup_model, bindeffect, shader, bindgroups, pipeline, draw)| {
+    draws.iter().for_each(|(bindgroup_scene, bindgroup_model, bindeffect, bindtextures, shader, bindgroups, pipeline, draw)| {
         if bindgroup_scene.is_some() { count_set0 += 1; }
         if bindgroup_model.is_some() { count_set1 += 1; }
         if bindeffect.0.is_some() { count_effect += 1; }
+        if bindtextures.val().is_some() { count_textures += 1; }
         if bindgroups.0.is_some() { count_bindgroups += 1; }
         if shader.is_some() { count_shader += 1; }
         if pipeline.is_some() { count_pipeline += 1; }
@@ -92,14 +96,14 @@ pub fn sys_info_draw(
 
     let mut viewer_cullings = vec![];
     let mut viewer_includes = vec![];
-    viewers.iter().for_each(|(models, item)| {
+    viewers.iter().for_each(|(models, forcemodels, item)| {
         viewer_cullings.push(item.0.len());
-        viewer_includes.push(models.0.len())
+        viewer_includes.push(models.0.len() + forcemodels.0.len());
     });
 
     log::warn!(
-        "ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-        count_ready_geo, count_ready_geo_mesh, viewer_includes, viewer_cullings, statecamera.culling_time, count_set0, count_set1, count_effect, count_bindgroups, count_shader, count_pipeline, count_draw
+        "ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+        count_ready_geo, count_ready_geo_mesh, viewer_includes, viewer_cullings, statecamera.culling_time, count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
     );
 }
 
@@ -141,13 +145,18 @@ impl PluginGroup for PluginBundleDefault {
             .add(PluginGeometry)
             .add(PluginLighting)
             .add(PluginLayerMask)
+            .add(PluginViewerBase)
             .add(PluginCulling);
         group = PluginGroupMaterial::add(group);
         group = group.add(PluginRenderer)
+            .add(PluginPassObject)
             .add(PluginSkeleton)
             .add(PluginDefaultMaterial)
             .add(PluginDispose)
+            .add(PluginNodeMaterial)
             .add(PluginStateGlobal)
+            .add(PluginShadowGenerator)
+            .add(PluginShadowMapping)
             ;
 
         group

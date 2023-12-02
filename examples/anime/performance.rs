@@ -16,6 +16,10 @@ use unlit_material::*;
 
 use std::{ mem::replace, ops::DerefMut};
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
 
 fn setup(
     mut commands: Commands,
@@ -28,28 +32,33 @@ fn setup(
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 100;
     fps.frame_ms = 4;
 
-    let (scene, camera01, id_renderer) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
+    let demopass = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 0., -10.), true
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
-    let source = commands.spawn_empty().id();
-    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_TILL_OFF_1;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
-    
-    let id_geo = commands.spawn_empty().id();
-    let attrs = CubeBuilder::attrs_meta();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    let vertices = CubeBuilder::attrs_meta();
+    let indices = Some(CubeBuilder::indices_meta());
+    let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_TILL_OFF_1, ..Default::default() };
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
 
     let idmat = commands.spawn_empty().id();
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
@@ -131,14 +140,12 @@ pub fn sys_anime_event(
 }
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins();
     
     app.add_plugins(PluginTest);
     
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
 
     app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));

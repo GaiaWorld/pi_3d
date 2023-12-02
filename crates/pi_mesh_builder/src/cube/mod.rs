@@ -36,7 +36,7 @@ impl CubeBuilder {
         vec![
             VertexBufferDesc::vertices(
                 key,
-                Some(Range { start: Self::POSITION_OFFSET as u64, end: Self::POSITION_SIZE as u64, }),
+                VertexBufferDescRange::new(Self::POSITION_OFFSET as VertexBufferRangeVType, Self::POSITION_SIZE  as VertexBufferRangeVType ),
                 vec![
                     VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
                     VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },

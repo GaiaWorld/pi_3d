@@ -2,7 +2,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-use crate::{transforms::transform_node::*, commands::*, prelude::NodeChilds};
+use crate::{transforms::transform_node::*, commands::*};
 
 use super::{skeleton::*, bone::*};
 

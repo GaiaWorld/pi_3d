@@ -1,5 +1,7 @@
+#[allow(dead_code)]
+#[allow(unused_imports)]
 
-
+use default_render::shader::DefaultShader;
 use pi_3d::PluginBundleDefault;
 use pi_3d_state::StateResource;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
@@ -7,13 +9,19 @@ use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
 use pi_node_materials::prelude::*;
 use pi_particle_system::{PluginParticleSystem, prelude::ResParticleCommonBuffer};
-use pi_scene_context::prelude::*;
-use pi_mesh_builder::{cube::*, quad::PluginQuadBuilder};
+use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator};
+use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
+use pi_shadow_mapping::PluginShadowMapping;
+use pi_standard_material::PluginStandardMaterial;
 use unlit_material::*;
+use wgpu1::Backends;
 
 use std::sync::Arc;
 use pi_async_rt::rt::AsyncRuntime;
 use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+
+#[path = "./copy.rs"]
+mod copy;
 
 pub struct PluginLocalLoad;
 impl Plugin for PluginLocalLoad {
@@ -34,52 +42,98 @@ pub fn main() {
     
 }
 
-pub struct DemoScene;
+pub struct DemoScene {
+    pub scene: Entity,
+    pub camera: Entity,
+    pub opaque_renderer: Entity,
+    pub transparent_renderer: Entity,
+    pub opaque_target: Option<KeyCustomRenderTarget>,
+    pub transparent_target: Option<KeyCustomRenderTarget>,
+    pub shadowtarget: Option<KeyRenderTarget>,
+}
 impl DemoScene {
+    pub const PASS_SHADOW: PassTag          = PassTag::PASS_TAG_01;
+    pub const PASS_PRE_DEPTH: PassTag       = PassTag::PASS_TAG_02;
+    pub const PASS_OPAQUE: PassTag          = PassTag::PASS_TAG_03;
+    pub const PASS_HIGHLIGHT: PassTag       = PassTag::PASS_TAG_04;
+    pub const PASS_SKY_WATER: PassTag       = PassTag::PASS_TAG_06;
+    pub const PASS_TRANSPARENT: PassTag     = PassTag::PASS_TAG_07;
     pub fn new(
         commands: &mut Commands,
         scenecmds: &mut ActionSetScene,
         cameracmds: &mut ActionSetCamera,
         transformcmds: &mut ActionSetTransform,
         animegroupcmd: &mut ActionSetAnimationGroup,
-        final_render: &mut WindowRenderer,
         renderercmds: &mut ActionSetRenderer,
+        targets: &mut CustomRenderTargets,
+        device: &RenderDevice,
+        asset_samp: &ShareAssetMgr<SamplerRes>,
+        atlas_allocator: &PiSafeAtlasAllocator,
         camera_size: f32,
         camera_fov: f32,
         camera_position: (f32, f32, f32),
         orthographic_camera: bool
-    ) -> (Entity, Entity, Entity) {
-        final_render.cleardepth = 0.0;
+    ) -> Self {
+        
+        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800 * 2, 600 * 2) {
+            Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
+            None => None,
+        };
+        
+        let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
 
         let scene = commands.spawn_empty().id();
         animegroupcmd.scene_ctxs.init_scene(scene);
-        scenecmds.create.push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default(), SceneBoundingPool::MODE_LIST, [0, 0, 0, 0,0 ,0 ,0 ,0 ,0]));
+        scenecmds.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0,0 ,0 ,0 ,0 ,0]));
 
-        let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
-        cameracmds.create.push(OpsCameraCreation::ops(scene, camera01, true));
-        transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, camera_position.0, camera_position.1, camera_position.2));
-        cameracmds.mode.push(OpsCameraMode::ops(camera01, orthographic_camera));
-        cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-        cameracmds.size.push(OpsCameraOrthSize::ops(camera01, camera_size));
-        cameracmds.fov.push(OpsCameraFov::ops(camera01, camera_fov));
-        
-        let desc = RendererGraphicDesc {
-            pre: Some(final_render.clear_entity),
-            curr: String::from("TestCamera"),
-            next: Some(final_render.render_entity),
-            passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent])
-        };
-        let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearColor(id_renderer, true));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(id_renderer, true));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearStencil(id_renderer, true));
-        renderercmds.modify.push(OpsRendererCommand::DepthClear(id_renderer, RenderDepthClear(0.)));
-        renderercmds.modify.push(OpsRendererCommand::ColorClear(id_renderer, RenderColorClear(0, 0, 0, 0)));
-        renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
-        renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
-        cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None));
+        let camera = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera, scene));
+        cameracmds.create.push(OpsCameraCreation::ops(scene, camera, true));
+        transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera, camera_position.0, camera_position.1, camera_position.2));
+        cameracmds.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
+        cameracmds.active.push(OpsCameraActive::ops(camera, true));
+        cameracmds.size.push(OpsCameraOrthSize::ops(camera, camera_size));
+        cameracmds.fov.push(OpsCameraFov::ops(camera, camera_fov));
+        cameracmds.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
+        cameracmds.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
+        cameracmds.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
 
-        (scene, camera01, id_renderer)
+        let opaque_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
+        renderercmds.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
+        renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
+        renderercmds.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
+        renderercmds.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
+        renderercmds.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
+        renderercmds.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
+        // cameracmds.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+
+        let transparent_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
+        renderercmds.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
+        renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
+        renderercmds.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
+        renderercmds.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
+        renderercmds.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
+        // cameracmds.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+
+        Self { scene, camera, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
+    }
+
+    pub fn mesh(
+        commands: &mut Commands,
+        scene: Entity,
+        parent: Entity,
+        meshcmds: &mut ActionSetMesh,
+        geometrycmd: &mut ActionSetGeometry,
+        transformcmds: &mut ActionSetTransform,
+        vertices: Vec<VertexBufferDesc>,
+        indices: Option<IndicesBufferDesc>,
+        state: MeshInstanceState,
+    ) -> Entity {
+        let id_geo = commands.spawn_empty().id();
+        let mesh = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(mesh, parent));
+        meshcmds.create.push(OpsMeshCreation::ops(scene, mesh, state));
+        geometrycmd.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
+        meshcmds.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
+        mesh
     }
 }
 
@@ -120,12 +174,16 @@ impl AddEvent for App {
 }
 
 pub fn test_plugins() -> App {
-    // env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut app = App::default();
 
     let width = 800;
     let height = 600;
+
+    let mut opt = PiRenderOptions::default();
+    opt.backends = Backends::VULKAN;
+    app.insert_resource(opt);
 
 	let mut window_plugin = WindowPlugin::default();
     if let Some(primary_window) = &mut window_plugin.primary_window {
@@ -153,7 +211,6 @@ pub fn test_plugins() -> App {
             PiRenderPlugin::default(),
             PluginLocalLoad,
             PluginFrameTime,
-            PluginWindowRender,
         )
     );
             
@@ -162,9 +219,10 @@ pub fn test_plugins() -> App {
         (
             PluginCubeBuilder,
             PluginQuadBuilder,
+            PluginBallBuilder,
             PluginStateToFile,
-            PluginNodeMaterial,
             PluginUnlitMaterial,
+            PluginStandardMaterial,
         )
     );
     app.add_plugins(PluginGroupNodeMaterialAnime);
@@ -178,11 +236,13 @@ pub fn test_plugins() -> App {
             pi_trail_renderer::PluginTrail
         )
     );
+
+    app.add_plugins(copy::PluginImageCopy);
     app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
     app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
-
-    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
+    
+    app.add_systems(Startup, setup_default_mat);
     
     app
 }
@@ -193,6 +253,16 @@ pub fn test_plugins_with_gltf() -> App {
     let mut app = App::default();
     let width = 800;
     let height = 600;
+
+    let mut opt = PiRenderOptions::default();
+    opt.backends = Backends::VULKAN;
+    app.insert_resource(opt);
+
+    app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 256, max_spot_light_count: 128, max_hemi_light_count: 16 }));
+    app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 16, max_spot_light_count: 16, max_hemi_light_count: 4 }));
+    app.insert_resource(SceneShadowLimit(
+        ShadowLimitInfo { max_count: 1, max_width: 2048, max_height: 2048, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
+    ));
 
 	let mut window_plugin = WindowPlugin::default();
     if let Some(primary_window) = &mut window_plugin.primary_window {
@@ -223,7 +293,6 @@ pub fn test_plugins_with_gltf() -> App {
             PiRenderPlugin::default(),
             PluginLocalLoad,
             PluginFrameTime,
-            PluginWindowRender,
         )
     );
             
@@ -232,9 +301,10 @@ pub fn test_plugins_with_gltf() -> App {
         (
             PluginCubeBuilder,
             PluginQuadBuilder,
+            PluginBallBuilder,
             PluginStateToFile,
-            PluginNodeMaterial,
             PluginUnlitMaterial,
+            PluginStandardMaterial,
         )
     );
     app.add_plugins(PluginGroupNodeMaterialAnime);
@@ -248,11 +318,21 @@ pub fn test_plugins_with_gltf() -> App {
             pi_trail_renderer::PluginTrail
         )
     );
+
+    app.add_plugins(copy::PluginImageCopy);
     app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
     app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
 
-    app.world.get_resource_mut::<WindowRenderer>().unwrap().active = true;
+    app.add_systems(Startup, setup_default_mat);
     
     app
+}
+
+pub fn setup_default_mat(
+    mat: Res<SingleIDBaseDefaultMaterial>,
+    mut matcmds: ResMut<ActionListMaterialCreate>,
+) {
+    let entity = mat.0;
+    matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY)));
 }

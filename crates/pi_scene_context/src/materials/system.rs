@@ -1,7 +1,8 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{prelude::{MaterialRefs, SingleIDBaseDefaultMaterial}, commands::*};
+use crate::commands::*;
+use super::material::*;
 
 
 pub fn sys_dispose_about_material(

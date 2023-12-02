@@ -1,6 +1,7 @@
 
 
 use axis::PluginAxis;
+use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
 use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
@@ -10,6 +11,12 @@ use pi_mesh_builder::quad::QuadBuilder;
 use unlit_material::*;
 use pi_particle_system::prelude::*;
 
+
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+
 fn setup(
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
@@ -18,17 +25,25 @@ fn setup(
     mut meshcmds: ActionSetMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     mut particlesys_cmds: ParticleSystemActionSet,
     mut animegroupcmd: ActionSetAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 20;
     // frame.frame_ms = 200;
 
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 34.34, -20.), true);
+    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 34.34, -20.), true
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
 
@@ -36,7 +51,7 @@ fn setup(
     transformcmds.create.push(OpsTransformNode::ops(scene, node));
 
     let idmattrail = commands.spawn_empty().id();
-    matcmds.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY, EPassTag::Transparent));
+    matcmds.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
     matcmds.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
@@ -50,14 +65,14 @@ fn setup(
     let _euler = -3.0..3.0;
     
                 let _item = {
-                    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
-                    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
-                    meshcmds.blend.push(OpsRenderBlend::Blend(source, ModelBlend::one_one()));
-                    let id_geo = commands.spawn_empty().id();
-                    let attrs = QuadBuilder::attrs_meta();
-                    // ParticleSystem Add
-                    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+                    let vertices = QuadBuilder::attrs_meta();
+                    let indices = Some(QuadBuilder::indices_meta());
+                    let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1, ..Default::default() };
+                    let source = base::DemoScene::mesh(&mut commands, scene, node, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
+
+                    let mut blend = ModelBlend::default(); blend.combine();
+                    meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
+
                     //
                     let syskey = String::from("Test");
                     let syscfg = cone_cfg(200., 1.);
@@ -72,14 +87,14 @@ fn setup(
                     // particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
                     let idmat = commands.spawn_empty().id();
-                    matcmds.usemat.push(OpsMaterialUse::ops(source, idmattrail));
-                    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
-                    particlesys_cmds.trail_material.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail));
+                    matcmds.usemat.push(OpsMaterialUse::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
+                    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+                    particlesys_cmds.trail_material.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
                     source
                 };
 
                 transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(_item, -12.0, 0., 10.));
-                // transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(item, random.gen_range(euler.clone()), random.gen_range(euler.clone()), random.gen_range(euler.clone())));
+                // transformcmds.localrot.push(OpsTransformNodeLocalRotation::Euler(item, random.gen_range(euler.clone()), random.gen_range(euler.clone()), random.gen_range(euler.clone())));
                 // transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
 
                 
@@ -188,9 +203,6 @@ impl Plugin for PluginTest {
 }
 
 
-
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
@@ -202,7 +214,7 @@ pub fn main() {
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

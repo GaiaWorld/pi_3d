@@ -8,9 +8,12 @@ use crate::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageModel {
+    InstanceInit,
+    InstanceInitApply,
     AbstructMeshCommand,
     InstanceEffectMesh,
     InstanceEffectGeometry,
+    LightingCollect,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -50,7 +53,7 @@ impl Default for MeshInstanceState {
 #[derive(Debug, Clone, Default, Component)]
 pub struct DirtyMeshRef;
 
-pub type MeshRefs = EntityRefInfo<DirtyMeshRef, MeshID>;
+pub type MeshRefs = EntityRefInfo<DirtyMeshRef>;
 
 #[derive(Debug, Clone, Component, Deref, DerefMut)]
 pub struct RenderAlignment(pub ERenderAlignment);
@@ -257,3 +260,45 @@ impl RenderWorldMatrixInv {
 
 #[derive(Debug, Clone, Component)]
 pub struct InstancedMeshTransparentSortCollection(pub Vec<(i32, Range<u32>)>);
+
+// #[derive(Component)]
+// pub struct ModelDirectLightingDirty;
+
+#[derive(Component, Default)]
+pub struct ModelSpotLightingDirty;
+
+#[derive(Component, Default)]
+pub struct ModelPointLightingDirty;
+
+#[derive(Component, Default)]
+pub struct ModelHemiLightingDirty;
+
+#[derive(Component)]
+pub struct ModelLightingInfosDirty;
+
+#[derive(Component, Default)]
+pub struct ModelForcePointLightings(pub Vec<Entity>);
+
+
+#[derive(Component, Default)]
+pub struct ModelForceSpotLightings(pub Vec<Entity>);
+
+
+#[derive(Component, Default)]
+pub struct ModelForceHemiLightings(pub Vec<Entity>);
+
+#[derive(Component)]
+pub struct ModelLightingIndexs {
+    pub bind: Option<Arc<BindModelLightIndexs>>,
+    pub count: u32,
+}
+impl ModelLightingIndexs {
+    pub fn new(allocator: &mut BindBufferAllocator, lightlimit: &LightLimitInfo) -> Self {
+        let data = if let Some(data) = BindModelLightIndexs::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count) {
+            Some(Arc::new(data))
+        } else {
+            None
+        };
+        Self { bind: data, count: 0 }
+    }
+}

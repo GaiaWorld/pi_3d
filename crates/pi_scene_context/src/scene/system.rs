@@ -1,10 +1,10 @@
 use pi_engine_shell::prelude::*;
 
-use crate::{commands::*, prelude::ScenePassRenderCfg};
-
+use crate::commands::*;
+use super::base::Scene;
 
 pub fn sys_dispose_about_scene(
-    scenes: Query<(Entity, &DisposeReady, &ScenePassRenderCfg), Changed<DisposeReady>>,
+    scenes: Query<(Entity, &DisposeReady, &Scene), Changed<DisposeReady>>,
     items: Query<(Entity, &SceneID)>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,

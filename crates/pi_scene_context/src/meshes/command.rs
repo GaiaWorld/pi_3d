@@ -7,19 +7,20 @@ use pi_scene_math::{Vector4, Number, Vector3};
 use crate::{
     geometry::{
         prelude::*,
-        instance::instance_boneoffset::*
+        instance::{instance_boneoffset::*, instance_float::InstanceFloatType}
     },
     pass::*,
     renderers::prelude::*,
     layer_mask::prelude::*,
     skeleton::prelude::*,
-    materials::prelude::*, prelude::{RenderAlignment, ScalingMode, ModelVelocity, BundleTransformNode, EScalingMode, IndiceRenderRange, MeshInstanceState},
+    materials::prelude::*,
+    renderers::prelude::*,
+    transforms::prelude::*,
 };
 
 use super::{
-    model::{RenderWorldMatrix, RenderWorldMatrixInv, RenderMatrixDirty},
+    model::*,
     abstract_mesh::AbstructMesh,
-    Mesh,
     lighting::{MeshCastShadow, MeshReceiveShadow}
 };
 
@@ -78,6 +79,15 @@ impl OpsInstanceTillOff {
 }
 pub type ActionListInstanceTillOff = ActionList<OpsInstanceTillOff>;
 
+pub struct OpsInstanceFloat(pub(crate) Entity, pub(crate) f32, pub InstanceFloatType);
+impl OpsInstanceFloat {
+    pub fn ops(instance: Entity, val: Number, float_type: InstanceFloatType) -> Self {
+        Self(instance, val, float_type)
+    }
+}
+pub type ActionListInstanceFloat = ActionList<OpsInstanceFloat>;
+
+
 pub struct OpsBoneOffset(pub(crate) Entity, pub(crate) u32, pub u8);
 impl OpsBoneOffset {
     pub fn ops(instance: Entity, val: u32) -> Self {
@@ -133,6 +143,32 @@ impl OpsMeshRenderVertexRange {
     }
 }
 pub type ActionListMeshRenderVertexRange = ActionList<OpsMeshRenderVertexRange>;
+
+pub struct OpsMeshForcePointLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool, pub(crate) u8);
+impl OpsMeshForcePointLighting {
+    pub fn ops(mesh_or_instance: Entity, light: Entity, is_add: bool) -> Self {
+        Self(mesh_or_instance, light, is_add, 0)
+    }
+}
+pub type ActionListMeshForcePointLighting = ActionList<OpsMeshForcePointLighting>;
+
+
+pub struct OpsMeshForceSpotLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool, pub(crate) u8);
+impl OpsMeshForceSpotLighting {
+    pub fn ops(mesh_or_instance: Entity, light: Entity, is_add: bool) -> Self {
+        Self(mesh_or_instance, light, is_add, 0)
+    }
+}
+pub type ActionListMeshForceSpotLighting = ActionList<OpsMeshForceSpotLighting>;
+
+
+pub struct OpsMeshForceHemiLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool, pub(crate) u8);
+impl OpsMeshForceHemiLighting {
+    pub fn ops(mesh_or_instance: Entity, light: Entity, is_add: bool) -> Self {
+        Self(mesh_or_instance, light, is_add, 0)
+    }
+}
+pub type ActionListMeshForceHemiLighting = ActionList<OpsMeshForceHemiLighting>;
 
 
 pub struct BundleMesh(
@@ -202,7 +238,7 @@ pub struct BundleInstanceMesh(
 );
 
 pub struct BundlePass(
-    ModelPass,
+    PassModelID,
     PassBindEffectValue,
     PassBindEffectTextures,
     PassBindGroupScene,
@@ -212,5 +248,5 @@ pub struct BundlePass(
     PassShader,
     PassPipeline,
     PassDraw,
-    MaterialID,
+    LinkedMaterialID,
 );

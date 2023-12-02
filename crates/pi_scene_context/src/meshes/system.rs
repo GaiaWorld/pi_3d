@@ -193,6 +193,7 @@ pub fn sys_dispose_about_mesh(
         ),
         Or<(Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
     >,
+    mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     // mut geometries: Query<&mut GeometryRefs>,
@@ -232,11 +233,15 @@ pub fn sys_dispose_about_mesh(
             }
             disposereadylist.push(OpsDisposeReady::ops(idskin.0));
         }
+        viewers.iter_mut().for_each(|(mut list0, mut list1)| {
+            list0.0.remove(&entity);
+            list1.0.remove(&entity);
+        });
     });
 }
 
 pub fn sys_dispose_about_pass(
-    items: Query<(Entity, &DisposeReady, &MaterialID, &ModelPass), Changed<DisposeReady>>,
+    items: Query<(Entity, &DisposeReady, &PassMaterialID, &PassModelID), Changed<DisposeReady>>,
     mut materials: Query<&mut MaterialRefs>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
@@ -258,6 +263,7 @@ pub fn sys_dispose_about_pass(
 
 pub fn sys_dispose_about_instance(
     items: Query<(Entity, &DisposeReady, &InstanceMesh), Changed<DisposeReady>>,
+    mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
     mut instancesources: Query<(&mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs)>,
     mut _disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
@@ -272,6 +278,11 @@ pub fn sys_dispose_about_instance(
             refs.remove(&entity);
             *flag = DirtyInstanceSourceRefs;
         }
+
+        viewers.iter_mut().for_each(|(mut list0, mut list1)| {
+            list0.0.remove(&entity);
+            list1.0.remove(&entity);
+        });
 
         // if empty.id() != sourceid.0 {
         //     disposereadylist.push(OpsDisposeReady::ops(sourceid.0));

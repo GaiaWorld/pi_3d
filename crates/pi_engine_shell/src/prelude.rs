@@ -22,7 +22,7 @@ pub use pi_bevy_render_plugin::{
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
     asset_config::*, should_run, component::GraphId
 };
-use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number};
+use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
 pub use pi_window_renderer::*;
 pub use pi_render::{
     asset::*,
@@ -46,11 +46,6 @@ pub use pi_render::{
         pipeline::*,
         buildin_data::*,
         buildin_var::*,
-    },
-    render_3d::{
-        shader::*,
-        bind_groups::{ scene::*, model::*, texture_sampler::* },
-        binds::{ scene::*, model::*, effect_value::*, effect_sampler2d::*, effect_texture2d::*},
     },
     rhi::{
         asset::*,
@@ -79,6 +74,15 @@ pub use crate::entity_ref::*;
 pub use crate::animation::*;
 pub use crate::interpolation::*;
 pub use crate::extends::*;
+pub use crate::pass::*;
+pub use crate::log::*;
+pub use crate::error::*;
+pub use crate::lighting_shadow::*;
+pub use crate::bind_defines::*;
+pub use crate::forward_rendering::*;
+pub use crate::{shader::*, bind_groups::*, binds::*};
+pub use crate::pipeline::*;
+pub use crate::custom_rendertarget::*;
 
 #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);
@@ -129,6 +133,11 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
 
 #[derive(Deref, DerefMut, Component)]
 pub struct EVerticeExtendCodeComp(pub EVerticeExtendCode);
+impl Default for EVerticeExtendCodeComp {
+    fn default() -> Self {
+        Self(EVerticeExtendCode::default())
+    }
+}
 
 #[derive(Deref, DerefMut, Component)]
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts);
@@ -201,6 +210,7 @@ pub struct Performance {
 pub trait TRenderAlignmentCalc {
     fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3;
     fn calc_local(&self, g_velocity: &Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix>;
+    fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Rotation3, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Rotation3, l_euler: &Vector3) -> Matrix;
 }
 impl TRenderAlignmentCalc for ERenderAlignment {
     fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3) -> Rotation3 {
@@ -283,16 +293,143 @@ impl TRenderAlignmentCalc for ERenderAlignment {
             ERenderAlignment::Velocity => None,
             ERenderAlignment::StretchedBillboard => {
                 let mut result = Matrix::identity();
+                // log::warn!("Velocity: {:?}", _g_velocity);
+
+                // let v = Vector3::new(0., 1., 0.);
+                // let _g_velocity = &v;
+                let vlen = CoordinateSytem3::length(_g_velocity);
+                let x_axis = if vlen > f32::EPSILON {
+                    _g_velocity.scale(-1.0 / vlen)
+                } else {
+                    Vector3::new(1., 0., 0.)
+                };
+                let d_rotation = CoordinateSytem3::quaternion_from_unit_vector(&Vector3::x_axis(), &x_axis).to_rotation_matrix();
+                result = result * &d_rotation.to_homogeneous();
+
+                let mut temp = Matrix::identity();
                 let vlen = length_scale + length_modify;
                 let scaling = Vector3::new(vlen, 1., 1.);
                 let translation = Vector3::new(0.5, 0., 0.);
-                CoordinateSytem3::matrix4_compose_rotation(&scaling, &Rotation3::identity(), &Vector3::zeros(), &mut result);
-                let mut temp = Matrix::identity();
-                temp.append_translation_mut(&translation);
+                CoordinateSytem3::matrix4_compose_rotation(&scaling, &Rotation3::identity(), &translation, &mut temp);
+                // let mut temp = Matrix::identity();
+                // temp.append_translation_mut(&translation);
+                // Some(result * temp)
                 Some(result * temp)
+                // Some(result)
             },
             ERenderAlignment::HorizontalBillboard => None,
             ERenderAlignment::VerticalBillboard => None,
         }
+    }
+
+    fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Rotation3, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Rotation3, l_euler: &Vector3) -> Matrix {
+        let mut matrix = Matrix::identity();
+        match self {
+            ERenderAlignment::View => {
+                let g_rotation = Rotation3::identity();
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+                let mut l_matrix = Matrix::identity();
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &l_rotation, l_positon, &mut l_matrix);
+
+                matrix = matrix * l_matrix;
+                // matrix = matrix * v_rotation;
+            },
+            ERenderAlignment::World => {
+                let g_rotation = Rotation3::identity();
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+                let mut l_matrix = Matrix::identity();
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &l_rotation, l_positon, &mut l_matrix);
+
+                matrix = matrix * l_matrix;
+            },
+            ERenderAlignment::Local => {
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, g_rotation, g_positon, &mut matrix);
+                let mut l_matrix = Matrix::identity();
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &l_rotation, l_positon, &mut l_matrix);
+
+                matrix = matrix * l_matrix;
+            },
+            ERenderAlignment::Facing => {
+                let g_rotation = Rotation3::identity();
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+                let mut l_matrix = Matrix::identity();
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &l_rotation, l_positon, &mut l_matrix);
+
+                matrix = matrix * l_matrix;
+
+                // let mut look_target = g_positon - v_position;
+                // CoordinateSytem3::transform_normal(&look_target.clone(), &matrix, &mut look_target);
+                // let mut lookat = Isometry3::identity();
+                // let cood = CoordinateSytem3::left();
+                // CoordinateSytem3::lookat(&cood, &Vector3::zeros(), &look_target, &Vector3::new(0., 1., 0.), &mut lookat);
+                // matrix = matrix * &lookat.to_matrix();
+            },
+            ERenderAlignment::Velocity => {
+                let g_rotation = Rotation3::identity();
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+                let mut l_matrix = Matrix::identity();
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &l_rotation, l_positon, &mut l_matrix);
+                
+                matrix = matrix * l_matrix;
+
+                let mut lookat = Isometry3::identity();
+                let mut look_target = g_velocity.clone();
+                if look_target.magnitude_squared() < 0.000001 {
+                    // matrix = matrix * &lookat.to_matrix();
+                } else {
+                    let cood = CoordinateSytem3::left();
+                    CoordinateSytem3::transform_normal(&look_target.clone(), &matrix, &mut look_target);
+                    CoordinateSytem3::lookat(&cood, &Vector3::zeros(), g_velocity, &Vector3::new(0., 1., 0.), &mut lookat);
+                    matrix = matrix * &lookat.to_matrix();
+                }
+            },
+            ERenderAlignment::StretchedBillboard => {
+                let g_rotation = Rotation3::identity();
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+                
+                let mut l_matrix = Matrix::identity();
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &g_rotation, l_positon, &mut l_matrix);
+                matrix = matrix * l_matrix;
+                
+                // let vlen = CoordinateSytem3::length(g_velocity);
+                // let x_axis = if vlen > f32::EPSILON {
+                //     g_velocity.scale(-1.0 / vlen)
+                // } else {
+                //     Vector3::new(1., 0., 0.)
+                // };
+                // let d_rotation = CoordinateSytem3::quaternion_from_unit_vector(&Vector3::x_axis(), &x_axis).to_rotation_matrix();
+                // matrix = matrix * &d_rotation.to_homogeneous();
+
+                // let mut look_target = g_positon - v_position;
+                // let mut lookat = Isometry3::identity();
+                // if look_target.magnitude_squared() < 0.000001 {
+                //     // matrix = matrix * &lookat.to_matrix();
+                // } else {
+                //     let cood = CoordinateSytem3::left();
+                //     CoordinateSytem3::lookat(&cood, &Vector3::zeros(), &look_target, &Vector3::new(0., 1., 0.), &mut lookat);
+                //     matrix = matrix * &lookat.to_matrix();
+                // }
+            },
+            ERenderAlignment::HorizontalBillboard => {
+                let g_rotation = Rotation3::identity();
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+                let mut l_matrix = Matrix::identity();
+                let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles((-90_f32).to_radians(), 0., l_euler.z);
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &l_rotation, l_positon, &mut l_matrix);
+
+                matrix = matrix * l_matrix;
+            },
+            ERenderAlignment::VerticalBillboard => {
+                let g_rotation = Rotation3::identity();
+                CoordinateSytem3::matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+                let mut l_matrix = Matrix::identity();
+                let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(0., l_euler.y, l_euler.z);
+                CoordinateSytem3::matrix4_compose_rotation(l_scale, &l_rotation, l_positon, &mut l_matrix);
+
+                matrix = matrix * l_matrix;
+            },
+        }
+
+        matrix
     }
 }

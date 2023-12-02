@@ -32,6 +32,7 @@ pub fn sys_create_cpu_partilce_system(
     mut disposeready: ResMut<ActionListDisposeReady>,
     mut meshes: ResMut<ActionListMeshRenderAlignment>,
     mut performance: ResMut<ParticleSystemPerformance>,
+    lightlimit: Res<ModelLightLimit>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -95,7 +96,7 @@ pub fn sys_create_cpu_partilce_system(
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
-                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default());
+                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0);
         
                     if let Some(mut cmd) = commands.get_entity(id_mesh) {
                         // log::warn!("Mesh Ok");
@@ -109,7 +110,7 @@ pub fn sys_create_cpu_partilce_system(
                         let vertex_desc = vec![trailbuffer.buffer_desc()];
                         ActionGeometry::init(&mut cmd, &vertex_desc, None, id_mesh);
 
-                        let mut verticescode = EVerticeExtendCodeComp(EVerticeExtendCode(EVerticeExtendCode::NONE));
+                        let mut verticescode = EVerticeExtendCodeComp::default();
                         verticescode.0.0 += EVerticeExtendCode::TRIAL_BILLBOARD;
                         let slot = AssetDescVBSlot01::from(vertex_desc[0].clone());
                         let geo_desc = GeometryDesc { list: vertex_desc };
@@ -174,11 +175,11 @@ pub fn sys_act_particle_system_trail_material(
     items: Query<&ParticleTrailMesh>,
     mut actions: ResMut<ActionListMaterialUse>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, count)| {
+    cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count)| {
         if let Ok(trail) = items.get(entity) {
-            actions.push(OpsMaterialUse::Use(trail.mesh, idmat));
+            actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
         } else if count < 8 {
-            cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, count + 1))
+            cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
         }
     });
 }

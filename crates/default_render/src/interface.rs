@@ -1,9 +1,4 @@
 
-use pi_engine_shell::prelude::*;
-
-use pi_scene_context::prelude::*;
-
-
 pub struct ActionDefaultMaterial;
 impl ActionDefaultMaterial {
     // pub fn create(
@@ -20,13 +15,13 @@ impl ActionDefaultMaterial {
 
     //     entity
     // }
-    pub fn use_default_material(
-        app: &mut App,
-        id_mesh: Entity,
-    ) {
-        let mat = app.world.get_resource::<SingleIDBaseDefaultMaterial>().unwrap().0;
-        ActionMaterial::use_material(app, OpsMaterialUse::ops(id_mesh, mat));
-    }
+    // pub fn use_default_material(
+    //     app: &mut App,
+    //     id_mesh: Entity,
+    // ) {
+    //     let mat = app.world.get_resource::<SingleIDBaseDefaultMaterial>().unwrap().0;
+    //     ActionMaterial::use_material(app, OpsMaterialUse::ops(id_mesh, mat));
+    // }
 }
 
 // pub trait InterfaceDefaultMaterial {

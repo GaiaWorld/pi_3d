@@ -11,6 +11,9 @@ mod particle_system;
 pub struct PluginGLTF2Res;
 impl Plugin for PluginGLTF2Res {
     fn build(&self, app: &mut App) {
+        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<GLTFBin>();
+        app.insert_resource(ShareAssetMgr::<GLTFBin>::new(GarbageEmpty(), cfg.flag, cfg.max, cfg.timeout));
+
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<GLTFBase>();
         app.insert_resource(ShareAssetMgr::<GLTFBase>::new(GarbageEmpty(), cfg.flag, cfg.max, cfg.timeout));
         

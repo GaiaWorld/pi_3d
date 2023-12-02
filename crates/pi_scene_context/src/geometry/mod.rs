@@ -78,12 +78,13 @@ impl Plugin for PluginGeometry {
         // );
         app.add_systems(Update, 
             (
-                sys_vertex_buffer_loaded_01,
-                sys_vertex_buffer_loaded_02,
-                sys_vertex_buffer_loaded_03,
-                sys_vertex_buffer_loaded_04,
-                sys_vertex_buffer_loaded_05,
-                sys_vertex_buffer_loaded_06,
+                sys_vertex_buffer_slots_loaded,
+                // sys_vertex_buffer_loaded_01,
+                // sys_vertex_buffer_loaded_02,
+                // sys_vertex_buffer_loaded_03,
+                // sys_vertex_buffer_loaded_04,
+                // sys_vertex_buffer_loaded_05,
+                // sys_vertex_buffer_loaded_06,
                 sys_geometry_enable
             ).chain().in_set(StageGeometry::GeometryLoaded)
         );

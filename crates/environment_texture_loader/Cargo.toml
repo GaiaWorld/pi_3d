@@ -1,0 +1,42 @@
+[package]
+name = "pi_env_texture_loader"
+version = "0.0.1"
+authors = ["baip0002 <2494156981@qq.com>"]
+edition = "2021"
+description = "GLTF2 Res Manager."
+repository = "https://github.com/GaiaWorld/pi_3d"
+license = "MIT OR Apache-2.0"
+keywords = ["GLTF2 Res"]
+
+[dependencies]
+pi_futures      = "0.1"
+pi-async-rt     = "0.1"
+pi_share        = "0.4"
+pi_hash         = "0.1"
+pi_assets       = "0.13"
+pi_time         = "0.3"
+pi_atom         = { version = "0.2", features = ["serde"] }
+
+wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
+naga            = { version = "0.12", features = [ "glsl-in", ] }
+bevy            = { version = "0.11", default-features = false }
+bytemuck        = { version = "1.4", features = ["derive"] }
+
+log             = "0.4"
+env_logger      = "0.9"
+
+smallvec        = "1.9"
+crossbeam       = "0.8"
+futures         = "0.3"
+derive_deref    = "1.1"
+base64          = "0.20.0"
+
+pi_hal              = { version = "0.1", registry = "yn" }
+
+pi_render           = { version = "0.1", registry = "yn" }
+render_utils        = { version = "0.1", registry = "yn" }
+render_derive       = { version = "0.1", registry = "yn" }
+
+pi_scene_math       = { git = "https://github.com/GaiaWorld/pi_scene" }
+
+pi_engine_shell     = { path = "../pi_engine_shell" }

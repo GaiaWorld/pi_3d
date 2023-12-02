@@ -50,6 +50,7 @@ impl FloatUniform {
     pub fn update(&self, range: &BindBufferRange) {
         let len = self.slot as usize;
         if self.slot > 0 {
+            // log::error!("Float : {:?}", self.data);
             range.write_data(self.begin as usize, bytemuck::cast_slice(&self.data[0..len]))
         }
     }

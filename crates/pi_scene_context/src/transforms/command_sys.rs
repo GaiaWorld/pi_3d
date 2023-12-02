@@ -5,7 +5,7 @@ use pi_scene_math::*;
 
 use crate::flags::*;
 use crate::object::ActionEntity;
-use crate::prelude::DisposeReady;
+use crate::commands::*;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
@@ -31,10 +31,10 @@ pub fn sys_act_transform_parent(
     mut cmds: ResMut<ActionListTransformNodeParent>,
     // mut parents: Query<&mut NodeChilds>,
     // mut childrens: Query<(&SceneID, &mut NodeParent)>,
-    nodes: Query<&DisposeReady>,
+    nodes: Query<&DisposeReady, (With<Layer>, With<Down>, With<Up>)>,
     mut tree: EntityTreeMut,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val)| {
         if let (Some(down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
             // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
             // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
@@ -43,16 +43,21 @@ pub fn sys_act_transform_parent(
                     if nodes.contains(up.parent()) {
                         tree.remove(entity);
                     }
-                    log::debug!("insert_child=====child: {:?}, parent: {:?}",entity, val);
+                    // log::warn!("AAA insert_child=====child: {:?}, parent: {:?}",entity, val);
                     // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
                     tree.insert_child(entity, val, 0);
                     // ActionTransformNode::tree_modify(&mut tree, entity, val);
                 }
             }
-        } else {
-            if count < 4 {
-                cmds.push(OpsTransformNodeParent(entity, val, count + 1));
-            }
+        //     else if count < 2 {
+        //         // log::warn!("WWWW2 child: {:?}, parent: {:?}",entity, val);
+        //         cmds.push(OpsTransformNodeParent(entity, val, count + 1));
+        //     }
+        // } else {
+        //     if count < 2 {
+        //         // log::warn!("WWWW child: {:?}, parent: {:?}",entity, val);
+        //         cmds.push(OpsTransformNodeParent(entity, val, count + 1));
+        //     }
         }
     });
 }
@@ -61,32 +66,61 @@ pub fn sys_act_local_rotation(
     mut cmds: ResMut<ActionListTransformNodeLocalRotationQuaternion>,
     mut nodes: Query<(&mut LocalRotationQuaternion, &mut RecordLocalRotationQuaternion)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w, count)| {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w)| {
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
             let data = LocalRotationQuaternion::create(x, y, z, w);
             record.0 = data.clone();
             *node = data;
-        } else {
-            if count < 4 {
-                cmds.push(OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w, count + 1));
-            }
+        // } else {
+        //     if count < 4 {
+        //         cmds.push(OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w, count + 1));
+        //     }
         }
     });
 }
+
+// pub fn sys_act_local_rotation(
+//     mut cmds: ResMut<ActionListTransformNodeLocalRotation>,
+//     mut nodes: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles, &mut LocalRotationQuaternion, &mut RecordLocalRotationQuaternion)>,
+// ) {
+//     cmds.drain().drain(..).for_each(|cmd| {
+//         match cmd {
+//             OpsTransformNodeLocalRotation::Euler(entity, x, y, z) => {
+//                 if let Ok((mut nodeeuler, mut recordeuler, mut nodequat, mut recordquat)) = nodes.get_mut(entity) {
+//                     let val = Vector3::new(x, y, z);
+//                     recordeuler.0 = LocalEulerAngles(val);
+//                     *nodeeuler = LocalEulerAngles(val);
+
+//                     let rotation = Rotation3::from_euler_angles(x, y, z);
+//                     let quat = Quaternion::from_rotation_matrix(&rotation);
+//                     recordquat.0 = LocalRotationQuaternion::create(quat.i, quat.j, quat.k, quat.w);
+//                     *nodequat = LocalRotationQuaternion::create(quat.i, quat.j, quat.k, quat.w);
+//                 }
+//             },
+//             OpsTransformNodeLocalRotation::Quaternion(entity, x, y, z, w) => {
+//                 if let Ok((mut nodeeuler, mut recordeuler, mut nodequat, mut recordquat)) = nodes.get_mut(entity) {
+//                     let quat = LocalRotationQuaternion::create(x, y, z, w);
+//                     recordquat.0 = quat.clone();
+//                     *nodequat = quat;
+//                 }
+//             },
+//         }
+//     });
+// }
 
 pub fn sys_act_local_position(
     mut cmds: ResMut<ActionListTransformNodeLocalPosition>,
     mut nodes: Query<(&mut LocalPosition, &mut RecordLocalPosition)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalPosition(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalPosition(entity, val)| {
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
             // log::warn!("transform_Position {:?} Val: {:?}", entity, val);
             record.0 = LocalPosition(val);
             *node = LocalPosition(val);
-        } else {
-            if count < 4 {
-                cmds.push(OpsTransformNodeLocalPosition(entity, val, count + 1));
-            }
+        // } else {
+        //     if count < 4 {
+        //         cmds.push(OpsTransformNodeLocalPosition(entity, val, count + 1));
+        //     }
         }
     });
 }
@@ -95,14 +129,14 @@ pub fn sys_act_local_euler(
     mut cmds: ResMut<ActionListTransformNodeLocalEuler>,
     mut nodes: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalEuler(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalEuler(entity, val)| {
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
             record.0 = LocalEulerAngles(val);
             *node = LocalEulerAngles(val);
-        } else {
-            if count < 4 {
-                cmds.push(OpsTransformNodeLocalEuler(entity, val, count + 1));
-            }
+        // } else {
+        //     if count < 4 {
+        //         cmds.push(OpsTransformNodeLocalEuler(entity, val, count + 1));
+        //     }
         }
     });
 }
@@ -111,14 +145,14 @@ pub fn sys_act_local_scaling(
     mut cmds: ResMut<ActionListTransformNodeLocalScaling>,
     mut nodes: Query<(&mut LocalScaling, &mut RecordLocalScaling)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalScaling(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalScaling(entity, val)| {
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
             record.0 = LocalScaling(val);
             *node = LocalScaling(val);
-        } else {
-            if count < 2 {
-                cmds.push(OpsTransformNodeLocalScaling(entity, val, count + 1));
-            }
+        // } else {
+        //     if count < 2 {
+        //         cmds.push(OpsTransformNodeLocalScaling(entity, val, count + 1));
+        //     }
         }
     });
 }
@@ -180,7 +214,7 @@ impl ActionTransformNode {
         // log::warn!("InsertChild");
         // log::warn!("Tree Remove {:?}", child);
         tree.remove(child);
-        log::debug!("insert_child=====child: {:?}, parent: {:?}",child, parent);
+        // log::warn!("insert_child=====child: {:?}, parent: {:?}",child, parent);
         // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
         tree.insert_child(child, parent, 0);
     }

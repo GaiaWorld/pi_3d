@@ -8,7 +8,6 @@ use super::base::*;
 pub trait TLight {
     fn create_light(&self, scene: ObjectID, name: Atom) -> ObjectID;
     fn light_direction(&self, entity: ObjectID, value: Vector3) -> &Self;
-    fn light_mode(&self, entity: ObjectID, value: Light) -> &Self;
     fn lighting_mode(&self, entity: ObjectID, value: LightingMode) -> &Self;
     fn shadow_enable(&self, entity: ObjectID, value: bool) -> &Self;
     fn shadow_mixz(&self, entity: ObjectID, value: f32) -> &Self;

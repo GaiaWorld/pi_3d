@@ -26,6 +26,7 @@ impl BRDFShader {
                 UniformTexture2DDesc::new(
                     UniformPropertyName::from("_MainTex"),
                     wgpu::TextureSampleType::Float { filterable: false },
+                    wgpu::TextureViewDimension::D2,
                     false,
                     EShaderStage::FRAGMENT,
                     EDefaultTexture::White,
@@ -36,6 +37,8 @@ impl BRDFShader {
                     Varying{ format: Atom::from("vec2"), name: Atom::from("v_UV") }, 
                 ]
             ),
+            String::from(""),
+            EVerticeExtendCode::default(),
             BlockCodeAtom { 
                 define: Atom::from(""), 
                 running: Atom::from(include_str!("./brdf.vert"))

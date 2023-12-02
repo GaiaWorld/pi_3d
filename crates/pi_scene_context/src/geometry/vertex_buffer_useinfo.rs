@@ -61,7 +61,7 @@ impl TEntityRef for GeometryID {
 #[derive(Debug, Clone, Default, Component)]
 pub struct DirtyGeometryRef;
 
-pub type GeometryRefs = EntityRefInfo<DirtyGeometryRef, GeometryID>;
+pub type GeometryRefs = EntityRefInfo<DirtyGeometryRef>;
 
 #[derive(Component)]
 pub struct MeshID(pub ObjectID);

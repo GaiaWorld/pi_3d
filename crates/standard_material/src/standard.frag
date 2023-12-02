@@ -1,26 +1,51 @@
-#version 450
 
-#define SHADER_NAME fragment:Default
 
-layout(location = 0) in vec3 v_normal;
-layout(location = 1) in vec3 v_pos;
+    vec4 baseColor              = v_color;
+    float alpha                 = 1.0;
 
-layout(location = 0) out vec4 gl_FragColor;
+    float Glossiness            = 0.;
+    vec3 diffuseColor           = vec3(1., 1., 1.);
+    vec3 specularColor          = vec3(1., 1., 1.);
+    vec3 emissiveColor          = vec3(0., 0., 0.);
+    vec3 baseAmbientColor       = vec3(1., 1., 1.);
+    vec3 LightMap               = vec3(1., 1., 1.);
+    vec4 refractionColor        = vec4(0., 0., 0., 1.);
+    vec4 reflectionColor        = vec4(0., 0., 0., 1.);
 
-layout(set = 1, binding = 1) uniform MatParam0 {
-    vec4 emissive;
-};
+    float depth                 = 0.;
+    float dither                = 0.;
+    
+    vec3 diffuseBase        = vec3(0., 0., 0.);
+    vec3 specularBase       = vec3(0., 0., 0.);
 
-void main() {
-    vec4 baseColor = vec4(1., 1., 1., 1.);
+    vec3 V                  = WorldSpaceViewDir(P.xyz);
+    float NdotV             = dot(N, V);
 
-    baseColor.rgb *= emissive.rgb * emissive.a;
+    float totalAttention;
+    computeLighting(depth, dither, NdotV, N, V, P, Glossiness, LightMap, diffuseBase, specularBase, totalAttention);
+    if (totalAttention < 0.001) {
+        discard;
+    }
 
-    float alpha = 1.0;
+    vec4 mainTextureColor = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS));
+    baseColor.rgb *= mainTextureColor.rgb * mainStrength() * mainColor();
 
-    // float level = dot(v_normal, vec3(0., 0., -1.));
-    baseColor.rgb = mix(baseColor.rgb, v_normal, 0.5);
-    // baseColor.rgb = (v_pos + vec3(1., 1., 1.)) / 2.;
+    alpha *= mainTextureColor.a;
 
-    gl_FragColor = vec4(baseColor.rgb, alpha);
-}
+specularBase       = vec3(0., 0., 0.);
+    vec3 finalSpecular      = specularBase * specularColor;
+    vec3 finalDiffuse       = (diffuseBase * diffuseColor + emissiveColor) * baseColor.rgb;
+    
+    vec4 finalColor         = vec4(
+        finalDiffuse * baseAmbientColor
+        + finalSpecular
+        + refractionColor.rgb
+        + reflectionColor.rgb
+        ,
+        alpha
+    );
+
+    finalColor.rgb *= finalColor.a;
+    // finalColor.rgb = v_color.rgb;
+
+    gl_FragColor = finalColor;

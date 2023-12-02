@@ -51,7 +51,7 @@ impl TEntityRef for SkeletonID {
 #[derive(Default, Clone, Component)]
 pub struct DirtySkeletonRefs(pub bool);
 
-pub type SkeletonRefs = EntityRefInfo<DirtySkeletonRefs, SkeletonID>;
+pub type SkeletonRefs = EntityRefInfo<DirtySkeletonRefs>;
 
 #[derive(Component)]
 pub struct SkeletonBonesDirty(pub bool);

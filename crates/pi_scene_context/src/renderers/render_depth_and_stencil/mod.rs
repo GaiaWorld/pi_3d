@@ -23,7 +23,7 @@ pub type ActionListDepthWrite = ActionList<OpsDepthWrite>;
 pub struct DepthCompare(pub CompareFunction);
 impl Default for DepthCompare {
     fn default() -> Self {
-        Self(CompareFunction::GreaterEqual)
+        Self(CompareFunction::LessEqual)
     }
 }
 pub struct OpsDepthCompare(pub(crate) Entity, pub(crate) DepthCompare, pub(crate) u16);

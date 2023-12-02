@@ -2,31 +2,98 @@
 use pi_bevy_render_plugin::component::GraphId;
 use pi_engine_shell::prelude::*;
 
-use crate::{viewer::prelude::*, postprocess::Postprocess, prelude::{PassTagOrders, DisposeCan}, object::ActionEntity};
+use crate::{
+    viewer::prelude::*,
+    postprocess::*,
+    commands::*,
+    object::*,
+};
 
 use super::{
     renderer::*,
     render_object::RendererID,
     graphic::*,
-    command::*
+    command::*,
 };
 
 pub fn sys_create_renderer(
+    mut commands: Commands,
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
-    mut commands: Commands,
+    mut viewers: Query<(&mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
+    mut error: ResMut<ErrorRecord>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsRendererCreate(entity, name)| {
-        let render_node = RenderNode::new(entity);
-        match graphic.add_node(name, render_node) {
-            Ok(nodeid) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(GraphId(nodeid));
-                }
+    cmds.drain().drain(..).for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
+        if let Ok((mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
+            let render_node = RenderNode::new(entity);
+            match graphic.add_node(name, render_node) {
+                Ok(nodeid) => {
+                    if let Some(mut cmd) = commands.get_entity(entity) {
+                        cmd.insert(GraphId(nodeid));
+                        ActionRenderer::init(&mut cmd, id_viewer, passtag, transparent);
+                        viewerrenderinfo.add(entity, passtag);
+                        *viewerflag = DirtyViewerRenderersInfo;
+                    }
+                },
+                Err(err) => {
+                    error.graphic(entity, err);
+                },
+            }
+        }
+    });
+}
+
+pub fn sys_act_renderer_target(
+    mut cmds: ResMut<ActionListRendererTarget>,
+    mut renderers: Query<(&mut RenderSize, &mut RenderColorFormat, &mut RenderDepthFormat, &mut RendererRenderTarget, &GraphId)>,
+    targets: Res<CustomRenderTargets>,
+    mut graphic: ResMut<PiRenderGraph>,
+    mut error: ResMut<ErrorRecord>,
+) {
+    cmds.drain().drain(..).for_each(|cmd| {
+        match cmd {
+            OpsRendererTarget::Custom(entity, keytarget) => {
+                if let Ok((mut rendersize, mut color_format, mut depth_stencil_format, mut rendertarget, nodeid)) = renderers.get_mut(entity) {
+
+                    match keytarget {
+                        KeyCustomRenderTarget::Custom(key) => {
+                            if let Some(srt) = targets.get(key) {
+                                *rendersize = RenderSize::new(srt.width, srt.height);
+                                *rendertarget = RendererRenderTarget::Custom(srt.rt.clone());
+                                *color_format = RenderColorFormat(srt.color_format);
+                                *depth_stencil_format = RenderDepthFormat(srt.depth_stencil_format);
+                                // log::warn!("sys_act_renderer_target Custom {:?}", srt.color_format);
+                            } else {
+                                *rendertarget = RendererRenderTarget::None;
+                            }
+                            if let Err(err) = graphic.set_finish(nodeid.0, false) {
+                                error.graphic(entity, err);
+                            }
+                        },
+                        KeyCustomRenderTarget::FinalRender => {
+                            let format = match ColorFormat::new(wgpu::TextureFormat::pi_render_default()) {
+                                Some(format) => format,
+                                _ => ColorFormat::Rgba8Unorm
+                            };
+    
+                            *color_format = RenderColorFormat(format);
+                            *depth_stencil_format = RenderDepthFormat(DepthStencilFormat::None);
+                            *rendertarget = RendererRenderTarget::FinalRender;
+    
+                            if let Err(err) = graphic.set_finish(nodeid.0, true) {
+                                error.graphic(entity, err);
+                            }
+                        },
+                    }
+                };
             },
-            Err(_e) => {
-                // log::error!("Renderer Error: {:?}", e);
-                log::debug!("Renderer Error:");
+            OpsRendererTarget::Auto(entity, width, height, colorformat, depthstencilformat) => {
+                if let Ok((mut rendersize, mut color_format, mut depth_stencil_format, mut rendertarget, _nodeid)) = renderers.get_mut(entity) {
+                    *rendersize = RenderSize::new(width as u32, height as u32);
+                    *color_format = RenderColorFormat(colorformat);
+                    *depth_stencil_format = RenderDepthFormat(depthstencilformat);
+                    *rendertarget = RendererRenderTarget::None;
+                }
             },
         }
     });
@@ -35,16 +102,17 @@ pub fn sys_create_renderer(
 pub fn sys_renderer_modify(
     mut cmds: ResMut<ActionListRendererModify>,
     mut enables: Query<&mut RendererEnable>,
-    mut rendersizes: Query<&mut RenderSize>,
+    // mut rendersizes: Query<&mut RenderSize>,
     mut colorclear: Query<&mut RenderColorClear>,
-    mut colorformat: Query<&mut RenderColorFormat>,
+    // mut colorformat: Query<&mut RenderColorFormat>,
     mut depthclear: Query<&mut RenderDepthClear>,
-    mut depthformat: Query<&mut RenderDepthFormat>,
+    // mut depthformat: Query<&mut RenderDepthFormat>,
     mut stencilclear: Query<&mut RenderStencilClear>,
     mut autoclearcolor: Query<&mut RenderAutoClearColor>,
     mut autocleardepth: Query<&mut RenderAutoClearDepth>,
     mut autoclearstencil: Query<&mut RenderAutoClearStencil>,
-    mut tofinals: Query<&mut RenderToFinalTarget>,
+    mut renderblend: Query<&mut RendererBlend>,
+    // mut tofinals: Query<&mut RendererRenderTarget>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
@@ -53,23 +121,13 @@ pub fn sys_renderer_modify(
                     *comp = RendererEnable(val);
                 } else { cmds.push(cmd) }
             },
-            OpsRendererCommand::Size(entity, w, h) => {
-                if let Ok(mut comp) = rendersizes.get_mut(entity) {
-                    *comp = RenderSize::new(w as u32, h as u32);
-                } else { cmds.push(cmd) }
-            },
-            OpsRendererCommand::ColorFormat(entity, val) => {
-                if let Ok(mut comp) = colorformat.get_mut(entity) {
-                    *comp = val;
+            OpsRendererCommand::Blend(entity, val) => {
+                if let Ok(mut comp) = renderblend.get_mut(entity) {
+                    *comp = RendererBlend(val);
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::ColorClear(entity, val) => {
                 if let Ok(mut comp) = colorclear.get_mut(entity) {
-                    *comp = val;
-                } else { cmds.push(cmd) }
-            },
-            OpsRendererCommand::DepthFormat(entity, val) => {
-                if let Ok(mut comp) = depthformat.get_mut(entity) {
                     *comp = val;
                 } else { cmds.push(cmd) }
             },
@@ -97,12 +155,7 @@ pub fn sys_renderer_modify(
                 if let Ok(mut comp) = autoclearstencil.get_mut(entity) {
                     *comp = RenderAutoClearStencil(val);
                 } else { cmds.push(cmd) }
-            },
-            OpsRendererCommand::RenderToFinal(entity, val) => {
-                if let Ok(mut comp) = tofinals.get_mut(entity) {
-                    *comp = RenderToFinalTarget(val);
-                } else { cmds.push(cmd) }
-            },
+            }
         }
     });
 }
@@ -111,28 +164,38 @@ pub fn sys_act_renderer_connect(
     mut cmds: ResMut<ActionListRendererConnect>,
     mut render_graphic: ResMut<PiRenderGraph>,
     renderers: Query<&GraphId>,
+    mut error: ResMut<ErrorRecord>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsRendererConnect(before, after, count)| {
-        if let (Ok(before), Ok(after)) = (renderers.get(before), renderers.get(after)) {
-            if let Err(_e) = render_graphic.add_depend(before.0, after.0) {
-                // log::error!("{:?}", e);
-                log::debug!("sys_act_renderer_connect add_depend Error");
+    cmds.drain().drain(..).for_each(|OpsRendererConnect(before, after, isdisconnect)| {
+        if let (Ok(nbefore), Ok(nafter)) = (renderers.get(before), renderers.get(after)) {
+            if isdisconnect {
+                if let Err(err) = render_graphic.remove_depend(nbefore.0, nafter.0) {
+                    error.graphic(before, err);
+                }
+            } else {
+                if let Err(err) = render_graphic.add_depend(nbefore.0, nafter.0) {
+                    error.graphic(before, err);
+                }
             }
-        } else {
-            if count < 4 {
-                cmds.push(OpsRendererConnect(before, after, count + 1))
-            }
+            render_graphic.dump_graphviz();
         }
     });
 }
 
 pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
-    renderers: Query<(&GraphId, &RendererEnable, &DisposeCan), Changed<DisposeCan>>,
+    renderers: Query<(Entity, &GraphId, &RendererEnable, &DisposeCan, &ViewerID), Changed<DisposeCan>>,
+    mut viewers: Query<&mut ViewerRenderersInfo>,
+    mut error: ResMut<ErrorRecord>,
 ) {
-    renderers.iter().for_each(|(nodeid, _, flag)| {
+    renderers.iter().for_each(|(entity, nodeid, _, flag, idviewer)| {
         if flag.0 {
-            render_graphic.remove_node(nodeid.0);
+            if let Err(err) = render_graphic.remove_node(nodeid.0) {
+                error.graphic(entity, err);
+            }
+        }
+        if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
+            renderinfos.remove(entity);
         }
     });
 }
@@ -142,28 +205,26 @@ impl ActionRenderer {
     pub(crate) fn init(
         commands_renderer: &mut EntityCommands,
         id_viewer: Entity,
-        passorders: PassTagOrders,
-        width: u32,
-        height: u32,
-        color_format: ColorFormat,
-        depth_format: DepthStencilFormat,
-        toscreen: bool,
+        passtag: PassTag,
+        transparent: bool,
     ) {
         ActionEntity::init(commands_renderer);
         commands_renderer
-            .insert(passorders)
+            .insert(passtag)
             .insert(Renderer::new())
-            .insert(RenderSize::new(width, height))
+            .insert(RenderViewport::default())
+            .insert(RenderSize::new(100, 100))
             .insert(RendererEnable(true))
             .insert(RenderColorClear::default())
-            .insert(RenderColorFormat(color_format))
+            .insert(RenderColorFormat::default())
             .insert(RenderDepthClear::default())
-            .insert(RenderDepthFormat(depth_format))
+            .insert(RenderDepthFormat::default())
             .insert(RenderStencilClear::default())
             .insert(RenderAutoClearColor::default())
             .insert(RenderAutoClearDepth::default())
             .insert(RenderAutoClearStencil::default())
-            .insert(RenderToFinalTarget(toscreen))
+            .insert(RendererRenderTarget::None)
+            .insert(RendererBlend(transparent))
             .insert(ViewerID(id_viewer))
             .insert(Postprocess::default())
             ;
@@ -171,6 +232,7 @@ impl ActionRenderer {
     pub fn create_graphic_node(
         commands: &mut Commands,
         render_graphic: &mut PiRenderGraph,
+        error: &mut ErrorRecord,
         name: String,
     ) -> Entity {
         let entity = commands.spawn_empty().id();
@@ -181,9 +243,8 @@ impl ActionRenderer {
                     cmd.insert(GraphId(nodeid));  
                 }
             },
-            Err(_e) => {
-                // log::error!("{:?}", e);
-                log::debug!("create_graphic_node fail");
+            Err(err) => {
+                error.graphic(entity, err);
             },
         }
 
@@ -197,6 +258,7 @@ impl ActionRenderer {
     }
     pub fn init_graphic_node(
         render_graphic: &mut PiRenderGraph,
+        error: &mut ErrorRecord,
         _id_renderer: RendererID,
         nodeid: NodeId,
         pre: Option<NodeId>,
@@ -204,16 +266,14 @@ impl ActionRenderer {
     ) {
         if let Some(key_pre) = pre {
             // log::warn!("Add Node {:?} > {:?}", key_pre, nodeid);
-            if let Err(_e) = render_graphic.add_depend(key_pre, nodeid) {
-                // log::error!("{:?}", e);
-                log::debug!("render_graphic.add_depend faile");
+            if let Err(err) = render_graphic.add_depend(key_pre, nodeid) {
+                error.graphic(_id_renderer.0, err);
             }
         }
         if let Some(key_next) = next {
             // log::warn!("Add Node {:?} > {:?}", nodeid, key_next);
-            if let Err(_e) = render_graphic.add_depend(nodeid, key_next) {
-                // log::error!("{:?}", e);
-                log::debug!("render_graphic.add_depend faile");
+            if let Err(err) = render_graphic.add_depend(nodeid, key_next) {
+                error.graphic(_id_renderer.0, err);
             }
         } else {
             // if let Err(e) = render_graphic.set_finish(nodeid, true) {

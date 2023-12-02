@@ -1,11 +1,17 @@
 #![feature(box_into_inner)]
 
+use base::DemoScene;
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 use pi_node_materials::{prelude::*, NodeMaterialBlocks};
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::ball::*;
 use unlit_material::*;
+
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
 
 
 fn setup(
@@ -18,38 +24,36 @@ fn setup(
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     nodematblocks: Res<NodeMaterialBlocks>,
     mut renderercmds: ActionSetRenderer,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     ActionMaterial::regist_material_meta(&matcmds.metas, KeyShaderMeta::from(MainOpacityFresnelShader::KEY), MainOpacityFresnelShader::create(&nodematblocks));
 
     let tes_size = 5;
     fps.frame_ms = 4;
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
+    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 0., -10.), true
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
-    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    let instancestate = 0;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
+    let vertices = BallBuilder::attrs_meta();
+    let indices = Some(BallBuilder::indices_meta());
+    let state = MeshInstanceState { state: 0, ..Default::default() };
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
+
     let mut blend = ModelBlend::default(); blend.combine();
     meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
-    
-    let id_geo = commands.spawn_empty().id();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, 
-        vec![
-            VertexBufferDesc::vertices(KeyVertexBuffer::from("BallPos#20#20"), None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
-            VertexBufferDesc::vertices(KeyVertexBuffer::from("BallNor#20#20"), None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
-            VertexBufferDesc::vertices(KeyVertexBuffer::from("BallUV#20#20"), None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
-        ],
-        Some(
-            IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: KeyVertexBuffer::from("BallInd#20#20") }
-        ),
-    ));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, MainOpacityFresnelShader::KEY, EPassTag::Transparent));
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, MainOpacityFresnelShader::KEY));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
@@ -117,15 +121,13 @@ impl Plugin for PluginTest {
     }
 }
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins();
     
     app.add_plugins(PluginTest);
     
     app.add_systems(Startup, sys_setup_ball);
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

@@ -8,15 +8,15 @@ pub mod command;
 pub mod interface;
 
 
-fn setup(
-    mat: Res<SingleIDBaseDefaultMaterial>,
-    mut matcmds: ResMut<ActionListMaterialCreate>,
-) {
-    // ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
+// fn setup(
+//     mat: Res<SingleIDBaseDefaultMaterial>,
+//     mut matcmds: ResMut<ActionListMaterialCreate>,
+// ) {
+//     // ActionMaterial::regist_material_meta(&asset_mgr, &mut wait_list, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
 
-    let entity = mat.0;
-    matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY), EPassTag::Opaque));
-}
+//     let entity = mat.0;
+//     matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY), EPassTag::Opaque));
+// }
 
 pub struct PluginDefaultMaterial;
 impl Plugin for PluginDefaultMaterial {
@@ -47,7 +47,7 @@ impl Plugin for PluginDefaultMaterial {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
 
-        app.add_systems(Startup, setup);
+        // app.add_systems(Startup, setup);
     }
 }
 

@@ -15,6 +15,11 @@ use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};
 use unlit_material::{PluginUnlitMaterial, command::*, shader::UnlitShader};
 use pi_particle_system::{prelude::*, PluginParticleSystem};
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+
 fn setup(
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
@@ -23,16 +28,23 @@ fn setup(
     mut meshcmds: ActionSetMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     mut particlesys_cmds: ParticleSystemActionSet,
     mut animegroupcmd: ActionSetAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 50;
 
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -50.), true);
+    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 0., -50.), true
+    );
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
 
@@ -67,7 +79,7 @@ fn setup(
                 };
 
                 transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(item, (i - temp / 2) as f32 * 10., (j - temp / 2) as f32 * 10., (k - temp / 2) as f32 * 10.));
-                transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(item, (i - temp) as f32, (j - temp) as f32, (k - temp) as f32));
+                transformcmds.localrot.push(OpsTransformNodeLocalRotation::Euler(item, (i - temp) as f32, (j - temp) as f32, (k - temp) as f32));
                 transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
             }
         }
@@ -140,15 +152,13 @@ impl Plugin for PluginTest {
 
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     app.run()

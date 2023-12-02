@@ -11,7 +11,7 @@ pub fn sys_material_anime_init(
 ) {
     materials.iter().for_each(|(entity, bindeffect)| {
         // log::warn!("Mat New");
-        let info = MaterialAnimeSlots::new(&bindeffect.0);
+        let info = if let Some(bindeffect) = &bindeffect.0 { MaterialAnimeSlots::new(bindeffect) } else { MaterialAnimeSlots::default() };
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd
             .insert(info)

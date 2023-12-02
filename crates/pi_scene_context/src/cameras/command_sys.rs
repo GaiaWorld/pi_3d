@@ -4,7 +4,6 @@ use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolV
 
 use crate::{
     viewer::{prelude::*, command_sys::ActionViewer},
-    renderers::{prelude::*, command_sys::*}, 
     transforms::command_sys::ActionTransformNode,
     layer_mask::prelude::*, prelude::{SceneMainCameraID, SceneID},
 };
@@ -19,6 +18,7 @@ pub fn sys_create_camera(
     mut cmds: ResMut<ActionListCameraCreate>,
     mut commands: Commands,
     mut dynallocator: ResMut<ResBindBufferAllocator>,
+    mut errors: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity, toscreen)| {
         if let Some(mut commands) = commands.get_entity(entity) {
@@ -28,6 +28,8 @@ pub fn sys_create_camera(
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
                 commands.insert(bindviewer);
+            } else {
+                errors.record(entity, ErrorRecord::ERROR_BIND_VIEWER_CREATE_FAIL);
             }
         }
     })
@@ -137,7 +139,7 @@ pub fn sys_act_camera_aspect(
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraAspect(entity, val)| {
         if let Ok(mut camera) = cameras.get_mut(entity) {
-            *camera = val;
+            camera.0 = val;
         } else {
             cmds.push(OpsCameraAspect(entity, val))
         }
@@ -145,35 +147,35 @@ pub fn sys_act_camera_aspect(
 }
 
 
-pub fn sys_act_camera_pixel_size(
-    mut cmds: ResMut<ActionListCameraPixelSize>,
-    mut cameras: Query<&mut ViewerSize>,
-) {
-    cmds.drain().drain(..).for_each(|OpsCameraPixelSize(entity, w, h)| {
-        if let Ok(mut camera) = cameras.get_mut(entity) {
-            *camera = ViewerSize(w, h);
-        } else {
-            cmds.push(OpsCameraPixelSize(entity, w, h))
-        }
-    });
-}
+// pub fn sys_act_camera_pixel_size(
+//     mut cmds: ResMut<ActionListCameraPixelSize>,
+//     mut cameras: Query<&mut ViewerSize>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsCameraPixelSize(entity, w, h)| {
+//         if let Ok(mut camera) = cameras.get_mut(entity) {
+//             *camera = ViewerSize(w, h);
+//         } else {
+//             cmds.push(OpsCameraPixelSize(entity, w, h))
+//         }
+//     });
+// }
 
-pub fn sys_act_camera_toscreen(
-    mut cmds: ResMut<ActionListCameraToScreen>,
-    mut cameras: Query<(&mut CameraToScreen, &ViewerRenderersInfo)>,
-    mut renderercmds: ResMut<ActionListRendererModify>,
-) {
-    cmds.drain().drain(..).for_each(|OpsCameraToScreen(entity, val)| {
-        if let Ok((mut camera, renderers)) = cameras.get_mut(entity) {
-            *camera = CameraToScreen(val);
-            renderers.map.iter().for_each(|v| {
-                renderercmds.push(OpsRendererCommand::RenderToFinal(v.1.1.0, val));
-            });
-        } else {
-            cmds.push(OpsCameraToScreen(entity, val))
-        }
-    });
-}
+// pub fn sys_act_camera_toscreen(
+//     mut cmds: ResMut<ActionListCameraToScreen>,
+//     mut cameras: Query<(&mut CameraToScreen, &ViewerRenderersInfo)>,
+//     mut renderercmds: ResMut<ActionListRendererModify>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsCameraToScreen(entity, val)| {
+//         if let Ok((mut camera, renderers)) = cameras.get_mut(entity) {
+//             *camera = CameraToScreen(val);
+//             renderers.map.iter().for_each(|v| {
+//                 renderercmds.push(OpsRendererCommand::RenderToFinal(v.1.1.0, val));
+//             });
+//         } else {
+//             cmds.push(OpsCameraToScreen(entity, val))
+//         }
+//     });
+// }
 
 pub fn sys_act_camera_target(
     mut cameras: Query<&mut CameraTarget>,
@@ -184,45 +186,6 @@ pub fn sys_act_camera_target(
             *camera = CameraTarget(target);
         } else {
             cmds.push(OpsCameraTarget(entity, target))
-        }
-    });
-}
-
-pub fn sys_create_camera_renderer(
-    mut cmds: ResMut<ActionListCameraRenderer>,
-    mut commands: Commands,
-    mut viewers: Query<
-        (
-            &mut ViewerRenderersInfo, &CameraToScreen, &mut DirtyViewerRenderersInfo
-        )
-    >,
-) {
-    cmds.drain().drain(..).for_each(|OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count)| {
-        // log::warn!("OpsCameraRenderer: A");
-
-        if let Ok((mut viewer_renderers, toscreen, mut dirtyflag)) = viewers.get_mut(id_viewer) {
-            // log::warn!("OpsCameraRenderer: AA");
-
-            if let Some((_, id_render)) = viewer_renderers.map.get(&rendername) {
-                if let Some(mut cmd) = commands.get_entity(id_render.0) {
-                    cmd.despawn();
-                }
-            }
-
-            // log::warn!("Camera Renderer Init!! ");
-            *dirtyflag = DirtyViewerRenderersInfo;
-
-            viewer_renderers.map.insert(rendername.clone(), (passorders.clone(), RendererID(id_renderer)));
-
-            if let Some(mut cmd) = commands.get_entity(id_renderer) {
-                ActionRenderer::init(
-                    &mut cmd, id_viewer, passorders, ViewerSize::DEFAULT_WIDTH, ViewerSize::DEFAULT_HEIGHT,
-                    color_format, depth_stencil_format, toscreen.0
-                );
-            }
-
-        } else {
-            cmds.push(OpsCameraRendererInit(id_viewer, id_renderer, rendername, passorders, color_format, depth_stencil_format, count + 1));
         }
     });
 }
@@ -249,8 +212,6 @@ impl ActionCamera {
             .insert(RecordCameraFov::default())
             .insert(RecordCameraOrthSize::default()) 
             .insert(CameraNearFar::default())
-            .insert(CameraToScreen(toscreen))
-            .insert(CameraViewport::default())
             .insert(LayerMask::default())
             .insert(CameraUp(CoordinateSytem3::up()))
             .insert(CameraTarget(Vector3::new(0., 0., 1.)))
@@ -258,8 +219,7 @@ impl ActionCamera {
             .insert(CameraParam::default())
             ;
         
-        ActionViewer::as_viewer(commands);
-        commands.insert(ViewerSize::default());
+        ActionViewer::as_viewer(commands, false);
     }
     pub fn create(
         app: &mut App,
@@ -295,21 +255,21 @@ impl ActionCamera {
         });
     }
 
-    pub fn sys_update_camera_renderer(
-        mut renderercmds: ResMut<ActionListRendererModify>,
-        cameras: Query<
-            (&Camera, &ViewerRenderersInfo, &CameraToScreen),
-            Or<(Changed<Camera>, Changed<DirtyViewerRenderersInfo>)>
-        >,
-    ) {
-        cameras.iter().for_each(|(enable, renderers, toscreen)| {
-            let enable = enable.0;
-            renderers.map.iter().for_each(|(_k, v)| {
-                let id_render = v.1.0;
-                renderercmds.push(OpsRendererCommand::Active(id_render, enable));
-                renderercmds.push(OpsRendererCommand::RenderToFinal(id_render, toscreen.0));
-            });
-        });
+    // pub fn sys_update_camera_renderer(
+    //     mut renderercmds: ResMut<ActionListRendererModify>,
+    //     cameras: Query<
+    //         (&Camera, &ViewerRenderersInfo, &CameraToScreen),
+    //         Or<(Changed<Camera>, Changed<DirtyViewerRenderersInfo>)>
+    //     >,
+    // ) {
+    //     cameras.iter().for_each(|(enable, renderers, toscreen)| {
+    //         let enable = enable.0;
+    //         renderers.map.iter().for_each(|(_k, v)| {
+    //             let id_render = v.1.0;
+    //             renderercmds.push(OpsRendererCommand::Active(id_render, enable));
+    //             renderercmds.push(OpsRendererCommand::RenderToFinal(id_render, toscreen.0));
+    //         });
+    //     });
 
-    }
+    // }
 

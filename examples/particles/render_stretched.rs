@@ -1,6 +1,7 @@
 
 
 use axis::PluginAxis;
+use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
 use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
@@ -10,6 +11,11 @@ use pi_mesh_builder::quad::QuadBuilder;
 use unlit_material::*;
 use pi_particle_system::prelude::*;
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+
 fn setup(
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
@@ -18,17 +24,25 @@ fn setup(
     mut meshcmds: ActionSetMesh,
     mut geometrycmd: ActionSetGeometry,
     mut matcmds: ActionSetMaterial,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     mut particlesys_cmds: ParticleSystemActionSet,
     mut animegroupcmd: ActionSetAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 20;
     // frame.frame_ms = 200;
 
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 34.34, -20.), true);
+    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 34.34, -20.), true
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // cameracmds.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -20.));
@@ -38,7 +52,7 @@ fn setup(
     transformcmds.create.push(OpsTransformNode::ops(scene, node));
 
     let idmattrail = commands.spawn_empty().id();
-    matcmds.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY, EPassTag::Transparent));
+    matcmds.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
     matcmds.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
@@ -57,21 +71,21 @@ fn setup(
         let node02 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node02, node01));
         transformcmds.create.push(OpsTransformNode::ops(scene, node02));
         transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(node02, 10., 7.5, 0.09));
-        transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(node02, -80.2_f32.to_radians(), 0., 0.));
+        transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(node02, -90.2_f32.to_radians(), 0., 0.));
         let node03 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node03, node02));
         transformcmds.create.push(OpsTransformNode::ops(scene, node03));
         node03
     };
     
                 let _item = {
-                    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
-                    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
-                    meshcmds.blend.push(OpsRenderBlend::Blend(source, ModelBlend::one_one()));
-                    let id_geo = commands.spawn_empty().id();
-                    let attrs = QuadBuilder::attrs_meta();
-                    // ParticleSystem Add
-                    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+                    let vertices = QuadBuilder::attrs_meta();
+                    let indices = Some(QuadBuilder::indices_meta());
+                    let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1, ..Default::default() };
+                    let source = base::DemoScene::mesh(&mut commands, scene, node, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
+
+                    let mut blend = ModelBlend::default(); blend.combine();
+                    meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
+
                     //
                     let syskey = String::from("Test");
                     let syscfg = cone_cfg(10., 3.);
@@ -86,14 +100,14 @@ fn setup(
                     // particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
                     let idmat = commands.spawn_empty().id();
-                    matcmds.usemat.push(OpsMaterialUse::ops(source, idmattrail));
-                    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
-                    particlesys_cmds.trail_material.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail));
+                    matcmds.usemat.push(OpsMaterialUse::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
+                    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+                    particlesys_cmds.trail_material.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
                     source
                 };
 
                 transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(_item, -0.0, 0., 0.1));
-                // transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(_item, -80.2_f32.to_radians(), 0., 0.));
+                // transformcmds.localrot.push(OpsTransformNodeLocalRotation::Euler(_item, -80.2_f32.to_radians(), 0., 0.));
                 // transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
 
                 
@@ -148,21 +162,21 @@ fn cone_cfg(count: f32, _speed: f32) -> IParticleSystemConfig {
     cfg.max_particles = count;
     cfg.emission = (count, None);
     cfg.lifetime = OneParamInfo::TInterpolateTwoConstants(0.1, 0.3);
-    cfg.start_speed = OneParamInfo::TInterpolateConstant(0.1);
+    cfg.start_speed = OneParamInfo::TInterpolateConstant(10.1);
     // cfg.start_speed = OneParamInfo::TInterpolateConstant(_speed);
     cfg.start_color = FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]);
     cfg.start_size = ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(1.));
-    cfg.start_size = ParamInfo::ThreeParamInfo(ThreeParamInfo::TInterpolateTwoConstants([5., 5., 1.], [6., 6., 1.]));
+    // cfg.start_size = ParamInfo::ThreeParamInfo(ThreeParamInfo::TInterpolateTwoConstants([5., 5., 1.], [6., 6., 1.]));
     cfg.render_alignment = EParticleRenderAlignment::Local;
     cfg.render_mode = EParticleRenderMode::StretchedBillboard;
     cfg.simulation_space_is_world = EMeshParticleSpaceMode::Local;
-    cfg.scaling_mode = EMeshParticleScaleMode::Local;
+    cfg.scaling_mode = EMeshParticleScaleMode::Hierarchy;
     // cfg.color_over_lifetime = Some(FourGradientInfo::TInterpolateRandom);
     cfg.lifetime = OneParamInfo::TInterpolateConstant(1.);
     cfg.velocity_over_lifetime = Some(ParamInfo::ThreeParamInfo(ThreeParamInfo::TInterpolateConstant([0., 0., 0.])));
     cfg.velocity_over_lifetime_is_local = Some(1);
-    cfg.stretched_length_scale = 2.;
-    cfg.stretched_velocity_scale = 0.;
+    cfg.stretched_length_scale = 1.;
+    cfg.stretched_velocity_scale = 1.1;
     cfg.shape = IShape::ShapeCone(IShapeCone {
         _type: 0,
         radius: 1.0,
@@ -227,8 +241,6 @@ impl Plugin for PluginTest {
 
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
@@ -240,7 +252,7 @@ pub fn main() {
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

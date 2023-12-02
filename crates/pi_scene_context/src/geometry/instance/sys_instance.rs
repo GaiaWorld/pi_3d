@@ -9,7 +9,7 @@ use crate::{
     prelude::*,
 };
 
-use super::{*, instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
+use super::{*, instanced_buffer::*, instance_vec4::*};
 
 ///
 /// T: Mesh 中 保存实例数据的buffer
@@ -71,11 +71,18 @@ impl Ord for TmpInstanceSort {
         instancematrixs: Query<&RenderWorldMatrix>,
         instancecolors: Query<&InstanceColor>,
         instancetilloffs: Query<&InstanceTillOff>,
+        instancevec4_a: Query<&InstanceVec4A>,
+        instancevec4_b: Query<&InstanceVec4B>,
+        instancevec4_c: Query<&InstanceVec4C>,
+        instancevec4_d: Query<&InstanceVec4D>,
         mut sources: Query<
             (
                 Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable, &mut InstancedMeshTransparentSortCollection
             ),
-            Or<(Changed<InstanceColorDirty>, Changed<InstanceTillOffDirty>, Changed<InstanceWorldMatrixDirty>, Changed<InstanceSourceRefs>, Changed<MeshInstanceState>)>
+            Or<(
+                Changed<InstanceColorDirty>, Changed<InstanceTillOffDirty>, Changed<InstanceWorldMatrixDirty>, Changed<InstanceSourceRefs>, Changed<MeshInstanceState>
+                , Changed<InstanceVec4ADirty>, Changed<InstanceVec4BDirty>, Changed<InstanceVec4CDirty>, Changed<InstanceVec4DDirty>
+            )>
         >,
         dispoeds: Query<&DisposeReady>,
         geometrys: Query<&InstancedInfo>,
@@ -170,6 +177,34 @@ impl Ord for TmpInstanceSort {
                                     bytemuck::cast_slice(defaulttilloff.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
                                 }
                             }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_A) == InstanceState::INSTANCE_CUSTOM_VEC4_A {
+                                if let Ok(v) = instancevec4_a.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_B) == InstanceState::INSTANCE_CUSTOM_VEC4_B {
+                                if let Ok(v) = instancevec4_b.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_C) == InstanceState::INSTANCE_CUSTOM_VEC4_C {
+                                if let Ok(v) = instancevec4_c.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_D) == InstanceState::INSTANCE_CUSTOM_VEC4_D {
+                                if let Ok(v) = instancevec4_d.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
 
                             idx += 0;
                         });
@@ -189,6 +224,10 @@ impl Ord for TmpInstanceSort {
         instancematrixs: Query<&RenderWorldMatrix>,
         instancecolors: Query<&InstanceColor>,
         instancetilloffs: Query<&InstanceTillOff>,
+        instancevec4_a: Query<&InstanceVec4A>,
+        instancevec4_b: Query<&InstanceVec4B>,
+        instancevec4_c: Query<&InstanceVec4C>,
+        instancevec4_d: Query<&InstanceVec4D>,
         mut sources: Query<
             (
                 Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable, &mut InstancedMeshTransparentSortCollection
@@ -285,6 +324,34 @@ impl Ord for TmpInstanceSort {
                                     bytemuck::cast_slice(item.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
                                 } else {
                                     bytemuck::cast_slice(defaulttilloff.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_A) == InstanceState::INSTANCE_CUSTOM_VEC4_A {
+                                if let Ok(v) = instancevec4_a.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_B) == InstanceState::INSTANCE_CUSTOM_VEC4_B {
+                                if let Ok(v) = instancevec4_b.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_C) == InstanceState::INSTANCE_CUSTOM_VEC4_C {
+                                if let Ok(v) = instancevec4_c.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
+                                }
+                            }
+                            if (buffer.state & InstanceState::INSTANCE_CUSTOM_VEC4_D) == InstanceState::INSTANCE_CUSTOM_VEC4_D {
+                                if let Ok(v) = instancevec4_d.get(instance) {
+                                    bytemuck::cast_slice(&[v.0, v.1, v.2, v.3]).iter().for_each(|v| { collected.push(*v); });
+                                } else {
+                                    bytemuck::cast_slice(&[0., 0., 0., 0.]).iter().for_each(|v| { collected.push(*v); });
                                 }
                             }
     

@@ -1,5 +1,6 @@
 #![feature(box_into_inner)]
 
+use base::DemoScene;
 use pi_atom::Atom;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
@@ -8,6 +9,11 @@ use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
 use unlit_material::*;
+
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
 
 
 fn setup(
@@ -21,22 +27,30 @@ fn setup(
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 5;
     fps.frame_ms = 4;
 
-    final_render.cleardepth = 0.0;
+    
 
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
+    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 0., -10.), true
+    );
+    let (scene, camera01, id_renderer) = (demopass.scene, demopass.camera, demopass.transparent_renderer);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = 0;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
     transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     
     // let key_group = pi_atom::Atom::from("key_group");
@@ -103,7 +117,7 @@ fn setup(
     geometrycmd.vb_wait.add(&jointkey, bytemuck::cast_slice(&data).iter().map(|v| *v).collect::<Vec<u8>>());
 
     let format = wgpu::VertexFormat::Uint16x2;
-    let jointdesc = VertexBufferDesc::vertices(jointkey.clone(), None, vec![VertexAttribute { kind: EVertexDataKind::MatricesIndices1, format }]);
+    let jointdesc = VertexBufferDesc::vertices(jointkey.clone(), VertexBufferDescRange::default(), vec![VertexAttribute { kind: EVertexDataKind::MatricesIndices1, format }]);
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();
@@ -111,8 +125,8 @@ fn setup(
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
+    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from("_MainTex"),
         filter: true,
@@ -137,16 +151,19 @@ impl Plugin for PluginTest {
 }
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
     
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
-    app.run()
+    app.add_systems(Update, pi_3d::sys_info_node);
+    app.add_systems(Update, pi_3d::sys_info_resource);
+    app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
+    
+    // app.run()
+    loop { app.update(); }
 
 }

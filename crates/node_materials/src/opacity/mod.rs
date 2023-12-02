@@ -60,6 +60,7 @@ impl TNodeMaterialBlock for BlockOpacityTexture {
             UniformTexture2DDesc::new(
                 UniformPropertyName::from(Self::KEY_TEX),
                 wgpu::TextureSampleType::Float { filterable: true },
+                wgpu::TextureViewDimension::D2,
                 false,
                 EShaderStage::FRAGMENT,
                 EDefaultTexture::White
@@ -124,6 +125,7 @@ impl TNodeMaterialBlock for BlockOpacity2Texture {
             UniformTexture2DDesc::new(
                 UniformPropertyName::from(Self::KEY_TEX),
                 wgpu::TextureSampleType::Float { filterable: true },
+                wgpu::TextureViewDimension::D2,
                 false,
                 EShaderStage::FRAGMENT,
                 EDefaultTexture::White

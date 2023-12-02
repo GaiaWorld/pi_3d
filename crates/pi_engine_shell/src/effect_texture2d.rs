@@ -2,27 +2,27 @@
 use bevy::prelude::{Deref, Component};
 use pi_assets::asset::Handle;
 
-use pi_render::{renderer::texture::*, render_3d::binds::effect_texture2d::*};
+use pi_render::renderer::texture::*;
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D01Comp(pub Option<EffectBindTexture2D01>);
+pub struct EffectBindTexture2D01Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D01Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D01::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D01Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D01::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D01Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }
 }
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D02Comp(pub Option<EffectBindTexture2D02>);
+pub struct EffectBindTexture2D02Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D02Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D02::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D02Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D02::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D02Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }
@@ -30,12 +30,12 @@ impl EffectBindTexture2D02Comp {
 
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D03Comp(pub Option<EffectBindTexture2D03>);
+pub struct EffectBindTexture2D03Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D03Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D03::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D03Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D03::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D03Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }
@@ -43,12 +43,12 @@ impl EffectBindTexture2D03Comp {
 
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D04Comp(pub Option<EffectBindTexture2D04>);
+pub struct EffectBindTexture2D04Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D04Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D04::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D04Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D04::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D04Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }
@@ -56,12 +56,12 @@ impl EffectBindTexture2D04Comp {
 
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D05Comp(pub Option<EffectBindTexture2D05>);
+pub struct EffectBindTexture2D05Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D05Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D05::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D05Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D05::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D05Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }
@@ -69,36 +69,36 @@ impl EffectBindTexture2D05Comp {
 
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D06Comp(pub Option<EffectBindTexture2D06>);
+pub struct EffectBindTexture2D06Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D06Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D06::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D06Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D06::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D06Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }
 }
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D07Comp(pub Option<EffectBindTexture2D07>);
+pub struct EffectBindTexture2D07Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D07Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D07::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D07Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D07::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D07Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }
 }
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
-pub struct EffectBindTexture2D08Comp(pub Option<EffectBindTexture2D08>);
+pub struct EffectBindTexture2D08Comp(pub Option<ETextureViewUsage>);
 impl From<ETextureViewUsage> for EffectBindTexture2D08Comp {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(EffectBindTexture2D08::from(value)) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some( value ) ) }
 }
 impl From<Handle<ImageTextureView>> for EffectBindTexture2D08Comp {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(EffectBindTexture2D08::from(value)) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some( ETextureViewUsage::Image(value) ) ) }
 }
 impl EffectBindTexture2D08Comp {
     // pub fn data(&self) -> Option<&BindDataTexture2D> { if let Some(data) = &self.0 { Some(data) } else { None } }

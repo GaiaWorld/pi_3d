@@ -22,6 +22,7 @@ pub mod object;
 pub mod viewer;
 pub mod bindgroup;
 pub mod light;
+pub mod shadow;
 pub mod skeleton;
 pub mod animation;
 pub mod pass;

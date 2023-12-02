@@ -3,7 +3,7 @@
 use bevy::prelude::{SystemSet, Plugin, IntoSystemSetConfig, IntoSystemConfigs, Update, apply_deferred};
 use pi_bevy_render_plugin::PiRenderSystemSet;
 
-use crate::prelude::EngineInstant;
+use crate::prelude::{EngineInstant, ErrorRecord};
 
 // pub struct RunStage {
 //     list: Vec<StageBuilder>,
@@ -166,6 +166,8 @@ impl Plugin for PluginRunstage {
         app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::DrawUniformToGPU));
         app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
         app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
+
+        app.insert_resource(ErrorRecord(vec![], false));
         
         // app.configure_set(
         //     (

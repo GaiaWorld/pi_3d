@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     object::sys_dispose_ready,
-    transforms::prelude::*,
+    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask},
 };
 
 use self::{
@@ -45,22 +45,22 @@ impl Plugin for PluginCamera {
         app.insert_resource(ActionListCameraFov::default());
         app.insert_resource(ActionListCameraOrthSize::default());
         app.insert_resource(ActionListCameraAspect::default());
-        app.insert_resource(ActionListCameraPixelSize::default());
+        // app.insert_resource(ActionListCameraPixelSize::default());
         app.insert_resource(ActionListCameraNearFar::default());
-        app.insert_resource(ActionListCameraRenderer::default());
+        // app.insert_resource(ActionListCameraRenderer::default());
         app.insert_resource(StateCamera::default());
 
         app.configure_set(Update, StageCamera::CameraCommand.after(ERunStageChap::_InitialApply));
         app.configure_set(Update, StageCamera::CameraCommandApply.after(StageCamera::CameraCommand));
-        app.configure_set(Update, StageCamera::CameraCalcMatrix.after(StageCamera::CameraCommandApply).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageCamera::CameraCulling.after(StageCamera::CameraCalcMatrix).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageCamera::CameraCalcMatrix.after(StageCamera::CameraCommandApply).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command));
+        app.configure_set(Update, StageCamera::CameraCulling.after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageCamera::CameraCommandApply));
 
         app.add_systems(
 			Update,
             (
                 sys_create_camera,
-                sys_create_camera_renderer,
+                // sys_create_camera_renderer,
             ).chain().in_set(ERunStageChap::Initial)
         );
 
@@ -74,7 +74,6 @@ impl Plugin for PluginCamera {
                 sys_act_camera_orth_size,
                 sys_act_camera_active,
                 sys_act_camera_aspect,
-                sys_act_camera_pixel_size,
                 sys_act_camera_target,
             ).in_set(StageCamera::CameraCommand)
         );
@@ -82,10 +81,9 @@ impl Plugin for PluginCamera {
         app.add_systems(
 			Update,
             (
-                sys_change_camera_render_size,
                 sys_update_camera_param,
                 sys_update_target_camera_modify,
-                sys_update_camera_renderer,
+                // sys_update_camera_renderer,
             ).after(sys_act_camera_target).in_set(StageCamera::CameraCommand)
         );
 
@@ -101,8 +99,8 @@ impl Plugin for PluginCamera {
         app.add_systems(
 			Update,
             (
-                sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>,
-                sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>,
+                sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam, LayerMask>,
+                sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam, LayerMask>,
             ).chain().in_set(StageCamera::CameraCalcMatrix)
         );
         app.add_systems(

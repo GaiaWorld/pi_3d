@@ -30,7 +30,9 @@ pi_3d_state             = { path = "crates/state" }
 
 pi_node_materials       = { path = "crates/node_materials" }
 unlit_material          = { path = "crates/unlit_material" }
-# standard_material = { path = "crates/standard_material" }
+pi_shadow_mapping       = { path = "crates/shadow_mapping" }
+pi_standard_material    = { path = "crates/standard_material" }
+pi_pbr                  = { path = "crates/pbr" }
 
 pi_render               = { version = "0.1", registry = "yn" }
 render_utils            = { version = "0.1", registry = "yn" }
@@ -210,6 +212,15 @@ path = "examples/anime/performance.rs"
 [[example]]
 name = "lighting_01"
 path = "examples/lighting/01.rs"
+
+[[example]]
+name = "lighting_points"
+path = "examples/lighting/points.rs"
+
+[[example]]
+name = "lighting_spots"
+path = "examples/lighting/spots.rs"
+
 # 
 # [[example]]
 # name = "particle01"
@@ -237,6 +248,10 @@ path = "examples/effects/main_opacity.rs"
 [[example]]
 name = "opacity_clip"
 path = "examples/effects/opacity_clip.rs"
+
+[[example]]
+name = "change_texture"
+path = "examples/anime/change_texture.rs"
 
 [[example]]
 name = "emissive_fresnel"
@@ -286,6 +301,9 @@ path = "examples/particles/render_shape.rs"
 [[example]]
 name = "particle_system_stretched"
 path = "examples/particles/render_stretched.rs"
+[[example]]
+name = "particle_system_vertical_billboard"
+path = "examples/particles/render_vertical_billboard.rs"
 
 [[example]]
 name = "trial01"
@@ -295,3 +313,23 @@ path = "examples/trial/01.rs"
 [[example]]
 name = "ray_test"
 path = "examples/oct_tree/ray_test.rs"
+
+[[example]]
+name = "pbr_01"
+path = "examples/pbr/01.rs"
+
+[[example]]
+name = "pbr_env"
+path = "examples/pbr/env_01.rs"
+
+[[example]]
+name = "pbr_env_image"
+path = "examples/pbr/env_02.rs"
+
+[[example]]
+name = "camera_opaque_texture"
+path = "examples/postprocess/camera_opaque_texture.rs"
+[[example]]
+name = "camera_depth_texture"
+path = "examples/postprocess/camera_depth_texture.rs"
+

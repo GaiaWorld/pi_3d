@@ -9,34 +9,6 @@ use crate::viewer::prelude::*;
 #[derive(Debug, Clone, Copy, Component)]
 pub struct Camera(pub bool);
 
-#[derive(Debug, Clone, Component)]
-pub struct CameraViewport {
-    /// 0. ~ 1.
-    pub x: f32,
-    /// 0. ~ 1.
-    pub y: f32,
-    /// 0. ~ 1.
-    pub w: f32,
-    /// 0. ~ 1.
-    pub h: f32,
-    /// 0. ~ 1.
-    pub mindepth: f32,
-    /// 0. ~ 1.
-    pub maxdepth: f32,
-}
-impl Default for CameraViewport {
-    fn default() -> Self {
-        Self {
-            x: 0.,
-            y: 0.,
-            w: 1.,
-            h: 1.,
-            mindepth: 0.,
-            maxdepth: 1.,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, Component, PartialEq, Eq, Default)]
 pub enum EFixedMode {
     #[default]
@@ -175,9 +147,6 @@ impl TAssetCapacity for CameraOrthSize {
 }
 impl TAnimatableComp for CameraOrthSize {}
 
-#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
-pub struct CameraToScreen(pub bool);
-
 #[derive(Debug, Clone, Component)]
 pub struct CameraParam {
     pub up: Vector3,
@@ -186,7 +155,6 @@ pub struct CameraParam {
     pub fov: CameraFov,
     pub fixed_mode: EFixedMode,
     pub mode: EFreeCameraMode,
-    pub viewport: CameraViewport,
 }
 impl Default for CameraParam {
     fn default() -> Self {
@@ -197,7 +165,6 @@ impl Default for CameraParam {
             fov: CameraFov::default(),
             fixed_mode: EFixedMode::default(),
             mode: EFreeCameraMode::default(),
-            viewport: CameraViewport::default(),
         }
     }
 }
@@ -208,7 +175,6 @@ impl CameraParam {
         fov: &CameraFov,
         nearfar: &CameraNearFar,
         orth: &CameraOrthSize,
-        viewport: &CameraViewport,
     ) -> Self {
         Self {
             up: Vector3::new(0., 1., 0.),
@@ -217,7 +183,6 @@ impl CameraParam {
             fov: fov.clone(),
             fixed_mode: fixed_mode.clone(),
             mode: mode.clone(),
-            viewport: viewport.clone(),
         }
     }
 }

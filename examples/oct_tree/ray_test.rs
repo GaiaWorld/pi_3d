@@ -12,6 +12,11 @@ use pi_scene_math::*;
 
 use crate::base::DemoScene;
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+
 fn setup(
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
@@ -23,31 +28,33 @@ fn setup(
     mut matuse: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     anime_assets: TypeAnimeAssetMgrs,
-    mut anime_contexts: TypeAnimeContexts,
     mut list: ResMut<ActionListTestData>,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>, TypeAnimeContexts, ),
 ) {
     let tes_size = 20;
     fps.frame_ms = 16;
+    let mut anime_contexts = assets.4;
 
-    final_render.cleardepth = 0.0;
+    
 
-    let (scene, camera01) = DemoScene::new(
+    let demopass = DemoScene::new(
         &mut commands,
         &mut scenecmds,
         &mut cameracmds,
         &mut transformcmds,
         &mut animegroupcmd,
-        &mut final_render,
+       
         &mut renderercmds,
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
         1.,
         0.7,
         (0., 10., -40.),
         false,
     );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
     cameracmds
         .target
         .push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
@@ -62,7 +69,7 @@ fn setup(
         source,
         MeshInstanceState {
             state: instancestate,
-            use_single_instancebuffer: false,
+            use_single_instancebuffer: false, ..Default::default()
         },
     ));
     // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
@@ -77,7 +84,7 @@ fn setup(
     ));
 
     let idmat = defaultmat.0;
-    matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
+    matuse.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
     // let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
@@ -181,8 +188,6 @@ pub fn sys_test(
         .for_each(|item| rays.push(RayTest(item.0, item.1, item.2, item.3)));
     println!("res: {:?}", res.as_ref());
 }
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins();
 
@@ -191,7 +196,7 @@ pub fn main() {
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     app.add_systems(Update, sys_test);
     app.world
         .get_resource_mut::<StateRecordCfg>()

@@ -21,10 +21,94 @@ pub type KeyGLTFBase = Atom;
 pub type GLTFJson = String;
 pub type GLTFDynamicJson = Atom;
 
+pub struct GLTFBin(Vec<u8>);
+impl pi_assets::asset::Asset for GLTFBin {
+    type Key = u64;
+    // const TYPE: &'static str = "GLTFBin";
+}
+impl pi_assets::asset::Size for GLTFBin {
+    fn size(&self) -> usize {
+        self.0.len()
+    }
+}
+impl TAssetCapacity for GLTFBin {
+    const ASSET_TYPE: &'static str = "RES_GLTF2_BIN";
+
+    fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 512 * 1024, max: 2 * 1024 * 1024, timeout: 1000 }
+    }
+}
+impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, Atom, G> for GLTFBin  {
+	fn async_load(desc: Atom, result: LoadResult<'a, Self, G>) -> BoxFuture<'a, std::io::Result<Handle<Self>>> {
+		Box::pin(async move { 
+			match result {
+				LoadResult::Ok(r) => Ok(r),
+				LoadResult::Wait(f) => f.await,
+				LoadResult::Receiver(recv) => {
+					let file = pi_hal::file::load_from_url(&desc ).await;
+					let file = match file {
+						Ok(r) => r,
+						Err(_e) =>  {
+							log::warn!("load gltf bin fail: {:?}", desc.as_str());
+							return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
+						},
+					};
+
+                    recv.receive(desc.asset_u64(), Ok(GLTFBin(file))).await
+				}
+			}
+		})
+	}
+}
+impl GLTFBin {
+    pub async fn load(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>) -> Result<Handle<GLTFBin>, String> {
+
+        let key = path.asset_u64();
+        let result = AssetMgr::load(&bin_assets, &key);
+        match result {
+            LoadResult::Ok(res) => {
+                return Ok(res);
+            },
+            _ => {
+                match GLTFBin::async_load(path.clone(), result).await {
+                    Ok(res) => Ok(res),
+                    Err(_) => Err(String::from("Load Fail.")),
+                }
+            }
+        }
+    }
+    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Vec<u8>) -> Result<Handle<GLTFBin>, String> {
+
+        let key = path.asset_u64();
+        let result = AssetMgr::load(&bin_assets, &key);
+        match result {
+            LoadResult::Ok(res) => {
+                return Ok(res);
+            },
+            _ => {
+                let loading = Box::pin(async move { 
+                    match result {
+                        LoadResult::Ok(r) => Ok(r),
+                        LoadResult::Wait(f) => f.await,
+                        LoadResult::Receiver(recv) => {
+                            recv.receive(key, Ok(GLTFBin(data))).await
+                        }
+                    }
+                }).await;
+
+                match loading {
+                    Ok(res) => Ok(res),
+                    Err(_) => Err(String::from("Load Fail.")),
+                }
+            }
+        }
+    }
+}
+
 pub struct GLTFBase{
     gltf: Gltf,
     size: usize,
-    buffers: Vec<Vec<u8>>,
+    buffers: Vec<Handle<GLTFBin>>,
     textures: Vec<Handle<ImageTexture>>,
 }
 impl pi_assets::asset::Asset for GLTFBase {
@@ -49,7 +133,7 @@ impl TAssetCapacity for GLTFBase {
     }
 }
 impl GLTFBase {
-    async fn load_buffers(gltf: &Gltf, base_path: &Atom) -> std::io::Result<Vec<Vec<u8>>> {
+    async fn load_buffers(gltf: &Gltf, base_path: &Atom, bin_assets: ShareAssetMgr<GLTFBin>) -> std::io::Result<Vec<Handle<GLTFBin>>> {
         let mut result = vec![];
         for buffer in gltf.buffers() {
             match buffer.source() {
@@ -59,15 +143,28 @@ impl GLTFBase {
                 pi_gltf::buffer::Source::Uri(path) => {
                     if path.starts_with("data:") {
                         if let Some(index) = path.find(',') {
+                            
+                            let mut path = String::from(base_path.as_str()) + "#";
+                            path += buffer.index().to_string().as_str();
+                            let path = Atom::from(path);
+                        
                             let base64_buffer = path.split_at(index + 1).1;
                             let data = base64::decode(base64_buffer).unwrap();
-                            result.push(data);
+                            match GLTFBin::load_with_data(&path, &bin_assets, data).await {
+                                Ok(val) => {
+                                    result.push(val);
+                                },
+                                Err(_e) => {
+                                    return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
+                                },
+                            }
                         } else {
                             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Buffer Data Error."));
                         }
                     } else {
                         let path = relative_path(path, base_path.as_str());
-                        match pi_hal::file::load_from_url(&Atom::from(path)).await {
+                        let path = Atom::from(path);
+                        match GLTFBin::load(&path, &bin_assets).await {
                             Ok(val) => {
                                 result.push(val);
                             },
@@ -82,53 +179,54 @@ impl GLTFBase {
         return Ok(result);
     }
     
-    async fn load_images(gltf: &Gltf, base_url: &Atom, image_assets_mgr: Share<AssetMgr<ImageTexture>>, device: RenderDevice, queue: RenderQueue) -> Vec<Handle<ImageTexture>> {
-        let mut result = vec![];
-        for item in gltf.images() {
-            match item.source() {
-                pi_gltf::image::Source::Uri { uri, mime_type: _ } => {
-                    let path = relative_path(uri, base_url.as_str());
-                    let key = KeyImageTexture::File(Atom::from(path), true);
-                    let imageresult = AssetMgr::load(&image_assets_mgr, &key);
-                    match imageresult {
-                        LoadResult::Ok(res) => {
-                            result.push(res);
-                        },
-                        _ => {
-                            let device = device.clone();
-                            let queue = queue.clone();
+    // async fn load_images(gltf: &Gltf, base_url: &Atom, image_assets_mgr: Share<AssetMgr<ImageTexture>>, device: RenderDevice, queue: RenderQueue) -> Vec<Handle<ImageTexture>> {
+    //     let mut result = vec![];
+    //     for item in gltf.images() {
+    //         match item.source() {
+    //             pi_gltf::image::Source::Uri { uri, mime_type: _ } => {
+    //                 let path = relative_path(uri, base_url.as_str());
+    //                 let key = KeyImageTexture { url: Atom::from(path), file: true, compressed: , ..Default::default() };
+    //                 let imageresult = AssetMgr::load(&image_assets_mgr, &key);
+    //                 match imageresult {
+    //                     LoadResult::Ok(res) => {
+    //                         result.push(res);
+    //                     },
+    //                     _ => {
+    //                         let device = device.clone();
+    //                         let queue = queue.clone();
 
-                            let desc = ImageTexture2DDesc {
-                                url: key.clone(),
-                                device: device,
-                                queue: queue,
-                            };
-                            let image = ImageTexture::async_load(desc, imageresult).await;
-                            match image {
-                                Ok(res) => {
-                                    result.push(res);
-                                },
-                                Err(_e) => {
-                                    // 图片加载失败仍然可渲染, 使用默认图片, 因此不添加Error
-                                    // log::error!("load image fail, {:?}", e);
-                                    // errorqueue.push(String::from(key.as_str()));
-                                    // log::error!("load image fail,");
-                                }
-                            }
-                        }
-                    }
-                },
-                _ => {
-                // pi_gltf::image::Source::View { view, mime_type } => {
+    //                         let desc = ImageTexture2DDesc {
+    //                             url: key.clone(),
+    //                             device: device,
+    //                             queue: queue,
+    //                         };
+    //                         let image = ImageTexture::async_load_image(desc, imageresult).await;
+    //                         match image {
+    //                             Ok(res) => {
+    //                                 result.push(res);
+    //                             },
+    //                             Err(_e) => {
+    //                                 // 图片加载失败仍然可渲染, 使用默认图片, 因此不添加Error
+    //                                 // log::error!("load image fail, {:?}", e);
+    //                                 // errorqueue.push(String::from(key.as_str()));
+    //                                 // log::error!("load image fail,");
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             },
+    //             _ => {
+    //             // pi_gltf::image::Source::View { view, mime_type } => {
                     
-                },
-            }
-        }
-        return result;
-    }
+    //             },
+    //         }
+    //     }
+    //     return result;
+    // }
 }
 pub struct GLTFBaseDesc {
     path: Atom,
+    bin_assets: ShareAssetMgr<GLTFBin>
 }
 impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase  {
 	fn async_load(desc: GLTFBaseDesc, result: LoadResult<'a, Self, G>) -> BoxFuture<'a, std::io::Result<Handle<Self>>> {
@@ -149,13 +247,13 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase
                     
                     let gltf = match Gltf::from_slice(&file) {
                         Ok(gltf) => {
-                            let buffers = match GLTFBase::load_buffers(&gltf, &desc.path).await {
+                            let buffers = match GLTFBase::load_buffers(&gltf, &desc.path, desc.bin_assets.clone()).await {
                                 Ok(buffers) => buffers,
                                 Err(e) => return Err(e),
                             };
                             let textures = vec![] ; // GLTFBase::load_images(&gltf, &desc.path, desc.textures_mgr.clone(), desc.device.clone(), desc.queue.clone()).await;
                             let mut size = 0;
-                            buffers.iter().for_each(|val| { size += val.len(); });
+                            buffers.iter().for_each(|val| { size += val.size(); });
                             // textures.iter().for_each(|val| { size += val.size(); });
                             GLTFBase { gltf, buffers, textures, size }
                         },
@@ -489,6 +587,7 @@ impl GLTFTempLoaded {
                     } else {
                         let view = accessor.view().unwrap();
                         if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                            let bufferdata = &bufferdata.0;
                             let start = view.offset() + accessor.offset();
                             let end = start + accessor.count() * accessor.size();
                             let data = &bufferdata[start..end];
@@ -511,6 +610,7 @@ impl GLTFTempLoaded {
                     } else {
                         let view = accessor.view().unwrap();
                         if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                            let bufferdata = &bufferdata.0;
                             let start = view.offset() + accessor.offset();
                             let end = start + accessor.count() * accessor.size();
                             let data = &bufferdata[start..end];
@@ -560,6 +660,7 @@ impl GLTFTempLoaded {
                         let accessor = channel.sampler().input();
                         let view = accessor.view().unwrap();
                         if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                            let bufferdata = &bufferdata.0;
                             let start = view.offset() + accessor.offset();
                             let end = start + accessor.count() * accessor.size();
                             let times = bytemuck::try_cast_slice(&bufferdata[start..end]);
@@ -574,6 +675,7 @@ impl GLTFTempLoaded {
                             let accessor = channel.sampler().output();
                             let view = accessor.view().unwrap();
                             if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                                let bufferdata = &bufferdata.0;
                                 let start = view.offset() + accessor.offset();
                                 let end = start + accessor.count() * accessor.size();
                                 let values = bytemuck::try_cast_slice(&bufferdata[start..end]);
@@ -906,6 +1008,7 @@ pub fn sys_load_gltf_launch(
 pub fn sys_gltf_base_loaded_launch(
     loader: Res<GLTFResLoader>,
     base_assets_mgr: Res<ShareAssetMgr<GLTFBase>>,
+    bin_assets_mgr: Res<ShareAssetMgr<GLTFBin>>,
 ) {
     let mut item = loader.waitbase.pop();
     while let Some((id, param)) = item {
@@ -928,6 +1031,7 @@ pub fn sys_gltf_base_loaded_launch(
                 _ => {
                     let desc = GLTFBaseDesc{
                         path: param.base_url.clone(),
+                        bin_assets: bin_assets_mgr.clone()
                     };
                     MULTI_MEDIA_RUNTIME
                     .spawn(async move {

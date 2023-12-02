@@ -21,4 +21,5 @@ pub use crate::{
     viewer::prelude::*,
     cullings::prelude::*,
     light::prelude::*,
+    shadow::prelude::*,
 };

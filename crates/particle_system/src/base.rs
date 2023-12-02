@@ -1250,6 +1250,8 @@ impl ParticleEmitMatrix {
             },
         };
 
+        // log::warn!("Emit Matrix : {:?}", emittermatrix);
+
         match simulation {
             EParticleSimulationSpace::Local => {
                 ids.iter().for_each(|idx| {

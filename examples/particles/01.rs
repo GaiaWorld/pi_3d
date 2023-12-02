@@ -30,6 +30,9 @@ use pi_scene_math::*;
 use std::sync::Arc;
 use unlit_material::{command::*, shader::UnlitShader, PluginUnlitMaterial};
 
+#[path = "../copy.rs"]
+mod copy;
+
 
 fn setup(
     mut commands: Commands,
@@ -42,15 +45,15 @@ fn setup(
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 10;
     fps.frame_ms = 16;
 
-    final_render.cleardepth = 0.0;
+    
 
     let scene = commands.spawn_empty().id();
     scenecmds
@@ -85,8 +88,8 @@ fn setup(
         ]),
     };
     let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer));
-    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, final_render.render_entity));
+    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer, false));
+    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, false));
     cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders,
         ColorFormat::Rgba8Unorm,
         DepthStencilFormat::None,
@@ -386,8 +389,6 @@ impl Plugin for PluginTest {
     }
 }
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
@@ -396,7 +397,7 @@ pub fn main() {
 
     app.add_systems(Update, sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix));
 
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
 
     app.run()

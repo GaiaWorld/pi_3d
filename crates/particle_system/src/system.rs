@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 use pi_scene_context::{prelude::*, geometry::instance::instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
-use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
+use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}};
 
 use crate::base::*;
 
@@ -634,29 +634,34 @@ pub fn sys_update_buffer(
                                     CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
                                     // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
                                     let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
-                                    // log::warn!("Velocity: {:?}", g_velocity);
+                                    // log::warn!("Velocity: {:?}", (g_velocity, direction.value));
                                     // log::warn!("Translation: {:?}", emitposition);
         
                                     let matrix = if let Some(renderalign) = renderalign {
-                                        let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
-                                        // log::warn!("rotation : {:?}", rotation);
-                                        let mut matrix = Matrix::identity();
-                                        {
-                                            matrix.append_nonuniform_scaling_mut(&emitmatrix.scaling);
-                                            matrix.append_translation_mut(&emitposition);
-                                            matrix = matrix * rotation.to_homogeneous();
-                                        }
-                                        // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
+                                        let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(eulers.x, eulers.y, eulers.z);
+                                        let mut matrix = renderalign.calc_matrix(
+                                            &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
+                                            &Vector3::zeros(), &scaling, &l_rotation, &eulers
+                                        );
+                                        // let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
+                                        // // log::warn!("rotation : {:?}", rotation);
+                                        // let mut matrix = Matrix::identity();
+                                        // {
+                                        //     matrix.append_nonuniform_scaling_mut(&emitmatrix.scaling);
+                                        //     matrix.append_translation_mut(&emitposition);
+                                        //     matrix = matrix * rotation.to_homogeneous();
+                                        // }
+                                        // // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
                                         
-                                        let mut local = Matrix::identity();
-                                        {
-                                            let rotation = Rotation3::from_euler_angles(eulers.z, eulers.x, eulers.y);
-                                            local.append_nonuniform_scaling_mut(scaling);
-                                            local = local * rotation.to_homogeneous();
-                                        }
-                                        // CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
-                                        // log::warn!("a MAREIX: {:?}", matrix);
-                                        matrix = matrix * local;
+                                        // let mut local = Matrix::identity();
+                                        // {
+                                        //     let rotation = Rotation3::from_euler_angles(eulers.z, eulers.x, eulers.y);
+                                        //     local.append_nonuniform_scaling_mut(scaling);
+                                        //     local = local * rotation.to_homogeneous();
+                                        // }
+                                        // // CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
+                                        // // log::warn!("a MAREIX: {:?}", matrix);
+                                        // matrix = matrix * local;
                             
                                         if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
                                             matrix = matrix * local;

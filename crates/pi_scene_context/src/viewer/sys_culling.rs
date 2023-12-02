@@ -5,7 +5,11 @@ use pi_hash::XHashSet;
 
 use crate::{
     layer_mask::prelude::*,
-    meshes::prelude::*, prelude::{GlobalEnable, DisposeReady, InstanceSourceRefs}, cullings::prelude::*
+    meshes::prelude::*,
+    geometry::prelude::*,
+    cullings::prelude::*,
+    commands::*,
+    flags::*,
 };
 
 use super::base::*;
@@ -41,10 +45,10 @@ pub fn sys_abstructmesh_culling_flag_reset(
     });
 }
 
-    pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+    pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, L: TViewerLayerMask + Component>(
         mut viewers: Query<
-            (Entity, &ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList, &T, &T2),
-            Or<(Changed<LayerMask>, Changed<ViewerActive>)>
+            (Entity, &ViewerActive, &SceneID, &L, &mut ModelList, &mut FlagModelList, &T, &T2),
+            Or<(Changed<L>, Changed<ViewerActive>)>
         >,
         items: Query<
             (Entity, &SceneID, &LayerMask, &InstanceSourceRefs),
@@ -61,7 +65,7 @@ pub fn sys_abstructmesh_culling_flag_reset(
                 // log::warn!("SysModelListUpdateByCamera: 0");
                 items.iter().for_each(|(id_obj, iscene, ilayer, instances)| {
                     // log::debug!("SysModelListUpdateByCamera: 1");
-                    if iscene == scene && layer.include(ilayer) {
+                    if iscene == scene && layer.include(ilayer.0) {
                         // log::debug!("SysModelListUpdateByCamera: 2");
                         if list_model.0.contains(&id_obj) {
                             // log::warn!("Has Include {:?}", id_obj);
@@ -83,9 +87,9 @@ pub fn sys_abstructmesh_culling_flag_reset(
         // log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
     }
 
-    pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+    pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, L: TViewerLayerMask + Component>(
         mut viewers: Query<
-            (&ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList, &T, &T2),
+            (&ViewerActive, &SceneID, &L, &mut ModelList, &mut FlagModelList, &T, &T2),
         >,
         items: Query<
             (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh),
@@ -96,13 +100,15 @@ pub fn sys_abstructmesh_culling_flag_reset(
         // log::debug!("CameraModelListByModel :");
 
         items.iter().for_each(|(id_obj, iscene, ilayer, instances, disposestate, _)| {
-            // log::debug!("CameraModelListByModel : 0");
+            // log::error!("CameraModelListByModel : 0");
             viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, mut flag_list_model, _, _)| {
-                // log::debug!("CameraModelListByModel : 1");
+                // log::error!("CameraModelListByModel : 1");
                 if vieweractive.0 {
                     if iscene == scene && disposestate.0 == false {
+                        // log::error!("CameraModelListByModel : 2");
                         if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
-                            if layer.include(ilayer) {
+                            if layer.include(ilayer.0) {
+                                // log::error!("CameraModelListByModel : 3");
                                 list_model.0.insert(id_obj);
                                 *flag_list_model = FlagModelList::default();
                                 instances.iter().for_each(|entity| {
@@ -127,7 +133,7 @@ pub fn sys_abstructmesh_culling_flag_reset(
 
     pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, R: TCullingPerformance + Resource>(
         mut viewers: Query<
-            (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &mut ModelListAfterCulling),
+            (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling),
             (With<T>, With<T2>)
         >,
         items: Query<
@@ -142,7 +148,7 @@ pub fn sys_abstructmesh_culling_flag_reset(
     ) {
         let time1 = pi_time::Instant::now();
         // log::warn!("SysModelListAfterCullinUpdateByCamera: ");
-        viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, mut cullings)| {
+        viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
             // log::warn!("SysViewerCulling: {:?}", vieweractive);
             cullings.0.clear();
             if vieweractive.0 {
@@ -153,7 +159,7 @@ pub fn sys_abstructmesh_culling_flag_reset(
                         &mut cullings.0
                     );
                 } else {
-                    // log::warn!("ModelList: {:?}", liet_model.0.len());
+                    // log::warn!("ModelList: {:?}", (list_model.0.len(), forceincludes.0.len()));
                     list_model.0.iter().for_each(|objid| {
                         // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
                         if let Ok((enable, instances)) = items.get(objid.clone()) {
@@ -173,6 +179,25 @@ pub fn sys_abstructmesh_culling_flag_reset(
                         }
                     });
                 }
+                
+                forceincludes.0.iter().for_each(|objid: &Entity| {
+                    // log::error!("forceincludes: ");
+                    if let Ok((enable, instances)) = items.get(objid.clone()) {
+                        // log::warn!("Moldellist Geo: {:?}, {:?}", enable.0, geo_enable.0);
+                        // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
+                        if let Some(instances) = instances {
+                            if instances.len() > 0 {
+                                cullings.0.push(objid.clone());
+                            } else if enable.0 {
+                                cullings.0.push(objid.clone());
+                            }
+                        } else {
+                            if enable.0 {
+                                cullings.0.push(objid.clone());
+                            }
+                        }
+                    }
+                });
                 
                 cullings.0.iter().for_each(|id| {
                     if let Ok(mut flag) = flags.get_mut(*id) {

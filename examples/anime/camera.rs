@@ -11,6 +11,11 @@ use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+
 fn setup(
     mut commands: Commands,
     mut scenecmds: ActionSetScene,
@@ -21,17 +26,25 @@ fn setup(
     mut matuse: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 20;
     fps.frame_ms = 30;
-    final_render.cleardepth = 0.0;
+    
 
-    let (scene, camera01, id_renderer) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, 4., 0.7, (0., 0., -10.), false);
+    let demopass = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        4., 0.7, (0., 0., -10.), false
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matuse, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     // cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
@@ -40,19 +53,13 @@ fn setup(
     // transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(root, 0., 0., 0.));
     // transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, root));
 
-
-    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    let instancestate = 0;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
-    // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::VerticalBillboard));
-    // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
-    
-    let id_geo = commands.spawn_empty().id();
-    let attrs = CubeBuilder::attrs_meta();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    let vertices = CubeBuilder::attrs_meta();
+    let indices = Some(CubeBuilder::indices_meta());
+    let state = MeshInstanceState::default();
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
 
     let idmat = defaultmat.0;
-    matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
+    matuse.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
     let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
@@ -116,8 +123,6 @@ impl Plugin for PluginTest {
     }
 }
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins();
     
@@ -125,7 +130,7 @@ pub fn main() {
     
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

@@ -7,7 +7,7 @@ use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
 use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{sys_create_material, sys_material_uniform_apply};
+use pi_scene_context::prelude::{sys_create_material, sys_material_uniform_apply, StageMaterial};
 use prelude::*;
 use premultiply::*;
 use command::*;
@@ -39,6 +39,15 @@ impl NodeMaterialBlocks {
     pub fn regist<T: TNodeMaterialBlock>(&mut self) {
         self.0.insert(Atom::from(T::KEY), T::info());
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageNodeMaterial {
+    InitAnimeAbout,
+    _InitAnimeAboutApply,
+    Command,
+    _CommandApply,
+    ApplyAnimeAbout,
 }
 
 pub struct PluginNodeMaterial;
@@ -94,6 +103,17 @@ impl Plugin for PluginNodeMaterial {
         app.insert_resource(ActionListMaskCutoff::default());
         app.insert_resource(ActionListMaskTexTilloff::default());
         app.insert_resource(ActionListOpacityTexTilloff::default());
+
+        app.configure_set(Update, StageNodeMaterial::InitAnimeAbout.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageNodeMaterial::_InitAnimeAboutApply.after(StageNodeMaterial::InitAnimeAbout));
+        app.configure_set(Update, StageNodeMaterial::Command.after(StageNodeMaterial::_InitAnimeAboutApply));
+        // app.configure_set(Update, StageNodeMaterial::_CommandApply.after(StageNodeMaterial::Command));
+        app.configure_set(Update, StageNodeMaterial::ApplyAnimeAbout.after(StageNodeMaterial::Command).after(ERunStageChap::Anime).before(StageMaterial::MaterialCommand));
+
+        app.add_systems(Update, apply_deferred.in_set(StageNodeMaterial::_InitAnimeAboutApply));
+        // app.add_systems(Update, apply_deferred.in_set(StageNodeMaterial::_CommandApply));
+
+        app.add_systems(Update, sys_material_anime_init.in_set(StageNodeMaterial::InitAnimeAbout));
         
         app.add_systems(
 			Update,
@@ -106,12 +126,11 @@ impl Plugin for PluginNodeMaterial {
                 sys_act_maskcutoff,
                 sys_act_masktex_tilloff,
                 sys_act_opacitytex_tilloff,
-            ).in_set(ERunStageChap::Command)
+            ).in_set(StageNodeMaterial::Command)
         );
 
-        app.add_systems(Update, sys_node_material_uniform_update.before(sys_material_uniform_apply));
+        app.add_systems(Update, sys_node_material_uniform_update.in_set(StageNodeMaterial::ApplyAnimeAbout));
 
-        app.add_systems(Update, sys_material_anime_init.in_set(ERunStageChap::SecondInitial));
     }
 }
 

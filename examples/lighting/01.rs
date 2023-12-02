@@ -1,12 +1,26 @@
 #![feature(box_into_inner)]
 
 
+use base::DemoScene;
+use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_scene_context::{prelude::*, viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix}, light::PluginLighting};
+use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_scene_context::{prelude::*, light::PluginLighting};
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
+use pi_standard_material::shader::StandardShader;
 use unlit_material::*;
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+#[path = "../light.rs"]
+mod light;
+#[path = "../shadow.rs"]
+mod shadow;
+#[path = "../pbr_material.rs"]
+mod pbr_material;
 
 #[derive(Debug)]
 pub struct PluginTest;
@@ -18,67 +32,101 @@ impl Plugin for PluginTest {
 
     fn setup(
         mut commands: Commands,
-        mut scenecmds: ActionSetScene,
-        mut cameracmds: ActionSetCamera,
-        mut transformcmds: ActionSetTransform,
-        mut lightingcmds: ActionSetLighting,
-        mut meshcmds: ActionSetMesh,
+        // mut scenecmds: ActionSetScene,
+        // mut cameracmds: ActionSetCamera,
+        // mut transformcmds: ActionSetTransform,
+        // mut lightingcmds: ActionSetLighting,
+        // mut meshcmds: ActionSetMesh,
+        // mut abstructmeshcmds: ActionSetAbstructMesh,
+        mut shadowcmds: ActionSetShadow,
         mut geometrycmd: ActionSetGeometry,
         mut matcmds: ActionSetMaterial,
         defaultmat: Res<SingleIDBaseDefaultMaterial>,
         mut animegroupcmd: ActionSetAnimationGroup,
         mut fps: ResMut<SingleFrameTimeCommand>,
-        mut final_render: ResMut<WindowRenderer>,
         mut renderercmds: ActionSetRenderer,
+        anime_assets: TypeAnimeAssetMgrs,
+        mut anime_contexts: TypeAnimeContexts,
+        mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+        mut cmds: (ActionSetScene, ActionSetCamera, ActionSetTransform, ActionSetLighting, ActionSetMesh, ActionSetInstanceMesh, ActionSetAbstructMesh)
     ) {
 
-        let tes_size = 12;
+        let (mut scenecmds, mut cameracmds, mut transformcmds, mut lightingcmds, mut meshcmds, mut instancemeshcmds, mut abstructmeshcmds) = cmds;
+
+        let tes_size = 6;
         fps.frame_ms = 100;
 
+        let orthographic_camera = true;
+        let camera_position = (10., 10., -10.);
+
         // Test Code
-        let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 10., -40.), true);
-        cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-        cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
+        let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+            &mut assets.0, &assets.1, &assets.2, &assets.3,
+            tes_size as f32, 0.7, camera_position, orthographic_camera
+        );
+        let (scene, camera01) = (demopass.scene, demopass.camera);
 
-        let light = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(light, scene));
-        transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(light, 0., 10., -10.));
-        meshcmds.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
-        lightingcmds.create.push(OpsLightCreate::ops(scene, light));
-        lightingcmds.param.push(ELightModifyCommand::Directional(light, Vector3::new(0., -1., 1.)));
-        lightingcmds.param.push(ELightModifyCommand::ShadowEnable(light, true));
-        lightingcmds.param.push(ELightModifyCommand::ShadowFrustumSize(light, 40.0));
+        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+        renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    
+        cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 2.));
+        
+        let cameraroot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        transformcmds.create.push(OpsTransformNode::ops(scene, cameraroot));
+        let lightroot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        transformcmds.create.push(OpsTransformNode::ops(scene, lightroot));
 
-        renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, light));
-        renderercmds.connect.push(OpsRendererConnect::ops(light, id_renderer));
-        renderercmds.modify.push(OpsRendererCommand::DepthFormat(light, RenderDepthFormat(DepthStencilFormat::Depth32Float)));
-        renderercmds.modify.push(OpsRendererCommand::ColorFormat(light, RenderColorFormat(ColorFormat::Rgba16Float)));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearColor(light, true));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(light, true));
-        renderercmds.modify.push(OpsRendererCommand::DepthClear(light, RenderDepthClear(0.)));
-        renderercmds.modify.push(OpsRendererCommand::ColorClear(light, RenderColorClear(0, 0, 0, 0)));
+        scenecmds.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
+        {
+            let light = light::DemoLight::directlight(&mut commands, scene, lightroot, &mut transformcmds, &mut lightingcmds, &mut meshcmds.layermask);
+            log::warn!("Light: {:?}", light);
 
-        log::warn!("Light: {:?}", light);
+            {
+                let pass = DemoScene::PASS_SHADOW;
+                let pre_renderer = None;
+                let next_renderer = demopass.opaque_renderer;
+                let rendertarget = demopass.shadowtarget;
+                let shadow = shadow::DemoShadow::init(&mut commands, scene, light, pass, pre_renderer, next_renderer, rendertarget, &mut renderercmds, &mut shadowcmds);
+            }
+        }
+        {
+            let position = (0., 0., 0.);
+            let direction =  (-1., -0.2, 0.2);
+            let color = (0.2 * 0.2, 0.8 * 0.2, 0.1 * 0.2);
+            let light = light::DemoLight::directlight_custom(&mut commands, scene, scene, &mut transformcmds, &mut lightingcmds, &mut meshcmds.layermask, position, direction, color, 0xFFFFFFFF);
+        }
+        {
+            let position = (0., 0., 0.);
+            let direction =  (1., -0.5, 0.2);
+            let color = (0.2 * 0.2, 0.4 * 0.2, 0.8 * 0.2);
+            let light = light::DemoLight::directlight_custom(&mut commands, scene, scene, &mut transformcmds, &mut lightingcmds, &mut meshcmds.layermask, position, direction, color, 0xFFFFFFFF);
+        }
 
-        // let camera01 = engine.create_free_camera(scene01);
-        // engine.free_camera_mode(camera01, EFreeCameraMode::Perspective);
-        // engine.active_camera(camera01, true);
-        // engine.layer_mask(camera01, LayerMask::default());
-        // engine.transform_position(camera01, Vector3::new(0., 10., -40.));
-        // // engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("TestLight")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque]) });
-        // // engine.transform_parent(camera01, root);
-        // engine.camera_target(camera01, Vector3::new(0., -1., 4.));
+    let lightingmat = {
+        
+        let idmat = commands.spawn_empty().id();
+        matcmds.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY));
+        // matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+        //     slotname: Atom::from(BlockMainTexture::KEY_TEX),
+        //     filter: true,
+        //     sample: KeySampler::linear_repeat(),
+        //     url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+        // }));
+        idmat
+    };
 
-        // let source = engine.create_mesh(scene01);
-        // let mut attrs = CubeBuilder::attrs_meta();
-        // attrs.push(VertexBufferDesc::instance_world_matrix());
-        // engine.use_geometry(source, attrs, Some(CubeBuilder::indices_meta()));
-        // // engine.use_default_material(source);
-        // engine.layer_mask(source, LayerMask::default());
+    let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
+    let mut state: MeshInstanceState = MeshInstanceState::default();
+    state.state = InstanceState::INSTANCE_BASE;
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
 
-        // let key_group = pi_atom::Atom::from("key_group");
-        // engine.create_animation_group(source, &key_group);
-
-    let attrs = CubeBuilder::attrs_meta();
+    matcmds.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
+    meshcmds.shadow.push(OpsMeshShadow::CastShadow(source, true));
+    
+    let ins = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(ins, scene));
+    instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, ins));
+    transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(ins, 100., 1., 100.));
+    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(ins, 0., -1., 0.));
 
         let cell_col = 4.;
         let cell_row = 4.;
@@ -86,36 +134,50 @@ impl Plugin for PluginTest {
             for j in 0..tes_size {
                 for k in 0..1 {
                     let cube = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState::default()));
-
-                    let id_geo = commands.spawn_empty().id();
-                    geometrycmd.create.push(OpsGeomeryCreate::ops(cube, id_geo, attrs.clone(), Some(CubeBuilder::indices_meta())));
-                    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i + 1) as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
-                    
-                    matcmds.usemat.push(OpsMaterialUse::Use(cube, defaultmat.0));
-                    // let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
-                    // let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(1., 1., 1.)), LocalScaling(Vector3::new(0., 2. * (1.1 + (i as f32).sin()), 0.)), (60. * (1.1 + ((i * j) as f32).cos())) as u16, 30, EEasingMode::None);
-                    // let asset_curve = if let Some(curve) = engine.check_anim_curve::<LocalScaling>(&key_curve0) {
-                    //     curve
-                    // } else {
-                    //     engine.creat_anim_curve::<LocalScaling>(&key_curve0, curve)
-                    // };
-                    // let animation = engine.create_animation::<LocalScaling>(asset_curve);
-
-
-                    // engine.create_target_animation(source, cube, &key_group, animation);
+                    instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube));
+                    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i + 1) as f32 * 3. - (tes_size) as f32, 0., j as f32 * 3. - (tes_size) as f32));
+                    transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  (f32::sin((i * j) as f32) * 0.5 + 0.5) * 6., 1.));
                 }
             }
         }
 
-        // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
-            
-        // 创建帧事件
-    }
+        let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
+        animegroupcmd.global.record_group(cameraroot, id_group);
+        animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, cameraroot, id_group));
+        {
+            let key_curve0 = pi_atom::Atom::from((0).to_string());
+            let key_curve0 = key_curve0.asset_u64();
+            let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 0.)), LocalEulerAngles(Vector3::new(0., 6.28, 0.)), 60 as FrameIndex, 30, EEasingMode::None);
+            let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) { Some(curve) } else {
+                match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
+                    Ok(value) => { Some(value) },
+                    Err(_) => { None },
+                }
+            };
+            if let Some(asset_curve) = asset_curve {
+                let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+                animegroupcmd.scene_ctxs.add_target_anime(scene, cameraroot, id_group.clone(), animation);
+            }
+        }
+        {
+            let key_curve0 = pi_atom::Atom::from((1).to_string());
+            let key_curve0 = key_curve0.asset_u64();
+            let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 0.)), LocalEulerAngles(Vector3::new(0., 6.28 * 2., 0.)), 60 as FrameIndex, 30, EEasingMode::None);
+            let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) { Some(curve) } else {
+                match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
+                    Ok(value) => { Some(value) },
+                    Err(_) => { None },
+                }
+            };
+            if let Some(asset_curve) = asset_curve {
+                let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+                animegroupcmd.scene_ctxs.add_target_anime(scene, lightroot, id_group.clone(), animation);
+            }
+        }
+        animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+}
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
 
@@ -124,7 +186,7 @@ pub fn main() {
     app.add_systems(Update, pi_3d::sys_info_draw);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

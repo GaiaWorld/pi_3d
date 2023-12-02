@@ -5,6 +5,11 @@
 
 use pi_engine_shell::prelude::*;
 
+pub trait TViewerLayerMask {
+    fn include(&self, other: u32) -> bool {
+        return true;
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LayerMask(pub u32);
@@ -13,8 +18,8 @@ impl Default for LayerMask {
         Self(0xFFFFFFFF)
     }
 }
-impl LayerMask {
-    pub fn include(&self, other: &Self) -> bool {
-        return self.0 & other.0 > 0;
+impl TViewerLayerMask for LayerMask {
+    fn include(&self, other: u32) -> bool {
+        return self.0 & other > 0;
     }
 }

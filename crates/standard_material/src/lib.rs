@@ -1,10 +1,25 @@
-// pub mod standard_material;
-// pub mod standard_material_sys;
-// pub mod shader;
-// pub mod command;
-// pub mod pipeline;
-// pub mod bind_group;
-// pub mod interface;
-// pub mod define;
-// pub mod emissive;
-// pub mod assets;
+use block_lighting::BlockStandardLighting;
+use pi_engine_shell::prelude::*;
+use pi_node_materials::{NodeMaterialBlocks, prelude::TNodeMaterialBlock};
+use pi_scene_context::prelude::*;
+use shader::StandardShader;
+
+pub mod shader;
+pub mod interface;
+pub mod block_lighting;
+
+
+fn setup(
+    asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    mut nodematblocks: ResMut<NodeMaterialBlocks>,
+) {
+    nodematblocks.regist::<BlockStandardLighting>();
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(StandardShader::KEY), StandardShader::meta());
+}
+
+pub struct PluginStandardMaterial;
+impl Plugin for PluginStandardMaterial {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, setup);
+    }
+}

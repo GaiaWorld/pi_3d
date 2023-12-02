@@ -28,13 +28,7 @@ impl InstancedInfo {
         self.bytes_per_instance
     }
     pub fn geo_desc(&self) -> VertexBufferDesc {
-        VertexBufferDesc {
-            key: KeyVertexBuffer::from(""),
-            range: None,
-            attrs: self.attributes(),
-            step_mode: wgpu::VertexStepMode::Instance,
-            instance: true,
-        }
+        VertexBufferDesc::new( KeyVertexBuffer::from(""), VertexBufferDescRange::default(), self.attributes(), true)
     }
 }
 

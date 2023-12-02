@@ -7,6 +7,8 @@ use pi_gltf2_load::*;
 use pi_particle_system::prelude::{ParticleSystemActionSet, OpsCPUParticleSystem};
 use pi_scene_context::prelude::*;
 
+#[path = "../base.rs"]
+mod base;
 
 fn setup(
     mut commands: Commands,
@@ -168,7 +170,7 @@ fn sys_load_check(
 //                 });
 
 //                 let instancestate = 0;
-//                 meshcmds.create.push(OpsMeshCreation::ops(scene, node, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
+//                 meshcmds.create.push(OpsMeshCreation::ops(scene, node, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
 //             } else {
 //                 transformcmds.create.push(OpsTransformNode::ops(scene, node));
 //             };
@@ -187,14 +189,12 @@ impl Plugin for PluginTest {
 }
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
     
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     app.add_systems(Update, sys_load_check);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     

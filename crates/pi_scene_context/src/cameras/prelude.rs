@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{prelude::GlobalEnable, viewer::prelude::{ModelListAfterCulling, ModelList, TCullingPerformance}};
+use crate::{prelude::GlobalEnable, viewer::prelude::{ModelListAfterCulling, ModelList, TCullingPerformance, ActionListViewerForceInclude}};
 
 pub use super::{
     target_camera::*,
@@ -43,9 +43,10 @@ pub struct ActionSetCamera<'w> {
     pub fov: ResMut<'w, ActionListCameraFov>,
     pub size: ResMut<'w, ActionListCameraOrthSize>,
     pub nearfar: ResMut<'w, ActionListCameraNearFar>,
-    pub render: ResMut<'w, ActionListCameraRenderer>,
+    // pub render: ResMut<'w, ActionListCameraRenderer>,
     pub aspect: ResMut<'w, ActionListCameraAspect>,
-    pub pixelsize: ResMut<'w, ActionListCameraPixelSize>,
+    // pub pixelsize: ResMut<'w, ActionListCameraPixelSize>,
+    pub forceinclude: ResMut<'w, ActionListViewerForceInclude>,
 }
 
 pub type StateCameraQuery = QueryState<(&'static Camera, &'static ModelList, &'static ModelListAfterCulling)>;

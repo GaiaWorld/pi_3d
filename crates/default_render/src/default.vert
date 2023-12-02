@@ -8,7 +8,6 @@ vec4 worldPos =  finalWorld * positionUpdate;
 // vec4 worldPos =  positionUpdate;
 
 gl_Position = PI_MATRIX_VP * worldPos;
-gl_Position.z = gl_Position.z * 0.5 + 0.5;
 // gl_Position = positionUpdate;
 
 v_pos = worldPos.xyz;

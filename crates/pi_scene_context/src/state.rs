@@ -97,7 +97,7 @@ pub struct StateRecordCfg {
 //     #[system]
     fn sys_mesh_state_by_pass<T: TMeshStatePass + Component, P: TPass + Component>(
         mut models: Query<&mut MeshStates>,
-        passes: Query<(&ModelPass, &T, &P), Changed<T>>,
+        passes: Query<(&PassModelID, &T, &P), Changed<T>>,
         mut commands: Commands,
     ) {
         passes.iter().for_each(|(id_model, val, _)| {
@@ -132,7 +132,7 @@ pub struct StateRecordCfg {
         mut commands: Commands,
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
-            let state = EMeshState::val(T::MESH_STATE, 0);
+            let state = EMeshState::val(T::MESH_STATE, PassTag::PASS_TAG_08);
             if !states.0.contains(&state) {
                 states.0.push(state);
             }
@@ -159,7 +159,7 @@ pub struct StateRecordCfg {
         mut commands: Commands,
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
-            let state = EMeshState::val(RenderGeometryComp::MESH_STATE, 0);
+            let state = EMeshState::val(RenderGeometryComp::MESH_STATE, PassTag::PASS_TAG_08);
             if !states.0.contains(&state) {
                 states.0.push(state);
             }

@@ -38,10 +38,10 @@ impl OpsCPUParticleSystemState {
 }
 pub type ActionListCPUParticleSystemState = ActionList<OpsCPUParticleSystemState>;
 
-pub struct OpsCPUParticleSystemTrailMaterial(pub(crate) Entity, pub(crate) Entity, pub(crate) u8);
+pub struct OpsCPUParticleSystemTrailMaterial(pub(crate) Entity, pub(crate) Entity, pub(crate) PassTag, pub(crate) u8);
 impl OpsCPUParticleSystemTrailMaterial {
-    pub fn ops(node: Entity, mat: Entity) -> Self {
-        Self(node, mat, 0)
+    pub fn ops(node: Entity, mat: Entity, pass: PassTag) -> Self {
+        Self(node, mat, pass, 0)
     }
 }
 pub type ActionListCPUParticleSystemTrailMaterial = ActionList<OpsCPUParticleSystemTrailMaterial>;

@@ -4,7 +4,10 @@ use pi_engine_shell::prelude::*;
 use crate::{
     renderers::prelude::*,
     geometry::command::*,
-    cullings::prelude::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}, prelude::{GlobalEnable, RenderGeometryEable, InstanceMesh, ActionListLayerMask}
+    cullings::prelude::*,
+    flags::*,
+    geometry::prelude::*,
+    layer_mask::prelude::*, viewer::prelude::ActionListViewerForceInclude,
 };
 
 pub use super::{
@@ -55,6 +58,7 @@ pub struct ActionSetInstanceMesh<'w> {
     pub ins_world_matrixs: ResMut<'w, ActionListInstanceWorldMatrixs>,
     pub ins_colors: ResMut<'w, ActionListInstanceColors>,
     pub ins_tilloffs: ResMut<'w, ActionListInstanceTilloffs>,
+    pub floats: ResMut<'w, ActionListInstanceFloat>,
 }
 
 #[derive(SystemParam)]
@@ -62,6 +66,9 @@ pub struct ActionSetAbstructMesh<'w> {
     pub scaling_mode: ResMut<'w, ActionListAbstructMeshScalingMode>,
     pub velocity: ResMut<'w, ActionListAbstructMeshVelocity>,
     pub boneoffset: ResMut<'w, ActionListBoneOffset>,
+    pub force_point_light: ResMut<'w, ActionListMeshForcePointLighting>,
+    pub force_spot_light: ResMut<'w, ActionListMeshForceSpotLighting>,
+    pub force_hemi_light: ResMut<'w, ActionListMeshForceHemiLighting>,
 }
 
 #[derive(Resource, Default)]

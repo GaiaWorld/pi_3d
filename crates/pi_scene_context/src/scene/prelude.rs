@@ -10,7 +10,10 @@ pub use super::environment::{
     fog::*,
     scene_time::*,
     ambient_light::*,
+    brdf::*,
+    environment_texture::*,
 };
+pub use super::pass_render_target::*;
 
 #[derive(SystemParam)]
 pub struct ActionSetScene<'w> {
@@ -21,5 +24,8 @@ pub struct ActionSetScene<'w> {
     pub ambientcolor: ResMut<'w, ActionListSceneAmbientColor>,
     pub ambientintensity: ResMut<'w, ActionListSceneAmbientIntensity>,
     pub animeenable: ResMut<'w, ActionListSceneAnimationEnable>,
+    pub brdf: ResMut<'w, ActionListSceneBRDF>,
+    pub env: ResMut<'w, ActionListSceneEnvTexture>,
+    pub shadowmap: ResMut<'w, ActionListSceneShadowMap>,
 }
 

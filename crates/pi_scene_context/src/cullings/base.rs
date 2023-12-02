@@ -179,14 +179,15 @@ impl SceneBoundingPool {
         }
     }
     pub fn culling<F: TFilter>(&self, transform: &ViewerTransformMatrix, filter: F, result: &mut Vec<Entity>) {
+        let transform = transform.0.clone();
         match self {
             SceneBoundingPool::List(item) => {
-                item.culling(&transform.0, filter, result);
+                item.culling(&transform, filter, result);
             },
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(item) => {
                 println!("================otctree");
-                item.culling(&transform.0, filter, result);
+                item.culling(&transform, filter, result);
             },
         }
     }

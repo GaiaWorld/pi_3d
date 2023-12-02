@@ -5,6 +5,11 @@ use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::cube::*;
 
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
+
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 
 // pub struct SysTest;
@@ -102,43 +107,47 @@ fn setup(
     mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut renderercmds: ActionSetRenderer,
-    
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     mut testdata: ResMut<ActionListTestData>,
 ) {
     fps.frame_ms = 200;
 
     let tes_size = 4;
-    let (scene, camera01, id_renderer) = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 0.7, (0., 0., -10.), true);
+    let demopass = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 0.7, (0., 0., -10.), true
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
     cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
-    let cube = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
-    let instancestate = 0;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
-    meshcmds.indexrange.push(OpsMeshRenderIndiceRange::ops(cube, Some(3), Some(12)));
+    let vertices = CubeBuilder::attrs_meta();
+    let indices = Some(CubeBuilder::indices_meta());
+    let state = MeshInstanceState { state: 0, ..Default::default() };
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
+
+    meshcmds.indexrange.push(OpsMeshRenderIndiceRange::ops(source, Some(3), Some(12)));
     // meshcmds.vertexrange.push(OpsMeshRenderVertexRange::ops(cube, Some(0), Some(12)));
-    meshcmds.cullmode.push(OpsCullMode::ops(cube, CullMode::Off));
-    
-    let id_geo = commands.spawn_empty().id();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(cube, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
+    meshcmds.cullmode.push(OpsCullMode::ops(source, CullMode::Off));
 
-    matcmds.usemat.push(OpsMaterialUse::ops(cube, defaultmat.0));
+    matcmds.usemat.push(OpsMaterialUse::ops(source, defaultmat.0, DemoScene::PASS_OPAQUE));
 
-    testdata.push((cube, 0., 0., 0.));
+    testdata.push((source, 0., 0., 0.));
 
 }
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins();
     
     app.add_plugins(PluginTest);
     app.add_systems(Update, pi_3d::sys_info_node);
     
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

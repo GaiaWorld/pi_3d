@@ -7,24 +7,19 @@ pub use super::command::*;
 pub use super::uniforms::{
     uniform::*,
     float::*,
-    int::*,
+    // int::*,
     uint::*,
     vec2::*,
     vec4::*,
-    mat2::*,
+    // mat2::*,
     mat4::*,
     texture::*,
-    texture_uniform::*,
-    value_uniform::*,
     sys_uniform::*,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageMaterial {
-    MaterialUse,
-    MaterialUseApply,
     MaterialCommand,
-    MaterialCommandApply,
     MaterialReady,
 }
 
@@ -60,6 +55,7 @@ pub struct ActionSetMaterial<'w> {
     pub mat2: ResMut<'w, ActionListUniformMat2>,
     pub mat4: ResMut<'w, ActionListUniformMat4>,
     pub texture: ResMut<'w, ActionListUniformTexture>,
+    pub texturefromtarget: ResMut<'w, ActionListUniformTextureFromRenderTarget>,
     pub metas: Res<'w, ShareAssetMgr<ShaderEffectMeta>>,
     // pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 }
@@ -76,7 +72,7 @@ pub fn sys_state_material(
     materials.iter().for_each(|(meta, texs)| {
         state.count += 1;
         if let Some(texs) = &texs.0 {
-            if texs.binding_count == meta.textures.len() as u32 * 2 {
+            if texs.textures.len() == meta.textures.len() {
                 state.count_ready += 1;
             }
         } else if meta.textures.len() == 0 {
@@ -84,3 +80,41 @@ pub fn sys_state_material(
         }
     });
 }
+
+///
+pub struct BundleMaterial (
+    AssetKeyShaderEffect,
+    // MaterialRefs,
+    BindEffectValueDirty,
+    BindEffectReset,
+    // UniformTextureWithSamplerParams,
+    UniformTextureWithSamplerParamsDirty,
+    FlagAnimationStartResetComp,
+    DirtyMaterialRefs,
+    TextureSlot01,
+    TextureSlot02,
+    TextureSlot03,
+    TextureSlot04,
+    TextureSlot05,
+    TextureSlot06,
+    TextureSlot07,
+    TextureSlot08,
+    EffectBindTexture2D01Comp,
+    EffectBindTexture2D02Comp,
+    EffectBindTexture2D03Comp,
+    EffectBindTexture2D04Comp,
+    EffectBindTexture2D05Comp,
+    EffectBindTexture2D06Comp,
+    EffectBindTexture2D07Comp,
+    EffectBindTexture2D08Comp,
+    EffectBindSampler2D01Comp,
+    EffectBindSampler2D02Comp,
+    EffectBindSampler2D03Comp,
+    EffectBindSampler2D04Comp,
+    EffectBindSampler2D05Comp,
+    EffectBindSampler2D06Comp,
+    EffectBindSampler2D07Comp,
+    EffectBindSampler2D08Comp,
+    EffectBindSampler2D08Comp,
+    EffectTextureSamplersComp,
+);

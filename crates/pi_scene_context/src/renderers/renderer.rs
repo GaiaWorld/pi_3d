@@ -1,11 +1,11 @@
 
+use std::{sync::Arc, ops::Deref, slice::Iter};
+
 use pi_engine_shell::prelude::*;
 use pi_hash::{DefaultHasher, XHashMap};
 use smallvec::SmallVec;
 
-use crate::{viewer::prelude::*, prelude::PassTagOrders};
-
-use super::{base::DrawList3D, render_object::RendererID};
+use super::base::DrawList3D;
 
 
 #[derive(Debug, Clone, Default, Resource)]
@@ -13,6 +13,22 @@ pub struct RendererHasher(pub DefaultHasher);
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct RendererEnable(pub bool);
+
+#[derive(Debug, Clone, Copy, Component)]
+pub struct RendererBlend(pub bool);
+
+#[derive(Debug, Clone, Copy, Component)]
+pub struct RenderViewport(pub f32, pub f32, pub f32, pub f32, pub f32, pub f32);
+impl Default for RenderViewport {
+    fn default() -> Self {
+        Self(0., 0., 1., 1., 0., 1.)
+    }
+}
+impl RenderViewport {
+    pub fn val(&self) -> (f32, f32, f32, f32, f32, f32) {
+        (self.0, self.1, self.2, self.3, self.4, self.5)
+    }
+}
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct RenderSize(pub(crate) u32, pub(crate) u32);
@@ -66,7 +82,7 @@ impl RenderColorClear {
 pub struct RenderDepthFormat(pub DepthStencilFormat);
 impl Default for RenderDepthFormat {
     fn default() -> Self {
-        Self(DepthStencilFormat::Depth24PlusStencil8)
+        Self(DepthStencilFormat::Depth32Float)
     }
 }
 impl RenderDepthFormat {
@@ -143,24 +159,70 @@ impl Default for RenderAutoClearStencil {
 }
 
 #[derive(Debug, Clone, Copy, Component)]
-pub struct RenderToFinalTarget(pub bool);
-impl Default for RenderToFinalTarget {
+pub enum RenderTargetMode {
+    Auto,
+    Window,
+    Custom(u32, u32),
+}
+impl Default for RenderTargetMode {
     fn default() -> Self {
-        Self(false)
+        Self::Auto
+    }
+}
+
+#[derive(Debug, Clone, Component)]
+pub enum RendererRenderTarget {
+    None,
+    FinalRender,
+    Custom(Arc<SafeTargetView>),
+}
+impl Default for RendererRenderTarget {
+    fn default() -> Self {
+        Self::None
+    }
+}
+impl RendererRenderTarget {
+    pub fn view(&self) -> Option<&wgpu::TextureView> {
+        match self {
+            RendererRenderTarget::None => None,
+            RendererRenderTarget::FinalRender => None,
+            RendererRenderTarget::Custom(srt) => {
+                let view: &wgpu::TextureView = srt.target().colors[0].0.as_ref().deref();
+                Some(view)
+            },
+        }
+    }
+    pub fn depth_view(&self) -> Option<&wgpu::TextureView> {
+        match self {
+            RendererRenderTarget::None => None,
+            RendererRenderTarget::FinalRender => None,
+            RendererRenderTarget::Custom(srt) => {
+                if let Some(view) = srt.target().depth.as_ref() {
+                    Some(view.0.as_ref().deref())
+                } else {
+                    None
+                }
+            },
+        }
+    }
+    pub fn is_active(&self) -> bool {
+        match self {
+            RendererRenderTarget::None => false,
+            RendererRenderTarget::FinalRender => true,
+            RendererRenderTarget::Custom(_) => true,
+        }
     }
 }
 
 #[derive(Component)]
 pub struct Renderer {
     pub ready: bool,
-    pub viewport: Viewport,
     pub draws: DrawList3D,
     pub vertexs: usize,
 }
 impl Renderer {
     pub fn new() -> Self {
         Self {
-            viewport: Viewport::default(),
             draws: DrawList3D { list: vec![], viewport: (0., 0., 1., 1., 0., 1.) },
             ready: false,
             vertexs: 0,
@@ -178,8 +240,40 @@ impl Renderer {
 }
 
 #[derive(Debug, Clone, Default, Component)]
-pub struct ViewerRenderersInfo {
-    pub map: XHashMap<String, (PassTagOrders, RendererID)>,
+pub struct ViewerRenderersInfo(pub Vec<Entity>, pub Vec<PassTag>);
+impl ViewerRenderersInfo {
+    pub fn add(&mut self, renderer: Entity, pass: PassTag) {
+        match self.0.binary_search(&renderer) {
+            Ok(_) => {
+                // self.0.insert(idx, renderer);
+            },
+            Err(idx) => {
+                self.0.insert(idx, renderer);
+                self.1.insert(idx, pass);
+            },
+        }
+    }
+    pub fn remove(&mut self, renderer: Entity) {
+        match self.0.binary_search(&renderer) {
+            Ok(idx) => {
+                self.0.remove(idx);
+                self.1.remove(idx);
+            },
+            Err(_) => todo!(),
+        }
+    }
+    pub fn renderers(&self) -> Iter<Entity> {
+        self.0.iter()
+    }
+    pub fn passtags(&self) -> Iter<PassTag> {
+        self.1.iter()
+    }
+    pub fn get(&self, idx: usize) -> (Option<&Entity>, Option<&PassTag>) {
+        (
+            self.0.get(idx),
+            self.1.get(idx),
+        )
+    }
 }
 
 #[derive(Component)]

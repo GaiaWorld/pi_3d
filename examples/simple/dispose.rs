@@ -1,10 +1,16 @@
 #![feature(box_into_inner)]
 
+use base::DemoScene;
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::cube::*;
 use pi_wy_rng::WyRng;
 use rand::Rng;
+
+#[path = "../base.rs"]
+mod base;
+#[path = "../copy.rs"]
+mod copy;
 
 #[derive(Resource)]
 pub struct ListTestData(Vec<Entity>, Option<Entity>, WyRng);
@@ -21,7 +27,7 @@ pub struct ListTestData(Vec<Entity>, Option<Entity>, WyRng);
         mut transformcmds: ActionSetTransform,
         mut meshcmds: ActionSetMesh,
         mut geometrycmd: ActionSetGeometry,
-        mut matuse: ActionSetMaterial,
+        mut matcmds: ActionSetMaterial,
         defaultmat: Res<SingleIDBaseDefaultMaterial>,
     ) {
         if let Some(entity) = testdata.0.pop() {
@@ -41,9 +47,9 @@ pub struct ListTestData(Vec<Entity>, Option<Entity>, WyRng);
             // log::warn!("Random: {:?}", random.gen_range(-5.0f32..5.0f32));
             let cube: Entity = commands.spawn_empty().id();
             let instancestate = 0;
-            meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
+            meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
             transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
-            transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, random.gen_range(-5.0f32..5.0f32) as f32, random.gen_range(-5.0f32..5.0f32), random.gen_range(-5.0f32..5.0f32)));
+            transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, random.gen_range(-5.0f32..5.0f32) as f32 * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5));
             testdata.0.insert(0, cube);
 
             let id_geo = commands.spawn_empty().id();
@@ -52,7 +58,7 @@ pub struct ListTestData(Vec<Entity>, Option<Entity>, WyRng);
             geometrycmd.create.push(OpsGeomeryCreate::ops(cube, id_geo, attrs, Some(CubeBuilder::indices_meta())));
     
             let idmat = defaultmat.0;
-            matuse.usemat.push(OpsMaterialUse::ops(cube, idmat));
+            matcmds.usemat.push(OpsMaterialUse::ops(cube, idmat, DemoScene::PASS_OPAQUE));
         }
     }
 // }
@@ -62,6 +68,8 @@ pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ListTestData(vec![], None, pi_wy_rng::WyRng::default()));
+        app.configure_set(Update, StageTest::Cmd.before(ERunStageChap::Initial));
+        app.add_systems(Update, sys.in_set(StageTest::Cmd));
     }
 }
 
@@ -73,24 +81,31 @@ fn setup(
     mut meshcmds: ActionSetMesh,
     mut instancemeshcmds: ActionSetInstanceMesh,
     mut geometrycmd: ActionSetGeometry,
-    mut matuse: ActionSetMaterial,
+    mut matcmds: ActionSetMaterial,
     mut animegroupcmd: ActionSetAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut final_render: ResMut<WindowRenderer>,
     mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut testdata: ResMut<ListTestData>,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 6;
     fps.frame_ms = 16;
 
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut final_render, &mut renderercmds, tes_size as f32, 1., (0., 10., -40.), true);
+    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        tes_size as f32, 1., (0., 10., -40.), true
+    );
+    let (scene, camera01, id_renderer) = (demopass.scene, demopass.camera, demopass.transparent_renderer);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
+    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = InstanceState::INSTANCE_BASE;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false }));
+    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
     testdata.0.push(source);
     // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
@@ -99,7 +114,7 @@ fn setup(
     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = defaultmat.0;
-    matuse.usemat.push(OpsMaterialUse::ops(source, idmat));
+    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
 
     for i in 0..tes_size {
@@ -118,8 +133,11 @@ fn setup(
     testdata.1 = Some(scene);
 }
 
-#[path = "../base.rs"]
-mod base;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageTest {
+    Cmd
+}
+
 pub fn main() {
     let mut app = base::test_plugins();
     
@@ -128,9 +146,8 @@ pub fn main() {
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
     
-    app.add_systems(Update, sys.in_set(ERunStageChap::Command));
     
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

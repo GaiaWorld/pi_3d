@@ -14,8 +14,8 @@ pub trait TMaterial {
 /// Mesh 使用
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Component)]
-pub struct MaterialID (pub Entity);
-impl TEntityRef for MaterialID {
+pub struct LinkedMaterialID (pub Entity);
+impl TEntityRef for LinkedMaterialID {
     fn id(&self) -> Entity {
         self.0
     }
@@ -25,7 +25,7 @@ impl TEntityRef for MaterialID {
 pub struct DirtyMaterialRefs(pub bool);
 
 /// 材质被哪些实体使用
-pub type MaterialRefs = EntityRefInfo<DirtyMaterialRefs, MaterialID>;
+pub type MaterialRefs = EntityRefInfo<DirtyMaterialRefs>;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UniformModifier {

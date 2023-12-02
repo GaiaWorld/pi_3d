@@ -18,6 +18,7 @@ bevy                = { version = "0.11", default-features = false }
 smallvec            = "1.9"
 crossbeam           = "0.8"
 futures             = "0.3"
+# image               = "0.24"
 
 parry3d             = "0.13"
 lazy_static         = "1.4"
@@ -31,6 +32,8 @@ winit               = { version = "0.27", registry = "yn" }
 pollster            = "0.2"
 spin_sleep          = "1.1"
 derive_deref        = "1.1"
+serde_json          = { features = ["raw_value"], version = "1.0" }
+serde               = { features = ["derive"], version = "1.0" }
 
 pi_slotmap = "0.1"
 pi_hash             = "0.1"

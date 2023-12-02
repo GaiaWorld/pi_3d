@@ -3,11 +3,13 @@
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 
+#[path = "../base.rs"]
+mod base;
 
 fn setup(
     mut loader: ResMut<ImageTextureLoader>,
 ) {
-    loader.create_load(KeyImageTexture::File(Atom::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_0805.png"), true));
+    loader.create_load(KeyImageTexture { url: Atom::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_0805.png"), file: true, srgb: true, ..Default::default() });
 }
 
 fn sys_load_check(
@@ -37,14 +39,12 @@ impl Plugin for PluginTest {
 
 
 
-#[path = "../base.rs"]
-mod base;
 pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
     
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, setup.after(base::setup_default_mat));
     app.add_systems(Update, sys_load_check);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     

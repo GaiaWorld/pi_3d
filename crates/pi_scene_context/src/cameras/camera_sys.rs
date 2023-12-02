@@ -21,26 +21,14 @@ use super::camera::*;
     pub(crate) fn sys_update_camera_param(
         mut cameras: Query<
             (
-                &EFreeCameraMode, &CameraFov, &CameraNearFar, &CameraOrthSize, &EFixedMode, &CameraViewport, &mut CameraParam,
+                &EFreeCameraMode, &CameraFov, &CameraNearFar, &CameraOrthSize, &EFixedMode, &mut CameraParam,
             ),
-            Or<(Changed<EFreeCameraMode>, Changed<CameraFov>, Changed<CameraNearFar>, Changed<CameraOrthSize>, Changed<EFixedMode>, Changed<CameraViewport>)>
+            Or<(Changed<EFreeCameraMode>, Changed<CameraFov>, Changed<CameraNearFar>, Changed<CameraOrthSize>, Changed<EFixedMode>)>
         >,
     ) {
         // log::debug!("CameraParam :");
-        cameras.iter_mut().for_each(|(mode, fov, nearfar, size, fixmode, viewport, mut param)| {
+        cameras.iter_mut().for_each(|(mode, fov, nearfar, size, fixmode, mut param)| {
             // log::debug!("CameraParam : 0");
-            *param = CameraParam::create(mode, fixmode, fov, nearfar, size, viewport);
+            *param = CameraParam::create(mode, fixmode, fov, nearfar, size);
         });
     }
-
-    pub fn sys_change_camera_render_size(
-        window: Res<PiRenderWindow>,
-        mut cameras: Query<(&mut ViewerSize, &CameraToScreen), With<Camera>>,
-    ) {
-        cameras.iter_mut().for_each(|(mut viewersize, toscreen)| {
-            if toscreen.0 {
-                *viewersize = ViewerSize(window.width, window.height);
-            }
-        });
-    }
-

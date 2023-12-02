@@ -1,97 +1,12 @@
-use std::{sync::Arc, ops::Range};
 
 use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
-use pi_map::smallvecmap::SmallVecMap;
 
-use crate::prelude::TransparentSortParam;
-
-#[derive(Debug, Clone)]
-pub struct BindGroups3D {
-    pub scene: Arc<BindGroupScene>,
-    pub model: Arc<BindGroupModel>, 
-    pub textures: Option<Arc<BindGroupTextureSamplers>>,
-}
-impl BindGroups3D {
-    pub fn create(
-        scene: Arc<BindGroupScene>,
-        model: Arc<BindGroupModel>, 
-        textures: Option<Arc<BindGroupTextureSamplers>>,
-    ) -> Self {
-        Self { scene, model, textures }
-    }
-    pub fn key_set_blocks(&self) -> KeyShaderSetBlocks<4, EKeyShader3DSetBlock> {
-        let mut key_set_blocks = [None, None, None, None];
-
-        key_set_blocks[0] = Some(EKeyShader3DSetBlock::Scene(self.scene.key().key_set.clone()));
-
-        key_set_blocks[1] = Some(EKeyShader3DSetBlock::Model(self.model.key().key.clone()));
-
-        if let Some(set_2) = &self.textures {
-            key_set_blocks[2] = Some(EKeyShader3DSetBlock::TextureSampler(set_2.key().key.clone()));
-        }
-
-        KeyShaderSetBlocks(key_set_blocks)
-    }
-    pub fn bind_group_layouts(&self) -> [Option<Handle<BindGroupLayout>>; 4] {
-        let mut bind_group_layouts = [None, None, None, None];
-        
-        bind_group_layouts[0] = Some(self.scene.bind_group().layout());
-
-        bind_group_layouts[1] = Some(self.model.bind_group().layout());
-
-        if let Some(set_2) = &self.textures {
-            bind_group_layouts[2] = Some(set_2.bind_group().layout());
-        }
-
-        bind_group_layouts
-    }
-    pub fn key_bindgroup_layouts(&self) -> [Option<u64>; 4] {
-        let mut key_bindgroup_layouts = [None, None, None, None];
-        
-        key_bindgroup_layouts[0] = Some(*self.scene.bind_group().layout().key());
-        key_bindgroup_layouts[1] = Some(*self.model.bind_group().layout().key());
-        if let Some(set_2) = &self.textures {
-            key_bindgroup_layouts[2] = Some(*set_2.bind_group().layout().key());
-        }
-
-        key_bindgroup_layouts
-    }
-    pub fn groups(&self) -> DrawBindGroups {
-        let mut groups = DrawBindGroups::default();
-        
-        groups.insert_group(0, DrawBindGroup::GroupUsage(self.scene.bind_group().clone()));
-        groups.insert_group(1, DrawBindGroup::GroupUsage(self.model.bind_group().clone()));
-
-        if let Some(set_2) = &self.textures {
-            groups.insert_group(2, DrawBindGroup::GroupUsage(set_2.bind_group().clone()));
-        }
-
-        groups
-    }
-}
-pub type KeyPipeline3D = KeyRenderPipeline<4, EKeyShader3DSetBlock>;
-pub type Pipeline3D = RenderRes<RenderPipeline>;
-pub type Pipeline3DUsage = Handle<Pipeline3D>;
+use super::render_sort::TransparentSortParam;
 
 // pub type DrawObj3D = DrawObj;
 pub type DrawList3D = DrawList;
 
-pub enum DrawObj3D {
-    Tmp(DrawObjTmp),
-    Draw(Arc<DrawObj>)
-}
-
-pub struct DrawObjTmp {
-    pub pipeline: Option<Handle<RenderRes<RenderPipeline>>>,
-    pub bindgroups: BindGroups3D,
-    ///
-    /// * MAX_VERTEX_BUFFER : 可能的最大顶点Buffer数目, 本地电脑 16
-    pub vertices: SmallVecMap<RenderVertices, 3>,
-    pub instances: Range<u32>,
-    pub vertex: Range<u32>,
-    pub indices: Option<RenderIndices>,
-}
 #[derive(Debug)]
 pub struct TmpSortDrawOpaque {
     pub idx: u16,
@@ -180,9 +95,10 @@ impl Ord for TmpSortDrawTransparent {
     }
 }
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageRenderer {
+    Create,
+    _CreateApply,
     RenderStateCommand,
     RendererCommand,
     PassBindGroup,
@@ -194,4 +110,35 @@ pub enum StageRenderer {
     // PassPipelineLoaded,
     PassDraw,
     DrawList,
+}
+
+pub fn create_bind_group(
+    key_bind_group: &KeyBindGroup ,
+    device: &RenderDevice,
+    asset_mgr_bindgroup_layout: &ShareAssetMgr<BindGroupLayout>,
+    asset_mgr_bindgroup: &ShareAssetMgr<BindGroup>,
+) -> Option<Handle<BindGroup>> {
+    let key_u64 = key_bind_group.asset_u64();
+    if let Some(bind_group) = asset_mgr_bindgroup.get(&key_u64) {
+        Some(bind_group)
+    } else {
+        let key_bind_group_layout = key_bind_group;
+        let key_layout_u64 = key_bind_group_layout.asset_u64();
+        let bind_group_layout = if let Some(layout) = asset_mgr_bindgroup_layout.get(&key_layout_u64) {
+            Ok(layout)
+        } else {
+            let layout = BindGroupLayout::new(device, &key_bind_group_layout);
+            asset_mgr_bindgroup_layout.insert(key_layout_u64, layout)
+        };
+        if let Ok(bind_group_layout) = bind_group_layout {
+            let bind_group = BindGroup::new(&device, &key_bind_group, bind_group_layout);
+            if let Ok(bind_group) = asset_mgr_bindgroup.insert(key_u64, bind_group) {
+                Some(bind_group)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
 }

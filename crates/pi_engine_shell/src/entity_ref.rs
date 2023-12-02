@@ -1,20 +1,20 @@
 use std::{marker::PhantomData, collections::hash_set::Iter};
 
 use bevy::prelude::{Entity, Component};
-use pi_hash::{XHashSet};
+use pi_hash::XHashSet;
 
 pub trait TEntityRef {
     fn id(&self) -> Entity;
 }
 
 #[derive(Component)]
-pub struct EntityRefInfo<F: Default + Clone + Component, R: Component + TEntityRef> {
+pub struct EntityRefInfo<F: Default + Clone + Component> {
     refs: XHashSet<Entity>,
     pub dirty: bool,
     pub request_dispose: bool,
-    p: PhantomData<(F, R)>,
+    p: PhantomData<F>,
 }
-impl<F: Default + Clone + Component, R: Component + TEntityRef> Default for EntityRefInfo<F, R> {
+impl<F: Default + Clone + Component> Default for EntityRefInfo<F> {
     fn default() -> Self {
         Self {
             refs: XHashSet::default(),
@@ -24,7 +24,7 @@ impl<F: Default + Clone + Component, R: Component + TEntityRef> Default for Enti
         }
     }
 }
-impl<F: Default + Clone + Component, R: Component + TEntityRef> EntityRefInfo<F, R> {
+impl<F: Default + Clone + Component> EntityRefInfo<F> {
     pub fn iter(&self) -> Iter<Entity> {
         self.refs.iter()
     }

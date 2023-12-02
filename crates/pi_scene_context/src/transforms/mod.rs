@@ -26,8 +26,9 @@ pub struct PluginTransformNode;
 impl Plugin for PluginTransformNode {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ActionListTransformNodeCreate::default())
-            .insert_resource(ActionListTransformNodeLocalEuler::default())
             .insert_resource(ActionListTransformNodeLocalPosition::default())
+            // .insert_resource(ActionListTransformNodeLocalRotation::default())
+            .insert_resource(ActionListTransformNodeLocalEuler::default())
             .insert_resource(ActionListTransformNodeLocalRotationQuaternion::default())
             .insert_resource(ActionListTransformNodeLocalScaling::default())
             .insert_resource(ActionListTransformNodeParent::default())
@@ -35,8 +36,8 @@ impl Plugin for PluginTransformNode {
             ;
 
         app.configure_set(Update, StageTransform::TransformCommand.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
-        app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommandApply).before(ERunStageChap::Uniform));
+        // app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
+        app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).before(ERunStageChap::Uniform));
 
         app.add_systems(Update, 
             sys_create_transform_node.in_set(ERunStageChap::Initial),
@@ -50,13 +51,13 @@ impl Plugin for PluginTransformNode {
                 sys_act_local_euler,
                 sys_act_local_position,
                 sys_act_local_scaling,
-                sys_act_local_rotation,
             ).in_set(StageTransform::TransformCommand)
         );
         app.add_systems(
 			Update,
             (
                 sys_local_euler_calc_rotation,
+                sys_act_local_rotation,
                 sys_local_quaternion_calc_rotation,
                 sys_local_matrix_calc,
                 sys_world_matrix_calc,

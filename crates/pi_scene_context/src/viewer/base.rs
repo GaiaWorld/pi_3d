@@ -6,18 +6,12 @@ use pi_scene_math::{Vector3, Matrix, coordiante_system::CoordinateSytem3, Number
 
 use crate::transforms::prelude::*;
 
-#[derive(Debug, Clone, Copy,Component)]
-pub struct Viewport {
-    pub x: Number,
-    pub y: Number,
-    pub w: Number,
-    pub h: Number,
-}
-impl Default for Viewport {
-    fn default() -> Self {
-        Self { x: 0., y: 0., w: 1., h: 1. }
-    }
-}
+
+#[derive(Debug, Default, Clone, Component)]
+pub struct ForceIncludeModelList(pub XHashSet<Entity>);
+
+#[derive(Debug, Default, Clone, Component)]
+pub struct FlagForceIncludeModelList;
 
 #[derive(Debug, Default, Clone, Component)]
 pub struct ModelList(pub XHashSet<Entity>);
@@ -48,28 +42,25 @@ pub struct ViewerID(pub Entity);
 #[derive(Debug, Clone, Copy, Component)]
 pub struct ViewerActive(pub bool);
 
-/// 视口尺寸
-#[derive(Debug, Clone, Copy, Component)]
-pub struct ViewerSize(pub u32, pub u32);
-impl Default for ViewerSize {
-    fn default() -> Self {
-        Self(Self::DEFAULT_WIDTH, Self::DEFAULT_HEIGHT)
-    }
-}
-impl ViewerSize {
-    pub const DEFAULT_WIDTH: u32 = 100;
-    pub const DEFAULT_HEIGHT: u32 = 100;
-}
+// /// 视口尺寸
+// #[derive(Debug, Clone, Copy, Component)]
+// pub struct ViewerSize(pub u32, pub u32);
+// impl Default for ViewerSize {
+//     fn default() -> Self {
+//         Self(Self::DEFAULT_WIDTH, Self::DEFAULT_HEIGHT)
+//     }
+// }
+// impl ViewerSize {
+//     pub const DEFAULT_WIDTH: u32 = 100;
+//     pub const DEFAULT_HEIGHT: u32 = 100;
+// }
 
 /// 视口尺寸
 #[derive(Debug, Clone, Copy, Component)]
-pub enum ViewerAspect {
-    Auto,
-    Custom(f32),
-}
+pub struct ViewerAspect(pub f32);
 impl Default for ViewerAspect {
     fn default() -> Self {
-        Self::Auto
+        Self(1.0)
     }
 }
 
@@ -115,9 +106,8 @@ impl ViewerViewMatrix {
         result
     }
     pub fn update(&self, range: &BindBufferRange) {
-        let t = self.0.transpose();
-        range.write_data(ShaderBindSceneAboutBase::OFFSET_VIEW_MATRIX as usize, bytemuck::cast_slice(t.as_slice()));
-        range.write_data(ShaderBindSceneAboutBase::OFFSET_CAMERA_ROTATION as usize, bytemuck::cast_slice(self.get_rotation_matrix().transpose().as_slice()));
+        range.write_data(ShaderBindViewer::OFFSET_VIEW_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
+        range.write_data(ShaderBindViewer::OFFSET_CAMERA_ROTATION as usize, bytemuck::cast_slice(self.get_rotation_matrix().as_slice()));
     }
 }
 
@@ -130,7 +120,7 @@ impl Default for ViewerProjectionMatrix {
 }
 impl ViewerProjectionMatrix {
     pub fn update(&self, range: &BindBufferRange) {
-        range.write_data(ShaderBindSceneAboutBase::OFFSET_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.transpose().as_slice()));
+        range.write_data(ShaderBindViewer::OFFSET_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
 // impl Uniform for ViewerProjectionMatrix {
@@ -147,7 +137,7 @@ impl Default for ViewerTransformMatrix {
 }
 impl ViewerTransformMatrix {
     pub fn update(&self, range: &BindBufferRange) {
-        range.write_data(ShaderBindSceneAboutBase::OFFSET_VIEW_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
+        range.write_data(ShaderBindViewer::OFFSET_VIEW_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
 // impl Uniform for ViewerTransformMatrix {
@@ -165,7 +155,7 @@ impl Default for ViewerGlobalPosition {
 }
 impl ViewerGlobalPosition {
     pub fn update(&self, range: &BindBufferRange) {
-        range.write_data(ShaderBindSceneAboutBase::OFFSET_CAMERA_POSITION as usize, bytemuck::cast_slice(self.0.as_slice()));
+        range.write_data(ShaderBindViewer::OFFSET_CAMERA_POSITION as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
 // impl Uniform for ViewerGlobalPosition {
@@ -182,7 +172,7 @@ impl Default for ViewerDirection {
 }
 impl ViewerDirection {
     pub fn update(&self, range: &BindBufferRange) {
-        range.write_data(ShaderBindSceneAboutBase::OFFSET_CAMERA_DIRECTION as usize, bytemuck::cast_slice(self.0.as_slice()));
+        range.write_data(ShaderBindViewer::OFFSET_CAMERA_DIRECTION as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
 // impl Uniform for ViewerDirection {
@@ -192,10 +182,10 @@ impl ViewerDirection {
 // }
 
 #[derive(Debug, Clone, Component)]
-pub struct BindViewer(pub Arc<ShaderBindSceneAboutBase>);
+pub struct BindViewer(pub Arc<ShaderBindViewer>);
 impl BindViewer {
     pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {
-        if let Some(data) = ShaderBindSceneAboutBase::new(allocator) {
+        if let Some(data) = ShaderBindViewer::new(allocator) {
             Some(Self ( Arc::new(data) ))
         } else {
             None
@@ -213,10 +203,7 @@ pub trait TViewerProjectMatrix {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageViewer {
-    ViewerCommand,
-    ViewerRendererCommand,
-    ViewerMatrix,
-    ViewerRenderer,
+    ForceInclude,
 }
 
 pub trait TCullingPerformance {

@@ -1,11 +1,8 @@
 use std::sync::Arc;
 
 use pi_gltf2_load::GLTF;
-use pi_hash::XHashMap;
 use pi_node_materials::prelude::*;
-use pi_particle_system::prelude::*;
 use pi_scene_context::prelude::*;
-use pi_trail_renderer::TrailBase;
 
 // #[derive(Default)]
 // pub struct StateScene {
@@ -174,21 +171,20 @@ pub fn sys_state_resource(
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
     bindbuffers: Res<ResBindBufferAllocator>,
     vertexbuffers: Res<VertexBufferAllocator3D>,
-    shaders: Res<AssetDataCenterShader3D>,
-    pipelines: Res<AssetDataCenterPipeline3D>,
+    shaders: Res<ShareAssetMgr<Shader3D>>,
+    pipelines: Res<ShareAssetMgr<Pipeline3D>>,
     imagetextures: Res<ShareAssetMgr<ImageTexture>>,
     shadermetas: Res<ShareAssetMgr<ShaderEffectMeta>>,
-    // passes: (
-    //     Query<&PassBindGroupScene>,
-    //     Query<&PassBindGroupModel>,
-    //     Query<&PassBindGroupTextureSamplers>,
-    //     Query<&PassBindGroups>,
-    //     Query<&PassShader>,
-    //     Query<&PassPipeline>,
-    //     Query<&PassDraw>,
-    //     Query<&PassBindEffectTextures>,
-    //     Query<&MaterialID>,
-    // ),
+    passes: (
+        Query<&PassBindGroupScene>,
+        Query<&PassBindGroupModel>,
+        Query<&PassBindGroupTextureSamplers>,
+        Query<&PassBindGroups>,
+        Query<&PassShader>,
+        Query<&PassPipeline>,
+        Query<&PassDraw>,
+        Query<&PassBindEffectTextures>,
+    ),
     mut stateglobal: ResMut<StateResource>,
     renderers: Query<&Renderer>,
 ) {
@@ -198,65 +194,65 @@ pub fn sys_state_resource(
     stateglobal.count_bindbuffer        = bindbuffers.asset_mgr().len();
     stateglobal.mem_bindbuffer          = bindbuffers.asset_mgr().size();
     stateglobal.count_bindgroup         = asset_mgr_bindgroup.0.len();
-    stateglobal.count_pipeline          = pipelines.asset_mgr().len();
+    stateglobal.count_pipeline          = pipelines.len();
     stateglobal.count_geometrybuffer    = vertexbuffers.total_buffer_count();
     stateglobal.size_geometrybuffer     = vertexbuffers.total_buffer_size();
-    stateglobal.count_shader            = shaders.asset_mgr().len();
-    stateglobal.mem_shader              = shaders.asset_mgr().size();
+    stateglobal.count_shader            = shaders.len();
+    stateglobal.mem_shader              = shaders.size();
     stateglobal.count_imgtexture        = imagetextures.len();
     stateglobal.mem_imgtexture          = imagetextures.size();
     stateglobal.count_shadermeta        = shadermetas.len();
     stateglobal.mem_shadermeta          = shadermetas.size();
 
-    // let mut count;
+    let mut count;
 
-    // count = 0;
-    // passes.0.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passset0 = count;
+    count = 0;
+    passes.0.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passset0 = count;
 
-    // count = 0;
-    // passes.1.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passset1 = count;
+    count = 0;
+    passes.1.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passset1 = count;
 
-    // count = 0;
-    // passes.2.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passset2 = count;
+    count = 0;
+    passes.2.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passset2 = count;
 
-    // count = 0;
-    // passes.3.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passbindgroups = count;
+    count = 0;
+    passes.3.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passbindgroups = count;
 
-    // count = 0;
-    // passes.4.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passshader = count;
+    count = 0;
+    passes.4.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passshader = count;
 
-    // count = 0;
-    // passes.5.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passpipeline = count;
+    count = 0;
+    passes.5.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passpipeline = count;
 
-    // count = 0;
-    // passes.6.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passdraw = count;
+    count = 0;
+    passes.6.iter().for_each(|item| {
+        if item.is_some() { count += 1; }
+    });
+    stateglobal.count_passdraw = count;
 
-    // count = 0;
-    // passes.7.iter().for_each(|item| {
-    //     if item.0.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passtexs = count;
+    count = 0;
+    passes.7.iter().for_each(|item| {
+        if item.0.is_some() { count += 1; }
+    });
+    stateglobal.count_passtexs = count;
 
     // count = 0;
     // passes.8.iter().for_each(|item| {
@@ -310,16 +306,15 @@ impl StateGeometryBuffer {
     pub const FLOAT_PER_VERTEX: u32 = (3 + 4);
     pub const SIZE_PER_VERTEX: u32 = Self::FLOAT_PER_VERTEX * 4;
     pub fn buffer_desc(&self) -> VertexBufferDesc {
-        VertexBufferDesc {
-            key: self.key.clone(),
-            range: None,
-            attrs: vec![
+        VertexBufferDesc::new(
+            self.key.clone(),
+            VertexBufferDescRange::default(),
+            vec![
                 VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
                 VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
             ],
-            step_mode: wgpu::VertexStepMode::Vertex,
-            instance: false,
-        }
+            false,
+        )
     }
     pub fn buffer(&self) -> Arc<NotUpdatableBufferRange> {
         self.buffer.0.clone()

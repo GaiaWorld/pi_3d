@@ -1,27 +1,24 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::pass::EPassTag;
-use super::material::*;
-use super::shader_effect::*;
-use super::uniforms::{uniform::*, texture::*};
+use crate::pass::PassTag;
 
-pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta, pub EPassTag);
+pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta);
 impl OpsMaterialCreate {
-    pub fn ops(mat: Entity, shader_meta: &str, pass: EPassTag) -> Self {
-        Self(mat, Atom::from(shader_meta), pass)
+    pub fn ops(mat: Entity, shader_meta: &str) -> Self {
+        Self(mat, Atom::from(shader_meta))
     }
 }
 pub type ActionListMaterialCreate = ActionList<OpsMaterialCreate>;
 
 #[derive(Debug)]
 pub enum OpsMaterialUse {
-    Use(Entity, Entity),
+    Use(Entity, Entity, PassTag),
     UnUse(Entity, Entity),
 }
 impl OpsMaterialUse {
-    pub fn ops(id_mesh: Entity, id_mat: Entity) -> Self {
-        Self::Use(id_mesh, id_mat)
+    pub fn ops(id_mesh: Entity, id_mat: Entity, pass: PassTag) -> Self {
+        Self::Use(id_mesh, id_mat, pass)
     }
 }
 pub type ActionListMaterialUse = ActionList<OpsMaterialUse>;
@@ -94,14 +91,10 @@ impl OpsUniformTexture {
 }
 pub type ActionListUniformTexture = ActionList<OpsUniformTexture>;
 
-/// size 1608 + 4 + 4 + 4
-pub struct BundleMaterial (
-    BindEffect,
-    AssetKeyShaderEffect,
-    AssetResShaderEffectMeta,
-    BindEffectValueDirty,
-    EPassTag ,
-    DirtyMaterialRefs,
-    MaterialRefs,
-    UniformTextureWithSamplerParams,
-);
+pub struct OpsUniformTextureFromRenderTarget(pub(crate) Entity, pub(crate) UniformTextureWithSamplerParam, pub(crate) KeyRenderTarget, pub(crate) Atom);
+impl OpsUniformTextureFromRenderTarget {
+    pub fn ops(mat: Entity, val: UniformTextureWithSamplerParam, keytarget: KeyRenderTarget, tilloffslot: Atom) -> Self {
+        Self(mat, val, keytarget, tilloffslot)
+    }
+}
+pub type ActionListUniformTextureFromRenderTarget = ActionList<OpsUniformTextureFromRenderTarget>;

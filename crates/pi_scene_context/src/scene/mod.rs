@@ -5,7 +5,7 @@ use pi_engine_shell::prelude::*;
 use crate::object::sys_dispose_ready;
 
 use self::{
-    environment::sys::*,
+    environment::{sys::*, brdf::*, environment_texture::*},
     command_sys::*,
     prelude::*,
     system::*,
@@ -20,6 +20,7 @@ pub mod light;
 pub mod passes_cfg;
 mod base;
 mod system;
+mod pass_render_target;
 pub mod prelude;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
@@ -27,6 +28,8 @@ pub enum StageScene {
     SceneCreate,
     SceneCreateAplly,
     SceneCommand,
+    SceneTextureRequest,
+    SceneTextureLoaded,
 }
 
 pub struct PluginScene;
@@ -42,6 +45,14 @@ impl Plugin for PluginScene {
         app.insert_resource(ActionListSceneFogColor::default());
         app.insert_resource(ActionListSceneFogParam::default());
         app.insert_resource(ActionListSceneAnimationEnable::default());
+        app.insert_resource(ActionListSceneBRDF::default());
+        app.insert_resource(ActionListSceneOpaqueTexture::default());
+        app.insert_resource(ActionListSceneDepthTexture::default());
+        app.insert_resource(ActionListSceneEnvTexture::default());
+        app.insert_resource(ActionListSceneShadowMap::default());
+        
+        app.insert_resource(ImageTextureViewLoader::<BRDFTextureSlot>::default());
+        app.insert_resource(ImageTextureViewLoader::<EnvTextureSlot>::default());
 
         app.configure_sets(
             Update,
@@ -50,6 +61,23 @@ impl Plugin for PluginScene {
                 StageScene::SceneCreateAplly,
                 StageScene::SceneCommand.after(ERunStageChap::_InitialApply)
             ).chain()
+        );
+
+        app.configure_set(Update, StageScene::SceneTextureRequest.after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
+        app.configure_set(Update, StageScene::SceneTextureLoaded.after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.add_systems(
+            Update,
+            (
+                sys_env_texture_load_launch,
+                sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>
+            ).in_set(StageScene::SceneTextureRequest)
+        );
+        app.add_systems(
+            Update,
+            (
+                sys_env_texture_loaded_check,
+                sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture>,
+            ).in_set(StageScene::SceneTextureLoaded)
         );
 
         app.add_systems(Update, 
@@ -65,6 +93,11 @@ impl Plugin for PluginScene {
                 sys_act_scene_fogcolor,
                 sys_act_scene_fogparam,
                 sys_act_scene_animation_enable,
+                sys_act_scene_brdf,
+                sys_act_scene_env_texture,
+                sys_act_scene_opaque_target,
+                sys_act_scene_depth_target,
+                sys_act_scene_shadowmap,
             ).in_set(StageScene::SceneCommand)
         );
 

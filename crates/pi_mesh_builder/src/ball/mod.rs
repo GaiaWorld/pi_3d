@@ -1,9 +1,13 @@
 
 use std::{collections::VecDeque, f32::consts::PI};
 
+use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Vector3;
 
+
+#[derive(Resource, Default)]
+pub struct SingleBall(pub Option<Handle<EVertexBufferRange>>, pub Option<Handle<EVertexBufferRange>>);
 
 pub struct BallBuilder;
 impl BallBuilder {
@@ -12,6 +16,28 @@ impl BallBuilder {
     pub const KEY_BUFFER_NORMAL:    &'static str = "BallNormal";
     pub const KEY_BUFFER_UV:        &'static str = "BallUV";
     pub const KEY_BUFFER_INDICES:   &'static str = "BallIndices";
+    pub const KEY_BUFFER:           &'static str = "BallVertices";
+    // const POSITION_OFFSET:      usize = 0;
+    // const POSITION_SIZE:        usize = 72 * 4;
+
+    pub fn attrs_meta() -> Vec<VertexBufferDesc> {
+        let key = KeyVertexBuffer::from(Self::KEY_BUFFER);
+        vec![
+            VertexBufferDesc::vertices(
+                key,
+                VertexBufferDescRange::default(),
+                vec![
+                    VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
+                    VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },
+                    VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }
+                ]
+            ),
+        ]
+    }
+    pub fn indices_meta() -> IndicesBufferDesc {
+        let key = KeyVertexBuffer::from(Self::KEY_BUFFER_INDICES);
+        IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -81,8 +107,39 @@ impl Plugin for PluginBallBuilder {
     //     Ok(())
     // }
 
-    fn build(&self, _app: &mut App) {
-        // app.add
+    fn build(&self, app: &mut App) {
+        let asset_mgr = app.world.get_resource::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
+
+        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+        let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
+        let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+
+        let (positions, normals, indces, uvs) = generate_sphere(&BallParam { sectors: 16, stacks: 16 });
+
+        let mut singequad = SingleBall::default();
+
+        let count = positions.len() / 3;
+        let mut temp = Vec::with_capacity(count * (3 + 3 + 2));
+        for i in 0..count {
+            temp.push(positions[i * 3 + 0]); temp.push(positions[i * 3 + 1]); temp.push(positions[i * 3 + 2]);
+            temp.push(normals[i * 3 + 0]); temp.push(normals[i * 3 + 1]); temp.push(normals[i * 3 + 2]);
+            temp.push(uvs[i * 2 + 0]); temp.push(uvs[i * 2 + 1]);
+        }
+
+        let key = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER);
+        if let Some(bufferrange) = allocator.create_not_updatable_buffer(&device, &queue, &bytemuck::cast_slice(&temp).iter().map(|v| *v).collect::<Vec<u8>>(), None) {
+            if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
+                singequad.0 = Some(range);
+            }
+        }
+        let key = KeyVertexBuffer::from(BallBuilder::KEY_BUFFER_INDICES);
+        if let Some(bufferrange) = allocator.create_not_updatable_buffer_for_index(&device, &queue, &bytemuck::cast_slice(&indces).iter().map(|v| *v).collect::<Vec<u8>>()) {
+            if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
+                singequad.1 = Some(range);
+            }
+        }
+
+        app.insert_resource(singequad);
     }
 }
 
@@ -338,18 +395,19 @@ pub fn generate_sphere(param: &BallParam) -> (Vec<f32>, Vec<f32>, Vec<u16>, Vec<
         for _j in 0..sectors {
             if i != 0 {
                 indices.push(k1 as u16);
-                indices.push(k2 as u16);
                 indices.push((k1 + 1) as u16);
+                indices.push(k2 as u16);
             }
             if i != stacks - 1 {
                 indices.push((k1 + 1) as u16);
-                indices.push(k2 as u16);
                 indices.push((k2 + 1) as u16);
+                indices.push(k2 as u16);
             }
             k1 += 1;
             k2 += 1;
         }
     }
 
+    // log::error!("Normals: {:?}", normals);
     return (vertices.concat(), normals.concat(), indices, uvs.concat());
 }
