@@ -67,14 +67,14 @@ pub fn sys_abstructmesh_culling_flag_reset(
                     // log::debug!("SysModelListUpdateByCamera: 1");
                     if iscene == scene && layer.include(ilayer.0) {
                         // log::debug!("SysModelListUpdateByCamera: 2");
-                        if list_model.0.contains(&id_obj) {
-                            // log::warn!("Has Include {:?}", id_obj);
-                        } else {
+                        if list_model.0.contains(&id_obj) == false {
                             list_model.0.insert(id_obj);
                             *flag_list_model = FlagModelList::default();
+                        } else {
+                            // log::warn!("Has Include {:?}", id_obj);
                         }
-                        instances.iter().for_each(|entity| {
-                            list_model.0.insert(*entity);
+                        instances.iter().for_each(|instance| {
+                            list_model.0.insert(*instance);
                         });
                         *flag_list_model = FlagModelList::default();
                     } else {
@@ -111,13 +111,13 @@ pub fn sys_abstructmesh_culling_flag_reset(
                                 // log::error!("CameraModelListByModel : 3");
                                 list_model.0.insert(id_obj);
                                 *flag_list_model = FlagModelList::default();
-                                instances.iter().for_each(|entity| {
-                                    list_model.0.insert(*entity);
+                                instances.iter().for_each(|instance| {
+                                    list_model.0.insert(*instance);
                                 });
                             } else {
                                 list_model.0.remove(&id_obj);
-                                instances.iter().for_each(|entity| {
-                                    list_model.0.remove(entity);
+                                instances.iter().for_each(|instance| {
+                                    list_model.0.remove(instance);
                                 });
                             }
                         }

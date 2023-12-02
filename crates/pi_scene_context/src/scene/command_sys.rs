@@ -15,7 +15,6 @@ pub fn sys_create_scene(
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
     lightlimit: Res<SceneLightLimit>,
     shadowlimit: Res<SceneShadowLimit>,
-    atlas_allocator: Res<PiSafeAtlasAllocator>,
     device: Res<PiRenderDevice>,
     asset_samp: Res<ShareAssetMgr<SamplerRes>>, 
 ) {

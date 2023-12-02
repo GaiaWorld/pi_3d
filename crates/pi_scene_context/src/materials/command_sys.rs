@@ -141,7 +141,7 @@ pub fn sys_act_material_use(
                             if matid.0 != id_mat {
                                 let old = matid.0;
                                 // use
-                                *matid = PassMaterialID(id_mat);
+                                // *matid = PassMaterialID(id_mat);
                                 if materialrefs.insert(id_pass) { *flag = DirtyMaterialRefs::default(); }
                                 
                                 // unuse

@@ -249,7 +249,7 @@ pub fn sys_act_abstruct_mesh_render_alignment(
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshRenderAlignment(entity, val, count)| {
         if let Ok(mut item) = items.get_mut(entity) {
-            log::warn!("RenderAlignment: {:?}", (val));
+            // log::warn!("RenderAlignment: {:?}", (val));
             *item = val;
         } else {
             if count < 2 {
@@ -410,7 +410,7 @@ impl ActionMesh {
         ActionMesh::as_instance_source(&mut entitycmd);
 
         if let Some(bind) = BindModel::new(allocator) {
-            log::info!("BindModel New");
+            // log::info!("BindModel New");
             entitycmd.insert(bind);
         }
 

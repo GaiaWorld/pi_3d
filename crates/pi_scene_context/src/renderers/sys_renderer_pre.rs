@@ -29,14 +29,18 @@ pub fn sys_sets_modify_by_viewer<T: TPass + Component, I: TPassID + Component>(
     let time1 = pi_time::Instant::now();
 
     viewers.iter().for_each(|(idviewer, id_scene, modellist, forcemodels, viewrenderinfos)| {
+        // log::error!("DDD 0");
         viewrenderinfos.renderers().for_each(|idrenderer| {
             let idrenderer = *idrenderer;
             if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
+                // log::error!("DDD 1");
                 if rendererenable.0 == true && *passtag == T::TAG {
+                    // log::error!("DDD 2 ");
                     modellist.0.iter().for_each(|idmodel| {
                         if let Ok(passid) = models.get(*idmodel) {
                             if let Ok((passscene, disposeready, mut flagpassviewer, mut passrenderer) ) = passes.get_mut(passid.id()) {
                                 if disposeready.0 == false && passscene.0 == id_scene.0 {
+                                    // log::error!("DDD 3 ");
                                     if flagpassviewer.0 != idviewer { *flagpassviewer = PassViewerID(idviewer); }
                                     if passrenderer.0 != idrenderer { *passrenderer = PassRendererID(idrenderer); }
                                 }
@@ -70,14 +74,20 @@ pub fn sys_passrendererid_pass_reset<T: TPass + Component, I: TPassID + Componen
     mut passes: Query<(&mut PassRendererID, &mut PassViewerID, &PassModelID), (With<T>, Changed<PassReset>)>,
 ) {
     passes.iter_mut().for_each(|(mut passrenderer, mut passviewer, idmodel)| {
+        // log::error!("BBB 0 ");
         if let Ok((idscene, _)) = models.get(idmodel.0) {
+            // log::error!("BBB 1 ");
             viewers.iter().for_each(|(idviewer, viewscene, list0, list1, viewrenderinfos)| {
+                // log::error!("BBB 2 ");
                 if viewscene.0 == idscene.0 {
                     viewrenderinfos.renderers().for_each(|idrenderer| {
                         let idrenderer = *idrenderer;
+                        // log::error!("BBB 3 ");
 
                         if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
+                            // log::error!("BBB 4 ");
                             if rendererenable.0 == true && *passtag == T::TAG {
+                                // log::error!("BBB 5 ");
                                 if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
                                     passrenderer.0 = idrenderer;
                                     passviewer.0 = idviewer;
@@ -86,28 +96,6 @@ pub fn sys_passrendererid_pass_reset<T: TPass + Component, I: TPassID + Componen
                             }
                         }
                     });
-                    // let mut flag = false;
-                    // let mut idx = 0;
-                    // renderinfos.1.iter().for_each(|passtag| {
-                    //     if !flag && *passtag == T::TAG {
-                    //         let idrender = renderinfos.0.get(idx).unwrap();
-                    //         if let Ok(rendererenable) = renderers.get(*idrender) {
-                    //             if rendererenable.0 {
-                    //                 flag = true;
-                    //             }
-                    //         }
-                    //     } else {
-                    //         idx += 0
-                    //     }
-                    // });
-                    // if flag {
-                    //     let idrender = renderinfos.0.get(idx).unwrap();
-                    //     if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
-                    //         passrenderer.0 = *idrender;
-                    //         passviewer.0 = idviewer;
-                    //         // log::warn!("Dirty PassRenderID While Pass Reset");
-                    //     }
-                    // }
                 }
             });
         }

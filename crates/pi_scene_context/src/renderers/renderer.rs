@@ -243,6 +243,7 @@ impl Renderer {
 pub struct ViewerRenderersInfo(pub Vec<Entity>, pub Vec<PassTag>);
 impl ViewerRenderersInfo {
     pub fn add(&mut self, renderer: Entity, pass: PassTag) {
+        // log::error!("Add Renderer {:?}", (renderer, pass));
         match self.0.binary_search(&renderer) {
             Ok(_) => {
                 // self.0.insert(idx, renderer);
@@ -254,6 +255,7 @@ impl ViewerRenderersInfo {
         }
     }
     pub fn remove(&mut self, renderer: Entity) {
+        // log::error!("Remove Renderer");
         match self.0.binary_search(&renderer) {
             Ok(idx) => {
                 self.0.remove(idx);

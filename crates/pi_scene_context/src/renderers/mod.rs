@@ -112,12 +112,12 @@ impl Plugin for PluginRenderer {
         app.configure_set(Update, StageRenderer::_CreateApply.after(StageRenderer::Create));
         app.configure_set(Update, StageRenderer::RenderStateCommand.before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply));
         app.configure_set(Update, StageRenderer::RendererCommand.after(StageRenderer::_CreateApply));
-        app.configure_set(Update, StageRenderer::PassBindGroup.after(StageRenderer::RendererCommand).after(ERunStageChap::Uniform));
+        app.configure_set(Update, StageRenderer::PassBindGroup.after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform));
         app.configure_set(Update, StageRenderer::PassBindGroups.after(StageRenderer::PassBindGroup));
         app.configure_set(Update, StageRenderer::PassShader.after(StageRenderer::PassBindGroups));
         app.configure_set(Update, StageRenderer::PassPipeline.after(StageRenderer::PassShader));
         app.configure_set(Update, StageRenderer::PassDraw.after(StageRenderer::PassPipeline));
-        app.configure_set(Update, StageRenderer::DrawList.after(StageRenderer::PassDraw).after(StageCamera::CameraCulling).before(ERunStageChap::Dispose));
+        app.configure_set(Update, StageRenderer::DrawList.after(StageRenderer::PassDraw).before(ERunStageChap::Dispose));
         
         app.add_systems(Update, 
             apply_deferred.in_set(StageRenderer::_CreateApply)

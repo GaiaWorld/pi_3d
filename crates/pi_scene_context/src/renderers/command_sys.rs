@@ -36,9 +36,12 @@ pub fn sys_create_renderer(
                     }
                 },
                 Err(err) => {
+                    // log::error!("CreateRenderer Fail Graphic Error");
                     error.graphic(entity, err);
                 },
             }
+        } else {
+            // log::error!("CreateRenderer Fail Not Found Viewer");
         }
     });
 }
@@ -189,10 +192,10 @@ pub fn sys_dispose_renderer(
     mut error: ResMut<ErrorRecord>,
 ) {
     renderers.iter().for_each(|(entity, nodeid, _, flag, idviewer)| {
-        if flag.0 {
-            if let Err(err) = render_graphic.remove_node(nodeid.0) {
-                error.graphic(entity, err);
-            }
+        if flag.0 == false { return; }
+        
+        if let Err(err) = render_graphic.remove_node(nodeid.0) {
+            error.graphic(entity, err);
         }
         if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
             renderinfos.remove(entity);
