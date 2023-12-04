@@ -1,6 +1,18 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Number, SQuaternion};
 
+#[derive(Debug, Clone, Copy, Component)]
+pub struct NodeDown(pub Option<Entity>);
+
+#[derive(Debug, Clone, Copy, Component)]
+pub struct NodeUp(pub Entity);
+
+#[derive(Debug, Clone, Copy, Component)]
+pub struct NodeBrothers {
+    pub idx: usize,
+    pub pre: Option<Entity>,
+    pub next: Option<Entity>,
+}
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct TransformNode;

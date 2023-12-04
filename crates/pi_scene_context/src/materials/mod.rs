@@ -8,12 +8,8 @@ use crate::object::sys_dispose_ready;
 use self::{
     command::*,
     command_sys::*,
-    uniforms::{
-        sys_texture::*,
-        sys_uniform::*,
-        set_up_uniforms
-    },
-    system::sys_dispose_about_material,
+    uniforms::set_up_uniforms,
+    system::*,
     prelude::*
 };
 

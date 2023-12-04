@@ -179,6 +179,10 @@ impl<T: Send + Sync> ActionList<T> {
         // self.0.drain().collect()
         replace(&mut self.0, vec![])
     }
+    pub fn exchange(&mut self, other: Vec<T>) -> Vec<T> {
+        // self.0.drain().collect()
+        replace(&mut self.0, other)
+    }
 }
 
 #[derive(Resource)]

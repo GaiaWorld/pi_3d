@@ -487,14 +487,14 @@ impl ActionMesh {
             .insert(ModelVelocity::default())
             .insert(RenderAlignment::default())
             .insert(ScalingMode::default())
-            .insert(InstanceBoneoffset::default())
-            .insert(RecordInstanceBoneoffset::default())
             .insert(IndiceRenderRange::default())
             .insert(RecordIndiceRenderRange::default())
             .insert(VertexRenderRange::default())
             .insert(GeometryBounding::default())
             .insert(GeometryCullingMode::default())
             .insert(InstancedMeshTransparentSortCollection(vec![]))
+            .insert(InstanceBoneoffset::default())
+            .insert(RecordInstanceBoneoffset::default())
             ;
     }
     // pub fn create(

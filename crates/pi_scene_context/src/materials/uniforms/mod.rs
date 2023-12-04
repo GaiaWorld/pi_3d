@@ -13,8 +13,8 @@ pub mod mat4;
 // pub mod int;
 pub mod uint;
 pub mod texture;
-pub mod sys_texture;
-pub mod sys_uniform;
+// pub mod sys_texture;
+// pub mod sys_uniform;
 
 #[derive(Resource)]
 pub struct ResourceDefaultTextures {

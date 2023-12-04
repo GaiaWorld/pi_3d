@@ -3,12 +3,14 @@ use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 
 use pi_curves::{curve::{frame::KeyFrameCurveValue, FramePerSecond}, easing::EEasingMode};
 use pi_slotmap::DefaultKey;
-use pi_bevy_ecs_extend::action::ActionList;
+// use pi_bevy_ecs_extend::action::ActionList;
 
 use bevy::{
     ecs::prelude::*, 
     ecs::system::SystemParam
 };
+
+use crate::prelude::ActionList;
 
 use super::base::*;
 
@@ -114,13 +116,13 @@ impl AnimationGroupParam {
 
 #[derive(SystemParam)]
 pub struct ActionSetAnimationGroup<'w> {
-    pub attach: ResMut<'w, ActionListAnimeGroupAttach>,
     // pub create: ResMut<'w, ActionListAnimeGroupCreate>,
     // pub add_target_anime: ResMut<'w, ActionListAddTargetAnime>,
     // pub start: ResMut<'w, ActionListAnimeGroupStart>,
     // pub pause: ResMut<'w, ActionListAnimeGroupPause>,
+    pub attach: ResMut<'w, ActionListAnimeGroupAttach>,
+    pub reset_while_start: ResMut<'w, ActionListAnimeGroupStartReset>,
     pub scene_ctxs: ResMut<'w, SceneAnimationContextMap>,
     pub global: ResMut<'w, GlobalAnimeAbout>,
     pub events: ResMut<'w, GlobalAnimeEvents>,
-    pub reset_while_start: ResMut<'w, ActionListAnimeGroupStartReset>,
 }

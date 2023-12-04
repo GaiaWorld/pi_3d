@@ -14,7 +14,7 @@ pub use super::uniforms::{
     // mat2::*,
     mat4::*,
     texture::*,
-    sys_uniform::*,
+    // sys_uniform::*,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]

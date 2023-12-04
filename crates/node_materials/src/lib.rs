@@ -7,7 +7,7 @@ use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
 use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{sys_create_material, sys_material_uniform_apply, StageMaterial};
+use pi_scene_context::prelude::StageMaterial;
 use prelude::*;
 use premultiply::*;
 use command::*;
