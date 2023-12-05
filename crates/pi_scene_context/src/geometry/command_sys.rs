@@ -85,7 +85,7 @@ pub fn sys_create_geometry(
         init_slot::<AssetDescVBSlot11, AssetResVBSlot11>(entity, &geo_desc, &mut geoloader.loader_11,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
         init_slot::<AssetDescVBSlot12, AssetResVBSlot12>(entity, &geo_desc, &mut geoloader.loader_12,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
 
-        // log::debug!(">>>>  GeometryDesc ");
+        // log::error!(">>>>  GeometryDesc ");
         geocommands.insert(geo_desc);
         let instance_code = EVerticeExtendCode(EVerticeExtendCode::NONE + instancestate);
         geocommands.insert(EVerticeExtendCodeComp(instance_code));

@@ -240,7 +240,7 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase
 					let file = match file {
 						Ok(r) => r,
 						Err(_e) =>  {
-							log::debug!("load file fail: {:?}", desc.path.as_str());
+							// log::debug!("load file fail: {:?}", desc.path.as_str());
 							return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
 						},
 					};
@@ -327,7 +327,7 @@ impl  GLTF {
 
         let key = key.asset_u64();
         
-        log::debug!("Curve: id: {:?}, {:?}-{:?}", key, group_index, channel_index);
+        // log::debug!("Curve: id: {:?}, {:?}-{:?}", key, group_index, channel_index);
 
         key
     }
@@ -604,6 +604,7 @@ impl GLTFTempLoaded {
                 // attributes - 未处理稀疏存储情况
                 for (_semantic, accessor) in primitive.attributes() {
                     let key = result.key_accessor(accessor.index());
+                    // log::error!("VB {:?}", key);
                     let indice_key = KeyVertexBuffer::from(key.as_str());
                     let indice_key_u64 = indice_key.asset_u64();
                     if let Some(buffer) = vb_assets_mgr.get(&indice_key_u64) {
@@ -687,7 +688,7 @@ impl GLTFTempLoaded {
                                 //     }
                                 // }).read_outputs().map(|v| v.collect::<Vec<f32>>());
 
-                                log::debug!("Curve: {:?}, {:?}, {:?}", curve_key_u64, property_id, mode);
+                                // log::debug!("Curve: {:?}, {:?}, {:?}", curve_key_u64, property_id, mode);
 
                                 let design_frame_per_second = 120;
                                 if let (Ok(times), Ok(values)) = (times, values) {
@@ -863,7 +864,7 @@ impl GLTFTempLoaded {
                 }
             }
         
-            log::debug!("channels: {:?}, ", index_chanel);
+            // log::debug!("channels: {:?}, ", index_chanel);
         }
 
         // ParticleSystemCalculator

@@ -15,6 +15,8 @@ use super::vertex_buffer_useinfo::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageGeometry {
+    Create,
+    CreateApply,
     VertexBufferLoaded,
     VertexBufferLoadedApply,
     GeometryLoaded,

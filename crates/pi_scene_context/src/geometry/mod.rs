@@ -53,38 +53,24 @@ impl Plugin for PluginGeometry {
         app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::create(GarbageEmpty(), cfg.flag, &cfg));
         app.insert_resource(GeometryVBLoader::default());
 
-        app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageGeometry::Create.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageGeometry::CreateApply.after(StageGeometry::Create));
+        app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(StageGeometry::CreateApply));
         app.configure_set(Update, StageGeometry::VertexBufferLoadedApply.after(StageGeometry::VertexBufferLoaded));
         app.configure_set(Update, StageGeometry::GeometryLoaded.after(StageGeometry::VertexBufferLoadedApply).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageGeometry::CreateApply) );
         app.add_systems(Update, apply_deferred.in_set(StageGeometry::VertexBufferLoadedApply) );
 
         app.add_systems(
 			Update,
             (
-                sys_create_geometry.in_set(ERunStageChap::Initial),
+                sys_create_geometry.in_set(StageGeometry::Create),
                 sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded),
             )
         );
-        // app.add_systems(
-		// 	Update,
-        //     (
-        //         sys_vertex_buffer_loaded_01,
-        //         sys_vertex_buffer_loaded_02,
-        //         sys_vertex_buffer_loaded_03,
-        //         sys_vertex_buffer_loaded_04,
-        //         sys_vertex_buffer_loaded_05,
-        //         sys_vertex_buffer_loaded_06,
-        //     ).chain().after(apply_deferred).in_set(StageGeometry::GeometryLoaded)
-        // );
         app.add_systems(Update, 
             (
                 sys_vertex_buffer_slots_loaded,
-                // sys_vertex_buffer_loaded_01,
-                // sys_vertex_buffer_loaded_02,
-                // sys_vertex_buffer_loaded_03,
-                // sys_vertex_buffer_loaded_04,
-                // sys_vertex_buffer_loaded_05,
-                // sys_vertex_buffer_loaded_06,
                 sys_geometry_enable
             ).chain().in_set(StageGeometry::GeometryLoaded)
         );
