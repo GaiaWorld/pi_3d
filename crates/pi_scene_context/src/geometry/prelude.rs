@@ -23,6 +23,21 @@ pub use super::base::*;
 #[derive(SystemParam)]
 pub struct ActionSetGeometry<'w> {
     pub create: ResMut<'w, ActionListGeometryCreate>,
+}
+
+#[derive(SystemParam)]
+pub struct ResourceGeometry<'w> {
     pub vb_mgr: Res<'w, ShareAssetMgr<EVertexBufferRange>>,
     pub vb_wait: ResMut<'w, VertexBufferDataMap3D>,
 }
+
+pub struct BundleGeometry(
+    GeometryDesc,
+    VertexBufferLayoutsComp,
+    MeshID,
+    GeometryRefs,
+    RenderGeometryComp,
+    EVerticeExtendCodeComp,
+    IndicesBufferDesc,
+    AssetResBufferIndices,
+);

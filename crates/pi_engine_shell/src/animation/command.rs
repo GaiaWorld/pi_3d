@@ -122,6 +122,10 @@ pub struct ActionSetAnimationGroup<'w> {
     // pub pause: ResMut<'w, ActionListAnimeGroupPause>,
     pub attach: ResMut<'w, ActionListAnimeGroupAttach>,
     pub reset_while_start: ResMut<'w, ActionListAnimeGroupStartReset>,
+}
+
+#[derive(SystemParam)]
+pub struct ResourceAnimationGroup<'w> {
     pub scene_ctxs: ResMut<'w, SceneAnimationContextMap>,
     pub global: ResMut<'w, GlobalAnimeAbout>,
     pub events: ResMut<'w, GlobalAnimeEvents>,

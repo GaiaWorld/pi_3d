@@ -4,7 +4,6 @@ use pi_node_materials::prelude::{NodeMaterialBuilder, BlockMainTexture};
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
 
-
 pub fn main() {}
 
 pub struct PluginImageCopy;
@@ -17,12 +16,7 @@ impl Plugin for PluginImageCopy {
 impl PluginImageCopy {
     pub fn toscreen(
         commands: &mut Commands,
-        materialcmd: &mut ActionSetMaterial,
-        meshcmds: &mut ActionSetMesh,
-        geometrycmd: &mut ActionSetGeometry,
-        cameracmds: &mut ActionSetCamera,
-        transformcmds: &mut ActionSetTransform,
-        renderercmds: &mut ActionSetRenderer,
+        actions: &mut pi_3d::ActionSets,
         scene: Entity,
         pre_renderer: Entity,
         source_render_target: Option<KeyCustomRenderTarget>,
@@ -30,12 +24,12 @@ impl PluginImageCopy {
 
         // {
             let copymat = commands.spawn_empty().id();
-            materialcmd.create.push(OpsMaterialCreate::ops(copymat, ShaderImageCopy::KEY));
+            actions.material.create.push(OpsMaterialCreate::ops(copymat, ShaderImageCopy::KEY));
             
             if let Some(pre_render_target) = source_render_target {
                 match pre_render_target {
                     KeyCustomRenderTarget::Custom(pre_render_target) => {
-                        materialcmd.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
+                        actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
                     },
                     KeyCustomRenderTarget::FinalRender => {},
                 }
@@ -45,36 +39,31 @@ impl PluginImageCopy {
             let id_geo = commands.spawn_empty().id();
             let attrs = QuadBuilder::attrs_meta();
             
-            let plane = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(plane, scene));
-            meshcmds.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
-            meshcmds.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
-            geometrycmd.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
-            materialcmd.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
+            let plane = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(plane, scene));
+            actions.mesh.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
+            actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
+            actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+            actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             
-            let copycamera = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(copycamera, scene));
-            cameracmds.create.push(OpsCameraCreation::ops(scene, copycamera, false));
-            meshcmds.layermask.push(OpsLayerMask::ops(copycamera, 0));
-            meshcmds.layermask.push(OpsLayerMask::ops(plane, 0));
-            cameracmds.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
-            cameracmds.active.push(OpsCameraActive::ops(copycamera, true));
+            let copycamera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(copycamera, scene));
+            actions.camera.create.push(OpsCameraCreation::ops(scene, copycamera, false));
+            actions.mesh.layermask.push(OpsLayerMask::ops(copycamera, 0));
+            actions.mesh.layermask.push(OpsLayerMask::ops(plane, 0));
+            actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
+            actions.camera.active.push(OpsCameraActive::ops(copycamera, true));
             
-            let copy_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
-            renderercmds.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
-            renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
-            renderercmds.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
-            renderercmds.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
-            renderercmds.target.push(OpsRendererTarget::Custom(copy_renderer, KeyCustomRenderTarget::FinalRender));
+            let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
+            actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
+            actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
+            actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
+            actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
+            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, KeyCustomRenderTarget::FinalRender));
         // }
         (copy_renderer, copycamera)
     }
     pub fn init(
         commands: &mut Commands,
-        materialcmd: &mut ActionSetMaterial,
-        meshcmds: &mut ActionSetMesh,
-        geometrycmd: &mut ActionSetGeometry,
-        cameracmds: &mut ActionSetCamera,
-        transformcmds: &mut ActionSetTransform,
-        renderercmds: &mut ActionSetRenderer,
+        actions: &mut pi_3d::ActionSets,
         scene: Entity,
         pre_renderer: Entity,
         next_renderer: Entity,
@@ -84,12 +73,12 @@ impl PluginImageCopy {
 
         // {
             let copymat = commands.spawn_empty().id();
-            materialcmd.create.push(OpsMaterialCreate::ops(copymat, ShaderImageCopy::KEY));
+            actions.material.create.push(OpsMaterialCreate::ops(copymat, ShaderImageCopy::KEY));
             
             if let Some(pre_render_target) = source_render_target {
                 match pre_render_target {
                     KeyCustomRenderTarget::Custom(pre_render_target) => {
-                        materialcmd.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
+                        actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
                     },
                     KeyCustomRenderTarget::FinalRender => {},
                 }
@@ -99,26 +88,26 @@ impl PluginImageCopy {
             let id_geo = commands.spawn_empty().id();
             let attrs = QuadBuilder::attrs_meta();
             
-            let plane = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(plane, scene));
-            meshcmds.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
-            meshcmds.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
-            geometrycmd.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
-            materialcmd.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
+            let plane = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(plane, scene));
+            actions.mesh.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
+            actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
+            actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+            actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             
-            let copycamera = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(copycamera, scene));
-            cameracmds.create.push(OpsCameraCreation::ops(scene, copycamera, false));
-            meshcmds.layermask.push(OpsLayerMask::ops(copycamera, 0));
-            meshcmds.layermask.push(OpsLayerMask::ops(plane, 0));
-            cameracmds.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
-            cameracmds.active.push(OpsCameraActive::ops(copycamera, true));
+            let copycamera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(copycamera, scene));
+            actions.camera.create.push(OpsCameraCreation::ops(scene, copycamera, false));
+            actions.mesh.layermask.push(OpsLayerMask::ops(copycamera, 0));
+            actions.mesh.layermask.push(OpsLayerMask::ops(plane, 0));
+            actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
+            actions.camera.active.push(OpsCameraActive::ops(copycamera, true));
             
-            let copy_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
-            renderercmds.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
-            renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
-            renderercmds.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
-            renderercmds.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
-            renderercmds.connect.push(OpsRendererConnect::ops(copy_renderer, next_renderer, false));
-            renderercmds.target.push(OpsRendererTarget::Custom(copy_renderer, dst_render_target.unwrap()));
+            let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
+            actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
+            actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
+            actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
+            actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
+            actions.renderer.connect.push(OpsRendererConnect::ops(copy_renderer, next_renderer, false));
+            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, dst_render_target.unwrap()));
         // }
         (copy_renderer, copycamera)
     }

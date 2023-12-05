@@ -1,8 +1,9 @@
 use pi_3d_state::{PluginStateGlobal, StateResource};
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
-use pi_node_materials::PluginNodeMaterial;
-use pi_particle_system::prelude::ParticleSystemPerformance;
+use pi_gltf2_load::{GLTFResLoader, GLTF, TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_node_materials::{PluginNodeMaterial, NodeMaterialBlocks};
+use pi_particle_system::prelude::{ParticleSystemPerformance, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::{
     prelude::*,
     scene::PluginScene,
@@ -18,6 +19,7 @@ use pi_scene_context::{
     skeleton::PluginSkeleton, cullings::PluginCulling, viewer::PluginViewerBase, shadow::PluginShadowGenerator
 };
 use pi_shadow_mapping::PluginShadowMapping;
+use pi_trail_renderer::{ActionSetTrailRenderer, ResTrailBuffer};
 
 pub struct Limit(pub wgpu::Limits);
 // impl TMemoryAllocatorLimit for Limit {
@@ -194,4 +196,56 @@ impl PluginGroup for PluginBundleDefault {
     //     // PluginBallBuilder.init(engine, stages);
     //     Ok(())
     // }
+}
+
+#[derive(SystemParam)]
+pub struct ActionSets<'w> {
+    pub scene: ActionSetScene<'w>,
+    pub scene_dispose: ResMut<'w, ActionListSceneDispose>,
+    pub obj_dispose: ResMut<'w, ActionListDispose>,
+    pub camera: ActionSetCamera<'w>,
+    pub light: ActionSetLighting<'w>,
+    pub shadow: ActionSetShadow<'w>,
+    pub transform: ActionSetTransform<'w>,
+    pub mesh: ActionSetMesh<'w>,
+    pub skin: ActionSetSkeleton<'w>,
+    pub abstructmesh: ActionSetAbstructMesh<'w>,
+    pub instance: ActionSetInstanceMesh<'w>,
+    pub geometry: ActionSetGeometry<'w>,
+    pub material: ActionSetMaterial<'w>,
+    pub anime: ActionSetAnimationGroup<'w>,
+    pub renderer: ActionSetRenderer<'w>,
+    pub trail: ActionSetTrailRenderer<'w>,
+    pub parsys: ActionSetParticleSystem<'w>,
+}
+
+#[derive(SystemParam)]
+pub struct ResourceSets<'w> {
+    pub default_mat: Res<'w, SingleIDBaseDefaultMaterial>,
+    pub node_material_blocks: ResMut<'w, NodeMaterialBlocks>,
+    pub imgtex_loader: ResMut<'w, ImageTextureLoader>,
+    pub imgtex_loader_state: ResMut<'w, StateTextureLoader>,
+    pub imgtex_asset: Res<'w, ShareAssetMgr<ImageTexture>>,
+    pub imgtexview_asset: Res<'w, ShareAssetMgr<ImageTextureView>>,
+    pub gltf2_asset: Res<'w, ShareAssetMgr<GLTF>>,
+    pub gltf2_loader: ResMut<'w, GLTFResLoader>,
+    pub device: Res<'w, PiRenderDevice>,
+    pub queue: Res<'w, PiRenderQueue>,
+    pub anime_assets: TypeAnimeAssetMgrs<'w>,
+    pub anime_contexts: TypeAnimeContexts<'w>,
+    pub render_targets: ResMut<'w, CustomRenderTargets>,
+    pub asset_samp: Res<'w, ShareAssetMgr<SamplerRes>>,
+    pub asset_atlas: Res<'w, PiSafeAtlasAllocator>,
+    pub scene_lighting_limit: ResMut<'w, SceneLightLimit>,
+    pub model_lighting_limit: ResMut<'w, ModelLightLimit>,
+    pub scene_shadow_limit: ResMut<'w, SceneShadowLimit>,
+    pub vb_mgr: Res<'w, ShareAssetMgr<EVertexBufferRange>>,
+    pub vb_wait: ResMut<'w, VertexBufferDataMap3D>,
+    pub shader_metas: Res<'w, ShareAssetMgr<ShaderEffectMeta>>,
+    pub anime_scene_ctxs: ResMut<'w, SceneAnimationContextMap>,
+    pub anime_global: ResMut<'w, GlobalAnimeAbout>,
+    pub anime_events: ResMut<'w, GlobalAnimeEvents>,
+    pub trailbuffer: ResMut<'w, ResTrailBuffer>,
+    pub particlesys: ResourceParticleSystem<'w>,
+    pub error_record: ResMut<'w, ErrorRecord>,
 }

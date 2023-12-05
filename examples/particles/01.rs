@@ -36,18 +36,11 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     nodematblocks: Res<NodeMaterialBlocks>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
-    mut renderercmds: ActionSetRenderer,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 10;
@@ -56,25 +49,25 @@ fn setup(
     
 
     let scene = commands.spawn_empty().id();
-    scenecmds
+    actions.scene
         .create
         .push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, scene));
-    cameracmds.create.push(OpsCameraCreation::ops(
+    let camera01 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, scene));
+    actions.camera.create.push(OpsCameraCreation::ops(
         scene,
         camera01,
         String::from("TestCamera"),
         true,
     ));
-    transformcmds
+    actions.transform
         .localpos
         .push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-    cameracmds.active.push(OpsCameraActive::ops(camera01, true));
-    cameracmds
+    actions.camera.active.push(OpsCameraActive::ops(camera01, true));
+    actions.camera
         .size
         .push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-    // localrulercmds.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
+    // actions.localruler.push(OpsTransformNodeLocalEuler(camera01, Vector3::new(3.1415926 / 4., 0., 0.)));
 
     let desc = RendererGraphicDesc {
         pre: Some(final_render.clear_entity),
@@ -87,16 +80,16 @@ fn setup(
             EPassTag::Transparent,
         ]),
     };
-    let id_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
-    renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer, false));
-    renderercmds.connect.push(OpsRendererConnect::ops(id_renderer, false));
-    cameracmds.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders,
+    let id_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
+    actions.renderer.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer, false));
+    actions.renderer.connect.push(OpsRendererConnect::ops(id_renderer, false));
+    actions.camera.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders,
         ColorFormat::Rgba8Unorm,
         DepthStencilFormat::None,
     ));
 
-    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-    meshcmds.create.push(OpsMeshCreation::ops(
+    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+    actions.mesh.create.push(OpsMeshCreation::ops(
         scene,
         source,
         String::from("TestCube"),
@@ -108,7 +101,7 @@ fn setup(
     attrs.push(VertexBufferDesc::instance_color());
     attrs.push(VertexBufferDesc::instance_tilloff());
 
-    geometrycmd.create.push(OpsGeomeryCreate::ops(
+    actions.geometry.create.push(OpsGeomeryCreate::ops(
         source,
         id_geo,
         attrs,
@@ -116,13 +109,13 @@ fn setup(
     ));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-    matcmds.create.push(OpsMaterialCreate::ops(
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
+    actions.material.create.push(OpsMaterialCreate::ops(
         idmat,
         UnlitShader::KEY,
         EPassTag::Opaque,
     ));
-    matcmds.texture.push(OpsUniformTexture::ops(
+    actions.material.texture.push(OpsUniformTexture::ops(
         idmat,
         UniformTextureWithSamplerParam {
             slotname: Atom::from("_MainTex"),
@@ -131,7 +124,7 @@ fn setup(
             url: EKeyTexture::from("assets/images/bubbles.png"),
         },
     ));
-    matcmds.vec4.push(
+    actions.material.vec4.push(
         OpsUniformVec4::ops(
             idmat,
             Atom::from(BlockMainTexture::KEY_COLOR),

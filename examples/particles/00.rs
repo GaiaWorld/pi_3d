@@ -14,44 +14,38 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut renderercmds: ActionSetRenderer,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 10;
     fps.frame_ms = 4;
 
-    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         tes_size as f32, 0.7, (0., 0., -10.), true
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
-    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
-    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
     
     let id_geo = commands.spawn_empty().id();
     let attrs = CubeBuilder::attrs_meta();
     let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
-    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-    // matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+    // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from("_MainTex"),
     //     filter: true,
     //     sample: KeySampler::default(),

@@ -19,16 +19,9 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
@@ -39,40 +32,40 @@ fn setup(
 
     
     
-    let demopass = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         1., 0.7, (0., 10., -40.), true
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
-    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
+    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
     let state = MeshInstanceState::default();
-    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let idmat = defaultmat.0;
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.global.record_group(source, id_group);
-    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
+    animegroupres.global.record_group(source, id_group);
+    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     for i in 0..tes_size {
         for j in 0..tes_size {
             for _k in 0..1 {
                 
                 let cube: Entity = commands.spawn_empty().id();
-                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube));
-                transformcmds.tree.push(OpsTransformNodeParent::ops(cube, source));
+                actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
+                actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
 
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
+                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
                 let key_curve0 = key_curve0.asset_u64();
@@ -92,17 +85,17 @@ fn setup(
                 };
 
                 let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupcmd.scene_ctxs.add_target_anime(scene, cube, id_group.clone(), animation);
+                animegroupres.scene_ctxs.add_target_anime(scene, cube, id_group.clone(), animation);
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
     }
 
     let mut param = AnimationGroupParam::default(); param.loop_mode = ELoopMode::Positive(Some(1));
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
-    animegroupcmd.scene_ctxs.stop(scene, id_group.clone());
+    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    animegroupres.scene_ctxs.stop(scene, id_group.clone());
     let mut param = AnimationGroupParam::default(); param.loop_mode = ELoopMode::Positive(Some(1));
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

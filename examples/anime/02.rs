@@ -18,16 +18,9 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
@@ -36,33 +29,33 @@ fn setup(
     let tes_size = 20;
     fps.frame_ms = 16;
 
-    let demopass = DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         10., 0.7, (0., 0., -40.), false
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
-    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
     let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR, ..Default::default() };
-    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
-    meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    actions.mesh.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
 
     let idmat = defaultmat.0;
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
-    let root = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(root, scene));
-    transformcmds.create.push(OpsTransformNode::ops(scene, root));
+    let root = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(root, scene));
+    actions.transform.create.push(OpsTransformNode::ops(scene, root));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.global.record_group(source, id_group);
-    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
+    animegroupres.global.record_group(source, id_group);
+    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     
     let key_curve0 = pi_atom::Atom::from("test");
     let key_curve0 = key_curve0.asset_u64();
@@ -82,11 +75,11 @@ fn setup(
         }
     };
     let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    animegroupcmd.scene_ctxs.add_target_anime(scene, root, id_group.clone(), animation);
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+    animegroupres.scene_ctxs.add_target_anime(scene, root, id_group.clone(), animation);
+    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
 
-    let temproot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(temproot, root));
-    transformcmds.create.push(OpsTransformNode::ops(scene, temproot));
+    let temproot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(temproot, root));
+    actions.transform.create.push(OpsTransformNode::ops(scene, temproot));
     // let cell_col = 4.;
     // let cell_row = 4.;
     let size = 4;
@@ -95,8 +88,8 @@ fn setup(
             for k in 0..size {
                 
                 let ins: Entity = commands.spawn_empty().id();
-                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, ins));
-                transformcmds.tree.push(OpsTransformNodeParent::ops(ins, temproot));
+                actions.instance.create.push(OpsInstanceMeshCreation::ops(source, ins));
+                actions.transform.tree.push(OpsTransformNodeParent::ops(ins, temproot));
                 
                 let r = (i as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
                 let g = (j as f32 - size as f32 / 2.).cos().cos() * 0.2 + 0.4;
@@ -106,9 +99,9 @@ fn setup(
                 let x = (i as f32 - size as f32 / 2.) + 0.5;
                 let y = (j as f32 - size as f32 / 2.) + 0.5;
                 let z = (k as f32 - size as f32 / 2.) + 0.5;
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(ins, x, y, z));
-                transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(ins, r, g, b));
-                instancemeshcmds.color.push(OpsInstanceColor::ops(ins, r, g, b));
+                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(ins, x, y, z));
+                actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(ins, r, g, b));
+                actions.instance.color.push(OpsInstanceColor::ops(ins, r, g, b));
             }
         }
     }

@@ -19,7 +19,6 @@ pub struct ResTrailBuffer(pub Option<TrailBuffer>);
 #[derive(SystemParam)]
 pub struct ActionSetTrailRenderer<'w> {
     pub create: ResMut<'w, ActionListTrail>,
-    pub trailbuffer: ResMut<'w, ResTrailBuffer>,
     pub age: ResMut<'w, ActionListTrailAge>,
 }
 

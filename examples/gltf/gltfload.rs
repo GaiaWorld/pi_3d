@@ -4,7 +4,7 @@ use pi_assets::asset::Handle;
 use pi_atom::Atom;
 use pi_engine_shell::prelude::*;
 use pi_gltf2_load::*;
-use pi_particle_system::prelude::{ParticleSystemActionSet, OpsCPUParticleSystem};
+use pi_particle_system::prelude::{ActionSetParticleSystem, OpsCPUParticleSystem};
 use pi_scene_context::prelude::*;
 
 #[path = "../base.rs"]
@@ -38,10 +38,10 @@ fn sys_load_check(
 //     entity: Entity,
 //     gltf: Handle<GLTF>,
 //     mut commands: Commands,
-//     mut transformcmds: ActionSetTransform,
-//     mut meshcmds: ActionSetMesh,
+//     mut actions.transform: ActionSetTransform,
+//     mut actions.mesh: ActionSetMesh,
 //     mut geometrycmd: ActionSetGeometry,
-//     mut particlesys_cmds: ParticleSystemActionSet,
+//     mut actions.particlesys_: ActionSetParticleSystem,
 //     roots: Query<&SceneID>,
 // ) {
 //     if let Ok(scene) = roots.get(entity) {
@@ -153,26 +153,26 @@ fn sys_load_check(
 
 //                     if let Some(extras) = meshinfo.extras() {
 //                         if extras.get("meshParticle").is_some() {
-//                             if let Some(calculator) = particlesys_cmds.calcultors.get(&gltf.key_particle_calculator(nodeinfo.index())) {
+//                             if let Some(calculator) = actions.parsys.calcultors.get(&gltf.key_particle_calculator(nodeinfo.index())) {
 //                                 let trailmesh = commands.spawn_empty().id();
 //                                 let trailgeo = commands.spawn_empty().id();
-//                                 particlesys_cmds.particlesys_cmds.push(OpsCPUParticleSystem::ops(scene, node, trailmesh, trailgeo, calculator));
+//                                 actions.particlesys_cmds.particlesys_.push(OpsCPUParticleSystem::ops(scene, node, trailmesh, trailgeo, calculator));
 //                             }
 //                         }
 //                     }
 
 //                     let geo = commands.spawn_empty().id();
 //                     let instancestate = InstanceState::INSTANCE_BASE & InstanceState::INSTANCE_COLOR & InstanceState::INSTANCE_TILL_OFF_1;
-//                     geometrycmd.create.push(OpsGeomeryCreate::ops(node, geo, attributes, indices));
+//                     actions.geometry.create.push(OpsGeomeryCreate::ops(node, geo, attributes, indices));
 
 //                     // let matinfo = primitive.material();
 //                     // matinfo.
 //                 });
 
 //                 let instancestate = 0;
-//                 meshcmds.create.push(OpsMeshCreation::ops(scene, node, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+//                 actions.mesh.create.push(OpsMeshCreation::ops(scene, node, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
 //             } else {
-//                 transformcmds.create.push(OpsTransformNode::ops(scene, node));
+//                 actions.transform.create.push(OpsTransformNode::ops(scene, node));
 //             };
 
 //         });

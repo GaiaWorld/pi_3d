@@ -18,15 +18,9 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut renderercmds: ActionSetRenderer,
-    mut particlesys_cmds: ParticleSystemActionSet,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut particlesys_res: ResourceParticleSystem,
+    mut animegroupres: ResourceAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
@@ -34,26 +28,26 @@ fn setup(
     let tes_size = 20;
     // frame.frame_ms = 200;
 
-    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         tes_size as f32, 0.7, (0., 34.34, -20.), true
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
-    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
-    // cameracmds.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -20.));
-    // cameracmds.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
+    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    // actions.camera.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
+    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -20.));
+    // actions.camera.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
 
-    let node = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node, scene));
-    transformcmds.create.push(OpsTransformNode::ops(scene, node));
+    let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
+    actions.transform.create.push(OpsTransformNode::ops(scene, node));
 
     let idmattrail = commands.spawn_empty().id();
-    matcmds.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
-    matcmds.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
+    actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
+    actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
@@ -66,14 +60,14 @@ fn setup(
     let _euler = -3.0..3.0;
 
     let node = {
-        let node01 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node01, scene));
-        transformcmds.create.push(OpsTransformNode::ops(scene, node01));
-        let node02 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node02, node01));
-        transformcmds.create.push(OpsTransformNode::ops(scene, node02));
-        transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(node02, 10., 7.5, 0.09));
-        transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(node02, -90.2_f32.to_radians(), 0., 0.));
-        let node03 = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node03, node02));
-        transformcmds.create.push(OpsTransformNode::ops(scene, node03));
+        let node01 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node01, scene));
+        actions.transform.create.push(OpsTransformNode::ops(scene, node01));
+        let node02 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node02, node01));
+        actions.transform.create.push(OpsTransformNode::ops(scene, node02));
+        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(node02, 10., 7.5, 0.09));
+        actions.transform.localrot.push(OpsTransformNodeLocalEuler::ops(node02, -90.2_f32.to_radians(), 0., 0.));
+        let node03 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node03, node02));
+        actions.transform.create.push(OpsTransformNode::ops(scene, node03));
         node03
     };
     
@@ -81,46 +75,46 @@ fn setup(
                     let vertices = QuadBuilder::attrs_meta();
                     let indices = Some(QuadBuilder::indices_meta());
                     let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1, ..Default::default() };
-                    let source = base::DemoScene::mesh(&mut commands, scene, node, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
+                    let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
-                    meshcmds.blend.push(OpsRenderBlend::ops(source, blend));
+                    actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
 
                     //
                     let syskey = String::from("Test");
                     let syscfg = cone_cfg(10., 3.);
                     let calculator = commands.spawn_empty().id();
-                    particlesys_cmds.calculator_cmds.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
-                    let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_cmds.calculator_queue.queue());
-                    let calculator = particlesys_cmds.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
+                    actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
+                    let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
+                    let calculator = particlesys_res.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
                     let trailmesh = commands.spawn_empty().id();
                     let trailgeo = commands.spawn_empty().id();
-                    particlesys_cmds.particlesys_cmds.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator));
-                    particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_start(source));
-                    // particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_stop(source));
+                    actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator));
+                    actions.parsys.state.push(OpsCPUParticleSystemState::ops_start(source));
+                    // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
                     let idmat = commands.spawn_empty().id();
-                    matcmds.usemat.push(OpsMaterialUse::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
-                    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-                    particlesys_cmds.trail_material.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
+                    actions.material.usemat.push(OpsMaterialUse::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
+                    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+                    actions.parsys.trailmaterial.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
                     source
                 };
 
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(_item, -0.0, 0., 0.1));
-                // transformcmds.localrot.push(OpsTransformNodeLocalRotation::Euler(_item, -80.2_f32.to_radians(), 0., 0.));
-                // transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
+                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(_item, -0.0, 0., 0.1));
+                // actions.transform.localrot.push(OpsTransformNodeLocalRotation::Euler(_item, -80.2_f32.to_radians(), 0., 0.));
+                // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
 
                 
-                // let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
-                // meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+                // let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
+                // actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
                 // let id_geo = commands.spawn_empty().id();
                 // let mut attrs = QuadBuilder::attrs_meta();
-                // geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+                // actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(QuadBuilder::indices_meta())));
                 // let idmat = commands.spawn_empty().id();
-                // matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-                // matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
+                // actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
+                // actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
 
-    // matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from("_MainTex"),
     //     filter: true,
     //     sample: KeySampler::default(),
@@ -129,9 +123,9 @@ fn setup(
 
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.global.record_group(node, id_group);
-    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
+    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
+    animegroupres.global.record_group(node, id_group);
+    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
     {
         let key_curve0 =  pi_atom::Atom::from("test2"); 
         let key_curve0 = key_curve0.asset_u64();
@@ -145,11 +139,11 @@ fn setup(
             }
         };
         let animation = anime_contexts.quaternion.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 0.5;
-    // animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    // animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

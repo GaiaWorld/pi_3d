@@ -22,30 +22,24 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut renderercmds: ActionSetRenderer,
-    mut particlesys_cmds: ParticleSystemActionSet,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut particlesys_res: ResourceParticleSystem,
+    mut animegroupres: ResourceAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 50;
 
-    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+    let (scene, camera01, id_renderer) = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         tes_size as f32, 0.7, (0., 0., -50.), true
     );
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
-    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
 
     let temp = 4;
@@ -53,39 +47,39 @@ fn setup(
         for j in 0..temp {
             for k in 0..temp {
                 let item = {
-                    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
-                    meshcmds.create.push(OpsMeshCreation::ops(scene, source));
+                    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+                    actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
                     let id_geo = commands.spawn_empty().id();
                     let mut attrs = CubeBuilder::attrs_meta();
                     // ParticleSystem Add
                     attrs.push(VertexBufferDesc::instance_world_matrix());
                     attrs.push(VertexBufferDesc::instance_color());
                     attrs.push(VertexBufferDesc::instance_tilloff());
-                    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+                    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
                     //
                     let syskey = String::from("Test");
                     let syscfg = demo_cfg(10000., 50.);
                     let calculator = commands.spawn_empty().id();
-                    particlesys_cmds.calculator_cmds.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
-                    let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_cmds.calculator_queue.queue());
-                    let calculator = particlesys_cmds.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
-                    particlesys_cmds.particlesys_cmds.push(OpsCPUParticleSystem::ops(source, source, calculator, 100));
-                    particlesys_cmds.particlesys_state_cmds.push(OpsCPUParticleSystemState::ops_start(source));
+                    actions.particlesys_cmds.calculator_.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
+                    let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, actions.parsys.calculator_queue.queue());
+                    let calculator = actions.parsys.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
+                    actions.particlesys_cmds.particlesys_.push(OpsCPUParticleSystem::ops(source, source, calculator, 100));
+                    actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_start(source));
                     //
                     let idmat = commands.spawn_empty().id();
-                    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
-                    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
+                    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
+                    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
                     source
                 };
 
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(item, (i - temp / 2) as f32 * 10., (j - temp / 2) as f32 * 10., (k - temp / 2) as f32 * 10.));
-                transformcmds.localrot.push(OpsTransformNodeLocalRotation::Euler(item, (i - temp) as f32, (j - temp) as f32, (k - temp) as f32));
-                transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
+                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(item, (i - temp / 2) as f32 * 10., (j - temp / 2) as f32 * 10., (k - temp / 2) as f32 * 10.));
+                actions.transform.localrot.push(OpsTransformNodeLocalRotation::Euler(item, (i - temp) as f32, (j - temp) as f32, (k - temp) as f32));
+                actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
             }
         }
     }
 
-    // matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from("_MainTex"),
     //     filter: true,
     //     sample: KeySampler::default(),
@@ -94,9 +88,9 @@ fn setup(
 
     
     let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.global.record_group(node, id_group);
-    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
+    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
+    animegroupres.global.record_group(node, id_group);
+    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
     {
         let key_curve0 =  pi_atom::Atom::from("test2"); 
         let key_curve0 = key_curve0.asset_u64();
@@ -116,11 +110,11 @@ fn setup(
         };
 
         let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 0.1;
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

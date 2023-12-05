@@ -7,7 +7,7 @@ use pi_engine_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_gltf::Gltf;
 use pi_hash::*;
-use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemActionSet, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator};
+use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator, ActionSetParticleSystem, ResParticleCalculatorUninstallQueue, ResourceParticleSystem};
 use pi_scene_context::prelude::*;
 use pi_node_materials::prelude::*;
 use pi_render::rhi::RenderQueue;
@@ -569,7 +569,8 @@ impl GLTFTempLoaded {
         device: &RenderDevice,
         queue: &RenderQueue,
         anime_assets: &TypeAnimeAssetMgrs,
-        particlesys_cmds: &mut ParticleSystemActionSet,
+        particlesys_cmds: &mut ActionSetParticleSystem,
+        particlesys_res: &mut ResourceParticleSystem,
     ) -> GLTF {
         let mut result = GLTF::new(gltf.clone(), base_url.to_string());
         // let basekey = self.id.base_url.to_string() + "#";
@@ -873,12 +874,12 @@ impl GLTFTempLoaded {
                     let cfg: IParticleSystemConfig = gltf_format_particle_cfg(cfg);
                     let key_u64 = result.key_particle_calculator(index);
                     let id = commands.spawn_empty().id();
-                    particlesys_cmds.calculator_cmds.push(OpsCPUParticleCalculator::ops(id, cfg));
-                    let res = ParticleSystemCalculatorID(id, 1024, particlesys_cmds.calculator_queue.queue());
-                    if let Ok(res) = particlesys_cmds.calcultors.insert(key_u64, res) {
+                    particlesys_cmds.calculator.push(OpsCPUParticleCalculator::ops(id, cfg));
+                    let res = ParticleSystemCalculatorID(id, 1024, particlesys_res.calculator_queue.queue());
+                    if let Ok(res) = particlesys_res.calcultors.insert(key_u64, res) {
                         result.particlesys_calculators.insert(index, res);
                     } else {
-                        particlesys_cmds.calculator_queue.queue().push(id);
+                        particlesys_res.calculator_queue.queue().push(id);
                     }
                 }
             }
@@ -1075,7 +1076,8 @@ pub fn sys_gltf_analy(
     mut loader: ResMut<GLTFResLoader>,
     anime_assets: TypeAnimeAssetMgrs,
     mut vballocator: ResMut<VertexBufferAllocator3D>,
-    mut particlesys: ParticleSystemActionSet,
+    mut particlesys: ActionSetParticleSystem,
+    mut particlesys_res: ResourceParticleSystem,
     vb_assets_mgr: Res<ShareAssetMgr<AssetVertexBuffer>>,
     assets_mgr: Res<ShareAssetMgr<GLTF>>,
     device: Res<PiRenderDevice>,
@@ -1095,7 +1097,7 @@ pub fn sys_gltf_analy(
             _ => {
                 let fails = loader.fails.clone();
                 let successed_temp = loader.successed_temp.clone();
-                let res = GLTFTempLoaded::analy(temp.gltf.clone(), temp.id.base_url.clone(), &mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys);
+                let res = GLTFTempLoaded::analy(temp.gltf.clone(), temp.id.base_url.clone(), &mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys, &mut particlesys_res);
                 let result = GLTF::async_load((res, key_u64), result);
                 let id = temp.entity;
                 MULTI_MEDIA_RUNTIME

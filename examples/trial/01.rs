@@ -21,54 +21,49 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
+    mut actions: pi_3d::ActionSets,
     mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut renderercmds: ActionSetRenderer,
     mut animegroupcmd: ActionSetAnimationGroup,
+    mut animegroupres: ResourceAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
-    mut trailcmds: ActionSetTrailRenderer,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
     let tes_size = 50;
-    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres,
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         tes_size as f32, 0.7, (0., 10., -50.), true
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer, demopass.transparent_target);
-    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer, demopass.transparent_target);
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let idmat = commands.spawn_empty().id();
-    matcmds.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-    matcmds.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_daoguang_lf_004.png"),
     }));
 
-    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = 0;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., 10., 0.));
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
+    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., 10., 0.));
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     let id_geo = commands.spawn_empty().id();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
+    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
     
-    let node = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(node, scene));
-    transformcmds.create.push(OpsTransformNode::ops(scene, node));
+    let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
+    actions.transform.create.push(OpsTransformNode::ops(scene, node));
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.global.record_group(node, id_group);
-    animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
+    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
+    animegroupres.global.record_group(node, id_group);
+    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
     {
         let key_curve0 =  pi_atom::Atom::from("test2"); 
         let key_curve0 = key_curve0.asset_u64();
@@ -82,7 +77,7 @@ fn setup(
         };
 
         let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test0"); 
@@ -97,38 +92,38 @@ fn setup(
         };
 
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupcmd.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 1.;param.loop_mode = ELoopMode::PositivePly(None);
-    animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
     let mut random = pi_wy_rng::WyRng::default();
     for idx in 0..200 {
         // let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
-        let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, node));
+        let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
         // if idx == 0 {
-        //     meshcmds.create.push(OpsMeshCreation::ops(scene, source));
-        //     matcmds.usemat.push(OpsMaterialUse::ops(source, idmat));
+        //     actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
+        //     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
         //     let id_geo = commands.spawn_empty().id();
         //     let instancestate = 0;
-        //     geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()), instancestate));
+        //     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()), instancestate));
         // } else {
-            transformcmds.create.push(OpsTransformNode::ops(scene, source));
+            actions.transform.create.push(OpsTransformNode::ops(scene, source));
         // }
-        transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(source, random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0)));
-        transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(source, 4., 4., 4.));
-        transformcmds.localrot.push(OpsTransformNodeLocalEuler::ops(source, 3., 0., 0.));
+        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0)));
+        actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(source, 4., 4., 4.));
+        actions.transform.localrot.push(OpsTransformNodeLocalEuler::ops(source, 3., 0., 0.));
 
         let trail = commands.spawn_empty().id();
-        trailcmds.create.push(OpsTrail::ops(scene, source, trail));
-        trailcmds.age.push(OpsTrailAgeControl::ops(trail, 500));
-        matcmds.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));
+        actions.trail.create.push(OpsTrail::ops(scene, source, trail));
+        actions.trail.age.push(OpsTrailAgeControl::ops(trail, 500));
+        actions.material.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));
         let mut blend = ModelBlend::default(); blend.combine();
-        meshcmds.blend.push(OpsRenderBlend::ops(trail, blend));
-        meshcmds.depth_compare.push(OpsDepthCompare::ops(trail, CompareFunction::Always));
+        actions.mesh.blend.push(OpsRenderBlend::ops(trail, blend));
+        actions.mesh.depth_compare.push(OpsDepthCompare::ops(trail, CompareFunction::Always));
     }
 }
 

@@ -33,22 +33,13 @@ impl Plugin for PluginTest {
 
     fn setup(
         mut commands: Commands,
-        // mut scenecmds: ActionSetScene,
-        // mut cameracmds: ActionSetCamera,
-        // mut transformcmds: ActionSetTransform,
-        // mut lightingcmds: ActionSetLighting,
-        // mut meshcmds: ActionSetMesh,
-        // mut abstructmeshcmds: ActionSetAbstructMesh,
-        mut geometrycmd: ActionSetGeometry,
-        mut matcmds: ActionSetMaterial,
+        mut actions: pi_3d::ActionSets,
         defaultmat: Res<SingleIDBaseDefaultMaterial>,
-        mut animegroupcmd: ActionSetAnimationGroup,
+    mut animegroupres: ResourceAnimationGroup,
         mut fps: ResMut<SingleFrameTimeCommand>,
-        mut renderercmds: ActionSetRenderer,
         anime_assets: TypeAnimeAssetMgrs,
         mut anime_contexts: TypeAnimeContexts,
         mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
-        mut cmds: (ActionSetScene, ActionSetCamera, ActionSetTransform, ActionSetLighting, ActionSetMesh, ActionSetInstanceMesh, ActionSetAbstructMesh)
     ) {
 
         let tes_size = 16;
@@ -56,64 +47,63 @@ impl Plugin for PluginTest {
         
         
 
-        let (mut scenecmds, mut cameracmds, mut transformcmds, mut lightingcmds, mut meshcmds, mut instancemeshcmds, mut abstructmeshcmds) = cmds;
 
 
         // Test Code
-        let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+        let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
             &mut assets.0, &assets.1, &assets.2, &assets.3,
             tes_size as f32, 0.7, (10., 10., -40.), false
         );
         let (scene, camera01) = (demopass.scene, demopass.camera);
 
-        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
-        renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+        actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
     
-        cameracmds.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 0.7));
-        cameracmds.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
+        actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 0.7));
+        actions.camera.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
 
-        let cameraroot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); transformcmds.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
-        transformcmds.create.push(OpsTransformNode::ops(scene, cameraroot));
+        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
 
-        let lightroot = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
-        transformcmds.create.push(OpsTransformNode::ops(scene, lightroot));
+        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
-        scenecmds.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
+        actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
         // {
-        //     let light = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(light, scene));
-        //     transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(light, 0., 10., -10.));
-        //     meshcmds.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
-        //     lightingcmds.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
-        //     lightingcmds.param.push(ELightModifyCommand::Directional(light, Vector3::new(-1., -1., 1.)));
-        //     // lightingcmds.param.push(ELightModifyCommand::ShadowEnable(light, true));
-        //     lightingcmds.param.push(ELightModifyCommand::ShadowFrustumSize(light, 40.0));
-        //     lightingcmds.color.push(OpsLightColor::ops(light, 1. * 0.2, 0.0 * 0.2, 0.0 * 0.2));
+        //     let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
+        //     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(light, 0., 10., -10.));
+        //     actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
+        //     actions.lighting.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
+        //     actions.lighting.param.push(ELightModifyCommand::Directional(light, Vector3::new(-1., -1., 1.)));
+        //     // actions.lighting.param.push(ELightModifyCommand::ShadowEnable(light, true));
+        //     actions.lighting.param.push(ELightModifyCommand::ShadowFrustumSize(light, 40.0));
+        //     actions.lighting.color.push(OpsLightColor::ops(light, 1. * 0.2, 0.0 * 0.2, 0.0 * 0.2));
     
-        //     // renderercmds.connect.push(OpsRendererConnect::ops(final_render.clear_entity, light, false));
-        //     // renderercmds.connect.push(OpsRendererConnect::ops(light, id_renderer, false));
+        //     // actions.renderer.connect.push(OpsRendererConnect::ops(final_render.clear_entity, light, false));
+        //     // actions.renderer.connect.push(OpsRendererConnect::ops(light, id_renderer, false));
     
-        //     // renderercmds.modify.push(OpsRendererCommand::DepthFormat(light, RenderDepthFormat(DepthStencilFormat::Depth32Float)));
-        //     // renderercmds.modify.push(OpsRendererCommand::ColorFormat(light, RenderColorFormat(ColorFormat::Rgba16Float)));
-        //     renderercmds.modify.push(OpsRendererCommand::AutoClearColor(light, true));
-        //     renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(light, true));
-        //     renderercmds.modify.push(OpsRendererCommand::DepthClear(light, RenderDepthClear(0.)));
-        //     renderercmds.modify.push(OpsRendererCommand::ColorClear(light, RenderColorClear(0, 0, 0, 0)));
+        //     // actions.renderer.modify.push(OpsRendererCommand::DepthFormat(light, RenderDepthFormat(DepthStencilFormat::Depth32Float)));
+        //     // actions.renderer.modify.push(OpsRendererCommand::ColorFormat(light, RenderColorFormat(ColorFormat::Rgba16Float)));
+        //     actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(light, true));
+        //     actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(light, true));
+        //     actions.renderer.modify.push(OpsRendererCommand::DepthClear(light, RenderDepthClear(0.)));
+        //     actions.renderer.modify.push(OpsRendererCommand::ColorClear(light, RenderColorClear(0, 0, 0, 0)));
         //     log::warn!("Light: {:?}", light);
         // }
 
         // {
-        //     let light = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(light, scene));
-        //     meshcmds.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
-        //     lightingcmds.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
-        //     lightingcmds.param.push(ELightModifyCommand::Directional(light, Vector3::new(-1., -0.2, 0.2)));
-        //     lightingcmds.color.push(OpsLightColor::ops(light, 0.0 * 0.2, 0.8 * 0.2, 0.0 * 0.2));
+        //     let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
+        //     actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
+        //     actions.lighting.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
+        //     actions.lighting.param.push(ELightModifyCommand::Directional(light, Vector3::new(-1., -0.2, 0.2)));
+        //     actions.lighting.color.push(OpsLightColor::ops(light, 0.0 * 0.2, 0.8 * 0.2, 0.0 * 0.2));
         // }
         // {
-        //     let light = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(light, scene));
-        //     meshcmds.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
-        //     lightingcmds.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
-        //     lightingcmds.param.push(ELightModifyCommand::Directional(light, Vector3::new(1., -0.2, 0.2)));
-        //     lightingcmds.color.push(OpsLightColor::ops(light, 0.0 * 0.2, 0.0 * 0.2, 0.8 * 0.2));
+        //     let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
+        //     actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
+        //     actions.lighting.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
+        //     actions.lighting.param.push(ELightModifyCommand::Directional(light, Vector3::new(1., -0.2, 0.2)));
+        //     actions.lighting.color.push(OpsLightColor::ops(light, 0.0 * 0.2, 0.0 * 0.2, 0.8 * 0.2));
         // }
 
         let light_colors = [
@@ -142,26 +132,26 @@ impl Plugin for PluginTest {
             let position = (pos[0], pos[1], pos[2]);
             let direction =  (1., -0.2, 0.2);
             let color = (color[0], color[1], color[2]);
-            let light = light::DemoLight::pointlight(&mut commands, scene, scene, &mut transformcmds, &mut lightingcmds, &mut meshcmds.layermask, position, color, 0xFFFFFFFF);
+            let light = light::DemoLight::pointlight(&mut commands, scene, scene, &mut actions, position, color, 0xFFFFFFFF);
             lights.push(light);
         }
 
     let lightingmat = {
         let idmat = commands.spawn_empty().id();
-        matcmds.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY));
         idmat
     };
 
     let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
     let mut state: MeshInstanceState = MeshInstanceState::default();
     state.state = InstanceState::INSTANCE_BASE;
-    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut meshcmds, &mut geometrycmd, &mut transformcmds, vertices, indices, state);
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
-    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., -1., 0.));
-    matcmds.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
-    meshcmds.shadow.push(OpsMeshShadow::CastShadow(source, true));
+    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., -1., 0.));
+    actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
+    actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, true));
     lights.iter().for_each(|light| {
-        abstructmeshcmds.force_point_light.push(OpsMeshForcePointLighting::ops(source, *light, true));
+        actions.abstructmesh.force_point_light.push(OpsMeshForcePointLighting::ops(source, *light, true));
     });
 
         let cell_col = 4.;
@@ -171,17 +161,17 @@ impl Plugin for PluginTest {
             for j in 0..tes_size {
                 for k in 0..tes_size {
                     let cube = commands.spawn_empty().id();
-                    instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube));
-                    transformcmds.tree.push(OpsTransformNodeParent::ops(cube, source));
-                    transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i as f32 - half) * 1., (k as f32 - half * 0.5) * 1., (j as f32 - half) * 1.));
-                    transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 0.25, 0.25, 0.25));
+                    actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
+                    actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
+                    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i as f32 - half) * 1., (k as f32 - half * 0.5) * 1., (j as f32 - half) * 1.));
+                    actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 0.25, 0.25, 0.25));
                 }
             }
         }
 
-        let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-        animegroupcmd.global.record_group(cameraroot, id_group);
-        animegroupcmd.attach.push(OpsAnimationGroupAttach::ops(scene, cameraroot, id_group));
+        let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
+        animegroupres.global.record_group(cameraroot, id_group);
+        actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, cameraroot, id_group));
         {
             let key_curve0 = pi_atom::Atom::from((0).to_string());
             let key_curve0 = key_curve0.asset_u64();
@@ -194,7 +184,7 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupcmd.scene_ctxs.add_target_anime(scene, cameraroot, id_group.clone(), animation);
+                animegroupres.scene_ctxs.add_target_anime(scene, cameraroot, id_group.clone(), animation);
             }
         }
         {
@@ -209,10 +199,10 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupcmd.scene_ctxs.add_target_anime(scene, lightroot, id_group.clone(), animation);
+                animegroupres.scene_ctxs.add_target_anime(scene, lightroot, id_group.clone(), animation);
             }
         }
-        animegroupcmd.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+        animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
             
         // 创建帧事件
     }

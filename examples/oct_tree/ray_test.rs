@@ -19,16 +19,9 @@ mod copy;
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matuse: ActionSetMaterial,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     anime_assets: TypeAnimeAssetMgrs,
     mut list: ResMut<ActionListTestData>,
@@ -42,12 +35,8 @@ fn setup(
 
     let demopass = DemoScene::new(
         &mut commands,
-        &mut scenecmds,
-        &mut cameracmds,
-        &mut transformcmds,
-        &mut animegroupcmd,
-       
-        &mut renderercmds,
+        &mut actions,
+        &mut animegroupres,
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         1.,
         0.7,
@@ -55,16 +44,16 @@ fn setup(
         false,
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
-    cameracmds
+    actions.camera
         .target
         .push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let source = commands.spawn_empty().id();
-    transformcmds
+    actions.transform
         .tree
         .push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = InstanceState::INSTANCE_BASE;
-    meshcmds.create.push(OpsMeshCreation::ops(
+    actions.mesh.create.push(OpsMeshCreation::ops(
         scene,
         source,
         MeshInstanceState {
@@ -72,11 +61,11 @@ fn setup(
             use_single_instancebuffer: false, ..Default::default()
         },
     ));
-    // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
+    // actions.mesh.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
 
     let id_geo = commands.spawn_empty().id();
     let attrs = CubeBuilder::attrs_meta();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(
+    actions.geometry.create.push(OpsGeomeryCreate::ops(
         source,
         id_geo,
         attrs,
@@ -84,12 +73,12 @@ fn setup(
     ));
 
     let idmat = defaultmat.0;
-    matuse.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupcmd.scene_ctxs.create_group(scene).unwrap();
-    animegroupcmd.global.record_group(source, id_group);
-    animegroupcmd
+    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
+    animegroupres.global.record_group(source, id_group);
+    actions.anime
         .attach
         .push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
@@ -99,14 +88,14 @@ fn setup(
         for j in 0..tes_size {
             for _k in 0..1 {
                 let cube: Entity = commands.spawn_empty().id();
-                instancemeshcmds
+                actions.instance
                     .create
                     .push(OpsInstanceMeshCreation::ops(source, cube));
-                transformcmds
+                actions.transform
                     .tree
                     .push(OpsTransformNodeParent::ops(cube, source));
 
-                transformcmds
+                actions.transform
                     .localpos
                     .push(OpsTransformNodeLocalPosition::ops(
                         cube,
@@ -143,7 +132,7 @@ fn setup(
                     .scaling
                     .ctx
                     .create_animation(0, AssetTypeFrameCurve::from(asset_curve));
-                animegroupcmd
+                animegroupres
                     .scene_ctxs
                     .add_target_anime(scene, cube, id_group.clone(), animation);
                 // engine.create_target_animation(source, cube, &key_group, animation);
@@ -154,7 +143,7 @@ fn setup(
     let q = LocalRotationQuaternion::create(0., -0.9, 0., 0.1);
     // log::warn!("Q: {:?}", q.0 * 0.5);
 
-    animegroupcmd.scene_ctxs.start_with_progress(
+    animegroupres.scene_ctxs.start_with_progress(
         scene,
         id_group.clone(),
         AnimationGroupParam::default(),

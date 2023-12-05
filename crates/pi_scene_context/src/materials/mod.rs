@@ -122,11 +122,11 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
         app.insert_resource(ActionListUniformFloat::default());
-        app.insert_resource(ActionListUniformInt::default());
+        // app.insert_resource(ActionListUniformInt::default());
         app.insert_resource(ActionListUniformUint::default());
         app.insert_resource(ActionListUniformVec2::default());
         app.insert_resource(ActionListUniformVec4::default());
-        app.insert_resource(ActionListUniformMat2::default());
+        // app.insert_resource(ActionListUniformMat2::default());
         app.insert_resource(ActionListUniformMat4::default());
         app.insert_resource(ActionListUniformTexture::default());
         app.insert_resource(ActionListUniformTextureFromRenderTarget::default());

@@ -23,21 +23,17 @@ pub struct ListTestData(Vec<Entity>, Option<Entity>, WyRng);
     pub fn sys(
         mut commands: Commands,
         mut testdata: ResMut<ListTestData>,
-        mut disposereadylist: ResMut<ActionListDisposeReady>,
-        mut transformcmds: ActionSetTransform,
-        mut meshcmds: ActionSetMesh,
-        mut geometrycmd: ActionSetGeometry,
-        mut matcmds: ActionSetMaterial,
+        mut actions: pi_3d::ActionSets,
         defaultmat: Res<SingleIDBaseDefaultMaterial>,
     ) {
         if let Some(entity) = testdata.0.pop() {
-            disposereadylist.push(OpsDisposeReady::ops(entity));
+            actions.obj_dispose.push(OpsDisposeReady::ops(entity));
         }
         
         // if testdata.0.len() % 2 != 0 {
         //     if let Some(entity) = testdata.0.pop() {
         //         disposereadylist.push(OpsDisposeReady::ops(entity));
-        //         // transformcmds.enable.push(OpsNodeEnable::ops(entity, false));
+        //         // actions.transform.enable.push(OpsNodeEnable::ops(entity, false));
         //     }
         //     return;
         // }
@@ -47,18 +43,18 @@ pub struct ListTestData(Vec<Entity>, Option<Entity>, WyRng);
             // log::warn!("Random: {:?}", random.gen_range(-5.0f32..5.0f32));
             let cube: Entity = commands.spawn_empty().id();
             let instancestate = 0;
-            meshcmds.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
-            transformcmds.tree.push(OpsTransformNodeParent::ops(cube, scene));
-            transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, random.gen_range(-5.0f32..5.0f32) as f32 * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5));
+            actions.mesh.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+            actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
+            actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, random.gen_range(-5.0f32..5.0f32) as f32 * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5));
             testdata.0.insert(0, cube);
 
             let id_geo = commands.spawn_empty().id();
             let attrs = CubeBuilder::attrs_meta();
             // attrs.push(VertexBufferDesc::instance_world_matrix());
-            geometrycmd.create.push(OpsGeomeryCreate::ops(cube, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+            actions.geometry.create.push(OpsGeomeryCreate::ops(cube, id_geo, attrs, Some(CubeBuilder::indices_meta())));
     
             let idmat = defaultmat.0;
-            matcmds.usemat.push(OpsMaterialUse::ops(cube, idmat, DemoScene::PASS_OPAQUE));
+            actions.material.usemat.push(OpsMaterialUse::ops(cube, idmat, DemoScene::PASS_OPAQUE));
         }
     }
 // }
@@ -75,16 +71,9 @@ impl Plugin for PluginTest {
 
 fn setup(
     mut commands: Commands,
-    mut scenecmds: ActionSetScene,
-    mut cameracmds: ActionSetCamera,
-    mut transformcmds: ActionSetTransform,
-    mut meshcmds: ActionSetMesh,
-    mut instancemeshcmds: ActionSetInstanceMesh,
-    mut geometrycmd: ActionSetGeometry,
-    mut matcmds: ActionSetMaterial,
-    mut animegroupcmd: ActionSetAnimationGroup,
+    mut actions: pi_3d::ActionSets,
+    mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    mut renderercmds: ActionSetRenderer,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut testdata: ResMut<ListTestData>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
@@ -92,39 +81,39 @@ fn setup(
     let tes_size = 6;
     fps.frame_ms = 16;
 
-    let demopass = base::DemoScene::new(&mut commands, &mut scenecmds, &mut cameracmds, &mut transformcmds, &mut animegroupcmd, &mut renderercmds, 
+    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         tes_size as f32, 1., (0., 10., -40.), true
     );
     let (scene, camera01, id_renderer) = (demopass.scene, demopass.camera, demopass.transparent_renderer);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut matcmds, &mut meshcmds, &mut geometrycmd, &mut cameracmds, &mut transformcmds, &mut renderercmds, scene, demopass.transparent_renderer,demopass.transparent_target);
-    renderercmds.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    cameracmds.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
+    actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
-    let source = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = InstanceState::INSTANCE_BASE;
-    meshcmds.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
     testdata.0.push(source);
-    // meshcmds.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
+    // actions.mesh.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
     
     let id_geo = commands.spawn_empty().id();
     let attrs = CubeBuilder::attrs_meta();
-    geometrycmd.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = defaultmat.0;
-    matcmds.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
 
     for i in 0..tes_size {
         for j in 0..tes_size {
             for _k in 0..1 {
                 let cube: Entity = commands.spawn_empty().id();
-                instancemeshcmds.create.push(OpsInstanceMeshCreation::ops(source, cube));
-                transformcmds.tree.push(OpsTransformNodeParent::ops(cube, source));
-                transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
-                transformcmds.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 0.2, 0.2, 0.2));
+                actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
+                actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
+                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
+                actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 0.2, 0.2, 0.2));
                 testdata.0.push(cube);
             }
         }

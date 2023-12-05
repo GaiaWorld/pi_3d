@@ -8,11 +8,12 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
 use pi_node_materials::prelude::*;
-use pi_particle_system::{PluginParticleSystem, prelude::ResParticleCommonBuffer};
+use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer, ActionSetParticleSystem}};
 use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_shadow_mapping::PluginShadowMapping;
 use pi_standard_material::PluginStandardMaterial;
+use pi_trail_renderer::ActionSetTrailRenderer;
 use unlit_material::*;
 use wgpu1::Backends;
 
@@ -60,11 +61,8 @@ impl DemoScene {
     pub const PASS_TRANSPARENT: PassTag     = PassTag::PASS_TAG_07;
     pub fn new(
         commands: &mut Commands,
-        scenecmds: &mut ActionSetScene,
-        cameracmds: &mut ActionSetCamera,
-        transformcmds: &mut ActionSetTransform,
-        animegroupcmd: &mut ActionSetAnimationGroup,
-        renderercmds: &mut ActionSetRenderer,
+        actions: &mut pi_3d::ActionSets,
+        animegroupres: &mut ResourceAnimationGroup,
         targets: &mut CustomRenderTargets,
         device: &RenderDevice,
         asset_samp: &ShareAssetMgr<SamplerRes>,
@@ -83,36 +81,36 @@ impl DemoScene {
         let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
 
         let scene = commands.spawn_empty().id();
-        animegroupcmd.scene_ctxs.init_scene(scene);
-        scenecmds.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0,0 ,0 ,0 ,0 ,0]));
+        animegroupres.scene_ctxs.init_scene(scene);
+        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0,0 ,0 ,0 ,0 ,0]));
 
-        let camera = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(camera, scene));
-        cameracmds.create.push(OpsCameraCreation::ops(scene, camera, true));
-        transformcmds.localpos.push(OpsTransformNodeLocalPosition::ops(camera, camera_position.0, camera_position.1, camera_position.2));
-        cameracmds.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
-        cameracmds.active.push(OpsCameraActive::ops(camera, true));
-        cameracmds.size.push(OpsCameraOrthSize::ops(camera, camera_size));
-        cameracmds.fov.push(OpsCameraFov::ops(camera, camera_fov));
-        cameracmds.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
-        cameracmds.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
-        cameracmds.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
+        let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
+        actions.camera.create.push(OpsCameraCreation::ops(scene, camera, true));
+        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(camera, camera_position.0, camera_position.1, camera_position.2));
+        actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
+        actions.camera.active.push(OpsCameraActive::ops(camera, true));
+        actions.camera.size.push(OpsCameraOrthSize::ops(camera, camera_size));
+        actions.camera.fov.push(OpsCameraFov::ops(camera, camera_fov));
+        actions.camera.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
+        actions.camera.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
+        actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
 
-        let opaque_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
-        renderercmds.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
-        renderercmds.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
-        renderercmds.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
-        // cameracmds.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+        let opaque_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
+        actions.renderer.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
+        actions.renderer.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
+        actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
+        // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
-        let transparent_renderer = commands.spawn_empty().id(); renderercmds.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
-        renderercmds.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
-        renderercmds.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
-        renderercmds.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
-        // cameracmds.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+        let transparent_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
+        actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
+        actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
+        // actions.camera.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
         Self { scene, camera, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
     }
@@ -121,18 +119,16 @@ impl DemoScene {
         commands: &mut Commands,
         scene: Entity,
         parent: Entity,
-        meshcmds: &mut ActionSetMesh,
-        geometrycmd: &mut ActionSetGeometry,
-        transformcmds: &mut ActionSetTransform,
+        actions: &mut pi_3d::ActionSets,
         vertices: Vec<VertexBufferDesc>,
         indices: Option<IndicesBufferDesc>,
         state: MeshInstanceState,
     ) -> Entity {
         let id_geo = commands.spawn_empty().id();
-        let mesh = commands.spawn_empty().id(); transformcmds.tree.push(OpsTransformNodeParent::ops(mesh, parent));
-        meshcmds.create.push(OpsMeshCreation::ops(scene, mesh, state));
-        geometrycmd.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
-        meshcmds.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
+        let mesh = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
+        actions.mesh.create.push(OpsMeshCreation::ops(scene, mesh, state));
+        actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
+        actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
         mesh
     }
 }
@@ -331,8 +327,8 @@ pub fn test_plugins_with_gltf() -> App {
 
 pub fn setup_default_mat(
     mat: Res<SingleIDBaseDefaultMaterial>,
-    mut matcmds: ResMut<ActionListMaterialCreate>,
+    mut actionsmat: ResMut<ActionListMaterialCreate>,
 ) {
     let entity = mat.0;
-    matcmds.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY)));
+    actionsmat.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY)));
 }

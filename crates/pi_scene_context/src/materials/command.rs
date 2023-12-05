@@ -34,13 +34,13 @@ impl OpsUniformMat4 {
 }
 pub type ActionListUniformMat4 = ActionList<OpsUniformMat4>;
 
-pub struct OpsUniformMat2(pub(crate) Entity, pub(crate) Atom, pub(crate) [f32;4], pub(crate) u16);
-impl OpsUniformMat2 {
-    pub fn ops(mat: Entity, uniformname: Atom, value: [f32;4]) -> Self {
-        Self(mat, uniformname, value, 0)
-    }
-}
-pub type ActionListUniformMat2 = ActionList<OpsUniformMat2>;
+// pub struct OpsUniformMat2(pub(crate) Entity, pub(crate) Atom, pub(crate) [f32;4], pub(crate) u16);
+// impl OpsUniformMat2 {
+//     pub fn ops(mat: Entity, uniformname: Atom, value: [f32;4]) -> Self {
+//         Self(mat, uniformname, value, 0)
+//     }
+// }
+// pub type ActionListUniformMat2 = ActionList<OpsUniformMat2>;
 
 
 pub struct OpsUniformVec4(pub(crate) Entity, pub(crate) Atom, pub(crate) f32, pub(crate) f32, pub(crate) f32, pub(crate) f32, pub(crate) u16);
@@ -67,13 +67,13 @@ impl OpsUniformFloat {
 }
 pub type ActionListUniformFloat = ActionList<OpsUniformFloat>;
 
-pub struct OpsUniformInt(pub(crate) Entity, pub(crate) Atom, pub(crate) i32, pub(crate) u16);
-impl OpsUniformInt {
-    pub fn ops(mat: Entity, uniformname: Atom, x: i32) -> Self {
-        Self(mat, uniformname, x, 0)
-    }
-}
-pub type ActionListUniformInt = ActionList<OpsUniformInt>;
+// pub struct OpsUniformInt(pub(crate) Entity, pub(crate) Atom, pub(crate) i32, pub(crate) u16);
+// impl OpsUniformInt {
+//     pub fn ops(mat: Entity, uniformname: Atom, x: i32) -> Self {
+//         Self(mat, uniformname, x, 0)
+//     }
+// }
+// pub type ActionListUniformInt = ActionList<OpsUniformInt>;
 
 pub struct OpsUniformUint(pub(crate) Entity, pub(crate) Atom, pub(crate) u32, pub(crate) u16);
 impl OpsUniformUint {
