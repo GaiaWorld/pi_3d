@@ -168,8 +168,8 @@ impl<T: Send + Sync> Default for ActionList<T> {
     }
 }
 impl<T: Send + Sync> ActionList<T> {
-    pub fn push_some(&mut self, _val: impl IntoIterator<Item = T>) {
-        // self.0.extend(val);
+    pub fn push_some(&mut self, val: impl IntoIterator<Item = T>) {
+        self.0.extend(val);
     }
     pub fn push(&mut self, val: T) {
         // self.0.extend([val]);
