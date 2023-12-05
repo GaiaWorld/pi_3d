@@ -24,7 +24,7 @@ pub fn sys_create_material(
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
     mut commands: Commands,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
 ) {
@@ -34,7 +34,7 @@ pub fn sys_create_material(
             cmd
         } else {
             // log::error!("Material: Not Found!!");
-            disposereadylist.push(OpsDisposeReady::ops(entity));
+            disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
         };
 

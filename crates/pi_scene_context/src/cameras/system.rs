@@ -1,12 +1,12 @@
 use pi_engine_shell::prelude::*;
 
-use crate::{commands::{DisposeReady, ActionListDisposeCan, OpsDisposeCan, ActionListDisposeReady}, prelude::{Camera, ViewerRenderersInfo, OpsDisposeReady}};
+use crate::{commands::{DisposeReady, ActionListDisposeCan, OpsDisposeCan, ActionListDisposeReadyForRef}, prelude::{Camera, ViewerRenderersInfo, OpsDisposeReadyForRef}};
 
 
 pub fn sys_dispose_about_camera(
     items: Query<(Entity, &DisposeReady, &Camera), Changed<DisposeReady>>,
     renderers: Query<&ViewerRenderersInfo>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     items.iter().for_each(|(entity, stae, _)| {
@@ -17,7 +17,7 @@ pub fn sys_dispose_about_camera(
             //     disposecanlist.push(OpsDisposeCan::ops(id.0));
             // });
             renderinfo.renderers().for_each(|idrenderer| {
-                disposereadylist.push(OpsDisposeReady::ops(*idrenderer));
+                disposereadylist.push(OpsDisposeReadyForRef::ops(*idrenderer));
             });
         }
         disposecanlist.push(OpsDisposeCan::ops(entity));

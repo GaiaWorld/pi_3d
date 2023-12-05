@@ -27,7 +27,7 @@ pub fn sys_create_shadow_generator(
     mut matcreatecmds: ResMut<ActionListMaterialCreate>,
     mut matusecmds: ResMut<ActionListMaterialUse>,
     empty: Res<SingleEmptyEntity>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
@@ -35,7 +35,7 @@ pub fn sys_create_shadow_generator(
             let mat = commands.spawn_empty().id();
 
             let mut shadowcommands = if let Some(cmd) = commands.get_entity(entity) { cmd } else {
-                disposereadylist.push(OpsDisposeReady::ops(entity)); commands.entity(mat).despawn(); return;
+                disposereadylist.push(OpsDisposeReadyForRef::ops(entity)); commands.entity(mat).despawn(); return;
             };
 
                 matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));

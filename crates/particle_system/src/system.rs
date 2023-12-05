@@ -787,13 +787,13 @@ pub fn sys_update_buffer_trail(
 
 pub fn sys_dispose_about_particle_system(
     particles: Query<(Entity, &DisposeReady, &ParticleTrailMesh), Changed<DisposeReady>>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     particles.iter().for_each(|(entity, state, trailmesh)| {
         if state.0 == false { return; }
 
-        disposereadylist.push(OpsDisposeReady::ops(trailmesh.mesh));
+        disposereadylist.push(OpsDisposeReadyForRef::ops(trailmesh.mesh));
         disposecanlist.push(OpsDisposeCan::ops(entity));
     });
 }

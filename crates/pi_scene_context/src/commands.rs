@@ -26,7 +26,16 @@ impl OpsDisposeReady {
         Self(entity)
     }
 }
+/// 外部操作， 内部不可操作
 pub type ActionListDisposeReady = ActionList<OpsDisposeReady>;
+
+pub struct OpsDisposeReadyForRef(pub(crate) Entity);
+impl OpsDisposeReadyForRef {
+    pub fn ops(entity: Entity) -> Self {
+        Self(entity)
+    }
+}
+pub type ActionListDisposeReadyForRef = ActionList<OpsDisposeReadyForRef>;
 
 pub struct OpsDisposeCan(pub(crate) Entity);
 impl OpsDisposeCan {

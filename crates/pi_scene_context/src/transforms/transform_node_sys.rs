@@ -524,7 +524,7 @@ fn calc_world_root_bytree(
 
 pub fn sys_dispose_about_transform_node(
     items: Query<(Entity, &DisposeReady, &TransformNode), Changed<DisposeReady>>,
-    mut _disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     items.iter().for_each(|(entity, state, _)| {

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 
-use crate::{prelude::{RenderGeometryComp, ActionListDisposeCan, ActionListDisposeReady, OpsDisposeCan, MeshInstanceState}, object::ActionEntity};
+use crate::{prelude::{RenderGeometryComp, ActionListDisposeCan, ActionListDisposeReadyForRef, OpsDisposeCan, MeshInstanceState}, object::ActionEntity};
 
 use super::{
     vertex_buffer_useinfo::*,
@@ -21,7 +21,7 @@ pub fn sys_create_geometry(
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
     mut instanceallocator: ResMut<InstanceBufferAllocator>,
-    mut _disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, mut vertex_desc, indices_desc, count)| {

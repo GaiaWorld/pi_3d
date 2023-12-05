@@ -219,7 +219,7 @@ pub fn sys_texture_ready07(
 
 pub fn sys_dispose_about_material(
     items: Query<(Entity, &DisposeReady, &MaterialRefs), Changed<DisposeReady>>,
-    mut _disposereadylist: ResMut<ActionListDisposeReady>,
+    mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {

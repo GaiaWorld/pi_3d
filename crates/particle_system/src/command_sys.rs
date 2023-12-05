@@ -29,7 +29,7 @@ pub fn sys_create_cpu_partilce_system(
     trailbuffer: Res<ResParticleTrailBuffer>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
-    mut disposeready: ResMut<ActionListDisposeReady>,
+    mut disposeready: ResMut<ActionListDisposeReadyForRef>,
     mut meshes: ResMut<ActionListMeshRenderAlignment>,
     mut performance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
@@ -39,9 +39,9 @@ pub fn sys_create_cpu_partilce_system(
             cmd
         } else {
             // log::warn!("create_cpu_partilce_system CANNT");
-            disposeready.push(OpsDisposeReady::ops(entity));
-            disposeready.push(OpsDisposeReady::ops(trailmesh));
-            disposeready.push(OpsDisposeReady::ops(trailgeo));
+            disposeready.push(OpsDisposeReadyForRef::ops(entity));
+            disposeready.push(OpsDisposeReadyForRef::ops(trailmesh));
+            disposeready.push(OpsDisposeReadyForRef::ops(trailgeo));
             return;
         };
 
@@ -131,9 +131,9 @@ pub fn sys_create_cpu_partilce_system(
             // log::warn!("create_cpu_partilce_system FAIL");
             cmds.push(OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count + 1));
         } else {
-            disposeready.push(OpsDisposeReady::ops(entity));
-            disposeready.push(OpsDisposeReady::ops(trailmesh));
-            disposeready.push(OpsDisposeReady::ops(trailgeo));
+            disposeready.push(OpsDisposeReadyForRef::ops(entity));
+            disposeready.push(OpsDisposeReadyForRef::ops(trailmesh));
+            disposeready.push(OpsDisposeReadyForRef::ops(trailgeo));
         }
 
     });

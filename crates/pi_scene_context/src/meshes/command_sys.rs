@@ -32,14 +32,14 @@ pub fn sys_create_mesh(
     mut commands: Commands,
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
         if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0) == false {
-            disposereadylist.push(OpsDisposeReady::ops(entity));
+            disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
     });
 }

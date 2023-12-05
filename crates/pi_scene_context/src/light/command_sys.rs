@@ -17,14 +17,14 @@ use super::{
 pub fn sys_create_light(
     mut cmds: ResMut<ActionListLightCreate>,
     mut commands: Commands,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity, ltype)| {
         let mut lightcmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
-            disposereadylist.push(OpsDisposeReady::ops(entity));
+            disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
         };
 

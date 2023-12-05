@@ -192,7 +192,7 @@ pub fn sys_shadow_bind_modify(
 
 pub fn sys_dispose_about_shadowcaster(
     items: Query<(Entity, &DisposeReady, &SceneID, &SceneItemIndex, &LinkedMaterialID), (Changed<DisposeReady>, With<ShadowCastPassTag>)>,
-    mut disposereadylist: ResMut<ActionListDisposeReady>,
+    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     mut scenes: Query< &mut SceneShadowQueue >,
     _empty: Res<SingleEmptyEntity>,
@@ -204,7 +204,7 @@ pub fn sys_dispose_about_shadowcaster(
             queueshadow.0.recycle(shadowindex, &entity);
         }
 
-        disposereadylist.push(OpsDisposeReady::ops(idmaterial.0));
+        disposereadylist.push(OpsDisposeReadyForRef::ops(idmaterial.0));
 
         disposecanlist.push(OpsDisposeCan::ops(entity));
     });
