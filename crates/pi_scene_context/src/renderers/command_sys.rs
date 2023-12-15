@@ -114,6 +114,7 @@ pub fn sys_renderer_modify(
     mut autoclearcolor: Query<&mut RenderAutoClearColor>,
     mut autocleardepth: Query<&mut RenderAutoClearDepth>,
     mut autoclearstencil: Query<&mut RenderAutoClearStencil>,
+    mut viewport: Query<&mut RenderViewport>,
     mut renderblend: Query<&mut RendererBlend>,
     // mut tofinals: Query<&mut RendererRenderTarget>,
 ) {
@@ -157,6 +158,11 @@ pub fn sys_renderer_modify(
             OpsRendererCommand::AutoClearStencil(entity, val) => {
                 if let Ok(mut comp) = autoclearstencil.get_mut(entity) {
                     *comp = RenderAutoClearStencil(val);
+                } else { cmds.push(cmd) }
+            },
+            OpsRendererCommand::Viewport(entity, x, y, z, w) => {
+                if let Ok(mut comp) = viewport.get_mut(entity) {
+                    *comp = RenderViewport(x, y, z, w, 0., 1.);
                 } else { cmds.push(cmd) }
             }
         }

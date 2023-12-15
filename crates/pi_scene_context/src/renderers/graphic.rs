@@ -183,6 +183,8 @@ impl Node for RenderNode {
                     } else {
                         render_depth_view = None;
                     };
+                    
+                    output.target = Some(srt.clone());
                 },
                 RendererRenderTarget::None => {
                     // can_render = false;

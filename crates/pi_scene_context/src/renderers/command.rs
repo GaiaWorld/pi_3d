@@ -40,6 +40,7 @@ pub enum OpsRendererCommand {
     AutoClearColor(Entity, bool),
     AutoClearDepth(Entity, bool),
     AutoClearStencil(Entity, bool),
+    Viewport(Entity, f32, f32, f32, f32),
 }
 
 pub type ActionListRendererModify = ActionList<OpsRendererCommand>;
