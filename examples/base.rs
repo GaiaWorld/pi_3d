@@ -85,7 +85,7 @@ impl DemoScene {
         actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0,0 ,0 ,0 ,0 ,0]));
 
         let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
-        actions.camera.create.push(OpsCameraCreation::ops(scene, camera, true));
+        actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
         actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(camera, camera_position.0, camera_position.1, camera_position.2));
         actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
         actions.camera.active.push(OpsCameraActive::ops(camera, true));
@@ -250,9 +250,9 @@ pub fn test_plugins_with_gltf() -> App {
     let width = 800;
     let height = 600;
 
-    let mut opt = PiRenderOptions::default();
-    opt.backends = Backends::VULKAN;
-    app.insert_resource(opt);
+    // let mut opt = PiRenderOptions::default();
+    // opt.backends = Backends::VULKAN;
+    // app.insert_resource(opt);
 
     app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 256, max_spot_light_count: 128, max_hemi_light_count: 16 }));
     app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 16, max_spot_light_count: 16, max_hemi_light_count: 4 }));

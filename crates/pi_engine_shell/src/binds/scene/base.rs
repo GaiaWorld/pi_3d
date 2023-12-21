@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
-use pi_render::{
-    renderer::{
-        bind_buffer::{BindBufferAllocator, BindBufferRange},
-        shader::TShaderBindCode, buildin_var::ShaderVarUniform,
-        bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer, KeyBindLayoutBindingType},
-        shader_stage::EShaderStage
-    },
+use pi_render::renderer::{
+    bind_buffer::{BindBufferAllocator, BindBufferRange},
+    shader::TShaderBindCode, buildin_var::ShaderVarUniform,
+    bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer},
+    shader_stage::EShaderStage
 };
 use crate::shader::*;
 
@@ -40,9 +38,8 @@ impl ShaderBindViewer {
             None
         }
     }
-    pub fn key_layout(&self, binding: KeyBindLayoutBindingType) -> KeyBindLayoutBuffer {
+    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
         KeyBindLayoutBuffer {
-            binding,
             visibility: EShaderStage::VERTEXFRAGMENT,
             min_binding_size: self.data.size(),
         }
@@ -50,7 +47,9 @@ impl ShaderBindViewer {
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
-    pub fn vs_define_code(&self, set: u32, bind: u32, ) -> String {
+}
+impl TShaderBindCode for ShaderBindViewer {
+    fn vs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
         result += " Camera {\r\n";
@@ -63,8 +62,23 @@ impl ShaderBindViewer {
         result += "};\r\n";
         result
     }
-    pub fn fs_define_code(&self, set: u32, bind: u32) -> String {
+    fn fs_define_code(&self, set: u32, bind: u32) -> String {
         self.vs_define_code(set, bind)
+    }
+}
+impl TKeyBind for ShaderBindViewer {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Buffer(
+                KeyBindBuffer {
+                    data: self.data.clone(),
+                    layout: KeyBindLayoutBuffer {
+                        visibility: EShaderStage::VERTEXFRAGMENT,
+                        min_binding_size: self.data.size()
+                    }
+                }
+            )
+        )
     }
 }
 
@@ -76,31 +90,5 @@ pub struct BindUseViewer {
 impl BindUseViewer {
     pub fn new(bind: u32, data: Arc<ShaderBindViewer>) -> Self {
         Self { bind, data }
-    }
-}
-impl TShaderBindCode for BindUseViewer {
-    fn vs_define_code(&self, set: u32) -> String {
-        self.data.vs_define_code(set, self.bind)
-    }
-    fn fs_define_code(&self, set: u32) -> String {
-        self.vs_define_code(set)
-    }
-}
-impl TKeyBind for BindUseViewer {
-    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        Some(
-            pi_render::renderer::bind::EKeyBind::Buffer(
-                KeyBindBuffer {
-                    data: self.data.data.clone(),
-                    layout: Arc::new(
-                        KeyBindLayoutBuffer {
-                            binding: self.bind as KeyBindLayoutBindingType,
-                            visibility: EShaderStage::VERTEXFRAGMENT,
-                            min_binding_size: self.data.data.size()
-                        }
-                    ) 
-                }
-            )
-        )
     }
 }

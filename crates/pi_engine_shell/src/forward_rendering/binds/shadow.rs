@@ -3,7 +3,7 @@ use std::sync::Arc;
 use bevy::prelude::Deref;
 use pi_render::renderer::{
     texture::BindDataTexture2D, sampler::BindDataSampler, buildin_var::ShaderVarUniform, shader::TShaderBindCode,
-    bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer, KeyBindLayoutBindingType},
+    bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer},
     shader_stage::EShaderStage, bind_buffer::{BindBufferAllocator, BindBufferRange}
 };
 use crate::shader::{texture_bind_code, sampler_bind_code, ShaderSetBind};
@@ -78,10 +78,11 @@ impl ShaderBindShadowData {
         }
         self.data.0.write_data( 0, bytemuck::cast_slice(&temp));
     }
-
-    pub fn vs_define_code(&self, set: u32, binding: u32) -> String {
+}
+impl TShaderBindCode for ShaderBindShadowData {
+    fn fs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
-        result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
+        result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
         result += " ";
         result += Self::KEY;
         result += " {\r\n";
@@ -94,8 +95,20 @@ impl ShaderBindShadowData {
         result += "const uint MAX_SHADOW = "; result += self.shadow_count.to_string().as_str(); result += ";\r\n";
         result
     }
-    pub fn fs_define_code(&self, set: u32, binding: u32) -> String {
-        self.vs_define_code(set, binding)
+}
+impl TKeyBind for ShaderBindShadowData {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Buffer(
+                KeyBindBuffer {
+                    data: self.data.clone(),
+                    layout: KeyBindLayoutBuffer {
+                        visibility: EShaderStage::VERTEXFRAGMENT,
+                        min_binding_size: self.data.size()
+                    }
+                }
+            )
+        )
     }
 }
 
@@ -109,42 +122,29 @@ impl BindUseShadowData {
         Self { bind, data }
     }
 }
-impl TShaderBindCode for BindUseShadowData {
-    fn vs_define_code(&self, set: u32) -> String {
-        self.data.vs_define_code(set, self.bind)
-    }
-    fn fs_define_code(&self, set: u32) -> String {
-        self.vs_define_code(set)
-    }
-}
-impl TKeyBind for BindUseShadowData {
-    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        Some(
-            pi_render::renderer::bind::EKeyBind::Buffer(
-                KeyBindBuffer {
-                    data: self.data.data.clone(),
-                    layout: Arc::new(
-                        KeyBindLayoutBuffer {
-                            binding: self.bind as KeyBindLayoutBindingType,
-                            visibility: EShaderStage::VERTEXFRAGMENT,
-                            min_binding_size: self.data.data.size()
-                        }
-                    ) 
-                }
-            )
-        )
-    }
-}
 
 
 #[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindShadowTexture(pub BindDataTexture2D);
-impl ShaderBindShadowTexture {
-    pub fn vs_define_code(&self, set: u32, binding: u32) -> String {
+impl TShaderBindCode for ShaderBindShadowTexture {
+    fn fs_define_code(&self, set: u32, binding: u32) -> String {
         texture_bind_code(&wgpu::TextureSampleType::Float { filterable: true }, wgpu::TextureViewDimension::D2, ShaderVarUniform::SHADOWMAP_TEXTURE, set, binding)
     }
-    pub fn fs_define_code(&self, set: u32, binding: u32) -> String {
-        self.vs_define_code(set, binding)
+}
+impl TKeyBind for ShaderBindShadowTexture {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Texture2D(
+                KeyBindTexture2D {
+                    data: self.0.clone(),
+                    layout: KeyBindLayoutTexture2D {
+                        visibility: EShaderStage::FRAGMENT,
+                        texture_sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                    }
+                }
+            )
+        )
     }
 }
 
@@ -158,45 +158,32 @@ impl BindUseShadowTexture {
         Self { bind, data }
     }
 }
-impl TShaderBindCode for BindUseShadowTexture {
-    fn vs_define_code(&self, set: u32) -> String {
-        self.data.vs_define_code(set, self.bind)
-    }
-    fn fs_define_code(&self, set: u32) -> String {
-        self.vs_define_code(set)
+
+#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+pub struct ShaderBindShadowSampler(pub BindDataSampler);
+
+impl TShaderBindCode for ShaderBindShadowSampler {
+    fn fs_define_code(&self, set: u32, binding: u32) -> String {
+        sampler_bind_code(ShaderVarUniform::SHADOWMAP_TEXTURE, wgpu::SamplerBindingType::Filtering, set, binding)
     }
 }
-impl TKeyBind for BindUseShadowTexture {
+impl TKeyBind for ShaderBindShadowSampler {
     fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
         Some(
-            pi_render::renderer::bind::EKeyBind::Texture2D(
-                KeyBindTexture2D {
-                    data: self.data.0.clone(),
-                    layout: Arc::new(
-                        KeyBindLayoutTexture2D {
-                            binding: self.bind as KeyBindLayoutBindingType,
-                            visibility: EShaderStage::FRAGMENT,
-                            texture_sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                        }
-                    ) 
+            pi_render::renderer::bind::EKeyBind::Sampler(
+                KeyBindSampler {
+                    data: self.0.clone(),
+                    layout: KeyBindLayoutSampler {
+                        visibility: EShaderStage::FRAGMENT,
+                        binding_type: wgpu::SamplerBindingType::Filtering
+                    }
                 }
             )
         )
     }
 }
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
-pub struct ShaderBindShadowSampler(pub BindDataSampler);
 
-impl ShaderBindShadowSampler {
-    pub fn vs_define_code(&self, set: u32, binding: u32) -> String {
-        sampler_bind_code(ShaderVarUniform::SHADOWMAP_TEXTURE, wgpu::SamplerBindingType::Filtering, set, binding)
-    }
-    pub fn fs_define_code(&self, set: u32, binding: u32) -> String {
-        self.vs_define_code(set, binding)
-    }
-}
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct BindUseShadowSampler {
     pub(crate) bind: u32,
@@ -207,30 +194,3 @@ impl BindUseShadowSampler {
         Self { bind, data }
     }
 }
-impl TShaderBindCode for BindUseShadowSampler {
-    fn vs_define_code(&self, set: u32) -> String {
-        self.data.vs_define_code(set, self.bind)
-    }
-    fn fs_define_code(&self, set: u32) -> String {
-        self.vs_define_code(set)
-    }
-}
-impl TKeyBind for BindUseShadowSampler {
-    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        Some(
-            pi_render::renderer::bind::EKeyBind::Sampler(
-                KeyBindSampler {
-                    data: self.data.0.clone(),
-                    layout: Arc::new(
-                        KeyBindLayoutSampler {
-                            binding: self.bind as KeyBindLayoutBindingType,
-                            visibility: EShaderStage::FRAGMENT,
-                            binding_type: wgpu::SamplerBindingType::Filtering
-                        }
-                    ) 
-                }
-            )
-        )
-    }
-}
-

@@ -136,11 +136,11 @@ pub struct SceneShadowInfosDirty;
 pub struct SceneShadowRenderTarget(pub Option<KeyRenderTarget>);
 
 #[derive(Clone, Component)]
-pub struct SceneShadowInfos(pub Arc<ShaderBindShadowData>, pub Option<ShareTargetView>);
+pub struct SceneShadowInfos(pub Arc<ShaderBindShadowData>, pub Option<ShareTargetView>, pub Option<BindDataTexture2D>, pub Option<BindDataSampler>);
 impl SceneShadowInfos {
     pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo, shadowlimit: ShadowLimitInfo) -> Option<Self> {
         if let Some(data) = ShaderBindShadowData::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count, shadowlimit.max_count) {
-            Some(Self ( Arc::new(data), None ))
+            Some(Self ( Arc::new(data), None, None, None ))
         } else {
             None
         }

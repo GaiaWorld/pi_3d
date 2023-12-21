@@ -3,7 +3,8 @@ use pi_engine_shell::prelude::ActionList;
 use pi_scene_math::Vector3;
 
 use crate::{
-    prelude::{SceneBoundingPool, WorldMatrix},
+    transforms::prelude::GlobalTransform,
+    cullings::prelude::SceneBoundingPool,
     viewer::prelude::ViewerTransformMatrix,
 };
 
@@ -25,7 +26,7 @@ impl Plugin for PluginRayTest {
 pub fn sys_ray_test(
     mut rays: ResMut<ActionListRayTest>,
     mut res: ResMut<RayTestID>,
-    transforms: Query<&WorldMatrix>,
+    transforms: Query<&GlobalTransform>,
     scenes: Query<&ViewerTransformMatrix>,
     pool: Query<&SceneBoundingPool>,
 ) {
@@ -35,10 +36,11 @@ pub fn sys_ray_test(
         .for_each(|RayTest(scene_id, entity, x, y)| {
             // println!("=======22222");
             if let Ok(world_matrix) = transforms.get(entity) {
+                let world_matrix = &world_matrix.matrix;
                 // println!("=======33333");
                 let x = (x - 0.5) * 2.;
                 let y = (y - 0.5) * 2.;
-                let org = Vector3::from(world_matrix.0.fixed_view::<3, 1>(0, 3));
+                let org = Vector3::from(world_matrix.fixed_view::<3, 1>(0, 3));
 
                 if let Ok(viewer) = scenes.get(entity) {
                     // println!("=======44444");

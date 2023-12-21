@@ -22,8 +22,6 @@ mod copy;
 fn setup(
     mut commands: Commands,
     mut actions: pi_3d::ActionSets,
-    mut geometrycmd: ActionSetGeometry,
-    mut animegroupcmd: ActionSetAnimationGroup,
     mut animegroupres: ResourceAnimationGroup,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
@@ -100,7 +98,7 @@ fn setup(
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
     let mut random = pi_wy_rng::WyRng::default();
-    for idx in 0..200 {
+    for idx in 0..10 {
         // let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
         let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));

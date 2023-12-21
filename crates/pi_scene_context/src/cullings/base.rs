@@ -5,7 +5,7 @@ use pi_hash::XHashSet;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
 use pi_spatial::oct_helper::OctTree;
 
-use crate::{prelude::WorldMatrix, viewer::prelude::ViewerTransformMatrix};
+use crate::viewer::prelude::ViewerTransformMatrix;
 
 use super::{oct_tree::BoundingOctTree, bounding::VecBoundingInfoCalc};
 
@@ -138,7 +138,7 @@ impl SceneBoundingPool {
             SceneBoundingPool::OctTree(items) => items.remove(entity),
         }
     }
-    pub fn set(&mut self, entity: Entity, info: &GeometryBounding, mode: &GeometryCullingMode, matrix: &WorldMatrix) {
+    pub fn set(&mut self, entity: Entity, info: &GeometryBounding, mode: &GeometryCullingMode, matrix: &Matrix) {
 
         match self {
             SceneBoundingPool::List(items) => {
@@ -148,12 +148,12 @@ impl SceneBoundingPool {
                     },
                     ECullingStrategy::Optimistic => {
                         // log::warn!("{:?}", (entity, &matrix.0));
-                        let (min, max) = info.minmax(&matrix.0);
+                        let (min, max) = info.minmax(matrix);
                         items.add(entity, min, max)
                     },
                     ECullingStrategy::STANDARD => {
                         // log::warn!("00000");
-                        let (min, max) = info.minmax(&matrix.0);
+                        let (min, max) = info.minmax(matrix);
                         items.add(entity, min, max)
                     },
                 }
@@ -167,11 +167,11 @@ impl SceneBoundingPool {
                         items.add_fast(entity);
                     },
                     ECullingStrategy::Optimistic => {
-                        let (min, max) = info.minmax(&matrix.0);
+                        let (min, max) = info.minmax(matrix);
                         items.add(entity, min, max)
                     },
                     ECullingStrategy::STANDARD => {
-                        let (min, max) = info.minmax(&matrix.0);
+                        let (min, max) = info.minmax(matrix);
                         items.add(entity, min, max)
                     },
                 }

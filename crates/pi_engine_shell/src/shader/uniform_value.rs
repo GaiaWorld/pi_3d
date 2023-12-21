@@ -263,7 +263,8 @@ pub struct MaterialValueBindDesc {
 }
 impl Default for MaterialValueBindDesc {
     fn default() -> Self {
-        Self { stage: wgpu::ShaderStages::VERTEX_FRAGMENT, 
+        Self {
+            stage: wgpu::ShaderStages::VERTEX_FRAGMENT, 
             mat4_list: vec![],
             // mat2_list: vec![],
             vec4_list: vec![], vec2_list: vec![], float_list: vec![],

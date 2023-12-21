@@ -91,7 +91,7 @@ impl Default for LightDirection {
     }
 }
 impl TViewerViewMatrix for LightDirection {
-    fn view_matrix(&self, coordsys: &pi_scene_math::coordiante_system::CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&mut GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
+    fn view_matrix(&self, coordsys: &pi_scene_math::coordiante_system::CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
 
         match parent {
             Some(parent) => {

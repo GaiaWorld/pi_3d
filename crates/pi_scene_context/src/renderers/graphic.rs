@@ -184,7 +184,7 @@ impl Node for RenderNode {
                         render_depth_view = None;
                     };
                     
-                    output.target = Some(srt.clone());
+                    // output.target = Some(srt.clone());
                 },
                 RendererRenderTarget::None => {
                     // can_render = false;

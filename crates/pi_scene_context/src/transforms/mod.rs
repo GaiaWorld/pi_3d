@@ -33,6 +33,7 @@ impl Plugin for PluginTransformNode {
             .insert_resource(ActionListTransformNodeLocalScaling::default())
             .insert_resource(ActionListTransformNodeParent::default())
             .insert_resource(StateTransform::default())
+            .insert_resource(TransformDirtyRoots::default())
             ;
 
         app.configure_set(Update, StageTransform::TransformCommand.after(ERunStageChap::_InitialApply));
@@ -60,6 +61,7 @@ impl Plugin for PluginTransformNode {
                 sys_act_local_rotation,
                 sys_local_quaternion_calc_rotation,
                 sys_local_matrix_calc,
+                sys_tree_layer_changed,
                 sys_world_matrix_calc,
                 sys_world_matrix_calc2,
             ).chain().run_if(should_run).in_set(StageTransform::TransformCalcMatrix)

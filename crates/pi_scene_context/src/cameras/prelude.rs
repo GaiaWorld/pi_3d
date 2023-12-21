@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{prelude::GlobalEnable, viewer::prelude::{ModelListAfterCulling, ModelList, TCullingPerformance, ActionListViewerForceInclude}};
+use crate::{viewer::prelude::{ModelListAfterCulling, ModelList, TCullingPerformance, ActionListViewerForceInclude}};
 
 pub use super::{
     target_camera::*,

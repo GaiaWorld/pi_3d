@@ -9,7 +9,7 @@ use crate::{base::*, ResTrailBuffer, StateTrail};
 
 
 pub fn sys_trail_update(
-    transforms: Query<(&WorldMatrix, &LocalMatrix)>,
+    transforms: Query<(&GlobalTransform, &LocalMatrix)>,
     scenes: Query<&SceneTime>,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut items: Query<
@@ -36,9 +36,9 @@ pub fn sys_trail_update(
                 base.update(scenetime.delta_ms() as u32);
 
                 let parentmatrix = if let Some(local) = localmatrix.0.try_inverse() {
-                    worldmatrix.0 * local
-                } else { worldmatrix.0.clone() };
-                let worldmatrix = &worldmatrix.0;
+                    worldmatrix.matrix * local
+                } else { worldmatrix.matrix.clone() };
+                let worldmatrix = &worldmatrix.matrix;
 
                 let randoms = BaseRandom { seed: random.0.gen_range(0..u64::MAX), base: random.0.gen_range(0.0..1.0), x: random.0.gen_range(0.0..1.0), y: random.0.gen_range(0.0..1.0), z: random.0.gen_range(0.0..1.0), w: random.0.gen_range(0.0..1.0) };
                 let flag = points.run(

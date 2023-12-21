@@ -48,6 +48,8 @@ impl Plugin for PluginTest {
         
         let orthographic_camera = false;
         let camera_position = (0., 20., -20.);
+        let limit = assets.1.limits();
+        log::warn!("{:?}", limit);
 
         // Test Code
         let demopass = base::DemoScene::new(

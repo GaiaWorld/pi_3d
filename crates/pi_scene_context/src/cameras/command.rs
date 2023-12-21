@@ -11,10 +11,10 @@ use super::{
     camera::*
 };
 
-pub struct OpsCameraCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) bool);
+pub struct OpsCameraCreation(pub(crate) Entity, pub(crate) Entity);
 impl OpsCameraCreation {
-    pub fn ops(scene: Entity, entity: Entity, toscreen: bool) -> Self {
-        Self(scene, entity, toscreen)
+    pub fn ops(scene: Entity, entity: Entity) -> Self {
+        Self(scene, entity)
     }
 }
 pub type ActionListCameraCreate = ActionList<OpsCameraCreation>;

@@ -17,6 +17,9 @@ pub struct NodeBrothers {
 #[derive(Debug, Clone, Copy, Component)]
 pub struct TransformNode;
 
+#[derive(Clone, Copy, Component)]
+pub struct TransformNodeDirty;
+
 #[derive(Debug, Clone, Component)]
 pub struct LocalDirtyRotation;
 
@@ -138,10 +141,10 @@ impl TAnimatableCompRecord<LocalRotationQuaternion> for RecordLocalRotationQuate
 }
 
 #[derive(Debug, Clone, Component)]
-pub struct LocalRotationQuaternion(pub SQuaternion<Number>, pub bool);
+pub struct LocalRotationQuaternion(pub SQuaternion<Number>);
 impl LocalRotationQuaternion {
     pub fn create(x: Number, y: Number, z: Number, w: Number) -> Self {
-        Self(SQuaternion::new(w, x, y, z), true)
+        Self(SQuaternion::new(w, x, y, z))
     }
 }
 impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
@@ -196,7 +199,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
         // let j = (((value1.0.j * part1) + (value2.0.j * part2)) + (tangent1.0.j * part3)) + (tangent2.0.j * part4);
         // let k = (((value1.0.k * part1) + (value2.0.k * part2)) + (tangent1.0.k * part3)) + (tangent2.0.k * part4);
         // let w = (((value1.0.w * part1) + (value2.0.w * part2)) + (tangent1.0.w * part3)) + (tangent2.0.w * part4);
-        let result = Self(result, true);
+        let result = Self(result);
 
         // log::warn!("Value1: {:?} Value2: {:?} Result: {:?}", value1, value2, result);
 
@@ -205,7 +208,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         // log::warn!("LocalRotationQuaternion has not 'append' operation!");
-        Self(self.0 + rhs.0 * amount, true)
+        Self(self.0 + rhs.0 * amount)
     }
     fn size() -> usize {
         4 * 4
@@ -214,7 +217,6 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
 impl Default for LocalRotationQuaternion {
     fn default() -> Self {
         let mut result = Self::create(0., 0., 0., 1.);
-        result.1 = false;
         result
     }
 }
@@ -325,72 +327,92 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
     }
 }
 
-#[derive(Debug, Clone, Component)]
-pub struct WorldMatrix(pub Matrix, pub bool);
-impl WorldMatrix {
-    pub fn new(m: Matrix) -> Self {
-        Self(m, true)
-    }
-}
+// #[derive(Debug, Clone, Component)]
+// pub struct WorldMatrix(pub Matrix, pub bool);
+// impl WorldMatrix {
+//     pub fn new(m: Matrix) -> Self {
+//         Self(m, true)
+//     }
+// }
 
-#[derive(Debug, Clone, Component)]
-pub struct WorldMatrixInv(pub Matrix, pub bool);
-impl WorldMatrixInv {
-    pub fn new(m: Matrix) -> Self {
-        Self(m, true)
-    }
-}
+// #[derive(Debug, Clone, Component)]
+// pub struct WorldMatrixInv(pub Matrix, pub bool);
+// impl WorldMatrixInv {
+//     pub fn new(m: Matrix) -> Self {
+//         Self(m, true)
+//     }
+// }
 
 #[derive(Debug, Clone, Component)]
 pub struct GlobalTransform {
-    pub position: Vector3,
+    // pub position: Vector3,
     pub scaling: Option<Vector3>,
     pub rotation: Option<Rotation3>,
     pub matrix: Matrix,
+    pub matrix_inv: Matrix,
     pub iso: Option<Isometry3>,
 }
 impl Default for GlobalTransform {
     fn default() -> Self {
         Self {
-            position: Vector3::new(0., 0., 0.),
+            // position: Vector3::new(0., 0., 0.),
             scaling: None,
             rotation: None,
             matrix: Matrix::identity(),
+            matrix_inv: Matrix::identity(),
             iso: None,
         }
     }
 }
 impl GlobalTransform {
-    pub fn euler_angles(&mut self) -> (Number, Number, Number) {
-        self.decompose();
+    pub fn euler_angles(& self) -> (Number, Number, Number) {
+        // self.decompose();
         self.rotation.unwrap().euler_angles()
     }
-    pub fn rotation_quaternion(&mut self) -> Quaternion {
-        self.decompose();
+    pub fn rotation_quaternion(& self) -> Quaternion {
+        // self.decompose();
         Quaternion::from_rotation_matrix(&self.rotation.unwrap())
     }
-    pub fn rotation(&mut self) -> &Rotation3 {
-        self.decompose();
+    pub fn rotation(& self) -> &Rotation3 {
+        // self.decompose();
         self.rotation.as_ref().unwrap()
     }
-    pub fn position(&self) -> &Vector3 {
-        &self.position
+    pub fn position(&self) -> Vector3 {
+        Vector3::from(self.matrix.fixed_view::<3, 1>(0, 3))
     }
-    pub fn scaling(&mut self) -> &Vector3 {
-        self.decompose();
+    pub fn scaling(& self) -> &Vector3 {
+        // self.decompose();
         self.scaling.as_ref().unwrap()
     }
-    pub fn iso(&mut self) -> &Isometry3 {
-        self.decompose();
+    pub fn iso(& self) -> &Isometry3 {
+        // self.decompose();
         self.iso.as_ref().unwrap()
     }
-    pub fn calc(p_m: &Matrix, l_matrix: &LocalMatrix) -> Self {
+    pub fn calc(p_m: &Matrix, l_matrix: &LocalMatrix) -> (Self, bool) {
+        let mut flag = true;
         let mut result = Self::default();
         result.matrix.copy_from(&(p_m * l_matrix.0));
-        
-        result.position = Vector3::from(result.matrix.fixed_view::<3, 1>(0, 3));
 
-        result
+        if result.matrix.as_slice()[0].is_finite() {
+            match result.matrix.try_inverse() {
+                Some(val) => {
+                    result.matrix_inv = val;
+                }
+                None => {
+                    flag = false;
+                    result.matrix = Matrix::identity();
+                    result.matrix_inv = Matrix::identity(); 
+                }
+            }
+        } else {
+            flag = false;
+            result.matrix = Matrix::identity();
+            result.matrix_inv = Matrix::identity();
+        }
+
+        result.decompose();
+
+        (result, flag)
     }
     fn decompose(&mut self) {
         if self.rotation.is_none() {
@@ -416,3 +438,6 @@ impl GlobalTransform {
         }
     }
 }
+
+#[derive(Default, Resource)]
+pub struct TransformDirtyRoots(pub Vec<Entity>);

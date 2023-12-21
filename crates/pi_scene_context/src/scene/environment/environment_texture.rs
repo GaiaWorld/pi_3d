@@ -68,7 +68,7 @@ pub fn sys_env_texture_load_launch(
         state.texview_count += 1;
         let key = KeyImageTextureView::new(
             KeyImageTexture { url: url.clone(), file: param.1, depth_or_array_layers: 6, ..Default::default() },
-            TextureViewDesc { base_mip_level: 0, array_layer_count: Some(6), aspect: wgpu::TextureAspect::All, ..Default::default() },
+            TextureViewDesc { base_mip_level: 0, array_layer_count: Some(6), ..Default::default() },
         );
         // let ekey = EKeyTexture::Image(key.clone());
         let key_u64 = key.asset_u64();

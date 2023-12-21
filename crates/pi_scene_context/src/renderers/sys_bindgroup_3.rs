@@ -15,7 +15,6 @@ pub fn sys_set3_modify(
     targets: Res<CustomRenderTargets>,
     asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-    mut binds_recorder: ResMut<ResBindsRecorder>,
     mut errors: ResMut<ErrorRecord>,
 ) {
     passes.iter_mut().for_each(|(idmodel, idscene, meta, mut set)| {
@@ -84,13 +83,11 @@ pub fn sys_set3_modify(
                     bind_camera_opaque,
                     bind_camera_depth,
                     bind_env,
-                    &mut binds_recorder
                 );
     
                 let key_bind_group = key.key_bind_group();
                 if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
-                    let binds = key.binds();
-                    let data = BindGroupSetExtend::new(BindGroupUsage::new(binds, bind_group), key);
+                    let data = BindGroupSetExtend::new(BindGroupUsage::new(key_bind_group, bind_group), key);
                     let data = Arc::new(data);
                     // log::error!("create_bind_group 2: Ok");
                     // *set = PassBindGroupLightingShadow(Some(data.clone()));
@@ -107,6 +104,6 @@ pub fn sys_set3_modify(
 }
 
 
-fn bind_lighting(scene_lighting: &SceneLightingInfos, modellighting: &ModelLightingIndexs) -> Option<(Arc<ShaderBindSceneLightInfos>, Arc<BindModelLightIndexs>)> {
-    Some((scene_lighting.0.clone(), modellighting.bind.as_ref().unwrap().clone()))
-}
+// fn bind_lighting(scene_lighting: &SceneLightingInfos, modellighting: &ModelLightingIndexs) -> Option<(Arc<ShaderBindSceneLightInfos>, Arc<BindModelLightIndexs>)> {
+//     Some((scene_lighting.0.clone(), modellighting.bind.as_ref().unwrap().clone()))
+// }

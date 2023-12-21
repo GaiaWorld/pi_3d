@@ -12,7 +12,39 @@ use bevy::{
 
 use crate::prelude::ActionList;
 
-use super::base::*;
+use super::{base::*, float::AnimatorableFloat, vec2::AnimatorableVec2, vec3::AnimatorableVec3, vec4::AnimatorableVec4};
+
+pub struct OpsAnimatorableFloat(pub(crate) Entity, pub(crate) AnimatorableFloat);
+impl OpsAnimatorableFloat {
+    pub fn ops(targe: Entity, defualval: AnimatorableFloat) -> Self {
+        Self(targe, defualval)
+    }
+}
+pub type ActionListAnimatorableFloat = ActionList<OpsAnimatorableFloat>;
+
+pub struct OpsAnimatorableVec2(pub(crate) Entity, pub(crate) AnimatorableVec2);
+impl OpsAnimatorableVec2 {
+    pub fn ops(targe: Entity, defualval: AnimatorableVec2) -> Self {
+        Self(targe, defualval)
+    }
+}
+pub type ActionListAnimatorableVec2 = ActionList<OpsAnimatorableVec2>;
+
+pub struct OpsAnimatorableVec3(pub(crate) Entity, pub(crate) AnimatorableVec3);
+impl OpsAnimatorableVec3 {
+    pub fn ops(targe: Entity, defualval: AnimatorableVec3) -> Self {
+        Self(targe, defualval)
+    }
+}
+pub type ActionListAnimatorableVec3 = ActionList<OpsAnimatorableVec3>;
+
+pub struct OpsAnimatorableVec4(pub(crate) Entity, pub(crate) AnimatorableVec4);
+impl OpsAnimatorableVec4 {
+    pub fn ops(targe: Entity, defualval: AnimatorableVec4) -> Self {
+        Self(targe, defualval)
+    }
+}
+pub type ActionListAnimatorableVec4 = ActionList<OpsAnimatorableVec4>;
 
 #[derive(Clone)]
 pub struct OpsAnimationGroupAttach(pub(crate) Entity, pub(crate) Entity, pub(crate) DefaultKey, pub(crate) u8);

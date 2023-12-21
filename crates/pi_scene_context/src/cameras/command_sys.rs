@@ -20,10 +20,10 @@ pub fn sys_create_camera(
     mut dynallocator: ResMut<ResBindBufferAllocator>,
     mut errors: ResMut<ErrorRecord>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity, toscreen)| {
+    cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity)| {
         if let Some(mut commands) = commands.get_entity(entity) {
 
-            ActionCamera::init(&mut commands, scene, toscreen);
+            ActionCamera::init(&mut commands, scene);
             ActionAnime::as_anime_group_target(&mut commands);
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
@@ -195,14 +195,12 @@ impl ActionCamera {
     pub fn init(
         commands: &mut EntityCommands,
         scene: Entity,
-        toscreen: bool,
     ) {
         ActionTransformNode::init(commands, scene);
-        ActionCamera::as_camera(commands, toscreen);
+        ActionCamera::as_camera(commands);
     }
     pub(crate) fn as_camera(
         commands: &mut EntityCommands,
-        toscreen: bool,
     ) {
         commands.insert(Camera(false))
             .insert(EFreeCameraMode::default())
@@ -221,30 +219,6 @@ impl ActionCamera {
         
         ActionViewer::as_viewer(commands, false);
     }
-    pub fn create(
-        app: &mut App,
-        scene: Entity,
-        toscreen: bool,
-    ) -> Entity {
-        let mut queue = CommandQueue::default();
-        let mut commands = Commands::new(&mut queue, &app.world);
-        let entity = commands.spawn_empty().id();
-
-        queue.apply(&mut app.world);
-
-        let mut cmds = app.world.get_resource_mut::<ActionListCameraCreate>().unwrap();
-        cmds.push(OpsCameraCreation(scene, entity, toscreen));
-
-        entity
-    }
-
-    pub fn active_camera(
-        commands: &mut EntityCommands,
-        value: bool,
-    ) {
-        commands.insert(ViewerActive(value));
-    }
-
 }
 
     pub fn sys_update_target_camera_modify(

@@ -1,8 +1,6 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::viewer::prelude::*;
-
 use super::camera::*;
 
 

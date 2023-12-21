@@ -19,7 +19,6 @@ pub fn sys_set1_modify(
     device: Res<PiRenderDevice>,
     asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-    mut binds_recorder: ResMut<ResBindsRecorder>,
 ) {
     let time1 = pi_time::Instant::now();
 
@@ -65,14 +64,12 @@ pub fn sys_set1_modify(
                         _ => { *set0 = PassBindGroupModel(None); return; }
                     };
 
-                    let key = KeyBindGroupModel::new(bind_matrix, bind_skin.clone(), bind_effect_value, bind_lingingsidx,
-                        &mut binds_recorder
-                    );
+                    let key = KeyBindGroupModel::new(bind_matrix, bind_skin.clone(), bind_effect_value, bind_lingingsidx);
 
                     let key_bind_group = key.key_bind_group();
                     // log::warn!("Set0Loaded : ");
                     if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
-                        let data = BindGroupModel::new(BindGroupUsage::new(key.binds(), bind_group), key);
+                        let data = BindGroupModel::new(BindGroupUsage::new(key_bind_group, bind_group), key);
                         let data = Arc::new(data);
                         // log::error!("create_bind_group 0: Ok");
                         // *set0 = PassBindGroupModel(Some(data.clone()));

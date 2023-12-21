@@ -12,6 +12,39 @@ use crate::prelude::Performance;
 
 use super::base::*;
 use super::command::*;
+use super::float::RecordAnimatorableFloat;
+use super::vec2::RecordAnimatorableVec2;
+use super::vec3::RecordAnimatorableVec3;
+use super::vec4::RecordAnimatorableVec4;
+
+pub fn sys_create_animatorable_entity(
+    mut cmds_float: ResMut<ActionListAnimatorableFloat>,
+    mut cmds_vec2: ResMut<ActionListAnimatorableVec2>,
+    mut cmds_vec3: ResMut<ActionListAnimatorableVec3>,
+    mut cmds_vec4: ResMut<ActionListAnimatorableVec4>,
+    mut commands: Commands,
+) {
+    cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, value)| {
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            cmd.insert(value.clone()).insert(RecordAnimatorableFloat(value.clone()));
+        }
+    });
+    cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, value)| {
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            cmd.insert(value.clone()).insert(RecordAnimatorableVec2(value.clone()));
+        }
+    });
+    cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, value)| {
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            cmd.insert(value.clone()).insert(RecordAnimatorableVec3(value.clone()));
+        }
+    });
+    cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, value)| {
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            cmd.insert(value.clone()).insert(RecordAnimatorableVec4(value.clone()));
+        }
+    });
+}
 
 pub fn sys_anime_group_attach(
     mut cmds: ResMut<ActionListAnimeGroupAttach>,
@@ -170,6 +203,7 @@ pub fn sys_calc_reset_while_animationgroup_start(
     });
 }
 
+/// 动画结束后将目标值 重置 为操作修改的值
 pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecord<D>>(
     mut items: Query<(&mut D, Option<&R>), Changed<FlagAnimationStartResetComp>>,
 ) {
@@ -182,6 +216,7 @@ pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecor
     });
 }
 
+/// 动画计算
 pub fn sys_calc_type_anime<D: TAnimatableComp>(
     type_ctx: Res<TypeAnimeContext<D>>,
     runinfos: Res<GlobalAnimeAbout>,

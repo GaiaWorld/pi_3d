@@ -11,13 +11,28 @@ impl InstanceState {
     pub const INSTANCE_SKIN: u32            = 0b0000_0000_0000_0000_0000_0000_0001_0000;
     pub const INSTANCE_CUSTOM_UVEC4_A: u32  = 0b0000_0000_0000_0000_0000_0000_0010_0000;
     pub const INSTANCE_CUSTOM_IVEC4_B: u32  = 0b0000_0000_0000_0000_0000_0000_0100_0000;
-    pub const INSTANCE_TILL_OFF_2: u32      = 0b0000_0000_0000_0000_0000_0000_1000_0000;
-    pub const INSTANCE_VELOCITY: u32        = 0b0000_0000_0000_0000_0000_0001_0000_0000;
-
+    pub const INSTANCE_VELOCITY: u32        = 0b0000_0000_0000_0000_0000_0000_1000_0000;
+    pub const INSTANCE_VEC4_A: u32          = 0b0000_0000_0000_0000_0000_0001_0000_0000;
+    pub const INSTANCE_VEC4_B: u32          = 0b0000_0000_0000_0000_0000_0010_0000_0000;
+    pub const INSTANCE_VEC4_C: u32          = 0b0000_0000_0000_0000_0000_0100_0000_0000;
+    pub const INSTANCE_VEC4_D: u32          = 0b0000_0000_0000_0000_0000_1000_0000_0000;
+    pub const INSTANCE_VEC4_E: u32          = 0b0000_0000_0000_0000_0001_0000_0000_0000;
+    pub const INSTANCE_VEC4_F: u32          = 0b0000_0000_0000_0000_0010_0000_0000_0000;
+    pub const INSTANCE_VEC4_G: u32          = 0b0000_0000_0000_0000_0100_0000_0000_0000;
+    pub const INSTANCE_VEC4_H: u32          = 0b0000_0000_0000_0000_1000_0000_0000_0000;
+    pub const INSTANCE_VEC3_A: u32          = 0b0000_0000_0000_0001_0000_0000_0000_0000;
+    pub const INSTANCE_VEC3_B: u32          = 0b0000_0000_0000_0010_0000_0000_0000_0000;
+    pub const INSTANCE_VEC3_C: u32          = 0b0000_0000_0000_0100_0000_0000_0000_0000;
+    pub const INSTANCE_VEC3_D: u32          = 0b0000_0000_0000_1000_0000_0000_0000_0000;
+    pub const INSTANCE_VEC3_E: u32          = 0b0000_0000_0001_0000_0000_0000_0000_0000;
+    pub const INSTANCE_VEC3_F: u32          = 0b0000_0000_0010_0000_0000_0000_0000_0000;
+    pub const INSTANCE_VEC3_G: u32          = 0b0000_0000_0100_0000_0000_0000_0000_0000;
+    pub const INSTANCE_VEC3_H: u32          = 0b0000_0000_1000_0000_0000_0000_0000_0000;
     pub const INSTANCE_CUSTOM_VEC4_A: u32   = 0b0000_0001_0000_0000_0000_0000_0000_0000;
     pub const INSTANCE_CUSTOM_VEC4_B: u32   = 0b0000_0010_0000_0000_0000_0000_0000_0000;
     pub const INSTANCE_CUSTOM_VEC4_C: u32   = 0b0000_0100_0000_0000_0000_0000_0000_0000;
     pub const INSTANCE_CUSTOM_VEC4_D: u32   = 0b0000_1000_0000_0000_0000_0000_0000_0000;
+
     pub fn attributes(state: u32) -> Vec<VertexAttribute> {
         let mut result = vec![];
         if (state & Self::INSTANCE_INDEX) == Self::INSTANCE_INDEX {
@@ -41,9 +56,6 @@ impl InstanceState {
         if (state & Self::INSTANCE_CUSTOM_IVEC4_B) == Self::INSTANCE_CUSTOM_IVEC4_B {
             result.push(VertexAttribute { kind: EVertexDataKind::InsCustomIVec4B, format: wgpu::VertexFormat::Sint32x4 });
         }
-        if (state & Self::INSTANCE_TILL_OFF_2) == Self::INSTANCE_TILL_OFF_2 {
-            result.push(VertexAttribute { kind: EVertexDataKind::InsTillOffset2, format: wgpu::VertexFormat::Float32x4 });
-        }
         if (state & Self::INSTANCE_VELOCITY) == Self::INSTANCE_VELOCITY {
             result.push(VertexAttribute { kind: EVertexDataKind::InsVelocity, format: wgpu::VertexFormat::Float32x4 });
         }
@@ -59,13 +71,63 @@ impl InstanceState {
         if (state & Self::INSTANCE_CUSTOM_VEC4_D) == Self::INSTANCE_CUSTOM_VEC4_D {
             result.push(VertexAttribute { kind: EVertexDataKind::InsCustomVec4D, format: wgpu::VertexFormat::Float32x4 });
         }
+        
+        if (state & Self::INSTANCE_VEC4_A) == Self::INSTANCE_VEC4_A {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4A, format: wgpu::VertexFormat::Float32x4 });
+        }
+        if (state & Self::INSTANCE_VEC4_B) == Self::INSTANCE_VEC4_B {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4B, format: wgpu::VertexFormat::Float32x4 });
+        }
+        if (state & Self::INSTANCE_VEC4_C) == Self::INSTANCE_VEC4_C {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4C, format: wgpu::VertexFormat::Float32x4 });
+        }
+        if (state & Self::INSTANCE_VEC4_D) == Self::INSTANCE_VEC4_D {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4D, format: wgpu::VertexFormat::Float32x4 });
+        }
+        if (state & Self::INSTANCE_VEC4_E) == Self::INSTANCE_VEC4_E {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4E, format: wgpu::VertexFormat::Float32x4 });
+        }
+        if (state & Self::INSTANCE_VEC4_F) == Self::INSTANCE_VEC4_F {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4F, format: wgpu::VertexFormat::Float32x4 });
+        }
+        if (state & Self::INSTANCE_VEC4_G) == Self::INSTANCE_VEC4_G {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4G, format: wgpu::VertexFormat::Float32x4 });
+        }
+        if (state & Self::INSTANCE_VEC4_H) == Self::INSTANCE_VEC4_H {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec4H, format: wgpu::VertexFormat::Float32x4 });
+        }
+
+        if (state & Self::INSTANCE_VEC3_A) == Self::INSTANCE_VEC3_A {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3A, format: wgpu::VertexFormat::Float32x3 });
+        }
+        if (state & Self::INSTANCE_VEC3_B) == Self::INSTANCE_VEC3_B {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3B, format: wgpu::VertexFormat::Float32x3 });
+        }
+        if (state & Self::INSTANCE_VEC3_C) == Self::INSTANCE_VEC3_C {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3C, format: wgpu::VertexFormat::Float32x3 });
+        }
+        if (state & Self::INSTANCE_VEC3_D) == Self::INSTANCE_VEC3_D {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3D, format: wgpu::VertexFormat::Float32x3 });
+        }
+        if (state & Self::INSTANCE_VEC3_E) == Self::INSTANCE_VEC3_E {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3E, format: wgpu::VertexFormat::Float32x3 });
+        }
+        if (state & Self::INSTANCE_VEC3_F) == Self::INSTANCE_VEC3_F {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3F, format: wgpu::VertexFormat::Float32x3 });
+        }
+        if (state & Self::INSTANCE_VEC3_G) == Self::INSTANCE_VEC3_G {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3G, format: wgpu::VertexFormat::Float32x3 });
+        }
+        if (state & Self::INSTANCE_VEC3_H) == Self::INSTANCE_VEC3_H {
+            result.push(VertexAttribute { kind: EVertexDataKind::InsVec3H, format: wgpu::VertexFormat::Float32x3 });
+        }
 
         result
     }
     pub fn bytes_per_instance(state: u32) -> u32 {
         let mut result = 0;
         if (state & Self::INSTANCE_INDEX) == Self::INSTANCE_INDEX {
-            result += 4;
+            result += 1 * 4;
         }
         if (state & Self::INSTANCE_BASE) == Self::INSTANCE_BASE {
             result += 4 * 4;
@@ -73,36 +135,33 @@ impl InstanceState {
             result += 4 * 4;
             result += 4 * 4;
         }
-        if (state & Self::INSTANCE_COLOR) == Self::INSTANCE_COLOR {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_TILL_OFF_1) == Self::INSTANCE_TILL_OFF_1 {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_CUSTOM_UVEC4_A) == Self::INSTANCE_CUSTOM_UVEC4_A {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_CUSTOM_IVEC4_B) == Self::INSTANCE_CUSTOM_IVEC4_B {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_TILL_OFF_2) == Self::INSTANCE_TILL_OFF_2 {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_VELOCITY) == Self::INSTANCE_VELOCITY {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_CUSTOM_VEC4_A) == Self::INSTANCE_CUSTOM_VEC4_A {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_CUSTOM_VEC4_B) == Self::INSTANCE_CUSTOM_VEC4_B {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_CUSTOM_VEC4_C) == Self::INSTANCE_CUSTOM_VEC4_C {
-            result += 4 * 4;
-        }
-        if (state & Self::INSTANCE_CUSTOM_VEC4_D) == Self::INSTANCE_CUSTOM_VEC4_D {
-            result += 4 * 4;
-        }
+        if (state & Self::INSTANCE_COLOR) == Self::INSTANCE_COLOR { result += 4 * 4; }
+        if (state & Self::INSTANCE_TILL_OFF_1) == Self::INSTANCE_TILL_OFF_1 { result += 4 * 4; }
+        if (state & Self::INSTANCE_CUSTOM_UVEC4_A) == Self::INSTANCE_CUSTOM_UVEC4_A { result += 4 * 4; }
+        if (state & Self::INSTANCE_CUSTOM_IVEC4_B) == Self::INSTANCE_CUSTOM_IVEC4_B { result += 4 * 4; }
+        if (state & Self::INSTANCE_VELOCITY) == Self::INSTANCE_VELOCITY { result += 4 * 4; }
+        if (state & Self::INSTANCE_CUSTOM_VEC4_A) == Self::INSTANCE_CUSTOM_VEC4_A { result += 4 * 4; }
+        if (state & Self::INSTANCE_CUSTOM_VEC4_B) == Self::INSTANCE_CUSTOM_VEC4_B { result += 4 * 4; }
+        if (state & Self::INSTANCE_CUSTOM_VEC4_C) == Self::INSTANCE_CUSTOM_VEC4_C { result += 4 * 4; }
+        if (state & Self::INSTANCE_CUSTOM_VEC4_D) == Self::INSTANCE_CUSTOM_VEC4_D { result += 4 * 4; }
+
+        if (state & Self::INSTANCE_VEC4_A) == Self::INSTANCE_VEC4_A { result += 4 * 4; }
+        if (state & Self::INSTANCE_VEC4_B) == Self::INSTANCE_VEC4_B { result += 4 * 4; }
+        if (state & Self::INSTANCE_VEC4_C) == Self::INSTANCE_VEC4_C { result += 4 * 4; }
+        if (state & Self::INSTANCE_VEC4_D) == Self::INSTANCE_VEC4_D { result += 4 * 4; }
+        if (state & Self::INSTANCE_VEC4_E) == Self::INSTANCE_VEC4_E { result += 4 * 4; }
+        if (state & Self::INSTANCE_VEC4_F) == Self::INSTANCE_VEC4_F { result += 4 * 4; }
+        if (state & Self::INSTANCE_VEC4_G) == Self::INSTANCE_VEC4_G { result += 4 * 4; }
+        if (state & Self::INSTANCE_VEC4_H) == Self::INSTANCE_VEC4_H { result += 4 * 4; }
+
+        if (state & Self::INSTANCE_VEC3_A) == Self::INSTANCE_VEC3_A { result += 3 * 4; }
+        if (state & Self::INSTANCE_VEC3_B) == Self::INSTANCE_VEC3_B { result += 3 * 4; }
+        if (state & Self::INSTANCE_VEC3_C) == Self::INSTANCE_VEC3_C { result += 3 * 4; }
+        if (state & Self::INSTANCE_VEC3_D) == Self::INSTANCE_VEC3_D { result += 3 * 4; }
+        if (state & Self::INSTANCE_VEC3_E) == Self::INSTANCE_VEC3_E { result += 3 * 4; }
+        if (state & Self::INSTANCE_VEC3_F) == Self::INSTANCE_VEC3_F { result += 3 * 4; }
+        if (state & Self::INSTANCE_VEC3_G) == Self::INSTANCE_VEC3_G { result += 3 * 4; }
+        if (state & Self::INSTANCE_VEC3_H) == Self::INSTANCE_VEC3_H { result += 3 * 4; }
 
         result
     }
@@ -125,16 +184,31 @@ impl EVerticeExtendCode {
     pub const INSTANCE_SKIN: u32            = InstanceState::INSTANCE_SKIN;
     pub const INSTANCE_CUSTOM_UVEC4_A: u32  = InstanceState::INSTANCE_CUSTOM_UVEC4_A;
     pub const INSTANCE_CUSTOM_IVEC4_B: u32  = InstanceState::INSTANCE_CUSTOM_IVEC4_B;
-    pub const INSTANCE_TILL_OFF_2: u32      = InstanceState::INSTANCE_TILL_OFF_2;
     pub const INSTANCE_CUSTOM_VEC4_A: u32   = InstanceState::INSTANCE_CUSTOM_VEC4_A;
     pub const INSTANCE_CUSTOM_VEC4_B: u32   = InstanceState::INSTANCE_CUSTOM_VEC4_B;
     pub const INSTANCE_CUSTOM_VEC4_C: u32   = InstanceState::INSTANCE_CUSTOM_VEC4_C;
     pub const INSTANCE_CUSTOM_VEC4_D: u32   = InstanceState::INSTANCE_CUSTOM_VEC4_D;
+    pub const INSTANCE_VEC4_A: u32          = InstanceState::INSTANCE_VEC4_A;
+    pub const INSTANCE_VEC4_B: u32          = InstanceState::INSTANCE_VEC4_B;
+    pub const INSTANCE_VEC4_C: u32          = InstanceState::INSTANCE_VEC4_C;
+    pub const INSTANCE_VEC4_D: u32          = InstanceState::INSTANCE_VEC4_D;
+    pub const INSTANCE_VEC4_E: u32          = InstanceState::INSTANCE_VEC4_E;
+    pub const INSTANCE_VEC4_F: u32          = InstanceState::INSTANCE_VEC4_F;
+    pub const INSTANCE_VEC4_G: u32          = InstanceState::INSTANCE_VEC4_G;
+    pub const INSTANCE_VEC4_H: u32          = InstanceState::INSTANCE_VEC4_H;
+    pub const INSTANCE_VEC3_A: u32          = InstanceState::INSTANCE_VEC3_A;
+    pub const INSTANCE_VEC3_B: u32          = InstanceState::INSTANCE_VEC3_B;
+    pub const INSTANCE_VEC3_C: u32          = InstanceState::INSTANCE_VEC3_C;
+    pub const INSTANCE_VEC3_D: u32          = InstanceState::INSTANCE_VEC3_D;
+    pub const INSTANCE_VEC3_E: u32          = InstanceState::INSTANCE_VEC3_E;
+    pub const INSTANCE_VEC3_F: u32          = InstanceState::INSTANCE_VEC3_F;
+    pub const INSTANCE_VEC3_G: u32          = InstanceState::INSTANCE_VEC3_G;
+    pub const INSTANCE_VEC3_H: u32          = InstanceState::INSTANCE_VEC3_H;
 
     pub const TRIAL: u32                    = 0b0001_0000_0000_0000_0000_0000_0000_0000;
     pub const TRIAL_BILLBOARD: u32          = 0b0010_0000_0000_0000_0000_0000_0000_0000;
-    pub const TRAIL_LINE_X: u32             = 0b0100_0000_0000_0000_0000_0000_0000_0000;
-    pub const TRAIL_LINE_Z: u32             = 0b1000_0000_0000_0000_0000_0000_0000_0000;
+    // pub const TRAIL_LINE_X: u32             = 0b0100_0000_0000_0000_0000_0000_0000_0000;
+    // pub const TRAIL_LINE_Z: u32             = 0b1000_0000_0000_0000_0000_0000_0000_0000;
     pub fn vs_running_code(&self) -> String {
         let mut result = String::from("");
 
@@ -166,12 +240,12 @@ impl EVerticeExtendCode {
         if (self.0 & Self::TRIAL_BILLBOARD) == Self::TRIAL_BILLBOARD {
             result += Self::trail_billboard().as_str();
         }
-        if (self.0 & Self::TRAIL_LINE_X) == Self::TRAIL_LINE_X {
-            result += Self::trail_line_x().as_str();
-        }
-        if (self.0 & Self::TRAIL_LINE_Z) == Self::TRAIL_LINE_Z {
-            result += Self::trail_line_z().as_str();
-        }
+        // if (self.0 & Self::TRAIL_LINE_X) == Self::TRAIL_LINE_X {
+        //     result += Self::trail_line_x().as_str();
+        // }
+        // if (self.0 & Self::TRAIL_LINE_Z) == Self::TRAIL_LINE_Z {
+        //     result += Self::trail_line_z().as_str();
+        // }
     
         result
     }
@@ -262,7 +336,7 @@ impl EVerticeExtendCode {
     A_NORMAL = yaxis;
         ")
     }
-    fn trail_line_x() -> String {
+    fn _trail_line_x() -> String {
         String::from("
     A_UV = vec2(TRAIL_INFO.y, step(0., TRAIL_INFO.x));
 
@@ -273,7 +347,7 @@ impl EVerticeExtendCode {
     A_NORMAL = normalize(cross(zaxis, xaxis));
         ")
     }
-    fn trail_line_z() -> String {
+    fn _trail_line_z() -> String {
         String::from("
     A_UV = vec2(TRAIL_INFO.y, step(0., TRAIL_INFO.x));
 

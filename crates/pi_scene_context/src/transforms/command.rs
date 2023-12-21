@@ -64,6 +64,8 @@ pub type ActionListTransformNodeLocalScaling = ActionList<OpsTransformNodeLocalS
 
 pub struct BundleTransformNode(
     Enable,
+    TransformNodeDirty,
+    CullingFlag,
     GlobalEnable,
     LocalPosition,
     LocalScaling,
@@ -75,9 +77,7 @@ pub struct BundleTransformNode(
     RecordLocalEulerAngles,
     LocalRotation,
     LocalMatrix,
-    WorldMatrix,
     GlobalTransform,
-    CullingFlag,
 );
 
 #[derive(Default, Resource)]

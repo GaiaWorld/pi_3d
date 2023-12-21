@@ -4,8 +4,6 @@ use pi_render::{renderer::{attributes::EVertexDataKind, vertex_buffer::{EVertexB
 use pi_scene_math::{Matrix, Matrix2, Vector4, Vector2, Number};
 use pi_share::Share;
 
-use crate::transforms::transform_node::WorldMatrix;
-
 pub trait TInstanceFlag {
     fn dirty(&self) -> bool;
     fn reset(&mut self);
@@ -23,40 +21,6 @@ pub fn instance_datas<T: TInstanceData>(
     list: &[T],
 ) {
     
-}
-
-impl TInstanceData for WorldMatrix {
-    fn vertex_kind(&self) -> EVertexDataKind {
-        EVertexDataKind::InsWorldRow1
-    }
-
-    // fn size() -> usize {
-    //     16
-    // }
-
-    // fn bytes_size() -> usize {
-    //     16 * 4
-    // }
-
-    // fn local_offset(&self) -> usize {
-    //     0
-    // }
-
-    fn collect(list: &Vec<&Self>, key: KeyVertexBuffer, device: &RenderDevice, queue: &RenderQueue, allocator: &mut VertexBufferAllocator, asset_mgr: &Share<AssetMgr<EVertexBufferRange>>) -> Option<Handle<EVertexBufferRange>> {
-        let mut result = vec![];
-
-        list.iter().for_each(|v| {
-            v.0.as_slice().iter().for_each(|v| {
-                result.push(*v);
-            })
-        });
-
-        if let Some(buffer) = allocator.create_not_updatable_buffer(device, queue, bytemuck::cast_slice(&result)) {
-            asset_mgr.insert(key, buffer)
-        } else {
-            None
-        }
-    }
 }
 
 pub enum InstanceValue {

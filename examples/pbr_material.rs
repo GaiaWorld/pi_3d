@@ -13,8 +13,8 @@ impl ShaderPBR {
         nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uMetallic"), 0.2));
         nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uRoughness"), 0.8));
         nodemat.effect_varying_while_instance = String::from("
-    vMetallic   = A_INS_Vec4A.x;
-    vRoughness  = A_INS_Vec4A.y;
+    vMetallic   = A_INS_F_Vec4A.x;
+    vRoughness  = A_INS_F_Vec4A.y;
         ");
         nodemat.check_instance = EVerticeExtendCode(EVerticeExtendCode::INSTANCE_CUSTOM_VEC4_A);
         nodemat.fs_define = String::from("

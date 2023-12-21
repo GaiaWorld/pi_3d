@@ -233,7 +233,7 @@ fn sys_demo_particle(
         &SceneID,
         &GeometryID,
         &mut Particle,
-        &WorldMatrix,
+        &GlobalTransform,
         &LocalMatrix,
     )>,
     scenes: Query<(&SceneTime, &SceneMainCameraID)>,
@@ -272,8 +272,8 @@ fn sys_demo_particle(
             )) = geometrys.get_mut(idgeo.0)
             {
                 println!("============= 1111111111111");
-                particle.as_mut().0.compute_call(world_matrix.0, local_matrix.0);
-                particle.as_mut().0.update_call(world_matrix.0, local_matrix.0, camerapos, camera_rotation_matrix);
+                particle.as_mut().0.compute_call(world_matrix.matrix, local_matrix.0);
+                particle.as_mut().0.update_call(world_matrix.matrix, local_matrix.0, camerapos, camera_rotation_matrix);
 
                 let buffercolor = particle.0.ps_tool.get_mp_color_data().unwrap();
                 let bufferuv = particle.0.ps_tool.get_mp_uvdata().unwrap();

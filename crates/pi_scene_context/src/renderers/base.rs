@@ -122,7 +122,7 @@ pub fn create_bind_group(
     if let Some(bind_group) = asset_mgr_bindgroup.get(&key_u64) {
         Some(bind_group)
     } else {
-        let key_bind_group_layout = key_bind_group;
+        let key_bind_group_layout = key_bind_group.key_bind_group_layout();
         let key_layout_u64 = key_bind_group_layout.asset_u64();
         let bind_group_layout = if let Some(layout) = asset_mgr_bindgroup_layout.get(&key_layout_u64) {
             Ok(layout)

@@ -1,7 +1,7 @@
 use bevy::ecs::system::Resource;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator};
-use pi_render::{components::view::target_alloc::{TextureDescriptor, ShareTargetView, TargetDescriptor}, renderer::sampler::{BindDataSampler, KeySampler, SamplerRes}, rhi::device::RenderDevice};
+use pi_render::{components::view::target_alloc::{TextureDescriptor, ShareTargetView, TargetDescriptor}, renderer::{sampler::{BindDataSampler, KeySampler, SamplerRes}}, rhi::device::RenderDevice};
 use pi_scene_math::Number;
 use pi_slotmap::{SlotMap, DefaultKey};
 use smallvec::SmallVec;

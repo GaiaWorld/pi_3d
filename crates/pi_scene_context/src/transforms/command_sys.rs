@@ -35,7 +35,7 @@ pub fn sys_act_transform_parent(
     mut tree: EntityTreeMut,
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val)| {
-        if let (Some(down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
+        if let (Some(_down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
             // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
             // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
             if let (Ok(state0), Ok(state1)) = (nodes.get(entity), nodes.get(val)) {
@@ -172,6 +172,7 @@ impl ActionTransformNode {
         commands: &mut EntityCommands,
     ) {
         commands
+            .insert(TransformNodeDirty)
             .insert(LocalPosition::default())
             .insert(LocalScaling::default())
             .insert(LocalRotationQuaternion::default())
@@ -182,8 +183,6 @@ impl ActionTransformNode {
             .insert(RecordLocalEulerAngles::default())
             .insert(LocalRotation(Rotation3::identity()))
             .insert(LocalMatrix::new(Matrix::identity()))
-            .insert(WorldMatrix::new(Matrix::identity()))
-            .insert(WorldMatrixInv::new(Matrix::identity()))
             .insert(GlobalTransform::default())
             .insert(FlagAnimationStartResetComp)
             .insert(CullingFlag(true))

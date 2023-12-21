@@ -79,12 +79,12 @@ pub fn sys_emission(
 
 pub fn sys_emitmatrix(
     calculators: Query<&ParticleCalculatorBase>,
-    mut particle_sys: Query<(&LocalScaling, &WorldMatrix, &WorldMatrixInv, &mut GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&LocalScaling, &GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
     let global_position = Vector3::zeros();
-    particle_sys.iter_mut().for_each(|(local_scaling, world_matrix, world_matrix_inv, mut transform, ids, time, mut emitmatrix)| {
+    particle_sys.iter_mut().for_each(|(local_scaling, transform, ids, time, mut emitmatrix)| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(base) = calculators.get(ids.calculator.0) {
@@ -99,7 +99,7 @@ pub fn sys_emitmatrix(
 
             emitmatrix.emit(
                 newids, activeids, &base.simulation_space, &base.scaling_space,
-                &world_matrix.0, &world_matrix_inv.0, iso, &global_position, &global_rotation, &global_scaling,
+                &transform.matrix, &transform.matrix_inv, iso, &global_position, &global_rotation, &global_scaling,
                 &local_scaling.0
             );
         }

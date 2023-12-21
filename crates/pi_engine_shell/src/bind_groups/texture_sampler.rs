@@ -1,6 +1,6 @@
 
 
-use std::{hash::Hash, sync::Arc};
+use std::hash::Hash;
 
 use pi_assets::asset::Handle;
 
@@ -8,7 +8,6 @@ use pi_render::{
     renderer::{
         bind_group::*,
         shader::TShaderSetBlock,
-        bind::KeyBindLayoutBindingType,
         texture::{ETextureViewUsage, BindDataTexture2D},
         sampler::BindDataSampler,
     },
@@ -29,80 +28,58 @@ pub struct EffectTextureSamplers {
 #[derive(Debug, Clone)]
 pub struct KeyBindGroupTextureSamplers {
     pub meta: Handle<ShaderEffectMeta>,
-    key_binds: Option<Arc<IDBinds>>,
+    key_bindgroup: KeyBindGroup,
     count: usize,
 }
 impl KeyBindGroupTextureSamplers {
     pub fn new(
         effect_texture_samplers: EffectTextureSamplers,
         meta: Handle<ShaderEffectMeta>,
-        recorder: &mut BindsRecorder,
-    ) -> Self {
-        let mut count = effect_texture_samplers.textures.len();
-        let idbinds = if let Some(mut binds) = EBinds::new(count as u32 * 2) {
-            let mut error = false;
-            let mut binding = 0;
-            for idx in 0..count {
-                if error == false {
-                    let tex = &effect_texture_samplers.textures[idx];
-                    if let Some(layout) = texture_key_bind(BindDataTexture2D(tex.clone()), idx, &meta, binding as KeyBindLayoutBindingType) {
-                        binds.set(binding, Some(layout)); binding += 1;
-                    } else { error = true; }
-                }
-            }
-            
-            for idx in 0..count {
-                if error == false {
-                    let val = &effect_texture_samplers.samplers[idx];
-                    if let Some(layout) = sampler_key_bind(val.clone(), idx, &meta, binding as KeyBindLayoutBindingType) {
-                        binds.set(binding, Some(layout)); binding += 1;
-                    } else { error = true; }
-                }
-            }
-
+    ) -> Option<Self> {
+        let mut key_bindgroup = KeyBindGroup::default();
+        let count = effect_texture_samplers.textures.len();
+        
+        let mut error = false;
+        for idx in 0..count {
             if error == false {
-                Some(binds.record(recorder))
-            } else {
-                count = 0;
-                None
+                let tex = &effect_texture_samplers.textures[idx];
+                if let Some(key) = texture_key_bind(BindDataTexture2D(tex.clone()), idx, &meta) {
+                    key_bindgroup.0.push(key);
+                } else { error = true; }
             }
-        } else {
-            None
-        };
+        }
+        
+        for idx in 0..count {
+            if error == false {
+                let val = &effect_texture_samplers.samplers[idx];
+                if let Some(key) = sampler_key_bind(val.clone(), idx, &meta) {
+                    key_bindgroup.0.push(key);
+                } else { error = true; }
+            }
+        }
 
-        Self { meta, key_binds: idbinds, count }
-    }
-    pub fn key_bind_group(&self) -> Option<KeyBindGroup> {
-        if let Some(binds) = &self.key_binds {
-            Some(
-                KeyBindGroup(binds.binds())
-            )
+        if error == false && count > 0 {
+            Some(Self { meta, key_bindgroup, count })
         } else {
             None
         }
     }
-    pub fn key_bind_group_layout(&self) -> Option<KeyBindGroupLayout> {
-        if let Some(binds) = &self.key_binds {
-            Some(
-                KeyBindGroup(binds.binds())
-            )
-        } else {
-            None
-        }
+    pub fn key_bind_group(&self) -> KeyBindGroup {
+        self.key_bindgroup.clone()
     }
-    pub fn binds(&self) -> Option<Arc<IDBinds>> {
-        self.key_binds.clone()
+    pub fn key_bind_group_layout(&self) -> KeyBindGroupLayout {
+        self.key_bindgroup.key_bind_group_layout()
     }
 }
 impl Hash for KeyBindGroupTextureSamplers {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.key_binds.hash(state);
+        self.key_bindgroup.hash(state);
         self.meta.key().hash(state);
     }
 }
 impl PartialEq for KeyBindGroupTextureSamplers {
     fn eq(&self, other: &Self) -> bool {
-        self.key_binds == other.key_binds && self.meta.key() == other.meta.key()
+        self.key_bindgroup == other.key_bindgroup && self.meta.key() == other.meta.key()
     }
 }
 impl Eq for KeyBindGroupTextureSamplers {

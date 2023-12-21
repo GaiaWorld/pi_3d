@@ -8,177 +8,133 @@ use pi_render::{
     },
     asset::TAssetKeyU64
 };
-use crate::{binds::*, shader::*, prelude::{BindModelLightIndexs, BindUseModelLightIndexs} };
+use crate::{binds::*, shader::*, prelude::{BindModelLightIndexs} };
 
 #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct KeyShaderSetModel {
     pub skin: ESkinCode,
-    pub camera_opaque: Option<u64>,
-    pub camera_depth: Option<u64>,
-    pub shadow: Option<u64>,
-    pub lighting: Option<u64>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct KeyBindGroupModel {
-    pub matrix: Option<BindUseModelMatrix>,
-    pub skin: Option<BindUseSkinValue>,
-    pub effect_value: Option<BindUseEffectValue>,
-    pub lightingidxs: Option<BindUseModelLightIndexs>,
-    // pub lighting: Option<(BindUseSceneLightInfos, BindUseModelLightIndexs)>,
-    // pub shadowmap: Option<(BindUseShadowTexture, BindUseShadowSampler)>,
-    // pub camera_opaque: Option<(BindUseCameraOpaqueTexture, BindUseCameraOpaqueSampler)>,
-    // pub camera_depth: Option<(BindUseCameraDepthTexture, BindUseCameraDepthSampler)>,
+    pub matrix: Option<Arc<ShaderBindModelAboutMatrix>>,
+    pub skin: Option<Arc<ShaderBindModelAboutSkinValue>>,
+    pub effect_value: Option<Arc<ShaderBindEffectValue>>,
+    pub lightingidxs: Option<Arc<BindModelLightIndexs>>,
     pub key: KeyShaderSetModel,
     bind_count: u32,
-    key_binds: Arc<IDBinds>,
+    key_bindgroup: KeyBindGroup,
 }
 impl KeyBindGroupModel {
     pub fn new(
-        bind_matrix: Option<Arc<ShaderBindModelAboutMatrix>>,
-        bind_skin: Option<Arc<ShaderBindModelAboutSkinValue>>,
-        bind_effect_value: Option<Arc<ShaderBindEffectValue>>,
-        bind_lingingsidx: Option<Arc<BindModelLightIndexs>>,
-        // bind_lighting: Option<(Arc<ShaderBindSceneLightInfos>, Arc<BindModelLightIndexs>)>,
-        // bind_shadow: Option<(Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
-        // bind_camera_opaque: Option<(Arc<ShaderBindCameraOpaqueTexture>, Arc<ShaderBindCameraOpaqueSampler>)>,
-        // bind_camera_depth: Option<(Arc<ShaderBindCameraDepthTexture>, Arc<ShaderBindCameraDepthSampler>)>,
-        recorder: &mut BindsRecorder
+        matrix: Option<Arc<ShaderBindModelAboutMatrix>>,
+        skin: Option<Arc<ShaderBindModelAboutSkinValue>>,
+        effect_value: Option<Arc<ShaderBindEffectValue>>,
+        lightingidxs: Option<Arc<BindModelLightIndexs>>,
     ) -> Self {
         let mut key = KeyShaderSetModel::default();
-        
-        let mut matrix: Option<BindUseModelMatrix> = None;
-        let mut skin: Option<BindUseSkinValue> = None;
-        let mut effect_value: Option<BindUseEffectValue> = None;
-        let mut lightingidxs: Option<BindUseModelLightIndexs> = None;
-        // let mut lighting: Option<(BindUseSceneLightInfos, BindUseModelLightIndexs)> = None;
-        // let mut shadowmap: Option<(BindUseShadowTexture, BindUseShadowSampler)> = None;
-        // let mut camera_opaque: Option<(BindUseCameraOpaqueTexture, BindUseCameraOpaqueSampler)> = None;
-        // let mut camera_depth: Option<(BindUseCameraDepthTexture, BindUseCameraDepthSampler)> = None;
+        let mut key_bindgroup = KeyBindGroup::default();
 
         let mut binding = 0;
 
-        if let Some(bind) = bind_matrix {
-            matrix = Some(BindUseModelMatrix { data: bind, bind: binding as u32 });
-            binding += 1;
+        if let Some(bind) = &matrix {
+            if let Some(key) = bind.key_bind() {
+                key_bindgroup.0.push(key);
+                binding += 1;
+            }
         }
 
-        if let Some(bind) = bind_skin {
+        if let Some(bind) = &skin {
             key.skin = bind.skin;
-            skin = Some(BindUseSkinValue { data: bind, bind: binding as u32 });
-            binding += 1;
+            if let Some(key) = bind.key_bind() {
+                key_bindgroup.0.push(key);
+                binding += 1;
+            }
         }
 
-        if let Some(bind) = bind_effect_value {
-            effect_value = Some(BindUseEffectValue { data: bind, bind: binding as u32 });
-            binding += 1;
+        if let Some(bind) = &effect_value {
+            if let Some(key) = bind.key_bind() {
+                key_bindgroup.0.push(key);
+                binding += 1;
+            }
         }
 
-        if let Some(bind) = bind_lingingsidx {
-            lightingidxs = Some(BindUseModelLightIndexs { data: bind, bind: binding as u32 });
-            binding += 1;
+        if let Some(bind) = &lightingidxs {
+            if let Some(key) = bind.key_bind() {
+                key_bindgroup.0.push(key);
+                binding += 1;
+            }
         }
 
-        // if let Some((v1, v2)) = bind_lighting {
-        //     lighting = Some((
-        //         BindUseSceneLightInfos { data: v1, bind: binding as u32 },
-        //         BindUseModelLightIndexs { data: v2, bind: (binding + 1) as u32 },
-        //     ));
-        //     binding += 2;
-        // }
-
-        // if let Some((v1, v2)) = bind_shadow {
-        //     shadowmap = Some((
-        //         BindUseShadowTexture { data: v1, bind: binding as u32 },
-        //         BindUseShadowSampler { data: v2, bind: (binding + 1) as u32 },
-        //     ));
-        //     binding += 2;
-        // }
-
-        // if let Some((v1, v2)) = bind_camera_opaque {
-        //     camera_opaque = Some((
-        //         BindUseCameraOpaqueTexture { data: v1, bind: binding as u32 },
-        //         BindUseCameraOpaqueSampler { data: v2, bind: (binding + 1) as u32 },
-        //     ));
-        //     binding += 2;
-        // }
-
-        // if let Some((v1, v2)) = bind_camera_depth {
-        //     camera_depth = Some((
-        //         BindUseCameraDepthTexture { data: v1, bind: binding as u32 },
-        //         BindUseCameraDepthSampler { data: v2, bind: (binding + 1) as u32 },
-        //     ));
-        //     binding += 2;
-        // }
-
-        let mut result = Self {
+        let result = Self {
             matrix,
             skin,
             effect_value,
             lightingidxs,
-            // lighting,
-            // shadowmap,
-            // camera_opaque,
-            // camera_depth,
             key,
             bind_count: binding,
-            key_binds: Arc::new(IDBinds::Binds00(vec![]))
+            key_bindgroup
         };
-        result.key_binds = result._binds(recorder);
 
         result
     }
-    
-    fn _binds(&self, recorder: &mut BindsRecorder) -> Arc<IDBinds> {
-        // log::warn!("Model Binds {:?} {:?}", self.key_binds, self.bind_count);
-        if let Some(mut binds) = EBinds::new(self.bind_count) {
-
-            if let Some(bind) = &self.matrix {
-                binds.set(bind.bind as usize, bind.key_bind());
-            }
-
-            if let Some(bind) = &self.skin {
-                binds.set(bind.bind as usize, bind.key_bind());
-            }
-            
-            if let Some(bind) = &self.effect_value {
-                binds.set(bind.bind as usize, bind.key_bind());
-            }
-
-            if let Some(bind) = &self.lightingidxs {
-                binds.set(bind.bind as usize, bind.key_bind());
-            }
-            
-            // if let Some((bind1, bind2)) = &self.lighting {
-            //     binds.set(bind1.bind as usize, bind1.key_bind());
-            //     binds.set(bind2.bind as usize, bind2.key_bind());
-            // }
-            // if let Some((bind1, bind2)) = &self.shadowmap {
-            //     binds.set(bind1.bind as usize, bind1.key_bind());
-            //     binds.set(bind2.bind as usize, bind2.key_bind());
-            // }
-            // if let Some((bind1, bind2)) = &self.camera_opaque {
-            //     binds.set(bind1.bind as usize, bind1.key_bind());
-            //     binds.set(bind2.bind as usize, bind2.key_bind());
-            // }
-            // if let Some((bind1, bind2)) = &self.camera_depth {
-            //     binds.set(bind1.bind as usize, bind1.key_bind());
-            //     binds.set(bind2.bind as usize, bind2.key_bind());
-            // }
-
-            binds.record(recorder)
-        } else {
-            Arc::new(IDBinds::Binds00(vec![]))
-        }
-    }
     pub fn key_bind_group(&self) -> KeyBindGroup {
-        KeyBindGroup(self.key_binds.binds())
+        self.key_bindgroup.clone()
     }
     pub fn key_bind_group_layout(&self) -> KeyBindGroupLayout {
-        KeyBindGroup(self.key_binds.binds())
+        self.key_bindgroup.key_bind_group_layout()
     }
-    pub fn binds(&self) -> Arc<IDBinds> {
-        self.key_binds.clone()
+}
+impl TShaderSetBlock for KeyBindGroupModel {
+    fn vs_define_code(&self, set: u32) -> String {
+
+        let mut result = String::from("");
+        let mut bind = 0;
+        if let Some(item) = &self.matrix {
+            result += item.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+
+        if let Some(item) = &self.skin {
+            result += item.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+
+        if let Some(item) = &self.effect_value {
+            result += item.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+
+        if let Some(item) = &self.lightingidxs {
+            result += item.vs_define_code(set, bind).as_str();
+            // bind += 1;
+        }
+
+        result
+    }
+
+    fn fs_define_code(&self, set: u32) -> String {
+        let mut result = String::from("");
+        let mut bind = 0;
+
+        if let Some(item) = &self.matrix {
+            result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.skin {
+            result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.effect_value {
+            result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.lightingidxs {
+            result += item.fs_define_code(set, bind).as_str();
+            // bind += 1;
+        }
+
+        result
     }
 }
 impl TAssetKeyU64 for KeyBindGroupModel {}
@@ -211,60 +167,11 @@ impl BindGroupModel {
     }
 }
 impl TShaderSetBlock for BindGroupModel {
-    fn vs_define_code(&self, set: u32) -> String {
-
-        let mut result = String::from("");
-
-        if let Some(bind) = &self.key.matrix {
-            result += bind.vs_define_code(set).as_str();
-        }
-
-        if let Some(bind) = &self.key.skin {
-            result += bind.vs_define_code(set).as_str();
-        }
-
-        if let Some(bind) = &self.key.effect_value {
-            result += bind.vs_define_code(set).as_str();
-        }
-
-        if let Some(bind) = &self.key.lightingidxs {
-            result += bind.vs_define_code(set).as_str();
-        }
-
-        result
-    }
-
     fn fs_define_code(&self, set: u32) -> String {
-
-        let mut result = String::from("");
-
-        if let Some(bind) = &self.key.matrix {
-            result += bind.fs_define_code(set).as_str();
-        }
-        if let Some(bind) = &self.key.skin {
-            result += bind.fs_define_code(set).as_str();
-        }
-        if let Some(bind) = &self.key.effect_value {
-            result += bind.fs_define_code(set).as_str();
-        }
-        if let Some(bind) = &self.key.lightingidxs {
-            result += bind.fs_define_code(set).as_str();
-        }
-
-        result
+        self.key.fs_define_code(set)
     }
 
-    // fn vs_running_code(&self) -> String {
-    //     let mut result = String::from("");
-
-    //     if let Some(skin) = &self.key.skin {
-    //         result += skin.vs_running_code(set).as_str();
-    //     }
-
-    //     result
-    // }
-
-    // fn fs_running_code(&self) -> String {
-    //     String::from("")
-    // }
+    fn vs_define_code(&self, set: u32) -> String {
+        self.key.vs_define_code(set)
+    }
 }

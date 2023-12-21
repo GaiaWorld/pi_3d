@@ -71,17 +71,17 @@ impl Ord for TmpInstanceSort {
         instancematrixs: Query<&RenderWorldMatrix>,
         instancecolors: Query<&InstanceColor>,
         instancetilloffs: Query<&InstanceTillOff>,
-        instancevec4_a: Query<&InstanceVec4A>,
-        instancevec4_b: Query<&InstanceVec4B>,
-        instancevec4_c: Query<&InstanceVec4C>,
-        instancevec4_d: Query<&InstanceVec4D>,
+        instancevec4_a: Query<&InstanceCustomVec4A>,
+        instancevec4_b: Query<&InstanceCustomVec4B>,
+        instancevec4_c: Query<&InstanceCustomVec4C>,
+        instancevec4_d: Query<&InstanceCustomVec4D>,
         mut sources: Query<
             (
                 Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable, &mut InstancedMeshTransparentSortCollection
             ),
             Or<(
                 Changed<InstanceColorDirty>, Changed<InstanceTillOffDirty>, Changed<InstanceWorldMatrixDirty>, Changed<InstanceSourceRefs>, Changed<MeshInstanceState>
-                , Changed<InstanceVec4ADirty>, Changed<InstanceVec4BDirty>, Changed<InstanceVec4CDirty>, Changed<InstanceVec4DDirty>
+                , Changed<InstanceCustomVec4ADirty>, Changed<InstanceCustomVec4BDirty>, Changed<InstanceCustomVec4CDirty>, Changed<InstanceCustomVec4DDirty>
             )>
         >,
         dispoeds: Query<&DisposeReady>,
@@ -224,10 +224,10 @@ impl Ord for TmpInstanceSort {
         instancematrixs: Query<&RenderWorldMatrix>,
         instancecolors: Query<&InstanceColor>,
         instancetilloffs: Query<&InstanceTillOff>,
-        instancevec4_a: Query<&InstanceVec4A>,
-        instancevec4_b: Query<&InstanceVec4B>,
-        instancevec4_c: Query<&InstanceVec4C>,
-        instancevec4_d: Query<&InstanceVec4D>,
+        instancevec4_a: Query<&InstanceCustomVec4A>,
+        instancevec4_b: Query<&InstanceCustomVec4B>,
+        instancevec4_c: Query<&InstanceCustomVec4C>,
+        instancevec4_d: Query<&InstanceCustomVec4D>,
         mut sources: Query<
             (
                 Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable, &mut InstancedMeshTransparentSortCollection

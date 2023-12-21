@@ -19,88 +19,77 @@ pub struct KeyShaderSetExtend {
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct KeyBindGroupSetExtend {
-    pub lighting: Option<BindUseSceneLightInfos>,
-    pub shadowmap: Option<(BindUseShadowData, BindUseShadowTexture, BindUseShadowSampler)>,
-    pub bind_brdf: Option<(BindUseBRDFTexture, BindUseBRDFSampler)>,
-    pub camera_opaque: Option<(BindUseMainCameraOpaqueTexture, BindUseMainCameraOpaqueSampler)>,
-    pub camera_depth: Option<(BindUseMainCameraDepthTexture, BindUseMainCameraDepthSampler)>,
-    pub env: Option<(BindUseEnvIrradiance, BindUseEnvTexture, BindUseEnvSampler)>,
+    pub lighting: Option<Arc<ShaderBindSceneLightInfos>>,
+    pub shadowmap: Option<(Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
+    pub bind_brdf: Option<(Arc<ShaderBindBRDFTexture>, Arc<ShaderBindBRDFSampler>)>,
+    pub camera_opaque: Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)>,
+    pub camera_depth: Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)>,
+    pub env: Option<(Arc<BindEnvIrradiance>, Arc<ShaderBindEnvTexture>, Arc<ShaderBindEnvSampler>)>,
     pub isactived: bool,
     bind_count: u32,
-    key_binds: Arc<IDBinds>,
+    pub key_bindgroup: KeyBindGroup,
     pub key: KeyShaderSetExtend,
 }
 impl KeyBindGroupSetExtend {
     pub fn new(
-        bind_lighting: Option<Arc<ShaderBindSceneLightInfos>>,
-        bind_shadow: Option<(Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
-        brdf: Option<(Arc<ShaderBindBRDFTexture>, Arc<ShaderBindBRDFSampler>)>,
-        bind_camera_opaque: Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)>,
-        bind_camera_depth: Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)>,
-        bind_env: Option<(Arc<BindEnvIrradiance>, Arc<ShaderBindEnvTexture>, Arc<ShaderBindEnvSampler>)>,
-        recorder: &mut BindsRecorder,
+        lighting: Option<Arc<ShaderBindSceneLightInfos>>,
+        shadowmap: Option<(Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
+        bind_brdf: Option<(Arc<ShaderBindBRDFTexture>, Arc<ShaderBindBRDFSampler>)>,
+        camera_opaque: Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)>,
+        camera_depth: Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)>,
+        env: Option<(Arc<BindEnvIrradiance>, Arc<ShaderBindEnvTexture>, Arc<ShaderBindEnvSampler>)>,
     ) -> Self {
         
         let mut lighting_enable: bool = false;
         let mut shadow_enable: bool = false;
-        let mut lighting: Option<BindUseSceneLightInfos> = None;
-        let mut shadowmap: Option<(BindUseShadowData, BindUseShadowTexture, BindUseShadowSampler)> = None;
-        let mut camera_opaque: Option<(BindUseMainCameraOpaqueTexture, BindUseMainCameraOpaqueSampler)> = None;
-        let mut camera_depth: Option<(BindUseMainCameraDepthTexture, BindUseMainCameraDepthSampler)> = None;
-        let mut env = None;
         let mut binding = 0;
+        let mut key_bindgroup = KeyBindGroup::default();
 
-        if let Some(v1) = bind_lighting {
-            lighting = Some(BindUseSceneLightInfos { data: v1, bind: binding as u32 });
-            lighting_enable = true;
-            binding += 1;
+        if let Some(bind) = &lighting {
+            if let Some(key) = bind.key_bind() {
+                key_bindgroup.0.push(key);
+                binding += 1;
+                lighting_enable = true;
+            }
         }
 
-        if let Some((v0, v1, v2)) = bind_shadow {
-            shadowmap = Some((
-                BindUseShadowData    { data: v0, bind: (binding + 0) as u32 },
-                BindUseShadowTexture { data: v1, bind: (binding + 1) as u32 },
-                BindUseShadowSampler { data: v2, bind: (binding + 2) as u32 },
-            ));
-            shadow_enable = true;
-            binding += 3;
+        if let Some((v0, v1, v2)) = &shadowmap {
+            if let (Some(key0), Some(key1), Some(key2)) = (v0.key_bind(), v1.key_bind(), v2.key_bind()) {
+                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1); key_bindgroup.0.push(key2);
+                binding += 3;
+                shadow_enable = true;
+            }
         }
         
-        let bind_brdf = if let Some((v0, v1)) = brdf {
-            let result = Some((
-                BindUseBRDFTexture::new(binding + 0, v0),
-                BindUseBRDFSampler::new(binding + 1, v1),
-            ));
-            binding += 2;
-            result
-        } else { None };
-        
-        if let Some((v1, v2)) = bind_camera_opaque {
-            camera_opaque = Some((
-                BindUseMainCameraOpaqueTexture { data: v1, bind: binding as u32 },
-                BindUseMainCameraOpaqueSampler { data: v2, bind: (binding + 1) as u32 },
-            ));
-            binding += 2;
-        }
-
-        if let Some((v1, v2)) = bind_camera_depth {
-            camera_depth = Some((
-                BindUseMainCameraDepthTexture { data: v1, bind: binding as u32 },
-                BindUseMainCameraDepthSampler { data: v2, bind: (binding + 1) as u32 },
-            ));
-            binding += 2;
+        if let Some((v0, v1)) = &bind_brdf {
+            if let (Some(key0), Some(key1)) = (v0.key_bind(), v1.key_bind()) {
+                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1);
+                binding += 2;
+            }
         }
         
-        if let Some((v1, v2, v3)) = bind_env {
-            env = Some((
-                BindUseEnvIrradiance { data: v1, bind: (binding + 0) as u32 },
-                BindUseEnvTexture { data: v2, bind: (binding + 1) as u32 },
-                BindUseEnvSampler { data: v3, bind: (binding + 2) as u32 },
-            ));
-            binding += 3;
+        if let Some((v0, v1)) = &camera_opaque {
+            if let (Some(key0), Some(key1)) = (v0.key_bind(), v1.key_bind()) {
+                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1);
+                binding += 2;
+            }
         }
 
-        let mut result = Self {
+        if let Some((v0, v1)) = &camera_depth {
+            if let (Some(key0), Some(key1)) = (v0.key_bind(), v1.key_bind()) {
+                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1); 
+                binding += 2;
+            }
+        }
+        
+        if let Some((v0, v1, v2)) = &env {
+            if let (Some(key0), Some(key1), Some(key2)) = (v0.key_bind(), v1.key_bind(), v2.key_bind()) {
+                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1); key_bindgroup.0.push(key2);
+                binding += 3;
+            }
+        }
+
+        let result = Self {
             lighting,
             shadowmap,
             bind_brdf,
@@ -109,55 +98,17 @@ impl KeyBindGroupSetExtend {
             env,
             isactived: binding > 0,
             bind_count: binding,
-            key_binds: Arc::new(IDBinds::Binds00(vec![])),
+            key_bindgroup,
             key: KeyShaderSetExtend { lighting_enable, shadow_enable }
         };
-        result.key_binds = result._binds(recorder);
 
         result
     }
-    fn _binds(&self, recorder: &mut BindsRecorder) -> Arc<IDBinds> {
-        // log::warn!("Model Binds {:?} {:?}", self.key_binds, self.bind_count);
-        if let Some(mut binds) = EBinds::new(self.bind_count) {
-            if let Some(bind1) = &self.lighting {
-                binds.set(bind1.bind as usize, bind1.key_bind());
-            }
-            if let Some((bind0, bind1, bind2)) = &self.shadowmap {
-                binds.set(bind0.bind as usize, bind0.key_bind());
-                binds.set(bind1.bind as usize, bind1.key_bind());
-                binds.set(bind2.bind as usize, bind2.key_bind());
-            }
-            if let Some((v0, v1)) = &self.bind_brdf {
-                binds.set( v0.bind as usize, v0.key_bind() );
-                binds.set( v1.bind as usize, v1.key_bind() );
-            }
-            if let Some((bind1, bind2)) = &self.camera_opaque {
-                binds.set(bind1.bind as usize, bind1.key_bind());
-                binds.set(bind2.bind as usize, bind2.key_bind());
-            }
-            if let Some((bind1, bind2)) = &self.camera_depth {
-                binds.set(bind1.bind as usize, bind1.key_bind());
-                binds.set(bind2.bind as usize, bind2.key_bind());
-            }
-            if let Some((bind1, bind2, bind3)) = &self.env {
-                binds.set(bind1.bind as usize, bind1.key_bind());
-                binds.set(bind2.bind as usize, bind2.key_bind());
-                binds.set(bind3.bind as usize, bind3.key_bind());
-            }
-
-            binds.record(recorder)
-        } else {
-            Arc::new(IDBinds::Binds00(vec![]))
-        }
-    }
     pub fn key_bind_group(&self) -> KeyBindGroup {
-        KeyBindGroup(self.key_binds.binds())
+        self.key_bindgroup.clone()
     }
     pub fn key_bind_group_layout(&self) -> KeyBindGroupLayout {
-        KeyBindGroup(self.key_binds.binds())
-    }
-    pub fn binds(&self) -> Arc<IDBinds> {
-        self.key_binds.clone()
+        self.key_bindgroup.key_bind_group_layout()
     }
 }
 impl TAssetKeyU64 for KeyBindGroupSetExtend {}
@@ -182,9 +133,10 @@ impl TShaderSetBlock for BindGroupSetExtend {
     fn vs_define_code(&self, set: u32) -> String {
 
         let mut result = String::from("");
+        let bind = 0;
 
         if let Some(v0) = &self.key.lighting {
-            result += v0.vs_define_code(set).as_str();
+            result += v0.vs_define_code(set, bind).as_str(); // bind += 1;
         }
         // if let Some((v0, v1, v2)) = &self.key.shadowmap {
         //     result += v0.vs_define_code(set).as_str();
@@ -202,18 +154,19 @@ impl TShaderSetBlock for BindGroupSetExtend {
     fn fs_define_code(&self, set: u32) -> String {
 
         let mut result = String::from("");
+        let mut bind = 0;
 
         if let Some(v0) = &self.key.lighting {
-            result += v0.fs_define_code(set).as_str();
+            result += v0.fs_define_code(set, bind).as_str(); bind += 1;
         }
         if let Some((v0, v1, v2)) = &self.key.shadowmap {
-            result += v0.fs_define_code(set).as_str();
-            result += v1.fs_define_code(set).as_str();
-            result += v2.vs_define_code(set).as_str();
+            result += v0.fs_define_code(set, bind).as_str(); bind += 1;
+            result += v1.fs_define_code(set, bind).as_str(); bind += 1;
+            result += v2.fs_define_code(set, bind).as_str(); bind += 1;
         }
         if let Some((bind1, bind2)) = &self.key.bind_brdf {
-            result += bind1.fs_define_code(set).as_str();
-            result += bind2.fs_define_code(set).as_str();
+            result += bind1.fs_define_code(set, bind).as_str(); bind += 1;
+            result += bind2.fs_define_code(set, bind).as_str(); bind += 1;
             result += "
 vec4 GetEnvironmentBRDFTexture(vec2 uv) {
     return texture(sampler2D(";
@@ -226,18 +179,18 @@ vec4 GetEnvironmentBRDFTexture(vec2 uv) {
         }
 
         if let Some((v0, v1)) = &self.key.camera_opaque {
-            result += v0.fs_define_code(set).as_str();
-            result += v1.fs_define_code(set).as_str();
+            result += v0.fs_define_code(set, bind).as_str(); bind += 1;
+            result += v1.fs_define_code(set, bind).as_str(); bind += 1;
         }
 
         if let Some((v0, v1)) = &self.key.camera_depth {
-            result += v0.fs_define_code(set).as_str();
-            result += v1.fs_define_code(set).as_str();
+            result += v0.fs_define_code(set, bind).as_str(); bind += 1;
+            result += v1.fs_define_code(set, bind).as_str(); bind += 1;
         }
         if let Some((bind1, bind2, bind3)) = &self.key.env {
-            result += bind1.fs_define_code(set).as_str();
-            result += bind2.fs_define_code(set).as_str();
-            result += bind3.fs_define_code(set).as_str();
+            result += bind1.fs_define_code(set, bind).as_str(); bind += 1;
+            result += bind2.fs_define_code(set, bind).as_str(); bind += 1;
+            result += bind3.fs_define_code(set, bind).as_str(); // bind += 1;
         }
 
         result

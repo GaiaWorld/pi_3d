@@ -18,8 +18,8 @@ use super::{
 
 pub fn sys_calc_render_matrix(
     mut meshes: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut GlobalTransform),
-        (Without<InstanceMesh>, Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
+        (ObjectID, &AbstructMesh, &LocalScaling, &GlobalTransform, &ScalingMode, &RenderAlignment, &ModelVelocity),
+        (Without<InstanceMesh>, Or<(Changed<GlobalTransform>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
@@ -27,20 +27,20 @@ pub fn sys_calc_render_matrix(
 
     meshes.iter_mut().for_each(|(
         obj, _,
-        localscaling, worldmatrix, worldmatrix_inv, scalingmode, renderalignment, velocity, mut transform
+        localscaling, transform, scalingmode, renderalignment, velocity
     )| {
         if let Ok((mut wm, mut wmi)) = matrixs.get_mut(obj) {
 
             // log::warn!("calc_render_matrix:");
             // render_wm.0.clone_from(&worldmatrix.0);
             // render_wminv.0.clone_from(&worldmatrix_inv.0);
-            let pos = transform.position().clone();
+            let pos = transform.position();
             let mut scl = Vector3::new(1., 1., 1.);
             match scalingmode.0 {
                 crate::prelude::EScalingMode::Hierarchy => {
                     if renderalignment.0 == ERenderAlignment::Local {
-                        wm.0.clone_from(&worldmatrix.0);
-                        wmi.0.clone_from(&worldmatrix_inv.0);
+                        wm.0.clone_from(&transform.matrix);
+                        wmi.0.clone_from(&transform.matrix_inv);
                         return;
                     }
                     scl.clone_from(transform.scaling());
@@ -76,8 +76,8 @@ pub fn sys_calc_render_matrix(
 pub fn sys_calc_render_matrix_instance(
     meshes: Query<&RenderAlignment>,
     mut instances: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &WorldMatrix, &WorldMatrixInv, &ScalingMode, &ModelVelocity, &mut GlobalTransform, &InstanceMesh),
-        Or<(Changed<WorldMatrix>, Changed<WorldMatrixInv>, Changed<ModelVelocity>, Changed<ScalingMode>)>
+        (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalTransform, &InstanceMesh),
+        Or<(Changed<GlobalTransform>, Changed<ModelVelocity>, Changed<ScalingMode>)>
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
     mut inssources: Query<&mut InstanceWorldMatrixDirty>,
@@ -86,7 +86,7 @@ pub fn sys_calc_render_matrix_instance(
 
     instances.iter_mut().for_each(|(
         obj, _,
-        localscaling, worldmatrix, worldmatrix_inv, scalingmode, velocity, mut transform, id_source
+        localscaling, scalingmode, velocity, transform, id_source
     )| {
         if let (Ok((mut wm, mut wmi)), Ok(renderalignment)) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
             
@@ -99,13 +99,13 @@ pub fn sys_calc_render_matrix_instance(
             // log::warn!("calc_render_matrix:");
             // render_wm.0.clone_from(&worldmatrix.0);
             // render_wminv.0.clone_from(&worldmatrix_inv.0);
-            let pos = transform.position().clone();
+            let pos = transform.position();
             let mut scl = Vector3::new(1., 1., 1.);
             match scalingmode.0 {
                 crate::prelude::EScalingMode::Hierarchy => {
                     if renderalignment.0 == ERenderAlignment::Local {
-                        wm.0.clone_from(&worldmatrix.0);
-                        wmi.0.clone_from(&worldmatrix_inv.0);
+                        wm.0.clone_from(&transform.matrix);
+                        wmi.0.clone_from(&transform.matrix_inv);
                         // log::warn!("Normal Alignment");
                         return;
                     }

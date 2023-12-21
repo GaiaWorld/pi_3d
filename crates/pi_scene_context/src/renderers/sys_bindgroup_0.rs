@@ -1,4 +1,4 @@
-use std::{sync::Arc, ops::Deref};
+use std::sync::Arc;
 use pi_engine_shell::prelude::*;
 
 use crate::{
@@ -16,7 +16,6 @@ pub fn sys_set0_modify(
     device: Res<PiRenderDevice>,
     asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-    mut binds_recorder: ResMut<ResBindsRecorder>,
     mut errors: ResMut<ErrorRecord>,
 ) {
     let time1 = pi_time::Instant::now();
@@ -45,11 +44,11 @@ pub fn sys_set0_modify(
                     }
                 };
 
-                let key = KeyBindGroupScene::new(bind_viewer, bind_base_effect, &mut binds_recorder);
+                let key = KeyBindGroupScene::new(bind_viewer, bind_base_effect);
                 let key_bind_group = key.key_bind_group();
                 // log::warn!("Set0Loaded : {:?}", key_bind_group);
                 if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
-                    let data = BindGroupScene::new(BindGroupUsage::new(key.binds(), bind_group), key);
+                    let data = BindGroupScene::new(BindGroupUsage::new(key_bind_group, bind_group), key);
                     let data = Arc::new(data);
 
                     // log::error!("create_bind_group 0: Ok, {:?}", (set0.0.is_some()));

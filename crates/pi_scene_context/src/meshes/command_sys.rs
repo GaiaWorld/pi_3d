@@ -56,10 +56,10 @@ pub fn sys_act_instanced_mesh_create(
                     .insert(InstanceColorDirty(true))
                     .insert(InstanceTillOffDirty(true))
                     .insert(InstanceWorldMatrixDirty(true))
-                    .insert(InstanceVec4ADirty(true))
-                    .insert(InstanceVec4BDirty(true))
-                    .insert(InstanceVec4CDirty(true))
-                    .insert(InstanceVec4DDirty(true))
+                    .insert(InstanceCustomVec4ADirty(true))
+                    .insert(InstanceCustomVec4BDirty(true))
+                    .insert(InstanceCustomVec4CDirty(true))
+                    .insert(InstanceCustomVec4DDirty(true))
                     ;
             } else {
                 return;
@@ -191,8 +191,8 @@ pub fn sys_act_instance_tilloff(
 pub fn sys_act_instance_float(
     mut cmds: ResMut<ActionListInstanceFloat>,
     entities: Query<Entity>,
-    mut instances: Query<(&InstanceMesh, &mut InstanceVec4A, &mut InstanceVec4B, &mut InstanceVec4C, &mut InstanceVec4D)>,
-    mut sources: Query<(&mut InstanceVec4ADirty, &mut InstanceVec4BDirty, &mut InstanceVec4CDirty, &mut InstanceVec4DDirty)>,
+    mut instances: Query<(&InstanceMesh, &mut InstanceCustomVec4A, &mut InstanceCustomVec4B, &mut InstanceCustomVec4C, &mut InstanceCustomVec4D)>,
+    mut sources: Query<(&mut InstanceCustomVec4ADirty, &mut InstanceCustomVec4BDirty, &mut InstanceCustomVec4CDirty, &mut InstanceCustomVec4DDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceFloat(instance, val, usetype)| {
         if entities.contains(instance) {
@@ -202,22 +202,22 @@ pub fn sys_act_instance_float(
                 if let Ok((mut adirty, mut bdirty, mut cdirty, mut ddirty)) = sources.get_mut(source.0) {
                     // log::warn!("Instance Float 3");
                     match usetype {
-                        EInstanceFloatType::F00 => { a_data.0 = val; *adirty = InstanceVec4ADirty(true); },
-                        EInstanceFloatType::F01 => { a_data.1 = val; *adirty = InstanceVec4ADirty(true); },
-                        EInstanceFloatType::F02 => { a_data.2 = val; *adirty = InstanceVec4ADirty(true); },
-                        EInstanceFloatType::F03 => { a_data.3 = val; *adirty = InstanceVec4ADirty(true); },
-                        EInstanceFloatType::F04 => { b_data.0 = val; *bdirty = InstanceVec4BDirty(true); },
-                        EInstanceFloatType::F05 => { b_data.1 = val; *bdirty = InstanceVec4BDirty(true); },
-                        EInstanceFloatType::F06 => { b_data.2 = val; *bdirty = InstanceVec4BDirty(true); },
-                        EInstanceFloatType::F07 => { b_data.3 = val; *bdirty = InstanceVec4BDirty(true); },
-                        EInstanceFloatType::F08 => { c_data.0 = val; *cdirty = InstanceVec4CDirty(true); },
-                        EInstanceFloatType::F09 => { c_data.1 = val; *cdirty = InstanceVec4CDirty(true); },
-                        EInstanceFloatType::F10 => { c_data.2 = val; *cdirty = InstanceVec4CDirty(true); },
-                        EInstanceFloatType::F11 => { c_data.3 = val; *cdirty = InstanceVec4CDirty(true); },
-                        EInstanceFloatType::F12 => { d_data.0 = val; *ddirty = InstanceVec4DDirty(true); },
-                        EInstanceFloatType::F13 => { d_data.1 = val; *ddirty = InstanceVec4DDirty(true); },
-                        EInstanceFloatType::F14 => { d_data.2 = val; *ddirty = InstanceVec4DDirty(true); },
-                        EInstanceFloatType::F15 => { d_data.3 = val; *ddirty = InstanceVec4DDirty(true); },
+                        EInstanceFloatType::F00 => { a_data.0 = val; *adirty = InstanceCustomVec4ADirty(true); },
+                        EInstanceFloatType::F01 => { a_data.1 = val; *adirty = InstanceCustomVec4ADirty(true); },
+                        EInstanceFloatType::F02 => { a_data.2 = val; *adirty = InstanceCustomVec4ADirty(true); },
+                        EInstanceFloatType::F03 => { a_data.3 = val; *adirty = InstanceCustomVec4ADirty(true); },
+                        EInstanceFloatType::F04 => { b_data.0 = val; *bdirty = InstanceCustomVec4BDirty(true); },
+                        EInstanceFloatType::F05 => { b_data.1 = val; *bdirty = InstanceCustomVec4BDirty(true); },
+                        EInstanceFloatType::F06 => { b_data.2 = val; *bdirty = InstanceCustomVec4BDirty(true); },
+                        EInstanceFloatType::F07 => { b_data.3 = val; *bdirty = InstanceCustomVec4BDirty(true); },
+                        EInstanceFloatType::F08 => { c_data.0 = val; *cdirty = InstanceCustomVec4CDirty(true); },
+                        EInstanceFloatType::F09 => { c_data.1 = val; *cdirty = InstanceCustomVec4CDirty(true); },
+                        EInstanceFloatType::F10 => { c_data.2 = val; *cdirty = InstanceCustomVec4CDirty(true); },
+                        EInstanceFloatType::F11 => { c_data.3 = val; *cdirty = InstanceCustomVec4CDirty(true); },
+                        EInstanceFloatType::F12 => { d_data.0 = val; *ddirty = InstanceCustomVec4DDirty(true); },
+                        EInstanceFloatType::F13 => { d_data.1 = val; *ddirty = InstanceCustomVec4DDirty(true); },
+                        EInstanceFloatType::F14 => { d_data.2 = val; *ddirty = InstanceCustomVec4DDirty(true); },
+                        EInstanceFloatType::F15 => { d_data.3 = val; *ddirty = InstanceCustomVec4DDirty(true); },
                         _ => { 
                             // log::warn!("Instance Float 4");
                         }
@@ -546,10 +546,10 @@ impl ActionMesh {
             .insert(InstanceColorDirty(false))
             .insert(InstanceTillOffDirty(false))
             .insert(InstanceBoneOffsetDirty(false))
-            .insert(InstanceVec4ADirty(false))
-            .insert(InstanceVec4BDirty(false))
-            .insert(InstanceVec4CDirty(false))
-            .insert(InstanceVec4DDirty(false))
+            .insert(InstanceCustomVec4ADirty(false))
+            .insert(InstanceCustomVec4BDirty(false))
+            .insert(InstanceCustomVec4CDirty(false))
+            .insert(InstanceCustomVec4DDirty(false))
             ;
     }
 }
@@ -578,10 +578,10 @@ impl ActionInstanceMesh {
         commands.insert(InstanceBoneoffset::default());
         commands.insert(RecordInstanceBoneoffset::default());
         
-        commands.insert(InstanceVec4A::default());
-        commands.insert(InstanceVec4B::default());
-        commands.insert(InstanceVec4C::default());
-        commands.insert(InstanceVec4D::default());
+        commands.insert(InstanceCustomVec4A::default());
+        commands.insert(InstanceCustomVec4B::default());
+        commands.insert(InstanceCustomVec4C::default());
+        commands.insert(InstanceCustomVec4D::default());
 
         commands.insert(RenderMatrixDirty(true));
         commands.insert(RenderWorldMatrix(Matrix::identity()));

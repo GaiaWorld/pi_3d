@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_render::renderer::{
     bind_buffer::{BindBufferAllocator, BindBufferRange},
-    bind::{KeyBindLayoutBuffer, KeyBindBuffer, TKeyBind, KeyBindLayoutBindingType},
+    bind::{KeyBindLayoutBuffer, KeyBindBuffer, TKeyBind},
     shader_stage::EShaderStage,
     buildin_var::ShaderVarUniform,
     shader::TShaderBindCode
@@ -102,9 +102,8 @@ impl BindModelLightIndexs {
             None
         }
     }
-    pub fn key_layout(&self, binding: KeyBindLayoutBindingType) -> KeyBindLayoutBuffer {
+    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
         KeyBindLayoutBuffer {
-            binding,
             visibility: EShaderStage::VERTEXFRAGMENT,
             min_binding_size: self.data.size(),
         }
@@ -112,9 +111,15 @@ impl BindModelLightIndexs {
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
-    pub fn vs_define_code(&self, set: u32, binding: u32) -> String {
+}
+
+impl TShaderBindCode for BindModelLightIndexs {
+    fn vs_define_code(&self, set: u32, bind: u32) -> String {
+        self.fs_define_code(set, bind)
+    }
+    fn fs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
-        result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
+        result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
         result += " ";
         result += Self::KEY;
         result += " {\r\n";
@@ -142,10 +147,23 @@ impl BindModelLightIndexs {
         result += "};\r\n";
         result
     }
-    pub fn fs_define_code(&self, set: u32, binding: u32) -> String {
-        self.vs_define_code(set, binding)
+}
+impl TKeyBind for BindModelLightIndexs {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Buffer(
+                KeyBindBuffer {
+                    data: self.data.clone(),
+                    layout: KeyBindLayoutBuffer {
+                        visibility: EShaderStage::VERTEXFRAGMENT,
+                        min_binding_size: self.data.size()
+                    }
+                }
+            )
+        )
     }
 }
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct BindUseModelLightIndexs {
     pub(crate) bind: u32,
@@ -154,31 +172,5 @@ pub struct BindUseModelLightIndexs {
 impl BindUseModelLightIndexs {
     pub fn new(bind: u32, data: Arc<BindModelLightIndexs>) -> Self {
         Self { bind, data }
-    }
-}
-impl TShaderBindCode for BindUseModelLightIndexs {
-    fn vs_define_code(&self, set: u32) -> String {
-        self.data.vs_define_code(set, self.bind)
-    }
-    fn fs_define_code(&self, set: u32) -> String {
-        self.vs_define_code(set)
-    }
-}
-impl TKeyBind for BindUseModelLightIndexs {
-    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        Some(
-            pi_render::renderer::bind::EKeyBind::Buffer(
-                KeyBindBuffer {
-                    data: self.data.data.clone(),
-                    layout: Arc::new(
-                        KeyBindLayoutBuffer {
-                            binding: self.bind as KeyBindLayoutBindingType,
-                            visibility: EShaderStage::VERTEXFRAGMENT,
-                            min_binding_size: self.data.data.size()
-                        }
-                    ) 
-                }
-            )
-        )
     }
 }

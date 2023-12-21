@@ -211,6 +211,10 @@ impl ShaderEffectMeta {
             arc_textures.push(Arc::new(item));
         });
         arc_textures.sort_by(|a, b| { a.slotname.cmp(&b.slotname) });
+        let len = arc_textures.len();
+        for idx in 0..len {
+            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("uTilloff") + &idx.to_string()), [1., 1., 0., 0.]));
+        }
 
         Self {
             uniforms: Arc::new(uniforms),
@@ -367,10 +371,10 @@ impl ShaderEffectMeta {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let root_dir = std::env::current_dir().unwrap();
-            let file_name = "temp.vert";
+            let file_name = key_meta.to_string() + ".vert";
             let _ = std::fs::write(root_dir.join(file_name), vs.as_str());
             
-            let file_name = "temp.frag";
+            let file_name = key_meta.to_string() + ".frag";
             let _ = std::fs::write(root_dir.join(file_name), fs.as_str());
         }
 

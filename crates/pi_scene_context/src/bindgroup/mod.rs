@@ -105,7 +105,7 @@ impl BindGroups3D {
         }
 
         if let Some(set) = &self.lightingshadow {
-            bind_group_layouts[3] = Some(set.bind_group().layout());
+            bind_group_layouts[setidx] = Some(set.bind_group().layout());
             // setidx += 1;
         }
 
@@ -167,11 +167,11 @@ pub type KeyPipeline3D = KeyRenderPipeline3D;
 pub type Pipeline3D = RenderRes<RenderPipeline>;
 pub type Pipeline3DUsage = Handle<Pipeline3D>;
 
-fn sys_recycle_binds_recorder(
-    mut recorder: ResMut<ResBindsRecorder>,
-) {
-    recorder.recycle();
-}
+// fn sys_recycle_binds_recorder(
+//     mut recorder: ResMut<ResBindsRecorder>,
+// ) {
+//     // recorder.recycle();
+// }
 
 pub struct PluginRenderBindGroup;
 impl Plugin for PluginRenderBindGroup {
@@ -223,10 +223,10 @@ impl Plugin for PluginRenderBindGroup {
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<BindGroupLayout>();
         app.insert_resource(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg));
         
-        if app.world.get_resource::<ResBindsRecorder>().is_none() {
-            let allocator = ResBindsRecorder(BindsRecorder::new());
-            app.insert_resource(allocator);
-            app.add_systems(Update, sys_recycle_binds_recorder.in_set(ERunStageChap::Initial));
-        }
+        // if app.world.get_resource::<ResBindsRecorder>().is_none() {
+        //     let allocator = ResBindsRecorder();
+        //     app.insert_resource(allocator);
+        //     app.add_systems(Update, sys_recycle_binds_recorder.in_set(ERunStageChap::Initial));
+        // }
     }
 }

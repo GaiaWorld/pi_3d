@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use pi_render::renderer::{
     bind_buffer::{BindBufferRange, BindBufferAllocator},
-    bind::{KeyBindLayoutBuffer, KeyBindBuffer, TKeyBind, KeyBindLayoutBindingType}, shader_stage::EShaderStage,
+    bind::{KeyBindLayoutBuffer, KeyBindBuffer, TKeyBind},
+    shader_stage::EShaderStage,
     buildin_var::ShaderVarUniform, shader::TShaderBindCode
 };
 use crate::shader::ShaderSetBind;
@@ -100,15 +101,14 @@ impl ShaderBindSceneLightInfos {
 
         let size = hemi_offset + hemi_count * Self::SIZE_HEMI_LIGHT;
 
-        if let Some(data) = allocator.allocate( size as wgpu::DynamicOffset ) {
+        if let Some(data) = allocator.allocate( size as wgpu::DynamicOffset) {
             Some(Self { data, direct_count, point_count, spot_count, hemi_count, direct_offset, point_offset, spot_offset, hemi_offset })
         } else {
             None
         }
     }
-    pub fn key_layout(&self, binding: KeyBindLayoutBindingType) -> KeyBindLayoutBuffer {
+    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
         KeyBindLayoutBuffer {
-            binding,
             visibility: EShaderStage::VERTEXFRAGMENT,
             min_binding_size: self.data.size(),
         }
@@ -116,9 +116,11 @@ impl ShaderBindSceneLightInfos {
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
-    pub fn vs_define_code(&self, set: u32, binding: u32) -> String {
+}
+impl TShaderBindCode for ShaderBindSceneLightInfos {
+    fn vs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
-        result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
+        result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
         result += " ";
         result += ShaderVarUniform::LIGHTING_INFOS;
         result += " {\r\n";
@@ -158,8 +160,23 @@ impl ShaderBindSceneLightInfos {
         result += "const uint MAX_HEMI_LIGHT = "; result += self.hemi_count.to_string().as_str(); result += ";\r\n";
         result
     }
-    pub fn fs_define_code(&self, set: u32, binding: u32) -> String {
-        self.vs_define_code(set, binding)
+    fn fs_define_code(&self, set: u32, bind: u32) -> String {
+        self.vs_define_code(set, bind)
+    }
+}
+impl TKeyBind for ShaderBindSceneLightInfos {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Buffer(
+                KeyBindBuffer {
+                    data: self.data.clone(),
+                    layout: KeyBindLayoutBuffer {
+                        visibility: EShaderStage::VERTEXFRAGMENT,
+                        min_binding_size: self.data.size()
+                    }
+                }
+            )
+        )
     }
 }
 
@@ -171,31 +188,5 @@ pub struct BindUseSceneLightInfos {
 impl BindUseSceneLightInfos {
     pub fn new(bind: u32, data: Arc<ShaderBindSceneLightInfos>) -> Self {
         Self { bind, data }
-    }
-}
-impl TShaderBindCode for BindUseSceneLightInfos {
-    fn vs_define_code(&self, set: u32) -> String {
-        self.data.vs_define_code(set, self.bind)
-    }
-    fn fs_define_code(&self, set: u32) -> String {
-        self.vs_define_code(set)
-    }
-}
-impl TKeyBind for BindUseSceneLightInfos {
-    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        Some(
-            pi_render::renderer::bind::EKeyBind::Buffer(
-                KeyBindBuffer {
-                    data: self.data.data.clone(),
-                    layout: Arc::new(
-                        KeyBindLayoutBuffer {
-                            binding: self.bind as KeyBindLayoutBindingType,
-                            visibility: EShaderStage::VERTEXFRAGMENT,
-                            min_binding_size: self.data.data.size()
-                        }
-                    ) 
-                }
-            )
-        )
     }
 }

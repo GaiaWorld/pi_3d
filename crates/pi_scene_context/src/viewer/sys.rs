@@ -10,8 +10,8 @@ use super::base::*;
 
 
     pub fn sys_calc_view_matrix_by_viewer<T: TViewerViewMatrix + Component>(
-        mut viewers: Query<(ObjectID, &T, &LocalPosition, &mut ViewerViewMatrix, &mut ViewerGlobalPosition), Or<(Changed<T>, Changed<WorldMatrix>)>>,
-        mut transforms: Query<&mut GlobalTransform>,
+        mut viewers: Query<(ObjectID, &T, &LocalPosition, &mut ViewerViewMatrix, &mut ViewerGlobalPosition), Or<(Changed<T>, Changed<GlobalTransform>)>>,
+        mut transforms: Query<&GlobalTransform>,
         // childrens: Query<&NodeParent>,
         childrens: Query<&Up>,
         tree: EntityTree,

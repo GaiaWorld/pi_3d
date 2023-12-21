@@ -147,8 +147,8 @@ pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts);
 // pub struct KeyShaderMeta(pub Atom);
 pub type KeyShaderMeta = Atom;
 
-#[derive(Deref, DerefMut, Resource)]
-pub struct ResBindsRecorder(pub BindsRecorder);
+#[derive(Resource)]
+pub struct ResBindsRecorder();
 
 /// 操作队列 最多等待 ACTION_WAIT_FRAME 帧
 pub const ACTION_WAIT_FRAME: u16 = 10;

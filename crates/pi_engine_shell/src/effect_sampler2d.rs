@@ -4,7 +4,6 @@ use bevy::prelude::{Deref, Component};
 use pi_assets::asset::Handle;
 
 use pi_render::renderer::sampler::{BindDataSampler, SamplerRes};
-use crate::binds::*;
 
 
 #[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]

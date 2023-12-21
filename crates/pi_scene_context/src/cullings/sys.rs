@@ -1,13 +1,13 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::prelude::{InstanceMesh, WorldMatrix, DisposeReady, InstanceSourceRefs};
+use crate::prelude::{InstanceMesh, GlobalTransform, DisposeReady, InstanceSourceRefs};
 
 use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode};
 
 pub fn sys_update_culling_by_worldmatrix(
     mut scenes: Query<&mut SceneBoundingPool>,
-    items: Query<(Entity, &WorldMatrix, &SceneID, &DisposeReady), Or<(Changed<WorldMatrix>, Changed<DisposeReady>)>>,
+    items: Query<(Entity, &GlobalTransform, &SceneID, &DisposeReady), Or<(Changed<GlobalTransform>, Changed<DisposeReady>)>>,
     boundings: Query<(&GeometryBounding, &GeometryCullingMode)>,
     instances: Query<&InstanceMesh>,
 ) {
@@ -31,7 +31,7 @@ pub fn sys_update_culling_by_worldmatrix(
                 };
 
                 if let Some((info, mode)) = bounding {
-                    pool.set(entity, info, mode, &worldmatrix);
+                    pool.set(entity, info, mode, &worldmatrix.matrix);
                 }
             }
         }
@@ -40,7 +40,7 @@ pub fn sys_update_culling_by_worldmatrix(
 
 pub fn sys_update_culling_by_cullinginfo(
     mut scenes: Query<&mut SceneBoundingPool>,
-    items: Query<(&WorldMatrix, &DisposeReady), Changed<WorldMatrix>>,
+    items: Query<(&GlobalTransform, &DisposeReady), Changed<GlobalTransform>>,
     boundings: Query<(Entity, &SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs), Or<(Changed<GeometryBounding>, Changed<GeometryCullingMode>)>>,
 ) {
     boundings.iter().for_each(|(entity, idscene, info, mode, instances)| {
@@ -50,7 +50,7 @@ pub fn sys_update_culling_by_cullinginfo(
                 if disposed.0 == true {
                     pool.remove(entity);
                 } else {
-                    pool.set(entity, info, mode, &worldmatrix);
+                    pool.set(entity, info, mode, &worldmatrix.matrix);
                 }
             }
             instances.iter().for_each(|entity| {
@@ -59,7 +59,7 @@ pub fn sys_update_culling_by_cullinginfo(
                     if disposed.0 == true {
                         pool.remove(entity);
                     } else {
-                        pool.set(entity, info, mode, &worldmatrix);
+                        pool.set(entity, info, mode, &worldmatrix.matrix);
                     }
                 }
             });

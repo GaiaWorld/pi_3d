@@ -1,4 +1,3 @@
-use parry3d::na::ComplexField;
 use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, Matrix, vector::{TToolVector3, TToolMatrix, TToolRotation}, coordiante_system::CoordinateSytem3, Isometry3, Number, Rotation3};
 
@@ -49,7 +48,7 @@ impl TargetCameraParam {
 }
 
 impl TViewerViewMatrix for TargetCameraParam {
-    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&mut GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
+    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
         let mut position = local_pos.0.clone();
         let initial_focal_distance = (self.target - position).metric_distance(&Vector3::zeros());
         if (position.z - self.target.z).abs() < 0.0001 {

@@ -46,15 +46,15 @@ pub fn sys_light_index_create(
 
 pub fn sys_direct_light_update(
     items: Query<
-        (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LayerMask, &GlobalEnable, &WorldMatrix),
-        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<WorldMatrix>)>
+        (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LayerMask, &GlobalEnable, &GlobalTransform),
+        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalTransform>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
     items.iter().for_each(|(_, idscene, lidx, direction, color, strength, layer, enabled, wm)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let mut gdirection = Vector3::zeros();
-            CoordinateSytem3::transform_normal(&direction.0, &wm.0, &mut gdirection);
+            CoordinateSytem3::transform_normal(&direction.0, &wm.matrix, &mut gdirection);
             let r = color.0.x * strength.0; let g = color.0.y * strength.0; let b = color.0.z * strength.0;
             info.0.direct_light_data(lidx.val(), enabled.0, layer.0 as f32, gdirection.x, gdirection.y, gdirection.z, r, g, b)
         }

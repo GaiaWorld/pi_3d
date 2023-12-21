@@ -1,13 +1,13 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
-use pi_assets::{asset::Handle};
+use pi_assets::asset::Handle;
 
 use pi_render::{
     rhi::device::RenderDevice,
     renderer::{
         shader::{KeyShaderMeta, TShaderBindCode},
         bind_buffer::{BindBufferAllocator, BindBufferRange},
-        bind::{TKeyBind, KeyBindBuffer, KeyBindLayoutBuffer, KeyBindLayoutBindingType},
+        bind::{TKeyBind, KeyBindBuffer, KeyBindLayoutBuffer},
         shader_stage::EShaderStage
     }
 };
@@ -104,7 +104,7 @@ impl ShaderBindEffectValue {
         if total_size == 0 {
             None
         } else {
-            match allocator.allocate(total_size) {
+            match allocator.allocate(total_size ) {
                 Some(data) => {
                     Some(
                         Self {
@@ -152,19 +152,18 @@ impl ShaderBindEffectValue {
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
-    pub fn key_layout(&self, binding: KeyBindLayoutBindingType) -> KeyBindLayoutBuffer {
+    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
         KeyBindLayoutBuffer {
-            binding,
             visibility: EShaderStage::VERTEXFRAGMENT,
             min_binding_size: self.data.size(),
         }
     }
-    pub fn vs_define_code(meta: &ShaderEffectMeta, set: u32, binding: u32) -> String {
-        meta.uniforms.vs_code(set, binding)
-    }
-    pub fn fs_define_code(meta: &ShaderEffectMeta, set: u32, binding: u32) -> String {
-        meta.uniforms.fs_code(set, binding)
-    }
+    // pub fn vs_define_code(meta: &ShaderEffectMeta, set: u32, binding: u32) -> String {
+    //     meta.uniforms.vs_code(set, binding)
+    // }
+    // pub fn fs_define_code(meta: &ShaderEffectMeta, set: u32, binding: u32) -> String {
+    //     meta.uniforms.fs_code(set, binding)
+    // }
 }
 impl std::hash::Hash for ShaderBindEffectValue {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -197,6 +196,29 @@ impl PartialEq for ShaderBindEffectValue {
 impl Eq for ShaderBindEffectValue {
     fn assert_receiver_is_total_eq(&self) {}
 }
+impl TKeyBind for ShaderBindEffectValue {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Buffer(
+                KeyBindBuffer {
+                    data: self.data.clone(),
+                    layout: KeyBindLayoutBuffer {
+                        visibility: EShaderStage::VERTEXFRAGMENT,
+                        min_binding_size: self.data.size()
+                    }
+                }
+            )
+        )
+    }
+}
+impl TShaderBindCode for ShaderBindEffectValue {
+    fn vs_define_code(&self, set: u32, bind: u32) -> String {
+        self.meta.uniforms.vs_code(set, bind)
+    }
+    fn fs_define_code(&self, set: u32, bind: u32) -> String {
+        self.meta.uniforms.fs_code(set, bind)
+    }
+}
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct BindUseEffectValue {
@@ -212,31 +234,5 @@ impl BindUseEffectValue {
     }
     pub fn data(&self) -> &ShaderBindEffectValue {
         &self.data
-    }
-}
-impl TShaderBindCode for BindUseEffectValue {
-    fn vs_define_code(&self, set: u32) -> String {
-        self.data.meta.uniforms.vs_code(set, self.bind)
-    }
-    fn fs_define_code(&self, set: u32) -> String {
-        self.data.meta.uniforms.fs_code(set, self.bind)
-    }
-}
-impl TKeyBind for BindUseEffectValue {
-    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        Some(
-            pi_render::renderer::bind::EKeyBind::Buffer(
-                KeyBindBuffer {
-                    data: self.data.data.clone(),
-                    layout: Arc::new(
-                        KeyBindLayoutBuffer {
-                            binding: self.bind as KeyBindLayoutBindingType,
-                            visibility: EShaderStage::VERTEXFRAGMENT,
-                            min_binding_size: self.data.data.size()
-                        }
-                    ) 
-                }
-            )
-        )
     }
 }

@@ -137,8 +137,8 @@ pub fn sys_shadow_project_modify_by_spot_light(
 }
 
 pub fn sys_calc_view_matrix_by_light(
-    mut lights: Query<(Entity, &LocalPosition, &LightLinkedShadowID, &LightDirection), Or<(Changed<LocalPosition>, Changed<LightLinkedShadowID>, Changed<LightDirection>, Changed<WorldMatrix>)>>,
-    mut transforms: Query<&mut GlobalTransform>,
+    mut lights: Query<(Entity, &LocalPosition, &LightLinkedShadowID, &LightDirection), Or<(Changed<LocalPosition>, Changed<LightLinkedShadowID>, Changed<LightDirection>, Changed<GlobalTransform>)>>,
+    mut transforms: Query<&GlobalTransform>,
     mut viewers: Query<(&ShadowLinkedLightID, &mut DirectionalShadowDirection, &mut ViewerViewMatrix, &mut ViewerGlobalPosition, &mut ViewerDirection)>,
     // childrens: Query<&NodeParent>,
     childrens: Query<&Up>,
@@ -153,8 +153,8 @@ pub fn sys_calc_view_matrix_by_light(
                 // log::warn!("View Matrix Calc: {:?}", viewcalc.0);
                 if let Ok(parent) = childrens.get(entity) {
                     let parent_id = parent.parent();
-                    if let Ok(mut parent) = transforms.get_mut(parent_id) {
-                        let (matrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&mut parent));
+                    if let Ok(parent) = transforms.get(parent_id) {
+                        let (matrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&parent));
                         *viewmatrix = matrix;
                         *viewposition = pos;
                     } else {

@@ -1,9 +1,14 @@
 mod base;
 mod command;
 mod command_sys;
+mod float;
+mod vec2;
+mod vec3;
+mod vec4;
+
 use std::marker::PhantomData;
 
-use bevy::prelude::{App, Plugin, IntoSystemConfigs, Entity, Update};
+use bevy::{prelude::{App, Plugin, IntoSystemConfigs, Entity, Update}, ecs::schedule::{SystemSet, IntoSystemSetConfig, apply_deferred}};
 
 pub use base::*;
 pub use command::*;
@@ -16,15 +21,40 @@ use pi_hash::XHashMap;
 
 use crate::prelude::ERunStageChap;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum EStageAnimation {
+    Create,
+    _CreateApply,
+    Command,
+    Running,
+}
+
 pub struct PluginGlobalAnimation;
 impl Plugin for PluginGlobalAnimation {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListAnimeGroupAttach::default());
         app.insert_resource(ActionListAnimeGroupStartReset::default());
+        app.insert_resource(ActionListAnimatorableFloat::default());
+        app.insert_resource(ActionListAnimatorableVec2::default());
+        app.insert_resource(ActionListAnimatorableVec3::default());
+        app.insert_resource(ActionListAnimatorableVec4::default());
         // app.insert_resource(ActionListAnimeGroupCreate::default());
         // app.insert_resource(ActionListAnimeGroupPause::default());
         // app.insert_resource(ActionListAnimeGroupStart::default());
         // app.insert_resource(ActionListAddTargetAnime::default());
+
+        app.configure_set(Update, EStageAnimation::Create.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, EStageAnimation::_CreateApply.after(EStageAnimation::Create));
+        app.configure_set(Update, EStageAnimation::Command.after(EStageAnimation::_CreateApply));
+        app.configure_set(Update, EStageAnimation::Running.after(EStageAnimation::Command));
+        app.add_systems(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
+        
+        app.add_systems(
+			Update,
+            (
+                sys_create_animatorable_entity
+            ).in_set(EStageAnimation::Create)
+        );
 
         app.add_systems(
 			Update,

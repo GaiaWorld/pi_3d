@@ -46,7 +46,7 @@ impl PluginImageCopy {
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             
             let copycamera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(copycamera, scene));
-            actions.camera.create.push(OpsCameraCreation::ops(scene, copycamera, false));
+            actions.camera.create.push(OpsCameraCreation::ops(scene, copycamera));
             actions.mesh.layermask.push(OpsLayerMask::ops(copycamera, 0));
             actions.mesh.layermask.push(OpsLayerMask::ops(plane, 0));
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
@@ -95,7 +95,7 @@ impl PluginImageCopy {
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             
             let copycamera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(copycamera, scene));
-            actions.camera.create.push(OpsCameraCreation::ops(scene, copycamera, false));
+            actions.camera.create.push(OpsCameraCreation::ops(scene, copycamera));
             actions.mesh.layermask.push(OpsLayerMask::ops(copycamera, 0));
             actions.mesh.layermask.push(OpsLayerMask::ops(plane, 0));
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));

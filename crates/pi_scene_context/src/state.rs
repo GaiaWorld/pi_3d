@@ -4,8 +4,7 @@ use pi_engine_shell::prelude::*;
 use pi_hash::XHashMap;
 
 use crate::{
-    pass::*,
-    renderers::prelude::*, 
+    pass::*, 
     meshes::prelude::*,
     geometry::prelude::*,
 };

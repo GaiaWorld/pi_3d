@@ -4,7 +4,7 @@ use pi_render::{
     renderer::{
         bind_buffer::{BindBufferAllocator, BindBufferRange},
         shader::TShaderBindCode, buildin_var::ShaderVarUniform,
-        bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer, KeyBindLayoutBindingType},
+        bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer},
         shader_stage::EShaderStage
     },
     rhi::device::RenderDevice
@@ -58,9 +58,8 @@ impl ShaderBindModelAboutSkinValue {
             }
         }
     }
-    pub fn key_layout(&self, binding: KeyBindLayoutBindingType) -> KeyBindLayoutBuffer {
+    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
         KeyBindLayoutBuffer {
-            binding,
             visibility: EShaderStage::VERTEX,
             min_binding_size: self.data.size(),
         }
@@ -111,6 +110,60 @@ impl ShaderBindModelAboutSkinValue {
     //     result
     // }
 }
+impl TKeyBind for ShaderBindModelAboutSkinValue {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        match self.skin {
+            ESkinCode::None => {
+                None
+            },
+            _ => {
+                Some(
+                    pi_render::renderer::bind::EKeyBind::Buffer(
+                        KeyBindBuffer {
+                            data: self.data.clone(),
+                            layout: KeyBindLayoutBuffer {
+                                visibility: EShaderStage::VERTEXFRAGMENT,
+                                min_binding_size: self.data.size()
+                            }
+                        }
+                    )
+                )
+            },
+        }
+    }
+}
+impl TShaderBindCode for ShaderBindModelAboutSkinValue {
+    fn vs_define_code(&self, set: u32, bind: u32) -> String {
+        let mut result = String::from("");
+        match self.skin {
+            ESkinCode::None => {},
+            ESkinCode::UBO(_, bone, cache) => {
+                result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
+                result += " Bone {\r\n";
+                result += ShaderSetBind::code_uniform_array("mat4", ShaderVarUniform::BONE_MATRICES, bone.count() * (cache as u32)).as_str();
+                result += "};\r\n";
+
+                result += self.skin.define_code().as_str();
+            },
+            _ => {
+                result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
+                result += " Bone {\r\n";
+                result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::BONE_TEX_SIZE).as_str();
+                result += "};\r\n";
+
+                result += self.skin.define_code().as_str();
+            },
+        }
+
+        result
+    }
+
+    fn fs_define_code(&self, _: u32, _bind: u32) -> String {
+        String::from("")
+    }
+
+}
+
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct BindUseSkinValue {
@@ -141,60 +194,4 @@ impl BindUseSkinValue {
 
     //     result
     // }
-}
-impl TShaderBindCode for BindUseSkinValue {
-    fn vs_define_code(&self, set: u32) -> String {
-        let mut result = String::from("");
-        match self.data.skin {
-            ESkinCode::None => {},
-            ESkinCode::UBO(_, bone, cache) => {
-                result += ShaderSetBind::code_set_bind_head(set, self.bind).as_str();
-                result += " Bone {\r\n";
-                result += ShaderSetBind::code_uniform_array("mat4", ShaderVarUniform::BONE_MATRICES, bone.count() * (cache as u32)).as_str();
-                result += "};\r\n";
-
-                result += self.data.skin.define_code().as_str();
-            },
-            _ => {
-                result += ShaderSetBind::code_set_bind_head(set, self.bind).as_str();
-                result += " Bone {\r\n";
-                result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::BONE_TEX_SIZE).as_str();
-                result += "};\r\n";
-
-                result += self.data.skin.define_code().as_str();
-            },
-        }
-
-        result
-    }
-
-    fn fs_define_code(&self, _: u32) -> String {
-        String::from("")
-    }
-
-}
-impl TKeyBind for BindUseSkinValue {
-    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        match self.data.skin {
-            ESkinCode::None => {
-                None
-            },
-            _ => {
-                Some(
-                    pi_render::renderer::bind::EKeyBind::Buffer(
-                        KeyBindBuffer {
-                            data: self.data.data.clone(),
-                            layout: Arc::new(
-                                KeyBindLayoutBuffer {
-                                    binding: self.bind as KeyBindLayoutBindingType,
-                                    visibility: EShaderStage::VERTEXFRAGMENT,
-                                    min_binding_size: self.data.data.size()
-                                }
-                            ) 
-                        }
-                    )
-                )
-            },
-        }
-    }
 }
