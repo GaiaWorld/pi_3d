@@ -13,7 +13,7 @@ use pi_node_materials::prelude::*;
 use pi_render::rhi::RenderQueue;
 use pi_share::Share;
 use pi_async_rt::prelude::AsyncRuntime;
-use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
+use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 
 use crate::{TypeAnimeAssetMgrs, EAnimePropertyType, curve_gltf, p3d_anime_curve_query, interpolation_from_u8, particle_system::gltf_format_particle_cfg};
 
@@ -487,7 +487,7 @@ impl GLTFTempLoaded {
     //                     let buffers = bufferqueue.clone();
     //                     let errors = errorqueue.clone();
     //                     let path = relative_path(path, self.id.base_url.as_str());
-    //                     MULTI_MEDIA_RUNTIME
+    //                     RENDER_RUNTIME
     //                     .spawn(async move {
     //                         let result = pi_hal::file::load_from_url(&Atom::from(path)).await;
     //                         match result {
@@ -526,7 +526,7 @@ impl GLTFTempLoaded {
     //                         let errors = errorqueue.clone();
     //                         let device = device.clone();
     //                         let queue = queue.clone();
-    //                         MULTI_MEDIA_RUNTIME
+    //                         RENDER_RUNTIME
     //                             .spawn(async move {
     //                                 let desc = ImageTexture2DDesc {
     //                                     url: key.clone(),
@@ -1035,7 +1035,7 @@ pub fn sys_gltf_base_loaded_launch(
                         path: param.base_url.clone(),
                         bin_assets: bin_assets_mgr.clone()
                     };
-                    MULTI_MEDIA_RUNTIME
+                    RENDER_RUNTIME
                     .spawn(async move {
                         match GLTFBase::async_load(desc, result).await {
                             Ok(data) => {
@@ -1101,7 +1101,7 @@ pub fn sys_gltf_analy(
                 let res = GLTFTempLoaded::analy(temp.gltf.clone(), temp.id.base_url.clone(), &mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys, &mut particlesys_res);
                 let result = GLTF::async_load((res, key_u64), result);
                 let id = temp.entity;
-                MULTI_MEDIA_RUNTIME
+                RENDER_RUNTIME
                 .spawn(async move {
                     match result.await {
                         Ok(data) => {
@@ -1161,7 +1161,7 @@ pub fn sys_gltf_analy(
     //                     let res = temp.analy(&mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys);
     //                     let result = GLTF::async_load(res, result);
                         
-    //                     MULTI_MEDIA_RUNTIME
+    //                     RENDER_RUNTIME
     //                     .spawn(async move {
     //                         match result.await {
     //                             Ok(data) => {

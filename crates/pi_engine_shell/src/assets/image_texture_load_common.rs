@@ -6,7 +6,7 @@ use pi_assets::{
     mgr::{AssetMgr, LoadResult},
 };
 use pi_async_rt::prelude::AsyncRuntime;
-use pi_hal::{runtime::MULTI_MEDIA_RUNTIME, loader::AsyncLoader};
+use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::XHashMap;
 use pi_render::rhi::asset::{ImageTextureDesc, TextureRes};
@@ -132,7 +132,7 @@ pub fn sys_image_texture_load_launch(
                         _ => {
                             let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
                             let param = param.clone();
-                            MULTI_MEDIA_RUNTIME
+                            RENDER_RUNTIME
                                 .spawn(async move {
                                     let desc = ImageTexture2DDesc {
                                         url: param.clone(),
@@ -258,7 +258,7 @@ pub fn sys_image_texture_view_load_launch_call<K: std::ops::Deref<Target = EKeyT
                         let (success, fail, device, queue) = (loader.success.clone(), loader.fail.clone(), (device).clone(), (queue).clone());
                         let key = param.clone();
                         let url = url.clone();
-                        MULTI_MEDIA_RUNTIME
+                        RENDER_RUNTIME
                             .spawn(async move {
                                 let desc = ImageTextureDesc { url: &url, device: &device, queue: &queue, };
                                 match TextureRes::async_load(desc, result).await {
