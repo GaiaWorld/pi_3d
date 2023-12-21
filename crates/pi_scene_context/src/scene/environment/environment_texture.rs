@@ -3,7 +3,7 @@ use std::sync::Arc;
 use pi_assets::{asset::Handle, mgr::AssetMgr};
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_engine_shell::prelude::*;
-use pi_hal::runtime::MULTI_MEDIA_RUNTIME;
+use pi_hal::runtime::RENDER_RUNTIME;
 use pi_render::rhi::sampler::SamplerDesc;
 use pi_share::Share;
 
@@ -111,7 +111,7 @@ pub fn sys_env_texture_loaded_check(
             let result = AssetMgr::load(&imgtex_assets_mgr, &key_u64);
             let (success, fail) = (loader.success.clone(), loader.fail.clone());
             let texkey = EKeyTexture::Image(key);
-            MULTI_MEDIA_RUNTIME.spawn(async move {
+            RENDER_RUNTIME.spawn(async move {
                 match ImageTextureView::async_load(image, viewkey, result).await {
                     Ok(res) => { success.push((entity, texkey, ETextureViewUsage::Image(res))); }
                     Err(_e) => { fail.push((entity, texkey)); }
