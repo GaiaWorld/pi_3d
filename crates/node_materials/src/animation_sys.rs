@@ -1,114 +1,114 @@
 
-use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::*;
+// use pi_engine_shell::prelude::*;
+// use pi_scene_context::prelude::*;
 
-use crate::animation::*;
-
-
-pub fn sys_material_anime_init(
-    materials: Query<(Entity, &BindEffect), Added<BindEffect>>,
-    mut commands: Commands,
-) {
-    materials.iter().for_each(|(entity, bindeffect)| {
-        // log::warn!("Mat New");
-        let info = if let Some(bindeffect) = &bindeffect.0 { MaterialAnimeSlots::new(bindeffect) } else { MaterialAnimeSlots::default() };
-        if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd
-            .insert(info)
-            .insert(Alpha::default())
-            .insert(Cutoff::default())
-            .insert(MaskCutoff::default())
-            .insert(MainColor::default())
-            .insert(MainTexUOffset::default())
-            .insert(MainTexVOffset::default())
-            .insert(MainTexUScale::default())
-            .insert(MainTexVScale::default())
-            .insert(MaskTexUOffset::default())
-            .insert(MaskTexUScale::default())
-            .insert(MaskTexVOffset::default())
-            .insert(MaskTexVScale::default())
-            .insert(OpacityTexUOffset::default())
-            .insert(OpacityTexUScale::default())
-            .insert(OpacityTexVOffset::default())
-            .insert(OpacityTexVScale::default())
-            .insert(RecordAlpha::default())
-            .insert(RecordCutoff::default())
-            .insert(RecordMaskCutoff::default())
-            .insert(RecordMainColor::default())
-            .insert(RecordMainTexUOffset::default())
-            .insert(RecordMainTexVOffset::default())
-            .insert(RecordMainTexUScale::default())
-            .insert(RecordMainTexVScale::default())
-            .insert(RecordMaskTexUOffset::default())
-            .insert(RecordMaskTexUScale::default())
-            .insert(RecordMaskTexVOffset::default())
-            .insert(RecordMaskTexVScale::default())
-            .insert(RecordOpacityTexUOffset::default())
-            .insert(RecordOpacityTexUScale::default())
-            .insert(RecordOpacityTexVOffset::default())
-            .insert(RecordOpacityTexVScale::default())
-            ;
-        }
-        
-    });
-}
+// use crate::animation::*;
 
 
-// pub fn sys_calc_type_anime<D: TAnimatableComp + TMaterialAnimeValue>(
-//     type_ctx: Res<TypeAnimeContext<D>>,
-//     runinfos: Res<GlobalAnimeAbout>,
-//     mut materials: Query<(&MaterialAnimeSlots, &BindEffect, &mut BindEffectValueDirty)>,
+// pub fn sys_material_anime_init(
+//     materials: Query<(Entity, &BindEffect), Added<BindEffect>>,
+//     mut commands: Commands,
 // ) {
-//     // let time0 = pi_time::Instant::now();
-
-//     let ty = type_ctx.ctx.ty();
-//     let curves = type_ctx.ctx.curves();
-//     if let Some(list) = runinfos.runtimeinfos.list.get(ty) {
-//         for info in list {
-//             if let Some(Some(curve)) = curves.get(info.curve_id) {
-//                 // log::warn!(">>>>>>>>>>>>>>>>> {}", info.amount_in_second);
-//                 let value = curve.as_ref().interple(info.amount_in_second);
-//                 if let Ok((slots, bindeffect, mut dirty)) = materials.get_mut(info.target) {
-//                     value.apply(slots, &bindeffect.0);
-//                     *dirty = BindEffectValueDirty(true);
-//                 }
-//             }
+//     materials.iter().for_each(|(entity, bindeffect)| {
+//         // log::warn!("Mat New");
+//         let info = if let Some(bindeffect) = &bindeffect.0 { MaterialAnimeSlots::new(bindeffect) } else { MaterialAnimeSlots::default() };
+//         if let Some(mut cmd) = commands.get_entity(entity) {
+//             cmd
+//             .insert(info)
+//             .insert(Alpha::default())
+//             .insert(Cutoff::default())
+//             .insert(MaskCutoff::default())
+//             .insert(MainColor::default())
+//             .insert(MainTexUOffset::default())
+//             .insert(MainTexVOffset::default())
+//             .insert(MainTexUScale::default())
+//             .insert(MainTexVScale::default())
+//             .insert(MaskTexUOffset::default())
+//             .insert(MaskTexUScale::default())
+//             .insert(MaskTexVOffset::default())
+//             .insert(MaskTexVScale::default())
+//             .insert(OpacityTexUOffset::default())
+//             .insert(OpacityTexUScale::default())
+//             .insert(OpacityTexVOffset::default())
+//             .insert(OpacityTexVScale::default())
+//             .insert(RecordAlpha::default())
+//             .insert(RecordCutoff::default())
+//             .insert(RecordMaskCutoff::default())
+//             .insert(RecordMainColor::default())
+//             .insert(RecordMainTexUOffset::default())
+//             .insert(RecordMainTexVOffset::default())
+//             .insert(RecordMainTexUScale::default())
+//             .insert(RecordMainTexVScale::default())
+//             .insert(RecordMaskTexUOffset::default())
+//             .insert(RecordMaskTexUScale::default())
+//             .insert(RecordMaskTexVOffset::default())
+//             .insert(RecordMaskTexVScale::default())
+//             .insert(RecordOpacityTexUOffset::default())
+//             .insert(RecordOpacityTexUScale::default())
+//             .insert(RecordOpacityTexVOffset::default())
+//             .insert(RecordOpacityTexVScale::default())
+//             ;
 //         }
-//     } else {
-//         // log::trace!("Not Found Anime Type: {}", ty);
-//     }
-
-//     // let time1 = pi_time::Instant::now();
-//     // log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
-// }
-
-// pub struct PluginMaterialAnime<D: TAnimatableComp + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default>(PhantomData<(D, C)>);
-// impl<D: TAnimatableComp + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default> PluginMaterialAnime<D, C> {
-//     pub fn new() -> Self {
-//         Self(PhantomData::default())
-//     }
-// }
-// impl<D: TAnimatableComp + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default> Plugin for PluginMaterialAnime<D, C> {
-
-//     fn build(&self, app: &mut bevy::prelude::App) {
         
-//         let ty = app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().ty_alloc.alloc().expect("");
-        
-//         let cfg = asset_capacity::<C>(app);
-//         // 创建 动画曲线 资产表
-//         app.world.insert_resource(ShareAssetMgr::<TypeFrameCurve<D>>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
-
-//         let mut runtime_info_map = &mut app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().runtimeinfos;
-
-//         let type_ctx = TypeAnimeContext::<D> {
-//             ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, &mut runtime_info_map),
-//         };
-
-//         app.world.insert_resource(type_ctx);
-
-//         // app.add_systems(Update, 
-//         //     sys_listen_type_anime_ctx::<D>.in_set(ERunStageChap::Command)
-//         // );
-//         app.add_systems(Update, sys_calc_type_anime::<D>.run_if(should_run).in_set(ERunStageChap::Anime));
-//     }
+//     });
 // }
+
+
+// // pub fn sys_calc_type_anime<D: TAnimatableComp + TMaterialAnimeValue>(
+// //     type_ctx: Res<TypeAnimeContext<D>>,
+// //     runinfos: Res<GlobalAnimeAbout>,
+// //     mut materials: Query<(&MaterialAnimeSlots, &BindEffect, &mut BindEffectValueDirty)>,
+// // ) {
+// //     // let time0 = pi_time::Instant::now();
+
+// //     let ty = type_ctx.ctx.ty();
+// //     let curves = type_ctx.ctx.curves();
+// //     if let Some(list) = runinfos.runtimeinfos.list.get(ty) {
+// //         for info in list {
+// //             if let Some(Some(curve)) = curves.get(info.curve_id) {
+// //                 // log::warn!(">>>>>>>>>>>>>>>>> {}", info.amount_in_second);
+// //                 let value = curve.as_ref().interple(info.amount_in_second);
+// //                 if let Ok((slots, bindeffect, mut dirty)) = materials.get_mut(info.target) {
+// //                     value.apply(slots, &bindeffect.0);
+// //                     *dirty = BindEffectValueDirty(true);
+// //                 }
+// //             }
+// //         }
+// //     } else {
+// //         // log::trace!("Not Found Anime Type: {}", ty);
+// //     }
+
+// //     // let time1 = pi_time::Instant::now();
+// //     // log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
+// // }
+
+// // pub struct PluginMaterialAnime<D: TAnimatableComp + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default>(PhantomData<(D, C)>);
+// // impl<D: TAnimatableComp + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default> PluginMaterialAnime<D, C> {
+// //     pub fn new() -> Self {
+// //         Self(PhantomData::default())
+// //     }
+// // }
+// // impl<D: TAnimatableComp + TMaterialAnimeValue, C: AsRef<AssetCapacity> + Resource + Default> Plugin for PluginMaterialAnime<D, C> {
+
+// //     fn build(&self, app: &mut bevy::prelude::App) {
+        
+// //         let ty = app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().ty_alloc.alloc().expect("");
+        
+// //         let cfg = asset_capacity::<C>(app);
+// //         // 创建 动画曲线 资产表
+// //         app.world.insert_resource(ShareAssetMgr::<TypeFrameCurve<D>>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
+
+// //         let mut runtime_info_map = &mut app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().runtimeinfos;
+
+// //         let type_ctx = TypeAnimeContext::<D> {
+// //             ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, &mut runtime_info_map),
+// //         };
+
+// //         app.world.insert_resource(type_ctx);
+
+// //         // app.add_systems(Update, 
+// //         //     sys_listen_type_anime_ctx::<D>.in_set(ERunStageChap::Command)
+// //         // );
+// //         app.add_systems(Update, sys_calc_type_anime::<D>.run_if(should_run).in_set(ERunStageChap::Anime));
+// //     }
+// // }

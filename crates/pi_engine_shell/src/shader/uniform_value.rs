@@ -34,7 +34,7 @@ impl UniformValueKind {
 }
 
 #[derive(Debug, Clone)]
-pub struct UniformPropertyMat4(pub UniformPropertyName, pub [f32;16]);
+pub struct UniformPropertyMat4(pub UniformPropertyName, pub [f32;16], pub bool);
 impl TUnifromShaderProperty for UniformPropertyMat4 {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -65,7 +65,7 @@ impl Ord for UniformPropertyMat4 {
 }
 
 #[derive(Clone, Debug)]
-pub struct UniformPropertyMat2(pub UniformPropertyName, pub [f32;4]);
+pub struct UniformPropertyMat2(pub UniformPropertyName, pub [f32;4], pub bool);
 impl TUnifromShaderProperty for UniformPropertyMat2 {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -96,7 +96,7 @@ impl Ord for UniformPropertyMat2 {
 }
 
 #[derive(Clone, Debug)]
-pub struct UniformPropertyVec4(pub UniformPropertyName, pub [f32;4]);
+pub struct UniformPropertyVec4(pub UniformPropertyName, pub [f32;4], pub bool);
 impl TUnifromShaderProperty for UniformPropertyVec4 {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -127,7 +127,38 @@ impl Ord for UniformPropertyVec4 {
 }
 
 #[derive(Clone, Debug)]
-pub struct UniformPropertyVec2(pub UniformPropertyName, pub [f32;2]);
+pub struct UniformPropertyVec3(pub UniformPropertyName, pub [f32;3], pub bool);
+impl TUnifromShaderProperty for UniformPropertyVec3 {
+    fn tag(&self) -> &UniformPropertyName {
+        &self.0
+    }
+}
+impl Hash for UniformPropertyVec3 {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.tag().hash(state);
+    }
+}
+impl PartialEq for UniformPropertyVec3 {
+    fn eq(&self, other: &Self) -> bool {
+        self.tag().eq(other.tag())
+    }
+}
+impl Eq for UniformPropertyVec3 {
+    fn assert_receiver_is_total_eq(&self) {}
+}
+impl PartialOrd for UniformPropertyVec3 {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.tag().partial_cmp(other.tag())
+    }
+}
+impl Ord for UniformPropertyVec3 {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct UniformPropertyVec2(pub UniformPropertyName, pub [f32;2], pub bool);
 impl TUnifromShaderProperty for UniformPropertyVec2 {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -158,7 +189,7 @@ impl Ord for UniformPropertyVec2 {
 }
 
 #[derive(Clone, Debug)]
-pub struct UniformPropertyFloat(pub UniformPropertyName, pub f32);
+pub struct UniformPropertyFloat(pub UniformPropertyName, pub f32, pub bool);
 impl TUnifromShaderProperty for UniformPropertyFloat {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -189,7 +220,7 @@ impl Ord for UniformPropertyFloat {
 }
 
 #[derive(Clone, Debug)]
-pub struct UniformPropertyInt(pub UniformPropertyName, pub i32);
+pub struct UniformPropertyInt(pub UniformPropertyName, pub i32, pub bool);
 impl TUnifromShaderProperty for UniformPropertyInt {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -220,7 +251,7 @@ impl Ord for UniformPropertyInt {
 }
 
 #[derive(Clone, Debug)]
-pub struct UniformPropertyUint(pub UniformPropertyName, pub u32);
+pub struct UniformPropertyUint(pub UniformPropertyName, pub u32, pub bool);
 impl TUnifromShaderProperty for UniformPropertyUint {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -256,6 +287,7 @@ pub struct MaterialValueBindDesc {
     pub mat4_list: Vec<UniformPropertyMat4>,
     // pub mat2_list: Vec<UniformPropertyMat2>,
     pub vec4_list: Vec<UniformPropertyVec4>,
+    pub vec3_list: Vec<UniformPropertyVec3>,
     pub vec2_list: Vec<UniformPropertyVec2>,
     pub float_list: Vec<UniformPropertyFloat>,
     // pub int_list: Vec<UniformPropertyInt>,
@@ -267,7 +299,7 @@ impl Default for MaterialValueBindDesc {
             stage: wgpu::ShaderStages::VERTEX_FRAGMENT, 
             mat4_list: vec![],
             // mat2_list: vec![],
-            vec4_list: vec![], vec2_list: vec![], float_list: vec![],
+            vec4_list: vec![], vec3_list: vec![], vec2_list: vec![], float_list: vec![],
             // int_list: vec![],
             uint_list: vec![]
         }
@@ -278,7 +310,7 @@ impl MaterialValueBindDesc {
         Self { stage, 
             mat4_list: vec![],
             // mat2_list: vec![],
-            vec4_list: vec![], vec2_list: vec![], float_list: vec![],
+            vec4_list: vec![], vec3_list: vec![], vec2_list: vec![], float_list: vec![],
             // int_list: vec![],
             uint_list: vec![]
         }
@@ -287,6 +319,7 @@ impl MaterialValueBindDesc {
         self.mat4_list.sort_by(|a, b| { a.0.cmp(&b.0) });
         // self.mat2_list.sort_by(|a, b| { a.0.cmp(&b.0) });
         self.vec4_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        self.vec3_list.sort_by(|a, b| { a.0.cmp(&b.0) });
         self.vec2_list.sort_by(|a, b| { a.0.cmp(&b.0) });
         self.float_list.sort_by(|a, b| { a.0.cmp(&b.0) });
         // self.int_list.sort_by(|a, b| { a.0.cmp(&b.0) });
@@ -305,7 +338,11 @@ impl MaterialValueBindDesc {
         self.vec4_list.iter().for_each(|item| {
             size += item.0.as_bytes().len();
         });
-        
+
+        self.vec3_list.iter().for_each(|item| {
+            size += item.0.as_bytes().len();
+        });
+
         self.vec2_list.iter().for_each(|item| {
             size += item.0.as_bytes().len();
         });
@@ -338,6 +375,11 @@ impl MaterialValueBindDesc {
         // });
 
         self.vec4_list.iter().for_each(|name| {
+            result += "#";
+            result += name.0.as_str();
+        });
+
+        self.vec3_list.iter().for_each(|name| {
             result += "#";
             result += name.0.as_str();
         });
@@ -393,6 +435,13 @@ impl MaterialValueBindDesc {
                 result += ";\r\n";
             });
             total_num += self.vec4_list.len();
+
+            self.vec3_list.iter().for_each(|name| {
+                result += "vec4 ";
+                result += &name.0;
+                result += ";\r\n";
+            });
+            total_num += self.vec3_list.len();
             
             self.vec2_list.iter().for_each(|name| {
                 result += "vec2 ";

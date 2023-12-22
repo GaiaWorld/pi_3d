@@ -38,8 +38,8 @@ impl DistortionUVShader {
             ]
         );
 
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_MODE), 0.));
-        nodemat.values.vec2_list.push(UniformPropertyVec2(Atom::from(Self::KEY_STRENGTH), [0.1, 0.1]));
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_MODE), 0., false));
+        nodemat.values.vec2_list.push(UniformPropertyVec2(Atom::from(Self::KEY_STRENGTH), [0.1, 0.1], true));
 
         nodemat.include(&Atom::from(BlockFloat::KEY), infos);
         nodemat.include(&Atom::from(BlockTextureChannel::KEY), infos);

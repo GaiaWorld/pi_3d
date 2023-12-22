@@ -6,6 +6,7 @@ impl BlockEmissiveTexture {
     pub const KEY_INFO: &'static str = "uEmissiveInfo";
     pub const KEY_TILLOFF: &'static str = "uEmissiveTilloff";
     pub const KEY_TEX: &'static str = "_EmissiveTex";
+    pub const KEY_TEX_LEVEL: &'static str = "_EmissiveTexLevel";
 }
 impl TNodeMaterialBlock for BlockEmissiveTexture {
     const KEY: &'static str = "EMISSIVE_TEXTURE";
@@ -16,8 +17,19 @@ impl TNodeMaterialBlock for BlockEmissiveTexture {
 
     fn vec4() -> Vec<UniformPropertyVec4> {
         vec![
-            UniformPropertyVec4(Atom::from(Self::KEY_INFO), [0., 0., 0., 1.]),
-            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.]),
+            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.], true),
+        ]
+    }
+
+    fn vec3() -> Vec<UniformPropertyVec3> {
+        vec![
+            UniformPropertyVec3(Atom::from(Self::KEY_INFO), [0., 0., 0.], true),
+        ]
+    }
+
+    fn float() -> Vec<UniformPropertyFloat> {
+        vec![
+            UniformPropertyFloat(Atom::from(Self::KEY_TEX_LEVEL), 1., true),
         ]
     }
 

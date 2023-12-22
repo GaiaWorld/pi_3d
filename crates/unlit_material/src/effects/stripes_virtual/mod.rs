@@ -44,14 +44,14 @@ impl StripesVirtualShader {
             ]
         );
 
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_STEP), 1.)); 
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_SPEED), 0.));
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_FADESTART), 0.));
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_FADEEND), 1.));
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_STEP), 1., true)); 
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_SPEED), 0., true));
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_FADESTART), 0., true));
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(Self::KEY_FADEEND), 1., true));
 
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_DIRECTION), [0.5, 0.5, 0.5, 1.]));
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_COLOR0), [0.1, 0.5, 0.1, 0.5]));
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_COLOR1), [0.1, 1.0, 0.1, 1.0]));
+        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_DIRECTION), [0.5, 0.5, 0.5, 1.], false));
+        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_COLOR0), [0.1, 0.5, 0.1, 0.5], true));
+        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_COLOR1), [0.1, 1.0, 0.1, 1.0], true));
         
         nodemat.meta()
     }

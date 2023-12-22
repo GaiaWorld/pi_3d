@@ -10,8 +10,8 @@ impl ShaderPBR {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uMetallic"), 0.2));
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uRoughness"), 0.8));
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uMetallic"), 0.2, true));
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uRoughness"), 0.8, true));
         nodemat.effect_varying_while_instance = String::from("
     vMetallic   = A_INS_F_Vec4A.x;
     vRoughness  = A_INS_F_Vec4A.y;

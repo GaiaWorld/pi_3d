@@ -16,6 +16,7 @@ impl AxisShader {
                 mat4_list: vec![],
                 // mat2_list: vec![],
                 vec4_list: vec![],
+                vec3_list: vec![],
                 vec2_list: vec![],
                 float_list: vec![],
                 // int_list: vec![],

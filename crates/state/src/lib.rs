@@ -361,7 +361,7 @@ impl StateUIShader {
     pub const KEY: &'static str = "StateUIShader";
     pub fn res() -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0));
+        nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0, false));
 
         nodemat.vs = String::from("
         gl_Position = vec4(A_POSITION.xy, 0.5, 0.0);

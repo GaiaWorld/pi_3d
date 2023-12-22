@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 
 use crate::{
@@ -27,32 +28,40 @@ pub fn sys_create_material(
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
+    mut animatorablefloats: ResMut<ActionListAnimatorableFloat>,
+    mut animatorablevec2s: ResMut<ActionListAnimatorableVec2>,
+    mut animatorablevec3s: ResMut<ActionListAnimatorableVec3>,
+    mut animatorablevec4s: ResMut<ActionListAnimatorableVec4>,
+    mut animatorableuints: ResMut<ActionListAnimatorableUint>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader)| {
         // log::warn!("MaterialInit: {:?}", entity);
-        let mut matcmds = if let Some(cmd) = commands.get_entity(entity) { 
-            cmd
-        } else {
+        if commands.get_entity(entity).is_none() { 
             // log::error!("Material: Not Found!!");
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
         };
 
         if let Some(meta) = asset_shader.get(&key_shader) {
-            let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
+            let effect_val_bind = BindEffectValues::new(&mut commands, entity, &device, key_shader.clone(), meta.clone(), &mut allocator, (&mut animatorablefloats, &mut animatorablevec2s, &mut animatorablevec3s, &mut animatorablevec4s, &mut animatorableuints));
+            let mut matcmds = commands.entity(entity);
+
             matcmds.insert(BindEffect(effect_val_bind));
             matcmds.insert(AssetResShaderEffectMeta::from(meta));
+
         } else {
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
         }
 
+        let mut matcmds = commands.entity(entity);
         ActionEntity::init(&mut matcmds);
         let keytex = Arc::new(UniformTextureWithSamplerParam::default());
 
         matcmds
+            .insert(TargetAnimatorableIsRunning)
+            .insert(UniformAnimated::default())
             .insert(AssetKeyShaderEffect(key_shader))
             .insert(MaterialRefs::default())
-            .insert(BindEffectValueDirty)
             .insert(BindEffectReset)
             .insert(UniformTextureWithSamplerParams::default())
             .insert(UniformTextureWithSamplerParamsDirty)
@@ -181,122 +190,68 @@ pub fn sys_act_material_use(
     });
 }
 
-pub fn sys_act_material_mat4(
-    mut cmds: ResMut<ActionListUniformMat4>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
+pub fn sys_act_material_value(
+    mut cmdsmat4: ResMut<ActionListUniformMat4>,
+    mut cmdsvec4: ResMut<ActionListUniformVec4>,
+    mut cmdsvec3: ResMut<ActionListUniformVec3>,
+    mut cmdsvec2: ResMut<ActionListUniformVec2>,
+    mut cmdsfloat: ResMut<ActionListUniformFloat>,
+    mut cmdsuint: ResMut<ActionListUniformUint>,
+
+    mut animator_vec4: ResMut<ActionListAnimatorableVec4>,
+    mut animator_vec3: ResMut<ActionListAnimatorableVec3>,
+    mut animator_vec2: ResMut<ActionListAnimatorableVec2>,
+    mut animator_float: ResMut<ActionListAnimatorableFloat>,
+    mut animator_uint: ResMut<ActionListAnimatorableUint>,
+
+    bindvalues: Query<&BindEffect>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            match &mut bindvalues.0 {
-                Some(bindvalues) => {
-                    if let Some(slot) = bindvalues.slot(&slot) {
-                        bindvalues.mat4(slot, &value);
-                        *flag = BindEffectValueDirty;
-                    }
-                },
-                _ => { }
+    cmdsmat4.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value)| {
+        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(entity) {
+            bindvalue.update(&slot, bytemuck::cast_slice(&value));
+        }
+    });
+    cmdsvec4.drain().drain(..).for_each(|OpsUniformVec4(linked, slot, x, y, z, w)| {
+        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
+            let val = [x, y, z, w];
+            match bindvalue.update(&slot, bytemuck::cast_slice(&val)) {
+                Some(target) => { animator_vec4.push(OpsAnimatorableVec4::ops(target, linked, AnimatorableVec4::from(&val))) },
+                None => {},
             }
-            return;
-        }
-
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            cmds.push(OpsUniformMat4(entity, slot, value, count + 1));
         }
     });
-}
-
-pub fn sys_act_material_vec4(
-    mut cmds: ResMut<ActionListUniformVec4>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsUniformVec4(entity, slot, x, y, z, w, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            match &mut bindvalues.0 {
-                Some(bindvalues) => {
-                    if let Some(slot) = bindvalues.slot(&slot) {
-                        bindvalues.vec4(slot, &[x, y, z, w]);
-                        *flag = BindEffectValueDirty;
-                    }
-                },
-                _ => {}
-            };
-            return;
-        }
-
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            cmds.push(OpsUniformVec4(entity, slot, x, y, z, w, count + 1));
+    cmdsvec3.drain().drain(..).for_each(|OpsUniformVec3(linked, slot, x, y, z)| {
+        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
+            let val = [x, y, z];
+            match bindvalue.update(&slot, bytemuck::cast_slice(&val)) {
+                Some(target) => { animator_vec3.push(OpsAnimatorableVec3::ops(target, linked, AnimatorableVec3::from(&val))) },
+                None => {},
+            }
         }
     });
-}
-
-pub fn sys_act_material_vec2(
-    mut cmds: ResMut<ActionListUniformVec2>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsUniformVec2(entity, slot, x, y, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            match &mut bindvalues.0 {
-                Some(bindvalues) => {
-                    if let Some(slot) = bindvalues.slot(&slot) {
-                        bindvalues.vec2(slot, &[x, y]);
-                        *flag = BindEffectValueDirty;
-                    }
-                },
-                _ => {}
-            };
-            return;
-        }
-
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            cmds.push(OpsUniformVec2(entity, slot, x, y, count + 1));
+    cmdsvec2.drain().drain(..).for_each(|OpsUniformVec2(linked, slot, x, y)| {
+        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
+            let val = [x, y];
+            match bindvalue.update(&slot, bytemuck::cast_slice(&val)) {
+                Some(target) => { animator_vec2.push(OpsAnimatorableVec2::ops(target, linked, AnimatorableVec2::from(&val))) },
+                None => {},
+            }
         }
     });
-}
-
-pub fn sys_act_material_float(
-    mut cmds: ResMut<ActionListUniformFloat>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsUniformFloat(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            match &mut bindvalues.0 {
-                Some(bindvalues) => {
-                    if let Some(slot) = bindvalues.slot(&slot) {
-                        bindvalues.float(slot, value);
-                        *flag = BindEffectValueDirty;
-                    }
-                },
-                _ => {}
-            };
-            return;
-        }
-
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            cmds.push(OpsUniformFloat(entity, slot, value, count + 1));
+    cmdsfloat.drain().drain(..).for_each(|OpsUniformFloat(linked, slot, val)| {
+        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
+            match bindvalue.update(&slot, bytemuck::cast_slice(&[val])) {
+                Some(target) => { animator_float.push(OpsAnimatorableFloat::ops(target, linked, AnimatorableFloat(val))) },
+                None => {},
+            }
         }
     });
-}
-
-pub fn sys_act_material_uint(
-    mut cmds: ResMut<ActionListUniformUint>,
-    mut bindvalues: Query<(&mut BindEffect, &mut BindEffectValueDirty)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsUniformUint(entity, slot, value, count)| {
-        if let Ok((mut bindvalues, mut flag)) = bindvalues.get_mut(entity) {
-            match &mut bindvalues.0 {
-                Some(bindvalues) => {
-                    if let Some(slot) = bindvalues.slot(&slot) {
-                        bindvalues.uint(slot, value);
-                        *flag = BindEffectValueDirty;
-                    }
-                },
-                _ => {}
-            };
-            return;
-        }
-
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            cmds.push(OpsUniformUint(entity, slot, value, count + 1));
+    cmdsuint.drain().drain(..).for_each(|OpsUniformUint(linked, slot, val)| {
+        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
+            match bindvalue.update(&slot, bytemuck::cast_slice(&[val])) {
+                Some(target) => { animator_uint.push(OpsAnimatorableUint::ops(target, linked, AnimatorableUint(val))) },
+                None => {},
+            }
         }
     });
 }
@@ -305,16 +260,12 @@ pub fn sys_act_material_texture(
     mut cmds: ResMut<ActionListUniformTexture>,
     mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsUniformTexture(entity, param, count)| {
+    cmds.drain().drain(..).for_each(|OpsUniformTexture(entity, param)| {
         if let Ok((mut textureparams, mut flag)) = textureparams.get_mut(entity) {
             // log::warn!("EUniformCommand::Texture");
             textureparams.0.insert(param.slotname.clone(), Arc::new(param));
             *flag = UniformTextureWithSamplerParamsDirty;
             return;
-        }
-
-        if count < MATERIAL_UNIFORM_OPS_WAIT_FRAME {
-            cmds.push(OpsUniformTexture(entity, param, count + 1));
         }
     });
 }
@@ -368,6 +319,23 @@ pub fn sys_act_material_texture_from_target(
     });
 }
 
+pub fn sys_act_target_animation_uniform(
+    mut cmds: ResMut<ActionListTargetAnimationUniform>,
+    mut scene_ctxs: ResMut<SceneAnimationContextMap>,
+    mut items: Query<(&BindEffect, &mut UniformAnimated)>,
+) {
+    cmds.drain().drain(..).for_each(|OpsTargetAnimationUniform(idscene, idmat, attr, group, animation)| {
+        if let Ok((BindEffect(Some(bind)), mut animated)) = items.get_mut(idmat) {
+            if let Some(uniform) = bind.offset(&attr) {
+                if let Some(target) = uniform.entity() {
+                    animated.add(&attr);
+                    scene_ctxs.add_target_anime(idscene, target, group, animation);
+                }
+            }
+        }
+    });
+}
+
 pub struct ActionMaterial;
 impl ActionMaterial {
     pub fn regist_material_meta(
@@ -399,4 +367,3 @@ impl ActionMaterial {
         cmds.push(cmd);
     }
 }
-

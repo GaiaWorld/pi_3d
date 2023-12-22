@@ -40,11 +40,11 @@ impl TwoOpacityMixShader {
         );
 
         nodemat.values.float_list.push(
-            UniformPropertyFloat(Atom::from(Self::KEY_MIX_CONTROL), 0.5)  
+            UniformPropertyFloat(Atom::from(Self::KEY_MIX_CONTROL), 0.5, true)  
         );
 
         nodemat.values.uint_list.push(
-            UniformPropertyUint(Atom::from(Self::KEY_MIX_CHANNEL), BlockTextureChannel::CHANNEL_A)  
+            UniformPropertyUint(Atom::from(Self::KEY_MIX_CHANNEL), BlockTextureChannel::CHANNEL_A, false)  
         );
 
         nodemat.include(&Atom::from(BlockFloat::KEY), infos);

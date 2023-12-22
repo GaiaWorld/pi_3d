@@ -125,14 +125,16 @@ impl Plugin for PluginMaterial {
         // app.insert_resource(ActionListUniformInt::default());
         app.insert_resource(ActionListUniformUint::default());
         app.insert_resource(ActionListUniformVec2::default());
+        app.insert_resource(ActionListUniformVec3::default());
         app.insert_resource(ActionListUniformVec4::default());
         // app.insert_resource(ActionListUniformMat2::default());
         app.insert_resource(ActionListUniformMat4::default());
         app.insert_resource(ActionListUniformTexture::default());
         app.insert_resource(ActionListUniformTextureFromRenderTarget::default());
+        app.insert_resource(ActionListTargetAnimationUniform::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::MaterialCommand.after(ERunStageChap::_InitialApply).before(StageTextureLoad::TextureRequest));
+        app.configure_set(Update, StageMaterial::MaterialCommand.after(ERunStageChap::_InitialApply).after(EStageAnimation::_CreateApply).before(StageTextureLoad::TextureRequest).before(ERunStageChap::Anime));
         app.configure_set(Update, StageMaterial::MaterialReady.after(StageMaterial::MaterialCommand).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
 
         app.add_systems(
@@ -145,6 +147,7 @@ impl Plugin for PluginMaterial {
         app.add_systems(Update, 
             (
                 sys_act_material_texture_from_target,
+                sys_act_target_animation_uniform,
             ).in_set(StageMaterial::MaterialCommand)
         );
 
@@ -160,13 +163,13 @@ impl Plugin for PluginMaterial {
             (
                 // sys_act_uniform,
                 // sys_act_uniform_by_name,
-                sys_act_material_mat4,
+                sys_act_material_value,
                 // sys_act_material_mat2.run_if(should_run),
-                sys_act_material_vec4,
-                sys_act_material_vec2,
-                sys_act_material_float,
+                // sys_act_material_vec4,
+                // sys_act_material_vec2,
+                // sys_act_material_float,
                 // sys_act_material_int.run_if(should_run),
-                sys_act_material_uint,
+                // sys_act_material_uint,
                 sys_act_material_texture,
             ).before(sys_material_textures_modify).after(sys_act_material_texture_from_target).chain().in_set(StageMaterial::MaterialCommand)
             // .after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)

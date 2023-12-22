@@ -31,6 +31,7 @@ pub trait TNodeMaterialBlock {
     fn mat4() -> Vec<UniformPropertyMat4> { vec![] }
     // fn mat2() -> Vec<UniformPropertyMat2> { vec![] }
     fn vec4() -> Vec<UniformPropertyVec4> { vec![] }
+    fn vec3() -> Vec<UniformPropertyVec3> { vec![] }
     fn vec2() -> Vec<UniformPropertyVec2> { vec![] }
     fn float() -> Vec<UniformPropertyFloat> { vec![] }
     // fn int() -> Vec<UniformPropertyInt> { vec![] }
@@ -47,6 +48,7 @@ pub trait TNodeMaterialBlock {
             mat4: Self::mat4(),
             // mat2: Self::mat2(),
             vec4: Self::vec4(),
+            vec3: Self::vec3(),
             vec2: Self::vec2(),
             float: Self::float(),
             // int: Self::int(),
@@ -76,6 +78,8 @@ pub struct NodeMaterialBlockInfo {
     // pub mat2: Vec<UniformPropertyMat2>,
     /// 声明的 vec4 uniform
     pub vec4: Vec<UniformPropertyVec4>,
+    /// 声明的 vec3 uniform
+    pub vec3: Vec<UniformPropertyVec3>,
     /// 声明的 vec2 uniform
     pub vec2: Vec<UniformPropertyVec2>,
     /// 声明的 f32 uniform
@@ -186,6 +190,9 @@ impl NodeMaterialBuilder {
                     info.vec4.iter().for_each(|v| {
                         self.values.vec4_list.push(v.clone());
                     });
+                    info.vec3.iter().for_each(|v| {
+                        self.values.vec3_list.push(v.clone());
+                    });
                     info.vec2.iter().for_each(|v| {
                         self.values.vec2_list.push(v.clone());
                     });
@@ -228,6 +235,9 @@ impl NodeMaterialBuilder {
             // });
             T::vec4().drain(..).for_each(|v| {
                 self.values.vec4_list.push(v);
+            });
+            T::vec3().drain(..).for_each(|v| {
+                self.values.vec3_list.push(v);
             });
             T::vec2().drain(..).for_each(|v| {
                 self.values.vec2_list.push(v);

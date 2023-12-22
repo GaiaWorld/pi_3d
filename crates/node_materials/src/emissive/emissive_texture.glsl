@@ -11,5 +11,5 @@ vec3 emissiveColor() {
 }
 
 float emissiveStrength() {
-    return uEmissiveInfo.w;
+    return _EmissiveTexLevel;
 }

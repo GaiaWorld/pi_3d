@@ -16,14 +16,14 @@ impl TNodeMaterialBlock for BlockEmissiveFresnel {
 
     fn vec4() -> Vec<UniformPropertyVec4> {
         vec![
-            UniformPropertyVec4(Atom::from(Self::KEY_LEFT), [1., 1., 1., 1.]),
-            UniformPropertyVec4(Atom::from(Self::KEY_RIGHT), [1., 1., 1., 1.]),
+            UniformPropertyVec4(Atom::from(Self::KEY_LEFT), [1., 1., 1., 1.], true),
+            UniformPropertyVec4(Atom::from(Self::KEY_RIGHT), [1., 1., 1., 1.], true),
         ]
     }
 
     fn vec2() -> Vec<UniformPropertyVec2> {
         vec![
-            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0.4, 0.]),
+            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0.4, 0.], true),
         ]
     }
 }

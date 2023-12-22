@@ -112,13 +112,13 @@ impl From<(pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>)> for Shader
                                                     },
                                                     pi_render::rhi::shader::TypeSize::Vec(v) => {
                                                         if v == 4 {
-                                                            uniforms.vec4_list.push(UniformPropertyVec4(uniform.name.clone(), crate::vec_u8_to_f32_4(&value.default_value)));
+                                                            uniforms.vec4_list.push(UniformPropertyVec4(uniform.name.clone(), crate::vec_u8_to_f32_4(&value.default_value), false));
                                                         } else if v == 2 {
-                                                            uniforms.vec2_list.push(UniformPropertyVec2(uniform.name.clone(), crate::vec_u8_to_f32_2(&value.default_value)));
+                                                            uniforms.vec2_list.push(UniformPropertyVec2(uniform.name.clone(), crate::vec_u8_to_f32_2(&value.default_value), false));
                                                         }
                                                     },
                                                     pi_render::rhi::shader::TypeSize::Scalar => {
-                                                        uniforms.float_list.push(UniformPropertyFloat(uniform.name.clone(), crate::vec_u8_to_f32(&value.default_value)));
+                                                        uniforms.float_list.push(UniformPropertyFloat(uniform.name.clone(), crate::vec_u8_to_f32(&value.default_value), false));
                                                     },
                                                 }
                                             },
@@ -126,7 +126,7 @@ impl From<(pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>)> for Shader
                                                 // uniforms.int_list.push(UniformPropertyInt(uniform.name.clone(), crate::vec_u8_to_i32(&value.default_value)));
                                             },
                                             pi_render::rhi::shader::TypeKind::Uint => {
-                                                uniforms.uint_list.push(UniformPropertyUint(uniform.name.clone(), crate::vec_u8_to_u32(&value.default_value)));
+                                                uniforms.uint_list.push(UniformPropertyUint(uniform.name.clone(), crate::vec_u8_to_u32(&value.default_value), false));
                                             },
                                         }
                                     }
@@ -204,7 +204,6 @@ impl ShaderEffectMeta {
         defines: ShaderDefinesSet,
     ) -> Self {
         let size = varyings.size() + vs.size() + fs.size();
-        uniforms.sort();
 
         let mut arc_textures = vec![];
         textures.drain(..).for_each(|item| {
@@ -213,8 +212,10 @@ impl ShaderEffectMeta {
         arc_textures.sort_by(|a, b| { a.slotname.cmp(&b.slotname) });
         let len = arc_textures.len();
         for idx in 0..len {
-            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("uTilloff") + &idx.to_string()), [1., 1., 0., 0.]));
+            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("uTexST") + &idx.to_string()), [1., 1., 0., 0.], false));
         }
+
+        uniforms.sort();
 
         Self {
             uniforms: Arc::new(uniforms),
@@ -235,6 +236,7 @@ impl ShaderEffectMeta {
         // + self.uniforms.mat4_list.len()
         // + self.uniforms.mat2_list.len()
         + self.uniforms.vec4_list.len()
+        + self.uniforms.vec3_list.len()
         + self.uniforms.vec2_list.len()
         + self.uniforms.float_list.len()
         // + self.uniforms.int_list.len()

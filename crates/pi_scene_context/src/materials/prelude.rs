@@ -51,6 +51,7 @@ pub struct ActionSetMaterial<'w> {
     // pub int: ResMut<'w, ActionListUniformInt>,
     pub uint: ResMut<'w, ActionListUniformUint>,
     pub vec2: ResMut<'w, ActionListUniformVec2>,
+    pub vec3: ResMut<'w, ActionListUniformVec3>,
     pub vec4: ResMut<'w, ActionListUniformVec4>,
     // pub mat2: ResMut<'w, ActionListUniformMat2>,
     pub mat4: ResMut<'w, ActionListUniformMat4>,
@@ -82,9 +83,11 @@ pub fn sys_state_material(
 
 ///
 pub struct BundleMaterial (
+    BindEffect,
+    UniformAnimated,
+    TargetAnimatorableIsRunning,
     AssetKeyShaderEffect,
     // MaterialRefs,
-    BindEffectValueDirty,
     BindEffectReset,
     // UniformTextureWithSamplerParams,
     UniformTextureWithSamplerParamsDirty,

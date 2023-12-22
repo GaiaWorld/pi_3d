@@ -7,14 +7,14 @@ impl DefaultShader {
     pub const KEY: &'static str = "Default";
     pub fn res() -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0));
+        nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0, false));
         nodemat.fs_define = String::from(include_str!("./default_define.frag"));
 
         nodemat.vs = String::from(include_str!("./default.vert"));
         nodemat.fs = String::from(include_str!("./default.frag"));
         nodemat.binddefines = BindDefines::MODEL_BIND | BindDefines::VIEWER | BindDefines::EFFECT_VALUE_BIND;
 
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(BlockMainTexture::KEY_COLOR), [1., 1., 1., 1.]));
+        nodemat.values.vec3_list.push(UniformPropertyVec3(Atom::from(BlockMainTexture::KEY_COLOR), [1., 1., 1.], true));
         nodemat.varyings = Varyings(
             vec![
                 Varying { 

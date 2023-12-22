@@ -14,7 +14,7 @@ impl TNodeMaterialBlock for BlockEmissiveTextureUVOffsetSpeed {
 
     fn vec2() -> Vec<UniformPropertyVec2> {
         vec![
-            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.])
+            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.], false)
         ]
     }
 }

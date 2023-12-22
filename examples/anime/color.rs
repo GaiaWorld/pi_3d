@@ -1,11 +1,13 @@
 #![feature(box_into_inner)]
 
 
+use default_render::shader::DefaultShader;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
 use pi_gltf2_load::*;
-use pi_node_materials::prelude::MainColor;
+use pi_node_materials::prelude::BlockMainTexture;
+// use pi_node_materials::prelude::MainColor;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
@@ -95,19 +97,20 @@ fn setup(
     {
         let key_curve0 = pi_atom::Atom::from("COLOR");
         let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<MainColor>::curve_easing(MainColor(Vector3::new(0., 0., 0.)), MainColor(Vector3::new(1., 0., 0.)), 60 as FrameIndex, 30, EEasingMode::None);
+        let curve = FrameCurve::<AnimatorableVec3>::curve_easing(AnimatorableVec3(Vector3::new(0., 0., 0.)), AnimatorableVec3(Vector3::new(1., 0., 0.)), 60 as FrameIndex, 30, EEasingMode::None);
         
-        let asset_curve = if let Some(curve) = anime_assets.maincolor_curves.get(&key_curve0) {
+        let asset_curve = if let Some(curve) = anime_assets.vec3s.get(&key_curve0) {
             curve
         } else {
-            match anime_assets.maincolor_curves.insert(key_curve0, TypeFrameCurve(curve)) {
+            match anime_assets.vec3s.insert(key_curve0, TypeFrameCurve(curve)) {
                 Ok(value) => { value },
                 Err(_) => { return; },
             }
         };
 
-        let animation = anime_contexts.maincolor.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
+        let animation = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
+        actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), animation));
     }
 
     let q = LocalRotationQuaternion::create(0., -0.9, 0., 0.1);

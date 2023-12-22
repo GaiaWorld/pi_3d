@@ -18,7 +18,7 @@ vec4 PremultiplyResult(vec4 finalColor) {
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_FLAG), 0.0)
+            UniformPropertyFloat(Atom::from(Self::KEY_FLAG), 0.0, false)
         ]
     }
 }

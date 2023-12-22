@@ -1,5 +1,8 @@
 
+use std::sync::Arc;
+
 use pi_engine_shell::prelude::*;
+use pi_hash::XHashMap;
 use pi_scene_math::{Vector4, Matrix, Matrix2, Vector2, Number};
 use pi_share::ThreadSync;
 
@@ -50,3 +53,20 @@ pub trait UniformBind {
 pub trait SlotActiveRequire {
     const ASK_SLOT_COUNT: u8;
 }
+
+#[derive(Component)]
+pub struct AnimatorableUniformVec4A { pub value: Entity }
+#[derive(Component)]
+pub struct AnimatorableUniformVec4B { pub value: Entity }
+#[derive(Component)]
+pub struct AnimatorableUniformVec4C { pub value: Entity }
+#[derive(Component)]
+pub struct AnimatorableUniformVec4D { pub value: Entity }
+#[derive(Component)]
+pub struct AnimatorableUniformVec4E { pub value: Entity }
+#[derive(Component)]
+pub struct AnimatorableUniformVec4F { pub value: Entity }
+#[derive(Component)]
+pub struct AnimatorableUniformVec4G { pub value: Entity }
+#[derive(Component)]
+pub struct AnimatorableUniformVec4H { pub value: Entity }

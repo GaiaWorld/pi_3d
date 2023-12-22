@@ -16,14 +16,14 @@ impl TNodeMaterialBlock for BlockOpacityFresnel {
 
     fn vec2() -> Vec<UniformPropertyVec2> {
         vec![
-            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0.4, 0.]),
+            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0.4, 0.], true),
         ]
     }
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_LEFT), 0.),
-            UniformPropertyFloat(Atom::from(Self::KEY_RIGHT), 0.),
+            UniformPropertyFloat(Atom::from(Self::KEY_LEFT), 0., true),
+            UniformPropertyFloat(Atom::from(Self::KEY_RIGHT), 0., true),
         ]
     }
 }

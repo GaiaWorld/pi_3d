@@ -41,7 +41,7 @@ fn define_sampler(desc: &UniformTexture2DDesc, index: usize, set: u32, bind: u32
     result += slotname.as_str();
     result += "\r\n";
     result += "vec4 texture2D"; result += &idx; result += "(vec2 uv) {\r\n";
-    result += "    uv = floor(uv) + fract(uv) * uTilloff"; result += &idx; result += ".xy + uTilloff"; result += &idx; result += ".zw;\r\n";
+    result += "    uv = floor(uv) + fract(uv) * uTexST"; result += &idx; result += ".xy + uTexST"; result += &idx; result += ".zw;\r\n";
     result += "    return texture(sampler2D(_Texture"; result += &idx; result += ", sampler_Texture"; result += &idx; result += "), uv);\r\n";
     result += "}\r\n";
     result

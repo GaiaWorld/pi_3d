@@ -1,4 +1,4 @@
-use animation_sys::sys_material_anime_init;
+
 use base::{NodeMaterialBlockInfo, TNodeMaterialBlock};
 use common::*;
 use emissive::emissive_texture::BlockEmissiveTexture;
@@ -41,14 +41,14 @@ impl NodeMaterialBlocks {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
-pub enum StageNodeMaterial {
-    InitAnimeAbout,
-    _InitAnimeAboutApply,
-    Command,
-    _CommandApply,
-    ApplyAnimeAbout,
-}
+// #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+// pub enum StageNodeMaterial {
+//     InitAnimeAbout,
+//     _InitAnimeAboutApply,
+//     Command,
+//     _CommandApply,
+//     ApplyAnimeAbout,
+// }
 
 pub struct PluginNodeMaterial;
 impl Plugin for PluginNodeMaterial {
@@ -95,41 +95,41 @@ impl Plugin for PluginNodeMaterial {
 
         app.insert_resource(blocks);
 
-        app.insert_resource(ActionListAlpha::default());
-        app.insert_resource(ActionListAlphaCutoff::default());
-        app.insert_resource(ActionListLightDiffuse::default());
-        app.insert_resource(ActionListMainColor::default());
-        app.insert_resource(ActionListMainTexTilloff::default());
-        app.insert_resource(ActionListMaskCutoff::default());
-        app.insert_resource(ActionListMaskTexTilloff::default());
-        app.insert_resource(ActionListOpacityTexTilloff::default());
+        // app.insert_resource(ActionListAlpha::default());
+        // app.insert_resource(ActionListAlphaCutoff::default());
+        // app.insert_resource(ActionListLightDiffuse::default());
+        // app.insert_resource(ActionListMainColor::default());
+        // app.insert_resource(ActionListMainTexTilloff::default());
+        // app.insert_resource(ActionListMaskCutoff::default());
+        // app.insert_resource(ActionListMaskTexTilloff::default());
+        // app.insert_resource(ActionListOpacityTexTilloff::default());
 
-        app.configure_set(Update, StageNodeMaterial::InitAnimeAbout.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, StageNodeMaterial::_InitAnimeAboutApply.after(StageNodeMaterial::InitAnimeAbout));
-        app.configure_set(Update, StageNodeMaterial::Command.after(StageNodeMaterial::_InitAnimeAboutApply));
-        // app.configure_set(Update, StageNodeMaterial::_CommandApply.after(StageNodeMaterial::Command));
-        app.configure_set(Update, StageNodeMaterial::ApplyAnimeAbout.after(StageNodeMaterial::Command).after(ERunStageChap::Anime).before(StageMaterial::MaterialCommand));
+        // app.configure_set(Update, StageNodeMaterial::InitAnimeAbout.after(ERunStageChap::_InitialApply));
+        // app.configure_set(Update, StageNodeMaterial::_InitAnimeAboutApply.after(StageNodeMaterial::InitAnimeAbout));
+        // app.configure_set(Update, StageNodeMaterial::Command.after(StageNodeMaterial::_InitAnimeAboutApply));
+        // // app.configure_set(Update, StageNodeMaterial::_CommandApply.after(StageNodeMaterial::Command));
+        // app.configure_set(Update, StageNodeMaterial::ApplyAnimeAbout.after(StageNodeMaterial::Command).after(ERunStageChap::Anime).before(StageMaterial::MaterialCommand));
 
-        app.add_systems(Update, apply_deferred.in_set(StageNodeMaterial::_InitAnimeAboutApply));
+        // app.add_systems(Update, apply_deferred.in_set(StageNodeMaterial::_InitAnimeAboutApply));
         // app.add_systems(Update, apply_deferred.in_set(StageNodeMaterial::_CommandApply));
 
-        app.add_systems(Update, sys_material_anime_init.in_set(StageNodeMaterial::InitAnimeAbout));
+        // app.add_systems(Update, sys_material_anime_init.in_set(StageNodeMaterial::InitAnimeAbout));
         
-        app.add_systems(
-			Update,
-            (
-                sys_act_alpha,
-                sys_act_alphacutoff,
-                sys_act_lightdiffuse,
-                sys_act_maincolor,
-                sys_act_maintex_tilloff,
-                sys_act_maskcutoff,
-                sys_act_masktex_tilloff,
-                sys_act_opacitytex_tilloff,
-            ).in_set(StageNodeMaterial::Command)
-        );
+        // app.add_systems(
+		// 	Update,
+        //     (
+        //         sys_act_alpha,
+        //         sys_act_alphacutoff,
+        //         sys_act_lightdiffuse,
+        //         sys_act_maincolor,
+        //         sys_act_maintex_tilloff,
+        //         sys_act_maskcutoff,
+        //         sys_act_masktex_tilloff,
+        //         sys_act_opacitytex_tilloff,
+        //     ).in_set(StageNodeMaterial::Command)
+        // );
 
-        app.add_systems(Update, sys_node_material_uniform_update.in_set(StageNodeMaterial::ApplyAnimeAbout));
+        // app.add_systems(Update, sys_node_material_uniform_update.in_set(StageNodeMaterial::ApplyAnimeAbout));
 
     }
 }
@@ -138,25 +138,25 @@ pub struct PluginGroupNodeMaterialAnime;
 impl PluginGroup for PluginGroupNodeMaterialAnime {
     fn build(self) -> PluginGroupBuilder {
         let group = PluginGroupBuilder::start::<Self>();
-
         group
-            .add(PluginAnimeMainTexUScale       ::new())
-            .add(PluginAnimeMainTexVScale       ::new())
-            .add(PluginAnimeMainTexUOffset      ::new())
-            .add(PluginAnimeMainTexVOffset      ::new())
-            .add(PluginAnimeOpacityTexUScale    ::new())
-            .add(PluginAnimeOpacityTexVScale    ::new())
-            .add(PluginAnimeOpacityTexUOffset   ::new())
-            .add(PluginAnimeOpacityTexVOffset   ::new())
-            .add(PluginAnimeMaskTexUScale       ::new())
-            .add(PluginAnimeMaskTexVScale       ::new())
-            .add(PluginAnimeMaskTexUOffset      ::new())
-            .add(PluginAnimeMaskTexVOffset      ::new())
-            .add(PluginAnimeMainColor           ::new())
-            .add(PluginAnimeAlpha               ::new())
-            .add(PluginAnimeCutoff              ::new())
-            .add(PluginAnimeMaskCutoff          ::new())
-            .add(PluginAnimeLightDiffuse        ::new())
+        // group
+        //     .add(PluginAnimeMainTexUScale       ::new())
+        //     .add(PluginAnimeMainTexVScale       ::new())
+        //     .add(PluginAnimeMainTexUOffset      ::new())
+        //     .add(PluginAnimeMainTexVOffset      ::new())
+        //     .add(PluginAnimeOpacityTexUScale    ::new())
+        //     .add(PluginAnimeOpacityTexVScale    ::new())
+        //     .add(PluginAnimeOpacityTexUOffset   ::new())
+        //     .add(PluginAnimeOpacityTexVOffset   ::new())
+        //     .add(PluginAnimeMaskTexUScale       ::new())
+        //     .add(PluginAnimeMaskTexVScale       ::new())
+        //     .add(PluginAnimeMaskTexUOffset      ::new())
+        //     .add(PluginAnimeMaskTexVOffset      ::new())
+        //     .add(PluginAnimeMainColor           ::new())
+        //     .add(PluginAnimeAlpha               ::new())
+        //     .add(PluginAnimeCutoff              ::new())
+        //     .add(PluginAnimeMaskCutoff          ::new())
+        //     .add(PluginAnimeLightDiffuse        ::new())
 
     }
 }

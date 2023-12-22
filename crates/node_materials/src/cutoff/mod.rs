@@ -14,7 +14,7 @@ impl TNodeMaterialBlock for BlockCutoff {
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_VALUE), 0.)
+            UniformPropertyFloat(Atom::from(Self::KEY_VALUE), 0., true)
         ]
     }
 }

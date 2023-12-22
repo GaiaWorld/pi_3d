@@ -86,11 +86,11 @@ fn setup(
             0.5
         )
     );
-    actions.material.vec4.push(
-        OpsUniformVec4::ops(
+    actions.material.vec3.push(
+        OpsUniformVec3::ops(
             idmat, 
             Atom::from(BlockEmissiveTexture::KEY_INFO), 
-            1., 1., 1., 1.
+            1., 1., 1.,
         )
     );
     
@@ -102,25 +102,22 @@ fn setup(
     {
         let key_curve0 = pi_atom::Atom::from("cutoff");
         let key_curve0 =key_curve0.asset_u64();
-        let mut curve = FrameCurve::<Cutoff>::curve_frame_values(10000);
-        curve.curve_frame_values_frame(0, Cutoff(0.));
-        curve.curve_frame_values_frame(10000, Cutoff(1.));
+        let mut curve = FrameCurve::<AnimatorableFloat>::curve_frame_values(10000);
+        curve.curve_frame_values_frame(0, AnimatorableFloat(0.));
+        curve.curve_frame_values_frame(10000, AnimatorableFloat(1.));
         
-        let asset_curve = if let Some(curve) = anime_assets.alphacutoff.get(&key_curve0) {
+        let asset_curve = if let Some(curve) = anime_assets.float.get(&key_curve0) {
             curve
         } else {
-            match anime_assets.alphacutoff.insert(key_curve0, TypeFrameCurve(curve)) {
-                Ok(value) => {
-                    value
-                },
-                Err(_) => {
-                    return;
-                },
+            match anime_assets.float.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => { value },
+                Err(_) => { return; },
             }
         };
     
-        let animation = anime_contexts.alphacutoff.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group, animation);
+        let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group, animation);
+        actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), animation));
     }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
@@ -133,12 +130,8 @@ fn setup(
             curve
         } else {
             match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
-                Ok(value) => {
-                    value
-                },
-                Err(_e) => {
-                    return;
-                },
+                Ok(value) => { value },
+                Err(_e) => { return; },
             }
         };
     

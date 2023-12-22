@@ -1,5 +1,7 @@
 
 
+use std::ops::Deref;
+
 use bevy::{
     app::prelude::*, ecs::prelude::*,
     ecs::system::EntityCommands,
@@ -10,9 +12,11 @@ use pi_curves::curve::frame_curve::FrameCurve;
 
 use crate::prelude::Performance;
 
+use super::RecordAnimatorableUint;
 use super::base::*;
 use super::command::*;
 use super::float::RecordAnimatorableFloat;
+use super::int::RecordAnimatorableInt;
 use super::vec2::RecordAnimatorableVec2;
 use super::vec3::RecordAnimatorableVec3;
 use super::vec4::RecordAnimatorableVec4;
@@ -22,26 +26,44 @@ pub fn sys_create_animatorable_entity(
     mut cmds_vec2: ResMut<ActionListAnimatorableVec2>,
     mut cmds_vec3: ResMut<ActionListAnimatorableVec3>,
     mut cmds_vec4: ResMut<ActionListAnimatorableVec4>,
+    // mut cmds_mat4: ResMut<ActionListAnimatorableMat4>,
+    mut cmds_uint: ResMut<ActionListAnimatorableUint>,
+    mut cmds_int: ResMut<ActionListAnimatorableInt>,
     mut commands: Commands,
 ) {
-    cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, value)| {
+    cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, linked, value)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(RecordAnimatorableFloat(value.clone()));
+            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableFloat(value.clone()));
         }
     });
-    cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, value)| {
+    cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, linked, value)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(RecordAnimatorableVec2(value.clone()));
+            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec2(value.clone()));
         }
     });
-    cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, value)| {
+    cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, linked, value)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(RecordAnimatorableVec3(value.clone()));
+            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec3(value.clone()));
         }
     });
-    cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, value)| {
+    cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, linked, value)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(RecordAnimatorableVec4(value.clone()));
+            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec4(value.clone()));
+        }
+    });
+    // cmds_mat4.drain().drain(..).for_each(|OpsAnimatorableMat4(entity, linked, value)| {
+    //     if let Some(mut cmd) = commands.get_entity(entity) {
+    //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec4(value.clone()));
+    //     }
+    // });
+    cmds_uint.drain().drain(..).for_each(|OpsAnimatorableUint(entity, linked, value)| {
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableUint(value.clone()));
+        }
+    });
+    cmds_int.drain().drain(..).for_each(|OpsAnimatorableInt(entity, linked, value)| {
+        if let Some(mut cmd) = commands.get_entity(entity) {
+            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableInt(value.clone()));
         }
     });
 }
@@ -205,13 +227,19 @@ pub fn sys_calc_reset_while_animationgroup_start(
 
 /// 动画结束后将目标值 重置 为操作修改的值
 pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecord<D>>(
-    mut items: Query<(&mut D, Option<&R>), Changed<FlagAnimationStartResetComp>>,
+    mut items: Query<(&mut D, Option<&R>, Option<&AnimatorableLink>), Changed<FlagAnimationStartResetComp>>,
+    mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
 ) {
-    items.iter_mut().for_each(|(mut comp, record)| {
+    items.iter_mut().for_each(|(mut comp, record, linked)| {
         if let Some(record) = record {
             *comp = record.comp();
         } else {
             *comp = D::default();
+        }
+        if let Some(linked) = linked {
+            if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
+                *item = TargetAnimatorableIsRunning;
+            }
         }
     });
 }
@@ -220,7 +248,8 @@ pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecor
 pub fn sys_calc_type_anime<D: TAnimatableComp>(
     type_ctx: Res<TypeAnimeContext<D>>,
     runinfos: Res<GlobalAnimeAbout>,
-    mut items: Query<&mut D>,
+    mut items: Query<(&mut D, Option<&AnimatorableLink>)>,
+    mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
     mut performance: ResMut<Performance>,
     // empty: Res<SingleEmptyEntity>,
 ) {
@@ -235,7 +264,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
             let mut last_value: D = D::default();
             let mut last_weight: f32 = 0.;
 
-            if let Ok(mut item) = items.get_mut(*target) {
+            if let Ok((mut item, linked)) = items.get_mut(*target) {
                 let mut enable = false;
                 info.iter().for_each(|info| {
                     if let Some(Some(curve)) = curves.get(info.curve_id) {
@@ -248,6 +277,11 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
                 
                 if enable {
                     *item = last_value;
+                    if let Some(linked) = linked {
+                        if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
+                            *item = TargetAnimatorableIsRunning;
+                        }
+                    }
                 }
             } else {
                 // log::warn!("Animation Target NotFound:");

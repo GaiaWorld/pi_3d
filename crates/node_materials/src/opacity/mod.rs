@@ -17,7 +17,7 @@ float opacity() {
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_ALPHA), 1.0)
+            UniformPropertyFloat(Atom::from(Self::KEY_ALPHA), 1.0, true)
         ]
     }
 }
@@ -39,19 +39,19 @@ impl TNodeMaterialBlock for BlockOpacityTexture {
 
     fn vec4() -> Vec<UniformPropertyVec4> {
         vec![
-            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.])
+            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.], true)
         ]
     }
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_LEVEL), 1.0)
+            UniformPropertyFloat(Atom::from(Self::KEY_LEVEL), 1.0, true)
         ]
     }
 
     fn uint() -> Vec<UniformPropertyUint> {
         vec![
-            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A)
+            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A, false)
         ]
     }
 
@@ -82,7 +82,7 @@ impl TNodeMaterialBlock for BlockOpacityTextureUVOffsetSpeed {
 
     fn vec2() -> Vec<UniformPropertyVec2> {
         vec![
-            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.])
+            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.], false)
         ]
     }
 }
@@ -104,19 +104,19 @@ impl TNodeMaterialBlock for BlockOpacity2Texture {
 
     fn vec4() -> Vec<UniformPropertyVec4> {
         vec![
-            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.])
+            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.], true)
         ]
     }
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_LEVEL), 1.0)
+            UniformPropertyFloat(Atom::from(Self::KEY_LEVEL), 1.0, true)
         ]
     }
 
     fn uint() -> Vec<UniformPropertyUint> {
         vec![
-            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A)
+            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A, false)
         ]
     }
 
@@ -147,7 +147,7 @@ impl TNodeMaterialBlock for BlockOpacity2TextureUVOffsetSpeed {
 
     fn vec2() -> Vec<UniformPropertyVec2> {
         vec![
-            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.])
+            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.], false)
         ]
     }
 }

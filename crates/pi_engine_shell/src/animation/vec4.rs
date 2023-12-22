@@ -1,11 +1,16 @@
 use bevy::ecs::component::Component;
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
-use pi_scene_math::Vector4;
+use pi_scene_math::{Vector4, Number};
 
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct AnimatorableVec4(pub Vector4);
+impl From<&[Number; 4]> for AnimatorableVec4 {
+    fn from(v: &[Number; 4]) -> Self {
+        Self(Vector4::new(v[0], v[1], v[2], v[3]))
+    }
+}
 impl Default for AnimatorableVec4 {
     fn default() -> Self {
         Self(Vector4::new(0.0, 0.0, 0.0, 0.0))
@@ -25,7 +30,7 @@ impl pi_curves::curve::frame::FrameDataValue for AnimatorableVec4 {
         Self(self.0 + rhs.0 * amount)
     }
     fn size() -> usize {
-        4
+        4 * 4
     }
 }
 impl TAssetCapacity for AnimatorableVec4 {

@@ -10,5 +10,5 @@ vec3 mainColor() {
 }
 
 float mainStrength() {
-    return uMainInfo.w;
+    return _MainTexLevel;
 }

@@ -16,18 +16,19 @@ impl WaterShader {
                 mat4_list: vec![],
                 // mat2_list: vec![],
                 vec4_list: vec![
-                    UniformPropertyVec4(Atom::from("sea_base"), [0.0, 0.09, 0.18, 1.]),
+                    UniformPropertyVec4(Atom::from("sea_base"), [0.0, 0.09, 0.18, 1.], true),
                     UniformPropertyVec4(
                         Atom::from("sea_water_color"),
-                        [0.48, 0.54, 0.36, 1.0],
+                        [0.48, 0.54, 0.36, 1.0], true
                     ),
                 ],
+                vec3_list: vec![],
                 vec2_list: vec![],
                 float_list: vec![
-                    UniformPropertyFloat(Atom::from("width"), 800.),
-                    UniformPropertyFloat(Atom::from("height"), 600.),
-                    UniformPropertyFloat(Atom::from("iTime"), 0.2),
-                    UniformPropertyFloat(Atom::from("phantom_data"), 0.),
+                    UniformPropertyFloat(Atom::from("width"), 800., true),
+                    UniformPropertyFloat(Atom::from("height"), 600., true),
+                    UniformPropertyFloat(Atom::from("iTime"), 0.2, true),
+                    UniformPropertyFloat(Atom::from("phantom_data"), 0., true),
                 ],
                 // int_list: vec![],
                 uint_list: vec![],

@@ -116,19 +116,56 @@ pub fn sys_material_textures_modify(
 }
 
 pub fn sys_material_uniform_apply(
-    mut items: Query<
-        &BindEffect,
-        Changed<BindEffectValueDirty>,
-    >,
+    floats: Query<&AnimatorableFloat, Changed<AnimatorableFloat>>,
+    _vec2s: Query<&AnimatorableVec2 , Changed<AnimatorableVec2>>,
+    _vec3s: Query<&AnimatorableVec3 , Changed<AnimatorableVec3>>,
+    _vec4s: Query<&AnimatorableVec4 , Changed<AnimatorableVec4>>,
+    _uints: Query<&AnimatorableUint , Changed<AnimatorableUint>>,
+    items: Query<(&BindEffect, &UniformAnimated), Changed<TargetAnimatorableIsRunning>>,
     mut performance: ResMut<Performance>,
 ) {
     let time0 = pi_time::Instant::now();
-    items.iter_mut().for_each(|bind| {
-        match &bind.0 {
-            Some(bind) => bind.update(),
-            None => {},
+    items.iter().for_each(|(bind, animated)| {
+        if let Some(bind) = &bind.0 {
+            animated.0.iter().for_each(|_k| {
+                if let Some(v) = bind.offset(_k) {
+                    match v {
+                        UniformOffset::Animatorable(offset) => {
+                            match offset.atype() {
+                                EAnimatorableType::Vec4 => {
+                                    if let Ok(value) = _vec4s.get(offset.entity()) {
+                                        bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
+                                    }
+                                },
+                                EAnimatorableType::Vec3 => {
+                                    if let Ok(value) = _vec3s.get(offset.entity()) {
+                                        bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
+                                    }
+                                },
+                                EAnimatorableType::Vec2 => {
+                                    if let Ok(value) = _vec2s.get(offset.entity()) {
+                                        bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
+                                    }
+                                },
+                                EAnimatorableType::Float => {
+                                    if let Ok(value) = floats.get(offset.entity()) {
+                                        bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
+                                    }
+                                },
+                                EAnimatorableType::Uint => {
+                                    if let Ok(value) = _uints.get(offset.entity()) {
+                                        bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
+                                    }
+                                },
+                                EAnimatorableType::Int => {
+                                },
+                            }
+                        },
+                        UniformOffset::UnAnimatorable(_) => {},
+                    }
+                }
+            });
         }
-        
     });
     performance.uniformbufferupdate = (pi_time::Instant::now() - time0).as_micros() as u32;
 }

@@ -6,6 +6,7 @@ impl BlockMainTexture {
     pub const KEY_COLOR: &'static str = "uMainInfo";
     pub const KEY_TILLOFF: &'static str = "uMainTilloff";
     pub const KEY_TEX: &'static str = "_MainTex";
+    pub const KEY_TEX_LEVEL: &'static str = "_MainTexLevel";
 }
 impl TNodeMaterialBlock for BlockMainTexture {
     const KEY: &'static str = "MAIN_TEXTURE";
@@ -16,8 +17,19 @@ impl TNodeMaterialBlock for BlockMainTexture {
 
     fn vec4() -> Vec<UniformPropertyVec4> {
         vec![
-            UniformPropertyVec4(Atom::from(Self::KEY_COLOR), [1., 1., 1., 1.]),
-            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.]),
+            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.], true),
+        ]
+    }
+
+    fn vec3() -> Vec<UniformPropertyVec3> {
+        vec![
+            UniformPropertyVec3(Atom::from(Self::KEY_COLOR), [1., 1., 1.], true),
+        ]
+    }
+
+    fn float() -> Vec<UniformPropertyFloat> {
+        vec![
+            UniformPropertyFloat(Atom::from(Self::KEY_TEX_LEVEL), 1., true),
         ]
     }
 
@@ -49,7 +61,7 @@ impl TNodeMaterialBlock for BlockMainTextureUVOffsetSpeed {
 
     fn vec2() -> Vec<UniformPropertyVec2> {
         vec![
-            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.])
+            UniformPropertyVec2(Atom::from(Self::KEY_PARAM), [0., 0.], false)
         ]
     }
 }

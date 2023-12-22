@@ -16,8 +16,9 @@ impl SkyboxShader {
                 mat4_list: vec![],
                 // mat2_list: vec![],
                 vec4_list: vec![
-                    UniformPropertyVec4(Atom::from("emissive"), [1., 1., 1., 0.5]),
+                    UniformPropertyVec4(Atom::from("emissive"), [1., 1., 1., 0.5], true),
                 ],
+                vec3_list: vec![],
                 vec2_list: vec![],
                 float_list: vec![],
                 // int_list: vec![],

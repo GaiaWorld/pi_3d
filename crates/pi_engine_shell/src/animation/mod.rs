@@ -5,6 +5,9 @@ mod float;
 mod vec2;
 mod vec3;
 mod vec4;
+mod uint;
+mod int;
+mod mat4;
 
 use std::marker::PhantomData;
 
@@ -13,6 +16,13 @@ use bevy::{prelude::{App, Plugin, IntoSystemConfigs, Entity, Update}, ecs::sched
 pub use base::*;
 pub use command::*;
 pub use command_sys::*;
+pub use float::*;
+pub use mat4::*;
+pub use uint::*;
+pub use int::*;
+pub use vec2::*;
+pub use vec3::*;
+pub use vec4::*;
 use pi_assets::asset::GarbageEmpty;
 use pi_bevy_asset::{ShareAssetMgr, AssetMgrConfigs};
 use pi_bevy_render_plugin::should_run;
@@ -20,6 +30,17 @@ use pi_curves::curve::frame::KeyFrameDataTypeAllocator;
 use pi_hash::XHashMap;
 
 use crate::prelude::ERunStageChap;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum EAnimatorableType {
+    // Mat4,
+    Vec4,
+    Vec3,
+    Vec2,
+    Float,
+    Uint,
+    Int,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum EStageAnimation {
@@ -38,6 +59,8 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAnimatorableVec2::default());
         app.insert_resource(ActionListAnimatorableVec3::default());
         app.insert_resource(ActionListAnimatorableVec4::default());
+        app.insert_resource(ActionListAnimatorableUint::default());
+        app.insert_resource(ActionListAnimatorableInt::default());
         // app.insert_resource(ActionListAnimeGroupCreate::default());
         // app.insert_resource(ActionListAnimeGroupPause::default());
         // app.insert_resource(ActionListAnimeGroupStart::default());
@@ -46,7 +69,7 @@ impl Plugin for PluginGlobalAnimation {
         app.configure_set(Update, EStageAnimation::Create.after(ERunStageChap::_InitialApply));
         app.configure_set(Update, EStageAnimation::_CreateApply.after(EStageAnimation::Create));
         app.configure_set(Update, EStageAnimation::Command.after(EStageAnimation::_CreateApply));
-        app.configure_set(Update, EStageAnimation::Running.after(EStageAnimation::Command));
+        app.configure_set(Update, EStageAnimation::Running.after(EStageAnimation::Command).before(ERunStageChap::Anime));
         app.add_systems(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
         
         app.add_systems(
@@ -65,7 +88,7 @@ impl Plugin for PluginGlobalAnimation {
                 // sys_anime_add_target_anime.run_if(should_run),
                 // sys_anime_start.run_if(should_run),
                 // sys_anime_pause.run_if(should_run),
-            ).chain().in_set(ERunStageChap::Command)
+            ).chain().in_set(EStageAnimation::Command)
         );
         
         app.add_systems(Update, 
@@ -125,3 +148,10 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
         // SysTypeAnime::<D>::setup(world, stages.query_stage::<SysTypeAnime::<D>>(ERunStageChap::Anime));
     }
 }
+
+pub type PluginTypeAnimatorableFloat = PluginTypeAnime<AnimatorableFloat, RecordAnimatorableFloat>;
+pub type PluginTypeAnimatorableVec2 = PluginTypeAnime<AnimatorableVec2, RecordAnimatorableVec2>;
+pub type PluginTypeAnimatorableVec3 = PluginTypeAnime<AnimatorableVec3, RecordAnimatorableVec3>;
+pub type PluginTypeAnimatorableVec4 = PluginTypeAnime<AnimatorableVec4, RecordAnimatorableVec4>;
+pub type PluginTypeAnimatorableUint = PluginTypeAnime<AnimatorableUint, RecordAnimatorableUint>;
+pub type PluginTypeAnimatorableInt = PluginTypeAnime<AnimatorableInt, RecordAnimatorableInt>;

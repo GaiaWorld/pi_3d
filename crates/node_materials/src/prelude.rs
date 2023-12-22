@@ -39,23 +39,23 @@ impl AsRef<AssetCapacity> for AssetCfgMaterialAnime {
     }
 }
 
-pub type PluginAnimeMainTexUScale       = PluginTypeAnime<MainTexUScale,        RecordMainTexUScale     >;
-pub type PluginAnimeMainTexVScale       = PluginTypeAnime<MainTexVScale,        RecordMainTexVScale     >;
-pub type PluginAnimeMainTexUOffset      = PluginTypeAnime<MainTexUOffset,       RecordMainTexUOffset    >;
-pub type PluginAnimeMainTexVOffset      = PluginTypeAnime<MainTexVOffset,       RecordMainTexVOffset    >;
-pub type PluginAnimeOpacityTexUScale    = PluginTypeAnime<OpacityTexUScale,     RecordOpacityTexUScale  >;
-pub type PluginAnimeOpacityTexVScale    = PluginTypeAnime<OpacityTexVScale,     RecordOpacityTexVScale  >;
-pub type PluginAnimeOpacityTexUOffset   = PluginTypeAnime<OpacityTexUOffset,    RecordOpacityTexUOffset >;
-pub type PluginAnimeOpacityTexVOffset   = PluginTypeAnime<OpacityTexVOffset,    RecordOpacityTexVOffset >;
-pub type PluginAnimeMaskTexUScale       = PluginTypeAnime<MaskTexUScale,        RecordMaskTexUScale     >;
-pub type PluginAnimeMaskTexVScale       = PluginTypeAnime<MaskTexVScale,        RecordMaskTexVScale     >;
-pub type PluginAnimeMaskTexUOffset      = PluginTypeAnime<MaskTexUOffset,       RecordMaskTexUOffset    >;
-pub type PluginAnimeMaskTexVOffset      = PluginTypeAnime<MaskTexVOffset,       RecordMaskTexVOffset    >;
-pub type PluginAnimeMainColor           = PluginTypeAnime<MainColor,            RecordMainColor         >;
-pub type PluginAnimeAlpha               = PluginTypeAnime<Alpha,                RecordAlpha             >;
-pub type PluginAnimeCutoff              = PluginTypeAnime<Cutoff,               RecordCutoff            >;
-pub type PluginAnimeMaskCutoff          = PluginTypeAnime<MaskCutoff,           RecordMaskCutoff        >;
-pub type PluginAnimeLightDiffuse        = PluginTypeAnime<LightDiffuse,         RecordLightDiffuse      >;
+// pub type PluginAnimeMainTexUScale       = PluginTypeAnime<MainTexUScale,        RecordMainTexUScale     >;
+// pub type PluginAnimeMainTexVScale       = PluginTypeAnime<MainTexVScale,        RecordMainTexVScale     >;
+// pub type PluginAnimeMainTexUOffset      = PluginTypeAnime<MainTexUOffset,       RecordMainTexUOffset    >;
+// pub type PluginAnimeMainTexVOffset      = PluginTypeAnime<MainTexVOffset,       RecordMainTexVOffset    >;
+// pub type PluginAnimeOpacityTexUScale    = PluginTypeAnime<OpacityTexUScale,     RecordOpacityTexUScale  >;
+// pub type PluginAnimeOpacityTexVScale    = PluginTypeAnime<OpacityTexVScale,     RecordOpacityTexVScale  >;
+// pub type PluginAnimeOpacityTexUOffset   = PluginTypeAnime<OpacityTexUOffset,    RecordOpacityTexUOffset >;
+// pub type PluginAnimeOpacityTexVOffset   = PluginTypeAnime<OpacityTexVOffset,    RecordOpacityTexVOffset >;
+// pub type PluginAnimeMaskTexUScale       = PluginTypeAnime<MaskTexUScale,        RecordMaskTexUScale     >;
+// pub type PluginAnimeMaskTexVScale       = PluginTypeAnime<MaskTexVScale,        RecordMaskTexVScale     >;
+// pub type PluginAnimeMaskTexUOffset      = PluginTypeAnime<MaskTexUOffset,       RecordMaskTexUOffset    >;
+// pub type PluginAnimeMaskTexVOffset      = PluginTypeAnime<MaskTexVOffset,       RecordMaskTexVOffset    >;
+// pub type PluginAnimeMainColor           = PluginTypeAnime<MainColor,            RecordMainColor         >;
+// pub type PluginAnimeAlpha               = PluginTypeAnime<Alpha,                RecordAlpha             >;
+// pub type PluginAnimeCutoff              = PluginTypeAnime<Cutoff,               RecordCutoff            >;
+// pub type PluginAnimeMaskCutoff          = PluginTypeAnime<MaskCutoff,           RecordMaskCutoff        >;
+// pub type PluginAnimeLightDiffuse        = PluginTypeAnime<LightDiffuse,         RecordLightDiffuse      >;
 
 // #[derive(SystemParam)]
 // pub struct ActionSetMaterialAnime<'w> {

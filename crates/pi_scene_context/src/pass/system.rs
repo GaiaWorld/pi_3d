@@ -30,7 +30,7 @@ pub fn sys_modify_pass_effect_by_pass(
             passready.0 = effect.clone();
             passtextures.0 = bindtextures.clone();
             match bindvalue {
-                Some(bindvalue) => passbind.0 = Some(bindvalue.bind.clone()),
+                Some(bindvalue) => passbind.0 = Some(bindvalue.bind()),
                 None =>  passbind.0 = None ,
             }
         }
@@ -78,7 +78,7 @@ pub fn sys_modify_pass_effect_by_material(
 
                 match bindvalue {
                     Some(bindvalue) => {
-                        passbind.0 = Some(bindvalue.bind.clone())
+                        passbind.0 = Some(bindvalue.bind())
                     },
                     None =>  passbind.0 = None ,
                 }

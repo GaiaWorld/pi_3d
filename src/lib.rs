@@ -137,6 +137,12 @@ impl PluginGroup for PluginBundleDefault {
         group = group.add(PluginSceneAnimation);
         group = group.add(PluginFlags);
         group = group.add(PluginAnimeNodeEnable::new());
+        group = group.add(PluginTypeAnimatorableFloat::new());
+        group = group.add(PluginTypeAnimatorableVec2::new());
+        group = group.add(PluginTypeAnimatorableVec3::new());
+        group = group.add(PluginTypeAnimatorableVec4::new());
+        group = group.add(PluginTypeAnimatorableUint::new());
+        group = group.add(PluginTypeAnimatorableInt::new());
         group = PluginGroupTransformNode::add(group);
         group = group.add(PluginCamera)
             .add(PluginAnimeCameraFOV::new())
@@ -214,6 +220,7 @@ pub struct ActionSets<'w> {
     pub geometry: ActionSetGeometry<'w>,
     pub material: ActionSetMaterial<'w>,
     pub anime: ActionSetAnimationGroup<'w>,
+    pub anime_uniform: ResMut<'w, ActionListTargetAnimationUniform>,
     pub renderer: ActionSetRenderer<'w>,
     pub trail: ActionSetTrailRenderer<'w>,
     pub parsys: ActionSetParticleSystem<'w>,

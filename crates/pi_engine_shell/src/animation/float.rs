@@ -8,7 +8,7 @@ use super::{TAnimatableComp, TAnimatableCompRecord};
 pub struct AnimatorableFloat(pub Number);
 impl Default for AnimatorableFloat {
     fn default() -> Self {
-        Self(0.0001)
+        Self(0.0)
     }
 }
 impl pi_curves::curve::frame::FrameDataValue for AnimatorableFloat {

@@ -82,25 +82,27 @@ fn setup(
     {
         let key_curve0 = pi_atom::Atom::from("color");
         let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<MainColor>::curve_easing(MainColor(Vector3::new(0.5, 0.5, 0.5)), MainColor(Vector3::new(1.0, 1., 1.)), 30, 30, EEasingMode::None);
-        let asset_curve = match anime_assets.maincolor_curves.insert(key_curve0, TypeFrameCurve(curve)) {
+        let curve = FrameCurve::<AnimatorableVec3>::curve_easing(AnimatorableVec3(Vector3::new(0.5, 0.5, 0.5)), AnimatorableVec3(Vector3::new(1.0, 1., 1.)), 30, 30, EEasingMode::None);
+        let asset_curve = match anime_assets.vec3s.insert(key_curve0, TypeFrameCurve(curve)) {
             Ok(value) => { value },
             Err(_) => { return; },
         };
-        let animation = anime_contexts.maincolor.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
+        let animation = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
+        actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockEmissiveTexture::KEY_INFO), id_group.clone(), animation));
     }
-    {
-        let key_curve0 = pi_atom::Atom::from("mainuo");
-        let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<OpacityTexUOffset>::curve_easing(OpacityTexUOffset(0.), OpacityTexUOffset(1.0), 30, 30, EEasingMode::None);
-        let asset_curve = match anime_assets.opacityuoff_curves.insert(key_curve0, TypeFrameCurve(curve)) {
-            Ok(value) => { value },
-            Err(_) => { return; },
-        };
-        let animation = anime_contexts.opacitytex_uoffset.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
-    }
+    // {
+    //     let key_curve0 = pi_atom::Atom::from("mainuo");
+    //     let key_curve0 = key_curve0.asset_u64();
+    //     let curve = FrameCurve::<AnimatorableFloat>::curve_easing(AnimatorableFloat(0.), AnimatorableFloat(1.0), 30, 30, EEasingMode::None);
+    //     let asset_curve = match anime_assets.float.insert(key_curve0, TypeFrameCurve(curve)) {
+    //         Ok(value) => { value },
+    //         Err(_) => { return; },
+    //     };
+    //     let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+    //     // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
+    //     actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockEmissiveTexture::KEY_INFO), id_group.clone(), animation));
+    // }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Positive(Some(5));
     animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);

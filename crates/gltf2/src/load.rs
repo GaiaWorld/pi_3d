@@ -277,28 +277,36 @@ pub struct GLTF {
     pub euler: Vec<Handle<TypeFrameCurve<LocalEulerAngles>>>,
     pub scaling: Vec<Handle<TypeFrameCurve<LocalScaling>>>,
     pub quaternion: Vec<Handle<TypeFrameCurve<LocalRotationQuaternion>>>,
-    pub maincolor_curves: Vec<Handle<TypeFrameCurve<MainColor>>>,
-    pub alpha: Vec<Handle<TypeFrameCurve<Alpha>>>,
-    pub alphacutoff: Vec<Handle<TypeFrameCurve<Cutoff>>>,
-    pub maskcutoff_curves: Vec<Handle<TypeFrameCurve<MaskCutoff>>>,
-    pub mainuoff_curves: Vec<Handle<TypeFrameCurve<MainTexUOffset>>>,
-    pub mainuscl_curves: Vec<Handle<TypeFrameCurve<MainTexUScale>>>,
-    pub mainvoff_curves: Vec<Handle<TypeFrameCurve<MainTexVOffset>>>,
-    pub mainvscl_curves: Vec<Handle<TypeFrameCurve<MainTexVScale>>>,
-    pub maskuoff_curves: Vec<Handle<TypeFrameCurve<MaskTexUOffset>>>,
-    pub maskuscl_curves: Vec<Handle<TypeFrameCurve<MaskTexUScale>>>,
-    pub maskvoff_curves: Vec<Handle<TypeFrameCurve<MaskTexVOffset>>>,
-    pub maskvscl_curves: Vec<Handle<TypeFrameCurve<MaskTexVScale>>>,
-    pub opacityuoff_curves: Vec<Handle<TypeFrameCurve<OpacityTexUOffset>>>,
-    pub opacityuscl_curves: Vec<Handle<TypeFrameCurve<OpacityTexUScale>>>,
-    pub opacityvoff_curves: Vec<Handle<TypeFrameCurve<OpacityTexVOffset>>>,
-    pub opacityvscl_curves: Vec<Handle<TypeFrameCurve<OpacityTexVScale>>>,
+    // pub maincolor_curves: Vec<Handle<TypeFrameCurve<MainColor>>>,
+    // pub alpha: Vec<Handle<TypeFrameCurve<Alpha>>>,
+    // pub alphacutoff: Vec<Handle<TypeFrameCurve<Cutoff>>>,
+    // pub maskcutoff_curves: Vec<Handle<TypeFrameCurve<MaskCutoff>>>,
+    // pub mainuoff_curves: Vec<Handle<TypeFrameCurve<MainTexUOffset>>>,
+    // pub mainuscl_curves: Vec<Handle<TypeFrameCurve<MainTexUScale>>>,
+    // pub mainvoff_curves: Vec<Handle<TypeFrameCurve<MainTexVOffset>>>,
+    // pub mainvscl_curves: Vec<Handle<TypeFrameCurve<MainTexVScale>>>,
+    // pub maskuoff_curves: Vec<Handle<TypeFrameCurve<MaskTexUOffset>>>,
+    // pub maskuscl_curves: Vec<Handle<TypeFrameCurve<MaskTexUScale>>>,
+    // pub maskvoff_curves: Vec<Handle<TypeFrameCurve<MaskTexVOffset>>>,
+    // pub maskvscl_curves: Vec<Handle<TypeFrameCurve<MaskTexVScale>>>,
+    // pub opacityuoff_curves: Vec<Handle<TypeFrameCurve<OpacityTexUOffset>>>,
+    // pub opacityuscl_curves: Vec<Handle<TypeFrameCurve<OpacityTexUScale>>>,
+    // pub opacityvoff_curves: Vec<Handle<TypeFrameCurve<OpacityTexVOffset>>>,
+    // pub opacityvscl_curves: Vec<Handle<TypeFrameCurve<OpacityTexVScale>>>,
+    // pub lightdiffuse_curves: Vec<Handle<TypeFrameCurve<LightDiffuse>>>,
     pub camerafov: Vec<Handle<TypeFrameCurve<CameraFov>>>,
     pub camerasize: Vec<Handle<TypeFrameCurve<CameraOrthSize>>>,
     pub enable: Vec<Handle<TypeFrameCurve<Enable>>>,
-    pub lightdiffuse_curves: Vec<Handle<TypeFrameCurve<LightDiffuse>>>,
     pub boneoff_curves: Vec<Handle<TypeFrameCurve<InstanceBoneoffset>>>,
     pub indicerange_curves: Vec<Handle<TypeFrameCurve<IndiceRenderRange>>>,
+    
+    pub float: Vec<Handle<TypeFrameCurve<AnimatorableFloat>>>,
+    pub vec2s: Vec<Handle<TypeFrameCurve<AnimatorableVec2>>>,
+    pub vec3s: Vec<Handle<TypeFrameCurve<AnimatorableVec3>>>,
+    pub vec4s: Vec<Handle<TypeFrameCurve<AnimatorableVec4>>>,
+    pub uints: Vec<Handle<TypeFrameCurve<AnimatorableUint>>>,
+    pub _ints: Vec<Handle<TypeFrameCurve<AnimatorableInt>>>,
+
     pub particlesys_calculators: XHashMap<usize, Handle<ParticleSystemCalculatorID>>,
     pub output: String,
     pub errors: Vec<ErrorGLTF>,
@@ -335,32 +343,39 @@ impl  GLTF {
         Self {
             textures:               vec![],
             vbs:                    vec![],
-            position:        vec![],
-            euler:      vec![],
-            scaling:    vec![],
-            quaternion:       vec![],
-            maincolor_curves:       vec![],
-            alpha:           vec![],
-            alphacutoff:          vec![],
-            maskcutoff_curves:      vec![],
-            mainuoff_curves:        vec![],
-            mainuscl_curves:        vec![],
-            mainvoff_curves:        vec![],
-            mainvscl_curves:        vec![],
-            maskuoff_curves:        vec![],
-            maskuscl_curves:        vec![],
-            maskvoff_curves:        vec![],
-            maskvscl_curves:        vec![],
-            opacityuoff_curves:     vec![],
-            opacityuscl_curves:     vec![],
-            opacityvoff_curves:     vec![],
-            opacityvscl_curves:     vec![],
-            camerafov:             vec![],
-            camerasize:         vec![],
-            enable:        vec![],
-            lightdiffuse_curves:    vec![],
+            position:               vec![],
+            euler:                  vec![],
+            scaling:                vec![],
+            quaternion:             vec![],
+            // maincolor_curves:       vec![],
+            // alpha:                  vec![],
+            // alphacutoff:            vec![],
+            // maskcutoff_curves:      vec![],
+            // mainuoff_curves:        vec![],
+            // mainuscl_curves:        vec![],
+            // mainvoff_curves:        vec![],
+            // mainvscl_curves:        vec![],
+            // maskuoff_curves:        vec![],
+            // maskuscl_curves:        vec![],
+            // maskvoff_curves:        vec![],
+            // maskvscl_curves:        vec![],
+            // opacityuoff_curves:     vec![],
+            // opacityuscl_curves:     vec![],
+            // opacityvoff_curves:     vec![],
+            // opacityvscl_curves:     vec![],
+            // lightdiffuse_curves:    vec![],
+            camerafov:              vec![],
+            camerasize:             vec![],
+            enable:                 vec![],
             boneoff_curves:         vec![],
             indicerange_curves:     vec![],
+            
+            float:                  vec![],
+            vec2s:                  vec![],
+            vec3s:                  vec![],
+            vec4s:                  vec![],
+            uints:                  vec![],
+            _ints:                  vec![],
             particlesys_calculators: XHashMap::default(),
             output: String::from(""),
             errors: vec![],
@@ -711,42 +726,6 @@ impl GLTFTempLoaded {
                                                 result.scaling.push(curve);
                                             };
                                         },
-                                        EAnimePropertyType::MainTexUScale => {
-                                            let curve = curve_gltf::<1, MainTexUScale>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.mainuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.mainuscl_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexVScale => {
-                                            let curve = curve_gltf::<1, MainTexVScale>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.mainvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.mainvscl_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexUOffset => {
-                                            let curve = curve_gltf::<1, MainTexUOffset>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.mainuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.mainuoff_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexVOffset => {
-                                            let curve = curve_gltf::<1, MainTexVOffset>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.mainvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.mainvoff_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::Alpha => {
-                                            let curve = curve_gltf::<1, Alpha>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.alpha.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.alpha.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainColor => {
-                                            let curve = curve_gltf::<3, MainColor>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.maincolor_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.maincolor_curves.push(curve);
-                                            };
-                                        },
                                         EAnimePropertyType::CameraOrthSize => {
                                             let curve = curve_gltf::<1, CameraOrthSize>(&times, &values, design_frame_per_second, mode);
                                             if let Ok(curve) = anime_assets.camerasize.insert(curve_key_u64, TypeFrameCurve(curve)) {
@@ -774,71 +753,8 @@ impl GLTFTempLoaded {
                                         EAnimePropertyType::Intensity => {
                                             // let curve = curve_gltf::<1, Intensity>(&times, &values, design_frame_per_second, mode);
                                         },
-                                        EAnimePropertyType::LightDiffuse => {
-                                            // let curve = curve_gltf::<3, Lightdiffuse>(&times, &values, design_frame_per_second, mode);
-                                        },
-                                        EAnimePropertyType::AlphaCutoff => {
-                                            let curve = curve_gltf::<1, Cutoff>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.alphacutoff.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.alphacutoff.push(curve);
-                                            };
-                                        },
                                         EAnimePropertyType::CellId => {
                                             // let curve = curve_gltf::<1, CellId>(&times, &values, design_frame_per_second, mode);
-                                        },
-                                        EAnimePropertyType::OpacityTexUScale => {
-                                            let curve = curve_gltf::<1, OpacityTexUScale>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.opacityuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.opacityuscl_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexVScale => {
-                                            let curve = curve_gltf::<1, OpacityTexVScale>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.opacityvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.opacityvscl_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexUOffset => {
-                                            let curve = curve_gltf::<1, OpacityTexUOffset>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.opacityuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.opacityuoff_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexVOffset => {
-                                            let curve = curve_gltf::<1, OpacityTexVOffset>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.opacityvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.opacityvoff_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskCutoff => {
-                                            let curve = curve_gltf::<1, MaskCutoff>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.maskcutoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.maskcutoff_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexUScale => {
-                                            let curve = curve_gltf::<1, MaskTexUScale>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.maskuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.maskuscl_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexVScale => {
-                                            let curve = curve_gltf::<1, MaskTexVScale>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.maskvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.maskvscl_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexUOffset => {
-                                            let curve = curve_gltf::<1, MaskTexUOffset>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.maskuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.maskuoff_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexVOffset => {
-                                            let curve = curve_gltf::<1, MaskTexVOffset>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.maskvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.maskvoff_curves.push(curve);
-                                            };
                                         },
                                         EAnimePropertyType::BoneOffset => {
                                             let curve = curve_gltf::<1, InstanceBoneoffset>(&times, &values, design_frame_per_second, mode);
@@ -850,6 +766,204 @@ impl GLTFTempLoaded {
                                             let curve = curve_gltf::<2, IndiceRenderRange>(&times, &values, design_frame_per_second, mode);
                                             if let Ok(curve) = anime_assets.indicerange_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
                                                 result.indicerange_curves.push(curve);
+                                            };
+                                        },
+                                        // EAnimePropertyType::MainTexUScale => {
+                                        //     let curve = curve_gltf::<1, MainTexUScale>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.mainuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.mainuscl_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MainTexVScale => {
+                                        //     let curve = curve_gltf::<1, MainTexVScale>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.mainvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.mainvscl_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MainTexUOffset => {
+                                        //     let curve = curve_gltf::<1, MainTexUOffset>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.mainuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.mainuoff_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MainTexVOffset => {
+                                        //     let curve = curve_gltf::<1, MainTexVOffset>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.mainvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.mainvoff_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::Alpha => {
+                                        //     let curve = curve_gltf::<1, Alpha>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.alpha.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.alpha.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MainColor => {
+                                        //     let curve = curve_gltf::<3, MainColor>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.maincolor_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.maincolor_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::LightDiffuse => {
+                                        //     // let curve = curve_gltf::<3, Lightdiffuse>(&times, &values, design_frame_per_second, mode);
+                                        // },
+                                        // EAnimePropertyType::AlphaCutoff => {
+                                        //     let curve = curve_gltf::<1, Cutoff>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.alphacutoff.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.alphacutoff.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::OpacityTexUScale => {
+                                        //     let curve = curve_gltf::<1, OpacityTexUScale>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.opacityuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.opacityuscl_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::OpacityTexVScale => {
+                                        //     let curve = curve_gltf::<1, OpacityTexVScale>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.opacityvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.opacityvscl_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::OpacityTexUOffset => {
+                                        //     let curve = curve_gltf::<1, OpacityTexUOffset>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.opacityuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.opacityuoff_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::OpacityTexVOffset => {
+                                        //     let curve = curve_gltf::<1, OpacityTexVOffset>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.opacityvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.opacityvoff_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MaskCutoff => {
+                                        //     let curve = curve_gltf::<1, MaskCutoff>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.maskcutoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.maskcutoff_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MaskTexUScale => {
+                                        //     let curve = curve_gltf::<1, MaskTexUScale>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.maskuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.maskuscl_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MaskTexVScale => {
+                                        //     let curve = curve_gltf::<1, MaskTexVScale>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.maskvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.maskvscl_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MaskTexUOffset => {
+                                        //     let curve = curve_gltf::<1, MaskTexUOffset>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.maskuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.maskuoff_curves.push(curve);
+                                        //     };
+                                        // },
+                                        // EAnimePropertyType::MaskTexVOffset => {
+                                        //     let curve = curve_gltf::<1, MaskTexVOffset>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.maskvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.maskvoff_curves.push(curve);
+                                        //     };
+                                        // },
+                                        EAnimePropertyType::MainTexUScale => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MainTexVScale => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MainTexUOffset => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MainTexVOffset => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::Alpha => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MainColor => {
+                                            let curve = curve_gltf::<3, AnimatorableVec3>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.vec3s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.vec3s.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::LightDiffuse => {
+                                            // let curve = curve_gltf::<3, Lightdiffuse>(&times, &values, design_frame_per_second, mode);
+                                        },
+                                        EAnimePropertyType::AlphaCutoff => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::OpacityTexUScale => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::OpacityTexVScale => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::OpacityTexUOffset => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::OpacityTexVOffset => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MaskCutoff => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MaskTexUScale => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MaskTexVScale => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MaskTexUOffset => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MaskTexVOffset => {
+                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.float.push(curve);
                                             };
                                         },
                                     }
