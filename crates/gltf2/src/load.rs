@@ -7,15 +7,14 @@ use pi_engine_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_gltf::Gltf;
 use pi_hash::*;
-use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator, ActionSetParticleSystem, ResParticleCalculatorUninstallQueue, ResourceParticleSystem};
+use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::prelude::*;
-use pi_node_materials::prelude::*;
 use pi_render::rhi::RenderQueue;
 use pi_share::Share;
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 
-use crate::{TypeAnimeAssetMgrs, EAnimePropertyType, curve_gltf, p3d_anime_curve_query, interpolation_from_u8, particle_system::gltf_format_particle_cfg};
+use crate::{EAnimePropertyType, curve_gltf, p3d_anime_curve_query, interpolation_from_u8, particle_system::gltf_format_particle_cfg};
 
 pub type KeyGLTFBase = Atom;
 pub type GLTFJson = String;
@@ -297,7 +296,6 @@ pub struct GLTF {
     pub camerafov: Vec<Handle<TypeFrameCurve<CameraFov>>>,
     pub camerasize: Vec<Handle<TypeFrameCurve<CameraOrthSize>>>,
     pub enable: Vec<Handle<TypeFrameCurve<Enable>>>,
-    pub boneoff_curves: Vec<Handle<TypeFrameCurve<InstanceBoneoffset>>>,
     pub indicerange_curves: Vec<Handle<TypeFrameCurve<IndiceRenderRange>>>,
     
     pub float: Vec<Handle<TypeFrameCurve<AnimatorableFloat>>>,
@@ -305,7 +303,7 @@ pub struct GLTF {
     pub vec3s: Vec<Handle<TypeFrameCurve<AnimatorableVec3>>>,
     pub vec4s: Vec<Handle<TypeFrameCurve<AnimatorableVec4>>>,
     pub uints: Vec<Handle<TypeFrameCurve<AnimatorableUint>>>,
-    pub _ints: Vec<Handle<TypeFrameCurve<AnimatorableInt>>>,
+    pub _ints: Vec<Handle<TypeFrameCurve<AnimatorableSint>>>,
 
     pub particlesys_calculators: XHashMap<usize, Handle<ParticleSystemCalculatorID>>,
     pub output: String,
@@ -367,7 +365,7 @@ impl  GLTF {
             camerafov:              vec![],
             camerasize:             vec![],
             enable:                 vec![],
-            boneoff_curves:         vec![],
+            // boneoff_curves:         vec![],
             indicerange_curves:     vec![],
             
             float:                  vec![],
@@ -756,12 +754,12 @@ impl GLTFTempLoaded {
                                         EAnimePropertyType::CellId => {
                                             // let curve = curve_gltf::<1, CellId>(&times, &values, design_frame_per_second, mode);
                                         },
-                                        EAnimePropertyType::BoneOffset => {
-                                            let curve = curve_gltf::<1, InstanceBoneoffset>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.boneoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.boneoff_curves.push(curve);
-                                            };
-                                        },
+                                        // EAnimePropertyType::BoneOffset => {
+                                        //     let curve = curve_gltf::<1, InstanceBoneoffset>(&times, &values, design_frame_per_second, mode);
+                                        //     if let Ok(curve) = anime_assets.boneoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                        //         result.boneoff_curves.push(curve);
+                                        //     };
+                                        // },
                                         EAnimePropertyType::IndicesRange => {
                                             let curve = curve_gltf::<2, IndiceRenderRange>(&times, &values, design_frame_per_second, mode);
                                             if let Ok(curve) = anime_assets.indicerange_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
@@ -964,6 +962,24 @@ impl GLTFTempLoaded {
                                             let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
                                             if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
                                                 result.float.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MainTexTilloff => {
+                                            let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.vec4s.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::MaskTexTilloff => {
+                                            let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.vec4s.push(curve);
+                                            };
+                                        },
+                                        EAnimePropertyType::OpacityTexTilloff => {
+                                            let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
+                                            if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                                                result.vec4s.push(curve);
                                             };
                                         },
                                     }

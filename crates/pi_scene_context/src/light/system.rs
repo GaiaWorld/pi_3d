@@ -4,7 +4,6 @@ use pi_engine_shell::prelude::*;
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
-    commands::*,
     scene::prelude::*,
     transforms::prelude::*,
     layer_mask::prelude::*,
@@ -100,7 +99,7 @@ pub fn sys_hemi_light_update(
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
-    items.iter().for_each(|(hemi, idscene, lidx, color, transform, layer, enabled)| {
+    items.iter().for_each(|(_hemi, idscene, lidx, color, transform, layer, enabled)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
             info.0.hemi_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, color.0.x, color.0.y, color.0.z, 1., 1., 0., 0., 0., 0.);

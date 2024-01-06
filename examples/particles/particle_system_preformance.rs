@@ -7,7 +7,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
-use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
+use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
 use pi_scene_context::{prelude::*, viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix}};
 use pi_scene_math::*;
@@ -110,11 +110,11 @@ fn setup(
         };
 
         let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 0.1;
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

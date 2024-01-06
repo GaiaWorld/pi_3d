@@ -1,6 +1,5 @@
 
 
-use command::{ActionListUnlitMaterial, sys_act_unlit_material};
 use pi_engine_shell::prelude::*;
 
 use pi_node_materials::prelude::*;
@@ -63,8 +62,6 @@ impl UnlitShader {
 pub struct PluginUnlitMaterial;
 impl Plugin for PluginUnlitMaterial {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListUnlitMaterial::default());
-        app.add_systems(Update, sys_act_unlit_material.in_set(ERunStageChap::Command));
 
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(UnlitShader::KEY), UnlitShader::meta());

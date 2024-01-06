@@ -5,7 +5,6 @@ use pi_scene_math::*;
 
 use crate::flags::*;
 use crate::object::ActionEntity;
-use crate::commands::*;
 use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
@@ -22,7 +21,6 @@ pub fn sys_create_transform_node(
             return;
         };
         ActionTransformNode::init(&mut transformnode, scene);
-        ActionAnime::as_anime_group_target(&mut transformnode);
         transformnode.insert(TransformNode);
     });
 }
@@ -205,7 +203,7 @@ impl ActionTransformNode {
             ;
     }
 
-    pub(crate) fn tree_modify(
+    pub(crate) fn _tree_modify(
         tree: &mut EntityTreeMut,
         child: Entity,
         parent: Entity,

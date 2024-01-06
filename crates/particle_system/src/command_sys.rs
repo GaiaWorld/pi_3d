@@ -1,5 +1,5 @@
 
-use std::sync::Arc;
+use std::{sync::Arc, ops::DerefMut};
 
 use pi_engine_shell::prelude::*;
 use pi_scene_context::prelude::*;
@@ -34,7 +34,7 @@ pub fn sys_create_cpu_partilce_system(
     mut performance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count)| {
+    cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, count)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
@@ -60,6 +60,7 @@ pub fn sys_create_cpu_partilce_system(
             }
 
             entitycmd
+                .insert(attributes)
                 .insert(ParticleActive(true))
                 .insert(ParticleRunningState(false))
                 .insert(ParticleModifyState(false))
@@ -107,11 +108,11 @@ pub fn sys_create_cpu_partilce_system(
                     }
                     if let Some(mut cmd) = commands.get_entity(id_geo) {
                         // log::warn!("Geometry Ok");
-                        let vertex_desc = vec![trailbuffer.buffer_desc()];
+                        let vertex_desc = vec![trailbuffer.buffer_desc_billboard()];
                         ActionGeometry::init(&mut cmd, &vertex_desc, None, id_mesh);
 
-                        let mut verticescode = EVerticeExtendCodeComp::default();
-                        verticescode.0.0 += EVerticeExtendCode::TRIAL_BILLBOARD;
+                        // let mut verticescode = EVerticeExtendCodeComp::default();
+                        // verticescode.0.0 += EVerticeExtendCode::TRIAL_BILLBOARD;
                         let slot = AssetDescVBSlot01::from(vertex_desc[0].clone());
                         let geo_desc = GeometryDesc { list: vertex_desc };
                         let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
@@ -120,7 +121,7 @@ pub fn sys_create_cpu_partilce_system(
                             .insert(geo_desc)
                             .insert(slot)
                             .insert(buffer)
-                            .insert(verticescode)
+                            // .insert(verticescode)
                             ;
                     }
                 // }
@@ -129,7 +130,7 @@ pub fn sys_create_cpu_partilce_system(
             }
         } else if count < 2 {
             // log::warn!("create_cpu_partilce_system FAIL");
-            cmds.push(OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, count + 1));
+            cmds.push(OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, count + 1));
         } else {
             disposeready.push(OpsDisposeReadyForRef::ops(entity));
             disposeready.push(OpsDisposeReadyForRef::ops(trailmesh));

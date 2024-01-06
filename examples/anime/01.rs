@@ -27,7 +27,7 @@ fn setup(
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
-    let tes_size = 20;
+    let tes_size = 0;
     fps.frame_ms = 16;
 
     
@@ -46,16 +46,18 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState::default();
+    let state = base::instance_attr(true, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     for i in 0..tes_size {
         for j in 0..tes_size {
@@ -85,17 +87,21 @@ fn setup(
                 };
 
                 let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupres.scene_ctxs.add_target_anime(scene, cube, id_group.clone(), animation);
+                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cube,  animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
     }
 
     let mut param = AnimationGroupParam::default(); param.loop_mode = ELoopMode::Positive(Some(1));
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
-    animegroupres.scene_ctxs.stop(scene, id_group.clone());
-    let mut param = AnimationGroupParam::default(); param.loop_mode = ELoopMode::Positive(Some(1));
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
+    // animegroupres.scene_ctxs.stop(scene, id_group.clone());
+    // let mut param = AnimationGroupParam::default(); param.loop_mode = ELoopMode::Positive(Some(1));
+    // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
+    // actions.anime.pause.push(OpsAnimationGroupPause::ops(id_group));
+    // let mut param = AnimationGroupParam::default(); param.loop_mode = ELoopMode::Positive(Some(1));
+    // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

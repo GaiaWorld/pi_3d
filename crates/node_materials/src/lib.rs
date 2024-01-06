@@ -7,11 +7,8 @@ use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
 use pi_hash::XHashMap;
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::StageMaterial;
 use prelude::*;
 use premultiply::*;
-use command::*;
-use command_sys::*;
 
 mod cutoff;
 mod common;

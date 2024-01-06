@@ -4,7 +4,7 @@
 use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::{prelude::*, viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix}, light::PluginLighting};
 use pi_scene_math::*;
@@ -143,8 +143,7 @@ impl Plugin for PluginTest {
     };
 
     let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
-    let mut state: MeshInstanceState = MeshInstanceState::default();
-    state.state = InstanceState::INSTANCE_BASE;
+    let state: MeshInstanceState = base::instance_attr(true, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., -1., 0.));
@@ -169,9 +168,11 @@ impl Plugin for PluginTest {
             }
         }
 
-        let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-        animegroupres.global.record_group(cameraroot, id_group);
-        actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, cameraroot, id_group));
+        let id_group = commands.spawn_empty().id();
+        // animegroupres.scene_ctxs.create_group(scene).unwrap();
+        // animegroupres.global.record_group(source, id_group);
+        actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+        // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
         {
             let key_curve0 = pi_atom::Atom::from((0).to_string());
             let key_curve0 = key_curve0.asset_u64();
@@ -184,7 +185,7 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupres.scene_ctxs.add_target_anime(scene, cameraroot, id_group.clone(), animation);
+                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cameraroot, animation));
             }
         }
         {
@@ -199,10 +200,10 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupres.scene_ctxs.add_target_anime(scene, lightroot, id_group.clone(), animation);
+                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), lightroot, animation));
             }
         }
-        animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+        actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
             
         // 创建帧事件
     }

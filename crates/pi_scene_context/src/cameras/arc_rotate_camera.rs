@@ -20,7 +20,7 @@ impl Default for ArcRotateCamera {
 }
 
 impl ArcRotateCamera {
-    pub fn apply(&self, camera: &TargetCameraParam) {
+    pub fn _apply(&self, camera: &TargetCameraParam) {
         let cosa = self.alpha.cos();
         let sina = self.alpha.sin();
         let cosb = self.beta.cos();
@@ -35,7 +35,7 @@ impl ArcRotateCamera {
             CoordinateSytem3::transform_coordinates(&computation_vec.clone(), &self.y_to_up, &mut computation_vec);
         }
 
-        let mut position: Vector3 = camera.target + computation_vec;
+        // let mut position: Vector3 = camera.target + computation_vec;
 
     }
 }

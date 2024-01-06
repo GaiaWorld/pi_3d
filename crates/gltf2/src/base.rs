@@ -4,7 +4,6 @@ use pi_curves::curve::{frame::FrameDataValue, frame_curve::{FrameCurve, frames::
 use pi_engine_shell::prelude::*;
 use pi_gltf::animation::Interpolation;
 use pi_scene_context::prelude::*;
-use pi_node_materials::prelude::*;
 use pi_scene_math::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -35,8 +34,12 @@ pub enum EAnimePropertyType {
     MaskTexVScale       = 23,
     MaskTexUOffset      = 24,
     MaskTexVOffset      = 25,
+    
+    MainTexTilloff      = 50,
+    MaskTexTilloff      = 51,
+    OpacityTexTilloff      = 52,
 
-    BoneOffset          = 100,
+    // BoneOffset          = 100,
     IndicesRange        = 101,
 }
 impl EAnimePropertyType {
@@ -68,7 +71,11 @@ impl EAnimePropertyType {
             23 => Some(Self::MaskTexVScale),
             24 => Some(Self::MaskTexUOffset),
             25 => Some(Self::MaskTexVOffset),
-            100 => Some(Self::BoneOffset),
+            
+            50 => Some(Self::MainTexTilloff),
+            51 => Some(Self::MaskTexTilloff),
+            52 => Some(Self::OpacityTexTilloff),
+            // 100 => Some(Self::BoneOffset),
             101 => Some(Self::IndicesRange),
             _ => {
                 None
@@ -77,79 +84,6 @@ impl EAnimePropertyType {
     }
 }
 
-#[derive(SystemParam)]
-pub struct TypeAnimeContexts<'w> {
-    pub position: ResMut<'w, TypeAnimeContext<LocalPosition>>,
-    pub euler: ResMut<'w, TypeAnimeContext<LocalEulerAngles>>,
-    pub quaternion: ResMut<'w, TypeAnimeContext<LocalRotationQuaternion>>,
-    pub scaling: ResMut<'w, TypeAnimeContext<LocalScaling>>,
-    pub isactive: ResMut<'w, TypeAnimeContext<Enable>>,
-    pub camerafov: ResMut<'w, TypeAnimeContext<CameraFov>>,
-    pub camerasize: ResMut<'w, TypeAnimeContext<CameraOrthSize>>,
-    // pub alpha: ResMut<'w, TypeAnimeContext<Alpha>>,
-    // pub alphacutoff: ResMut<'w, TypeAnimeContext<Cutoff>>,
-    // pub maintex_uscale: ResMut<'w, TypeAnimeContext<MainTexUScale>>,
-    // pub maintex_vscale: ResMut<'w, TypeAnimeContext<MainTexVScale>>,
-    // pub maintex_uoffset: ResMut<'w, TypeAnimeContext<MainTexUOffset>>,
-    // pub maintex_voffset: ResMut<'w, TypeAnimeContext<MainTexVOffset>>,
-    // pub opacitytex_uscale: ResMut<'w, TypeAnimeContext<OpacityTexUScale>>,
-    // pub opacitytex_vscale: ResMut<'w, TypeAnimeContext<OpacityTexVScale>>,
-    // pub opacitytex_uoffset: ResMut<'w, TypeAnimeContext<OpacityTexUOffset>>,
-    // pub opacitytex_voffset: ResMut<'w, TypeAnimeContext<OpacityTexVOffset>>,
-    // pub masktex_uscale: ResMut<'w, TypeAnimeContext<MaskTexUScale>>,
-    // pub masktex_vscale: ResMut<'w, TypeAnimeContext<MaskTexVScale>>,
-    // pub masktex_uoffset: ResMut<'w, TypeAnimeContext<MaskTexUOffset>>,
-    // pub masktex_voffset: ResMut<'w, TypeAnimeContext<MaskTexVOffset>>,
-    // pub maskcutoff: ResMut<'w, TypeAnimeContext<MaskCutoff>>,
-    // pub maincolor: ResMut<'w, TypeAnimeContext<MainColor>>,
-    // pub lightdiffuse: ResMut<'w, TypeAnimeContext<LightDiffuse>>,
-    pub boneoffset: ResMut<'w, TypeAnimeContext<InstanceBoneoffset>>,
-    pub indices_range: ResMut<'w, TypeAnimeContext<IndiceRenderRange>>,
-
-    pub float: ResMut<'w, TypeAnimeContext<AnimatorableFloat>>,
-    pub vec2s: ResMut<'w, TypeAnimeContext<AnimatorableVec2>>,
-    pub vec3s: ResMut<'w, TypeAnimeContext<AnimatorableVec3>>,
-    pub vec4s: ResMut<'w, TypeAnimeContext<AnimatorableVec4>>,
-    pub uints: ResMut<'w, TypeAnimeContext<AnimatorableUint>>,
-    pub _ints: ResMut<'w, TypeAnimeContext<AnimatorableInt>>,
-}
-
-#[derive(SystemParam)]
-pub struct TypeAnimeAssetMgrs<'w> {
-    pub position: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalPosition>>>,
-    pub euler: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalEulerAngles>>>,
-    pub quaternion: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalRotationQuaternion>>>,
-    pub scaling: Res<'w, ShareAssetMgr<TypeFrameCurve<LocalScaling>>>,
-    pub enable: Res<'w, ShareAssetMgr<TypeFrameCurve<Enable>>>,
-    pub camerafov: Res<'w, ShareAssetMgr<TypeFrameCurve<CameraFov>>>,
-    pub camerasize: Res<'w, ShareAssetMgr<TypeFrameCurve<CameraOrthSize>>>,
-    // pub alpha: Res<'w, ShareAssetMgr<TypeFrameCurve<Alpha>>>,
-    // pub alphacutoff: Res<'w, ShareAssetMgr<TypeFrameCurve<Cutoff>>>,
-    // pub mainuscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexUScale>>>,
-    // pub mainvscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexVScale>>>,
-    // pub mainuoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexUOffset>>>,
-    // pub mainvoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexVOffset>>>,
-    // pub opacityuscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexUScale>>>,
-    // pub opacityvscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexVScale>>>,
-    // pub opacityuoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexUOffset>>>,
-    // pub opacityvoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexVOffset>>>,
-    // pub maskuscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexUScale>>>,
-    // pub maskvscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexVScale>>>,
-    // pub maskuoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexUOffset>>>,
-    // pub maskvoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexVOffset>>>,
-    // pub maskcutoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskCutoff>>>,
-    // pub maincolor_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainColor>>>,
-    // pub lightdiffuse_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<LightDiffuse>>>,
-    pub boneoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<InstanceBoneoffset>>>,
-    pub indicerange_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<IndiceRenderRange>>>,
-
-    pub float: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableFloat>>>,
-    pub vec2s: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableVec2>>>,
-    pub vec3s: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableVec3>>>,
-    pub vec4s: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableVec4>>>,
-    pub uints: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableUint>>>,
-    pub _ints: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableInt>>>,
-}
 
 pub fn interpolation_from_u8(val: u8) -> Option<Interpolation> {
     match val {
@@ -187,85 +121,6 @@ impl TValue<4> for LocalRotationQuaternion {
         Self::create(x, y, z, w)
     }
 }
-// impl TValue<1> for Alpha {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for Cutoff {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<3> for MainColor {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         let x = data[offset + 0] as f32; let y = data[offset + 1] as f32; let z = data[offset + 2] as f32;
-//         Self(Vector3::new(x, y, z))
-//     }
-// }
-// impl TValue<1> for MainTexUScale {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for MainTexVScale {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for MainTexUOffset {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for MainTexVOffset {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-
-// impl TValue<1> for MaskTexUScale {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for MaskTexVScale {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for MaskTexUOffset {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for MaskTexVOffset {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-
-// impl TValue<1> for OpacityTexUScale {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for OpacityTexVScale {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for OpacityTexUOffset {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-// impl TValue<1> for OpacityTexVOffset {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-
 impl TValue<1> for Enable {
     fn newn(data: &[f32], offset: usize) -> Self {
         Self(data[offset])
@@ -284,25 +139,6 @@ impl TValue<1> for CameraOrthSize {
     }
 }
 
-// impl TValue<1> for MaskCutoff {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         Self(data[offset])
-//     }
-// }
-
-// impl TValue<3> for LightDiffuse {
-//     fn newn(data: &[f32], offset: usize) -> Self {
-//         let x = data[offset + 0] as f32; let y = data[offset + 1] as f32; let z = data[offset + 2] as f32;
-//         Self(Vector3::new(x, y, z))
-//     }
-// }
-
-impl TValue<1> for InstanceBoneoffset {
-    fn newn(data: &[f32], offset: usize) -> Self {
-        let x = data[offset + 0] as u32;
-        Self(x)
-    }
-}
 impl TValue<2> for IndiceRenderRange {
     fn newn(data: &[f32], offset: usize) -> Self {
         let x = data[offset + 0] as u32; let y = data[offset + 1] as u32;
@@ -337,7 +173,7 @@ impl TValue<1> for AnimatorableUint {
         Self(data[offset] as u32)
     }
 }
-impl TValue<1> for AnimatorableInt {
+impl TValue<1> for AnimatorableSint {
     fn newn(data: &[f32], offset: usize) -> Self {
         Self(data[offset] as i32)
     }
@@ -445,7 +281,7 @@ pub fn p3d_anime_curve_query(cmds: &TypeAnimeAssetMgrs, key: IDAssetTypeFrameCur
         // EAnimePropertyType::MaskTexVOffset      => cmds.maskvoff_curves.get(&key).is_some(),
         // EAnimePropertyType::MaskCutoff          => cmds.maskcutoff_curves.get(&key).is_some(),
         EAnimePropertyType::Enable              => cmds.enable.get(&key).is_some(),
-        EAnimePropertyType::BoneOffset          => cmds.boneoff_curves.get(&key).is_some(),
+        // EAnimePropertyType::BoneOffset          => cmds.boneoff_curves.get(&key).is_some(),
         EAnimePropertyType::CameraFov           => cmds.camerafov.get(&key).is_some(),
         EAnimePropertyType::CameraOrthSize      => cmds.camerasize.get(&key).is_some(),
         EAnimePropertyType::IndicesRange        => cmds.indicerange_curves.get(&key).is_some(),
@@ -469,5 +305,9 @@ pub fn p3d_anime_curve_query(cmds: &TypeAnimeAssetMgrs, key: IDAssetTypeFrameCur
         EAnimePropertyType::MaskTexUOffset      => cmds.float.get(&key).is_some(),
         EAnimePropertyType::MaskTexVOffset      => cmds.float.get(&key).is_some(),
         EAnimePropertyType::MaskCutoff          => cmds.float.get(&key).is_some(),
+        
+        EAnimePropertyType::MainTexTilloff      => cmds.vec4s.get(&key).is_some(),
+        EAnimePropertyType::MaskTexTilloff      => cmds.vec4s.get(&key).is_some(),
+        EAnimePropertyType::OpacityTexTilloff   => cmds.vec4s.get(&key).is_some(),
     }
 }

@@ -1,7 +1,7 @@
 use pi_3d_state::{PluginStateGlobal, StateResource};
 use pi_engine_shell::{prelude::*, run_stage::PluginRunstage};
 use default_render::PluginDefaultMaterial;
-use pi_gltf2_load::{GLTFResLoader, GLTF, TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_gltf2_load::{GLTFResLoader, GLTF};
 use pi_node_materials::{PluginNodeMaterial, NodeMaterialBlocks};
 use pi_particle_system::prelude::{ParticleSystemPerformance, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::{
@@ -60,7 +60,11 @@ pub fn sys_info_draw(
     meshes: Query<&RenderGeometryEable>,
     viewers: Query<(&ModelList, &ForceIncludeModelList, &ModelListAfterCulling)>,
     statecamera: Res<StateCamera>,
+    command: Query<Entity>,
 ) {
+    let mut entitycount = 0;
+    command.iter().for_each(|v| { entitycount += 1; });
+
     let mut count_set0 = 0;
     let mut count_set1 = 0;
     let mut count_effect = 0;
@@ -104,8 +108,11 @@ pub fn sys_info_draw(
     });
 
     log::warn!(
-        "ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-        count_ready_geo, count_ready_geo_mesh, viewer_includes, viewer_cullings, statecamera.culling_time, count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
+        "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+        entitycount,
+        count_ready_geo, count_ready_geo_mesh,
+        viewer_includes, viewer_cullings, statecamera.culling_time,
+        count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
     );
 }
 
@@ -148,7 +155,7 @@ impl PluginGroup for PluginBundleDefault {
             .add(PluginAnimeCameraFOV::new())
             .add(PluginAnimeCameraSize::new())
             .add(PluginMesh)
-            .add(PluginAnimeBoneOffset::new())
+            // .add(PluginAnimeBoneOffset::new())
             .add(PluginAnimeRenderIndiceRange::new())
             .add(PluginGeometry)
             .add(PluginLighting)
@@ -221,9 +228,11 @@ pub struct ActionSets<'w> {
     pub material: ActionSetMaterial<'w>,
     pub anime: ActionSetAnimationGroup<'w>,
     pub anime_uniform: ResMut<'w, ActionListTargetAnimationUniform>,
+    pub anime_instance: ResMut<'w, ActionListTargetAnimationAttribute>,
     pub renderer: ActionSetRenderer<'w>,
     pub trail: ActionSetTrailRenderer<'w>,
     pub parsys: ActionSetParticleSystem<'w>,
+    pub property_targetanimation: ResMut<'w, ActionListPropertyTargetAnimation>,
 }
 
 #[derive(SystemParam)]
@@ -249,7 +258,7 @@ pub struct ResourceSets<'w> {
     pub vb_mgr: Res<'w, ShareAssetMgr<EVertexBufferRange>>,
     pub vb_wait: ResMut<'w, VertexBufferDataMap3D>,
     pub shader_metas: Res<'w, ShareAssetMgr<ShaderEffectMeta>>,
-    pub anime_scene_ctxs: ResMut<'w, SceneAnimationContextMap>,
+    // pub anime_scene_ctxs: ResMut<'w, SceneAnimationContextMap>,
     pub anime_global: ResMut<'w, GlobalAnimeAbout>,
     pub anime_events: ResMut<'w, GlobalAnimeEvents>,
     pub trailbuffer: ResMut<'w, ResTrailBuffer>,

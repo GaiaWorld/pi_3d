@@ -120,19 +120,19 @@ pub enum ERunStageChap {
     // 场景中的 节点, Mesh, Light, Camera [一级实体]
     Initial,
     _InitialApply,
-    // 场景中的 Material, Geometry, Renderer [二级实体, 他们被一级实体使用]
-    SecondInitial,
-    _SecondInitialApply,
-    // 场景中的 GraphiNode [三级实体, 他们被一级或二级实体使用]
-    ThirdInitial,
-    _ThirdInitialApply,
+    // // 场景中的 Material, Geometry, Renderer [二级实体, 他们被一级实体使用]
+    // SecondInitial,
+    // _SecondInitialApply,
+    // // 场景中的 GraphiNode [三级实体, 他们被一级或二级实体使用]
+    // ThirdInitial,
+    // _ThirdInitialApply,
     Command,
     _CommandApply,
-    LoadRequest,
+    // LoadRequest,
     AnimeAmount,
     Anime,
-    Logic01,
-    Logic02,
+    // Logic01,
+    // Logic02,
     CalcWorldMatrix,
     CalcRenderMatrix,
     Uniform,
@@ -148,18 +148,18 @@ impl Plugin for PluginRunstage {
         app.configure_set(Update, ERunStageChap::New);
         app.configure_set(Update, ERunStageChap::Initial.after(ERunStageChap::New));
         app.configure_set(Update, ERunStageChap::_InitialApply.after(ERunStageChap::Initial));
-        app.configure_set(Update, ERunStageChap::SecondInitial.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, ERunStageChap::_SecondInitialApply.after(ERunStageChap::SecondInitial));
-        app.configure_set(Update, ERunStageChap::ThirdInitial.after(ERunStageChap::_SecondInitialApply));
-        app.configure_set(Update, ERunStageChap::_ThirdInitialApply.after(ERunStageChap::ThirdInitial));
-        app.configure_set(Update, ERunStageChap::Command.after(ERunStageChap::_ThirdInitialApply));
+        // app.configure_set(Update, ERunStageChap::SecondInitial.after(ERunStageChap::_InitialApply));
+        // app.configure_set(Update, ERunStageChap::_SecondInitialApply.after(ERunStageChap::SecondInitial));
+        // app.configure_set(Update, ERunStageChap::ThirdInitial.after(ERunStageChap::_SecondInitialApply));
+        // app.configure_set(Update, ERunStageChap::_ThirdInitialApply.after(ERunStageChap::ThirdInitial));
+        app.configure_set(Update, ERunStageChap::Command.after(ERunStageChap::_InitialApply));
         app.configure_set(Update, ERunStageChap::_CommandApply.after(ERunStageChap::Command));
-        app.configure_set(Update, ERunStageChap::LoadRequest.after(ERunStageChap::_CommandApply));
-        app.configure_set(Update, ERunStageChap::AnimeAmount.after(ERunStageChap::LoadRequest));
+        // app.configure_set(Update, ERunStageChap::LoadRequest.after(ERunStageChap::_CommandApply));
+        app.configure_set(Update, ERunStageChap::AnimeAmount.after(ERunStageChap::_CommandApply));
         app.configure_set(Update, ERunStageChap::Anime.after(ERunStageChap::AnimeAmount));
-        app.configure_set(Update, ERunStageChap::Logic01.after(ERunStageChap::Anime));
-        app.configure_set(Update, ERunStageChap::Logic02.after(ERunStageChap::Logic01));
-        app.configure_set(Update, ERunStageChap::CalcWorldMatrix.after(ERunStageChap::Logic02));
+        // app.configure_set(Update, ERunStageChap::Logic01.after(ERunStageChap::Anime));
+        // app.configure_set(Update, ERunStageChap::Logic02.after(ERunStageChap::Logic01));
+        app.configure_set(Update, ERunStageChap::CalcWorldMatrix.after(ERunStageChap::Anime));
         app.configure_set(Update, ERunStageChap::CalcRenderMatrix.after(ERunStageChap::CalcWorldMatrix));
         app.configure_set(Update, ERunStageChap::Uniform.after(ERunStageChap::CalcRenderMatrix));
         app.configure_set(Update, ERunStageChap::DrawUniformToGPU.after(ERunStageChap::Uniform));
@@ -197,8 +197,8 @@ impl Plugin for PluginRunstage {
         // );
 
         app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
-        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_SecondInitialApply));
-        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_ThirdInitialApply));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_SecondInitialApply));
+        // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_ThirdInitialApply));
         app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_CommandApply));
         app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
         // app.add_systems(Update, apply_deferred.in_set(ERunStageChap::AnimeAmount));

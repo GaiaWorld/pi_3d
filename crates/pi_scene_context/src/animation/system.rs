@@ -6,7 +6,6 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     scene::environment::scene_time::SceneTime,
-    commands::DisposeReady,
     prelude::SceneAnimationEnable
 };
 
@@ -33,7 +32,7 @@ pub fn sys_listen_scene_anime_ctx(
 pub fn sys_scene_anime_ctx(
     mut scenes: Query<(Entity, &SceneTime, &SceneAnimationEnable)>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
-    mut scenectxs: ResMut<SceneAnimationContextMap>,
+    mut scenectxs: Query<&mut SceneAnimationContext>,
     mut animeevents: ResMut<GlobalAnimeEvents>,
     mut performance: ResMut<Performance>,
 ) {
@@ -41,13 +40,12 @@ pub fn sys_scene_anime_ctx(
 
     animeglobal.runtimeinfos.reset();
     scenes.iter_mut().for_each(|(id_scene, scene_time, enable)| {
-        let ctx = if let Some(ctx) = scenectxs.get_mut(&id_scene) {
+
+        if enable.0 == false { return; }
+
+        let mut ctx = if let Ok(ctx) = scenectxs.get_mut(id_scene) {
             ctx
         } else { return; };
-
-        if enable.0 == false {
-            return;
-        }
 
         // ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos);
         {
@@ -69,23 +67,23 @@ pub fn sys_scene_anime_ctx(
                 if let Some((idobj, frameevents, listen)) = animeglobal.group_records.get(&id_group) {
                     // log::warn!("Group : {:?}", listen);
                     if group_info.start_event && (listen & TagGroupListen::START) == TagGroupListen::START {
-                        animeevents.push((*idobj, id_group, TagGroupListen::START, 0));
+                        animeevents.push((*idobj, *idobj, TagGroupListen::START, 0));
                     }
     
                     if (listen & TagGroupListen::FRAME) == TagGroupListen::FRAME {
                         if let Some(data) = frameevents.query(group_info.last_amount_in_second, group_info.amount_in_second) {
                             data.iter().for_each(|v| {
-                                animeevents.push((*idobj, id_group, TagGroupListen::FRAME, *v));
+                                animeevents.push((*idobj, *idobj, TagGroupListen::FRAME, *v));
                             });
                         }
                     }
 
                     if group_info.loop_event && (listen & TagGroupListen::LOOP) == TagGroupListen::LOOP {
-                        animeevents.push((*idobj, id_group, TagGroupListen::LOOP, group_info.looped_count as u32));
+                        animeevents.push((*idobj, *idobj, TagGroupListen::LOOP, group_info.looped_count as u32));
                     }
 
                     if group_info.end_event && (listen & TagGroupListen::END) == TagGroupListen::END {
-                        animeevents.push((*idobj, id_group, TagGroupListen::END, 0));
+                        animeevents.push((*idobj, *idobj, TagGroupListen::END, 0));
                     }
                 };
             }
@@ -95,21 +93,5 @@ pub fn sys_scene_anime_ctx(
 
     let time1 = pi_time::Instant::now();
     performance.animationgroup = (time1 - time0).as_micros() as u32;
-    log::debug!("SysSceneAnime: {:?}", time1 - time0);
-}
-
-
-pub fn sys_dispose_about_animationgroup(
-    items: Query<(&DisposeReady, &SceneID, &AnimationGroups), Changed<DisposeReady>>,
-    mut animeglobal: ResMut<GlobalAnimeAbout>,
-    mut scenectxs: ResMut<SceneAnimationContextMap>,
-) {
-    items.iter().for_each(|(state, scene, groups)| {
-        if state.0 == false { return; }
-
-        groups.map.iter().for_each(|(_k, id_group)| {
-            scenectxs.delete_group(&scene.0, *id_group);
-            animeglobal.remove(id_group);
-        });
-    });
+    // log::debug!("SysSceneAnime: {:?}", time1 - time0);
 }

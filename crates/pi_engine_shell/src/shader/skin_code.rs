@@ -22,7 +22,7 @@ impl ESkinBonesPerVertex {
             ESkinBonesPerVertex::One =>  {
                 String::from("
 
-    mat4 influence = boneMatrices[A_JOINT_INC1[0] + PI_SkinBoneOffset0];
+    mat4 influence = boneMatrices[A_JOINT_INC1 + PI_SkinBoneOffset0];
     PI_ObjectToWorld = PI_ObjectToWorld * influence; 
 
                 ")
@@ -81,7 +81,7 @@ mat4 readMatrixFromTex(texture2D tex, sampler samp, float index, float texWidth,
             ESkinBonesPerVertex::One =>  {
                 String::from("
 
-    // mat4 influence = readMatrixFromTex(_boneTex, sampler_boneTex, A_JOINT_INC1.x * 1.0, bondTexSize.x, 0., bondTexSize.y);
+    // mat4 influence = readMatrixFromTex(_boneTex, sampler_boneTex, A_JOINT_INC1 * 1.0, bondTexSize.x, 0., bondTexSize.y);
     // PI_ObjectToWorld = PI_ObjectToWorld * influence; 
 
                 ")

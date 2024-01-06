@@ -17,6 +17,7 @@ pub fn sys_create_trail_mesh(
     lightlimit: Res<ModelLightLimit>,
 ) {
     if let Some(trailbuffer) = &trailbuffer.0 {
+
         cmds.drain().drain(..).for_each(|OpsTrail(id_scene, id_linked, entity)| {
 
             let id_mesh = entity;
@@ -40,8 +41,8 @@ pub fn sys_create_trail_mesh(
                 let vertex_desc = vec![trailbuffer.buffer_desc()];
                 ActionGeometry::init(&mut cmd, &vertex_desc, None, id_mesh);
 
-                let mut verticescode = EVerticeExtendCodeComp::default();
-                verticescode.0.0 += EVerticeExtendCode::TRIAL;
+                // let mut verticescode = EVerticeExtendCodeComp::default();
+                // verticescode.0.0 += EVerticeExtendCode::TRIAL;
                 let slot = AssetDescVBSlot01::from(vertex_desc[0].clone());
                 let geo_desc = GeometryDesc { list: vertex_desc };
                 let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
@@ -50,7 +51,7 @@ pub fn sys_create_trail_mesh(
                     .insert(geo_desc)
                     .insert(slot)
                     .insert(buffer)
-                    .insert(verticescode)
+                    // .insert(verticescode)
                     ;
             }
             

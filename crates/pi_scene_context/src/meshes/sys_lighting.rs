@@ -14,7 +14,6 @@ use super::model::*;
 
 pub fn sys_model_direct_lighting_modify_by_light(
     scenes: Query<(Entity, &SceneDirectLightsQueue), Changed<SceneDirectLightsQueue>>,
-    transforms: Query<&GlobalTransform>,
     layermask: Query<&LayerMask>,
     viewers: Query<(&SceneID, &ModelList)>,
     lightindex: Query<&SceneItemIndex>,
@@ -28,7 +27,7 @@ pub fn sys_model_direct_lighting_modify_by_light(
                         if let Some(ids) = &ids.bind {
                             let mut indexlight = vec![];
                             queuedirect.0.items().for_each(|idlight| {
-                                if let (Ok(lp), Ok(ly), Ok(lidx)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight)) {
+                                if let (Ok(ly), Ok(lidx)) = (layermask.get(*idlight), lightindex.get(*idlight)) {
                                     if ly.include(my.0) {
                                         indexlight.push(lidx.val());
                                     }
@@ -94,7 +93,7 @@ pub fn sys_model_point_lighting_modify_by_model(
                         }
                     });
                     queuepoint.0.items().for_each(|idlight| {
-                        if let (Ok(lp), Ok(ly), Ok(lidx), Ok(enabled)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
+                        if let (Ok(_lp), Ok(ly), Ok(lidx), Ok(enabled)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
                             if enabled.0 && ly.include(my.0) {
                                 let idx = lidx.val();
                                 if indexlight.contains(&idx) == false { indexlight.push(idx); }

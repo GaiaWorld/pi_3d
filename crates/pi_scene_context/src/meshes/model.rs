@@ -41,12 +41,13 @@ pub struct AbstructMeshCullingFlag(pub bool);
 
 #[derive(Component)]
 pub struct MeshInstanceState {
-    pub state: u32,
+    pub instances: Vec<CustomVertexAttribute>,
+    pub instance_matrix: bool,
     pub use_single_instancebuffer: bool,
 }
 impl Default for MeshInstanceState {
     fn default() -> Self {
-        Self { state: 0, use_single_instancebuffer: false }
+        Self { instances: vec![], instance_matrix: false, use_single_instancebuffer: false }
     }
 }
 

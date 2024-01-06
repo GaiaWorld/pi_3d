@@ -83,6 +83,7 @@ pub use crate::forward_rendering::*;
 pub use crate::{shader::*, bind_groups::*, binds::*};
 pub use crate::pipeline::*;
 pub use crate::custom_rendertarget::*;
+pub use crate::object::*;
 
 #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);
@@ -131,16 +132,16 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
     }
 }
 
-#[derive(Deref, DerefMut, Component)]
-pub struct EVerticeExtendCodeComp(pub EVerticeExtendCode);
-impl Default for EVerticeExtendCodeComp {
-    fn default() -> Self {
-        Self(EVerticeExtendCode::default())
-    }
-}
+// #[derive(Deref, DerefMut, Component)]
+// pub struct EVerticeExtendCodeComp(pub EVerticeExtendCode);
+// impl Default for EVerticeExtendCodeComp {
+//     fn default() -> Self {
+//         Self(EVerticeExtendCode::default())
+//     }
+// }
 
-#[derive(Deref, DerefMut, Component)]
-pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts);
+#[derive(Component)]
+pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts, pub KeyShaderFromAttributes);
 
 ////////////////////////////////////// Shader
 // #[derive(Deref, DerefMut, Component)]

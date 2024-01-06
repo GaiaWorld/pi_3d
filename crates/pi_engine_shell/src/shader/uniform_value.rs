@@ -1,5 +1,7 @@
 use std::hash::Hash;
 
+use pi_atom::Atom;
+
 use super::{TUnifromShaderProperty, UniformPropertyName, TBindDescToShaderCode};
 
 
@@ -64,39 +66,42 @@ impl Ord for UniformPropertyMat4 {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct UniformPropertyMat2(pub UniformPropertyName, pub [f32;4], pub bool);
-impl TUnifromShaderProperty for UniformPropertyMat2 {
-    fn tag(&self) -> &UniformPropertyName {
-        &self.0
-    }
-}
-impl Hash for UniformPropertyMat2 {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.tag().hash(state);
-    }
-}
-impl PartialEq for UniformPropertyMat2 {
-    fn eq(&self, other: &Self) -> bool {
-        self.tag().eq(other.tag())
-    }
-}
-impl Eq for UniformPropertyMat2 {
-    fn assert_receiver_is_total_eq(&self) {}
-}
-impl PartialOrd for UniformPropertyMat2 {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.tag().partial_cmp(other.tag())
-    }
-}
-impl Ord for UniformPropertyMat2 {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
+// #[derive(Clone, Debug)]
+// pub struct UniformPropertyMat2(pub UniformPropertyName, pub [f32;4], pub bool);
+// impl TUnifromShaderProperty for UniformPropertyMat2 {
+//     fn tag(&self) -> &UniformPropertyName {
+//         &self.0
+//     }
+// }
+// impl Hash for UniformPropertyMat2 {
+//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//         self.tag().hash(state);
+//     }
+// }
+// impl PartialEq for UniformPropertyMat2 {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.tag().eq(other.tag())
+//     }
+// }
+// impl Eq for UniformPropertyMat2 {
+//     fn assert_receiver_is_total_eq(&self) {}
+// }
+// impl PartialOrd for UniformPropertyMat2 {
+//     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+//         self.tag().partial_cmp(other.tag())
+//     }
+// }
+// impl Ord for UniformPropertyMat2 {
+//     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+//         self.partial_cmp(other).unwrap()
+//     }
+// }
 
 #[derive(Clone, Debug)]
 pub struct UniformPropertyVec4(pub UniformPropertyName, pub [f32;4], pub bool);
+impl UniformPropertyVec4 {
+    pub fn instance(&self) -> bool { self.2 }
+}
 impl TUnifromShaderProperty for UniformPropertyVec4 {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -128,6 +133,9 @@ impl Ord for UniformPropertyVec4 {
 
 #[derive(Clone, Debug)]
 pub struct UniformPropertyVec3(pub UniformPropertyName, pub [f32;3], pub bool);
+impl UniformPropertyVec3 {
+    pub fn instance(&self) -> bool { self.2 }
+}
 impl TUnifromShaderProperty for UniformPropertyVec3 {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -159,6 +167,9 @@ impl Ord for UniformPropertyVec3 {
 
 #[derive(Clone, Debug)]
 pub struct UniformPropertyVec2(pub UniformPropertyName, pub [f32;2], pub bool);
+impl UniformPropertyVec2 {
+    pub fn instance(&self) -> bool { self.2 }
+}
 impl TUnifromShaderProperty for UniformPropertyVec2 {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -190,6 +201,9 @@ impl Ord for UniformPropertyVec2 {
 
 #[derive(Clone, Debug)]
 pub struct UniformPropertyFloat(pub UniformPropertyName, pub f32, pub bool);
+impl UniformPropertyFloat {
+    pub fn instance(&self) -> bool { self.2 }
+}
 impl TUnifromShaderProperty for UniformPropertyFloat {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -221,6 +235,9 @@ impl Ord for UniformPropertyFloat {
 
 #[derive(Clone, Debug)]
 pub struct UniformPropertyInt(pub UniformPropertyName, pub i32, pub bool);
+impl UniformPropertyInt {
+    pub fn instance(&self) -> bool { self.2 }
+}
 impl TUnifromShaderProperty for UniformPropertyInt {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -252,6 +269,9 @@ impl Ord for UniformPropertyInt {
 
 #[derive(Clone, Debug)]
 pub struct UniformPropertyUint(pub UniformPropertyName, pub u32, pub bool);
+impl UniformPropertyUint {
+    pub fn instance(&self) -> bool { self.2 }
+}
 impl TUnifromShaderProperty for UniformPropertyUint {
     fn tag(&self) -> &UniformPropertyName {
         &self.0
@@ -306,6 +326,7 @@ impl Default for MaterialValueBindDesc {
     }
 }
 impl MaterialValueBindDesc {
+    pub const PRE_KEY_FOR_INSTANCE_UNIFORM: &str = "_I";
     pub fn none(stage: wgpu::ShaderStages) -> Self {
         Self { stage, 
             mat4_list: vec![],
@@ -360,6 +381,29 @@ impl MaterialValueBindDesc {
         });
 
         size
+    }
+    pub fn query_instance(&self, key: &Atom) -> bool {
+        match self.vec4_list.binary_search_by(|v| { v.0.cmp(key) }) {
+            Ok(idx) => return self.vec4_list[idx].2,
+            Err(_) => {},
+        }
+        match self.vec3_list.binary_search_by(|v| { v.0.cmp(key) }) {
+            Ok(idx) => return self.vec3_list[idx].2,
+            Err(_) => {},
+        }
+        match self.vec2_list.binary_search_by(|v| { v.0.cmp(key) }) {
+            Ok(idx) => return self.vec2_list[idx].2,
+            Err(_) => {},
+        }
+        match self.float_list.binary_search_by(|v| { v.0.cmp(key) }) {
+            Ok(idx) => return self.float_list[idx].2,
+            Err(_) => {},
+        }
+        match self.uint_list.binary_search_by(|v| { v.0.cmp(key) }) {
+            Ok(idx) => return self.uint_list[idx].2,
+            Err(_) => {},
+        }
+        return  false;
     }
     pub fn label(&self) -> String {
         let mut result = String::from("");
@@ -432,6 +476,7 @@ impl MaterialValueBindDesc {
             self.vec4_list.iter().for_each(|name| {
                 result += "vec4 ";
                 result += &name.0;
+                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";\r\n";
             });
             total_num += self.vec4_list.len();
@@ -439,6 +484,7 @@ impl MaterialValueBindDesc {
             self.vec3_list.iter().for_each(|name| {
                 result += "vec4 ";
                 result += &name.0;
+                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";\r\n";
             });
             total_num += self.vec3_list.len();
@@ -446,6 +492,7 @@ impl MaterialValueBindDesc {
             self.vec2_list.iter().for_each(|name| {
                 result += "vec2 ";
                 result += &name.0;
+                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";\r\n";
             });
             total_num += self.vec2_list.len();
@@ -457,6 +504,7 @@ impl MaterialValueBindDesc {
             self.float_list.iter().for_each(|name| {
                 result += "float ";
                 result += &name.0;
+                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";\r\n";
             });
             total_num += self.float_list.len();
@@ -471,6 +519,7 @@ impl MaterialValueBindDesc {
             self.uint_list.iter().for_each(|name| {
                 result += "uint ";
                 result += &name.0;
+                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";\r\n";
             });
             total_num += self.uint_list.len();
@@ -496,6 +545,36 @@ impl MaterialValueBindDesc {
             log::info!("Uniform Count: {}", total_num);
     
         }
+
+        result
+    }
+    pub fn vs_running_code(&self) -> String {
+        let mut result = String::from("");
+        self.vec4_list.iter().for_each(|name| {
+            if name.2 { 
+                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+            }
+        });
+        self.vec3_list.iter().for_each(|name| {
+            if name.2 { 
+                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ".xyz;\r\n";
+            }
+        });
+        self.vec2_list.iter().for_each(|name| {
+            if name.2 { 
+                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+            }
+        });
+        self.float_list.iter().for_each(|name| {
+            if name.2 { 
+                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+            }
+        });
+        self.uint_list.iter().for_each(|name| {
+            if name.2 { 
+                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+            }
+        });
 
         result
     }

@@ -37,7 +37,6 @@ pub struct BundleGeometry(
     MeshID,
     GeometryRefs,
     RenderGeometryComp,
-    EVerticeExtendCodeComp,
     IndicesBufferDesc,
     AssetResBufferIndices,
 );

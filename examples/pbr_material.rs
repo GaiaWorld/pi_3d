@@ -12,11 +12,8 @@ impl ShaderPBR {
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
         nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uMetallic"), 0.2, true));
         nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uRoughness"), 0.8, true));
-        nodemat.effect_varying_while_instance = String::from("
-    vMetallic   = A_INS_F_Vec4A.x;
-    vRoughness  = A_INS_F_Vec4A.y;
-        ");
-        nodemat.check_instance = EVerticeExtendCode(EVerticeExtendCode::INSTANCE_CUSTOM_VEC4_A);
+        nodemat.material_instance_code = String::from("");
+        // nodemat.check_instance = EVerticeExtendCode(EVerticeExtendCode::INSTANCE_CUSTOM_VEC4_A);
         nodemat.fs_define = String::from("
     layout(location = 0) out vec4 gl_FragColor;
     struct InputParam {
@@ -58,8 +55,6 @@ impl ShaderPBR {
 
     v_color = A_COLOR4;
     v_uv = A_UV;
-    vMetallic   = uMetallic;
-    vRoughness  = uRoughness;
         ");
         nodemat.fs = String::from("
 
@@ -84,8 +79,8 @@ impl ShaderPBR {
 
     InputParam inputParam; 
     inputParam.albedo                   = baseColor.rgb;
-    inputParam.metallic                 = vMetallic;
-    inputParam.roughness                = vRoughness;
+    inputParam.metallic                 = uMetallic;
+    inputParam.roughness                = uRoughness;
     inputParam.emission                 = vec3(0., 0., 0.);
     inputParam.emissionStrength         = 0.0;
     inputParam.bumpTexture              = vec3(0., 0., 1.);
@@ -198,14 +193,6 @@ impl ShaderPBR {
                 Varying { 
                     format: Atom::from("vec4"),
                     name: Atom::from("v_color"),
-                },
-                Varying { 
-                    format: Atom::from("float"),
-                    name: Atom::from("vMetallic"),
-                },
-                Varying { 
-                    format: Atom::from("float"),
-                    name: Atom::from("vRoughness"),
                 },
             ]
         );

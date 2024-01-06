@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     object::sys_dispose_ready,
-    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask},
+    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask}, scene::command_sys::sys_create_scene,
 };
 
 use self::{
@@ -59,7 +59,7 @@ impl Plugin for PluginCamera {
         app.add_systems(
 			Update,
             (
-                sys_create_camera,
+                sys_create_camera.after(sys_create_scene),
                 // sys_create_camera_renderer,
             ).chain().in_set(ERunStageChap::Initial)
         );

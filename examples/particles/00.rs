@@ -34,12 +34,10 @@ fn setup(
     actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
-    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
-    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, base::particelsystem_mesh_state()));
     
     let id_geo = commands.spawn_empty().id();
     let attrs = CubeBuilder::attrs_meta();
-    let instancestate = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1;
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
     let idmat = commands.spawn_empty().id();
@@ -62,10 +60,7 @@ fn sys_demo_particle(
     particles: Query<(&SceneID, &GeometryID), With<Particle>>,
     scenes: Query<(&SceneTime, &SceneMainCameraID)>,
     cameras: Query<(&ViewerGlobalPosition, &ViewerViewMatrix)>,
-    mut geometrys: Query<(&mut InstanceBufferWorldMatrix, &mut InstanceBufferColor)>,
-    mut matrixuse: ResMut<ActionListInstanceWorldMatrixs>,
-    mut coloruse: ResMut<ActionListInstanceColors>,
-    mut uvuse: ResMut<ActionListInstanceTilloffs>,
+    mut actions: pi_3d::ActionSets,
 ) {
     particles.iter().for_each(|(idscene, idgeo)| {
         if let Ok((scenetime, maincamera)) = scenes.get(idscene.0) {
@@ -80,66 +75,67 @@ fn sys_demo_particle(
                 (Vector3::new(0., 0., -1.), Matrix::identity())
             };
 
-            if let Ok((_, _)) = geometrys.get_mut(idgeo.0) {
-                let mut buffermatrix = vec![];
-                let mut buffercolor = vec![];
-                let mut bufferuv = vec![];
+            // if let Ok((_, _)) = geometrys.get_mut(idgeo.0) {
+            //     let mut buffermatrix = vec![];
+            //     let mut buffercolor = vec![];
+            //     let mut bufferuv = vec![];
             
-                for z in 0..20 {
-                    let ringcount = (z + 1) * 10;
-                    let tt = if z % 2 == 0 {
-                        scenetime.time_ms as f32 * 0.002
-                    } else {
-                        scenetime.time_ms as f32 * 0.002 * -1.
-                    };
-                    for x in 0..ringcount {
-                        let t: f32 = (tt + x as f32 * (1. / ringcount as f32)) * 3.1415926 * 2.;
-                        let mut wm = Matrix::identity();
-                        wm.append_translation_mut(
-                            &Vector3::new(
-                                f32::cos(t) * 2. * ( z as f32 + 1.0),
-                                f32::sin(t) * 2. * ( z as f32 + 1.0),
-                                0.,
-                            )
-                        );
-                        buffermatrix.push(wm);
+            //     for z in 0..20 {
+            //         let ringcount = (z + 1) * 10;
+            //         let tt = if z % 2 == 0 {
+            //             scenetime.time_ms as f32 * 0.002
+            //         } else {
+            //             scenetime.time_ms as f32 * 0.002 * -1.
+            //         };
+            //         for x in 0..ringcount {
+            //             let t: f32 = (tt + x as f32 * (1. / ringcount as f32)) * 3.1415926 * 2.;
+            //             let mut wm = Matrix::identity();
+            //             wm.append_translation_mut(
+            //                 &Vector3::new(
+            //                     f32::cos(t) * 2. * ( z as f32 + 1.0),
+            //                     f32::sin(t) * 2. * ( z as f32 + 1.0),
+            //                     0.,
+            //                 )
+            //             );
+            //             buffermatrix.push(wm);
 
-                        buffercolor.push(Vector4::new(
-                            f32::cos(tt + x as f32) * 0.5 + 0.5,
-                            f32::sin(tt) * 0.5 + 0.5,
-                            f32::sin(tt + z as f32) * 0.5 + 0.5,
-                            f32::cos(tt) * 0.5 + 0.5,
-                        ));
-                        bufferuv.push(Vector4::new(1., 1., 0., 0.));
-                    }
-                }
+            //             buffercolor.push(Vector4::new(
+            //                 f32::cos(tt + x as f32) * 0.5 + 0.5,
+            //                 f32::sin(tt) * 0.5 + 0.5,
+            //                 f32::sin(tt + z as f32) * 0.5 + 0.5,
+            //                 f32::cos(tt) * 0.5 + 0.5,
+            //             ));
+            //             bufferuv.push(Vector4::new(1., 1., 0., 0.));
+            //         }
+            //     }
 
-                let mut colordata : Vec<u8> = vec![];
-                buffercolor.iter().for_each(|v| {
-                    bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
-                        colordata.push(*v);
-                    })
-                });
+            //     let mut colordata : Vec<u8> = vec![];
+            //     buffercolor.iter().for_each(|v| {
+            //         bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
+            //             colordata.push(*v);
+            //         })
+            //     });
                 
-                let mut wmdata: Vec<u8> = vec![];
-                buffermatrix.iter().for_each(|v| {
-                    bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
-                        wmdata.push(*v);
-                    })
-                });
-                let mut uvdata: Vec<u8> = vec![];
-                bufferuv.iter().for_each(|v| {
-                    bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
-                        uvdata.push(*v);
-                    })
-                });
+            //     let mut wmdata: Vec<u8> = vec![];
+            //     buffermatrix.iter().for_each(|v| {
+            //         bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
+            //             wmdata.push(*v);
+            //         })
+            //     });
+            //     let mut uvdata: Vec<u8> = vec![];
+            //     bufferuv.iter().for_each(|v| {
+            //         bytemuck::cast_slice(v.as_slice()).iter().for_each(|v| {
+            //             uvdata.push(*v);
+            //         })
+            //     });
 
-                matrixuse.push(OpsInstanceWorldMatrixs::ops(idgeo.0, wmdata));
-                coloruse.push(OpsInstanceColors::ops(idgeo.0, colordata));
-                uvuse.push(OpsInstanceTilloffs::ops(idgeo.0, uvdata));
-                // instance_buffer_update::<InstanceBufferWorldMatrix>(wmdata, idgeo.0, &mut wm, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
-                // instance_buffer_update::<InstanceBufferColor>(colordata, idgeo.0, &mut colors, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
-            }
+            //     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(node, x, y, z));
+            //     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(node, x, y, z));
+            //     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(node, x, y, z));
+
+            //     // instance_buffer_update::<InstanceBufferWorldMatrix>(wmdata, idgeo.0, &mut wm, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
+            //     // instance_buffer_update::<InstanceBufferColor>(colordata, idgeo.0, &mut colors, &mut geoloader, &mut vb_data_map, &mut slots, &mut allocator, &asset_mgr, &device, &queue);
+            // }
         }
     });
 }

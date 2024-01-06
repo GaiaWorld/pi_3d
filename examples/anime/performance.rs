@@ -46,7 +46,7 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_TILL_OFF_1, ..Default::default() };
+    let state = base::instance_attr(true, false, true);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let idmat = commands.spawn_empty().id();
@@ -67,9 +67,11 @@ fn setup(
     );
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     let cell_col = 4.;
     let cell_row = 4.;
@@ -82,7 +84,7 @@ fn setup(
 
                 actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
 
-                actions.instance.tilloff.push(OpsInstanceTillOff::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row));
+                actions.instance.vec4s.push(OpsInstanceVec4::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row, Atom::from("InsTilloff")));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
                 let key_curve0 = key_curve0.asset_u64();
@@ -102,14 +104,14 @@ fn setup(
                 };
 
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupres.scene_ctxs.add_target_anime(scene, cube, id_group, animation);
+                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, cube, animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
     }
 
     let parma = AnimationGroupParam::default();
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
 }
@@ -126,7 +128,7 @@ impl Plugin for PluginTest {
 pub fn sys_anime_event(
     mut events: ResMut<GlobalAnimeEvents>,
 ) {
-    let mut list: Vec<(Entity, AnimationGroupID, u8, u32)> = replace(events.deref_mut(), vec![]);
+    let mut list: Vec<(Entity, Entity, u8, u32)> = replace(events.deref_mut(), vec![]);
     list.drain(..).for_each(|item| {
         log::warn!("Event {:?}", item);
     });

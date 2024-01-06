@@ -5,10 +5,10 @@ use pi_scene_math::{Matrix, coordiante_system::CoordinateSytem3, vector::TToolMa
 use crate::{
     geometry::{
         prelude::*,
-        instance::instance_boneoffset::*
+        instance::types::{ModelInstanceAttributes, InstanceAttributeAnimated}
     },
     transforms::prelude::*,
-    prelude::*, commands::*
+    prelude::*,
 };
 
 use super::{
@@ -79,8 +79,7 @@ pub fn sys_calc_render_matrix_instance(
         (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalTransform, &InstanceMesh),
         Or<(Changed<GlobalTransform>, Changed<ModelVelocity>, Changed<ScalingMode>)>
     >,
-    mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
-    mut inssources: Query<&mut InstanceWorldMatrixDirty>,
+    mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
 ) {
     let time = pi_time::Instant::now();
 
@@ -88,15 +87,13 @@ pub fn sys_calc_render_matrix_instance(
         obj, _,
         localscaling, scalingmode, velocity, transform, id_source
     )| {
-        if let (Ok((mut wm, mut wmi)), Ok(renderalignment)) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
-            
-            if let Ok(mut dirty) = inssources.get_mut(id_source.0) {
-                *dirty = InstanceWorldMatrixDirty(true);
-            }
-
+        // log::warn!("calc_render_matrix:");
+        if let (
+            Ok((mut wm, mut wmi, mut instanceattributes)),
+            Ok(renderalignment)
+        ) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
             // let mut flag = true;
 
-            // log::warn!("calc_render_matrix:");
             // render_wm.0.clone_from(&worldmatrix.0);
             // render_wminv.0.clone_from(&worldmatrix_inv.0);
             let pos = transform.position();
@@ -106,6 +103,7 @@ pub fn sys_calc_render_matrix_instance(
                     if renderalignment.0 == ERenderAlignment::Local {
                         wm.0.clone_from(&transform.matrix);
                         wmi.0.clone_from(&transform.matrix_inv);
+                        instanceattributes.update_worldmatrix(&wm.0);
                         // log::warn!("Normal Alignment");
                         return;
                     }
@@ -131,6 +129,8 @@ pub fn sys_calc_render_matrix_instance(
             wm.0.clone_from(&m);
             m.try_inverse_mut();
             wmi.0.clone_from(&m);
+
+            instanceattributes.update_worldmatrix(&wm.0);
         }
 
     });
@@ -159,20 +159,6 @@ pub fn sys_velocity_for_uniform(
     });
 }
 
-pub fn sys_skinoffset_for_uniform(
-    mut meshes: Query<
-        (
-            &InstanceBoneoffset, &BindModel
-        ), 
-        Changed<InstanceBoneoffset>
-    >,
-) {
-    meshes.iter_mut().for_each(|(skinoffset, bind_model)| {
-        // log::debug!("SysModelUniformUpdate:");
-        bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[skinoffset.0]));
-    });
-}
-
 pub fn sys_enable_about_instance(
     instances: Query<&InstanceMesh, Changed<GlobalEnable>>,
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,
@@ -184,12 +170,52 @@ pub fn sys_enable_about_instance(
     });
 }
 
+pub fn sys_animator_update_instance_attribute(
+    floats: Query<&AnimatorableFloat, (Changed<AnimatorableFloat>, With<AnimatorableAttribute>)>,
+    _vec2s: Query<&AnimatorableVec2 , (Changed<AnimatorableVec2>, With<AnimatorableAttribute>)>,
+    _vec3s: Query<&AnimatorableVec3 , (Changed<AnimatorableVec3>, With<AnimatorableAttribute>)>,
+    _vec4s: Query<&AnimatorableVec4 , (Changed<AnimatorableVec4>, With<AnimatorableAttribute>)>,
+    _uints: Query<&AnimatorableUint , (Changed<AnimatorableUint>, With<AnimatorableAttribute>)>,
+    _sints: Query<&AnimatorableSint , (Changed<AnimatorableSint>, With<AnimatorableAttribute>)>,
+    mut items: Query<(&mut ModelInstanceAttributes, &InstanceAttributeAnimated), Changed<TargetAnimatorableIsRunning>>,
+) {
+    items.iter_mut().for_each(|(mut attributes, animators)| {
+        animators.0.iter().for_each(|key| {
+            if let Some(offset) = attributes.offset(key) {
+                let mut idx = offset.offset() as usize;
+                if let Some(entity) = offset.entity() {
+                    match offset.atype() {
+                        EAnimatorableType::Vec4 => if let Ok(data) = _vec4s.get(entity) {
+                            bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                        },
+                        EAnimatorableType::Vec3 => if let Ok(data) = _vec3s.get(entity) {
+                            bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                        },
+                        EAnimatorableType::Vec2 => if let Ok(data) = _vec2s.get(entity) {
+                            bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                        },
+                        EAnimatorableType::Float => if let Ok(data) = floats.get(entity) {
+                            bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                        },
+                        EAnimatorableType::Uint => if let Ok(data) = _uints.get(entity) {
+                            bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                        },
+                        EAnimatorableType::Int => if let Ok(data) = _sints.get(entity) {
+                            bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                        },
+                    }
+                }
+            }
+        });
+    });
+}
+
 pub fn sys_dispose_about_mesh(
     items: Query<
         (
             Entity, &DisposeReady,
             &PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08,
-            &GeometryID, &InstanceSourceRefs, &Mesh, Option<&SkeletonID>
+            &GeometryID, &InstanceSourceRefs, &Mesh, Option<&SkeletonID>, &ModelInstanceAttributes
         ),
         Or<(Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
     >,
@@ -201,14 +227,19 @@ pub fn sys_dispose_about_mesh(
 ) {
     items.iter().for_each(|(
         entity, state, pass01, pass02, pass03, pass04, pass05, pass06, pass07, pass08,
-        idgeo, instancerefs, _, idskin
+        idgeo, instancerefs, _, idskin, animators
     )| {
         if state.0 == false { return; }
 
         disposecanlist.push(OpsDisposeCan::ops(entity));
+        animators.attributes().iter().for_each(|v| {
+            if let Some(entity) = v.1.entity() {
+                disposecanlist.push(OpsDisposeCan::ops(entity));
+            }
+        });
 
         instancerefs.iter().for_each(|instance| {
-            disposecanlist.push(OpsDisposeCan::ops(*instance));
+            disposereadylist.push(OpsDisposeReadyForRef::ops(*instance));
         });
 
         disposereadylist.push(OpsDisposeReadyForRef::ops(pass01.id()));
@@ -262,16 +293,21 @@ pub fn sys_dispose_about_pass(
 }
 
 pub fn sys_dispose_about_instance(
-    items: Query<(Entity, &DisposeReady, &InstanceMesh), Changed<DisposeReady>>,
+    items: Query<(Entity, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes), Changed<DisposeReady>>,
     mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
     mut instancesources: Query<(&mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs)>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
-    items.iter().for_each(|(entity, state, sourceid)| {
+    items.iter().for_each(|(entity, state, sourceid, animators)| {
         if state.0 == false { return; }
 
         disposecanlist.push(OpsDisposeCan::ops(entity));
+        animators.attributes().iter().for_each(|v| {
+            if let Some(entity) = v.1.entity() {
+                disposecanlist.push(OpsDisposeCan::ops(entity));
+            }
+        });
 
         if let Ok((mut refs, mut flag)) = instancesources.get_mut(sourceid.0) {
             // log::warn!("Remove Instance");

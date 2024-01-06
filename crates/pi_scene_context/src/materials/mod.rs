@@ -3,7 +3,7 @@ use pi_assets::asset::GarbageEmpty;
 use pi_engine_shell::prelude::*;
 
 
-use crate::object::sys_dispose_ready;
+use crate::{object::sys_dispose_ready, cameras::command_sys::sys_create_camera};
 
 use self::{
     command::*,
@@ -134,20 +134,20 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListTargetAnimationUniform::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::MaterialCommand.after(ERunStageChap::_InitialApply).after(EStageAnimation::_CreateApply).before(StageTextureLoad::TextureRequest).before(ERunStageChap::Anime));
+        app.configure_set(Update, StageMaterial::MaterialCommand.after(ERunStageChap::_InitialApply).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(ERunStageChap::Anime));
         app.configure_set(Update, StageMaterial::MaterialReady.after(StageMaterial::MaterialCommand).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
 
         app.add_systems(
 			Update,
             (
-                sys_create_material,
+                sys_create_material.after(sys_create_camera),
             ).in_set(ERunStageChap::Initial)
         );
 
         app.add_systems(Update, 
             (
-                sys_act_material_texture_from_target,
                 sys_act_target_animation_uniform,
+                sys_act_material_texture_from_target,
             ).in_set(StageMaterial::MaterialCommand)
         );
 
@@ -163,7 +163,7 @@ impl Plugin for PluginMaterial {
             (
                 // sys_act_uniform,
                 // sys_act_uniform_by_name,
-                sys_act_material_value,
+                sys_act_material_value.after(sys_act_target_animation_uniform),
                 // sys_act_material_mat2.run_if(should_run),
                 // sys_act_material_vec4,
                 // sys_act_material_vec2,

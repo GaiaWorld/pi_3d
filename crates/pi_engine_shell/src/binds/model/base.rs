@@ -37,6 +37,7 @@ impl ShaderBindModelAboutMatrix {
         allocator: &mut BindBufferAllocator,
     ) -> Option<Self> {
         if let Some(range) = allocator.allocate(ShaderBindModelAboutMatrix::TOTAL_SIZE) {
+            range.write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[0u32, 0u32]));
             Some(
                 Self {
                     data: range,

@@ -1,7 +1,6 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::commands::*;
 use super::{
     material::*,
     uniforms::{uniform::*, texture::*},
@@ -11,7 +10,7 @@ use super::{
 pub fn sys_material_textures_modify(
     mut materials: Query<
         (
-            ObjectID, &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams,
+            &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams,
             (
                 &mut TextureSlot01, &mut TextureSlot02, &mut TextureSlot03, &mut TextureSlot04, 
                 &mut TextureSlot05, &mut TextureSlot06, &mut TextureSlot07, &mut TextureSlot08, 
@@ -28,7 +27,6 @@ pub fn sys_material_textures_modify(
 ) {
     // log::debug!("SysMaterialMetaChange: ");
     materials.iter_mut().for_each(|(
-        matid,
         effect, mut texparams,
         mut slots,
         mut samplers
@@ -116,11 +114,11 @@ pub fn sys_material_textures_modify(
 }
 
 pub fn sys_material_uniform_apply(
-    floats: Query<&AnimatorableFloat, Changed<AnimatorableFloat>>,
-    _vec2s: Query<&AnimatorableVec2 , Changed<AnimatorableVec2>>,
-    _vec3s: Query<&AnimatorableVec3 , Changed<AnimatorableVec3>>,
-    _vec4s: Query<&AnimatorableVec4 , Changed<AnimatorableVec4>>,
-    _uints: Query<&AnimatorableUint , Changed<AnimatorableUint>>,
+    floats: Query<&AnimatorableFloat, (Changed<AnimatorableFloat>, With<AnimatorableUniform>)>,
+    _vec2s: Query<&AnimatorableVec2 , (Changed<AnimatorableVec2>, With<AnimatorableUniform>)>,
+    _vec3s: Query<&AnimatorableVec3 , (Changed<AnimatorableVec3>, With<AnimatorableUniform>)>,
+    _vec4s: Query<&AnimatorableVec4 , (Changed<AnimatorableVec4>, With<AnimatorableUniform>)>,
+    _uints: Query<&AnimatorableUint , (Changed<AnimatorableUint>, With<AnimatorableUniform>)>,
     items: Query<(&BindEffect, &UniformAnimated), Changed<TargetAnimatorableIsRunning>>,
     mut performance: ResMut<Performance>,
 ) {
@@ -128,32 +126,32 @@ pub fn sys_material_uniform_apply(
     items.iter().for_each(|(bind, animated)| {
         if let Some(bind) = &bind.0 {
             animated.0.iter().for_each(|_k| {
-                if let Some(v) = bind.offset(_k) {
-                    match v {
-                        UniformOffset::Animatorable(offset) => {
+                if let Some(offset) = bind.offset(_k) {
+                    match offset.entity() {
+                        Some(entity) => {
                             match offset.atype() {
                                 EAnimatorableType::Vec4 => {
-                                    if let Ok(value) = _vec4s.get(offset.entity()) {
+                                    if let Ok(value) = _vec4s.get(entity) {
                                         bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
                                     }
                                 },
                                 EAnimatorableType::Vec3 => {
-                                    if let Ok(value) = _vec3s.get(offset.entity()) {
+                                    if let Ok(value) = _vec3s.get(entity) {
                                         bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
                                     }
                                 },
                                 EAnimatorableType::Vec2 => {
-                                    if let Ok(value) = _vec2s.get(offset.entity()) {
+                                    if let Ok(value) = _vec2s.get(entity) {
                                         bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
                                     }
                                 },
                                 EAnimatorableType::Float => {
-                                    if let Ok(value) = floats.get(offset.entity()) {
+                                    if let Ok(value) = floats.get(entity) {
                                         bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
                                     }
                                 },
                                 EAnimatorableType::Uint => {
-                                    if let Ok(value) = _uints.get(offset.entity()) {
+                                    if let Ok(value) = _uints.get(entity) {
                                         bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
                                     }
                                 },
@@ -161,7 +159,7 @@ pub fn sys_material_uniform_apply(
                                 },
                             }
                         },
-                        UniformOffset::UnAnimatorable(_) => {},
+                        _ => {},
                     }
                 }
             });
@@ -255,16 +253,24 @@ pub fn sys_texture_ready07(
 }
 
 pub fn sys_dispose_about_material(
-    items: Query<(Entity, &DisposeReady, &MaterialRefs), Changed<DisposeReady>>,
+    items: Query<(Entity, &DisposeReady, &MaterialRefs, &BindEffect), Changed<DisposeReady>>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
-    items.iter().for_each(|(entity, state, refs)| {
-        if defaultmat.0 == entity { return; }
+    items.iter().for_each(|(entity, state, refs, bind)| {
+        if defaultmat.0 == entity || state.0 == false { return; }
 
-        if state.0 == true && refs.len() == 0 {
+        if refs.is_empty() {
             disposecanlist.push(OpsDisposeCan::ops(entity));
+            if let Some(bind) = &bind.0 {
+                bind.uniforms().iter().for_each(|v| {
+                    if let Some(entity) = v.1.entity() {
+                        // log::error!("AAAA {:?}", (entity));
+                        disposecanlist.push(OpsDisposeCan::ops(entity));
+                    }
+                });
+            }
         }
     });
 }

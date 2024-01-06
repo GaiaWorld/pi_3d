@@ -12,7 +12,7 @@ pub fn sys_modify_pass_effect_by_pass(
 ) {
     passes.iter_mut().for_each(|(mut passready, mut passbind, mut passtextures, idmat)| {
         
-        if let Ok((effect_key, meta, bind, list, textures)) = materials.get(idmat.0) {
+        if let Ok((effect_key, meta, bind, _list, textures)) = materials.get(idmat.0) {
 
             let (bindvalue, bindtextures, effect) = match (0 < meta.textures.len(), &textures.0) {
                 (true, Some(textures)) => {

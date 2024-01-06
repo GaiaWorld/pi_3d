@@ -3,7 +3,6 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     transforms::command_sys::*,
-    commands::*,
     layer_mask::prelude::*,
     shadow::prelude::LightLinkedShadowID,
 };
@@ -35,7 +34,6 @@ pub fn sys_create_light(
             ELightType::Point => ActionLight::as_point_light(&mut lightcmd),
             ELightType::Hemispheric => ActionLight::as_hemi_light(&mut lightcmd),
         }
-        ActionAnime::as_anime_group_target(&mut lightcmd);
 
     });
 }

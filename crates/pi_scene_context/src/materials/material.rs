@@ -22,7 +22,7 @@ impl TEntityRef for LinkedMaterialID {
 }
 
 #[derive(Clone, Default, Component)]
-pub struct DirtyMaterialRefs(pub bool);
+pub struct DirtyMaterialRefs;
 
 /// 材质被哪些实体使用
 pub type MaterialRefs = EntityRefInfo<DirtyMaterialRefs>;

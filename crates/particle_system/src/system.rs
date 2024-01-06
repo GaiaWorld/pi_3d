@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
-use pi_scene_context::{prelude::*, geometry::instance::instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
+use pi_scene_context::{prelude::*, geometry::instance::{instanced_buffer::{InstancedInfo, InstanceBufferAllocator}, types::ModelInstanceAttributes}};
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}};
 
 use crate::base::*;
@@ -524,9 +524,9 @@ pub fn sys_texturesheet(
 pub fn sys_update_buffer(
     calculators: Query<&ParticleCalculatorBase>,
     particle_sys: Query<
-        (Entity, &ParticleRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColor, &ParticleUV),
+        (Entity, &ParticleAttributes, &ParticleRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColor, &ParticleUV),
     >,
-    meshes: Query<(&GlobalEnable, &GeometryID)>,
+    meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes)>,
     mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfo>,
     mut slots: (
@@ -564,15 +564,15 @@ pub fn sys_update_buffer(
         performance.last_running_time = currms;
         // log::warn!("ParticleBuffer: ");
         let mut count_particles = 0;
-        let mut collectdata: Vec<f32> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16));
-        let common_f32 = commonbuffer.f32_count();
-        let mut common_f32_use = 0;
-        let mut flag_common = common_f32 > common_f32_use;
+        let mut collectdata: Vec<u8> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16) * 4);
+        let common_bytes = commonbuffer.byte_count();
+        let mut common_byte_use = 0;
+        let mut flag_common = common_bytes > common_byte_use;
         // let mut collectdata: Vec<u8> = Vec::with_capacity(100 * (4 + 4 + 16) * 4);
-        let mut collect_common: Vec<f32> = Vec::with_capacity(common_f32);
+        let mut collect_common: Vec<u8> = Vec::with_capacity(common_bytes);
         particle_sys.iter().for_each(
             |(
-                entity, state, _time, ids, scalings, rotations, positions, directions, emitmatrixs,
+                entity, attributes, state, _time, ids, scalings, rotations, positions, directions, emitmatrixs,
                 colors, uvs
             )| {
                 let particle_count = ids.actives.len();
@@ -586,7 +586,7 @@ pub fn sys_update_buffer(
                 }
 
                 // if time.running_delta_ms <= 0 { return; }
-                if let Ok((enable, idgeo)) = meshes.get(entity) {
+                if let Ok((enable, idgeo, instanceattributes)) = meshes.get(entity) {
 
                     if enable.0 == false { return; }
                     
@@ -609,14 +609,15 @@ pub fn sys_update_buffer(
                                 // let zero = Vector3::zeros();
                                 let mut g_velocity = Vector3::zeros();
                                 
-                                let f32_count = particle_count * instanceinfo.bytes_per_instance() as usize / 4;
-                                let collect = if common_f32_use + f32_count <= common_f32 {
+                                let byte_count = particle_count * instanceinfo.bytes_per_instance() as usize;
+                                let collect = if common_byte_use + byte_count <= common_bytes {
                                     flag_common = true;
                                     &mut collect_common
                                 } else {
                                     flag_common = false;
                                     &mut collectdata
                                 };
+                                let mut tempbytes = instanceattributes.bytes().clone();
         
                                 ids.actives.iter().for_each(|idx| {
                                     let scaling = scalings.get(*idx).unwrap();
@@ -681,24 +682,49 @@ pub fn sys_update_buffer(
                                     let color = colors.get(*idx).unwrap();
                                     let uv = uvs.get(*idx).unwrap();
 
-                                    if instanceinfo.state & InstanceState::INSTANCE_BASE == InstanceState::INSTANCE_BASE {
-                                        matrix.as_slice().iter().for_each(|v| { collect.push(*v); });
-                                    }
-                                    if instanceinfo.state & InstanceState::INSTANCE_COLOR == InstanceState::INSTANCE_COLOR {
-                                        color.as_slice().iter().for_each(|v| { collect.push(*v); });
-                                    }
-                                    if instanceinfo.state & InstanceState::INSTANCE_TILL_OFF_1 == InstanceState::INSTANCE_TILL_OFF_1 {
-                                        collect.push(uv.uscale); collect.push(uv.vscale); collect.push(uv.uoffset); collect.push(uv.voffset);
-                                    }
+                                    attributes.0.iter().for_each(|v| {
+                                        match v.vtype {
+                                            EParticleAttributeType::Matrix => if instanceattributes.worldmatrix() {
+                                                let mut idx = 0;
+                                                bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                            },
+                                            EParticleAttributeType::Color => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                                let mut idx = offset.offset() as usize;
+                                                bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                            },
+                                            EParticleAttributeType::Tilloff => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                                let mut idx = offset.offset() as usize;
+                                                bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                            },
+                                            EParticleAttributeType::Extend4A => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                                // let mut idx = offset.offset() as usize;
+                                                // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                            },
+                                            EParticleAttributeType::Extend4B => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                                // let mut idx = offset.offset() as usize;
+                                                // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                            },
+                                        }
+                                    });
+                                    tempbytes.iter().for_each(|v| { collect.push(*v); });
+                                    // if instanceinfo.state & InstanceState::INSTANCE_BASE == InstanceState::INSTANCE_BASE {
+                                    //     matrix.as_slice().iter().for_each(|v| { collect.push(*v); });
+                                    // }
+                                    // if instanceinfo.state & InstanceState::INSTANCE_COLOR == InstanceState::INSTANCE_COLOR {
+                                    //     color.as_slice().iter().for_each(|v| { collect.push(*v); });
+                                    // }
+                                    // if instanceinfo.state & InstanceState::INSTANCE_TILL_OFF_1 == InstanceState::INSTANCE_TILL_OFF_1 {
+                                    //     collect.push(uv.uscale); collect.push(uv.vscale); collect.push(uv.uoffset); collect.push(uv.voffset);
+                                    // }
                                 });
 
                                 if flag_common {
                                     let newsize = collect_common.len();
-                                    if newsize > common_f32_use {
+                                    if newsize > common_byte_use {
                                         // log::warn!("Common: {:?}", (common_f32_use as u32 * 4, newsize as u32 * 4));
-                                        let data = commonbuffer.buffer(common_f32_use as u32 * 4, newsize as u32 * 4);
+                                        let data = commonbuffer.buffer(common_byte_use as u32, newsize as u32);
                                         reset_instances_buffer_range(id_geo, &instanceinfo, &mut slots, data);
-                                        common_f32_use = newsize;
+                                        common_byte_use = newsize;
                                     }
                                 } else {
                                     // log::warn!("Single: >>>>>>>>>>>>>");

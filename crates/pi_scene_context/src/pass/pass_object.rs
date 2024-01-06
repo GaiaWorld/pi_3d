@@ -2,7 +2,6 @@
 use std::{sync::Arc, ops::{Deref, Range}};
 
 use pi_assets::asset::Handle;
-use pi_engine_shell::prelude::*;
 use crate::bindgroup::*;
 
 pub use pi_engine_shell::prelude::*;

@@ -11,8 +11,8 @@ impl Default for AnimatorableVec3 {
         Self(Vector3::new(0.0, 0.0, 0.0))
     }
 }
-impl From<&[Number; 3]> for AnimatorableVec3 {
-    fn from(v: &[Number; 3]) -> Self {
+impl From<&[Number]> for AnimatorableVec3 {
+    fn from(v: &[Number]) -> Self {
         Self(Vector3::new(v[0], v[1], v[2]))
     }
 }
@@ -27,6 +27,7 @@ impl pi_curves::curve::frame::FrameDataValue for AnimatorableVec3 {
     }
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
+        log::error!("amount {:?}", amount);
         Self(self.0 + rhs.0 * amount)
     }
     fn size() -> usize {

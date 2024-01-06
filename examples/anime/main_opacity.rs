@@ -46,7 +46,7 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: 0, ..Default::default() };
+    let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let mut blend = ModelBlend::default(); blend.combine();
@@ -67,18 +67,20 @@ fn setup(
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/icon_city.png"),
     }));
-    actions.material.vec4.push(
-        OpsUniformVec4::ops(
+    actions.material.vec3.push(
+        OpsUniformVec3::ops(
             idmat, 
-            Atom::from(BlockEmissiveTexture::KEY_INFO), 
-            1., 1., 1., 1.
+            Atom::from(BlockMainTexture::KEY_COLOR), 
+            1., 1., 0.,
         )
     );
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     {
         let key_curve0 = pi_atom::Atom::from("color");
         let key_curve0 = key_curve0.asset_u64();
@@ -88,8 +90,8 @@ fn setup(
             Err(_) => { return; },
         };
         let animation = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
-        actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockEmissiveTexture::KEY_INFO), id_group.clone(), animation));
+        // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), idmat, animation));
+        actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
     }
     // {
     //     let key_curve0 = pi_atom::Atom::from("mainuo");
@@ -100,12 +102,12 @@ fn setup(
     //         Err(_) => { return; },
     //     };
     //     let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    //     // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
+    //     // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), idmat, animation));
     //     actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockEmissiveTexture::KEY_INFO), id_group.clone(), animation));
     // }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Positive(Some(5));
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
 }
 
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
@@ -122,8 +124,11 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     
+    app.add_systems(Update, pi_3d::sys_info_node);
+    app.add_systems(Update, pi_3d::sys_info_resource);
+    app.add_systems(Update, pi_3d::sys_info_draw);
     app.add_systems(Startup, setup.after(base::setup_default_mat));
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     
     // app.run()
     loop { app.update(); }

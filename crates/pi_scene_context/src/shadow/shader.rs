@@ -31,7 +31,7 @@ impl ShaderShadowGenerator {
                 vec![]
             ),
             String::from(""),
-            EVerticeExtendCode::default(),
+            // EVerticeExtendCode::default(),
             BlockCodeAtom { 
                 define: Atom::from("
 layout(location = 0) out float vDepthMetricSM;

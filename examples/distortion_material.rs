@@ -10,23 +10,17 @@ impl ShaderDistortion {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
-        nodemat.effect_varying_while_instance = String::from("
+        nodemat.material_instance_code = String::from("
         ");
-        nodemat.check_instance = EVerticeExtendCode(EVerticeExtendCode::NONE);
+        nodemat.varyings.0.push(Varying { format: Atom::from("vec4"), name: Atom::from("v_color") });
+        nodemat.varyings.0.push(Varying { format: Atom::from("vec3"), name: Atom::from("v_pos") });
+        nodemat.varyings.0.push(Varying { format: Atom::from("vec2"), name: Atom::from("v_uv") });
+        nodemat.varyings.0.push(Varying { format: Atom::from("vec4"), name: Atom::from("v_pos_SS") });
+        // nodemat.check_instance = EVerticeExtendCode(EVerticeExtendCode::NONE);
         nodemat.vs_define = String::from("
-layout(location = 0) out vec4 v_color;
-layout(location = 1) out vec2 v_uv;
-layout(location = 2) out vec4 v_pos_SS;
-#define P v_pos
-#define N v_normal
 ");
         nodemat.fs_define = String::from("
-layout(location = 0) in vec4 v_color;
-layout(location = 1) in vec2 v_uv;
-layout(location = 2) in vec4 v_pos_SS;
 layout(location = 0) out vec4 gl_FragColor;
-#define P v_pos
-#define N v_normal
 ");
 
         nodemat.vs = String::from("

@@ -6,7 +6,7 @@ use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode, amount::AnimationAmountCalc};
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
-use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
@@ -50,16 +50,18 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: 0, ..Default::default() };
+    let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(root, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, root, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     {
         let key_curve0 = pi_atom::Atom::from("test"); 
@@ -80,11 +82,11 @@ fn setup(
         };
 
         let animation = anime_contexts.quaternion.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, source, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.speed = 0.2;
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

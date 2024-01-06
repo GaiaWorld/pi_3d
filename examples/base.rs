@@ -8,7 +8,7 @@ use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
 use pi_node_materials::prelude::*;
-use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer, ActionSetParticleSystem}};
+use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer, ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
 use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_shadow_mapping::PluginShadowMapping;
@@ -41,6 +41,44 @@ impl Plugin for PluginLocalLoad {
 
 pub fn main() {
     
+}
+
+pub fn instance_attr(matrix: bool, color: bool, tilloff: bool) -> MeshInstanceState {
+    let mut instances = vec![];
+
+    if color {
+        instances.push(instance_color());
+    }
+    if tilloff {
+        instances.push(instance_tilloff());
+    }
+
+    MeshInstanceState {
+        instances,
+        instance_matrix: matrix,
+        use_single_instancebuffer: false,
+    }
+}
+pub fn instance_color() -> CustomVertexAttribute {
+    CustomVertexAttribute::new(Atom::from("InsColor4"), Atom::from("A_COLOR4 = InsColor4;"), ECustomVertexType::Vec4, None)
+}
+pub fn instance_tilloff() -> CustomVertexAttribute {
+    CustomVertexAttribute::new(Atom::from("InsTilloff"), Atom::from("A_UV = A_UV * InsTilloff.xy + InsTilloff.zw;"), ECustomVertexType::Vec4, None)
+}
+
+pub fn particelsystem_mesh_state() -> MeshInstanceState {
+    MeshInstanceState {
+        instances: vec![instance_color(), instance_tilloff()],
+        instance_matrix: true,
+        use_single_instancebuffer: false,
+    }
+}
+pub fn particelsystem_attrs() -> Vec<ParticleAttribute> {
+    vec![
+        ParticleAttribute { vtype: EParticleAttributeType::Matrix, attr: Atom::from("") },
+        ParticleAttribute { vtype: EParticleAttributeType::Color, attr: Atom::from("InsColor4") },
+        ParticleAttribute { vtype: EParticleAttributeType::Tilloff, attr: Atom::from("InsTilloff") },
+    ]
 }
 
 pub struct DemoScene {
@@ -81,7 +119,7 @@ impl DemoScene {
         let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
 
         let scene = commands.spawn_empty().id();
-        animegroupres.scene_ctxs.init_scene(scene);
+        // animegroupres.scene_ctxs.init_scene(scene);
         actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0,0 ,0 ,0 ,0 ,0]));
 
         let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));

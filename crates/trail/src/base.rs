@@ -258,11 +258,33 @@ impl TrailBuffer {
             self.key.clone(),
             VertexBufferDescRange::default(),
             vec![
-                VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
-                VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
-                VertexAttribute { kind: EVertexDataKind::TrailAxisX, format: wgpu::VertexFormat::Float32x3 },
-                VertexAttribute { kind: EVertexDataKind::TrailAxisZ, format: wgpu::VertexFormat::Float32x3 },
-                VertexAttribute { kind: EVertexDataKind::TrailInfo, format: wgpu::VertexFormat::Float32x2 },
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Position),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Color4),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::TrailAxisX),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::TrailAxisZ),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Trail),
+                // VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
+                // VertexAttribute { kind: EVertexDataKind::TrailAxisX, format: wgpu::VertexFormat::Float32x3 },
+                // VertexAttribute { kind: EVertexDataKind::TrailAxisZ, format: wgpu::VertexFormat::Float32x3 },
+                // VertexAttribute { kind: EVertexDataKind::TrailInfo, format: wgpu::VertexFormat::Float32x2 },
+            ],
+            false,
+        )
+    }
+    pub fn buffer_desc_billboard(&self) -> VertexBufferDesc {
+        VertexBufferDesc::new(
+            self.key.clone(),
+            VertexBufferDescRange::default(),
+            vec![
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Position),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Color4),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::TrailAxisX),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::TrailAxisZ),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::TrailBillboard),
+                // VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
+                // VertexAttribute { kind: EVertexDataKind::TrailAxisX, format: wgpu::VertexFormat::Float32x3 },
+                // VertexAttribute { kind: EVertexDataKind::TrailAxisZ, format: wgpu::VertexFormat::Float32x3 },
+                // VertexAttribute { kind: EVertexDataKind::TrailInfo, format: wgpu::VertexFormat::Float32x2 },
             ],
             false,
         )

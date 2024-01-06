@@ -4,7 +4,7 @@ use axis::PluginAxis;
 use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
+use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::quad::QuadBuilder;
@@ -61,7 +61,7 @@ fn setup(
                 let _item = {
                     let vertices = QuadBuilder::attrs_meta();
                     let indices = Some(QuadBuilder::indices_meta());
-                    let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR | InstanceState::INSTANCE_TILL_OFF_1, ..Default::default() };
+                    let state = base::particelsystem_mesh_state();
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
@@ -76,7 +76,7 @@ fn setup(
                     let calculator = particlesys_res.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
                     let trailmesh = commands.spawn_empty().id();
                     let trailgeo = commands.spawn_empty().id();
-                    actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator));
+                    actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator, base::particelsystem_attrs()));
                     actions.parsys.state.push(OpsCPUParticleSystemState::ops_start(source));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
@@ -110,9 +110,11 @@ fn setup(
 
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(node, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     {
         let key_curve0 =  pi_atom::Atom::from("test2"); 
         let key_curve0 = key_curve0.asset_u64();
@@ -126,11 +128,11 @@ fn setup(
             }
         };
         let animation = anime_contexts.quaternion.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 0.5;
-    // animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

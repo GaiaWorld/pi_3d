@@ -47,16 +47,18 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE, ..Default::default() };
+    let state = base::instance_attr(true, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     // let cell_col = 4.;
     // let cell_row = 4.;
@@ -88,7 +90,7 @@ fn setup(
                 };
 
                 let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupres.scene_ctxs.add_target_anime(scene, cube, id_group.clone(), animation);
+                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cube, animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
@@ -109,14 +111,14 @@ fn setup(
         };
 
         let animation = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group.clone(), animation);
-        actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), animation));
+        // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), idmat, animation));
+        actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
     }
 
     let q = LocalRotationQuaternion::create(0., -0.9, 0., 0.1);
     // log::warn!("Q: {:?}", q.0 * 0.5);
 
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 

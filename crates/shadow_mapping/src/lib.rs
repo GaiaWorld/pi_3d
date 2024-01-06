@@ -45,7 +45,7 @@ impl TNodeMaterialBlock for BlockShadowMapping {
 }
 
 
-fn setup(
+fn _setup(
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
     nodematblocks.regist::<BlockShadowMapping>();

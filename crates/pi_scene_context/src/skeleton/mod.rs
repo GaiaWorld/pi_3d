@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{object::sys_dispose_ready, prelude::StageTransform};
+use crate::{object::sys_dispose_ready, prelude::{StageTransform, sys_create_mesh}};
 
 use self::{sys::*, command::*, command_sys::*};
 
@@ -36,8 +36,8 @@ impl Plugin for PluginSkeleton {
         app.add_systems(
 			Update,
             (
+                sys_create_skin.after(sys_create_mesh),
                 sys_create_bone,
-                sys_create_skin,
             ).chain().in_set(ERunStageChap::Initial)
         );
         app.add_systems(

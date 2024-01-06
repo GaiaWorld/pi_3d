@@ -2,18 +2,14 @@
 use std::ops::Range;
 
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Vector4, Number, Vector3};
+use pi_scene_math::*;
 
 use crate::{
-    geometry::{
-        prelude::*,
-        instance::{instance_boneoffset::*, instance_float::InstanceFloatType}
-    },
+    geometry::prelude::*,
     pass::*,
     renderers::prelude::*,
     layer_mask::prelude::*,
     skeleton::prelude::*,
-    materials::prelude::*,
     cullings::prelude::*,
     transforms::prelude::*,
 };
@@ -48,51 +44,66 @@ pub enum OpsMeshShadow {
 }
 pub type ActionListMeshShadow = ActionList<OpsMeshShadow>;
 
-pub struct OpsInstanceColorAlpha(pub(crate) Entity, pub(crate) Number, pub(crate) Number, pub(crate) Number, pub(crate) Number, pub u8);
-impl OpsInstanceColorAlpha {
-    pub fn ops(instance: Entity, r: Number, g: Number, b: Number, a: Number) -> Self {
-        Self(instance, r, g, b, a, 0)
-    }
-}
-pub type ActionListInstanceColorAlpha = ActionList<OpsInstanceColorAlpha>;
-
-pub struct OpsInstanceColor(pub(crate) Entity, pub(crate) Number, pub(crate) Number, pub(crate) Number, pub u8);
-impl OpsInstanceColor {
-    pub fn ops(instance: Entity, r: Number, g: Number, b: Number) -> Self {
-        Self(instance, r, g, b, 0)
-    }
-}
-pub type ActionListInstanceColor = ActionList<OpsInstanceColor>;
-
-pub struct OpsInstanceAlpha(pub(crate) Entity, pub(crate) Number, pub u8);
-impl OpsInstanceAlpha {
-    pub fn ops(instance: Entity, alpha: Number) -> Self {
-        Self(instance, alpha, 0)
-    }
-}
-pub type ActionListInstanceAlpha = ActionList<OpsInstanceAlpha>;
-
-pub struct OpsInstanceTillOff(pub(crate) Entity, pub(crate) Vector4, pub u8);
-impl OpsInstanceTillOff {
-    pub fn ops(instance: Entity, uscale: Number, vscale: Number, uoffset: Number, voffset: Number) -> Self {
-        Self(instance, Vector4::new(uscale, vscale, uoffset, voffset), 0)
-    }
-}
-pub type ActionListInstanceTillOff = ActionList<OpsInstanceTillOff>;
-
-pub struct OpsInstanceFloat(pub(crate) Entity, pub(crate) f32, pub InstanceFloatType);
+pub struct OpsInstanceFloat(pub(crate) Entity, pub(crate) Number, pub Atom);
 impl OpsInstanceFloat {
-    pub fn ops(instance: Entity, val: Number, float_type: InstanceFloatType) -> Self {
-        Self(instance, val, float_type)
+    pub fn ops(instance: Entity, val: Number, attr: Atom) -> Self {
+        Self(instance, val, attr)
     }
 }
 pub type ActionListInstanceFloat = ActionList<OpsInstanceFloat>;
 
+pub struct OpsInstanceVec4(pub(crate) Entity, pub(crate) [Number; 4], pub Atom);
+impl OpsInstanceVec4 {
+    pub fn ops(instance: Entity, x: Number, y: Number, z: Number, w: Number, attr: Atom) -> Self {
+        Self(instance, [x, y, z, w], attr)
+    }
+}
+pub type ActionListInstanceVec4 = ActionList<OpsInstanceVec4>;
 
-pub struct OpsBoneOffset(pub(crate) Entity, pub(crate) u32, pub u8);
+pub struct OpsInstanceVec3(pub(crate) Entity, pub(crate) [Number; 3], pub Atom);
+impl OpsInstanceVec3 {
+    pub fn ops(instance: Entity, x: Number, y: Number, z: Number, attr: Atom) -> Self {
+        Self(instance, [x, y, z], attr)
+    }
+}
+pub type ActionListInstanceVec3 = ActionList<OpsInstanceVec3>;
+
+pub struct OpsInstanceVec2(pub(crate) Entity, pub(crate) [Number; 2], pub Atom);
+impl OpsInstanceVec2 {
+    pub fn ops(instance: Entity, x: Number, y: Number, attr: Atom) -> Self {
+        Self(instance, [x, y], attr)
+    }
+}
+pub type ActionListInstanceVec2 = ActionList<OpsInstanceVec2>;
+
+pub struct OpsInstanceUint(pub(crate) Entity, pub(crate) u32, pub Atom);
+impl OpsInstanceUint {
+    pub fn ops(instance: Entity, x: u32, attr: Atom) -> Self {
+        Self(instance, x, attr)
+    }
+}
+pub type ActionListInstanceUint = ActionList<OpsInstanceUint>;
+
+pub struct OpsInstanceSint(pub(crate) Entity, pub(crate) i32, pub Atom);
+impl OpsInstanceSint {
+    pub fn ops(instance: Entity, x: i32, attr: Atom) -> Self {
+        Self(instance, x, attr)
+    }
+}
+pub type ActionListInstanceSint = ActionList<OpsInstanceSint>;
+
+pub struct OpsTargetAnimationAttribute(pub(crate) Entity, pub(crate) Atom, pub(crate) Entity, pub(crate) u64);
+impl OpsTargetAnimationAttribute {
+    pub fn ops(target: Entity, tatype: Atom, group: Entity, curve: u64) -> Self {
+        Self(target, tatype, group, curve)
+    }
+}
+pub type ActionListTargetAnimationAttribute = ActionList<OpsTargetAnimationAttribute>;
+
+pub struct OpsBoneOffset(pub(crate) Entity, pub(crate) u32);
 impl OpsBoneOffset {
     pub fn ops(instance: Entity, val: u32) -> Self {
-        Self(instance, val, 0)
+        Self(instance, val)
     }
 }
 pub type ActionListBoneOffset = ActionList<OpsBoneOffset>;
@@ -214,17 +225,8 @@ pub struct BundleMesh(
     GeometryCullingMode,
     InstancedMeshTransparentSortCollection,
     MeshInstanceState,
-    InstanceBoneoffset,
     // InstanceSourceRefs,
     DirtyInstanceSourceRefs,
-    InstanceWorldMatrixDirty,
-    InstanceColorDirty,
-    InstanceTillOffDirty,
-    InstanceBoneOffsetDirty,
-    InstanceCustomVec4ADirty,
-    InstanceCustomVec4BDirty,
-    InstanceCustomVec4CDirty,
-    InstanceCustomVec4DDirty,
     PassID01,
     PassID02,
     PassID03,
@@ -249,16 +251,6 @@ pub struct BundleInstanceMesh(
     AbstructMeshCullingFlag,
     InstanceTransparentIndex,
     InstanceMesh,
-    InstanceRGB,
-    InstanceAlpha,
-    InstanceColor,
-    InstanceTillOff,
-    InstanceBoneoffset,
-    RecordInstanceBoneoffset,
-    InstanceCustomVec4A,
-    InstanceCustomVec4B,
-    InstanceCustomVec4C,
-    InstanceCustomVec4D,
     RenderMatrixDirty,
     RenderWorldMatrix,
     RenderWorldMatrixInv,

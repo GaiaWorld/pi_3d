@@ -11,7 +11,6 @@ use crate::{
     scene::prelude::*,
     meshes::prelude::*,
     geometry::prelude::*,
-    commands::*,
     layer_mask::prelude::{LayerMask, TViewerLayerMask},
 };
 
@@ -138,7 +137,7 @@ pub fn sys_shadow_project_modify_by_spot_light(
 
 pub fn sys_calc_view_matrix_by_light(
     mut lights: Query<(Entity, &LocalPosition, &LightLinkedShadowID, &LightDirection), Or<(Changed<LocalPosition>, Changed<LightLinkedShadowID>, Changed<LightDirection>, Changed<GlobalTransform>)>>,
-    mut transforms: Query<&GlobalTransform>,
+    transforms: Query<&GlobalTransform>,
     mut viewers: Query<(&ShadowLinkedLightID, &mut DirectionalShadowDirection, &mut ViewerViewMatrix, &mut ViewerGlobalPosition, &mut ViewerDirection)>,
     // childrens: Query<&NodeParent>,
     childrens: Query<&Up>,

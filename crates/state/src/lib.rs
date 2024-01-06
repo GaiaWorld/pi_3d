@@ -310,8 +310,8 @@ impl StateGeometryBuffer {
             self.key.clone(),
             VertexBufferDescRange::default(),
             vec![
-                VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
-                VertexAttribute { kind: EVertexDataKind::Color4, format: wgpu::VertexFormat::Float32x4 },
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Position),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Color4),
             ],
             false,
         )

@@ -32,7 +32,7 @@ impl SkyboxShader {
                 ]
             ),
             String::from(""),
-            EVerticeExtendCode::default(),
+            // EVerticeExtendCode::default(),
             BlockCodeAtom { 
                 define: Atom::from(include_str!("./assets/skybox_define.vert")), 
                 running: Atom::from(include_str!("./assets/skybox.vert"))

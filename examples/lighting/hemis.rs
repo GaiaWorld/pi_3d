@@ -3,7 +3,7 @@
 
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::{prelude::*, viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix}, light::PluginLighting};
 use pi_scene_math::*;
@@ -173,7 +173,7 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupres.scene_ctxs.add_target_anime(scene, cameraroot, id_group.clone(), animation);
+                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cameraroot, animation));
             }
         }
         {
@@ -188,10 +188,10 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                animegroupres.scene_ctxs.add_target_anime(scene, lightroot, id_group.clone(), animation);
+                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), lightroot, animation));
             }
         }
-        animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+        actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
             
         // 创建帧事件
     }

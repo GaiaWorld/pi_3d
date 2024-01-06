@@ -2,12 +2,11 @@
 
 // use pi_bevy_ecs_extend::prelude::EntityTree;
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, Matrix, Rotation3, Quaternion, Vector3};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, Matrix, Rotation3, Quaternion};
 
 use crate::{
     scene::coordinate_system::SceneCoordinateSytem3D,
     flags::*,
-    commands::*,
 };
 
 use super::transform_node::*;
@@ -112,7 +111,7 @@ fn iter_dirty(
 }
 
     pub fn sys_world_matrix_calc(
-        query_scenes: Query<(Entity, &SceneCoordinateSytem3D)>,
+        _query_scenes: Query<(Entity, &SceneCoordinateSytem3D)>,
         // mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
         mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
         mut transforms: Query<&mut GlobalTransform>,
@@ -259,27 +258,26 @@ fn iter_dirty(
     }
 
 
-fn calc_world_one(
+fn _calc_world_one(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
     transforms: &mut Query<&mut GlobalTransform>,
     temp_list: &mut Vec<TmpCalcWorldMatrix>,
-    dirtyenable: &mut Query<Changed<Enable>>,
-    dirtylocal: &mut Query<Changed<LocalMatrix>>,
     tmp: &TmpCalcWorldMatrix,
 ) {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((lmatrix, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok(mut gtransform)) => {
             let mut resultenable = enable.bool() && tmp.enable;
 
             let dirty = tmp.dirty || lmatrix.is_changed();
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let (mut transform, flag) = GlobalTransform::calc(&tmp.matrix, &lmatrix);
-                resultenable = flag;
+                let ( transform, flag) = GlobalTransform::calc(&tmp.matrix, &lmatrix);
+                resultenable = resultenable && flag;
                 *gtransform = transform;
             };
+
             if globalenable.0 != resultenable {
                 globalenable.0 = resultenable;
             }
@@ -334,7 +332,7 @@ fn calc_world_one_bytree(
     tmp: &TmpCalcWorldMatrix,
 ) {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((lmatrix, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok(mut gtransform)) => {
             let mut resultenable = enable.bool() && tmp.enable;
 
             
@@ -342,8 +340,8 @@ fn calc_world_one_bytree(
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let (mut transform, flag) = GlobalTransform::calc(&tmp.matrix, &lmatrix);
-                resultenable = flag;
+                let ( transform, flag) = GlobalTransform::calc(&tmp.matrix, &lmatrix);
+                resultenable = resultenable && flag;
                 *gtransform = transform;
             };
 
@@ -366,15 +364,15 @@ fn calc_world_root_bytree(
     entity: Entity,
 ) -> TmpCalcWorldMatrix {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((lmatrix, enable, mut globalenable, parent)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok(mut gtransform)) => {
             let mut resultenable = enable.bool() && penable;
 
             let dirty = lmatrix.is_changed();
 
             if dirty {
                 // log::debug!(">>>>> GlobalTransform 0");
-                let (mut transform, flag) = GlobalTransform::calc(p_m, &lmatrix);
-                resultenable = flag;
+                let (transform, flag) = GlobalTransform::calc(p_m, &lmatrix);
+                resultenable = resultenable && flag;
                 *gtransform = transform;
             }
 
@@ -399,21 +397,6 @@ fn calc_world_root_bytree(
             }
         },
     }
-}
-
-fn calc_world_by_layerdirty(
-    lmatrix: &LocalMatrix,
-    globalenable: &mut GlobalEnable,
-    // wmatrix: &mut WorldMatrix,
-    // wmatrixinv: &mut WorldMatrixInv,
-    gtransform: &mut GlobalTransform,
-    tmp: &TmpCalcWorldMatrix,
-) {
-    let (mut transform, flag) = GlobalTransform::calc(&tmp.matrix, &lmatrix);
-    globalenable.0 = flag;
-    *gtransform = transform;
-    
-    globalenable.0 = tmp.enable && globalenable.0;
 }
 
 pub fn sys_dispose_about_transform_node(

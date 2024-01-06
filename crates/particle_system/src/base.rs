@@ -190,6 +190,22 @@ pub struct ParticleSystemCalculatorBufferMatrix {
     // pub 
 }
 
+#[derive(Clone, Copy)]
+pub enum EParticleAttributeType {
+    Matrix,
+    Color,
+    Tilloff,
+    Extend4A,
+    Extend4B,
+}
+
+pub struct ParticleAttribute {
+    pub vtype: EParticleAttributeType,
+    pub attr: Atom,
+}
+
+#[derive(Component)]
+pub struct ParticleAttributes(pub Vec<ParticleAttribute>);
 
 #[derive(Component)]
 pub struct ParticleCalculatorEmission {
@@ -334,9 +350,9 @@ impl ResParticleCommonBuffer {
         let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None);
         Self(buffer)
     }
-    pub fn f32_count(&self) -> usize {
+    pub fn byte_count(&self) -> usize {
         if let Some(item) = &self.0 {
-            item.size() as usize / 4 
+            item.size() as usize
         } else {
             0
         }

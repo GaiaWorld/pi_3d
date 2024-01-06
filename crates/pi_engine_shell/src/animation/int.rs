@@ -5,13 +5,13 @@ use pi_scene_math::Number;
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
 #[derive(Debug, Clone, Copy, Component)]
-pub struct AnimatorableInt(pub i32);
-impl Default for AnimatorableInt {
+pub struct AnimatorableSint(pub i32);
+impl Default for AnimatorableSint {
     fn default() -> Self {
         Self(0)
     }
 }
-impl pi_curves::curve::frame::FrameDataValue for AnimatorableInt {
+impl pi_curves::curve::frame::FrameDataValue for AnimatorableSint {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
         let mut result = self.0 as f32 * (1.0 - amount) + rhs.0 as f32 * amount;
         result = result.min(i32::MAX as f32).max(i32::MIN as f32);
@@ -33,19 +33,19 @@ impl pi_curves::curve::frame::FrameDataValue for AnimatorableInt {
         4
     }
 }
-impl TAssetCapacity for AnimatorableInt {
-    const ASSET_TYPE: &'static str = "AnimeInt";
+impl TAssetCapacity for AnimatorableSint {
+    const ASSET_TYPE: &'static str = "AnimeSint";
     fn capacity() -> AssetCapacity {
         AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
     }
 }
-impl TAnimatableComp for AnimatorableInt {}
+impl TAnimatableComp for AnimatorableSint {}
 
 
 #[derive(Clone, Copy, Component, Default)]
-pub struct RecordAnimatorableInt(pub AnimatorableInt);
-impl TAnimatableCompRecord<AnimatorableInt> for RecordAnimatorableInt {
-    fn comp(&self) -> AnimatorableInt {
+pub struct RecordAnimatorableInt(pub AnimatorableSint);
+impl TAnimatableCompRecord<AnimatorableSint> for RecordAnimatorableInt {
+    fn comp(&self) -> AnimatorableSint {
         self.0.clone()
     }
 }

@@ -24,30 +24,34 @@ pub fn sys_create_geometry(
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, mut vertex_desc, indices_desc, count)| {
+    cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, mut vertex_desc, indices_desc)| {
         
         let instancestate = if let Ok((mut mesh, insstate)) = meshes.get_mut(id_mesh) {
-            // log::warn!("GeometryID Apply");
-            *mesh = GeometryID(entity);
-            insstate.state
-        } else if count < 2 {
-            cmds.push(OpsGeomeryCreate(id_mesh, entity, vertex_desc, indices_desc, count + 1));
-            return;
-        } else {
-            // Geometry 不在应用层, 依附于 Mesh
-            disposecanlist.push(OpsDisposeCan::ops(entity));
-            return;
-        };
+            *mesh = GeometryID(entity); insstate
+        } else { disposecanlist.push(OpsDisposeCan::ops(entity)); return; };
 
         let mut geocommands = if let Some(cmd) = commands.get_entity(entity) {
             cmd
-        } else {
-            return;
-        };
+        } else { return; };
 
-        if instancestate > 0 {
-            vertex_desc.push(VertexBufferDesc::new(KeyVertexBuffer::from(""), VertexBufferDescRange::default(), InstanceState::attributes(instancestate), true));
+        let mut attrs = vec![];
+        if instancestate.instance_matrix {
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow1));
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow2));
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow3));
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow4));
         }
+        instancestate.instances.iter().for_each(|attr| {
+            attrs.push(EVertexAttribute::Custom(attr.clone()));
+        });
+
+        if attrs.len() > 0 {
+            vertex_desc.push(VertexBufferDesc::new(KeyVertexBuffer::from(""), VertexBufferDescRange::new(0, 0), attrs, true));
+        }
+
+        // if instancestate > 0 {
+        //     vertex_desc.push(VertexBufferDesc::new(KeyVertexBuffer::from(""), VertexBufferDescRange::default(), attrs, true));
+        // }
 
         ActionGeometry::init(&mut geocommands, &vertex_desc, indices_desc.clone(), id_mesh);
 
@@ -72,23 +76,23 @@ pub fn sys_create_geometry(
             .remove::<AssetDescVBSlot16>();
 
 
-        init_slot::<AssetDescVBSlot01, AssetResVBSlot01>(entity, &geo_desc, &mut geoloader.loader_01,  &mut vb_data_map, &asset_mgr, &mut geocommands,   &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot02, AssetResVBSlot02>(entity, &geo_desc, &mut geoloader.loader_02,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot03, AssetResVBSlot03>(entity, &geo_desc, &mut geoloader.loader_03,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot04, AssetResVBSlot04>(entity, &geo_desc, &mut geoloader.loader_04,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot05, AssetResVBSlot05>(entity, &geo_desc, &mut geoloader.loader_05,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot06, AssetResVBSlot06>(entity, &geo_desc, &mut geoloader.loader_06,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot07, AssetResVBSlot07>(entity, &geo_desc, &mut geoloader.loader_07,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot08, AssetResVBSlot08>(entity, &geo_desc, &mut geoloader.loader_08,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot09, AssetResVBSlot09>(entity, &geo_desc, &mut geoloader.loader_09,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot10, AssetResVBSlot10>(entity, &geo_desc, &mut geoloader.loader_10,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot11, AssetResVBSlot11>(entity, &geo_desc, &mut geoloader.loader_11,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
-        init_slot::<AssetDescVBSlot12, AssetResVBSlot12>(entity, &geo_desc, &mut geoloader.loader_12,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator, instancestate);
+        init_slot::<AssetDescVBSlot01, AssetResVBSlot01>(entity, &geo_desc, &mut geoloader.loader_01,  &mut vb_data_map, &asset_mgr, &mut geocommands,   &mut instanceallocator);
+        init_slot::<AssetDescVBSlot02, AssetResVBSlot02>(entity, &geo_desc, &mut geoloader.loader_02,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot03, AssetResVBSlot03>(entity, &geo_desc, &mut geoloader.loader_03,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot04, AssetResVBSlot04>(entity, &geo_desc, &mut geoloader.loader_04,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot05, AssetResVBSlot05>(entity, &geo_desc, &mut geoloader.loader_05,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot06, AssetResVBSlot06>(entity, &geo_desc, &mut geoloader.loader_06,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot07, AssetResVBSlot07>(entity, &geo_desc, &mut geoloader.loader_07,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot08, AssetResVBSlot08>(entity, &geo_desc, &mut geoloader.loader_08,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot09, AssetResVBSlot09>(entity, &geo_desc, &mut geoloader.loader_09,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot10, AssetResVBSlot10>(entity, &geo_desc, &mut geoloader.loader_10,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot11, AssetResVBSlot11>(entity, &geo_desc, &mut geoloader.loader_11,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
+        init_slot::<AssetDescVBSlot12, AssetResVBSlot12>(entity, &geo_desc, &mut geoloader.loader_12,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
 
         // log::error!(">>>>  GeometryDesc ");
         geocommands.insert(geo_desc);
-        let instance_code = EVerticeExtendCode(EVerticeExtendCode::NONE + instancestate);
-        geocommands.insert(EVerticeExtendCodeComp(instance_code));
+        // let instance_code = EVerticeExtendCode(EVerticeExtendCode::NONE + instancestate);
+        // geocommands.insert(EVerticeExtendCodeComp(instance_code));
         
         if let Some(indices_desc) = indices_desc {
             if let Some(data) = asset_mgr.get(&indices_desc.buffer.asset_u64()) {
@@ -135,9 +139,10 @@ impl ActionGeometry {
         indices_desc: Option<IndicesBufferDesc>,
         id_mesh: Entity,
     ) {
+        // log::warn!("{:?}", vertex_desc);
         ActionEntity::init(cmds);
         cmds
-            .insert(VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc)))
+            .insert(VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)))
             .insert(MeshID(id_mesh))
             .insert(RenderGeometryComp::default())
             ;
@@ -160,7 +165,7 @@ fn init_slot<
     asset_mgr: &ShareAssetMgr<EVertexBufferRange>,
     commands: &mut EntityCommands,
     instanceallocator: &mut InstanceBufferAllocator,
-    instancestate: u32,
+    // instancestate: u32,
 ) {
     let slot_index = D::ASK_SLOT_COUNT as usize - 1;
     if slot_index >= geodesc.list.len() {
@@ -177,8 +182,8 @@ fn init_slot<
                 loader.request(id_geo, &desc.key, None, vb_data_map);
             }
         } else {
-            let info = InstancedInfo::new(instancestate, EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
-            // log::warn!("Geometry: {:?}", EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
+            let info = InstancedInfo::new(desc.stride() as u32, EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
+            // log::warn!("Geometry Instance: {:?}", EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             let data = instanceallocator.instance_initial_buffer();
             commands.insert(D1::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))));
             commands.insert(info);

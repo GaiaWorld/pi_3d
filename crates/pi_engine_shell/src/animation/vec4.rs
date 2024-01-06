@@ -6,8 +6,8 @@ use super::{TAnimatableComp, TAnimatableCompRecord};
 
 #[derive(Debug, Clone, Copy, Component)]
 pub struct AnimatorableVec4(pub Vector4);
-impl From<&[Number; 4]> for AnimatorableVec4 {
-    fn from(v: &[Number; 4]) -> Self {
+impl From<&[Number]> for AnimatorableVec4 {
+    fn from(v: &[Number]) -> Self {
         Self(Vector4::new(v[0], v[1], v[2], v[3]))
     }
 }

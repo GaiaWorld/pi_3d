@@ -21,7 +21,7 @@ use super::{
     shader_defines::ShaderDefinesSet,
     uniform_value::{MaterialValueBindDesc, UniformPropertyVec4, UniformPropertyVec2, UniformPropertyFloat,  UniformPropertyUint}, 
     uniform_texture::{UniformTexture2DDesc, EffectUniformTexture2DDescs},
-    instance_code::EVerticeExtendCode, shader::*,
+    shader::*, Varying, TUnifromShaderProperty,
 };
 
 pub type BindDefine = u32;
@@ -63,8 +63,7 @@ pub struct ShaderEffectMeta {
     pub textures: Arc<EffectUniformTexture2DDescs>,
     // pub samplers: Vec<UniformSamplerDesc>,
     pub varyings: Varyings,
-    pub effect_varying_while_instance: String,
-    pub check_instance: EVerticeExtendCode,
+    pub material_instance_code: String,
     /// 顶点代码片段
     vs: BlockCodeAtom,
     /// 像素代码片段
@@ -173,7 +172,7 @@ impl From<(pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>)> for Shader
         let fs = value.fs.to_block_code();
         let varyings = Varyings::from(&value.varyings);
 
-        Self::new(uniforms, textures, varyings, String::from(""), EVerticeExtendCode::default(), vs, fs, defines)
+        Self::new(uniforms, textures, varyings, String::from(""), vs, fs, defines)
     }
 }
 impl Asset for ShaderEffectMeta {
@@ -196,34 +195,38 @@ impl ShaderEffectMeta {
         mut uniforms: MaterialValueBindDesc,
         mut textures: Vec<UniformTexture2DDesc>,
         // samplers: Vec<UniformSamplerDesc>,
-        varyings: Varyings,
-        effect_varying_while_instance: String,
-        check_instance: EVerticeExtendCode,
+        mut varyings: Varyings,
+        material_instance_code: String,
         vs: BlockCodeAtom,
         fs: BlockCodeAtom,
         defines: ShaderDefinesSet,
     ) -> Self {
-        let size = varyings.size() + vs.size() + fs.size();
-
         let mut arc_textures = vec![];
         textures.drain(..).for_each(|item| {
             arc_textures.push(Arc::new(item));
         });
         arc_textures.sort_by(|a, b| { a.slotname.cmp(&b.slotname) });
-        let len = arc_textures.len();
-        for idx in 0..len {
-            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("uTexST") + &idx.to_string()), [1., 1., 0., 0.], false));
-        }
+        // let len = arc_textures.len();
+        // for idx in 0..len {
+        //     uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("uTexST") + &idx.to_string()), [1., 1., 0., 0.], false));
+        // }
 
         uniforms.sort();
+
+        uniforms.vec4_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("vec4"), name: item.tag().clone() }) } });
+        uniforms.vec3_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("vec3"), name: item.tag().clone() }) } });
+        uniforms.vec2_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("vec2"), name: item.tag().clone() }) } });
+        uniforms.float_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("float"), name: item.tag().clone() }) } });
+        uniforms.uint_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("uint"), name: item.tag().clone() }) } });
+
+        let size = varyings.size() + vs.size() + fs.size();
 
         Self {
             uniforms: Arc::new(uniforms),
             textures: Arc::new(EffectUniformTexture2DDescs::from(arc_textures)),
             // samplers,
             varyings,
-            effect_varying_while_instance,
-            check_instance,
+            material_instance_code,
             vs,
             fs,
             size,
@@ -263,6 +266,9 @@ impl ShaderEffectMeta {
         // Shader Name
         code += "#define SHADER_NAME vertex:"; code += name; code += "\r\n";
 
+        // Shader 定义 Varying 代码
+        code += &VaryingCode::vs_code(&self.varyings);
+
         // 功能块的定义代码 - 功能块的 Uniform 、常量 、 方法
         defined_snippets.iter().for_each(|val| {
             code += val;
@@ -271,9 +277,6 @@ impl ShaderEffectMeta {
         // Shader 自带定义块代码 - 常量 、 方法, 不包含 Uniform 定义
         code += self.vs.define.as_str();
 
-        // Shader 定义 Varying 代码
-        code += &VaryingCode::vs_code(&self.varyings);
-
         // Running Start
         code += "void main() {\r\n";
 
@@ -281,6 +284,8 @@ impl ShaderEffectMeta {
         code += EVertexDataKind::Color4.kind();     code += " "; code += ShaderVarVertices::COLOR4 ;    code += " = vec4(1., 1., 1., 1.);\r\n";
         code += EVertexDataKind::Normal.kind();     code += " "; code += ShaderVarVertices::NORMAL ;    code += " = vec3(0., 1., 0.);\r\n";
         code += EVertexDataKind::UV.kind();         code += " "; code += ShaderVarVertices::UV ;        code += " = vec2(0., 0.);\r\n";
+
+        code += self.material_instance_code.as_str();
         
         // 功能块的 运行代码
         running_model_snippets.iter().for_each(|val| {
@@ -320,6 +325,9 @@ impl ShaderEffectMeta {
         // Shader Name
         code += "#define SHADER_NAME fragment:"; code += name; code += "\r\n";
 
+        // Shader 定义 Varying 代码
+        code += &VaryingCode::fs_code(&self.varyings);
+
         // 功能块的定义代码 - 功能块的 Uniform 、常量 、 方法
         defined_snippets.iter().for_each(|val| {
             code += val;
@@ -327,9 +335,6 @@ impl ShaderEffectMeta {
 
         // Shader 自带定义块代码 - 常量 、 方法, 不包含 Uniform 定义
         code += self.fs.define.as_str();
-
-        // Shader 定义 Varying 代码
-        code += &VaryingCode::fs_code(&self.varyings);
 
         // Running Start
         code += "void main() {\r\n";
@@ -372,13 +377,17 @@ impl ShaderEffectMeta {
 
         #[cfg(not(target_arch = "wasm32"))]
         {
+            log::warn!("Shader: {:?}", key_meta);
             let root_dir = std::env::current_dir().unwrap();
-            let file_name = key_meta.to_string() + ".vert";
+            let file_name: String = key_meta.to_string() + ".vert";
             let _ = std::fs::write(root_dir.join(file_name), vs.as_str());
             
             let file_name = key_meta.to_string() + ".frag";
             let _ = std::fs::write(root_dir.join(file_name), fs.as_str());
         }
+        // log::error!("Shader: {:?}", key_meta);
+        // log::error!("VS: {:?}", vs.as_str());
+        // log::error!("FS: {:?}", fs.as_str());
 
         let vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some((key_meta.to_string() + "-VS").as_str()),

@@ -108,10 +108,10 @@ impl OpsUniformTextureFromRenderTarget {
 pub type ActionListUniformTextureFromRenderTarget = ActionList<OpsUniformTextureFromRenderTarget>;
 
 pub type EAnimeUniform = Atom;
-pub struct OpsTargetAnimationUniform(pub(crate) Entity, pub(crate) Entity, pub(crate) EAnimeUniform, pub(crate) pi_slotmap::DefaultKey, pub(crate) pi_animation::animation::AnimationInfo);
+pub struct OpsTargetAnimationUniform(pub(crate) Entity, pub(crate) EAnimeUniform, pub(crate) Entity, pub(crate) u64);
 impl OpsTargetAnimationUniform {
-    pub fn ops(scene: Entity, target: Entity, tatype: EAnimeUniform, group: pi_slotmap::DefaultKey, animation: pi_animation::animation::AnimationInfo) -> Self {
-        Self(scene, target, tatype, group, animation)
+    pub fn ops(target: Entity, tatype: EAnimeUniform, group: Entity, curve: u64) -> Self {
+        Self(target, tatype, group, curve)
     }
 }
 pub type ActionListTargetAnimationUniform = ActionList<OpsTargetAnimationUniform>;

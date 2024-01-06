@@ -4,7 +4,6 @@ use crate::{
     light::prelude::{DirectLight, SpotLight},
     materials::prelude::*,
     renderers::prelude::*,
-    commands::*,
     viewer::prelude::*,
     flags::GlobalEnable,
     layer_mask::prelude::*,

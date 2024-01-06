@@ -24,7 +24,6 @@ pub fn sys_create_camera(
         if let Some(mut commands) = commands.get_entity(entity) {
 
             ActionCamera::init(&mut commands, scene);
-            ActionAnime::as_anime_group_target(&mut commands);
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
                 commands.insert(bindviewer);

@@ -6,30 +6,30 @@ use pi_render::rhi::buffer::Buffer;
 
 #[derive(Component)]
 pub struct InstancedInfo {
-    pub state: u32,
+    // pub state: u32,
     pub bytes_per_instance: u32,
     pub slot: EVertexBufferSlot,
 }
 impl InstancedInfo {
-    pub fn new(state: u32, slot: EVertexBufferSlot) -> Self {
+    pub fn new(bytes_per_instance: u32, slot: EVertexBufferSlot) -> Self {
         Self {
-            state,
-            bytes_per_instance: InstanceState::bytes_per_instance(state),
+            // state,
+            bytes_per_instance,
             slot,
         }
     }
-    pub fn attributes(&self) -> Vec<VertexAttribute> {
-        InstanceState::attributes(self.state)
-    }
+    // pub fn attributes(&self) -> Vec<VertexAttribute> {
+    //     InstanceState::attributes(self.state)
+    // }
     pub fn slot(&self) -> EVertexBufferSlot {
         self.slot
     }
     pub fn bytes_per_instance(&self) -> u32 {
         self.bytes_per_instance
     }
-    pub fn geo_desc(&self) -> VertexBufferDesc {
-        VertexBufferDesc::new( KeyVertexBuffer::from(""), VertexBufferDescRange::default(), self.attributes(), true)
-    }
+    // pub fn geo_desc(&self) -> VertexBufferDesc {
+    //     VertexBufferDesc::new( KeyVertexBuffer::from(""), VertexBufferDescRange::default(), self.attributes(), true)
+    // }
 }
 
 pub struct InstanceCacheBuffer {

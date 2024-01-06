@@ -33,6 +33,7 @@ impl KeyRenderPipeline3D {
                 layouts.push(v.layout())
             }
         });
+        // log::warn!("{:?}", &key.key_vertex_layouts.layouts());
         let vs_state = wgpu::VertexState {
             module: &shader.vs,
             entry_point: shader.vs_point,

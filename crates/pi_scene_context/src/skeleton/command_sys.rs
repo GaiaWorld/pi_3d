@@ -3,10 +3,7 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-use crate::{
-    transforms::command_sys::*,
-    commands::*,
-};
+use crate::transforms::command_sys::*;
 
 use super::{
     command::*,
@@ -93,7 +90,6 @@ pub fn sys_create_bone(
         } else {
             return;
         };
-        ActionAnime::as_anime_group_target(&mut bonecmd);
         ActionBone::init(&mut bonecmd, &empty, parent, scene);
     });
 }

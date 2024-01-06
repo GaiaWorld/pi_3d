@@ -52,6 +52,11 @@ impl ErrorRecord {
     pub const ERROR_USE_MATERIAL_NULL_MAT: EErorr           = 00013;
     pub const ERROR_USE_MATERIAL_NULL_TARGET: EErorr        = 00013;
     
+    pub const ERROR_ANIMATION_START_FAIL: EErorr            = 00100;
+    pub const ERROR_ANIMATION_PAUSE_FAIL: EErorr            = 00101;
+    pub const ERROR_ANIMATION_STOP_FAIL: EErorr             = 00102;
+    pub const ERROR_ADD_TARGET_ANIMATION_FAIL: EErorr       = 00103;
+    
     pub const ERROR_GRAPHIC_NONE_NGRAPHIC: EErorr           = 00100;
     pub const ERROR_GRAPHIC_NONE_NODE: EErorr               = 00101;
     pub const ERROR_GRAPHIC_EXTI_NODE: EErorr               = 00102;

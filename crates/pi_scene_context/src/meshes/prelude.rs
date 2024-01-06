@@ -3,11 +3,10 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     renderers::prelude::*,
-    geometry::command::*,
     cullings::prelude::*,
     flags::*,
     geometry::prelude::*,
-    layer_mask::prelude::*, viewer::prelude::ActionListViewerForceInclude,
+    layer_mask::prelude::*,
 };
 
 pub use super::{
@@ -47,28 +46,28 @@ pub struct ActionSetMesh<'w> {
     pub bounding: ResMut<'w, ActionListMeshBounding>,
     pub boundingculling: ResMut<'w, ActionListMeshBoundingCullingMode>,
     pub layermask: ResMut<'w, ActionListLayerMask>,
+    pub boneoffset: ResMut<'w, ActionListBoneOffset>,
 }
 
 #[derive(SystemParam)]
 pub struct ActionSetInstanceMesh<'w> {
     pub create: ResMut<'w, ActionListInstanceMeshCreate>,
-    pub color: ResMut<'w, ActionListInstanceColor>,
-    pub alpha: ResMut<'w, ActionListInstanceAlpha>,
-    pub tilloff: ResMut<'w, ActionListInstanceTillOff>,
-    pub ins_world_matrixs: ResMut<'w, ActionListInstanceWorldMatrixs>,
-    pub ins_colors: ResMut<'w, ActionListInstanceColors>,
-    pub ins_tilloffs: ResMut<'w, ActionListInstanceTilloffs>,
     pub floats: ResMut<'w, ActionListInstanceFloat>,
+    pub vec4s: ResMut<'w, ActionListInstanceVec4>,
+    pub vec3s: ResMut<'w, ActionListInstanceVec3>,
+    pub vec2s: ResMut<'w, ActionListInstanceVec2>,
+    pub uints: ResMut<'w, ActionListInstanceUint>,
+    pub sints: ResMut<'w, ActionListInstanceSint>,
 }
 
 #[derive(SystemParam)]
 pub struct ActionSetAbstructMesh<'w> {
     pub scaling_mode: ResMut<'w, ActionListAbstructMeshScalingMode>,
     pub velocity: ResMut<'w, ActionListAbstructMeshVelocity>,
-    pub boneoffset: ResMut<'w, ActionListBoneOffset>,
     pub force_point_light: ResMut<'w, ActionListMeshForcePointLighting>,
     pub force_spot_light: ResMut<'w, ActionListMeshForceSpotLighting>,
     pub force_hemi_light: ResMut<'w, ActionListMeshForceHemiLighting>,
+    // pub targetanime: ResMut<'w, ActionListTargetAnimationAttribute>,
 }
 
 #[derive(Resource, Default)]

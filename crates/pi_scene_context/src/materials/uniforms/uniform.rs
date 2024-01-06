@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 use pi_assets::asset::Handle;
-use pi_hash::XHashMap;
 
 #[derive(Component)]
 pub struct BindEffectReset;
@@ -22,23 +21,27 @@ impl UniformAnimated {
     }
 }
 
-pub struct AnimatorableUniformOffset {
+#[derive(Debug, Clone)]
+pub struct UniformOffset {
     vtype: EUniformValueType,
     offset: u16,
-    entity: Entity,
+    entity: Option<Entity>,
 }
-impl AnimatorableUniformOffset {
+impl UniformOffset {
     pub fn new(
         vtype: EUniformValueType,
         offset: u16,
-        entity: Entity,
+        entity: Option<Entity>,
     ) -> Self {
         Self { vtype, offset, entity }
     }
     pub fn vtype(&self) -> EUniformValueType { self.vtype }
     pub fn atype(&self) -> EAnimatorableType { self.vtype.animatorable_type() }
-    pub fn offset(&self) -> u16 { self.offset }
-    pub fn entity(&self) -> Entity { self.entity }
+    pub fn offset(&self) -> usize { self.offset as usize }
+    pub fn entity(&self) -> Option<Entity> { self.entity }
+    pub fn strip_offset(&self) -> (usize, usize, Option<Entity>) {
+        (self.vtype.strip(), self.offset as usize, self.entity)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -88,120 +91,47 @@ impl UnAnimatorableUniformOffset {
     pub fn offset(&self) -> u16 { self.offset }
 }
 
-pub enum UniformOffset {
-    Animatorable(AnimatorableUniformOffset),
-    UnAnimatorable(UnAnimatorableUniformOffset),
-}
-impl UniformOffset {
-    pub fn strip_offset(&self) -> (usize, usize, Option<Entity>) {
-        match self {
-            UniformOffset::Animatorable(val) => {
-                (val.vtype.strip(), val.offset as usize, Some(val.entity))
-            },
-            UniformOffset::UnAnimatorable(val) => {
-                (val.vtype.strip(), val.offset as usize, None)
-            },
-        }
-    }
-    pub fn entity(&self) -> Option<Entity> {
-        match self {
-            UniformOffset::Animatorable(val) => {
-                Some(val.entity)
-            },
-            UniformOffset::UnAnimatorable(_) => {
-                None
-            },
-        }
-    }
-}
-
 pub struct BindEffectValues {
     // offsets: XHashMap<Atom, UniformOffset>,
+    bytes: Vec<u8>,
     offsets: Vec<(Atom, UniformOffset)>,
     bind: Arc<ShaderBindEffectValue>,
 }
 impl BindEffectValues {
     pub fn new(
-        commands: &mut Commands,
-        mat: Entity,
         device: &PiRenderDevice,
         key_meta: KeyShaderMeta,
         meta: Handle<ShaderEffectMeta>,
         allocator: &mut BindBufferAllocator,
-        cmds: (
-            &mut ActionListAnimatorableFloat,
-            &mut ActionListAnimatorableVec2,
-            &mut ActionListAnimatorableVec3,
-            &mut ActionListAnimatorableVec4,
-            &mut ActionListAnimatorableUint,
-        )
     ) -> Option<Self> {
         
         if let Some(bind) = ShaderBindEffectValue::new(device, key_meta, meta.clone(), allocator) {
-            let linked = mat;
-            let (animatorablefloats, 
-                animatorablevec2s,
-                animatorablevec3s, 
-                animatorablevec4s, 
-                animatorableuints
-            ) = cmds;
-
             let mut bytes: Vec<u8> = vec![];
             let mut offsets: Vec<(Atom, UniformOffset)> = vec![];
             // let mut offsets: XHashMap<Atom, UniformOffset> = XHashMap::default();
     
             meta.uniforms.mat4_list.iter().for_each(|item| {
-                if item.2 {
-                    // let entity = commands.spawn_empty().id();
-                    // let offset = UniformOffset::Animatorable(AnimatorableUniformOffset::new(EAnimatorableType::VEc4, offset, entity))
-                } else {
-                    let offset = UniformOffset::UnAnimatorable(UnAnimatorableUniformOffset::new(EUniformValueType::Mat4, bytes.len() as u16));
-                    bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
-                    // keys.push(item.0.clone());
-                    offsets.push((item.0.clone(), offset));
-                    // offsets.insert(item.0.clone(), offset);
-                }
+                let offset = UniformOffset::new(EUniformValueType::Mat4, bytes.len() as u16, None);
+                bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
+                offsets.push((item.0.clone(), offset));
+                // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.vec4_list.iter().for_each(|item| {
-                let offset = if item.2 {
-                    let entity = commands.spawn_empty().id();
-                    animatorablevec4s.push(OpsAnimatorableVec4::ops(entity, linked, AnimatorableVec4::from(&item.1)));
-                    UniformOffset::Animatorable(AnimatorableUniformOffset::new(EUniformValueType::Vec4, bytes.len() as u16, entity))
-                } else {
-                    UniformOffset::UnAnimatorable(UnAnimatorableUniformOffset::new(EUniformValueType::Vec4, bytes.len() as u16))
-                };
+                let offset = UniformOffset::new(EUniformValueType::Vec4, bytes.len() as u16, None);
                 bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
-    
-                // keys.push(item.0.clone());
                 offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.vec3_list.iter().for_each(|item| {
-                let offset = if item.2 {
-                    let entity = commands.spawn_empty().id();
-                    animatorablevec3s.push(OpsAnimatorableVec3::ops(entity, linked, AnimatorableVec3::from(&item.1)));
-                    UniformOffset::Animatorable(AnimatorableUniformOffset::new(EUniformValueType::Vec3, bytes.len() as u16, entity))
-                } else {
-                    UniformOffset::UnAnimatorable(UnAnimatorableUniformOffset::new(EUniformValueType::Vec3, bytes.len() as u16))
-                };
+                let offset = UniformOffset::new(EUniformValueType::Vec3, bytes.len() as u16, None);
                 bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
                 bytemuck::cast_slice(&[0.0f32]).iter().for_each(|v| { bytes.push(*v); });
-    
-                // keys.push(item.0.clone());
                 offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.vec2_list.iter().for_each(|item| {
-                let offset = if item.2 {
-                    let entity = commands.spawn_empty().id();
-                    animatorablevec2s.push(OpsAnimatorableVec2::ops(entity, linked, AnimatorableVec2::from(&item.1)));
-                    UniformOffset::Animatorable(AnimatorableUniformOffset::new(EUniformValueType::Vec2, bytes.len() as u16, entity))
-                } else {
-                    UniformOffset::UnAnimatorable(UnAnimatorableUniformOffset::new(EUniformValueType::Vec2, bytes.len() as u16))
-                };
+                let offset = UniformOffset::new(EUniformValueType::Vec2, bytes.len() as u16, None);
                 bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
-    
-                // keys.push(item.0.clone());
                 offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
@@ -210,30 +140,14 @@ impl BindEffectValues {
                 bytemuck::cast_slice(&[0.0f32, 0.0f32]).iter().for_each(|v| { bytes.push(*v); });
             }
             meta.uniforms.float_list.iter().for_each(|item| {
-                let offset = if item.2 {
-                    let entity = commands.spawn_empty().id();
-                    animatorablefloats.push(OpsAnimatorableFloat::ops(entity, linked, AnimatorableFloat(item.1.clone())));
-                    UniformOffset::Animatorable(AnimatorableUniformOffset::new(EUniformValueType::Float, bytes.len() as u16, entity))
-                } else {
-                    UniformOffset::UnAnimatorable(UnAnimatorableUniformOffset::new(EUniformValueType::Float, bytes.len() as u16))
-                };
-                log::error!("Float {:?}", (&item.0, item.1, bytes.len()));
+                let offset = UniformOffset::new(EUniformValueType::Float, bytes.len() as u16, None);
                 bytemuck::cast_slice(&[item.1]).iter().for_each(|v| { bytes.push(*v); });
-                // keys.push(item.0.clone());
                 offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.uint_list.iter().for_each(|item| {
-                let offset = if item.2 {
-                    let entity = commands.spawn_empty().id();
-                    animatorableuints.push(OpsAnimatorableUint::ops(entity, linked, AnimatorableUint(item.1.clone())));
-                    UniformOffset::Animatorable(AnimatorableUniformOffset::new(EUniformValueType::Uint, bytes.len() as u16, entity))
-                } else {
-                    UniformOffset::UnAnimatorable(UnAnimatorableUniformOffset::new(EUniformValueType::Uint, bytes.len() as u16))
-                };
+                let offset = UniformOffset::new(EUniformValueType::Uint, bytes.len() as u16, None);
                 bytemuck::cast_slice(&[item.1]).iter().for_each(|v| { bytes.push(*v); });
-    
-                // keys.push(item.0.clone());
                 offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
@@ -242,35 +156,67 @@ impl BindEffectValues {
             offsets.sort_by(|a, b| a.0.cmp(&b.0) );
     
             Some(
-                BindEffectValues {
-                    offsets,
-                    bind: Arc::new(bind),
-                }
+                BindEffectValues { bytes, offsets, bind: Arc::new(bind), }
             )
         } else {
             None
         }
     }
-    pub fn query_animatorable(&self, key: &Atom) -> Option<&AnimatorableUniformOffset> {
-        match self.offset(key) {
-            Some(offset) => match offset {
-                UniformOffset::Animatorable(offset) => Some(offset),
-                UniformOffset::UnAnimatorable(_) => None,
+    pub fn animator(
+        &mut self,
+        key: &Atom,
+        item: Entity,
+        command: &mut Commands,
+        animatorablefloat: &mut ActionListAnimatorableFloat,
+        animatorablevec2s: &mut ActionListAnimatorableVec2,
+        animatorablevec3s: &mut ActionListAnimatorableVec3,
+        animatorablevec4s: &mut ActionListAnimatorableVec4,
+        animatorableuints: &mut ActionListAnimatorableUint,
+    ) -> Option<UniformOffset> {
+        let linked = item;
+        match self.offsets.binary_search_by(|v| v.0.cmp(key) ) {
+            Ok(idx) => {
+                let offset = &mut self.offsets.get_mut(idx).unwrap().1;
+                if offset.entity.is_none() {
+                    let entity = command.spawn_empty().id();
+                    offset.entity = Some(entity);
+                    match offset.atype() {
+                        EAnimatorableType::Vec4     => {
+                            let start = offset.offset as usize; let end = offset.offset as usize + 16;
+                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                            animatorablevec4s.push(OpsAnimatorableVec4::ops(entity, linked, AnimatorableVec4::from(data), EAnimatorableEntityType::Uniform));
+                        },
+                        EAnimatorableType::Vec3     => {
+                            let start = offset.offset as usize; let end = offset.offset as usize + 12;
+                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                            animatorablevec3s.push(OpsAnimatorableVec3::ops(entity, linked, AnimatorableVec3::from(data), EAnimatorableEntityType::Uniform));
+                        },
+                        EAnimatorableType::Vec2     => {
+                            let start = offset.offset as usize; let end = offset.offset as usize + 8;
+                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                            animatorablevec2s.push(OpsAnimatorableVec2::ops(entity, linked, AnimatorableVec2::from(data), EAnimatorableEntityType::Uniform));
+                        },
+                        EAnimatorableType::Float    => {
+                            let start = offset.offset as usize; let end = offset.offset as usize + 4;
+                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                            animatorablefloat.push(OpsAnimatorableFloat::ops(entity, linked, AnimatorableFloat(data[0]), EAnimatorableEntityType::Uniform));
+                        },
+                        EAnimatorableType::Uint     => {
+                            let start = offset.offset as usize; let end = offset.offset as usize + 4;
+                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                            animatorableuints.push(OpsAnimatorableUint::ops(entity, linked, AnimatorableUint(data[0]), EAnimatorableEntityType::Uniform));
+                        },
+                        EAnimatorableType::Int => {
+                        },
+                    }
+                }
+                Some(offset.clone())
             },
-            None => None,
+            Err(_) => { None },
         }
     }
-    pub fn update(&self, key: &Atom, value: &[u8]) -> Option<Entity> {
-        match self.offset(key) {
-            Some(offset) => {
-                let (strip, offset, entity) = offset.strip_offset();
-                if strip <= value.len() {
-                    self.bind.data().write_data(offset, &value[0..strip]);
-                }
-                entity
-            },
-            None => None,
-        }
+    pub fn update(&mut self, mut offset: usize, value: &[u8]) {
+        value.iter().for_each(|v| { self.bytes[offset] = *v; offset += 1; });
     }
     pub fn bind(&self) -> Arc<ShaderBindEffectValue> {
         self.bind.clone()
@@ -280,6 +226,12 @@ impl BindEffectValues {
             Ok(idx) => Some(&self.offsets.get(idx).unwrap().1),
             Err(_) => None,
         }
+    }
+    pub fn uniforms(&self) -> &Vec<(Atom, UniformOffset)> {
+        &self.offsets
+    }
+    pub fn log(&self) {
+        log::error!("{:?}", &self.offsets);
     }
 }
 

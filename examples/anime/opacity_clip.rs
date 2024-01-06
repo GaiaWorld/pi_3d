@@ -56,10 +56,12 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: 0, ..Default::default() };
+    let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     let mut blend = ModelBlend::default(); blend.combine();
     actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
+
+    actions.transform.enable.push(OpsNodeEnable::ops(source, false));
 
     actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
     actions.transform.tree.push(OpsTransformNodeParent::ops(node, root));
@@ -83,7 +85,7 @@ fn setup(
         OpsUniformFloat::ops(
             idmat, 
             Atom::from(BlockCutoff::KEY_VALUE), 
-            0.5
+            0.8
         )
     );
     actions.material.vec3.push(
@@ -95,30 +97,52 @@ fn setup(
     );
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
-    {
-        let key_curve0 = pi_atom::Atom::from("cutoff");
-        let key_curve0 =key_curve0.asset_u64();
-        let mut curve = FrameCurve::<AnimatorableFloat>::curve_frame_values(10000);
-        curve.curve_frame_values_frame(0, AnimatorableFloat(0.));
-        curve.curve_frame_values_frame(10000, AnimatorableFloat(1.));
+    // {
+    //     let key_curve0 = pi_atom::Atom::from("cutoff");
+    //     let key_curve0 =key_curve0.asset_u64();
+    //     let mut curve = FrameCurve::<AnimatorableFloat>::curve_frame_values(10000);
+    //     curve.curve_frame_values_frame(0, AnimatorableFloat(0.));
+    //     curve.curve_frame_values_frame(10000, AnimatorableFloat(1.));
         
-        let asset_curve = if let Some(curve) = anime_assets.float.get(&key_curve0) {
-            curve
-        } else {
-            match anime_assets.float.insert(key_curve0, TypeFrameCurve(curve)) {
-                Ok(value) => { value },
-                Err(_) => { return; },
-            }
-        };
+    //     let asset_curve = if let Some(curve) = anime_assets.float.get(&key_curve0) {
+    //         curve
+    //     } else {
+    //         match anime_assets.float.insert(key_curve0, TypeFrameCurve(curve)) {
+    //             Ok(value) => { value },
+    //             Err(_) => { return; },
+    //         }
+    //     };
     
-        let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        // animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group, animation);
-        actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), animation));
-    }
+    //     let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+    //     // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, idmat, animation));
+    //     actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), key_curve0));
+    // }
+    // {
+    //     let key_curve0 = pi_atom::Atom::from("tilloff");
+    //     let key_curve0 =key_curve0.asset_u64();
+    //     let mut curve = FrameCurve::<AnimatorableVec4>::curve_frame_values(10000);
+    //     curve.curve_frame_values_frame(0, AnimatorableVec4::from([1., 1., 0., 0.].as_slice()));
+    //     curve.curve_frame_values_frame(10000, AnimatorableVec4::from([1., 1., 1., 1.].as_slice()));
+        
+    //     let asset_curve = if let Some(curve) = anime_assets.vec4s.get(&key_curve0) {
+    //         curve
+    //     } else {
+    //         match anime_assets.vec4s.insert(key_curve0, TypeFrameCurve(curve)) {
+    //             Ok(value) => { value },
+    //             Err(_) => { return; },
+    //         }
+    //     };
+    
+    //     let animation = anime_contexts.vec4s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+    //     // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, idmat, animation));
+    //     actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockMainTexture::KEY_TILLOFF), id_group.clone(), key_curve0));
+    // }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
         let key_curve0 = key_curve0.asset_u64();
@@ -136,23 +160,23 @@ fn setup(
         };
     
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, root, id_group, animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, root, animation));
     }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Not;
     parma.speed = 0.1;
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
 
     // animegroupres.global.add_frame_event_listen(id_group);
     // animegroupres.global.add_frame_event(id_group, 0.5, 100);
-    animegroupres.global.add_start_listen(id_group);
-    animegroupres.global.add_end_listen(id_group);
+    actions.anime.listens.push(OpsAddAnimationListen::Start(id_group));
+    actions.anime.listens.push(OpsAddAnimationListen::End(id_group));
 }
 
 pub fn sys_anime_event(
     mut events: ResMut<GlobalAnimeEvents>,
 ) {
-    let mut list: Vec<(Entity, AnimationGroupID, u8, u32)> = replace(&mut events, vec![]);
+    let mut list: Vec<(Entity, Entity, u8, u32)> = replace(&mut events, vec![]);
     list.drain(..).for_each(|item| {
         log::warn!("Event {:?}", item);
     });

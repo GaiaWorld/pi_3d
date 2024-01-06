@@ -108,19 +108,25 @@ pub fn sys_act_node_enable(
             record.0 = val.clone();
             *node = val;
         } else {
-            if count < 2 {
-                cmds.push(OpsNodeEnable(entity, val, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsNodeEnable(entity, val, count + 1));
+            // }
         }
     });
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageEnable {
+    Command,
 }
 
 pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListNodeEnable::default());
+        app.configure_set(Update, StageEnable::Command.after(ERunStageChap::_InitialApply));
         app.add_systems(Update, 
-            sys_act_node_enable.run_if(should_run).in_set(ERunStageChap::Command)
+            sys_act_node_enable.in_set(StageEnable::Command)
         );
     }
 }

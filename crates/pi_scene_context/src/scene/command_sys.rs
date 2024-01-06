@@ -3,7 +3,6 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
-    object::*,
     flags::*,
 };
 
@@ -26,6 +25,7 @@ pub fn sys_create_scene(
         if let Some(mut entitycmds) = commands.get_entity(entity) {
             ActionScene::init(&mut entitycmds, id_left, id_right, lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp);
             entitycmds.insert(pool);
+            entitycmds.insert(SceneAnimationContext::new());
         } else {
             commands.entity(id_left).despawn();
             commands.entity(id_right).despawn();

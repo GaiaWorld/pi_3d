@@ -1,7 +1,7 @@
 use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 
-use crate::{iparticle_system_config::IParticleSystemConfig, base::ParticleSystemCalculatorID};
+use crate::{iparticle_system_config::IParticleSystemConfig, base::{ParticleSystemCalculatorID, ParticleAttribute, ParticleAttributes}};
 
 
 pub struct OpsCPUParticleCalculator(pub(crate) Entity, pub(crate) IParticleSystemConfig, pub(crate) u8);
@@ -12,10 +12,10 @@ impl OpsCPUParticleCalculator {
 }
 pub type ActionListCPUParticleCalculator = ActionList<OpsCPUParticleCalculator>;
 
-pub struct OpsCPUParticleSystem(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Handle<ParticleSystemCalculatorID>, pub(crate) u8);
+pub struct OpsCPUParticleSystem(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Handle<ParticleSystemCalculatorID>, pub(crate) ParticleAttributes, pub(crate) u8);
 impl OpsCPUParticleSystem {
-    pub fn ops(scene: Entity, node: Entity, trailmesh: Entity, trailgeo: Entity, calculator: Handle<ParticleSystemCalculatorID>) -> Self {
-        Self(scene, node, trailmesh, trailgeo, calculator, 0)
+    pub fn ops(scene: Entity, node: Entity, trailmesh: Entity, trailgeo: Entity, calculator: Handle<ParticleSystemCalculatorID>, atrts: Vec<ParticleAttribute>) -> Self {
+        Self(scene, node, trailmesh, trailgeo, calculator, ParticleAttributes(atrts), 0)
     }
 }
 pub type ActionListCPUParticleSystem = ActionList<OpsCPUParticleSystem>;

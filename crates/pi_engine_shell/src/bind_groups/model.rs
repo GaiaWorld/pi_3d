@@ -153,7 +153,7 @@ impl BindGroupModel {
     }
     pub fn key(&self) -> &KeyBindGroupModel { &self.key }
     pub fn bind_group(&self) -> &BindGroupUsage { &self.bind_group }
-    pub fn vs_running_model_snippet(&self) -> String {
+    pub fn vs_running_model_snippet(&self, meta: &ShaderEffectMeta) -> String {
         let mut result = String::from("");
         if self.key.matrix.is_some() {
             result += "
@@ -162,6 +162,9 @@ impl BindGroupModel {
     uint PI_SkinBoneOffset0 = U_PI_SkinBoneOffset0;
     uint PI_SkinBoneOffset1 = U_PI_SkinBoneOffset1;
 ";
+        }
+        if self.key.effect_value.is_some() {
+            result += meta.uniforms.vs_running_code().as_str();
         }
         result
     }

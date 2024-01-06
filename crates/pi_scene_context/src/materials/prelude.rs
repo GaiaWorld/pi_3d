@@ -57,6 +57,7 @@ pub struct ActionSetMaterial<'w> {
     pub mat4: ResMut<'w, ActionListUniformMat4>,
     pub texture: ResMut<'w, ActionListUniformTexture>,
     pub texturefromtarget: ResMut<'w, ActionListUniformTextureFromRenderTarget>,
+    // pub targetanime: ResMut<'w, ActionListTargetAnimationUniform>,
     // pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 }
 

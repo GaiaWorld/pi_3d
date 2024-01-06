@@ -47,24 +47,30 @@ pub enum EStageAnimation {
     Create,
     _CreateApply,
     Command,
+    Start,
+    Pause,
+    Dispose,
     Running,
 }
 
 pub struct PluginGlobalAnimation;
 impl Plugin for PluginGlobalAnimation {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListAnimeGroupAttach::default());
+        // app.insert_resource(ActionListAnimeGroupAttach::default());
         app.insert_resource(ActionListAnimeGroupStartReset::default());
         app.insert_resource(ActionListAnimatorableFloat::default());
         app.insert_resource(ActionListAnimatorableVec2::default());
         app.insert_resource(ActionListAnimatorableVec3::default());
         app.insert_resource(ActionListAnimatorableVec4::default());
         app.insert_resource(ActionListAnimatorableUint::default());
-        app.insert_resource(ActionListAnimatorableInt::default());
-        // app.insert_resource(ActionListAnimeGroupCreate::default());
-        // app.insert_resource(ActionListAnimeGroupPause::default());
-        // app.insert_resource(ActionListAnimeGroupStart::default());
-        // app.insert_resource(ActionListAddTargetAnime::default());
+        app.insert_resource(ActionListAnimatorableSint::default());
+        app.insert_resource(ActionListAddAnimationListen::default());
+        app.insert_resource(ActionListAddAnimationFrameEvent::default());
+        app.insert_resource(ActionListAnimeGroupCreate::default());
+        app.insert_resource(ActionListAnimeGroupDispose::default());
+        app.insert_resource(ActionListAnimationGroupAction::default());
+        app.insert_resource(ActionListAddTargetAnime::default());
+        app.insert_resource(ActionListAnimationWeight::default());
 
         app.configure_set(Update, EStageAnimation::Create.after(ERunStageChap::_InitialApply));
         app.configure_set(Update, EStageAnimation::_CreateApply.after(EStageAnimation::Create));
@@ -75,6 +81,7 @@ impl Plugin for PluginGlobalAnimation {
         app.add_systems(
 			Update,
             (
+                sys_create_animation_group,
                 sys_create_animatorable_entity
             ).in_set(EStageAnimation::Create)
         );
@@ -82,12 +89,15 @@ impl Plugin for PluginGlobalAnimation {
         app.add_systems(
 			Update,
             (
-                sys_anime_group_attach.run_if(should_run),
-                sys_calc_reset_while_animationgroup_start.run_if(should_run),
+                sys_act_reset_while_animationgroup_start.run_if(should_run),
                 // sys_anime_group_create.run_if(should_run),
-                // sys_anime_add_target_anime.run_if(should_run),
+                sys_act_add_target_animation,
+                sys_act_add_animation_group_frame_event,
+                sys_act_add_animation_group_listen,
                 // sys_anime_start.run_if(should_run),
                 // sys_anime_pause.run_if(should_run),
+                sys_act_animation_group_action.run_if(should_run),
+                sys_act_dispose_animation_group.run_if(should_run),
             ).chain().in_set(EStageAnimation::Command)
         );
         
@@ -105,7 +115,6 @@ impl Plugin for PluginGlobalAnimation {
             group_records: XHashMap::default(),
         };
         app.insert_resource(globalaboput);
-        app.insert_resource(SceneAnimationContextMap::default());
         app.insert_resource(GlobalAnimeEvents::default());
     }
 }
@@ -154,4 +163,4 @@ pub type PluginTypeAnimatorableVec2 = PluginTypeAnime<AnimatorableVec2, RecordAn
 pub type PluginTypeAnimatorableVec3 = PluginTypeAnime<AnimatorableVec3, RecordAnimatorableVec3>;
 pub type PluginTypeAnimatorableVec4 = PluginTypeAnime<AnimatorableVec4, RecordAnimatorableVec4>;
 pub type PluginTypeAnimatorableUint = PluginTypeAnime<AnimatorableUint, RecordAnimatorableUint>;
-pub type PluginTypeAnimatorableInt = PluginTypeAnime<AnimatorableInt, RecordAnimatorableInt>;
+pub type PluginTypeAnimatorableInt = PluginTypeAnime<AnimatorableSint, RecordAnimatorableInt>;

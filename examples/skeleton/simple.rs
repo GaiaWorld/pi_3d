@@ -4,7 +4,7 @@ use base::DemoScene;
 use pi_atom::Atom;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_gltf2_load::{TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
@@ -43,14 +43,15 @@ fn setup(
     actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
 
     let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
-    let instancestate = 0;
-    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState::default()));
     actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     
     let bone0 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone0, scene));
     let bone1 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone1, scene));
@@ -59,7 +60,7 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, bone1, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone1, animation));
     }
     let bone2 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone2, scene));
     let key_curve0 = pi_atom::Atom::from((2).to_string());
@@ -67,7 +68,7 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, bone2, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone2, animation));
     }
     let bone3 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone3, scene));
     let key_curve0 = pi_atom::Atom::from((3).to_string());
@@ -75,7 +76,7 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, bone3, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone3, animation));
     }
     let bone4 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone4, scene));
     let key_curve0 = pi_atom::Atom::from((4).to_string());
@@ -83,9 +84,9 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, bone4, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone4, animation));
     }
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
 
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone0, scene, scene));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone1, bone0, scene));
@@ -98,20 +99,23 @@ fn setup(
     // actions.transform.tree.push(OpsTransformNodeParent::ops(bone3, bone0));
     // actions.transform.tree.push(OpsTransformNodeParent::ops(bone4, bone0));
 
-    let data: [u16; 48] = [
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        1, 1, 1, 1, 1, 1, 1, 1, 
-        2, 2, 2, 2, 2, 2, 2, 2, 
-        3, 3, 3, 3, 3, 3, 3, 3, 
-        4, 4, 4, 4, 4, 4, 4, 4
+    let data: [u32; 24] = [
+        0, 0, 0, 0, 
+        0, 0, 0, 0, 
+        1, 1, 1, 1, 
+        2, 2, 2, 2, 
+        3, 3, 3, 3, 
+        4, 4, 4, 4, 
     ];
     // normals
     let jointkey = KeyVertexBuffer::from("TestJoint");
     geometryres.vb_wait.add(&jointkey, bytemuck::cast_slice(&data).iter().map(|v| *v).collect::<Vec<u8>>());
 
-    let format = wgpu::VertexFormat::Uint16x2;
-    let jointdesc = VertexBufferDesc::vertices(jointkey.clone(), VertexBufferDescRange::default(), vec![VertexAttribute { kind: EVertexDataKind::MatricesIndices1, format }]);
+    let format = wgpu::VertexFormat::Uint32;
+    let jointdesc = VertexBufferDesc::vertices(
+        jointkey.clone(), VertexBufferDescRange::default(), 
+        vec![ EVertexAttribute::Custom(CustomVertexAttribute::new(Atom::from("A_JOINT_INC1"), Atom::from(""), ECustomVertexType::Uint, None)) ]
+    );
     
     let id_geo = commands.spawn_empty().id();
     let mut attrs = CubeBuilder::attrs_meta();

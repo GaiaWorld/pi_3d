@@ -6,10 +6,7 @@ use pi_engine_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_share::ShareRefCell;
 
-use crate::{
-    pass::PassTagOrders,
-    commands::DisposeReady
-};
+use crate::pass::PassTagOrders;
 
 use super::renderer::*;
 

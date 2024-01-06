@@ -6,7 +6,7 @@
 use pi_engine_shell::prelude::*;
 
 pub trait TViewerLayerMask {
-    fn include(&self, other: u32) -> bool {
+    fn include(&self, _other: u32) -> bool {
         return true;
     }
 }

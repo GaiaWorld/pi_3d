@@ -11,8 +11,8 @@ impl Default for AnimatorableVec2 {
         Self(Vector2::new(0.0, 0.0))
     }
 }
-impl From<&[Number; 2]> for AnimatorableVec2 {
-    fn from(v: &[Number; 2]) -> Self {
+impl From<&[Number]> for AnimatorableVec2 {
+    fn from(v: &[Number]) -> Self {
         Self(Vector2::new(v[0], v[1]))
     }
 }

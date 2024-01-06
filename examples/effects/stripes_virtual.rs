@@ -40,7 +40,7 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: 0, ..Default::default() };
+    let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let mut blend = ModelBlend::default(); blend.combine();

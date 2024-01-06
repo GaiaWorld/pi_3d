@@ -5,8 +5,6 @@ use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     postprocess::*,
-    commands::*,
-    object::*,
 };
 
 use super::{

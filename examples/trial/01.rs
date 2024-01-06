@@ -4,7 +4,7 @@ use base::DemoScene;
 use pi_animation::loop_mode::ELoopMode;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_gltf2_load::{TypeAnimeContexts, TypeAnimeAssetMgrs};
+use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
@@ -49,8 +49,7 @@ fn setup(
     }));
 
     let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
-    let instancestate = 0;
-    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
+    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState::default()));
     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., 10., 0.));
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     let id_geo = commands.spawn_empty().id();
@@ -58,10 +57,13 @@ fn setup(
     
     let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
+
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(node, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, node, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     {
         let key_curve0 =  pi_atom::Atom::from("test2"); 
         let key_curve0 = key_curve0.asset_u64();
@@ -75,7 +77,7 @@ fn setup(
         };
 
         let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test0"); 
@@ -90,11 +92,11 @@ fn setup(
         };
 
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, node, id_group.clone(), animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 1.;param.loop_mode = ELoopMode::PositivePly(None);
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), param, 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
     let mut random = pi_wy_rng::WyRng::default();

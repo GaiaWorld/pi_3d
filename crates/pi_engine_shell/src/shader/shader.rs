@@ -3,26 +3,89 @@ use pi_assets::asset::{Asset, Size};
 use pi_bevy_asset::{AssetCapacity, TAssetCapacity};
 use pi_render::{renderer::{
         shader::*,
-        attributes::KeyShaderFromAttributes
+        attributes::{KeyShaderFromAttributes, EVertexAttribute, EBuildinVertexAtribute}
     }, asset::ASSET_SIZE_FOR_UNKOWN};
 use crate::bind_groups::*;
 
-use super::{BindDefine, ERenderAlignment, EVerticeExtendCode};
+use super::{BindDefine, ERenderAlignment, ShaderEffectMeta};
 
+pub trait TShaderAttributesCode {
+    fn define_code(&self, location: u32) -> String;
+    fn running_code(&self, meta: &ShaderEffectMeta) -> String;
+}
 
+impl TShaderAttributesCode for EVertexAttribute {
+    fn define_code(&self, location: u32) -> String {
+        let mut result = String::from("layout(location = ");
+        result += location.to_string().as_str();
+        result += ") in ";
+        result += self.kind().as_str();
+        result += " ";
+
+        match self {
+            EVertexAttribute::Buildin(_) => result += "V",
+            EVertexAttribute::Custom(_) => {},
+        }
+        result += self.var_code();
+        result += ";\r\n";
+
+        result
+    }
+    fn running_code(&self, meta: &ShaderEffectMeta) -> String {
+        let mut result = String::from("");
+
+        match self {
+            EVertexAttribute::Buildin(val) => {
+                match val {
+                    EBuildinVertexAtribute::Color4 => {},
+                    EBuildinVertexAtribute::UV => {},
+                    EBuildinVertexAtribute::Normal => {},
+                    _ => { result += val.kind().as_str(); result += " "; },
+                }
+                result += val.var_code(); result += " = V"; result += val.var_code(); result += ";\r\n";
+
+                match val {
+                    EBuildinVertexAtribute::InsWorldRow4 => {
+                        result += Self::matrix().as_str();
+                    },
+                    EBuildinVertexAtribute::Trail => {
+                        result += Self::trail().as_str();
+                    },
+                    EBuildinVertexAtribute::TrailBillboard => {
+                        result += Self::trail_billboard().as_str();
+                    },
+                    _ => {},
+                }
+            },
+            EVertexAttribute::Custom(val) => {
+                if let Some(uniform) = val.foruniform() {
+                    if meta.uniforms.query_instance(uniform) {
+                        result += val.vs_running_code(); result += "\r\n";
+                    }
+                } else {
+                    result += val.vs_running_code(); result += "\r\n";
+                }
+            },
+        }
+
+        result
+    }
+}
 
 pub trait TShaderBlockCode {
     fn vs_define_code(&self) -> String;
     fn fs_define_code(&self) -> String;
-    fn vs_running_code(&self) -> String;
+    fn vs_running_code(&self, meta: &ShaderEffectMeta) -> String;
     fn fs_running_code(&self) -> String;
 }
 
 impl TShaderBlockCode for KeyShaderFromAttributes {
     fn vs_define_code(&self) -> String {
         let mut result = String::from("");
+        let mut idx = 0;
         self.0.iter().for_each(|attr| {
-            result += attr.define_code().as_str();
+            result += attr.define_code(idx).as_str();
+            idx += 1;
         });
 
         result
@@ -32,10 +95,10 @@ impl TShaderBlockCode for KeyShaderFromAttributes {
         String::from("")
     }
 
-    fn vs_running_code(&self) -> String {
+    fn vs_running_code(&self, meta: &ShaderEffectMeta) -> String {
         let mut result = String::from("");
         self.0.iter().for_each(|attr| {
-            result += attr.running_code().as_str();
+            result += attr.running_code(meta).as_str();
         });
 
         result
@@ -60,7 +123,6 @@ pub struct KeyShader3D {
     pub key_meta: pi_atom::Atom,
     pub key_attributes: KeyShaderFromAttributes,
     pub bind_defines: BindDefine,
-    pub instance: EVerticeExtendCode,
     pub renderalignment: ERenderAlignment,
 }
 

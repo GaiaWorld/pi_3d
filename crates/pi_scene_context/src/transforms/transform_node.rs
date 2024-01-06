@@ -216,7 +216,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalRotationQuaternion {
 }
 impl Default for LocalRotationQuaternion {
     fn default() -> Self {
-        let mut result = Self::create(0., 0., 0., 1.);
+        let result = Self::create(0., 0., 0., 1.);
         result
     }
 }

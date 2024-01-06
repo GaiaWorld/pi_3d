@@ -41,8 +41,7 @@ impl<F: Default + Clone + Component> EntityRefInfo<F> {
         }
     }
     pub fn remove(&mut self, entity: &Entity) -> bool {
-        if self.refs.contains(&entity) {
-            self.refs.remove(entity);
+        if self.refs.remove(entity) {
             self.dirty = true;
             true
         } else {

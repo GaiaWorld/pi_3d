@@ -27,9 +27,12 @@ impl BallBuilder {
                 key,
                 VertexBufferDescRange::default(),
                 vec![
-                    VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
-                    VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },
-                    VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }
+                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Position),
+                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Normal),
+                    EVertexAttribute::Buildin(EBuildinVertexAtribute::UV),
+                    // VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
+                    // VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },
+                    // VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }
                 ]
             ),
         ]

@@ -57,7 +57,7 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: 0, ..Default::default() };
+    let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     let mut blend = ModelBlend::default(); blend.combine();
     actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
@@ -96,9 +96,11 @@ fn setup(
     );
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     // {
     //     let key_curve0 = pi_atom::Atom::from("cutoff");
@@ -121,7 +123,7 @@ fn setup(
     //     };
     
     //     let animation = anime_contexts.alphacutoff.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    //     animegroupres.scene_ctxs.add_target_anime(scene, idmat, id_group, animation);
+    //     actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, idmat, animation));
     // }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
@@ -144,17 +146,17 @@ fn setup(
         };
     
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        animegroupres.scene_ctxs.add_target_anime(scene, root, id_group, animation);
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, root, animation));
     }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Not;
     parma.speed = 1.;
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
 
     // animegroupres.global.add_frame_event_listen(id_group);
     // animegroupres.global.add_frame_event(id_group, 0.5, 100);
-    animegroupres.global.add_start_listen(id_group);
-    animegroupres.global.add_end_listen(id_group);
+    actions.anime.listens.push(OpsAddAnimationListen::Start(id_group));
+    actions.anime.listens.push(OpsAddAnimationListen::End(id_group));
 
     list.material = Some(idmat);
 }
@@ -164,7 +166,7 @@ pub fn sys_anime_event(
     mut test: ResMut<ActionListTestData>,
     mut actions: pi_3d::ActionSets,
 ) {
-    let mut list: Vec<(Entity, AnimationGroupID, u8, u32)> = replace(&mut events, vec![]);
+    let mut list: Vec<(Entity, Entity, u8, u32)> = replace(&mut events, vec![]);
     list.drain(..).for_each(|item| {
         log::warn!("Event {:?}", item);
         if let Some(idmat) = test.material {

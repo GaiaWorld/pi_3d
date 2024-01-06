@@ -11,16 +11,14 @@ impl ShaderWater {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
         nodemat.vs_define = String::from("
-    layout(location = 0) out vec4 v_pos_SS;
-    layout(location = 1) out vec2 vUV;
-    layout(location = 2) out vec4 vColor;
 "
         );
+        nodemat.varyings.0.push(Varying { format: Atom::from("vec4"), name: Atom::from("v_pos_SS") });
+        nodemat.varyings.0.push(Varying { format: Atom::from("vec2"), name: Atom::from("vUV") });
+        nodemat.varyings.0.push(Varying { format: Atom::from("vec4"), name: Atom::from("vColor") });
+
         nodemat.fs_define = String::from("
     layout(location = 0) out vec4 gl_FragColor;
-    layout(location = 0) in vec4 v_pos_SS;
-    layout(location = 1) in vec2 vUV;
-    layout(location = 2) in vec4 vColor;
 "
         );
 

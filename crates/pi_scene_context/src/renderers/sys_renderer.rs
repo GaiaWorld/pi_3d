@@ -9,7 +9,6 @@ use crate::{
     geometry::prelude::*,
     transforms::prelude::*,
     meshes::prelude::*,
-    commands::*,
     flags::*
 };
 
@@ -109,7 +108,7 @@ use super::{
         models: Query<
             (&GeometryID, &I),
         >,
-        geometrys: Query<(Entity, &MeshID), Or<(Changed<EVerticeExtendCodeComp>, Changed<VertexBufferLayoutsComp>)>>,
+        geometrys: Query<(Entity, &MeshID), Changed<VertexBufferLayoutsComp>>,
         mut passes: Query<&mut PassGeometryID, With<T>>,
     ) {
         // let time1 = pi_time::Instant::now();
@@ -129,7 +128,7 @@ use super::{
 /// 渲染器搜集渲染
     pub fn sys_pass_shader(
         models: Query<&RenderAlignment>,
-        geometrys: Query<(&EVerticeExtendCodeComp, &VertexBufferLayoutsComp)>, 
+        geometrys: Query<&VertexBufferLayoutsComp>, 
         mut passes: Query<
             (ObjectID, &DisposeReady, &PassModelID, &PassGeometryID, &PassEffectReady, &PassBindGroups, &mut PassShader),
             Or<(Changed<PassBindGroups>, Changed<PassGeometryID>)>
@@ -146,9 +145,9 @@ use super::{
             if let (Some((key_meta, meta)), Some(bindgroups)) = (ready.val(), bindgroups.val()) {
                 // log::debug!("SysPassShaderRequestByPass: 1");
                 match (models.get(id_model.0), geometrys.get(id_geo.0)) {
-                    (Ok(renderalignment), Ok((instance, vb))) => {
+                    (Ok(renderalignment), Ok(vb)) => {
                         if let Ok(shader) = shader(
-                            id_pass, meta, key_meta, &instance, vb, bindgroups, renderalignment, &assets, &device
+                            id_pass, meta, key_meta, vb, bindgroups, renderalignment, &assets, &device
                         ) {
                             // log::error!("Shader Success");
                 
@@ -482,7 +481,7 @@ fn shader(
     _id_pass: Entity,
     meta: &Handle<ShaderEffectMeta>,
     key_meta: &Atom,
-    instance: &EVerticeExtendCode,
+    // instance: &EVerticeExtendCode,
     vb: &VertexBufferLayoutsComp,
     bindgroups: &BindGroups3D,
     renderalignment: &RenderAlignment,
@@ -491,7 +490,7 @@ fn shader(
 ) -> Result<Handle<Shader3D>, Shader3D> {
     
     // log::error!("Shader: {:?}", 2);
-    let key_attributes = vb.as_key_shader_from_attributes();
+    let key_attributes = &vb.1;
     // let key_shader_defines = 0;
 
     // let key_set_blocks = bindgroups.key_set_blocks();
@@ -503,13 +502,16 @@ fn shader(
     let mut vs_defined_snippets = vec![];
     let mut fs_defined_snippets = vec![];
     let mut vs_running_model_snippets = vec![];
-    let mut vs_running_after_effect_snippets = vec![];
+    let vs_running_after_effect_snippets = vec![];
     let vs_running_before_effect_snippets = vec![];
     let fs_running_before_effect_snippets = vec![];
     let fs_running_after_effect_snippets = vec![];
 
+    // log::error!("Shader: {:?}", key_meta);
+    // log::error!("{:?}", key_attributes);
+    // log::error!("{:?}", key_attributes.vs_define_code());
+
     vs_defined_snippets.push(key_attributes.vs_define_code());
-    vs_running_model_snippets.push(key_attributes.vs_running_code());
 
     if let Some(set) = set0 {
         vs_defined_snippets.push(set.vs_define_code(setidx));
@@ -522,8 +524,8 @@ fn shader(
         vs_defined_snippets.push(set.vs_define_code(setidx));
         fs_defined_snippets.push(set.fs_define_code(setidx));
 
-        vs_running_model_snippets.push(set.vs_running_model_snippet());
-        vs_running_model_snippets.push(instance.vs_running_code());
+        vs_running_model_snippets.push(set.vs_running_model_snippet(meta));
+        // vs_running_model_snippets.push(instance.vs_running_code());
         vs_running_model_snippets.push(skin.running_code());
         vs_running_model_snippets.push(renderalignment.running_code());
 
@@ -531,6 +533,7 @@ fn shader(
 
         setidx += 1;
     }
+    vs_running_model_snippets.push(key_attributes.vs_running_code(meta));
 
     // let set2 = 
     if let Some(set) = set2 {
@@ -549,17 +552,16 @@ fn shader(
         // Some(set2.as_ref())
     }
 
-    if meta.check_instance.0 & instance.0 == meta.check_instance.0 {
-        vs_running_after_effect_snippets.push(meta.effect_varying_while_instance.clone());
-    }
+    // if meta.check_instance.0 & instance.0 == meta.check_instance.0 {
+    //     vs_running_after_effect_snippets.push(meta.effect_varying_while_instance.clone());
+    // }
 
     let key_shader = KeyShader3D {
         key_meta: key_meta.clone(),
         // lighting: lightingenable,
         bind_defines: meta.binddefines,
-        key_attributes,
+        key_attributes: key_attributes.clone(),
         renderalignment: renderalignment.0,
-        instance: *instance,
     };
 
     if let Some(shader) = assets.get(&key_shader) {
@@ -604,7 +606,7 @@ fn pipeline(
     let bind_group_layouts = bindgroups.bind_group_layouts();
     let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
 
-    let key_vertex_layouts = KeyPipelineFromAttributes::new(vb.0.clone());
+    let key_vertex_layouts = vb.0.as_key_pipeline_from_vertex_layout();
 
     let pass_color_format = colorformat.val();
     let pass_depth_format = depthstencilformat.val();

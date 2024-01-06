@@ -1,11 +1,11 @@
 
 use pi_engine_shell::prelude::*;
-use pi_scene_math::{Vector4, Matrix};
+use pi_scene_math::*;
 
 use crate::{
     geometry::{
         prelude::*,
-        instance::{instance_boneoffset::*, instance_vec4::*, instance_float::EInstanceFloatType}
+        instance::types::{ModelInstanceAttributes, InstanceAttributeAnimated}
     },
     pass::*,
     renderers::prelude::*,
@@ -13,10 +13,8 @@ use crate::{
     layer_mask::prelude::*,
     transforms::command_sys::ActionTransformNode,
     skeleton::prelude::*,
-    materials::prelude::*,
     object::ActionEntity,
-    cullings::prelude::*,
-    commands::*,
+    cullings::prelude::*, prelude::{TypeAnimeContexts, TypeAnimeAssetMgrs}
 };
 
 use super::{
@@ -44,42 +42,82 @@ pub fn sys_create_mesh(
     });
 }
 
-pub fn sys_act_instanced_mesh_create(
+pub fn sys_create_instanced_mesh(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
     mut commands: Commands,
-    mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs)>,
+    mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &ModelInstanceAttributes)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, count)| {
-        if let Ok((id_scene, mut instancelist, mut flag)) = meshes.get_mut(source) {
-            if let Some(mut cmd) = commands.get_entity(source) {
-                cmd
-                    .insert(InstanceColorDirty(true))
-                    .insert(InstanceTillOffDirty(true))
-                    .insert(InstanceWorldMatrixDirty(true))
-                    .insert(InstanceCustomVec4ADirty(true))
-                    .insert(InstanceCustomVec4BDirty(true))
-                    .insert(InstanceCustomVec4CDirty(true))
-                    .insert(InstanceCustomVec4DDirty(true))
-                    ;
-            } else {
-                return;
-            };
+        if let Ok((id_scene, mut instancelist, mut flag, instanceattrs)) = meshes.get_mut(source) {
 
-            let mut ins_cmds = if let Some(cmd) = commands.get_entity(instance) {
-                cmd
-            } else {
-                return;
-            };
+            let instanceattrs = instanceattrs.clone();
 
+            if let Some(mut commands) = commands.get_entity(instance) {
+                commands.insert(instanceattrs);
+                commands.insert(TargetAnimatorableIsRunning).insert(InstanceAttributeAnimated::default());
+                ActionInstanceMesh::init(&mut commands, source, id_scene.0);
+    
+                instancelist.insert(instance);
+                *flag = DirtyInstanceSourceRefs;
+            }
             // 
-            ActionInstanceMesh::init(&mut ins_cmds, source, id_scene.0);
-            ActionAnime::as_anime_group_target(&mut ins_cmds);
-
-            instancelist.insert(instance);
-            *flag = DirtyInstanceSourceRefs;
         } else {
             if count < 2 {
                 cmds.push(OpsInstanceMeshCreation(source, instance, count + 1))
+            }
+        }
+    });
+}
+
+pub fn sys_act_target_animation_attribute(
+    mut cmds: ResMut<ActionListTargetAnimationAttribute>,
+    mut items: Query<(&mut ModelInstanceAttributes, &mut InstanceAttributeAnimated)>,
+    mut command: Commands,
+    mut animatorablefloat: ResMut<ActionListAnimatorableFloat>,
+    mut animatorablevec2s: ResMut<ActionListAnimatorableVec2>,
+    mut animatorablevec3s: ResMut<ActionListAnimatorableVec3>,
+    mut animatorablevec4s: ResMut<ActionListAnimatorableVec4>,
+    mut animatorableuints: ResMut<ActionListAnimatorableUint>,
+    mut animatorablesints: ResMut<ActionListAnimatorableSint>,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
+    mut targetanimations: ResMut<ActionListAddTargetAnime>,
+) {
+    cmds.drain().drain(..).for_each(|OpsTargetAnimationAttribute(item, attr, group, curve)| {
+        if let Ok((mut attributes, mut animated)) = items.get_mut(item) {
+            if let Some(offset) = attributes.animator(&attr, item, &mut command, &mut animatorablefloat, &mut animatorablevec2s, &mut animatorablevec3s, &mut animatorablevec4s, &mut animatorableuints, &mut animatorablesints) {
+                match offset.entity() {
+                    Some(target) => {
+                        animated.add(&attr);
+                        match offset.atype() {
+                            EAnimatorableType::Vec4 => if let Some(curve) = anime_assets.vec4s.get(&curve) {
+                                let anime = anime_contexts.vec4s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                            },
+                            EAnimatorableType::Vec3 => if let Some(curve) = anime_assets.vec3s.get(&curve) {
+                                let anime = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                            },
+                            EAnimatorableType::Vec2 => if let Some(curve) = anime_assets.vec2s.get(&curve) {
+                                let anime = anime_contexts.vec2s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                            },
+                            EAnimatorableType::Float => if let Some(curve) = anime_assets.float.get(&curve) {
+                                let anime = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                            },
+                            EAnimatorableType::Uint => if let Some(curve) = anime_assets.uints.get(&curve) {
+                                let anime = anime_contexts.uints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                            },
+                            EAnimatorableType::Int => if let Some(curve) = anime_assets._ints.get(&curve) {
+                                let anime = anime_contexts._ints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                            },
+                        }
+                    },
+                    None => { },
+                }
             }
         }
     });
@@ -111,134 +149,93 @@ pub fn sys_act_mesh_modify(
     });
 }
 
-pub fn sys_act_instance_color_alpha(
-    mut cmds: ResMut<ActionListInstanceColorAlpha>,
-    entities: Query<Entity>,
-    mut instances: Query<(&InstanceMesh, &mut InstanceColor)>,
+pub fn sys_act_instance_attribute(
+    mut cmdsfloat: ResMut<ActionListInstanceFloat>,
+    mut cmdsvec4s: ResMut<ActionListInstanceVec4>,
+    mut cmdsvec3s: ResMut<ActionListInstanceVec3>,
+    mut cmdsvec2s: ResMut<ActionListInstanceVec2>,
+    mut cmdsuints: ResMut<ActionListInstanceUint>,
+    mut cmdssints: ResMut<ActionListInstanceSint>,
+    mut instances: Query<&mut ModelInstanceAttributes>,
+
+    mut animator_vec4: ResMut<ActionListAnimatorableVec4>,
+    mut animator_vec3: ResMut<ActionListAnimatorableVec3>,
+    mut animator_vec2: ResMut<ActionListAnimatorableVec2>,
+    mut animator_float: ResMut<ActionListAnimatorableFloat>,
+    mut animator_uint: ResMut<ActionListAnimatorableUint>,
+    mut animator_sint: ResMut<ActionListAnimatorableSint>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsInstanceColorAlpha(instance, r, g, b, a, count)| {
-        if entities.contains(instance) {
-            if let Ok((_source, mut instance_data)) = instances.get_mut(instance) {
-                *instance_data = InstanceColor(Vector4::new(r, g, b, a));
-            } else {
-                if count < 2 {
-                    cmds.push(OpsInstanceColorAlpha(instance, r, g, b, a, count + 1));
+
+    cmdsfloat.drain().drain(..).for_each(|OpsInstanceFloat(instance, val, attr)| {
+        if let Ok(mut attributes) = instances.get_mut(instance) {
+            if let Some(offset) = attributes.offset(&attr) {
+                if let Some(target) = offset.entity() {
+                    animator_float.push(OpsAnimatorableFloat::ops(target, instance, AnimatorableFloat(val), EAnimatorableEntityType::Attribute));
+                } else {
+                    let mut offset = offset.offset() as usize;
+                    bytemuck::cast_slice(&[offset]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
                 }
             }
         }
     });
-}
-
-pub fn sys_act_instance_color(
-    mut cmds: ResMut<ActionListInstanceColor>,
-    entities: Query<Entity>,
-    mut instances: Query<(&InstanceMesh, &mut InstanceRGB)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsInstanceColor(instance, r, g, b, count)| {
-        if entities.contains(instance) {
-            if let Ok((_source, mut instance_data)) = instances.get_mut(instance) {
-                *instance_data = InstanceRGB(r, g, b);
-            } else {
-                if count < 2 {
-                    cmds.push(OpsInstanceColor(instance, r, g, b, count + 1));
+    cmdsvec4s.drain().drain(..).for_each(|OpsInstanceVec4(instance, val, attr)| {
+        if let Ok(mut attributes) = instances.get_mut(instance) {
+            if let Some(offset) = attributes.offset(&attr) {
+                if let Some(target) = offset.entity() {
+                    animator_vec4.push(OpsAnimatorableVec4::ops(target, instance, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Attribute));
+                } else {
+                    let mut offset = offset.offset() as usize;
+                    bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
                 }
             }
         }
     });
-}
-
-pub fn sys_act_instance_alpha(
-    mut cmds: ResMut<ActionListInstanceAlpha>,
-    entities: Query<Entity>,
-    mut instances: Query<(&InstanceMesh, &mut InstanceAlpha)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsInstanceAlpha(instance, val, count)| {
-        if entities.contains(instance) {
-            if let Ok((_source, mut instance_data)) = instances.get_mut(instance) {
-                *instance_data = InstanceAlpha(val);
-            } else {
-                if count < 2 {
-                    cmds.push(OpsInstanceAlpha(instance, val, count + 1));
+    cmdsvec3s.drain().drain(..).for_each(|OpsInstanceVec3(instance, val, attr)| {
+        if let Ok(mut attributes) = instances.get_mut(instance) {
+            if let Some(offset) = attributes.offset(&attr) {
+                if let Some(target) = offset.entity() {
+                    animator_vec3.push(OpsAnimatorableVec3::ops(target, instance, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Attribute));
+                } else {
+                    let mut offset = offset.offset() as usize;
+                    bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
                 }
             }
         }
     });
-}
-
-pub fn sys_act_instance_tilloff(
-    mut cmds: ResMut<ActionListInstanceTillOff>,
-    entities: Query<Entity>,
-    mut instances: Query<(&InstanceMesh, &mut InstanceTillOff)>,
-    mut source_colors: Query<&mut InstanceTillOffDirty>,
-) {
-    cmds.drain().drain(..).for_each(|OpsInstanceTillOff(instance, val, count)| {
-        if entities.contains(instance) {
-            if let Ok((source, mut instance_data)) = instances.get_mut(instance) {
-                *instance_data = InstanceTillOff(val);
-                if let Ok(mut flag) = source_colors.get_mut(source.0) {
-                    *flag = InstanceTillOffDirty(true);
-                }
-            } else {
-                if count < 2 {
-                    cmds.push(OpsInstanceTillOff(instance, val, count + 1));
+    cmdsvec2s.drain().drain(..).for_each(|OpsInstanceVec2(instance, val, attr)| {
+        if let Ok(mut attributes) = instances.get_mut(instance) {
+            if let Some(offset) = attributes.offset(&attr) {
+                if let Some(target) = offset.entity() {
+                    animator_vec2.push(OpsAnimatorableVec2::ops(target, instance, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Attribute));
+                } else {
+                    let mut offset = offset.offset() as usize;
+                    bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
                 }
             }
         }
     });
-}
-
-
-pub fn sys_act_instance_float(
-    mut cmds: ResMut<ActionListInstanceFloat>,
-    entities: Query<Entity>,
-    mut instances: Query<(&InstanceMesh, &mut InstanceCustomVec4A, &mut InstanceCustomVec4B, &mut InstanceCustomVec4C, &mut InstanceCustomVec4D)>,
-    mut sources: Query<(&mut InstanceCustomVec4ADirty, &mut InstanceCustomVec4BDirty, &mut InstanceCustomVec4CDirty, &mut InstanceCustomVec4DDirty)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsInstanceFloat(instance, val, usetype)| {
-        if entities.contains(instance) {
-            // log::warn!("Instance Float 1");
-            if let Ok((source, mut a_data, mut b_data, mut c_data, mut d_data)) = instances.get_mut(instance) {
-                // log::warn!("Instance Float 2");
-                if let Ok((mut adirty, mut bdirty, mut cdirty, mut ddirty)) = sources.get_mut(source.0) {
-                    // log::warn!("Instance Float 3");
-                    match usetype {
-                        EInstanceFloatType::F00 => { a_data.0 = val; *adirty = InstanceCustomVec4ADirty(true); },
-                        EInstanceFloatType::F01 => { a_data.1 = val; *adirty = InstanceCustomVec4ADirty(true); },
-                        EInstanceFloatType::F02 => { a_data.2 = val; *adirty = InstanceCustomVec4ADirty(true); },
-                        EInstanceFloatType::F03 => { a_data.3 = val; *adirty = InstanceCustomVec4ADirty(true); },
-                        EInstanceFloatType::F04 => { b_data.0 = val; *bdirty = InstanceCustomVec4BDirty(true); },
-                        EInstanceFloatType::F05 => { b_data.1 = val; *bdirty = InstanceCustomVec4BDirty(true); },
-                        EInstanceFloatType::F06 => { b_data.2 = val; *bdirty = InstanceCustomVec4BDirty(true); },
-                        EInstanceFloatType::F07 => { b_data.3 = val; *bdirty = InstanceCustomVec4BDirty(true); },
-                        EInstanceFloatType::F08 => { c_data.0 = val; *cdirty = InstanceCustomVec4CDirty(true); },
-                        EInstanceFloatType::F09 => { c_data.1 = val; *cdirty = InstanceCustomVec4CDirty(true); },
-                        EInstanceFloatType::F10 => { c_data.2 = val; *cdirty = InstanceCustomVec4CDirty(true); },
-                        EInstanceFloatType::F11 => { c_data.3 = val; *cdirty = InstanceCustomVec4CDirty(true); },
-                        EInstanceFloatType::F12 => { d_data.0 = val; *ddirty = InstanceCustomVec4DDirty(true); },
-                        EInstanceFloatType::F13 => { d_data.1 = val; *ddirty = InstanceCustomVec4DDirty(true); },
-                        EInstanceFloatType::F14 => { d_data.2 = val; *ddirty = InstanceCustomVec4DDirty(true); },
-                        EInstanceFloatType::F15 => { d_data.3 = val; *ddirty = InstanceCustomVec4DDirty(true); },
-                        _ => { 
-                            // log::warn!("Instance Float 4");
-                        }
-                    }
+    cmdsuints.drain().drain(..).for_each(|OpsInstanceUint(instance, val, attr)| {
+        if let Ok(mut attributes) = instances.get_mut(instance) {
+            if let Some(offset) = attributes.offset(&attr) {
+                if let Some(target) = offset.entity() {
+                    animator_uint.push(OpsAnimatorableUint::ops(target, instance, AnimatorableUint(val), EAnimatorableEntityType::Attribute));
+                } else {
+                    let mut offset = offset.offset() as usize;
+                    bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
                 }
             }
         }
     });
-}
-
-
-pub fn sys_act_bone_offset(
-    mut cmds: ResMut<ActionListBoneOffset>,
-    mut instances: Query<(&mut InstanceBoneoffset, &mut RecordInstanceBoneoffset)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsBoneOffset(entity, val, count)| {
-        if let Ok((mut instance, mut record)) = instances.get_mut(entity) {
-            *record = RecordInstanceBoneoffset(InstanceBoneoffset(val));
-            *instance = InstanceBoneoffset(val);
-        } else if count < 2 {
-            cmds.push(OpsBoneOffset(entity, val, count + 1))
+    cmdssints.drain().drain(..).for_each(|OpsInstanceSint(instance, val, attr)| {
+        if let Ok(mut attributes) = instances.get_mut(instance) {
+            if let Some(offset) = attributes.offset(&attr) {
+                if let Some(target) = offset.entity() {
+                    animator_sint.push(OpsAnimatorableSint::ops(target, instance, AnimatorableSint(val), EAnimatorableEntityType::Attribute));
+                } else {
+                    let mut offset = offset.offset() as usize;
+                    bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
+                }
+            }
         }
     });
 }
@@ -387,6 +384,17 @@ pub fn sys_act_mesh_force_hemi_lighting(
     });
 }
 
+pub fn sys_act_model_skinoffset(
+    mut cmds: ResMut<ActionListBoneOffset>,
+    items: Query<&BindModel>,
+) {
+    cmds.drain().drain(..).for_each(|OpsBoneOffset(entity, offset)| {
+        if let Ok(bind) = items.get(entity) {
+            bind.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[offset]));
+        }
+    });
+}
+
 pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
@@ -398,6 +406,7 @@ impl ActionMesh {
         state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
     ) -> bool {
+        let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
@@ -405,9 +414,10 @@ impl ActionMesh {
         };
 
         ActionTransformNode::init(&mut entitycmd, scene);
-        ActionAnime::as_anime_group_target(&mut entitycmd);
         ActionMesh::as_mesh(&mut entitycmd, empty.id());
         ActionMesh::as_instance_source(&mut entitycmd);
+        // ActionMesh::as_instance_source(&mut entitycmd);
+        entitycmd.insert(TargetAnimatorableIsRunning).insert(InstanceAttributeAnimated::default());
 
         if let Some(bind) = BindModel::new(allocator) {
             // log::info!("BindModel New");
@@ -425,6 +435,8 @@ impl ActionMesh {
 
         entitycmd.insert(MeshStates::default());
         entitycmd.insert(DirtyMeshStates);
+
+        entitycmd.insert(meshinstanceattributes);
         entitycmd.insert(state);
 
         create_passobj::<Pass01, PassID01>(entity, commands, empty.id(), scene );
@@ -493,8 +505,6 @@ impl ActionMesh {
             .insert(GeometryBounding::default())
             .insert(GeometryCullingMode::default())
             .insert(InstancedMeshTransparentSortCollection(vec![]))
-            .insert(InstanceBoneoffset::default())
-            .insert(RecordInstanceBoneoffset::default())
             ;
     }
     // pub fn create(
@@ -542,14 +552,6 @@ impl ActionMesh {
         commands
             .insert(InstanceSourceRefs::default())
             .insert(DirtyInstanceSourceRefs::default())
-            .insert(InstanceWorldMatrixDirty(false))
-            .insert(InstanceColorDirty(false))
-            .insert(InstanceTillOffDirty(false))
-            .insert(InstanceBoneOffsetDirty(false))
-            .insert(InstanceCustomVec4ADirty(false))
-            .insert(InstanceCustomVec4BDirty(false))
-            .insert(InstanceCustomVec4CDirty(false))
-            .insert(InstanceCustomVec4DDirty(false))
             ;
     }
 }
@@ -571,17 +573,6 @@ impl ActionInstanceMesh {
         commands.insert(AbstructMeshCullingFlag(false));
         commands.insert(InstanceTransparentIndex(0));
         commands.insert(InstanceMesh(source));
-        commands.insert(InstanceRGB(1., 1., 1.));
-        commands.insert(InstanceAlpha(1.));
-        commands.insert(InstanceColor(Vector4::new(1., 1., 1., 1.)));
-        commands.insert(InstanceTillOff(Vector4::new(1., 1., 0., 0.)));
-        commands.insert(InstanceBoneoffset::default());
-        commands.insert(RecordInstanceBoneoffset::default());
-        
-        commands.insert(InstanceCustomVec4A::default());
-        commands.insert(InstanceCustomVec4B::default());
-        commands.insert(InstanceCustomVec4C::default());
-        commands.insert(InstanceCustomVec4D::default());
 
         commands.insert(RenderMatrixDirty(true));
         commands.insert(RenderWorldMatrix(Matrix::identity()));

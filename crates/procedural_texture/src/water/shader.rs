@@ -36,7 +36,7 @@ impl WaterShader {
             vec![],
             Varyings(vec![]),
             String::from(""),
-            EVerticeExtendCode::default(),
+            // EVerticeExtendCode::default(),
             BlockCodeAtom {
                 define: Atom::from(""),
                 running: Atom::from(include_str!("../assets/skybox.vert")),

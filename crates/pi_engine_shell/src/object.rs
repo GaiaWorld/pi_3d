@@ -7,92 +7,141 @@ use crate::prelude::*;
 
 pub type ObjectID = Entity;
 
-// pub trait InterfaceObject {
-//     fn new_object(
-//         &mut self
-//     ) -> ObjectID;
-//     fn remove_object(
-//         &mut self,
-//         id: ObjectID,
-//     ) -> &Self;
-// }
+/// 准备销毁
+#[derive(Component)]
+pub struct DisposeReady(pub bool);
+impl Default for DisposeReady {
+    fn default() -> Self {
+        Self(false)
+    }
+}
 
-// impl InterfaceObject for crate::engine_shell::EnginShell {
-//     fn new_object(
-//         &mut self
-//     ) -> ObjectID {
-//         self.world.spawn_empty().id()
-//     }
+/// 可以销毁
+#[derive(Component)]
+pub struct DisposeCan(pub bool);
+impl Default for DisposeCan {
+    fn default() -> Self {
+        Self(false)
+    }
+}
 
-//     fn remove_object(
-//         &mut self,
-//         id: ObjectID,
-//     ) -> &Self {
-//         self.world.despawn(id);
+pub struct ActionEntity;
+impl ActionEntity {
+    pub fn init(entitycmd: &mut EntityCommands) {
+        entitycmd.insert(DisposeReady::default()).insert(DisposeCan::default());
+    }
+}
 
-//         self
-//     }
-// }
+pub struct OpsDisposeReady(pub(crate) Entity);
+impl OpsDisposeReady {
+    pub fn ops(entity: Entity) -> Self {
+        Self(entity)
+    }
+}
+/// 外部操作， 内部不可操作
+pub type ActionListDisposeReady = ActionList<OpsDisposeReady>;
 
-// #[derive(Debug, Default, Resource)]
-// pub struct SingleObjectCommand(Vec<ObjectID>);
+pub struct OpsDisposeReadyForRef(pub(crate) Entity);
+impl OpsDisposeReadyForRef {
+    pub fn ops(entity: Entity) -> Self {
+        Self(entity)
+    }
+}
+pub type ActionListDisposeReadyForRef = ActionList<OpsDisposeReadyForRef>;
 
-// pub fn sys_object(
-//     mut cmds: ResMut<SingleObjectCommand>,
-//     mut tree: EntityTreeMut,
-//     mut delete: Commands,
-// ) {
-//     let mut list = replace(&mut cmds.0, vec![]);
+pub struct OpsDisposeCan(pub(crate) Entity);
+impl OpsDisposeCan {
+    pub fn ops(entity: Entity) -> Self {
+        Self(entity)
+    }
+}
+pub type ActionListDisposeCan = ActionList<OpsDisposeCan>;
 
-//     list.drain(..).for_each(|id| {
-//         let mut begin = 0;
-//         let mut end = 1;
-//         let mut count = 1;
-//         let mut loopcount = 0;
-//         let mut temp = vec![];
-//         temp.push(id);
+pub fn sys_dispose_ready(
+    mut cmds: ResMut<ActionListDisposeReady>,
+    mut cmdsforref: ResMut<ActionListDisposeReadyForRef>,
+    mut items: Query<&mut DisposeReady>,
+    empty: Res<SingleEmptyEntity>,
+) {
+    cmds.drain().drain(..).for_each(|OpsDisposeReady(entity)| {
+        if empty.id() == entity { return }
 
-//         loop {
-//             if count == 0 || loopcount >= 65535 {
-//                 break;
-//             }
-//             count = 0;
-//             loopcount += 1;
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = DisposeReady(true);
+        } else {
+            cmds.push(OpsDisposeReady(entity))
+        }
+    });
+    cmdsforref.drain().drain(..).for_each(|OpsDisposeReadyForRef(entity)| {
+        if empty.id() == entity { return }
 
-//             for i in begin..end {
-//                 if let Some(item) = tree.get_down(temp.get(i).unwrap().clone()) {
-//                     tree.iter(item.head.0).for_each(|item| {
-//                         count += 1;
-//                         temp.push(item);
-//                     });
-//                 }
-//             }
-//             begin = end;
-//             end = begin + count;
-//         }
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = DisposeReady(true);
+        } else {
+            cmdsforref.push(OpsDisposeReadyForRef(entity))
+        }
+    });
+}
+pub fn sys_dispose_can(
+    mut cmds: ResMut<ActionListDisposeCan>,
+    mut items: Query<&mut DisposeCan>,
+    empty: Res<SingleEmptyEntity>,
+) {
+    cmds.drain().drain(..).for_each(|OpsDisposeCan(entity)| {
+        if empty.id() == entity { return }
 
+        if let Ok(mut item) = items.get_mut(entity) {
+            *item = DisposeCan(true);
+        }
+    });
+}
 
+pub fn sys_dispose(
+    mut commands: Commands,
+    items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
+    mut tree: EntityTreeMut,
+) {
+    items.iter().for_each(|(entity, state)| {
+        if state.0 == true {
+            if let Some(mut commands) = commands.get_entity(entity) {
+                // log::debug!("despawn====={:?}", commands.id());
+                tree.remove(entity);
+                commands.despawn();
+            }
+        }
+    });
+}
 
-//         loop {
-//             if let Some(id) = temp.pop() {
-//                 if let Some(mut cmd) = delete.get_entity(id) {
-//                     cmd
-//                     .despawn();
-//                 }
-//             } else {
-//                 break;
-//             }
-//         }
+pub struct OpsSceneDispose(Entity);
+impl OpsSceneDispose {
+    pub fn ops(entity: Entity) -> OpsSceneDispose {
+        OpsSceneDispose(entity)
+    }
+}
+pub type ActionListSceneDispose = ActionList<OpsSceneDispose>;
+pub fn sys_act_scene_dispose(
+    mut cmds: ResMut<ActionListSceneDispose>,
+    mut items: Query<&mut DisposeReady>,
+) {
+    cmds.drain().drain(..).for_each(|OpsSceneDispose(idscene)| {
+        if let Ok(mut item) = items.get_mut(idscene) {
+            *item = DisposeReady(true);
+        } else {
+            cmds.push(OpsSceneDispose(idscene))
+        }
+    });
+}
 
-//         tree.remove(id);
-//     });
-// }
-
-// pub struct PluginObject;
-// impl Plugin for PluginObject {
-//     fn build(&self, app: &mut bevy::prelude::App) {
-//         app.world.insert_resource(SingleObjectCommand::default());
-        
-//         app.add_systems(Update, sys_object);
-//     }
-// }
+pub struct PluginDispose;
+impl Plugin for PluginDispose {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(ActionListSceneDispose::default());
+        app.insert_resource(ActionListDisposeReadyForRef::default());
+        app.insert_resource(ActionListDisposeReady::default());
+        app.insert_resource(ActionListDisposeCan::default());
+        app.add_systems(Update, sys_act_scene_dispose.in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_dispose_ready.in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose_can.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update, sys_dispose.after(sys_dispose_can).in_set(ERunStageChap::Dispose));
+    }
+}

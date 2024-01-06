@@ -42,7 +42,7 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState { state: InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_COLOR, ..Default::default() };
+    let state = base::instance_attr(true, true, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     actions.mesh.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
 
@@ -53,9 +53,11 @@ fn setup(
     actions.transform.create.push(OpsTransformNode::ops(scene, root));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = animegroupres.scene_ctxs.create_group(scene).unwrap();
-    animegroupres.global.record_group(source, id_group);
-    actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
+    let id_group = commands.spawn_empty().id();
+    // animegroupres.scene_ctxs.create_group(scene).unwrap();
+    // animegroupres.global.record_group(source, id_group);
+    actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+    // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     
     let key_curve0 = pi_atom::Atom::from("test");
     let key_curve0 = key_curve0.asset_u64();
@@ -66,17 +68,13 @@ fn setup(
         curve
     } else {
         match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
-            Ok(value) => {
-                value
-            },
-            Err(_) => {
-                return;
-            },
+            Ok(value) => { value },
+            Err(_) => { return; },
         }
     };
     let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    animegroupres.scene_ctxs.add_target_anime(scene, root, id_group.clone(), animation);
-    animegroupres.scene_ctxs.start_with_progress(scene, id_group.clone(), AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE);
+    actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), root, animation));
+    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
 
     let temproot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(temproot, root));
     actions.transform.create.push(OpsTransformNode::ops(scene, temproot));
@@ -101,7 +99,7 @@ fn setup(
                 let z = (k as f32 - size as f32 / 2.) + 0.5;
                 actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(ins, x, y, z));
                 actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(ins, r, g, b));
-                actions.instance.color.push(OpsInstanceColor::ops(ins, r, g, b));
+                actions.instance.vec4s.push(OpsInstanceVec4::ops(ins, r, g, b, 1., Atom::from("InsColor4")));
             }
         }
     }
@@ -122,15 +120,18 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
 
+    app.add_systems(Update, pi_3d::sys_info_node);
+    app.add_systems(Update, pi_3d::sys_info_resource);
+    app.add_systems(Update, pi_3d::sys_info_draw);
     app.add_systems(Startup, setup.after(base::setup_default_mat));
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    while !app.ready() {
-        #[cfg(not(target_arch = "wasm32"))]
-        bevy::tasks::tick_global_task_pools_on_main_thread();
-    }
-    app.finish();
-    app.cleanup();
+    // while !app.ready() {
+    //     #[cfg(not(target_arch = "wasm32"))]
+    //     bevy::tasks::tick_global_task_pools_on_main_thread();
+    // }
+    // app.finish();
+    // app.cleanup();
 
     // app.run()
     loop { app.update(); }

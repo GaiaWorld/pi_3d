@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
-use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 
 use crate::{
     pass::*,
-    object::ActionEntity,
-    commands::*,
+    object::ActionEntity, prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts},
 };
 
 use super::{
@@ -28,11 +26,6 @@ pub fn sys_create_material(
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
-    mut animatorablefloats: ResMut<ActionListAnimatorableFloat>,
-    mut animatorablevec2s: ResMut<ActionListAnimatorableVec2>,
-    mut animatorablevec3s: ResMut<ActionListAnimatorableVec3>,
-    mut animatorablevec4s: ResMut<ActionListAnimatorableVec4>,
-    mut animatorableuints: ResMut<ActionListAnimatorableUint>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader)| {
         // log::warn!("MaterialInit: {:?}", entity);
@@ -43,12 +36,10 @@ pub fn sys_create_material(
         };
 
         if let Some(meta) = asset_shader.get(&key_shader) {
-            let effect_val_bind = BindEffectValues::new(&mut commands, entity, &device, key_shader.clone(), meta.clone(), &mut allocator, (&mut animatorablefloats, &mut animatorablevec2s, &mut animatorablevec3s, &mut animatorablevec4s, &mut animatorableuints));
+            let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
             let mut matcmds = commands.entity(entity);
-
             matcmds.insert(BindEffect(effect_val_bind));
             matcmds.insert(AssetResShaderEffectMeta::from(meta));
-
         } else {
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
         }
@@ -106,7 +97,7 @@ pub fn sys_act_material_use(
         // & PassID09, & PassID10, & PassID11, & PassID12
     )>,
     mut linkedtargets: Query<&mut LinkedMaterialID>,
-    mut passes: Query<&mut PassMaterialID>,
+    passes: Query<&PassMaterialID>,
     empty: Res<SingleEmptyEntity>,
     mut errors: ResMut<ErrorRecord>,
 ) {
@@ -115,14 +106,14 @@ pub fn sys_act_material_use(
             OpsMaterialUse::Use(id_mesh, id_mat, pass) => {
                 if let Ok((mut materialrefs, mut flag)) = materials.get_mut(id_mat) {
                     if let Ok(mut matid) = linkedtargets.get_mut(id_mesh) {
+                        let oldmat = matid.0;
                         if matid.0 != id_mat {
-                            let old = matid.0;
                             // use
                             if materialrefs.insert(id_mesh) { *flag = DirtyMaterialRefs::default(); }
                             *matid = LinkedMaterialID(id_mat);
 
                             // unuse
-                            if let Ok((mut materialrefs, mut flag)) = materials.get_mut(old) {
+                            if let Ok((mut materialrefs, mut flag)) = materials.get_mut(oldmat) {
                                 if materialrefs.remove(&id_mesh) { *flag = DirtyMaterialRefs::default(); }
                             }
                         }
@@ -145,16 +136,16 @@ pub fn sys_act_material_use(
 
                         renderobjectcmds.push(OpsPassObject::ops(id_mesh, id_mat, pass));
 
-                        if let Ok(mut matid) = passes.get_mut(id_pass) {
+                        if let Ok(matid) = passes.get(id_pass) {
                             // log::error!("Material Use Pass {:?}", pass);
-                            if matid.0 != id_mat {
-                                let old = matid.0;
+                            let oldmat = matid.0;
+                            if oldmat != id_mat {
                                 // use
                                 // *matid = PassMaterialID(id_mat);
                                 if materialrefs.insert(id_pass) { *flag = DirtyMaterialRefs::default(); }
                                 
                                 // unuse
-                                if let Ok((mut materialrefs, mut _flag)) = materials.get_mut(old) {
+                                if let Ok((mut materialrefs, mut _flag)) = materials.get_mut(oldmat) {
                                     if materialrefs.remove(&id_pass) {
                                         // *flag = DirtyMaterialRefs::default();
                                     }
@@ -204,53 +195,127 @@ pub fn sys_act_material_value(
     mut animator_float: ResMut<ActionListAnimatorableFloat>,
     mut animator_uint: ResMut<ActionListAnimatorableUint>,
 
-    bindvalues: Query<&BindEffect>,
+    mut bindvalues: Query<&mut BindEffect>,
 ) {
-    cmdsmat4.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, value)| {
-        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(entity) {
-            bindvalue.update(&slot, bytemuck::cast_slice(&value));
+    cmdsmat4.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, val)| {
+        if let Ok(mut bindvalue) = bindvalues.get_mut(entity) {
+            if let Some(bindvalue) = &mut bindvalue.0 {
+                let value = bytemuck::cast_slice(&val);
+                match bindvalue.offset(&slot) {
+                    Some(offset) => {
+                        let (strip, offset, entity) = offset.strip_offset();
+                        if strip <= value.len() {
+                            bindvalue.update(offset, &value[0..strip]);
+                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
+                        }
+                    },
+                    None => {},
+                }
+            }
         }
     });
     cmdsvec4.drain().drain(..).for_each(|OpsUniformVec4(linked, slot, x, y, z, w)| {
-        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
-            let val = [x, y, z, w];
-            match bindvalue.update(&slot, bytemuck::cast_slice(&val)) {
-                Some(target) => { animator_vec4.push(OpsAnimatorableVec4::ops(target, linked, AnimatorableVec4::from(&val))) },
-                None => {},
+        if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
+            if let Some(bindvalue) = &mut bindvalue.0 {
+                let val = [x, y, z, w];
+                let value = bytemuck::cast_slice(&val);
+                match bindvalue.offset(&slot) {
+                    Some(offset) => {
+                        let (strip, offset, entity) = offset.strip_offset();
+                        if strip <= value.len() {
+                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
+                            bindvalue.update(offset, &value[0..strip]);
+                        }
+                        if let Some(target) = entity {
+                            animator_vec4.push(OpsAnimatorableVec4::ops(target, linked, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Uniform));
+                        }
+                    },
+                    None => {},
+                }
             }
         }
     });
     cmdsvec3.drain().drain(..).for_each(|OpsUniformVec3(linked, slot, x, y, z)| {
-        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
-            let val = [x, y, z];
-            match bindvalue.update(&slot, bytemuck::cast_slice(&val)) {
-                Some(target) => { animator_vec3.push(OpsAnimatorableVec3::ops(target, linked, AnimatorableVec3::from(&val))) },
-                None => {},
+        if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
+            if let Some(bindvalue) = &mut bindvalue.0 {
+                let val = [x, y, z];
+                let value = bytemuck::cast_slice(&val);
+                match bindvalue.offset(&slot) {
+                    Some(offset) => {
+                        let (strip, offset, entity) = offset.strip_offset();
+                        if strip <= value.len() {
+                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
+                            bindvalue.update(offset, &value[0..strip]);
+                        }
+                        if let Some(target) = entity {
+                            animator_vec3.push(OpsAnimatorableVec3::ops(target, linked, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Uniform));
+                        }
+                    },
+                    None => {},
+                }
             }
         }
     });
     cmdsvec2.drain().drain(..).for_each(|OpsUniformVec2(linked, slot, x, y)| {
-        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
-            let val = [x, y];
-            match bindvalue.update(&slot, bytemuck::cast_slice(&val)) {
-                Some(target) => { animator_vec2.push(OpsAnimatorableVec2::ops(target, linked, AnimatorableVec2::from(&val))) },
-                None => {},
+        if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
+            if let Some(bindvalue) = &mut bindvalue.0 {
+                let val = [x, y];
+                let value = bytemuck::cast_slice(&val);
+                match bindvalue.offset(&slot) {
+                    Some(offset) => {
+                        let (strip, offset, entity) = offset.strip_offset();
+                        if strip <= value.len() {
+                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
+                            bindvalue.update(offset, &value[0..strip]);
+                        }
+                        if let Some(target) = entity {
+                            animator_vec2.push(OpsAnimatorableVec2::ops(target, linked, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Uniform));
+                        }
+                    },
+                    None => {},
+                }
             }
         }
     });
     cmdsfloat.drain().drain(..).for_each(|OpsUniformFloat(linked, slot, val)| {
-        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
-            match bindvalue.update(&slot, bytemuck::cast_slice(&[val])) {
-                Some(target) => { animator_float.push(OpsAnimatorableFloat::ops(target, linked, AnimatorableFloat(val))) },
-                None => {},
+        if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
+            if let Some(bindvalue) = &mut bindvalue.0 {
+                let vv = [val];
+                let value = bytemuck::cast_slice(&vv);
+                match bindvalue.offset(&slot) {
+                    Some(offset) => {
+                        let (strip, offset, entity) = offset.strip_offset();
+                        if strip <= value.len() {
+                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
+                            bindvalue.update(offset, &value[0..strip]);
+                        }
+                        if let Some(target) = entity {
+                            animator_float.push(OpsAnimatorableFloat::ops(target, linked, AnimatorableFloat(val), EAnimatorableEntityType::Uniform));
+                        }
+                    },
+                    None => {},
+                }
             }
         }
     });
     cmdsuint.drain().drain(..).for_each(|OpsUniformUint(linked, slot, val)| {
-        if let Ok(BindEffect(Some(bindvalue))) = bindvalues.get(linked) {
-            match bindvalue.update(&slot, bytemuck::cast_slice(&[val])) {
-                Some(target) => { animator_uint.push(OpsAnimatorableUint::ops(target, linked, AnimatorableUint(val))) },
-                None => {},
+        if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
+            if let Some(bindvalue) = &mut bindvalue.0 {
+                let vv = [val];
+                let value = bytemuck::cast_slice(&vv);
+                match bindvalue.offset(&slot) {
+                    Some(offset) => {
+                        let (strip, offset, entity) = offset.strip_offset();
+                        if strip <= value.len() {
+                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
+                            bindvalue.update(offset, &value[0..strip]);
+                        }
+                        if let Some(target) = entity {
+                            animator_uint.push(OpsAnimatorableUint::ops(target, linked, AnimatorableUint(val), EAnimatorableEntityType::Uniform));
+                        }
+                    },
+                    None => {},
+                }
             }
         }
     });
@@ -321,15 +386,53 @@ pub fn sys_act_material_texture_from_target(
 
 pub fn sys_act_target_animation_uniform(
     mut cmds: ResMut<ActionListTargetAnimationUniform>,
-    mut scene_ctxs: ResMut<SceneAnimationContextMap>,
-    mut items: Query<(&BindEffect, &mut UniformAnimated)>,
+    mut items: Query<(&mut BindEffect, &mut UniformAnimated)>,
+    mut command: Commands,
+    mut animatorablefloat: ResMut<ActionListAnimatorableFloat>,
+    mut animatorablevec2s: ResMut<ActionListAnimatorableVec2>,
+    mut animatorablevec3s: ResMut<ActionListAnimatorableVec3>,
+    mut animatorablevec4s: ResMut<ActionListAnimatorableVec4>,
+    mut animatorableuints: ResMut<ActionListAnimatorableUint>,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
+    mut targetanimations: ResMut<ActionListAddTargetAnime>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTargetAnimationUniform(idscene, idmat, attr, group, animation)| {
-        if let Ok((BindEffect(Some(bind)), mut animated)) = items.get_mut(idmat) {
-            if let Some(uniform) = bind.offset(&attr) {
-                if let Some(target) = uniform.entity() {
-                    animated.add(&attr);
-                    scene_ctxs.add_target_anime(idscene, target, group, animation);
+    cmds.drain().drain(..).for_each(|OpsTargetAnimationUniform(idmat, attr, group, curve)| {
+        if let Ok((mut bindvalue, mut animated)) = items.get_mut(idmat) {
+            if let Some(bind) = &mut bindvalue.0 {
+                if let Some(offset) = bind.animator(&attr, idmat, &mut command, &mut animatorablefloat, &mut animatorablevec2s, &mut animatorablevec3s, &mut animatorablevec4s, &mut animatorableuints) {
+                    match offset.entity() {
+                        Some(target) => {
+                            animated.add(&attr);
+                            match offset.atype() {
+                                EAnimatorableType::Vec4 => if let Some(curve) = anime_assets.vec4s.get(&curve) {
+                                    let anime = anime_contexts.vec4s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                },
+                                EAnimatorableType::Vec3 => if let Some(curve) = anime_assets.vec3s.get(&curve) {
+                                    let anime = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                },
+                                EAnimatorableType::Vec2 => if let Some(curve) = anime_assets.vec2s.get(&curve) {
+                                    let anime = anime_contexts.vec2s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                },
+                                EAnimatorableType::Float => if let Some(curve) = anime_assets.float.get(&curve) {
+                                    let anime = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                },
+                                EAnimatorableType::Uint => if let Some(curve) = anime_assets.uints.get(&curve) {
+                                    let anime = anime_contexts.uints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                },
+                                EAnimatorableType::Int => if let Some(curve) = anime_assets._ints.get(&curve) {
+                                    let anime = anime_contexts._ints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                },
+                            }
+                        },
+                        None => { },
+                    }
                 }
             }
         }

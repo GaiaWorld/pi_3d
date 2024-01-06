@@ -21,7 +21,7 @@ use base::*;
 use command::*;
 use command_sys::*;
 use pi_scene_context::prelude::*;
-use pi_trail_renderer::TrailBuffer;
+use pi_trail_renderer::{TrailBuffer, sys_create_trail_mesh};
 use system::*;
 
 pub struct PluginParticleSystem;
@@ -60,7 +60,7 @@ impl Plugin for PluginParticleSystem {
             sys_create_particle_calculator.in_set(ERunStageChap::Initial),
         );
         app.add_systems(Update, 
-            sys_create_cpu_partilce_system.in_set(ERunStageChap::Initial),
+            sys_create_cpu_partilce_system.after(sys_create_trail_mesh).in_set(ERunStageChap::Initial),
         );
         app.add_systems(
 			Update,
