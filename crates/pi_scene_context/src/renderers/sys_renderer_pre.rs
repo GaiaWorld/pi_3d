@@ -89,8 +89,11 @@ pub fn sys_passrendererid_pass_reset<T: TPass + Component, I: TPassID + Componen
                             if rendererenable.0 == true && *passtag == T::TAG {
                                 // log::error!("BBB 5 ");
                                 if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
-                                    passrenderer.0 = idrenderer;
-                                    passviewer.0 = idviewer;
+                                    // passrenderer.0 = idrenderer;
+                                    // passviewer.0 = idviewer;
+
+                                    if passviewer.0 != idviewer { *passviewer = PassViewerID(idviewer); }
+                                    if passrenderer.0 != idrenderer { *passrenderer = PassRendererID(idrenderer); }
                                     // log::warn!("Dirty PassRenderID While Pass Reset");
                                 }
                             }
