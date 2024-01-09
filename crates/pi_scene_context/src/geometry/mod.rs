@@ -6,7 +6,7 @@ use pi_engine_shell::prelude::*;
 ///
 /// 网格信息单独与 GameObject 绑定
 
-use crate::{object::sys_dispose_ready, plugin::Plugin, prelude::*};
+use crate::{object::sys_dispose_ready, plugin::Plugin, prelude::*, scene::StageScene};
 
 use self::{
     sys_vertex_buffer_use::*,
@@ -53,13 +53,13 @@ impl Plugin for PluginGeometry {
         app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::create(GarbageEmpty(), cfg.flag, &cfg));
         app.insert_resource(GeometryVBLoader::default());
 
-        app.configure_set(Update, StageGeometry::Create.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, StageGeometry::CreateApply.after(StageGeometry::Create));
-        app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(StageGeometry::CreateApply));
-        app.configure_set(Update, StageGeometry::VertexBufferLoadedApply.after(StageGeometry::VertexBufferLoaded));
-        app.configure_set(Update, StageGeometry::GeometryLoaded.after(StageGeometry::VertexBufferLoadedApply).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageGeometry::CreateApply) );
-        app.add_systems(Update, apply_deferred.in_set(StageGeometry::VertexBufferLoadedApply) );
+        app.configure_set(Update, StageGeometry::Create.after(StageModel::_InitMesh));
+        app.configure_set(Update, StageGeometry::_GeoCreate.after(StageGeometry::Create));
+        app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(StageGeometry::_GeoCreate));
+        app.configure_set(Update, StageGeometry::_VertexBufferLoadedApply.after(StageGeometry::VertexBufferLoaded));
+        app.configure_set(Update, StageGeometry::GeometryLoaded.after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageGeometry::_GeoCreate) );
+        app.add_systems(Update, apply_deferred.in_set(StageGeometry::_VertexBufferLoadedApply) );
 
         app.add_systems(
 			Update,

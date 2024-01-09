@@ -45,8 +45,8 @@ pub fn sys_light_index_create(
 
 pub fn sys_direct_light_update(
     items: Query<
-        (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LayerMask, &GlobalEnable, &GlobalTransform),
-        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalTransform>)>
+        (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LayerMask, &GlobalEnable, &GlobalMatrix),
+        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalMatrix>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
@@ -62,8 +62,8 @@ pub fn sys_direct_light_update(
 
 pub fn sys_point_light_update(
     items: Query<
-        (&PointLight, &SceneID, &SceneItemIndex, &LightRadius, &LightColor, &LightStrength, &GlobalTransform, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightRadius>, Changed<LayerMask>, Changed<GlobalTransform>, Changed<GlobalEnable>)>
+        (&PointLight, &SceneID, &SceneItemIndex, &LightRadius, &LightColor, &LightStrength, &GlobalMatrix, &LayerMask, &GlobalEnable),
+        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightRadius>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
@@ -78,8 +78,8 @@ pub fn sys_point_light_update(
 
 pub fn sys_spot_light_update(
     items: Query<
-        (&SpotLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LightRadius, &SpotLightInAngle, &SpotLightOutAngle, &GlobalTransform, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightDirection>, Changed<LightColor>, Changed<LightStrength>, Changed<LightRadius>, Changed<SpotLightInAngle>, Changed<SpotLightOutAngle>, Changed<LayerMask>, Changed<GlobalTransform>, Changed<GlobalEnable>)>
+        (&SpotLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LightRadius, &SpotLightInAngle, &SpotLightOutAngle, &GlobalMatrix, &LayerMask, &GlobalEnable),
+        Or<(Changed<LightDirection>, Changed<LightColor>, Changed<LightStrength>, Changed<LightRadius>, Changed<SpotLightInAngle>, Changed<SpotLightOutAngle>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
@@ -94,8 +94,8 @@ pub fn sys_spot_light_update(
 
 pub fn sys_hemi_light_update(
     items: Query<
-        (&HemiGrounds, &SceneID, &SceneItemIndex, &LightColor, &GlobalTransform, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightColor>, Changed<LayerMask>, Changed<GlobalTransform>, Changed<GlobalEnable>)>
+        (&HemiGrounds, &SceneID, &SceneItemIndex, &LightColor, &GlobalMatrix, &LayerMask, &GlobalEnable),
+        Or<(Changed<LightColor>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {

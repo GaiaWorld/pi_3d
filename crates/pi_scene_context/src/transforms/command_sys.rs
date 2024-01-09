@@ -47,15 +47,6 @@ pub fn sys_act_transform_parent(
                     // ActionTransformNode::tree_modify(&mut tree, entity, val);
                 }
             }
-        //     else if count < 2 {
-        //         // log::warn!("WWWW2 child: {:?}, parent: {:?}",entity, val);
-        //         cmds.push(OpsTransformNodeParent(entity, val, count + 1));
-        //     }
-        // } else {
-        //     if count < 2 {
-        //         // log::warn!("WWWW child: {:?}, parent: {:?}",entity, val);
-        //         cmds.push(OpsTransformNodeParent(entity, val, count + 1));
-        //     }
         }
     });
 }
@@ -76,35 +67,6 @@ pub fn sys_act_local_rotation(
         }
     });
 }
-
-// pub fn sys_act_local_rotation(
-//     mut cmds: ResMut<ActionListTransformNodeLocalRotation>,
-//     mut nodes: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles, &mut LocalRotationQuaternion, &mut RecordLocalRotationQuaternion)>,
-// ) {
-//     cmds.drain().drain(..).for_each(|cmd| {
-//         match cmd {
-//             OpsTransformNodeLocalRotation::Euler(entity, x, y, z) => {
-//                 if let Ok((mut nodeeuler, mut recordeuler, mut nodequat, mut recordquat)) = nodes.get_mut(entity) {
-//                     let val = Vector3::new(x, y, z);
-//                     recordeuler.0 = LocalEulerAngles(val);
-//                     *nodeeuler = LocalEulerAngles(val);
-
-//                     let rotation = Rotation3::from_euler_angles(x, y, z);
-//                     let quat = Quaternion::from_rotation_matrix(&rotation);
-//                     recordquat.0 = LocalRotationQuaternion::create(quat.i, quat.j, quat.k, quat.w);
-//                     *nodequat = LocalRotationQuaternion::create(quat.i, quat.j, quat.k, quat.w);
-//                 }
-//             },
-//             OpsTransformNodeLocalRotation::Quaternion(entity, x, y, z, w) => {
-//                 if let Ok((mut nodeeuler, mut recordeuler, mut nodequat, mut recordquat)) = nodes.get_mut(entity) {
-//                     let quat = LocalRotationQuaternion::create(x, y, z, w);
-//                     recordquat.0 = quat.clone();
-//                     *nodequat = quat;
-//                 }
-//             },
-//         }
-//     });
-// }
 
 pub fn sys_act_local_position(
     mut cmds: ResMut<ActionListTransformNodeLocalPosition>,
@@ -181,7 +143,8 @@ impl ActionTransformNode {
             .insert(RecordLocalEulerAngles::default())
             .insert(LocalRotation(Rotation3::identity()))
             .insert(LocalMatrix::new(Matrix::identity()))
-            .insert(GlobalTransform::default())
+            .insert(GlobalMatrix::default())
+            .insert(AbsoluteTransform::default())
             .insert(FlagAnimationStartResetComp)
             .insert(CullingFlag(true))
             ;
@@ -190,7 +153,7 @@ impl ActionTransformNode {
     pub(crate) fn init_for_tree(
         commands: &mut EntityCommands,
     ) {
-        log::debug!("init_for_tree====={:?}", commands.id());
+        // log::debug!("init_for_tree====={:?}", commands.id());
         commands
             .insert(Down::default())
             .insert(Up::default())

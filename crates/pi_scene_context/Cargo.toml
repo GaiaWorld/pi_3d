@@ -63,6 +63,7 @@ pi_curves           = { version = "0.1", registry = "yn" }
 pi_postprocess      = { version = "0.1", registry = "yn" }
 
 pi_engine_shell     = { path = "../pi_engine_shell" }
+pi_mesh_builder     = { path = "../pi_mesh_builder" }
 
 [net]
 git-fetch-with-cli = true

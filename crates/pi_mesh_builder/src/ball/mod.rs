@@ -356,7 +356,7 @@ fn compute_uv(normalize: &[f32]) -> Vec<f32> {
  */
 pub fn generate_sphere(param: &BallParam) -> (Vec<f32>, Vec<f32>, Vec<u16>, Vec<f32>) {
     // Largely inspired from http://www.songho.ca/opengl/gl_sphere.html
-    let radius = 1.0;
+    let radius = 0.5;
     let sectors: usize = param.sectors;
     let stacks: usize = param.stacks;
 

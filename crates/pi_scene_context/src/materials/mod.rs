@@ -3,7 +3,7 @@ use pi_assets::asset::GarbageEmpty;
 use pi_engine_shell::prelude::*;
 
 
-use crate::{object::sys_dispose_ready, cameras::command_sys::sys_create_camera};
+use crate::{object::sys_dispose_ready, cameras::{command_sys::sys_create_camera, prelude::StageCamera}, scene::StageScene, shadow::prelude::StageShadowGenerator};
 
 use self::{
     command::*,
@@ -134,28 +134,31 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListTargetAnimationUniform::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::MaterialCommand.after(ERunStageChap::_InitialApply).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(ERunStageChap::Anime));
-        app.configure_set(Update, StageMaterial::MaterialReady.after(StageMaterial::MaterialCommand).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageMaterial::Create.after(StageShadowGenerator::Create));
+        app.configure_set(Update, StageMaterial::_Init.after(StageMaterial::Create));
+        app.configure_set(Update, StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(ERunStageChap::Anime));
+        app.configure_set(Update, StageMaterial::Ready.after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageMaterial::_Init));
 
         app.add_systems(
 			Update,
             (
-                sys_create_material.after(sys_create_camera),
-            ).in_set(ERunStageChap::Initial)
+                sys_create_material,
+            ).in_set(StageMaterial::Create)
         );
 
         app.add_systems(Update, 
             (
                 sys_act_target_animation_uniform,
                 sys_act_material_texture_from_target,
-            ).in_set(StageMaterial::MaterialCommand)
+            ).in_set(StageMaterial::Command)
         );
 
         app.add_systems(Update, 
             (
                 sys_act_material_use,
                 sys_material_textures_modify,
-            ).chain().in_set(StageMaterial::MaterialCommand)
+            ).chain().in_set(StageMaterial::Command)
         );
 
         app.add_systems(
@@ -171,7 +174,7 @@ impl Plugin for PluginMaterial {
                 // sys_act_material_int.run_if(should_run),
                 // sys_act_material_uint,
                 sys_act_material_texture,
-            ).before(sys_material_textures_modify).after(sys_act_material_texture_from_target).chain().in_set(StageMaterial::MaterialCommand)
+            ).before(sys_material_textures_modify).after(sys_act_material_texture_from_target).chain().in_set(StageMaterial::Command)
             // .after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
         );
 
@@ -179,7 +182,7 @@ impl Plugin for PluginMaterial {
 			Update,
             (
                 sys_texture_ready07,
-            ).chain().in_set(StageMaterial::MaterialReady)
+            ).chain().in_set(StageMaterial::Ready)
         );
         app.add_systems(Update, 
                 sys_material_uniform_apply.in_set(ERunStageChap::Uniform)

@@ -80,12 +80,8 @@ fn setup(
                     curve
                 } else {
                     match anime_assets.scaling.insert(key_curve0, TypeFrameCurve(curve)) {
-                        Ok(value) => {
-                            value
-                        },
-                        Err(_) => {
-                            break;
-                        },
+                        Ok(value) => { value },
+                        Err(_) => { break; },
                     }
                 };
 

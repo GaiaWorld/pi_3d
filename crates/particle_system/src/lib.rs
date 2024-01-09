@@ -20,8 +20,8 @@ pub mod prelude;
 use base::*;
 use command::*;
 use command_sys::*;
-use pi_scene_context::prelude::*;
-use pi_trail_renderer::{TrailBuffer, sys_create_trail_mesh};
+use pi_scene_context::{prelude::*, scene::StageScene};
+use pi_trail_renderer::{TrailBuffer, sys_create_trail_mesh, StageTrail};
 use system::*;
 
 pub struct PluginParticleSystem;
@@ -47,20 +47,24 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(particlecommonbuffer);
         app.insert_resource(ResParticleTrailBuffer(trailbuffer));
 
-        app.configure_set(Update, StageParticleSystem::ParticleSysCommand.after(ERunStageChap::_InitialApply).after(StageTransform::TransformCommand));
+        app.configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::TrailCreate));
+        app.configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate));
+        app.configure_set(Update, StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate));
         app.configure_set(Update, StageParticleSystem::ParticleSysEmission.after(StageParticleSystem::ParticleSysCommand));
         app.configure_set(Update, StageParticleSystem::ParticleSysParamStart.after(StageParticleSystem::ParticleSysEmission));
         app.configure_set(Update, StageParticleSystem::ParticleSysParamOverLifetime.after(StageParticleSystem::ParticleSysParamStart));
         app.configure_set(Update, StageParticleSystem::ParticleSysDirection.after(StageParticleSystem::ParticleSysParamOverLifetime));
         app.configure_set(Update, StageParticleSystem::ParticleSysParamBySpeed.after(StageParticleSystem::ParticleSysDirection));
         app.configure_set(Update, StageParticleSystem::ParticleSysMatrix.after(StageParticleSystem::ParticleSysParamBySpeed).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform));
+
+        app.add_systems(Update, apply_deferred.in_set(StageParticleSystem::_ParticleSysCreate));
 
         app.add_systems(Update, 
-            sys_create_particle_calculator.in_set(ERunStageChap::Initial),
+            sys_create_particle_calculator.in_set(StageScene::Create),
         );
         app.add_systems(Update, 
-            sys_create_cpu_partilce_system.after(sys_create_trail_mesh).in_set(ERunStageChap::Initial),
+            sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate),
         );
         app.add_systems(
 			Update,

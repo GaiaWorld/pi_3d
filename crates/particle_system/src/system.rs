@@ -79,27 +79,28 @@ pub fn sys_emission(
 
 pub fn sys_emitmatrix(
     calculators: Query<&ParticleCalculatorBase>,
-    mut particle_sys: Query<(&LocalScaling, &GlobalTransform, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&LocalScaling, &GlobalMatrix, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix, &mut AbsoluteTransform), Changed<ParticleModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
     let global_position = Vector3::zeros();
-    particle_sys.iter_mut().for_each(|(local_scaling, transform, ids, time, mut emitmatrix)| {
+    particle_sys.iter_mut().for_each(|(local_scaling, transform, ids, time, mut emitmatrix, mut absolute)| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(base) = calculators.get(ids.calculator.0) {
             let newids = &ids.newids;
             let activeids = &ids.actives;
-            let global_rotation = transform.rotation().clone();
-            let global_scaling = transform.scaling().clone();
+
+            let global_rotation = absolute.rotation(transform.matrix()).clone();
+            let global_scaling = absolute.scaling(transform.matrix()).clone();
             // let global_position = transform.position().clone();
             // log::warn!("Position: {:?} {:?}", &localpos.0, global_position);
 
-            let iso = transform.iso();
+            let iso = absolute.iso(transform.matrix());
 
             emitmatrix.emit(
                 newids, activeids, &base.simulation_space, &base.scaling_space,
-                &transform.matrix, &transform.matrix_inv, iso, &global_position, &global_rotation, &global_scaling,
+                &transform.matrix, &transform.matrix_inv, &iso, &global_position, &global_rotation, &global_scaling,
                 &local_scaling.0
             );
         }
@@ -644,25 +645,6 @@ pub fn sys_update_buffer(
                                             &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
                                             &Vector3::zeros(), &scaling, &l_rotation, &eulers
                                         );
-                                        // let rotation = renderalign.calc_rotation(&emitmatrix.rotation, &g_velocity);
-                                        // // log::warn!("rotation : {:?}", rotation);
-                                        // let mut matrix = Matrix::identity();
-                                        // {
-                                        //     matrix.append_nonuniform_scaling_mut(&emitmatrix.scaling);
-                                        //     matrix.append_translation_mut(&emitposition);
-                                        //     matrix = matrix * rotation.to_homogeneous();
-                                        // }
-                                        // // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &rotation, &emitposition, &mut matrix);
-                                        
-                                        // let mut local = Matrix::identity();
-                                        // {
-                                        //     let rotation = Rotation3::from_euler_angles(eulers.z, eulers.x, eulers.y);
-                                        //     local.append_nonuniform_scaling_mut(scaling);
-                                        //     local = local * rotation.to_homogeneous();
-                                        // }
-                                        // // CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &zero, &mut local);
-                                        // // log::warn!("a MAREIX: {:?}", matrix);
-                                        // matrix = matrix * local;
                             
                                         if let Some(local) = renderalign.calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
                                             matrix = matrix * local;
@@ -707,15 +689,6 @@ pub fn sys_update_buffer(
                                         }
                                     });
                                     tempbytes.iter().for_each(|v| { collect.push(*v); });
-                                    // if instanceinfo.state & InstanceState::INSTANCE_BASE == InstanceState::INSTANCE_BASE {
-                                    //     matrix.as_slice().iter().for_each(|v| { collect.push(*v); });
-                                    // }
-                                    // if instanceinfo.state & InstanceState::INSTANCE_COLOR == InstanceState::INSTANCE_COLOR {
-                                    //     color.as_slice().iter().for_each(|v| { collect.push(*v); });
-                                    // }
-                                    // if instanceinfo.state & InstanceState::INSTANCE_TILL_OFF_1 == InstanceState::INSTANCE_TILL_OFF_1 {
-                                    //     collect.push(uv.uscale); collect.push(uv.vscale); collect.push(uv.uoffset); collect.push(uv.voffset);
-                                    // }
                                 });
 
                                 if flag_common {

@@ -114,7 +114,7 @@ fn iter_dirty(
         _query_scenes: Query<(Entity, &SceneCoordinateSytem3D)>,
         // mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
         mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-        mut transforms: Query<&mut GlobalTransform>,
+        mut transforms: Query<&mut GlobalMatrix>,
         mut state: ResMut<StateTransform>,
         tree: EntityTree,
         dirtylist: Query<Entity, Changed<TransformNodeDirty>>,
@@ -261,7 +261,7 @@ fn iter_dirty(
 fn _calc_world_one(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalTransform>,
+    transforms: &mut Query<&mut GlobalMatrix>,
     temp_list: &mut Vec<TmpCalcWorldMatrix>,
     tmp: &TmpCalcWorldMatrix,
 ) {
@@ -273,7 +273,7 @@ fn _calc_world_one(
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let ( transform, flag) = GlobalTransform::calc(&tmp.matrix, &lmatrix);
+                let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, &lmatrix);
                 resultenable = resultenable && flag;
                 *gtransform = transform;
             };
@@ -291,7 +291,7 @@ fn _calc_world_one(
 
 fn calc_world_bytree(
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalTransform>,
+    transforms: &mut Query<&mut GlobalMatrix>,
     tree: &EntityTree,
     mut temp_ids: Vec<TmpCalcWorldMatrix>
 ) -> u32 {
@@ -327,7 +327,7 @@ fn calc_world_bytree(
 fn calc_world_one_bytree(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalTransform>,
+    transforms: &mut Query<&mut GlobalMatrix>,
     temp_list: &mut Vec<TmpCalcWorldMatrix>,
     tmp: &TmpCalcWorldMatrix,
 ) {
@@ -340,7 +340,7 @@ fn calc_world_one_bytree(
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let ( transform, flag) = GlobalTransform::calc(&tmp.matrix, &lmatrix);
+                let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, &lmatrix);
                 resultenable = resultenable && flag;
                 *gtransform = transform;
             };
@@ -360,7 +360,7 @@ fn calc_world_root_bytree(
     penable: bool,
     p_m: &Matrix,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalTransform>,
+    transforms: &mut Query<&mut GlobalMatrix>,
     entity: Entity,
 ) -> TmpCalcWorldMatrix {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
@@ -371,7 +371,7 @@ fn calc_world_root_bytree(
 
             if dirty {
                 // log::debug!(">>>>> GlobalTransform 0");
-                let (transform, flag) = GlobalTransform::calc(p_m, &lmatrix);
+                let (transform, flag) = GlobalMatrix::calc(p_m, &lmatrix);
                 resultenable = resultenable && flag;
                 *gtransform = transform;
             }

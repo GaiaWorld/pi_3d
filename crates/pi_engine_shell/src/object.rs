@@ -139,9 +139,13 @@ impl Plugin for PluginDispose {
         app.insert_resource(ActionListDisposeReadyForRef::default());
         app.insert_resource(ActionListDisposeReady::default());
         app.insert_resource(ActionListDisposeCan::default());
-        app.add_systems(Update, sys_act_scene_dispose.in_set(ERunStageChap::Initial));
-        app.add_systems(Update, sys_dispose_ready.in_set(ERunStageChap::Dispose));
-        app.add_systems(Update, sys_dispose_can.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
-        app.add_systems(Update, sys_dispose.after(sys_dispose_can).in_set(ERunStageChap::Dispose));
+        app.add_systems(Update,
+            (
+                sys_act_scene_dispose,
+                sys_dispose_ready,
+                sys_dispose_can,
+                sys_dispose
+            ).in_set(ERunStageChap::Dispose)
+        );
     }
 }

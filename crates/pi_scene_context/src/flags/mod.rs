@@ -1,6 +1,8 @@
 
 use pi_engine_shell::prelude::*;
 
+use crate::scene::StageScene;
+
 pub mod enable;
 
 
@@ -124,7 +126,7 @@ pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListNodeEnable::default());
-        app.configure_set(Update, StageEnable::Command.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageEnable::Command.after(StageScene::Create));
         app.add_systems(Update, 
             sys_act_node_enable.in_set(StageEnable::Command)
         );

@@ -157,7 +157,7 @@ pub fn main() {
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     
     app.add_systems(Update, 
-        sys_demo_particle.in_set(ERunStageChap::CalcRenderMatrix)
+        sys_demo_particle.in_set(StageModel::RenderMatrix)
     );
 
     app.add_systems(Startup, setup.after(base::setup_default_mat));

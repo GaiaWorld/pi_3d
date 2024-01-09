@@ -18,8 +18,8 @@ use super::{
 
 pub fn sys_calc_render_matrix(
     mut meshes: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &GlobalTransform, &ScalingMode, &RenderAlignment, &ModelVelocity),
-        (Without<InstanceMesh>, Or<(Changed<GlobalTransform>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
+        (ObjectID, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut AbsoluteTransform),
+        (Without<InstanceMesh>, Or<(Changed<GlobalMatrix>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
@@ -27,34 +27,38 @@ pub fn sys_calc_render_matrix(
 
     meshes.iter_mut().for_each(|(
         obj, _,
-        localscaling, transform, scalingmode, renderalignment, velocity
+        localscaling, transform, scalingmode, renderalignment, velocity, mut abstransform
     )| {
         if let Ok((mut wm, mut wmi)) = matrixs.get_mut(obj) {
 
             // log::warn!("calc_render_matrix:");
             // render_wm.0.clone_from(&worldmatrix.0);
             // render_wminv.0.clone_from(&worldmatrix_inv.0);
+            
             let pos = transform.position();
             let mut scl = Vector3::new(1., 1., 1.);
+            
+            let g_rotation;
             match scalingmode.0 {
                 crate::prelude::EScalingMode::Hierarchy => {
                     if renderalignment.0 == ERenderAlignment::Local {
-                        wm.0.clone_from(&transform.matrix);
+                        wm.0.clone_from(transform.matrix());
                         wmi.0.clone_from(&transform.matrix_inv);
                         return;
                     }
-                    scl.clone_from(transform.scaling());
+                    scl.clone_from(abstransform.scaling(transform.matrix()));
+                    g_rotation = abstransform.rotation(transform.matrix());
                 },
                 crate::prelude::EScalingMode::Local => {
                     scl.clone_from(&localscaling.0);
+                    g_rotation = abstransform.rotation(transform.matrix());
                 },
                 crate::prelude::EScalingMode::Shape => {
-                    // 1, 1, 1
+                    g_rotation = abstransform.rotation(transform.matrix());
                 },
             }
 
             let mut m = Matrix::identity();
-            let g_rotation = transform.rotation();
             let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
             CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
             if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
@@ -76,8 +80,8 @@ pub fn sys_calc_render_matrix(
 pub fn sys_calc_render_matrix_instance(
     meshes: Query<&RenderAlignment>,
     mut instances: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalTransform, &InstanceMesh),
-        Or<(Changed<GlobalTransform>, Changed<ModelVelocity>, Changed<ScalingMode>)>
+        (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalMatrix, &InstanceMesh, &mut AbsoluteTransform),
+        Or<(Changed<GlobalMatrix>, Changed<ModelVelocity>, Changed<ScalingMode>)>
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
 ) {
@@ -85,7 +89,7 @@ pub fn sys_calc_render_matrix_instance(
 
     instances.iter_mut().for_each(|(
         obj, _,
-        localscaling, scalingmode, velocity, transform, id_source
+        localscaling, scalingmode, velocity, transform, id_source, mut abstransform
     )| {
         // log::warn!("calc_render_matrix:");
         if let (
@@ -98,6 +102,7 @@ pub fn sys_calc_render_matrix_instance(
             // render_wminv.0.clone_from(&worldmatrix_inv.0);
             let pos = transform.position();
             let mut scl = Vector3::new(1., 1., 1.);
+            let g_rotation;
             match scalingmode.0 {
                 crate::prelude::EScalingMode::Hierarchy => {
                     if renderalignment.0 == ERenderAlignment::Local {
@@ -107,19 +112,19 @@ pub fn sys_calc_render_matrix_instance(
                         // log::warn!("Normal Alignment");
                         return;
                     }
-                    scl.clone_from(transform.scaling());
-                    // flag = false;
+                    scl.clone_from(abstransform.scaling(transform.matrix()));
+                    g_rotation = abstransform.rotation(transform.matrix());
                 },
                 crate::prelude::EScalingMode::Local => {
                     scl.clone_from(&localscaling.0);
+                    g_rotation = abstransform.rotation(transform.matrix());
                 },
                 crate::prelude::EScalingMode::Shape => {
-                    // 1, 1, 1
+                    g_rotation = abstransform.rotation(transform.matrix());
                 },
             }
 
             let mut m = Matrix::identity();
-            let g_rotation = transform.rotation();
             let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
             CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
             if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {

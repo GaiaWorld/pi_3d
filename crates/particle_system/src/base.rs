@@ -19,6 +19,8 @@ use crate::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageParticleSystem {
+    ParticleSysCreate,
+    _ParticleSysCreate,
     ParticleSysCommand,
     ParticleSysEmission,
     ParticleSysParamStart,

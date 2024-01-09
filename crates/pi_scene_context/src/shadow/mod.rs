@@ -5,7 +5,7 @@ use crate::{
     transforms::prelude::*,
     object::sys_dispose_ready,
     materials::{command_sys::ActionMaterial, prelude::*},
-    light::prelude::StageLighting, prelude::StageRenderer, layer_mask::StageLayerMask,
+    light::prelude::StageLighting, prelude::StageRenderer, layer_mask::StageLayerMask, cameras::prelude::StageCamera,
     // prelude::{StageTransform, ActionSetMaterial, ActionMaterial},
 };
 
@@ -33,14 +33,12 @@ impl Plugin for PluginShadowGenerator {
         app.insert_resource(ActionListShadowGeneratorParam::default());
         app.insert_resource(StateShadow::default());
 
-        app.configure_set(Update, StageShadowGenerator::Create.after(StageLighting::LightingCommandApply).after(StageMaterial::MaterialCommand));
-        app.configure_set(Update, StageShadowGenerator::CreateApply.after(StageShadowGenerator::Create).before(StageRenderer::Create));
-        app.configure_set(Update, StageShadowGenerator::Command.after(StageShadowGenerator::CreateApply).after(StageLayerMask::Command));
-        app.configure_set(Update, StageShadowGenerator::CommandApply.after(StageShadowGenerator::Command));
-        app.configure_set(Update, StageShadowGenerator::CalcMatrix.after(StageShadowGenerator::CommandApply).after(StageTransform::TransformCalcMatrix));
+        app.configure_set(Update, StageShadowGenerator::Create.after(StageLighting::_LightCreate).after(StageCamera::CameraCreate));
+        app.configure_set(Update, StageShadowGenerator::_CreateApply.after(StageShadowGenerator::Create).before(StageRenderer::Create));
+        app.configure_set(Update, StageShadowGenerator::Command.after(StageShadowGenerator::_CreateApply).after(StageLayerMask::Command).before(StageMaterial::Command));
+        app.configure_set(Update, StageShadowGenerator::CalcMatrix.after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix));
         app.configure_set(Update, StageShadowGenerator::Culling.after(StageShadowGenerator::CalcMatrix).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageShadowGenerator::CreateApply));
-        app.add_systems(Update, apply_deferred.in_set(StageShadowGenerator::CommandApply));
+        app.add_systems(Update, apply_deferred.in_set(StageShadowGenerator::_CreateApply));
 
         app.add_systems(
 			Update,

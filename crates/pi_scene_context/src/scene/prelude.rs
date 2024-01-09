@@ -1,6 +1,8 @@
 
 use pi_engine_shell::prelude::*;
 
+use crate::prelude::ActionListBoundingBoxDisplay;
+
 pub use super::base::*;
 pub use super::command::*;
 pub use super::passes_cfg::*;
@@ -27,5 +29,6 @@ pub struct ActionSetScene<'w> {
     pub brdf: ResMut<'w, ActionListSceneBRDF>,
     pub env: ResMut<'w, ActionListSceneEnvTexture>,
     pub shadowmap: ResMut<'w, ActionListSceneShadowMap>,
+    pub boundingboxdisplay: ResMut<'w, ActionListBoundingBoxDisplay>,
 }
 

@@ -6,7 +6,7 @@ mod command_sys;
 mod command;
 mod system;
 
-use pi_scene_context::{prelude::{sys_dispose_ready, StageGeometry}, skeleton::command_sys::sys_create_skin};
+use pi_scene_context::{prelude::{sys_dispose_ready, StageGeometry}, skeleton::{command_sys::sys_create_skin, StageSkeleton}};
 
 pub use base::*;
 pub use command::*;
@@ -24,6 +24,8 @@ pub struct ActionSetTrailRenderer<'w> {
 
 #[derive(Debug, SystemSet, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum StageTrail {
+    TrailCreate,
+    _TrailCreate,
     TrailCommand,
     TrailUpdate,
 }
@@ -51,10 +53,13 @@ impl Plugin for PluginTrail {
         app.insert_resource(ActionListTrailAge::default());
         app.insert_resource(StateTrail::default());
 
-        app.configure_set(Update, StageTrail::TrailCommand.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
+        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate));
+        app.configure_set(Update, StageTrail::TrailCommand.after(StageTrail::_TrailCreate));
         app.configure_set(Update, StageTrail::TrailUpdate.after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
+        app.add_systems(Update, apply_deferred.in_set(StageTrail::TrailCreate));
 
-        app.add_systems(Update, sys_create_trail_mesh.after(sys_create_skin).in_set(ERunStageChap::Initial));
+        app.add_systems(Update, sys_create_trail_mesh.in_set(StageTrail::TrailCreate));
         app.add_systems(Update, sys_act_trail_age.run_if(should_run).in_set(StageTrail::TrailCommand));
         app.add_systems(Update, sys_trail_update.run_if(should_run).in_set(StageTrail::TrailUpdate));
         app.add_systems(

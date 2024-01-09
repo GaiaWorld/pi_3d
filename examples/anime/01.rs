@@ -6,6 +6,7 @@ use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
 use pi_gltf2_load::*;
+use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
@@ -27,7 +28,7 @@ fn setup(
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
-    let tes_size = 0;
+    let tes_size = 10;
     fps.frame_ms = 16;
 
     
@@ -66,7 +67,6 @@ fn setup(
                 let cube: Entity = commands.spawn_empty().id();
                 actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                 actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
-
                 actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
@@ -77,12 +77,8 @@ fn setup(
                     curve
                 } else {
                     match anime_assets.scaling.insert(key_curve0, TypeFrameCurve(curve)) {
-                        Ok(value) => {
-                            value
-                        },
-                        Err(_) => {
-                            break;
-                        },
+                        Ok(value) => { value  },
+                        Err(_) => { break; },
                     }
                 };
 

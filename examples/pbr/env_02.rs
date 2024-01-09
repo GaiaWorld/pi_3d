@@ -60,8 +60,8 @@ impl Plugin for PluginTest {
         actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 2.));
 
         actions.scene.brdf.push(OpsSceneBRDF::ops(scene, Atom::from("./assets/images/fractal.png"), false));
-        actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01_image.env")), true));
-        // actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01.env")), false));
+        // actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01_image.env")), true));
+        actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01.env")), false));
         
         let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
@@ -157,7 +157,7 @@ impl Plugin for PluginTest {
     let state: MeshInstanceState = MeshInstanceState {
         instance_matrix: true,
         instances: vec![
-            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from("uMetallic = InsV2.x; uRoughness = InsV2..y;"), ECustomVertexType::Vec2, Some(Atom::from("uMetallic")))
+            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from("uMetallic = InsV2.x; uRoughness = InsV2.y;"), ECustomVertexType::Vec2, Some(Atom::from("uMetallic")))
         ],
         use_single_instancebuffer: false,
     };
@@ -235,6 +235,7 @@ pub fn main() {
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_systems(Startup, base::active_lighting_shadow);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

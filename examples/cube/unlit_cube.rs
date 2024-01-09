@@ -14,63 +14,6 @@ mod base;
 #[path = "../copy.rs"]
 mod copy;
 
-// #[derive(Debug, Default)]
-// pub struct SingleTestData {
-//     pub transforms: Vec<(ObjectID, f32, f32, f32)>,
-// }
-
-// pub struct SysTest;
-// impl TSystemStageInfo for SysTest {}
-// #[setup]
-// impl SysTest {
-//     #[system]
-//     pub fn sys(
-//         mut list: ResMut<SingleTestData>,
-//         mut transform_commands: ResMut<SingleTransformNodeModifyCommandList>,
-//     ) {
-//         list.transforms.iter_mut().for_each(|mut item| {
-//             item.1 = item.1 + 16.0;
-//             item.2 = item.2 + 16.0;
-//             item.3 = item.3 + 16.0;
-//             let x0 = item.1 % 4000.0 / 4000.0;
-//             let x = x0 * 3.1415926 * 2.;
-//             let y0 = item.2 % 4000.0 / 4000.0;
-//             let y = y0 * 3.1415926 * 2.;
-//             let z0 = item.3 % 4000.0 / 4000.0;
-//             let z = z0 * 3.1415926 * 2.;
-//             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 3., 0., 0.)));
-//             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
-//             transform_commands.list.push(ETransformNodeModifyCommand::ModifyRotation(item.0, Vector3::new(x, y, z)));
-//         });
-//     }
-// }
-
-// #[derive(Debug)]
-// pub struct PluginTest;
-// impl Plugin for PluginTest {
-//     fn init(
-//         &mut self,
-//         engine: &mut pi_scene_context::engine::Engine,
-//         stages: &mut pi_scene_context::run_stage::RunStage,
-//     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-//         PluginLocalLoad.init(engine, stages);
-//         PluginBundleDefault.init(engine, stages);
-//         // PluginMaterialTextures.init(engine, stages);
-//         // PluginMainTexture.init(engine, stages);
-//         PluginUnlitMaterial.init(engine, stages);
-//         PluginCubeBuilder.init(engine, stages);
-
-//         let world = engine.world_mut();
-
-//         SysTest::setup(world, stages.query_stage::<SysTest>(ERunStageChap::Command));
-
-//         let testdata = SingleTestData::default();
-//         world.insert_resource(testdata);
-
-//         Ok(())
-//     }
-// }
-
 fn setup(
     mut commands: Commands,
     mut actions: pi_3d::ActionSets,

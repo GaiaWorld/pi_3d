@@ -1,11 +1,11 @@
 
-use pi_engine_shell::prelude::*;
+use pi_engine_shell::{prelude::*, run_stage::should_run_with_lighting};
 
 use crate::{
     geometry::prelude::*,
     object::sys_dispose_ready,
     transforms::prelude::*,
-    cameras::prelude::StageCamera, materials::command_sys::sys_create_material, flags::StageEnable
+    cameras::prelude::StageCamera, materials::{command_sys::sys_create_material, prelude::StageMaterial}, flags::StageEnable, prelude::sys_tick_culling_box, light::prelude::StageLighting, layer_mask::StageLayerMask
 };
 
 use self::{
@@ -56,19 +56,23 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListMeshForceHemiLighting::default());
         app.insert_resource(ActionListTargetAnimationAttribute::default());
 
-        app.configure_set(Update, StageModel::InstanceInit.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, StageModel::InstanceInitApply.after(StageModel::InstanceInit).before(StageEnable::Command).before(StageTransform::TransformCommand));
-        app.configure_set(Update, StageModel::AbstructMeshCommand.after(StageModel::InstanceInitApply).before(ERunStageChap::Uniform).before(EStageAnimation::Create));
-        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageModel::InstanceEffectGeometry.after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(ERunStageChap::Anime).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageModel::LightingCollect.after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageModel::InstanceInitApply));
+        app.configure_set(Update, StageModel::CreateMesh.after(StageMaterial::Create));
+        app.configure_set(Update, StageModel::_InitMesh.after(StageModel::CreateMesh).before(StageLayerMask::Command).before(StageEnable::Command));
+        app.configure_set(Update, StageModel::CreateInstance.after(StageModel::_InitMesh));
+        app.configure_set(Update, StageModel::_InitInstance.after(StageModel::CreateInstance).before(StageEnable::Command).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageModel::AbstructMeshCommand.after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create));
+        app.configure_set(Update, StageModel::RenderMatrix.after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix));
+        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand));
+        app.configure_set(Update, StageModel::InstanceEffectGeometry.after(StageModel::InstanceEffectMesh).after(StageModel::RenderMatrix).after(StageCamera::CameraCulling).after(ERunStageChap::Anime).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageModel::LightingCollect.after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageModel::_InitMesh));
+        app.add_systems(Update, apply_deferred.in_set(StageModel::_InitInstance));
 
         app.add_systems(Update, 
-            sys_create_mesh.after(sys_create_material).in_set(ERunStageChap::Initial)
+            sys_create_mesh.in_set(StageModel::CreateMesh)
         );
         app.add_systems(Update, 
-            sys_create_instanced_mesh.in_set(StageModel::InstanceInit)
+            sys_create_instanced_mesh.in_set(StageModel::CreateInstance)
         );
         app.add_systems(
 			Update,
@@ -91,10 +95,10 @@ impl crate::Plugin for PluginMesh {
             sys_enable_about_instance.in_set(StageModel::InstanceEffectMesh)
         );
         app.add_systems(Update, 
-            sys_calc_render_matrix.in_set(StageModel::InstanceEffectMesh)
-        );
-        app.add_systems(Update, 
-            sys_calc_render_matrix_instance.after(sys_calc_render_matrix).in_set(StageModel::InstanceEffectMesh)
+            (
+                sys_calc_render_matrix,
+                sys_calc_render_matrix_instance
+            ).chain().in_set(StageModel::RenderMatrix)
         );
         app.add_systems(
 			Update,
@@ -106,20 +110,20 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(
 			Update,
             (
-                sys_animator_update_instance_attribute,
+                sys_animator_update_instance_attribute.run_if(should_run),
                 sys_tick_instanced_buffer_update.run_if(should_run),
-                sys_tick_instanced_buffer_update_single,
+                sys_tick_instanced_buffer_update_single.run_if(should_run),
+                sys_tick_culling_box.run_if(should_run),
             ).chain().in_set(StageModel::InstanceEffectGeometry)
         );
 
         app.add_systems(
 			Update,
             (
-                sys_model_direct_lighting_modify_by_light.run_if(should_run),
-                sys_model_direct_lighting_modify_by_model.run_if(should_run),
-                sys_model_point_lighting_modify_by_model.run_if(should_run),
-                sys_model_spot_lighting_modify_by_model.run_if(should_run),
-                sys_tick_instanced_buffer_update_single,
+                sys_model_direct_lighting_modify_by_light.run_if(should_run_with_lighting),
+                sys_model_direct_lighting_modify_by_model.run_if(should_run_with_lighting),
+                sys_model_point_lighting_modify_by_model.run_if(should_run_with_lighting),
+                sys_model_spot_lighting_modify_by_model.run_if(should_run_with_lighting),
             ).chain().in_set(StageModel::LightingCollect)
         );
 

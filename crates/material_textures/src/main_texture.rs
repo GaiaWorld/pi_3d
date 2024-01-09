@@ -126,30 +126,3 @@ impl InterfaceMainTexture for engine_shell::EnginShell {
         self
     }
 }
-
-
-struct SysLoad;
-impl TSystemStageInfo for SysLoad {
-    fn depends() -> Vec<pi_engine_shell::run_stage::KeySystem> {
-        vec![
-            SingleCommands::key()
-        ]
-    }
-}
-pub struct PluginMainTexture;
-impl Plugin for PluginMainTexture {
-    fn init(
-        &mut self,
-        engine: &mut engine_shell::EnginShell,
-        stages: &mut pi_engine_shell::run_stage::RunStage,
-    ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-        let world = engine.world_mut();
-
-        world.insert_resource(SingleCommands::default());
-
-        SingleCommands::setup(world, stages.query_stage::<SingleCommands>(ERunStageChap::Command));
-        MainTextureLoad::setup(world, stages.query_stage::<SysLoad>(ERunStageChap::Command));
-        
-        Ok(())
-    }
-}

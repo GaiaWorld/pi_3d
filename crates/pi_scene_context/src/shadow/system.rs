@@ -117,7 +117,9 @@ pub fn sys_light_layermask_to_shadow(
 
 pub fn sys_shadow_project_modify_by_direction_light(
     mut shadows: Query<(&ShadowMinZ, &ShadowMaxZ, &ShadowFrustumSize, &mut DirectionalShadowProjection), Or<(Changed<ShadowMinZ>, Changed<ShadowMaxZ>, Changed<ShadowFrustumSize>)>>,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_shadow_project_modify_by_direction_light"));
     shadows.iter_mut().for_each(|(minz, maxz, size, mut project)| {
         *project = DirectionalShadowProjection { minz: minz.0, maxz: maxz.0, frustum_size: size.0 };
     });
@@ -136,12 +138,14 @@ pub fn sys_shadow_project_modify_by_spot_light(
 }
 
 pub fn sys_calc_view_matrix_by_light(
-    mut lights: Query<(Entity, &LocalPosition, &LightLinkedShadowID, &LightDirection), Or<(Changed<LocalPosition>, Changed<LightLinkedShadowID>, Changed<LightDirection>, Changed<GlobalTransform>)>>,
-    transforms: Query<&GlobalTransform>,
+    mut lights: Query<(Entity, &LocalPosition, &LightLinkedShadowID, &LightDirection), Or<(Changed<LocalPosition>, Changed<LightLinkedShadowID>, Changed<LightDirection>, Changed<GlobalMatrix>)>>,
+    mut transforms: Query<(&GlobalMatrix, &mut AbsoluteTransform)>,
     mut viewers: Query<(&ShadowLinkedLightID, &mut DirectionalShadowDirection, &mut ViewerViewMatrix, &mut ViewerGlobalPosition, &mut ViewerDirection)>,
     // childrens: Query<&NodeParent>,
     childrens: Query<&Up>,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_calc_view_matrix_by_light"));
     //  log::debug!("View Matrix Calc:");
     let coordsys = CoordinateSytem3::left();
     lights.iter_mut().for_each(|(entity, l_position, idshadow, ldirection)| {
@@ -152,8 +156,9 @@ pub fn sys_calc_view_matrix_by_light(
                 // log::warn!("View Matrix Calc: {:?}", viewcalc.0);
                 if let Ok(parent) = childrens.get(entity) {
                     let parent_id = parent.parent();
-                    if let Ok(parent) = transforms.get(parent_id) {
-                        let (matrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some(&parent));
+                    if let Ok((parent, mut absolute)) = transforms.get_mut(parent_id) {
+                        let iso = absolute.iso(&parent.matrix());
+                        let (matrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some((&parent, iso)));
                         *viewmatrix = matrix;
                         *viewposition = pos;
                     } else {
@@ -172,7 +177,9 @@ pub fn sys_shadow_bind_modify(
     scenes: Query<(Entity, &SceneShadowInfos, &SceneShadowQueue)>,
     shadows: Query<(&ShadowLinkedLightID, &ViewerTransformMatrix, &ShadowBias, &ShadowNormalBias, &ShadowMinZ, &ShadowMaxZ, &ShadowDepthScale)>,
     indexs: Query<&SceneItemIndex>,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_shadow_bind_modify"));
     scenes.iter().for_each(|(_entity, shadowdata, queueshadow)| {
         shadowdata.0.reset();
         queueshadow.0.items().for_each(|v| {
@@ -218,7 +225,9 @@ pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix + Comp
     items: Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &MeshCastShadow),
     >,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_update_shadow_viewer_model_list_by_viewer"));
     // let time1 = pi_time::Instant::now();
 
     // log::debug!("CameraModelListByViewer :");
@@ -264,7 +273,9 @@ pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Compo
         (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh, &MeshCastShadow),
         Or<(Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>, Changed<MeshCastShadow>)>,
     >,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_update_shadow_viewer_model_list_by_model"));
     // let time1 = pi_time::Instant::now();
     // log::debug!("CameraModelListByModel :");
 

@@ -167,66 +167,22 @@ pub type KeyPipeline3D = KeyRenderPipeline3D;
 pub type Pipeline3D = RenderRes<RenderPipeline>;
 pub type Pipeline3DUsage = Handle<Pipeline3D>;
 
-// fn sys_recycle_binds_recorder(
-//     mut recorder: ResMut<ResBindsRecorder>,
-// ) {
-//     // recorder.recycle();
-// }
-
 pub struct PluginRenderBindGroup;
 impl Plugin for PluginRenderBindGroup {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
-    //     stages: &mut pi_engine_shell::run_stage::RunStage,
-    // ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-    //     let device = world.get_resource::<RenderDevice>().unwrap();
-    //     let allocator = BindBufferAllocator::new(device);
-        
-    //     let world = engine.world_mut();
-    //     world.insert_resource(allocator);
-        
-    //     world.insert_resource(AssetBindGroupSceneWaits::default());
-    //     world.insert_resource(AssetBindGroupModelWaits::default());
-    //     world.insert_resource(AssetBindGroupTextureSamplersWaits::default());
-        
-    //     // log::debug!("{:?}", device.limits());
-    //     world.insert_resource(AssetMgr::<BindGroup>::new(GarbageEmpty(), false, 2 * 1024 * 1024, 60 * 1000));
-    //     world.insert_resource(AssetMgr::<BindGroupLayout>::new(GarbageEmpty(), false, 2 * 1024 * 1024, 60 * 1000));
-
-    //     Ok(())
-    // }
-
     fn build(&self, app: &mut App) {
-
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
-
         if app.world.get_resource::<ResBindBufferAllocator>().is_none() {
             let allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
             app.insert_resource(allocator);
         }
-        
-        
         app.insert_resource(AssetBindGroupSceneWaits::default());
         app.insert_resource(AssetBindGroupModelWaits::default());
         app.insert_resource(AssetBindGroupTextureSamplersWaits::default());
-        
-        // log::debug!("{:?}", device.limits());
-        
-        // let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgBindGroup>() { cfg.0.clone() } else {
-        //     app.insert_resource(AssetCfgBindGroup::default());
-        //     app.world.get_resource::<AssetCfgBindGroup>().unwrap().0.clone()
-        // };
+
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<BindGroup>();
         app.insert_resource(ShareAssetMgr::<BindGroup>::create(GarbageEmpty(), false, &cfg));
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<BindGroupLayout>();
         app.insert_resource(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg));
-        
-        // if app.world.get_resource::<ResBindsRecorder>().is_none() {
-        //     let allocator = ResBindsRecorder();
-        //     app.insert_resource(allocator);
-        //     app.add_systems(Update, sys_recycle_binds_recorder.in_set(ERunStageChap::Initial));
-        // }
+
     }
 }

@@ -182,6 +182,10 @@ path = "examples/simple/dispose.rs"
 # path = "examples/axis/axis.rs"
 
 [[example]]
+name = "culling_box"
+path = "examples/oct_tree/culling_box.rs"
+
+[[example]]
 name = "skin_simple"
 path = "examples/skeleton/simple.rs"
 

@@ -55,19 +55,3 @@ impl InterfaceAlphaIndex for crate::engine::Engine {
         self
     }
 }
-
-// pub struct PluginAlphaIndex;
-// impl crate::Plugin for PluginAlphaIndex {
-//     fn init(
-//         &mut self,
-//         engine: &mut crate::engine::Engine,
-//         stages: &mut crate::run_stage::RunStage,
-//     ) -> Result<(), crate::plugin::ErrorPlugin> {
-//         let world = engine.world_mut();
-
-//         world.insert_resource(SingleAlphaIndexCommandList::default());
-//         SysAlphaIndexCommand::setup(world, stages.query_stage::<SysAlphaIndexCommand>(ERunStageChap::Initial));
-        
-//         Ok(())
-//     }
-// }

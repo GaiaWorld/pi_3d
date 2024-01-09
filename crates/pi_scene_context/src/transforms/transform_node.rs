@@ -344,49 +344,24 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
 // }
 
 #[derive(Debug, Clone, Component)]
-pub struct GlobalTransform {
-    // pub position: Vector3,
-    pub scaling: Option<Vector3>,
-    pub rotation: Option<Rotation3>,
+pub struct GlobalMatrix {
     pub matrix: Matrix,
     pub matrix_inv: Matrix,
-    pub iso: Option<Isometry3>,
 }
-impl Default for GlobalTransform {
+impl Default for GlobalMatrix {
     fn default() -> Self {
         Self {
-            // position: Vector3::new(0., 0., 0.),
-            scaling: None,
-            rotation: None,
             matrix: Matrix::identity(),
             matrix_inv: Matrix::identity(),
-            iso: None,
         }
     }
 }
-impl GlobalTransform {
-    pub fn euler_angles(& self) -> (Number, Number, Number) {
-        // self.decompose();
-        self.rotation.unwrap().euler_angles()
-    }
-    pub fn rotation_quaternion(& self) -> Quaternion {
-        // self.decompose();
-        Quaternion::from_rotation_matrix(&self.rotation.unwrap())
-    }
-    pub fn rotation(& self) -> &Rotation3 {
-        // self.decompose();
-        self.rotation.as_ref().unwrap()
+impl GlobalMatrix {
+    pub fn matrix(&self) -> &Matrix {
+        &self.matrix
     }
     pub fn position(&self) -> Vector3 {
         Vector3::from(self.matrix.fixed_view::<3, 1>(0, 3))
-    }
-    pub fn scaling(& self) -> &Vector3 {
-        // self.decompose();
-        self.scaling.as_ref().unwrap()
-    }
-    pub fn iso(& self) -> &Isometry3 {
-        // self.decompose();
-        self.iso.as_ref().unwrap()
     }
     pub fn calc(p_m: &Matrix, l_matrix: &LocalMatrix) -> (Self, bool) {
         let mut flag = true;
@@ -410,29 +385,50 @@ impl GlobalTransform {
             result.matrix_inv = Matrix::identity();
         }
 
-        result.decompose();
-
         (result, flag)
     }
-    fn decompose(&mut self) {
+}
+
+#[derive(Default, Component)]
+pub struct AbsoluteTransform {
+    scaling: Option<Vector3>,
+    rotation: Option<Rotation3>,
+    quaternion: Option<Quaternion>,
+}
+impl AbsoluteTransform {
+    pub fn reset_while_world_matrix_update(&mut self) {
+        self.scaling = None;
+        self.rotation = None;
+        self.quaternion = None;
+    }
+    pub fn euler_angles(&mut self, gm: &Matrix) -> (Number, Number, Number) {
+        self.decompose(gm);
+        self.rotation.unwrap().euler_angles()
+    }
+    pub fn rotation_quaternion(&mut self, gm: &Matrix) -> &Quaternion {
+        self.decompose(gm);
+        self.quaternion.as_ref().unwrap()
+    }
+    pub fn rotation(&mut self, gm: &Matrix) -> &Rotation3 {
+        self.decompose(gm);
+        self.rotation.as_ref().unwrap()
+    }
+    pub fn scaling(&mut self, gm: &Matrix) -> &Vector3 {
+        self.decompose(gm);
+        self.scaling.as_ref().unwrap()
+    }
+    pub fn iso(&mut self, gm: &Matrix) -> Isometry3 {
+        self.decompose(gm);
+        let temp = Vector3::from(gm.fixed_view::<3, 1>(0, 3));
+        Isometry3::from_parts(Translation3::new(temp[0], temp[1], temp[2]), self.quaternion.unwrap().clone())
+    }
+    fn decompose(&mut self, gm: &Matrix) {
         if self.rotation.is_none() {
             let mut g_r = Rotation3::identity();
             let mut g_p = Vector3::new(0., 0., 0.);
             let mut g_s = Vector3::new(1., 1., 1.);
-            CoordinateSytem3::matrix4_decompose_rotation(&self.matrix, Some(&mut g_s), Some(&mut g_r), Some(&mut g_p));
-
-            // log::debug!("calc_world_matrix:");
-            // log::debug!("{}", w_m);
-            // log::debug!("absolute_scaling:");
-            // log::debug!("{}", g_s);
-            // log::debug!("absolute_rotation:");
-            // log::debug!("{}", g_r);
-            // log::debug!("absolute_position:");
-            // log::debug!("{}", g_p);
-        
-            let temp = g_p.as_slice();
-            let iso = Isometry3::from_parts(Translation3::new(temp[0], temp[1], temp[2]), Quaternion::from_matrix(&g_r.matrix()));
-            self.iso = Some(iso);
+            CoordinateSytem3::matrix4_decompose_rotation(&gm, Some(&mut g_s), Some(&mut g_r), Some(&mut g_p));
+            self.quaternion = Some(Quaternion::from_rotation_matrix(&g_r));
             self.rotation = Some(g_r);
             self.scaling = Some(g_s);
         }

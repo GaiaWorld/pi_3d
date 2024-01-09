@@ -8,7 +8,7 @@ use crate::{
     pass::*,
     transforms::prelude::*,
     cameras::prelude::*,
-    object::sys_dispose_can,
+    object::sys_dispose_can, scene::StageScene,
 };
 
 use self::{
@@ -108,7 +108,7 @@ impl Plugin for PluginRenderer {
         app.insert_resource(RendererDrawCallRecord::default());
 
         
-        app.configure_set(Update, StageRenderer::Create.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageRenderer::Create.after(StageScene::Create));
         app.configure_set(Update, StageRenderer::_CreateApply.after(StageRenderer::Create));
         app.configure_set(Update, StageRenderer::RenderStateCommand.before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply));
         app.configure_set(Update, StageRenderer::RendererCommand.after(StageRenderer::_CreateApply));

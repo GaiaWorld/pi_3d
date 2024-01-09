@@ -48,7 +48,7 @@ impl TargetCameraParam {
 }
 
 impl TViewerViewMatrix for TargetCameraParam {
-    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
+    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<(&GlobalMatrix, Isometry3)>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
         let mut position = local_pos.0.clone();
         let initial_focal_distance = (self.target - position).metric_distance(&Vector3::zeros());
         if (position.z - self.target.z).abs() < 0.0001 {
@@ -70,7 +70,7 @@ impl TViewerViewMatrix for TargetCameraParam {
         if self.ignore_parent_scale {
             match parent {
                 Some(parent) => {
-                    let transformation = &parent.matrix;
+                    let transformation = &parent.0.matrix;
                     let mut eye = Vector3::zeros();
                     CoordinateSytem3::transform_coordinates(&position, transformation, &mut eye);
                     // log::warn!("local_pos: {:?}", local_pos);
@@ -114,11 +114,11 @@ impl TViewerViewMatrix for TargetCameraParam {
     
             let eye = match parent {
                 Some(parent) => {
-                    iso = iso.inv_mul(parent.iso());
+                    iso = iso.inv_mul(&parent.1);
                     iso.inverse_mut();
 
                     let mut eye = position.clone();
-                    CoordinateSytem3::transform_coordinates(&position, &parent.matrix, &mut eye);
+                    CoordinateSytem3::transform_coordinates(&position, &parent.0.matrix, &mut eye);
                     // log::warn!("local_pos: {:?}", local_pos);
                     // log::warn!("eye: {:?}", eye);
 

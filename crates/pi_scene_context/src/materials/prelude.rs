@@ -19,8 +19,11 @@ pub use super::uniforms::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageMaterial {
-    MaterialCommand,
-    MaterialReady,
+    Create,
+    _Init,
+    Use,
+    Command,
+    Ready,
 }
 
 #[derive(Resource, Default)]

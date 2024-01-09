@@ -66,6 +66,13 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             }
         });
     }
+    fn entities(&self) -> Vec<Entity> {
+        let count = self.fast.len() + self.pool.len();
+        let mut result = Vec::with_capacity(count);
+        self.fast.iter().for_each(|v| { result.push(*v); });
+        self.pool.keys().for_each(|v| { result.push(*v); });
+        result
+    }
 }
 
 pub fn is_in_frustum(

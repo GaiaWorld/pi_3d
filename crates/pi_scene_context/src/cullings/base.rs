@@ -5,7 +5,7 @@ use pi_hash::XHashSet;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
 use pi_spatial::oct_helper::OctTree;
 
-use crate::viewer::prelude::ViewerTransformMatrix;
+use crate::{viewer::prelude::ViewerTransformMatrix, prelude::MeshInstanceState};
 
 use super::{oct_tree::BoundingOctTree, bounding::VecBoundingInfoCalc};
 
@@ -20,6 +20,7 @@ pub trait TBoundingInfoCalc {
         dir: Vector3,
         result: &mut Option<Entity>,
     );
+    fn entities(&self) -> Vec<Entity>;
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -72,7 +73,7 @@ pub struct GeometryBounding {
 }
 impl Default for GeometryBounding {
     fn default() -> Self {
-        Self { minimum: Vector3::new(-1., -1., -1.), maximum: Vector3::new(1., 1., 1.) }
+        Self { minimum: Vector3::new(-0.5, -0.5, -0.5), maximum: Vector3::new(0.5, 0.5, 0.5) }
     }
 }
 impl GeometryBounding {
@@ -93,11 +94,6 @@ pub trait TFilter {
     fn filter(&self, entity: Entity) -> bool;
 }
 
-#[derive(Component)]
-pub struct BoxCullingBounding {
-    pub minimum: Vector3,
-    pub maximum: Vector3,
-}
 
 #[derive(Component, Default)]
 pub struct GeometryCullingMode(pub ECullingStrategy);
@@ -109,7 +105,6 @@ pub enum SceneBoundingPool {
     QuadTree(),
     OctTree(BoundingOctTree),
 }
-
 impl SceneBoundingPool {
     pub const MODE_LIST: u8 = 0;
     pub const MODE_QUAD_TREE: u8 = 1;
@@ -202,6 +197,33 @@ impl SceneBoundingPool {
             SceneBoundingPool::List(item) => item.ray_test(org, dir, result),
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(item) => item.ray_test(org, dir, result),
+        }
+    }
+    pub fn entities(&self) -> Vec<Entity> {
+        match self {
+            SceneBoundingPool::List(items) => items.entities(),
+            SceneBoundingPool::QuadTree() => vec![],
+            SceneBoundingPool::OctTree(items) => items.entities(),
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct BoundingBoxDisplay {
+    pub mesh: Entity,
+    pub display: bool,
+}
+impl BoundingBoxDisplay {
+    pub const ATTRIBUTE_MINIMUM: &str = "BoxMinimum";
+    pub const ATTRIBUTE_MAXIMUM: &str = "BoxMaximum";
+    pub fn mesh_state() -> MeshInstanceState {
+        MeshInstanceState {
+            instances: vec![
+                CustomVertexAttribute::new(Atom::from(Self::ATTRIBUTE_MAXIMUM), Atom::from(""), ECustomVertexType::Vec3, None),
+                CustomVertexAttribute::new(Atom::from(Self::ATTRIBUTE_MINIMUM), Atom::from("A_POSITION = 0.5 * (BoxMaximum + BoxMinimum) + A_POSITION * (BoxMaximum - BoxMinimum);"), ECustomVertexType::Vec3, None),
+            ],
+            instance_matrix: true,
+            use_single_instancebuffer: true,
         }
     }
 }

@@ -25,11 +25,11 @@ pub mod prelude;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageScene {
-    SceneCreate,
-    SceneCreateAplly,
-    SceneCommand,
-    SceneTextureRequest,
-    SceneTextureLoaded,
+    Create,
+    _Insert,
+    Command,
+    TextureRequest,
+    TextureLoaded,
 }
 
 pub struct PluginScene;
@@ -57,31 +57,33 @@ impl Plugin for PluginScene {
         app.configure_sets(
             Update,
             (
-                StageScene::SceneCreate,
-                StageScene::SceneCreateAplly,
-                StageScene::SceneCommand.after(ERunStageChap::_InitialApply)
+                StageScene::Create.after(ERunStageChap::_InitialApply),
+                StageScene::_Insert.before(EStageAnimation::Create),
+                StageScene::Command
             ).chain()
         );
 
-        app.configure_set(Update, StageScene::SceneTextureRequest.after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
-        app.configure_set(Update, StageScene::SceneTextureLoaded.after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageScene::TextureRequest.after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
+        app.configure_set(Update, StageScene::TextureLoaded.after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageScene::_Insert));
+
         app.add_systems(
             Update,
             (
                 sys_env_texture_load_launch,
                 sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>
-            ).in_set(StageScene::SceneTextureRequest)
+            ).in_set(StageScene::TextureRequest)
         );
         app.add_systems(
             Update,
             (
                 sys_env_texture_loaded_check,
                 sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture>,
-            ).in_set(StageScene::SceneTextureLoaded)
+            ).in_set(StageScene::TextureLoaded)
         );
 
         app.add_systems(Update, 
-            sys_create_scene.in_set(ERunStageChap::Initial)
+            sys_create_scene.in_set(StageScene::Create)
         );
         
         app.add_systems(
@@ -98,7 +100,7 @@ impl Plugin for PluginScene {
                 sys_act_scene_opaque_target,
                 sys_act_scene_depth_target,
                 sys_act_scene_shadowmap,
-            ).in_set(StageScene::SceneCommand)
+            ).in_set(StageScene::Command)
         );
 
         app.add_systems(

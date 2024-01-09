@@ -95,6 +95,13 @@ impl TBoundingInfoCalc for BoundingOctTree {
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
+    fn entities(&self) -> Vec<Entity> {
+        let count = self.fast.len() + self.tree.len();
+        let mut result = Vec::with_capacity(count);
+        self.fast.iter().for_each(|v| { result.push(*v); });
+        self.tree.ab_map.keys().for_each(|v| { result.push(v.0); });
+        result
+    }
 }
 
 pub fn ab_query_func<F: TFilter>(

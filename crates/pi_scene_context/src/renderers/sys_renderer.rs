@@ -378,7 +378,7 @@ use super::{
         >,
         models: Query<
             (
-                &GlobalEnable, &DisposeReady, &GlobalTransform, &TransparentSortParam, &InstancedMeshTransparentSortCollection,
+                &GlobalEnable, &DisposeReady, &GlobalMatrix, &TransparentSortParam, &InstancedMeshTransparentSortCollection,
                 (&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08
                     // ,&PassID09, &PassID10, &PassID11, &PassID12
                 )

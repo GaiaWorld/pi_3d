@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 
 use crate::{
     transforms::{prelude::*, command_sys::ActionTransformNode},
-    flags::*,
+    flags::*, prelude::{ActionListMeshCreate, ActionListGeometryCreate, OpsMeshCreation, BoundingBoxDisplay, OpsGeomeryCreate, ActionListMeshBoundingCullingMode, OpsMeshBoundingCullingMode, ECullingStrategy, ActionListPolyginMode, OpsPolygonMode, ActionListDepthWrite, OpsDepthWrite, OpsDepthCompare, ActionListDepthCompare, ActionListRenderQueue, OpsRenderQueue}, materials::prelude::{ActionListMaterialCreate, SingleIDBaseDefaultMaterial, ActionListMaterialUse, OpsMaterialUse},
 };
 
 use super::{prelude::*, environment::{brdf::*, environment_texture::{EnvIrradiance, EnvTexture, EnvSampler, EnvTextureSlot}}, pass_render_target::*};
@@ -16,19 +16,39 @@ pub fn sys_create_scene(
     shadowlimit: Res<SceneShadowLimit>,
     device: Res<PiRenderDevice>,
     asset_samp: Res<ShareAssetMgr<SamplerRes>>, 
+    mut meshcreate: ResMut<ActionListMeshCreate>,
+    mut meshpolygin: ResMut<ActionListPolyginMode>,
+    mut meshdepthwrite: ResMut<ActionListDepthWrite>,
+    mut meshdepthtest: ResMut<ActionListDepthCompare>,
+    mut meshrenderqueue: ResMut<ActionListRenderQueue>,
+    mut geocreate: ResMut<ActionListGeometryCreate>,
+    mut meshboundingmode: ResMut<ActionListMeshBoundingCullingMode>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool)| {
 
         let id_left = commands.spawn_empty().id();
         let id_right = commands.spawn_empty().id();
+        let bounding = commands.spawn_empty().id();
+        let boundinggeo = commands.spawn_empty().id();
 
         if let Some(mut entitycmds) = commands.get_entity(entity) {
+            meshcreate.push(OpsMeshCreation::ops(entity, bounding, BoundingBoxDisplay::mesh_state()));
+            meshboundingmode.push(OpsMeshBoundingCullingMode::ops(bounding, ECullingStrategy::None));
+            meshpolygin.push(OpsPolygonMode::ops(bounding, PolygonMode::Line));
+            meshdepthwrite.push(OpsDepthWrite::ops(bounding, false));
+            meshdepthtest.push(OpsDepthCompare::ops(bounding, CompareFunction::Always));
+            meshrenderqueue.push(OpsRenderQueue::ops(bounding, i32::MAX, i32::MAX));
+            geocreate.push(OpsGeomeryCreate::ops(bounding, boundinggeo, pi_mesh_builder::cube::CubeBuilder::attrs_meta(), Some(pi_mesh_builder::cube::CubeBuilder::indices_meta())));
+
             ActionScene::init(&mut entitycmds, id_left, id_right, lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp);
             entitycmds.insert(pool);
             entitycmds.insert(SceneAnimationContext::new());
+            entitycmds.insert(BoundingBoxDisplay { mesh: bounding, display: false });
         } else {
             commands.entity(id_left).despawn();
             commands.entity(id_right).despawn();
+            commands.entity(bounding).despawn();
+            commands.entity(boundinggeo).despawn();
             return;
         };
     });

@@ -46,56 +46,7 @@ impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTestData::default());
     }
-//     fn init(
-//         &mut self,
-//         engine: &mut pi_scene_context::engine::Engine,
-//         stages: &mut pi_scene_context::run_stage::RunStage,
-//     ) -> Result<(), pi_scene_context::plugin::ErrorPlugin> {
-//         PluginLocalLoad.init(engine, stages);
-//         PluginBundleDefault.init(engine, stages);
-//         PluginUnlitMaterial.init(engine, stages);
-
-//         PluginCubeBuilder.init(engine, stages);
-
-//         let world = engine.world_mut();
-
-//         SysTest::setup(world, stages.query_stage::<SysTest>(ERunStageChap::Command));
-
-//         let testdata = SingleTestData::default();
-//         world.insert_resource(testdata);
-
-//         Ok(())
-//     }
 }
-
-// impl PluginTest {
-//     fn setup(
-//         engine: &pi_engine_shell::engine_shell::EnginShell,
-//     ) {
-//         let testdata = engine.world().get_resource_mut::<SingleTestData>().unwrap();
-
-//         engine.frame_time(2000);
-
-//         // Test Code
-//         let scene01 = engine.create_scene();
-//         let camera01 = engine.create_free_camera(scene01);
-//         engine.active_camera(camera01, true);
-//         engine.layer_mask(camera01, LayerMask::default());
-//         engine.transform_position(camera01, Vector3::new(0., 0., -10.));
-//         engine.free_camera_orth_size(camera01, 4 as f32);
-//         engine.camera_renderer(camera01, RendererGraphicDesc { pre: Some(Atom::from("Clear")), curr: Atom::from("MainCamera"), next: None, passorders: PassTagOrders::new(vec![EPassTag::Opaque, EPassTag::Water, EPassTag::Sky, EPassTag::Transparent]) });
-
-
-//         // let matid = engine.create_default_material();
-//         // engine.emissive_intensity(entity, intensity);
-
-//         let cube = engine.new_cube(scene01);
-//         let mat = engine.create_default_material(EPassTag::Opaque);
-//         engine.use_material(cube, mat);
-//         engine.layer_mask(cube, LayerMask::default());
-//         testdata.transforms.push((cube, 0., 0., 0.));
-//     }
-// }
 
 fn setup(
     mut commands: Commands,

@@ -4,7 +4,7 @@ use axis::PluginAxis;
 use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
+use pi_scene_context::{prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, scene::StageScene};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::cube::*;
@@ -183,9 +183,9 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     app.add_plugins(PluginAxis);
-    app.add_systems(Update, pi_3d::sys_info_node.run_if(should_run).in_set(ERunStageChap::Initial));
-    app.add_systems(Update, pi_3d::sys_info_draw.run_if(should_run).in_set(ERunStageChap::Initial));
-    app.add_systems(Update, pi_3d::sys_info_resource.run_if(should_run).in_set(ERunStageChap::Initial));
+    app.add_systems(Update, pi_3d::sys_info_node.run_if(should_run).in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_draw.run_if(should_run).in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_resource.run_if(should_run).in_set(StageScene::Create));
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 

@@ -18,7 +18,9 @@ pub fn sys_model_direct_lighting_modify_by_light(
     viewers: Query<(&SceneID, &ModelList)>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<&ModelLightingIndexs>,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_model_direct_lighting_modify_by_light"));
     scenes.iter().for_each(|(scene, queuedirect)| {
         viewers.iter().for_each(|(idscene, models)| {
             if idscene.0 == scene {
@@ -44,12 +46,14 @@ pub fn sys_model_direct_lighting_modify_by_light(
 
 pub fn sys_model_direct_lighting_modify_by_model(
     scenes: Query<&SceneDirectLightsQueue>,
-    transforms: Query<&GlobalTransform>,
+    transforms: Query<&GlobalMatrix>,
     enabled: Query<&GlobalEnable, With<DirectLight>>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs), Changed<LayerMask>>,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_model_direct_lighting_modify_by_model"));
     meshes.iter().for_each(|(idm, idscene, ids)| {
         if let Ok(queuedirect) = scenes.get(idscene.0) {
             if let Ok(my) = layermask.get(idm) {
@@ -71,12 +75,14 @@ pub fn sys_model_direct_lighting_modify_by_model(
 
 pub fn sys_model_point_lighting_modify_by_model(
     scenes: Query<&ScenePointLightsQueue>,
-    transforms: Query<&GlobalTransform>,
+    transforms: Query<&GlobalMatrix>,
     enabled: Query<&GlobalEnable, With<PointLight>>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForcePointLightings), Or<(Changed<LayerMask>, Changed<ModelForcePointLightings>)>>,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_model_point_lighting_modify_by_model"));
     meshes.iter().for_each(|(idm, idscene, ids, forcelights)| {
         if let Ok(queuepoint) = scenes.get(idscene.0) {
             if let Ok(my) = layermask.get(idm) {
@@ -109,12 +115,14 @@ pub fn sys_model_point_lighting_modify_by_model(
 
 pub fn sys_model_spot_lighting_modify_by_model(
     scenes: Query<&SceneSpotLightsQueue>,
-    transforms: Query<&GlobalTransform>,
+    transforms: Query<&GlobalMatrix>,
     enabled: Query<&GlobalEnable, With<SpotLight>>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceSpotLightings), Or<(Changed<LayerMask>, Changed<ModelForceSpotLightings>)>>,
+    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
 ) {
+    // record.0.push(String::from("sys_model_spot_lighting_modify_by_model"));
     meshes.iter().for_each(|(idm, idscene, ids, forcelights)| {
         if let Ok(queuepoint) = scenes.get(idscene.0) {
             if let Ok(my) = layermask.get(idm) {

@@ -1,9 +1,9 @@
 
-use pi_engine_shell::prelude::*;
+use pi_engine_shell::{prelude::*, run_stage::should_run_with_lighting};
 
 use crate::{
     transforms::prelude::*,
-    object::sys_dispose_ready,
+    object::sys_dispose_ready, scene::StageScene, layer_mask::StageLayerMask, flags::StageEnable,
 };
 
 use self::{
@@ -34,12 +34,12 @@ impl Plugin for PluginLighting {
         app.insert_resource(ActionListLightRadius::default());
         app.insert_resource(StateLight::default());
         
-        app.configure_set(Update, StageLighting::LightingCommand.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, StageLighting::LightingCommandApply.after(StageLighting::LightingCommand));
-        app.configure_set(Update, StageLighting::LightingUniform.after(StageLighting::LightingCommandApply).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
-        // app.configure_set(Update, StageLighting::LightingCalcMatrix.after(StageLighting::LightingCommandApply).after(StageTransform::TransformCalcMatrix));
-        // app.configure_set(Update, StageLighting::LightingCulling.after(StageLighting::LightingCalcMatrix).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageLighting::LightingCommandApply));
+        app.configure_set(Update, StageLighting::LightCreate.after(StageScene::Create));
+        app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command));
+        app.configure_set(Update, StageLighting::LightingCommand.after(StageLighting::_LightCreate));
+        app.configure_set(Update, StageLighting::LightingUniform.after(StageLighting::LightingCommand).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageLighting::_LightCreate));
+
 
         app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 256, max_spot_light_count: 128, max_hemi_light_count: 16 }));
         app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 16, max_spot_light_count: 16, max_hemi_light_count: 4 }));
@@ -48,14 +48,11 @@ impl Plugin for PluginLighting {
             ShadowLimitInfo { max_count: 1, max_width: 1024, max_height: 1024, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
         ));
 
-        // app.add_systems(Update, sys_cmd_light_create.in_set(ERunStageChap::Initial));
-        // app.add_systems(Update, sys_cmd_light_modify.in_set(ERunStageChap::Command));
-        // app.add_systems(Update, sys_light_render_modify.in_set(ERunStageChap::Command));
         app.add_systems(
 			Update,
             (
                 sys_create_light,
-            ).chain().in_set(ERunStageChap::Initial)
+            ).in_set(StageLighting::LightCreate)
         );
         app.add_systems(
 			Update,
@@ -71,10 +68,10 @@ impl Plugin for PluginLighting {
         app.add_systems(
 			Update,
             (
-                sys_direct_light_update,
-                sys_spot_light_update,
-                sys_point_light_update,
-                sys_hemi_light_update,
+                sys_direct_light_update.run_if(should_run_with_lighting),
+                sys_spot_light_update.run_if(should_run_with_lighting),
+                sys_point_light_update.run_if(should_run_with_lighting),
+                sys_hemi_light_update.run_if(should_run_with_lighting),
             ).chain().in_set(StageLighting::LightingUniform)
         );
         

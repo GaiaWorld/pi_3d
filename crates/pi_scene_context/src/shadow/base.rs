@@ -6,9 +6,8 @@ use crate::{viewer::prelude::TCullingPerformance, layer_mask::prelude::*};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageShadowGenerator {
     Create,
-    CreateApply,
+    _CreateApply,
     Command,
-    CommandApply,
     Renderer,
     CalcMatrix,
     Culling,

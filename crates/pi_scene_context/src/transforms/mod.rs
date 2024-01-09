@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::object::sys_dispose_ready;
+use crate::{object::sys_dispose_ready, scene::StageScene, flags::StageEnable};
 
 use self::{
     command::*,
@@ -36,12 +36,15 @@ impl Plugin for PluginTransformNode {
             .insert_resource(TransformDirtyRoots::default())
             ;
 
-        app.configure_set(Update, StageTransform::TransformCommand.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageTransform::TransformCreate.after(StageScene::Create));
+        app.configure_set(Update, StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command));
+        app.configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate));
         // app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
         app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageTransform::_TransformCreate));
 
         app.add_systems(Update, 
-            sys_create_transform_node.in_set(ERunStageChap::Initial),
+            sys_create_transform_node.in_set(StageTransform::TransformCreate),
         );
         app.add_systems(Update, 
             sys_act_transform_parent.in_set(StageTransform::TransformCommand),

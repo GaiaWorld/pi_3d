@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::ActionList;
 use pi_scene_math::Vector3;
 
 use crate::{
-    transforms::prelude::GlobalTransform,
+    transforms::prelude::GlobalMatrix,
     cullings::prelude::SceneBoundingPool,
     viewer::prelude::ViewerTransformMatrix,
 };
@@ -26,7 +26,7 @@ impl Plugin for PluginRayTest {
 pub fn sys_ray_test(
     mut rays: ResMut<ActionListRayTest>,
     mut res: ResMut<RayTestID>,
-    transforms: Query<&GlobalTransform>,
+    transforms: Query<&GlobalMatrix>,
     scenes: Query<&ViewerTransformMatrix>,
     pool: Query<&SceneBoundingPool>,
 ) {

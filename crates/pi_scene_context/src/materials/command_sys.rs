@@ -134,8 +134,6 @@ pub fn sys_act_material_use(
                             _ => { passid.7.0 }
                         };
 
-                        renderobjectcmds.push(OpsPassObject::ops(id_mesh, id_mat, pass));
-
                         if let Ok(matid) = passes.get(id_pass) {
                             // log::error!("Material Use Pass {:?}", pass);
                             let oldmat = matid.0;
@@ -150,6 +148,8 @@ pub fn sys_act_material_use(
                                         // *flag = DirtyMaterialRefs::default();
                                     }
                                 }
+
+                                renderobjectcmds.push(OpsPassObject::ops(id_mesh, id_mat, pass));
                             }
                         } else {
                             errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);

@@ -3,9 +3,9 @@
 use pi_engine_shell::prelude::*;
 use pi_scene_math::Vector3;
 
-use crate::{transforms::transform_node_sys::sys_world_matrix_calc, prelude::{StageTransform, StageModel}, viewer::prelude::sys_abstructmesh_culling_flag_reset};
+use crate::{transforms::transform_node_sys::sys_world_matrix_calc, prelude::{StageTransform, StageModel}, viewer::prelude::sys_abstructmesh_culling_flag_reset, cameras::prelude::StageCamera, scene::StageScene, materials::prelude::StageMaterial};
 
-use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::{sys_update_culling_by_worldmatrix, sys_update_culling_by_cullinginfo}, command::{ActionListMeshBounding, ActionListMeshBoundingCullingMode}, command_sys::{sys_act_mesh_bounding, sys_act_mesh_bounding_culling}};
+use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::{sys_update_culling_by_worldmatrix, sys_update_culling_by_cullinginfo}, command::{ActionListMeshBounding, ActionListMeshBoundingCullingMode, ActionListBoundingBoxDisplay}, command_sys::{sys_act_mesh_bounding, sys_act_mesh_bounding_culling, sys_act_mesh_bounding_culling_display}};
 
 mod bounding_box;
 mod bounding_sphere;
@@ -21,6 +21,11 @@ mod ray_test;
 pub mod prelude;
 
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageCulling {
+    Command,
+    CalcBounding,
+}
 
 #[derive(Debug, Clone, Component)]
 pub struct IsCulled;
@@ -37,6 +42,14 @@ impl Plugin for PluginCulling {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListMeshBounding::default());
         app.insert_resource(ActionListMeshBoundingCullingMode::default());
+        app.insert_resource(ActionListBoundingBoxDisplay::default());
+
+        app.configure_set(Update, StageCulling::Command.after(StageScene::_Insert).before(StageMaterial::Command));
+        app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
+
+        app.add_systems(Update, (
+            sys_act_mesh_bounding_culling_display
+        ).in_set(StageCulling::Command));
 
         app.add_systems(Update, (
             sys_act_mesh_bounding,
@@ -49,7 +62,7 @@ impl Plugin for PluginCulling {
                 sys_update_culling_by_worldmatrix,
                 sys_update_culling_by_cullinginfo,
                 sys_abstructmesh_culling_flag_reset,
-            ).chain().after(sys_world_matrix_calc).in_set(StageTransform::TransformCalcMatrix)
+            ).chain().in_set(StageCulling::CalcBounding)
         );
     }
 }

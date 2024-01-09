@@ -2,6 +2,7 @@
 use pi_engine_shell::prelude::*;
 pub use load::*;
 pub use base::*;
+use pi_scene_context::scene::StageScene;
 
 mod load;
 mod base;
@@ -28,7 +29,7 @@ impl Plugin for PluginGLTF2Res {
                 sys_gltf_base_loaded_launch,
                 sys_gltf_base_loaded_check,
                 sys_gltf_analy
-            ).chain().in_set(ERunStageChap::Initial)
+            ).chain().in_set(StageScene::Create)
         );
     }
 }

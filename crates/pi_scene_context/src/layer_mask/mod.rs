@@ -23,24 +23,9 @@ pub enum StageLayerMask {
 
 pub struct PluginLayerMask;
 impl Plugin for PluginLayerMask {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut crate::engine::Engine,
-    //     stages: &mut crate::run_stage::RunStage,
-    // ) -> Result<(), crate::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-
-    //     SysLayerMaskCommand::setup(world, stages.query_stage::<SysLayerMaskCommand>(ERunStageChap::Initial));
-
-    //     world.insert_resource(SingleLayerMaskCommandList::default());
-
-    //     Ok(())
-    // }
-
     fn build(&self, app: &mut pi_engine_shell::prelude::App) {
         app.insert_resource(ActionListLayerMask::default());
-        app.add_systems(Update, sys_act_layer_mask.run_if(should_run).in_set(StageLayerMask::Command).after(ERunStageChap::_CommandApply));
-
-        // app.world.insert_resource(SingleLayerMaskCommandList::default());
+        app.configure_set(Update, StageLayerMask::Command);
+        app.add_systems(Update, sys_act_layer_mask.run_if(should_run).in_set(StageLayerMask::Command));
     }
 }

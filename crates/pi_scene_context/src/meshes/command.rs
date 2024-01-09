@@ -108,76 +108,76 @@ impl OpsBoneOffset {
 }
 pub type ActionListBoneOffset = ActionList<OpsBoneOffset>;
 
-pub struct OpsMeshRenderAlignment(pub(crate) Entity, pub(crate) RenderAlignment, pub u8);
+pub struct OpsMeshRenderAlignment(pub(crate) Entity, pub(crate) RenderAlignment);
 impl OpsMeshRenderAlignment {
     pub fn ops(entity: Entity, val: ERenderAlignment) -> Self {
-        Self(entity, RenderAlignment(val), 0)
+        Self(entity, RenderAlignment(val))
     }
 }
 pub type ActionListMeshRenderAlignment = ActionList<OpsMeshRenderAlignment>;
 
-pub struct OpsAbstructMeshScalingMode(pub(crate) Entity, pub(crate) ScalingMode, pub u8);
+pub struct OpsAbstructMeshScalingMode(pub(crate) Entity, pub(crate) ScalingMode);
 impl OpsAbstructMeshScalingMode {
     pub fn ops(entity: Entity, val: EScalingMode) -> Self {
-        Self(entity, ScalingMode(val), 0)
+        Self(entity, ScalingMode(val))
     }
 }
 pub type ActionListAbstructMeshScalingMode = ActionList<OpsAbstructMeshScalingMode>;
 
-pub struct OpsMeshRenderIndiceRange(pub(crate) Entity, pub(crate) Option<Range<u32>>, pub u8);
+pub struct OpsMeshRenderIndiceRange(pub(crate) Entity, pub(crate) Option<Range<u32>>);
 impl OpsMeshRenderIndiceRange {
     pub fn ops(entity: Entity, start: Option<u32>, end: Option<u32>) -> Self {
         if let (Some(start), Some(end)) = (start, end) {
-            Self(entity, Some(Range { start, end }), 0)
+            Self(entity, Some(Range { start, end }))
         } else {
-            Self(entity, None, 0)
+            Self(entity, None)
         }
     }
 }
 pub type ActionListMeshRenderIndiceRange = ActionList<OpsMeshRenderIndiceRange>;
 
-pub struct OpsAbstructMeshVelocity(pub(crate) Entity, pub(crate) ModelVelocity, pub u8);
+pub struct OpsAbstructMeshVelocity(pub(crate) Entity, pub(crate) ModelVelocity);
 impl OpsAbstructMeshVelocity {
     pub fn ops(entity: Entity, x: Number, y: Number, z: Number) -> Self {
-        Self(entity, ModelVelocity(Vector3::new(x, y, z)), 0)
+        Self(entity, ModelVelocity(Vector3::new(x, y, z)))
     }
 }
 pub type ActionListAbstructMeshVelocity = ActionList<OpsAbstructMeshVelocity>;
 
-pub struct OpsMeshRenderVertexRange(pub(crate) Entity, pub(crate) Option<(u32, u32)>, pub u8);
+pub struct OpsMeshRenderVertexRange(pub(crate) Entity, pub(crate) Option<(u32, u32)>);
 impl OpsMeshRenderVertexRange {
     pub fn ops(entity: Entity, start: Option<u32>, count: Option<u32>) -> Self {
         if let (Some(start), Some(count)) = (start, count) {
-            Self(entity, Some((start, count)), 0)
+            Self(entity, Some((start, count)))
         } else {
-            Self(entity, None, 0)
+            Self(entity, None)
         }
     }
 }
 pub type ActionListMeshRenderVertexRange = ActionList<OpsMeshRenderVertexRange>;
 
-pub struct OpsMeshForcePointLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool, pub(crate) u8);
+pub struct OpsMeshForcePointLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool);
 impl OpsMeshForcePointLighting {
     pub fn ops(mesh_or_instance: Entity, light: Entity, is_add: bool) -> Self {
-        Self(mesh_or_instance, light, is_add, 0)
+        Self(mesh_or_instance, light, is_add)
     }
 }
 pub type ActionListMeshForcePointLighting = ActionList<OpsMeshForcePointLighting>;
 
 
-pub struct OpsMeshForceSpotLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool, pub(crate) u8);
+pub struct OpsMeshForceSpotLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool);
 impl OpsMeshForceSpotLighting {
     pub fn ops(mesh_or_instance: Entity, light: Entity, is_add: bool) -> Self {
-        Self(mesh_or_instance, light, is_add, 0)
+        Self(mesh_or_instance, light, is_add)
     }
 }
 pub type ActionListMeshForceSpotLighting = ActionList<OpsMeshForceSpotLighting>;
 
 
-pub struct OpsMeshForceHemiLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool, pub(crate) u8);
+pub struct OpsMeshForceHemiLighting(pub(crate) Entity, pub(crate) Entity, pub(crate) bool);
 impl OpsMeshForceHemiLighting {
     pub fn ops(mesh_or_instance: Entity, light: Entity, is_add: bool) -> Self {
-        Self(mesh_or_instance, light, is_add, 0)
+        Self(mesh_or_instance, light, is_add)
     }
 }
 pub type ActionListMeshForceHemiLighting = ActionList<OpsMeshForceHemiLighting>;

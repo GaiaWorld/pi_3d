@@ -21,3 +21,11 @@ impl OpsMeshBoundingCullingMode {
 }
 pub type ActionListMeshBoundingCullingMode = ActionList<OpsMeshBoundingCullingMode>;
 
+pub struct OpsBoundingBoxDisplay(pub(crate) Entity, pub(crate) bool, pub(crate) PassTag);
+impl OpsBoundingBoxDisplay {
+    pub fn ops(scene: Entity, mode: bool, pass: PassTag) -> Self {
+        Self(scene, mode, pass)
+    }
+}
+pub type ActionListBoundingBoxDisplay = ActionList<OpsBoundingBoxDisplay>;
+

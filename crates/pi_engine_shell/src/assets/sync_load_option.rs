@@ -246,24 +246,6 @@ where
     R: From<Handle<D>> + Component,
     S: TSystemStageInfo + 'static + ThreadSync
 {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut EnginShell,
-    //     stages: &mut RunStage,
-    // ) -> Result<(), ErrorPlugin> {
-
-    //     let world = engine.world_mut();
-    //     world.insert_resource(AssetSyncWaitOption::<K0, K, D, R>(XHashMap::default(), vec![], PhantomData));
-    //     if world.get_resource::<AssetMgr::<D>>().is_none() {
-    //         world.insert_resource(AssetMgr::<D>::new(GarbageEmpty(), self.0, self.1, self.2));
-    //     }
-
-    //     AssetSyncLoadOption::<K0, K, D, R, S>::setup(world, stages.query_stage::<AssetSyncLoadOption::<K0, K, D, R, S>>(ERunStageChap::Initial));
-    //     AssetSyncLoadCheckOption::<K0, K, D, R>::setup(world, stages.query_stage::<AssetSyncLoadCheckOption::<K0, K, D, R>>(ERunStageChap::Initial));
-
-    //     Ok(())
-    // }
-
     fn build(&self, app: &mut App) {
         app.world.insert_resource(AssetSyncWaitOption::<K0, K, D, R>(XHashMap::default(), vec![], PhantomData));
         if app.world.get_resource::<ShareAssetMgr::<D>>().is_none() {

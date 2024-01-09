@@ -29,7 +29,7 @@ impl Plugin for PluginTest {
     }
 }
 
-    fn setup(
+pub fn setup(
         mut commands: Commands,
         mut actions: pi_3d::ActionSets,
     mut animegroupres: ResourceAnimationGroup,
@@ -235,6 +235,7 @@ pub fn main() {
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_systems(Startup, base::active_lighting_shadow);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

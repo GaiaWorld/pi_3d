@@ -12,8 +12,9 @@ pub use super::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageCamera {
+    CameraCreate,
+    _CameraCreate,
     CameraCommand,
-    CameraCommandApply,
     CameraRenderer,
     CameraCalcMatrix,
     CameraCulling,

@@ -9,7 +9,7 @@ use crate::{base::*, ResTrailBuffer, StateTrail};
 
 
 pub fn sys_trail_update(
-    transforms: Query<(&GlobalTransform, &LocalMatrix)>,
+    transforms: Query<(&GlobalMatrix, &LocalMatrix)>,
     scenes: Query<&SceneTime>,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut items: Query<

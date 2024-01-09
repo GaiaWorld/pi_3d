@@ -31,13 +31,6 @@ impl OpsTransformNodeLocalPosition {
 }
 pub type ActionListTransformNodeLocalPosition = ActionList<OpsTransformNodeLocalPosition>;
 
-
-// pub enum OpsTransformNodeLocalRotation {
-//     Euler(Entity, Number, Number, Number),
-//     Quaternion(Entity, Number, Number, Number, Number),
-// }
-// pub type ActionListTransformNodeLocalRotation = ActionList<OpsTransformNodeLocalRotation>;
-
 pub struct OpsTransformNodeLocalRotationQuaternion(pub Entity, pub f32, pub f32, pub f32, pub f32);
 impl OpsTransformNodeLocalRotationQuaternion {
     pub fn ops(node: Entity, x: f32, y: f32, z: f32, w: f32) -> Self {
@@ -77,7 +70,8 @@ pub struct BundleTransformNode(
     RecordLocalEulerAngles,
     LocalRotation,
     LocalMatrix,
-    GlobalTransform,
+    GlobalMatrix,
+    AbsoluteTransform,
 );
 
 #[derive(Default, Resource)]

@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     object::sys_dispose_ready,
-    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask}, scene::command_sys::sys_create_scene,
+    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask}, scene::{command_sys::sys_create_scene, StageScene}, cullings::StageCulling, prelude::StageRenderer,
 };
 
 use self::{
@@ -50,18 +50,19 @@ impl Plugin for PluginCamera {
         // app.insert_resource(ActionListCameraRenderer::default());
         app.insert_resource(StateCamera::default());
 
-        app.configure_set(Update, StageCamera::CameraCommand.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, StageCamera::CameraCommandApply.after(StageCamera::CameraCommand));
-        app.configure_set(Update, StageCamera::CameraCalcMatrix.after(StageCamera::CameraCommandApply).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command));
-        app.configure_set(Update, StageCamera::CameraCulling.after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageCamera::CameraCommandApply));
+        app.configure_set(Update, StageCamera::CameraCreate.after(StageScene::Create));
+        app.configure_set(Update, StageCamera::_CameraCreate.after(StageCamera::CameraCreate).before(StageLayerMask::Command));
+        app.configure_set(Update, StageCamera::CameraCommand.after(StageCamera::_CameraCreate).before(StageRenderer::Create));
+        app.configure_set(Update, StageCamera::CameraCalcMatrix.after(StageCamera::CameraCommand).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command));
+        app.configure_set(Update, StageCamera::CameraCulling.after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageCamera::_CameraCreate));
 
         app.add_systems(
 			Update,
             (
-                sys_create_camera.after(sys_create_scene),
+                sys_create_camera,
                 // sys_create_camera_renderer,
-            ).chain().in_set(ERunStageChap::Initial)
+            ).in_set(StageCamera::CameraCreate)
         );
 
         app.add_systems(

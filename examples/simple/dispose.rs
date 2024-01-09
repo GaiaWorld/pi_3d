@@ -3,7 +3,7 @@
 use base::DemoScene;
 use default_render::shader::DefaultShader;
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
-use pi_scene_context::prelude::*;
+use pi_scene_context::{prelude::*, scene::StageScene};
 use pi_mesh_builder::cube::*;
 use pi_wy_rng::WyRng;
 use rand::Rng;
@@ -68,7 +68,7 @@ pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ListTestData(vec![], None, pi_wy_rng::WyRng::default()));
-        app.configure_set(Update, StageTest::Cmd.before(ERunStageChap::Initial));
+        app.configure_set(Update, StageTest::Cmd.before(StageScene::Create));
         app.add_systems(Update, sys.in_set(StageTest::Cmd));
     }
 }

@@ -27,7 +27,7 @@ impl pi_curves::curve::frame::FrameDataValue for AnimatorableVec3 {
     }
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
-        log::error!("amount {:?}", amount);
+        // log::error!("amount {:?}", amount);
         Self(self.0 + rhs.0 * amount)
     }
     fn size() -> usize {

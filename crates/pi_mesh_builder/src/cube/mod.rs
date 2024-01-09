@@ -5,8 +5,6 @@ use std::ops::Range;
 use pi_assets::asset::Handle;
 use pi_engine_shell::prelude::*;
 
-use pi_scene_context::prelude::*;
-
 pub struct CubeBuilder;
 impl CubeBuilder {
     // const KEY_BUFFER_COLOR4:    &'static str = "CubeColor4";

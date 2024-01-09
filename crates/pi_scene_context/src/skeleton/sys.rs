@@ -8,7 +8,7 @@ use super::{skeleton::*, bone::*};
 
     pub fn sys_skin_dirty_by_bone(
         mut skins: Query<&mut SkeletonBonesDirty>,
-        bones: Query<&SkeletonID, Changed<GlobalTransform>>,
+        bones: Query<&SkeletonID, Changed<GlobalMatrix>>,
     ) {
         bones.iter().for_each(|skin| {
             if let Ok(mut item) = skins.get_mut(skin.0) {
@@ -50,7 +50,7 @@ use super::{skeleton::*, bone::*};
             ),
             Changed<SkeletonBonesDirty>
         >,
-        bones: Query<(&GlobalTransform, &BoneAbsoluteInv)>,
+        bones: Query<(&GlobalMatrix, &BoneAbsoluteInv)>,
     ) {
         items.iter_mut().for_each(|(skel, mut skindirty)| {
             if skindirty.0 {

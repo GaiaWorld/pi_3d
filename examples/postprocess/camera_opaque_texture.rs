@@ -169,7 +169,7 @@ impl Plugin for PluginTest {
                     let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i + 1) as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
-                    actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
+                    // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
                     actions.instance.vec2s.push(OpsInstanceVec2::ops(cube, (i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.), Atom::from("InsV2")));
                 }
             }
@@ -253,6 +253,7 @@ pub fn main() {
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_systems(Startup, base::active_lighting_shadow);
     // bevy_mod_debugdump::print_main_schedule(&mut app);
     
     // app.run()

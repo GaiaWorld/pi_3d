@@ -61,7 +61,7 @@ fn setup(
     let mut blend = ModelBlend::default(); blend.combine();
     actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
 
-    actions.transform.enable.push(OpsNodeEnable::ops(source, false));
+    // actions.transform.enable.push(OpsNodeEnable::ops(source, false));
 
     actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
     actions.transform.tree.push(OpsTransformNodeParent::ops(node, root));

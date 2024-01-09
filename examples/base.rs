@@ -6,10 +6,10 @@ use pi_3d::PluginBundleDefault;
 use pi_3d_state::StateResource;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime};
+use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
 use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer, ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
-use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator};
+use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator, scene::StageScene};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_shadow_mapping::PluginShadowMapping;
 use pi_standard_material::PluginStandardMaterial;
@@ -187,7 +187,7 @@ impl Plugin for PluginSceneTimeFromPluginFrame {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            sys_scene_time_from_frame.after(pi_engine_shell::frame_time::sys_frame_time).in_set(ERunStageChap::Initial)
+            sys_scene_time_from_frame.after(pi_engine_shell::frame_time::sys_frame_time).in_set(StageScene::Create)
         );
     }
 }
@@ -369,4 +369,9 @@ pub fn setup_default_mat(
 ) {
     let entity = mat.0;
     actionsmat.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY)));
+}
+
+pub fn active_lighting_shadow(mut state3d: ResMut<RunState3D>) {
+    state3d.with_lighting(true);
+    state3d.with_shadow(true);
 }

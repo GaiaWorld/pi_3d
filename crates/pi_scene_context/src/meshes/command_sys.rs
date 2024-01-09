@@ -244,14 +244,14 @@ pub fn sys_act_abstruct_mesh_render_alignment(
     mut cmds: ResMut<ActionListMeshRenderAlignment>,
     mut items: Query<&mut RenderAlignment>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshRenderAlignment(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsMeshRenderAlignment(entity, val)| {
         if let Ok(mut item) = items.get_mut(entity) {
             // log::warn!("RenderAlignment: {:?}", (val));
             *item = val;
         } else {
-            if count < 2 {
-                cmds.push(OpsMeshRenderAlignment(entity, val, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsMeshRenderAlignment(entity, val, count + 1));
+            // }
         }
     });
 }
@@ -260,13 +260,13 @@ pub fn sys_act_abstruct_mesh_scaling_mode(
     mut cmds: ResMut<ActionListAbstructMeshScalingMode>,
     mut items: Query<&mut ScalingMode>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsAbstructMeshScalingMode(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsAbstructMeshScalingMode(entity, val)| {
         if let Ok(mut item) = items.get_mut(entity) {
             *item = val;
         } else {
-            if count < 2 {
-                cmds.push(OpsAbstructMeshScalingMode(entity, val, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsAbstructMeshScalingMode(entity, val, count + 1));
+            // }
         }
     });
 }
@@ -275,13 +275,13 @@ pub fn sys_act_abstruct_mesh_velocity(
     mut cmds: ResMut<ActionListAbstructMeshVelocity>,
     mut items: Query<&mut ModelVelocity>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsAbstructMeshVelocity(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsAbstructMeshVelocity(entity, val)| {
         if let Ok(mut item) = items.get_mut(entity) {
             *item = val;
         } else {
-            if count < 2 {
-                cmds.push(OpsAbstructMeshVelocity(entity, val, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsAbstructMeshVelocity(entity, val, count + 1));
+            // }
         }
     });
 }
@@ -290,15 +290,15 @@ pub fn sys_act_mesh_render_indice(
     mut cmds: ResMut<ActionListMeshRenderIndiceRange>,
     mut items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val)| {
         // log::warn!("Range: {:?}", val);
         if let Ok((mut item, mut record)) = items.get_mut(entity) {
             *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
             *item = IndiceRenderRange(val);
         } else {
-            if count < 2 {
-                cmds.push(OpsMeshRenderIndiceRange(entity, val, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsMeshRenderIndiceRange(entity, val, count + 1));
+            // }
         }
     });
 }
@@ -308,15 +308,15 @@ pub fn sys_act_mesh_render_vertex_range(
     mut items: Query<&mut VertexRenderRange>,
     // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshRenderVertexRange(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsMeshRenderVertexRange(entity, val)| {
         // log::warn!("Range: {:?}", val);
         if let Ok(mut item) = items.get_mut(entity) {
             // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
             *item = VertexRenderRange(val);
         } else {
-            if count < 2 {
-                cmds.push(OpsMeshRenderVertexRange(entity, val, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsMeshRenderVertexRange(entity, val, count + 1));
+            // }
         }
     });
 }
@@ -326,7 +326,7 @@ pub fn sys_act_mesh_force_point_lighting(
     mut items: Query<&mut ModelForcePointLightings>,
     // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshForcePointLighting(entity, light, isadd, count)| {
+    cmds.drain().drain(..).for_each(|OpsMeshForcePointLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
         if let Ok(mut item) = items.get_mut(entity) {
             // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
@@ -335,9 +335,9 @@ pub fn sys_act_mesh_force_point_lighting(
                 Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
             }
         } else {
-            if count < 2 {
-                cmds.push(OpsMeshForcePointLighting(entity, light, isadd, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsMeshForcePointLighting(entity, light, isadd, count + 1));
+            // }
         }
     });
 }
@@ -347,7 +347,7 @@ pub fn sys_act_mesh_force_spot_lighting(
     mut items: Query<&mut ModelForceSpotLightings>,
     // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshForceSpotLighting(entity, light, isadd, count)| {
+    cmds.drain().drain(..).for_each(|OpsMeshForceSpotLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
         if let Ok(mut item) = items.get_mut(entity) {
             // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
@@ -356,9 +356,9 @@ pub fn sys_act_mesh_force_spot_lighting(
                 Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
             }
         } else {
-            if count < 2 {
-                cmds.push(OpsMeshForceSpotLighting(entity, light, isadd, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsMeshForceSpotLighting(entity, light, isadd, count + 1));
+            // }
         }
     });
 }
@@ -368,7 +368,7 @@ pub fn sys_act_mesh_force_hemi_lighting(
     mut items: Query<&mut ModelForceHemiLightings>,
     // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshForceHemiLighting(entity, light, isadd, count)| {
+    cmds.drain().drain(..).for_each(|OpsMeshForceHemiLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
         if let Ok(mut item) = items.get_mut(entity) {
             // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
@@ -377,9 +377,9 @@ pub fn sys_act_mesh_force_hemi_lighting(
                 Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
             }
         } else {
-            if count < 2 {
-                cmds.push(OpsMeshForceHemiLighting(entity, light, isadd, count + 1));
-            }
+            // if count < 2 {
+            //     cmds.push(OpsMeshForceHemiLighting(entity, light, isadd, count + 1));
+            // }
         }
     });
 }

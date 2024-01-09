@@ -46,9 +46,9 @@ impl Plugin for PluginPassObject {
         app.insert_resource(ActionListPassObject::default());
         
 
-        app.configure_set(Update, StagePassObject::Create.after(StageMaterial::MaterialCommand).after(ERunStageChap::_InitialApply).after(StageMaterial::MaterialCommand));
+        app.configure_set(Update, StagePassObject::Create.after(StageMaterial::Command));
         app.configure_set(Update, StagePassObject::_CreateApply.after(StagePassObject::Create));
-        app.configure_set(Update, StagePassObject::EffectModify.after(StagePassObject::_CreateApply).after(StageMaterial::MaterialReady).before(StageRenderer::PassBindGroup));
+        app.configure_set(Update, StagePassObject::EffectModify.after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup));
 
         app.add_systems(Update, 
             apply_deferred.in_set(StagePassObject::_CreateApply)

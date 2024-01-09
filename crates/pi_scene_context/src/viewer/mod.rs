@@ -22,7 +22,7 @@ pub mod prelude;
 pub struct PluginViewerBase;
 impl Plugin for PluginViewerBase {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, StageViewer::ForceInclude.after(ERunStageChap::_InitialApply).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageViewer::ForceInclude.before(ERunStageChap::Uniform));
         app.insert_resource(ActionListViewerForceInclude::default());
         app.add_systems(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
     }

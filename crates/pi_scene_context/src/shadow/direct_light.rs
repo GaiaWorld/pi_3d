@@ -15,7 +15,7 @@ impl Default for DirectionalShadowDirection {
     }
 }
 impl TViewerViewMatrix for DirectionalShadowDirection {
-    fn view_matrix(&self, coordsys: &pi_scene_math::coordiante_system::CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
+    fn view_matrix(&self, coordsys: &pi_scene_math::coordiante_system::CoordinateSytem3, local_pos: &LocalPosition, parent: Option<(&GlobalMatrix, Isometry3)>) -> (ViewerViewMatrix, ViewerGlobalPosition) {
         let mut position = local_pos.0.clone();
         let target = position + self.0;
         let initial_focal_distance = (target - position).metric_distance(&Vector3::zeros());
@@ -36,7 +36,7 @@ impl TViewerViewMatrix for DirectionalShadowDirection {
         
             match parent {
                 Some(parent) => {
-                    let transformation = &parent.matrix;
+                    let transformation = &parent.0.matrix;
                     let mut eye = Vector3::zeros();
                     CoordinateSytem3::transform_coordinates(&position, transformation, &mut eye);
                     // log::warn!("local_pos: {:?}", local_pos);

@@ -1,7 +1,7 @@
 
 use pi_engine_shell::prelude::*;
 
-use crate::{object::sys_dispose_ready, prelude::{StageTransform, sys_create_mesh}};
+use crate::{object::sys_dispose_ready, prelude::{StageTransform, sys_create_mesh, StageModel}};
 
 use self::{sys::*, command::*, command_sys::*};
 
@@ -17,6 +17,8 @@ pub mod prelude;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageSkeleton {
+    SkinCreate,
+    _SkinCreate,
     Command,
     Calc,
 }
@@ -29,16 +31,18 @@ impl Plugin for PluginSkeleton {
         app.insert_resource(ActionListBoneCreate::default());
         app.insert_resource(ActionListBonePose::default());
 
-        app.configure_set(Update, StageSkeleton::Command.after(ERunStageChap::_InitialApply).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageSkeleton::Calc.after(ERunStageChap::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
-        // app.configure_set(Update, StageSkeleton::Command.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, StageSkeleton::SkinCreate.after(StageModel::CreateMesh));
+        app.configure_set(Update, StageSkeleton::_SkinCreate.after(StageSkeleton::SkinCreate));
+        app.configure_set(Update, StageSkeleton::Command.after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageSkeleton::Calc.after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.add_systems(Update, apply_deferred.in_set(StageSkeleton::_SkinCreate));
 
         app.add_systems(
 			Update,
             (
                 sys_create_skin.after(sys_create_mesh),
                 sys_create_bone,
-            ).chain().in_set(ERunStageChap::Initial)
+            ).chain().in_set(StageSkeleton::SkinCreate)
         );
         app.add_systems(
 			Update,
@@ -48,13 +52,7 @@ impl Plugin for PluginSkeleton {
                 sys_bones_initial
             ).chain().in_set(StageSkeleton::Command)
         );
-        
-        // app.add_systems(Update, 
-        //     sys_act_skin_use.in_set(ERunStageChap::SecondInitial)
-        // );
-        // app.add_systems(Update, 
-        //     sys_bones_initial.in_set(ERunStageChap::Command),
-        // );
+
         app.add_systems(
 			Update,
             (
@@ -64,22 +62,4 @@ impl Plugin for PluginSkeleton {
         );
         app.add_systems(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
-    // fn init(
-    //     &mut self,
-    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
-    //     stages: &mut pi_engine_shell::run_stage::RunStage,
-    // ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
-    //     let world = engine.world_mut();
-
-    //     world.insert_resource(SingleSkinCreateCommands::default());
-    //     world.insert_resource(SingleSkinModifyCommands::default());
-
-    //     SysSkinCreateCommand::setup(world, stages.query_stage::<SysSkinCreateCommand>(ERunStageChap::Initial));
-    //     SysSkinModifyCommand::setup(world, stages.query_stage::<SysSkinModifyCommand>(ERunStageChap::Initial));
-
-    //     SysSkinDirtyByBonesMatrix::setup(world, stages.query_stage::<SysSkinDirtyByBonesMatrix>(ERunStageChap::Command));
-    //     SysSkinTextureUpdate::setup(world, stages.query_stage::<SysSkinTextureUpdate>(ERunStageChap::Command));
-        
-    //     Ok(())
-    // }
 }

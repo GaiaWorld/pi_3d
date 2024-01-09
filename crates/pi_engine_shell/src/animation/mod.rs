@@ -29,7 +29,7 @@ use pi_bevy_render_plugin::should_run;
 use pi_curves::curve::frame::KeyFrameDataTypeAllocator;
 use pi_hash::XHashMap;
 
-use crate::prelude::ERunStageChap;
+use crate::{prelude::ERunStageChap, run_stage::should_run_with_animation};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum EAnimatorableType {
@@ -72,10 +72,11 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAddTargetAnime::default());
         app.insert_resource(ActionListAnimationWeight::default());
 
-        app.configure_set(Update, EStageAnimation::Create.after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, EStageAnimation::Create);
         app.configure_set(Update, EStageAnimation::_CreateApply.after(EStageAnimation::Create));
         app.configure_set(Update, EStageAnimation::Command.after(EStageAnimation::_CreateApply));
         app.configure_set(Update, EStageAnimation::Running.after(EStageAnimation::Command).before(ERunStageChap::Anime));
+        app.configure_set(Update, EStageAnimation::Dispose.after(EStageAnimation::Running).after(ERunStageChap::Dispose));
         app.add_systems(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
         
         app.add_systems(
@@ -105,7 +106,7 @@ impl Plugin for PluginGlobalAnimation {
             (
                 sys_animation_removed_data_clear,
                 sys_reset_anime_performance
-            ).run_if(should_run).in_set(ERunStageChap::Initial)
+            ).run_if(should_run).in_set(EStageAnimation::Dispose)
         );
 
         let globalaboput = GlobalAnimeAbout {
@@ -147,14 +148,9 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
 			Update,
             (
                 sys_calc_reset_animatablecomp::<D, R>.run_if(should_run),
-                sys_calc_type_anime::<D>.run_if(should_run)
+                sys_calc_type_anime::<D>.run_if(should_run_with_animation)
             ).chain().in_set(ERunStageChap::Anime)
         );
-        
-        // app.add_systems(Update, sys_calc_type_anime::<D>.in_set(ERunStageChap::Anime));
-
-        // SysTypeAnimeDispose::<D>::setup(world, stages.query_stage::<SysTypeAnimeDispose::<D>>(ERunStageChap::Initial));
-        // SysTypeAnime::<D>::setup(world, stages.query_stage::<SysTypeAnime::<D>>(ERunStageChap::Anime));
     }
 }
 

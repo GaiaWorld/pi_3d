@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 use pi_hash::XHashSet;
-use pi_scene_math::{Vector3, Matrix, coordiante_system::CoordinateSytem3};
+use pi_scene_math::{Vector3, Matrix, coordiante_system::CoordinateSytem3, Isometry3};
 
 use crate::transforms::prelude::*;
 
@@ -194,7 +194,7 @@ impl BindViewer {
 }
 
 pub trait TViewerViewMatrix {
-    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<&GlobalTransform>) -> (ViewerViewMatrix, ViewerGlobalPosition);
+    fn view_matrix(&self, coordsys: &CoordinateSytem3, local_pos: &LocalPosition, parent: Option<(&GlobalMatrix, Isometry3)>) -> (ViewerViewMatrix, ViewerGlobalPosition);
 }
 
 pub trait TViewerProjectMatrix {
