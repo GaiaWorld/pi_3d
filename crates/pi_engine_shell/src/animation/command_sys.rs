@@ -240,7 +240,7 @@ pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecor
     mut items: Query<(Entity, &mut D, Option<&R>, Option<&AnimatorableLink>), Changed<FlagAnimationStartResetComp>>,
     mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
 ) {
-    items.iter_mut().for_each(|(entity, mut comp, record, linked)| {
+    items.iter_mut().for_each(|(_entity, mut comp, record, linked)| {
         if let Some(record) = record {
             *comp = record.comp();
         } else {

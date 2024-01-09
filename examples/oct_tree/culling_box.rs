@@ -1,12 +1,6 @@
 
-use base::DemoScene;
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
-use pi_node_materials::prelude::BlockMainTexture;
-use pi_scene_context::{prelude::*, light::PluginLighting};
-use pi_scene_math::*;
-use pi_mesh_builder::{cube::*, ball::BallBuilder};
+use pi_scene_context::prelude::*;
 
 #[path = "../base.rs"]
 mod base;

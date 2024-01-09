@@ -1,11 +1,9 @@
 #![feature(box_into_inner)]
 
 
-use default_render::shader::DefaultShader;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
-use pi_gltf2_load::*;
 use pi_node_materials::prelude::BlockMainTexture;
 // use pi_node_materials::prelude::MainColor;
 use pi_scene_context::prelude::*;

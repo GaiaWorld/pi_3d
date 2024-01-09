@@ -3,7 +3,7 @@ use pi_engine_shell::prelude::*;
 
 use crate::{object::sys_dispose_ready, prelude::{StageTransform, sys_create_mesh, StageModel}};
 
-use self::{sys::*, command::*, command_sys::*};
+use self::{sys::*, command::*, command_sys::*, skeleton::*};
 
 mod bone;
 mod skeleton;
@@ -15,13 +15,6 @@ pub mod command_sys;
 mod interface;
 pub mod prelude;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
-pub enum StageSkeleton {
-    SkinCreate,
-    _SkinCreate,
-    Command,
-    Calc,
-}
 
 pub struct PluginSkeleton;
 impl Plugin for PluginSkeleton {

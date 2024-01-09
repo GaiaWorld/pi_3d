@@ -4,7 +4,7 @@ use pi_engine_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     object::sys_dispose_ready,
-    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask}, scene::{command_sys::sys_create_scene, StageScene}, cullings::StageCulling, prelude::StageRenderer,
+    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask}, scene::StageScene, cullings::StageCulling, prelude::StageRenderer,
 };
 
 use self::{

@@ -2,6 +2,14 @@ use std::sync::Arc;
 
 use pi_engine_shell::prelude::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+pub enum StageSkeleton {
+    SkinCreate,
+    _SkinCreate,
+    Command,
+    Calc,
+}
+
 #[derive(Component)]
 pub struct SkeletonInitBaseMatrix;
 

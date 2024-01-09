@@ -187,8 +187,8 @@ pub fn compute_frustum(view_projection: &Matrix) -> Option<ConvexPolyhedron> {
 }
 
 // pub type ActionListAddBindingInfo = ActionList<(BoundingKey, BoundingInfo)>;
-pub type ActionListRemoveBindingInfo = ActionList<BoundingKey>;
-pub type ActionListCheckBindingInfo = ActionList<BoundingKey>;
+// pub type ActionListRemoveBindingInfo = ActionList<BoundingKey>;
+// pub type ActionListCheckBindingInfo = ActionList<BoundingKey>;
 
 pub struct PluginBoundingOctTree;
 impl Plugin for PluginBoundingOctTree {

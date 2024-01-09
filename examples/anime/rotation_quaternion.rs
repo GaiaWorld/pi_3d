@@ -3,12 +3,11 @@
 
 
 use base::DemoScene;
-use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode, amount::AnimationAmountCalc};
+use pi_curves::curve::frame_curve::FrameCurve;
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
 use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_scene_context::prelude::*;
-use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
 
 #[path = "../base.rs"]

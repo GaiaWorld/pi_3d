@@ -63,7 +63,7 @@ pub fn sys_info_draw(
     command: Query<Entity>,
 ) {
     let mut entitycount = 0;
-    command.iter().for_each(|v| { entitycount += 1; });
+    command.iter().for_each(|_v| { entitycount += 1; });
 
     let mut count_set0 = 0;
     let mut count_set1 = 0;

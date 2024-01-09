@@ -3,7 +3,7 @@ use pi_assets::asset::GarbageEmpty;
 use pi_engine_shell::prelude::*;
 
 
-use crate::{object::sys_dispose_ready, cameras::{command_sys::sys_create_camera, prelude::StageCamera}, scene::StageScene, shadow::prelude::StageShadowGenerator};
+use crate::{object::sys_dispose_ready, shadow::prelude::*};
 
 use self::{
     command::*,

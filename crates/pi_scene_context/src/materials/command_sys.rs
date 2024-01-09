@@ -203,7 +203,7 @@ pub fn sys_act_material_value(
                 let value = bytemuck::cast_slice(&val);
                 match bindvalue.offset(&slot) {
                     Some(offset) => {
-                        let (strip, offset, entity) = offset.strip_offset();
+                        let (strip, offset, _entity) = offset.strip_offset();
                         if strip <= value.len() {
                             bindvalue.update(offset, &value[0..strip]);
                             bindvalue.bind().data().write_data(offset, &value[0..strip]);

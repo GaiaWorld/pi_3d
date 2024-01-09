@@ -28,7 +28,7 @@ impl BoundingSphere {
     }
 
     pub fn reset(&mut self, min: &Vector3, max: &Vector3, world: &Matrix) {
-        let distance = min.metric_distance(max);
+        let _distance = min.metric_distance(max);
 
         max.add_to(min, &mut self.center);
         self.center.scale_mut(0.5);

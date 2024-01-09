@@ -3,7 +3,7 @@ use std::ops::Range;
 
 use pi_engine_shell::prelude::*;
 
-use crate::{prelude::*, geometry::instance::{instanced_buffer::{InstancedInfo, InstanceBufferAllocator}, types::ModelInstanceAttributes}};
+use crate::{prelude::*, geometry::instance::instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
 
 use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode, BoundingBoxDisplay};
 
@@ -104,7 +104,7 @@ pub fn sys_tick_culling_box(
 ) {
     scenes.iter().for_each(|(boundingboxs, pool)| {
         if boundingboxs.display == false { return; }
-        if let Ok((idsource, idgeo, meshinsstate, mut renderenable, mut instancessortinfos)) = sources.get_mut(boundingboxs.mesh) {
+        if let Ok((_idsource, idgeo, _meshinsstate, mut renderenable, mut instancessortinfos)) = sources.get_mut(boundingboxs.mesh) {
             let instances = pool.entities();
             if let Ok(buffer) = geometrys.get(idgeo.0) {
                 if buffer.bytes_per_instance > 0 {

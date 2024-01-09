@@ -6,7 +6,7 @@ use pi_engine_shell::prelude::*;
 ///
 /// 网格信息单独与 GameObject 绑定
 
-use crate::{object::sys_dispose_ready, plugin::Plugin, prelude::*, scene::StageScene};
+use crate::{object::sys_dispose_ready, plugin::Plugin, prelude::*};
 
 use self::{
     sys_vertex_buffer_use::*,

@@ -88,7 +88,7 @@ pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, RecordEnable>;
 #[derive(Component)]
 pub struct GlobalEnable(pub bool);
 
-pub struct OpsNodeEnable(pub(crate) Entity, pub(crate) Enable, pub u8);
+pub struct OpsNodeEnable(pub(crate) Entity, pub(crate) Enable);
 impl OpsNodeEnable {
     pub fn ops(entity: Entity, val: bool) -> Self {
         let val = if val {
@@ -96,7 +96,7 @@ impl OpsNodeEnable {
         } else {
             0.
         };
-        Self(entity, Enable(val), 0)
+        Self(entity, Enable(val))
     }
 }
 pub type ActionListNodeEnable = ActionList<OpsNodeEnable>;
@@ -105,7 +105,7 @@ pub fn sys_act_node_enable(
     mut cmds: ResMut<ActionListNodeEnable>,
     mut items: Query<(&mut Enable, &mut RecordEnable)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsNodeEnable(entity, val, count)| {
+    cmds.drain().drain(..).for_each(|OpsNodeEnable(entity, val)| {
         if let Ok((mut node, mut record)) = items.get_mut(entity) {
             record.0 = val.clone();
             *node = val;

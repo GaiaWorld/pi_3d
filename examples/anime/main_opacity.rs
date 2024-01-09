@@ -6,7 +6,6 @@ use pi_animation::loop_mode::ELoopMode;
 use pi_atom::Atom;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::prelude::*;
-use pi_gltf2_load::*;
 use pi_node_materials::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;

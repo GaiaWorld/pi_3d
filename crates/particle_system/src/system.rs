@@ -678,11 +678,11 @@ pub fn sys_update_buffer(
                                                 let mut idx = offset.offset() as usize;
                                                 bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
                                             },
-                                            EParticleAttributeType::Extend4A => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                            EParticleAttributeType::Extend4A => if let Some(_offset) = instanceattributes.offset(&v.attr) {
                                                 // let mut idx = offset.offset() as usize;
                                                 // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
                                             },
-                                            EParticleAttributeType::Extend4B => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                            EParticleAttributeType::Extend4B => if let Some(_offset) = instanceattributes.offset(&v.attr) {
                                                 // let mut idx = offset.offset() as usize;
                                                 // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
                                             },

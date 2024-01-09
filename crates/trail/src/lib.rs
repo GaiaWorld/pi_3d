@@ -6,7 +6,7 @@ mod command_sys;
 mod command;
 mod system;
 
-use pi_scene_context::{prelude::{sys_dispose_ready, StageGeometry, StageTransform}, skeleton::{command_sys::sys_create_skin, StageSkeleton}};
+use pi_scene_context::prelude::*;
 
 pub use base::*;
 pub use command::*;

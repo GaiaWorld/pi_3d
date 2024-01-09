@@ -5,8 +5,6 @@ use pi_animation::loop_mode::ELoopMode;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
-use pi_gltf2_load::*;
-use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
