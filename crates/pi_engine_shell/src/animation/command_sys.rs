@@ -237,13 +237,14 @@ pub fn sys_act_reset_while_animationgroup_start(
 
 /// 动画结束后将目标值 重置 为操作修改的值
 pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecord<D>>(
-    mut items: Query<(&mut D, Option<&R>, Option<&AnimatorableLink>), Changed<FlagAnimationStartResetComp>>,
+    mut items: Query<(Entity, &mut D, Option<&R>, Option<&AnimatorableLink>), Changed<FlagAnimationStartResetComp>>,
     mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
 ) {
-    items.iter_mut().for_each(|(mut comp, record, linked)| {
+    items.iter_mut().for_each(|(entity, mut comp, record, linked)| {
         if let Some(record) = record {
             *comp = record.comp();
         } else {
+            // log::error!("sys_calc_reset_animatablecomp {:?}", entity);
             *comp = D::default();
         }
         if let Some(linked) = linked {
@@ -299,7 +300,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
             }
         }
     } else {
-        log::trace!("Not Found Anime Type: {}", ty);
+        // log::trace!("Not Found Anime Type: {}", ty);
     }
 
     performance.animation += (pi_time::Instant::now() - time0).as_micros() as u32;

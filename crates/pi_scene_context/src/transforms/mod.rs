@@ -38,9 +38,9 @@ impl Plugin for PluginTransformNode {
 
         app.configure_set(Update, StageTransform::TransformCreate.after(StageScene::Create));
         app.configure_set(Update, StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command));
-        app.configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate));
+        app.configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create));
         // app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
-        app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageTransform::_TransformCreate));
 
         app.add_systems(Update, 

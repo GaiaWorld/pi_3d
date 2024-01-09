@@ -136,7 +136,7 @@ impl Plugin for PluginMaterial {
 
         app.configure_set(Update, StageMaterial::Create.after(StageShadowGenerator::Create));
         app.configure_set(Update, StageMaterial::_Init.after(StageMaterial::Create));
-        app.configure_set(Update, StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(ERunStageChap::Anime));
+        app.configure_set(Update, StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
         app.configure_set(Update, StageMaterial::Ready.after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageMaterial::_Init));
 

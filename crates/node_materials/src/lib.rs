@@ -92,41 +92,6 @@ impl Plugin for PluginNodeMaterial {
 
         app.insert_resource(blocks);
 
-        // app.insert_resource(ActionListAlpha::default());
-        // app.insert_resource(ActionListAlphaCutoff::default());
-        // app.insert_resource(ActionListLightDiffuse::default());
-        // app.insert_resource(ActionListMainColor::default());
-        // app.insert_resource(ActionListMainTexTilloff::default());
-        // app.insert_resource(ActionListMaskCutoff::default());
-        // app.insert_resource(ActionListMaskTexTilloff::default());
-        // app.insert_resource(ActionListOpacityTexTilloff::default());
-
-        // app.configure_set(Update, StageNodeMaterial::InitAnimeAbout.after(ERunStageChap::_InitialApply));
-        // app.configure_set(Update, StageNodeMaterial::_InitAnimeAboutApply.after(StageNodeMaterial::InitAnimeAbout));
-        // app.configure_set(Update, StageNodeMaterial::Command.after(StageNodeMaterial::_InitAnimeAboutApply));
-        // // app.configure_set(Update, StageNodeMaterial::_CommandApply.after(StageNodeMaterial::Command));
-        // app.configure_set(Update, StageNodeMaterial::ApplyAnimeAbout.after(StageNodeMaterial::Command).after(ERunStageChap::Anime).before(StageMaterial::MaterialCommand));
-
-        // app.add_systems(Update, apply_deferred.in_set(StageNodeMaterial::_InitAnimeAboutApply));
-        // app.add_systems(Update, apply_deferred.in_set(StageNodeMaterial::_CommandApply));
-
-        // app.add_systems(Update, sys_material_anime_init.in_set(StageNodeMaterial::InitAnimeAbout));
-        
-        // app.add_systems(
-		// 	Update,
-        //     (
-        //         sys_act_alpha,
-        //         sys_act_alphacutoff,
-        //         sys_act_lightdiffuse,
-        //         sys_act_maincolor,
-        //         sys_act_maintex_tilloff,
-        //         sys_act_maskcutoff,
-        //         sys_act_masktex_tilloff,
-        //         sys_act_opacitytex_tilloff,
-        //     ).in_set(StageNodeMaterial::Command)
-        // );
-
-        // app.add_systems(Update, sys_node_material_uniform_update.in_set(StageNodeMaterial::ApplyAnimeAbout));
 
     }
 }

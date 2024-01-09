@@ -35,9 +35,9 @@ impl Plugin for PluginLighting {
         app.insert_resource(StateLight::default());
         
         app.configure_set(Update, StageLighting::LightCreate.after(StageScene::Create));
-        app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command));
+        app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageLighting::LightingCommand.after(StageLighting::_LightCreate));
-        app.configure_set(Update, StageLighting::LightingUniform.after(StageLighting::LightingCommand).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageLighting::LightingUniform.after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageLighting::_LightCreate));
 
 

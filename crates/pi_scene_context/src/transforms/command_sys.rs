@@ -58,6 +58,7 @@ pub fn sys_act_local_rotation(
     cmds.drain().drain(..).for_each(|OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w)| {
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
             let data = LocalRotationQuaternion::create(x, y, z, w);
+            // log::error!("act_local_rotation {:?}", (entity, &data));
             record.0 = data.clone();
             *node = data;
         // } else {
@@ -93,6 +94,7 @@ pub fn sys_act_local_euler(
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
             record.0 = LocalEulerAngles(val);
             *node = LocalEulerAngles(val);
+            // log::error!("sys_act_local_euler {:?}", (entity, &val));
         // } else {
         //     if count < 4 {
         //         cmds.push(OpsTransformNodeLocalEuler(entity, val, count + 1));

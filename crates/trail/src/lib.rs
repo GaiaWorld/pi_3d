@@ -6,7 +6,7 @@ mod command_sys;
 mod command;
 mod system;
 
-use pi_scene_context::{prelude::{sys_dispose_ready, StageGeometry}, skeleton::{command_sys::sys_create_skin, StageSkeleton}};
+use pi_scene_context::{prelude::{sys_dispose_ready, StageGeometry, StageTransform}, skeleton::{command_sys::sys_create_skin, StageSkeleton}};
 
 pub use base::*;
 pub use command::*;
@@ -54,7 +54,7 @@ impl Plugin for PluginTrail {
         app.insert_resource(StateTrail::default());
 
         app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
-        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate));
+        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageTrail::TrailCommand.after(StageTrail::_TrailCreate));
         app.configure_set(Update, StageTrail::TrailUpdate.after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
         app.add_systems(Update, apply_deferred.in_set(StageTrail::TrailCreate));

@@ -46,6 +46,7 @@ fn setup(
     actions.transform.create.push(OpsTransformNode::ops(scene, root));
     // actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(root, 0., 0., 0.));
     // actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, root));
+    actions.transform.localrotq.push(OpsTransformNodeLocalRotationQuaternion::ops(root, 1., -4.6930341720581055, 0., 0.36934909224510193));
 
 
     let vertices = CubeBuilder::attrs_meta();

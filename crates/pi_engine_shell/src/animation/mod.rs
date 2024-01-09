@@ -142,14 +142,14 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
         app.insert_resource(type_ctx);
 
         app.add_systems(Update, 
-            sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear)
+            sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear).in_set(EStageAnimation::Dispose)
         );
         app.add_systems(
 			Update,
             (
                 sys_calc_reset_animatablecomp::<D, R>.run_if(should_run),
                 sys_calc_type_anime::<D>.run_if(should_run_with_animation)
-            ).chain().in_set(ERunStageChap::Anime)
+            ).chain().in_set(EStageAnimation::Running)
         );
     }
 }

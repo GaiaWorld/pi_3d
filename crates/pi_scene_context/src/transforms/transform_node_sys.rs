@@ -21,6 +21,7 @@ use super::prelude::*;
                 let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
                 let quaternion = Quaternion::from_rotation_matrix(&rotation);
                 *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone());
+                // log::error!("loacl_quaternion from euler {:?}", (entity, loacl_quaternion));
                 *local_rotation = LocalRotation(rotation);
             }
         });
@@ -38,6 +39,7 @@ use super::prelude::*;
                     // log::warn!("Quaternion: Ok");
                     // *loacl_quaternion = LocalRotationQuaternion(quaternion);
                     *local_rotation = LocalRotation(rotation);
+                    // log::error!("local_rotation {:?}", (entity, quat.0));
                 // }
             }
         });

@@ -32,7 +32,7 @@ impl Plugin for PluginSkeleton {
         app.insert_resource(ActionListBonePose::default());
 
         app.configure_set(Update, StageSkeleton::SkinCreate.after(StageModel::CreateMesh));
-        app.configure_set(Update, StageSkeleton::_SkinCreate.after(StageSkeleton::SkinCreate));
+        app.configure_set(Update, StageSkeleton::_SkinCreate.after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageSkeleton::Command.after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform));
         app.configure_set(Update, StageSkeleton::Calc.after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageSkeleton::_SkinCreate));

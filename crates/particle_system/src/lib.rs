@@ -48,7 +48,7 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(ResParticleTrailBuffer(trailbuffer));
 
         app.configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::TrailCreate));
-        app.configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate));
+        app.configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate));
         app.configure_set(Update, StageParticleSystem::ParticleSysEmission.after(StageParticleSystem::ParticleSysCommand));
         app.configure_set(Update, StageParticleSystem::ParticleSysParamStart.after(StageParticleSystem::ParticleSysEmission));
