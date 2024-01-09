@@ -114,7 +114,7 @@ fn iter_dirty(
         _query_scenes: Query<(Entity, &SceneCoordinateSytem3D)>,
         // mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
         mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-        mut transforms: Query<&mut GlobalMatrix>,
+        mut transforms: Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
         mut state: ResMut<StateTransform>,
         tree: EntityTree,
         dirtylist: Query<Entity, Changed<TransformNodeDirty>>,
@@ -162,7 +162,7 @@ fn iter_dirty(
                 let mut temp_ids: Vec<TmpCalcWorldMatrix> = vec![];
 
                 let tmp = if let Some(parent) = tree.get_up(child) {
-                    if let (Ok(transform), Ok((_, _, penable, _))) = (transforms.get(parent.parent()), nodes.get(parent.parent())) {
+                    if let (Ok((transform, _)), Ok((_, _, penable, _))) = (transforms.get(parent.parent()), nodes.get(parent.parent())) {
                         calc_world_root_bytree( penable.0, &transform.matrix.clone(), &mut nodes,  &mut transforms,  child, )
                     }else {
                         calc_world_root_bytree( true, &Matrix::identity(), &mut nodes,  &mut transforms,  child, )
@@ -261,12 +261,12 @@ fn iter_dirty(
 fn _calc_world_one(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalMatrix>,
+    transforms: &mut Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
     temp_list: &mut Vec<TmpCalcWorldMatrix>,
     tmp: &TmpCalcWorldMatrix,
 ) {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok((mut gtransform, mut absolute))) => {
             let mut resultenable = enable.bool() && tmp.enable;
 
             let dirty = tmp.dirty || lmatrix.is_changed();
@@ -276,6 +276,7 @@ fn _calc_world_one(
                 let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, &lmatrix);
                 resultenable = resultenable && flag;
                 *gtransform = transform;
+                absolute.reset_while_world_matrix_update();
             };
 
             if globalenable.0 != resultenable {
@@ -291,7 +292,7 @@ fn _calc_world_one(
 
 fn calc_world_bytree(
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalMatrix>,
+    transforms: &mut Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
     tree: &EntityTree,
     mut temp_ids: Vec<TmpCalcWorldMatrix>
 ) -> u32 {
@@ -327,12 +328,12 @@ fn calc_world_bytree(
 fn calc_world_one_bytree(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalMatrix>,
+    transforms: &mut Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
     temp_list: &mut Vec<TmpCalcWorldMatrix>,
     tmp: &TmpCalcWorldMatrix,
 ) {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok((mut gtransform, mut absolute))) => {
             let mut resultenable = enable.bool() && tmp.enable;
 
             
@@ -343,6 +344,7 @@ fn calc_world_one_bytree(
                 let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, &lmatrix);
                 resultenable = resultenable && flag;
                 *gtransform = transform;
+                absolute.reset_while_world_matrix_update();
             };
 
             if globalenable.0 != resultenable {
@@ -360,11 +362,11 @@ fn calc_world_root_bytree(
     penable: bool,
     p_m: &Matrix,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
-    transforms: &mut Query<&mut GlobalMatrix>,
+    transforms: &mut Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
     entity: Entity,
 ) -> TmpCalcWorldMatrix {
     match (nodes.get_mut(entity), transforms.get_mut(entity)) {
-        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok(mut gtransform)) => {
+        (Ok((lmatrix, enable, mut globalenable, _parent)), Ok((mut gtransform, mut absolute))) => {
             let mut resultenable = enable.bool() && penable;
 
             let dirty = lmatrix.is_changed();
@@ -374,6 +376,7 @@ fn calc_world_root_bytree(
                 let (transform, flag) = GlobalMatrix::calc(p_m, &lmatrix);
                 resultenable = resultenable && flag;
                 *gtransform = transform;
+                absolute.reset_while_world_matrix_update();
             }
 
             if globalenable.0 != resultenable {
