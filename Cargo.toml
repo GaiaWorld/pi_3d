@@ -36,7 +36,7 @@ pi_bevy_post_process    = { version = "0.1", registry = "yn" }
 pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
 pi_bevy_asset           = { version = "0.1", registry = "yn" }
 
-pi_scene_math           = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_scene_math           = { version = "0.0.3", registry = "yn" }
 pi_animation            = { version = "0.1", registry = "yn" }
 pi_curves               = { version = "0.1", registry = "yn" }
 pi_atom                 = { version = "0.2", features = ["serde"] }
@@ -58,6 +58,9 @@ crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
 ahash               = "=0.8.6"
+
+[patch.yn]
+pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
 
 [dev-dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["wgpu"] }

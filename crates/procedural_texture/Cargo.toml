@@ -31,7 +31,7 @@ derive_deref    = "1.1"
 pi_render           = { version = "0.1", registry = "yn" }
 render_utils        = { version = "0.1", registry = "yn" }
 render_derive       = { version = "0.1", registry = "yn" }
-pi_scene_math       = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_scene_math       = { version = "0.0.3", registry = "yn" }
 pi_scene_context    = { path = "../pi_scene_context" }
 pi_scene_shell      = { path = "../pi_scene_shell" }
 pi_node_materials   = { path = "../node_materials" }

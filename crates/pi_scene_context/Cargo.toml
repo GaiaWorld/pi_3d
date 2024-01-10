@@ -57,7 +57,7 @@ pi_bevy_post_process    = { version = "0.1", registry = "yn" }
 pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
 pi_bevy_asset           = { version = "0.1", registry = "yn" }
 
-pi_scene_math       = { git = "https://github.com/GaiaWorld/pi_scene" }
+pi_scene_math       = { version = "0.0.3", registry = "yn" }
 pi_animation        = { version = "0.1", registry = "yn" }
 pi_curves           = { version = "0.1", registry = "yn" }
 
