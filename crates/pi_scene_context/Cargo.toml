@@ -61,8 +61,8 @@ pi_scene_math       = { version = "0.0.3", registry = "yn" }
 pi_animation        = { version = "0.1", registry = "yn" }
 pi_curves           = { version = "0.1", registry = "yn" }
 
-pi_scene_shell      = { path = "../pi_scene_shell" }
-pi_mesh_builder     = { path = "../pi_mesh_builder" }
+pi_scene_shell      = { version = "0.0.1", registry = "yn", path = "../pi_scene_shell" }
+pi_mesh_builder     = { version = "0.0.1", registry = "yn", path = "../pi_mesh_builder" }
 
 [net]
 git-fetch-with-cli = true

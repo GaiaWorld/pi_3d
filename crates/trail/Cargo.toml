@@ -37,6 +37,6 @@ render_derive       = { version = "0.1", registry = "yn" }
 
 pi_scene_math       = { version = "0.0.3", registry = "yn" }
 
-pi_scene_context    = { path = "../pi_scene_context" }
-pi_scene_shell      = { path = "../pi_scene_shell" }
-pi_node_materials   = { path = "../node_materials" }
+pi_scene_context    = { version = "0.0.1", registry = "yn", path = "../pi_scene_context" }
+pi_scene_shell      = { version = "0.0.1", registry = "yn", path = "../pi_scene_shell" }
+pi_node_materials   = { version = "0.0.1", registry = "yn", path = "../node_materials" }

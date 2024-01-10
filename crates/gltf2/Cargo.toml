@@ -42,7 +42,7 @@ pi_animation        = { version = "0.1", registry = "yn" }
 pi_curves           = { version = "0.1", registry = "yn" }
 pi_gltf             = { version = "0.1", registry = "yn", features = ["extras"] }
 
-pi_scene_context    = { path = "../pi_scene_context" }
-pi_scene_shell      = { path = "../pi_scene_shell" }
-pi_node_materials   = { path = "../node_materials" }
-pi_particle_system  = { path = "../particle_system" }
+pi_scene_context    = { version = "0.0.1", registry = "yn", path = "../pi_scene_context" }
+pi_scene_shell      = { version = "0.0.1", registry = "yn", path = "../pi_scene_shell" }
+pi_node_materials   = { version = "0.0.1", registry = "yn", path = "../node_materials" }
+pi_particle_system  = { version = "0.0.1", registry = "yn", path = "../particle_system" }

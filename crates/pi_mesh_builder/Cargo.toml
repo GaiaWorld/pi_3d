@@ -31,7 +31,7 @@ bytemuck        = { version = "1.4", features = ["derive"] }
 render_utils        = { version = "0.1", registry = "yn" }
 render_derive       = { version = "0.1", registry = "yn" }
 pi_scene_math       = { version = "0.0.3", registry = "yn" }
-pi_scene_shell      = { path = "../pi_scene_shell" }
+pi_scene_shell      = { version = "0.0.1", registry = "yn", path = "../pi_scene_shell" }
 
 [net]
 git-fetch-with-cli = true
