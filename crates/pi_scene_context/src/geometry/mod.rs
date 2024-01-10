@@ -2,7 +2,7 @@
 
 use pi_atom::Atom;
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 ///
 /// 网格信息单独与 GameObject 绑定
 

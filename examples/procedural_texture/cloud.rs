@@ -1,5 +1,5 @@
 use pi_3d::PluginBundleDefault;
-use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime};
+use pi_scene_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     plugin::Plugin,

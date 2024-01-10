@@ -4,7 +4,7 @@ use std::{ops::Sub, sync::Arc};
 use bevy::prelude::Deref;
 use crossbeam::queue::SegQueue;
 use pi_assets::asset::{Asset, Size, Handle};
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolVector3, TToolRotation, TToolMatrix}};
 use pi_share::Share;
@@ -986,31 +986,6 @@ impl ParticleStartScaling {
         });
     }
 }
-
-// #[derive(Component)]
-// pub struct ParticleStartRotation(pub(crate) Vec<Vector3>);
-// impl ParticleStartRotation {
-//     pub fn new(maxcount: usize) -> Self {
-//         let mut vec = Vec::with_capacity(maxcount);
-//         for _ in 0..maxcount {
-//             vec.push(Vector3::new(0., 0., 0.));
-//         }
-//         Self(vec)
-//     }
-//     pub fn start(
-//         &mut self,
-//         newids: &Vec<IdxParticle>,
-//         randomlist: &Vec<BaseRandom>,
-//         time: &ParticleSystemTime,
-//         start_angle_interpolation: &StartRotation,
-//     ) {
-//         newids.iter().for_each(|idx| {
-//             let item = self.0.get_mut(*idx).unwrap();
-//             let randoms = randomlist.get(*idx).unwrap();
-//             start_angle_interpolation.modify(item, time.loop_progress, randoms);
-//         });
-//     }
-// }
 
 #[derive(Component, Deref, DerefMut)]
 pub struct ParticleLocalPosition(pub(crate) Vec<Vector3>);

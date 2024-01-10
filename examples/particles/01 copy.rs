@@ -1,5 +1,5 @@
 
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
+use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime,};
 
 #[derive(Component)]
 pub struct ParticleSysStartLifetime { }

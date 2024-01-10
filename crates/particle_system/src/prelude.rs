@@ -1,5 +1,5 @@
 
-use pi_engine_shell::prelude::SystemParam;
+use pi_scene_shell::prelude::SystemParam;
 
 pub use crate::tools::*;
 pub use crate::base::*;
@@ -9,7 +9,7 @@ pub use crate::command::*;
 pub use crate::extend::*;
 pub use crate::iparticle_system_config::*;
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 #[derive(SystemParam)]
 pub struct ActionSetParticleSystem<'w> {

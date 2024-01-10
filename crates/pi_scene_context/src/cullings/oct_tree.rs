@@ -8,7 +8,7 @@ use parry3d::{
     query::{Ray, RayCast},
     shape::{ConvexPolyhedron, Cuboid},
 };
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_hash::XHashSet;
 use pi_scene_math::{Matrix, Number, Vector3, Vector4};
 use pi_spatial::oct_helper::OctTree;

@@ -4,7 +4,7 @@
 
 use base::DemoScene;
 use pi_curves::curve::frame_curve::FrameCurve;
-use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
+use pi_scene_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
 use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_scene_context::prelude::*;

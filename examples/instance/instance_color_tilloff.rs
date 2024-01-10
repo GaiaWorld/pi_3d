@@ -3,7 +3,7 @@
 
 use pi_3d::PluginBundleDefault;
 use pi_atom::Atom;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad, run_stage::{ERunStageChap, TSystemStageInfo}};
+use pi_scene_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad, run_stage::{ERunStageChap, TSystemStageInfo}};
 use pi_render::{rhi::options::RenderOptions, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam, renderer::{sampler::KeySampler, texture::KeyTexture, vertex_buffer_desc::VertexBufferDesc}};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
@@ -76,7 +76,7 @@ impl Plugin for PluginTest {
 
 impl PluginTest {
     pub fn setup(
-        engine: &pi_engine_shell::engine_shell::EnginShell,
+        engine: &pi_scene_shell::engine_shell::EnginShell,
     ) {
 
         let tes_size = 40;

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use pi_assets::asset::Handle;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use crate::{
     viewer::prelude::*,
     bindgroup::*,

@@ -26,16 +26,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'pi_engine_shell'",
+            "name": "Debug unit tests in library 'pi_scene_shell'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=pi_engine_shell"
+                    "--package=pi_scene_shell"
                 ],
                 "filter": {
-                    "name": "pi_engine_shell",
+                    "name": "pi_scene_shell",
                     "kind": "lib"
                 }
             },

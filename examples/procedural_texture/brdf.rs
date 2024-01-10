@@ -1,7 +1,7 @@
 
 use pi_3d::PluginBundleDefault;
 use pi_atom::Atom;
-use pi_engine_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
+use pi_scene_shell::{engine_shell::{EnginShell, AppShell}, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_mesh_builder::quad::{InterfaceQuad, PluginQuadBuilder};
 use pi_render::{rhi::options::RenderOptions, renderer::{texture::KeyTexture, sampler::KeySampler}, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam};
 use pi_scene_context::{

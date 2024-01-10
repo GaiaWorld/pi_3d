@@ -1,7 +1,7 @@
 #![feature(box_into_inner)]
 
 use base::DemoScene;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_mesh_builder::cube::*;
 

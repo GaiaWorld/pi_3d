@@ -1,4 +1,4 @@
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 
 pub trait TInterfaceSkeleton {
@@ -16,7 +16,7 @@ pub trait TInterfaceSkeleton {
     ) -> &Self;
 }
 
-// impl TInterfaceSkeleton for pi_engine_shell::engine_shell::EnginShell {
+// impl TInterfaceSkeleton for pi_scene_shell::engine_shell::EnginShell {
 //     fn create_skeleton_ubo(
 //         &self,
 //         bone_mode: ESkinBonesPerVertex,

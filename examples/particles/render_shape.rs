@@ -1,9 +1,7 @@
 
-
-use axis::PluginAxis;
 use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
@@ -203,7 +201,6 @@ pub fn main() {
     let mut app = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
-    app.add_plugins(PluginAxis);
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_draw);
     app.add_systems(Update, pi_3d::sys_info_resource);

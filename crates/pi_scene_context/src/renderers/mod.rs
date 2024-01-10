@@ -1,6 +1,6 @@
 
 use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr};
-use pi_engine_shell::{prelude::*, engine_shell::asset_capacity};
+use pi_scene_shell::{prelude::*, engine_shell::asset_capacity};
 
 
 use crate::{

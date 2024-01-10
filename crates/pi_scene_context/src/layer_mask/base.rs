@@ -3,7 +3,7 @@
 /// * 通过 layer mask 数据标识目标的层级信息
 /// * 提供用户操作接口, 对应实现操作命令, 实现操作命令队列, 命令队列的执行System
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 pub trait TViewerLayerMask {
     fn include(&self, _other: u32) -> bool {

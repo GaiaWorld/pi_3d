@@ -2,7 +2,7 @@
 
 use pi_3d::PluginBundleDefault;
 use pi_atom::Atom;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
+use pi_scene_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_mesh_builder::quad::{PluginQuadBuilder, InterfaceQuad};
 use pi_render::{rhi::options::RenderOptions, render_3d::shader::uniform_texture::UniformTextureWithSamplerParam, renderer::{sampler::KeySampler, texture::KeyTexture}};
 use pi_scene_context::{plugin::Plugin,
@@ -35,7 +35,7 @@ impl Plugin for PluginTest {
 
 impl PluginTest {
     pub fn setup(
-        engine: &pi_engine_shell::engine_shell::EnginShell,
+        engine: &pi_scene_shell::engine_shell::EnginShell,
     ) {
 
         engine.frame_time(4);

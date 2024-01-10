@@ -1,7 +1,7 @@
 #![feature(box_into_inner)]
 
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{frame_time::SingleFrameTimeCommand, prelude::*};
+use pi_scene_shell::{frame_time::SingleFrameTimeCommand, prelude::*};
 
 use pi_mesh_builder::cube::*;
 use pi_scene_context::prelude::*;

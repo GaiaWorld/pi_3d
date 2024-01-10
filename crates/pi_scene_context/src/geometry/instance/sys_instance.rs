@@ -1,7 +1,7 @@
 
 use std::{sync::Arc, ops::Range};
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 use crate::{
     geometry::vertex_buffer_useinfo::*,

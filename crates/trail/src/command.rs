@@ -1,4 +1,4 @@
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 
 pub struct OpsTrail(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity);

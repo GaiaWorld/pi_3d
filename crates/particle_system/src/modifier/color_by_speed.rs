@@ -1,6 +1,6 @@
 use pi_scene_math::Color4;
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 #[derive(Clone)]
 pub struct ColorBySpeed {

@@ -2,7 +2,7 @@
 
 use pi_animation::animation_group_manager::AnimationGroupManager;
 use pi_curves::curve::frame::KeyFrameCurveValue;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 use crate::{
     scene::environment::scene_time::SceneTime,

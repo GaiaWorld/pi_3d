@@ -1,5 +1,5 @@
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
 
 use crate::water::shader::WaterShader;
@@ -20,8 +20,8 @@ impl Plugin for PluginWaterMaterial {
     }
     // fn init(
     //     &mut self,
-    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
-    //     stages: &mut pi_engine_shell::run_stage::RunStage,
+    //     engine: &mut pi_scene_shell::engine_shell::EnginShell,
+    //     stages: &mut pi_scene_shell::run_stage::RunStage,
     // ) -> Result<(), ErrorPlugin> {
     //     log::debug!("PluginWaterMaterial");
     //     let key = Atom::from(WaterShader::KEY);

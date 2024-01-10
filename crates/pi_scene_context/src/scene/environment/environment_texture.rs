@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_assets::{asset::Handle, mgr::AssetMgr};
 use pi_async_rt::prelude::AsyncRuntime;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_hal::runtime::RENDER_RUNTIME;
 use pi_render::rhi::sampler::SamplerDesc;
 use pi_share::Share;

@@ -1,5 +1,5 @@
 use block_lighting::BlockStandardLighting;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_node_materials::NodeMaterialBlocks;
 use pi_scene_context::prelude::*;
 use shader::StandardShader;

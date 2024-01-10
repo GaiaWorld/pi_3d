@@ -2,7 +2,7 @@ use std::mem::replace;
 
 use pi_ecs::{prelude::{ResMut, Setup, Commands}};
 use pi_ecs_macros::setup;
-use pi_engine_shell::run_stage::{TSystemStageInfo, ERunStageChap};
+use pi_scene_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
 use crate::object::{ObjectID, GameObject};
 

@@ -1,14 +1,13 @@
 
-use default_render::{SingleIDBaseDefaultMaterial, shader::DefaultShader};
 use pi_3d::PluginBundleDefault;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime,};
+use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime,};
 use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
-use pi_node_materials::{NodeMaterialBlocks, PluginNodeMaterial};
+use pi_node_materials::*;
 use pi_scene_context::{prelude::*, viewer::prelude::{ViewerGlobalPosition, ViewerViewMatrix}};
 use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::*, quad::PluginQuadBuilder};

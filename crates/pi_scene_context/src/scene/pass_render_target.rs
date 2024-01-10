@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use bevy::prelude::Component;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 #[derive(Component)]
 pub struct MainCameraOpaqueTarget(pub Option<CustomRenderTarget>);

@@ -16,7 +16,7 @@ impl InterfaceBRDFMaterial {
     // }
 }
 
-// impl InterfaceBRDFMaterial for pi_engine_shell::engine_shell::EnginShell {
+// impl InterfaceBRDFMaterial for pi_scene_shell::engine_shell::EnginShell {
 //     fn create_brdf_material(
 //         & self,
 //     ) -> ObjectID {

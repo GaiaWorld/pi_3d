@@ -1,5 +1,5 @@
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
 
 use self::shader::BRDFShader;
@@ -21,9 +21,9 @@ impl Plugin for PluginBRDFMaterial {
     }
     // fn init(
     //     &mut self,
-    //     engine: &mut pi_engine_shell::engine_shell::EnginShell,
-    //     stages: &mut pi_engine_shell::run_stage::RunStage,
-    // ) -> Result<(), pi_engine_shell::plugin::ErrorPlugin> {
+    //     engine: &mut pi_scene_shell::engine_shell::EnginShell,
+    //     stages: &mut pi_scene_shell::run_stage::RunStage,
+    // ) -> Result<(), pi_scene_shell::plugin::ErrorPlugin> {
     //     let key = Atom::from(BRDFShader::KEY);
     //     engine.regist_material_meta(key, BRDFShader::meta());
 

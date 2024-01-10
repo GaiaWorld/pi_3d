@@ -28,9 +28,8 @@ futures         = "0.3"
 derive_deref    = "1.1"
 
 pi_scene_context    = { path = "../pi_scene_context" }
-pi_engine_shell     = { path = "../pi_engine_shell" }
+pi_scene_shell      = { path = "../pi_scene_shell" }
 pi_node_materials   = { path = "../node_materials" }
-pi_shadow_mapping   = { path = "../shadow_mapping" }
 
 pi_render           = { version = "0.1", registry = "yn" }
 render_utils        = { version = "0.1", registry = "yn" }

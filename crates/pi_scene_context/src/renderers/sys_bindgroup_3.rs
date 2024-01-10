@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use crate::{
     pass::*,
     scene::{prelude::*, environment::{brdf::{BRDFTexture, BRDFSampler}, environment_texture::{EnvTexture, EnvIrradiance, EnvSampler}}}

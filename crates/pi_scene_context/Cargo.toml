@@ -60,9 +60,8 @@ pi_bevy_asset           = { version = "0.1", registry = "yn" }
 pi_scene_math       = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_animation        = { version = "0.1", registry = "yn" }
 pi_curves           = { version = "0.1", registry = "yn" }
-pi_postprocess      = { version = "0.1", registry = "yn" }
 
-pi_engine_shell     = { path = "../pi_engine_shell" }
+pi_scene_shell      = { path = "../pi_scene_shell" }
 pi_mesh_builder     = { path = "../pi_mesh_builder" }
 
 [net]

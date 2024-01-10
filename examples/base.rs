@@ -1,19 +1,15 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 
-use default_render::shader::DefaultShader;
-use pi_3d::PluginBundleDefault;
-use pi_3d_state::StateResource;
+use pi_3d::*;
 use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_engine_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
+use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
 use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer, ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
 use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator, scene::StageScene};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
-use pi_shadow_mapping::PluginShadowMapping;
 use pi_standard_material::PluginStandardMaterial;
-use pi_trail_renderer::ActionSetTrailRenderer;
 use unlit_material::*;
 use wgpu1::Backends;
 
@@ -120,7 +116,7 @@ impl DemoScene {
 
         let scene = commands.spawn_empty().id();
         // animegroupres.scene_ctxs.init_scene(scene);
-        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0,0 ,0 ,0 ,0 ,0]));
+        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
         let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
         actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
@@ -187,7 +183,7 @@ impl Plugin for PluginSceneTimeFromPluginFrame {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            sys_scene_time_from_frame.after(pi_engine_shell::frame_time::sys_frame_time).in_set(StageScene::Create)
+            sys_scene_time_from_frame.after(pi_scene_shell::frame_time::sys_frame_time).in_set(StageScene::Create)
         );
     }
 }
@@ -259,7 +255,6 @@ pub fn test_plugins() -> App {
             PluginStandardMaterial,
         )
     );
-    app.add_plugins(PluginGroupNodeMaterialAnime);
     app.add_plugins(
         PluginSceneTimeFromPluginFrame
     );
@@ -341,7 +336,6 @@ pub fn test_plugins_with_gltf() -> App {
             PluginStandardMaterial,
         )
     );
-    app.add_plugins(PluginGroupNodeMaterialAnime);
     app.add_plugins(
         PluginSceneTimeFromPluginFrame
     );

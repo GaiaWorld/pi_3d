@@ -3,7 +3,7 @@ use crate::{
     modifier::*,
     tools::*,
 };
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 /**
  * 形状发射器类型

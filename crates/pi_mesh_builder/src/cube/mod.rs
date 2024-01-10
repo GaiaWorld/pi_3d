@@ -3,7 +3,7 @@
 use std::ops::Range;
 
 use pi_assets::asset::Handle;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 pub struct CubeBuilder;
 impl CubeBuilder {
@@ -193,7 +193,7 @@ impl Plugin for PluginCubeBuilder {
     // fn init(
     //     &mut self,
     //     engine: &mut Engine,
-    //     stages: &mut pi_engine_shell::run_stage::RunStage,
+    //     stages: &mut pi_scene_shell::run_stage::RunStage,
     // ) -> Result<(), ErrorPlugin> {
     //     engine.regist_cube();
 

@@ -1,5 +1,5 @@
 use pi_scene_math::coordiante_system;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 #[derive(Deref, DerefMut, Component)]
 pub struct SceneCoordinateSytem3D(pub coordiante_system::CoordinateSytem3);

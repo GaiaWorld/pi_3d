@@ -3,7 +3,7 @@
 use pi_3d::PluginBundleDefault;
 use pi_ecs::prelude::{ResMut, Setup};
 use pi_ecs_macros::setup;
-use pi_engine_shell::{
+use pi_scene_shell::{
     engine_shell::{AppShell, EnginShell},
     frame_time::InterfaceFrameTime,
     plugin::Plugin, run_stage::{TSystemStageInfo, ERunStageChap},

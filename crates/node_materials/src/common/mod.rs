@@ -85,5 +85,5 @@ impl TNodeMaterialBlock for BlockUVOffsetSpeed {
 
     const VS_DEFINED: &'static str = "";
 
-    const BIND_DEFINES: pi_engine_shell::prelude::BindDefine = pi_engine_shell::prelude::BindDefines::SCENE_EFFECT;
+    const BIND_DEFINES: pi_scene_shell::prelude::BindDefine = pi_scene_shell::prelude::BindDefines::SCENE_EFFECT;
 }

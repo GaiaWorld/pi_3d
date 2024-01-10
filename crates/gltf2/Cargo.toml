@@ -43,6 +43,6 @@ pi_curves           = { version = "0.1", registry = "yn" }
 pi_gltf             = { git = "https://github.com/GaiaWorld/pi_gltf.git", features = ["extras"] }
 
 pi_scene_context    = { path = "../pi_scene_context" }
-pi_engine_shell     = { path = "../pi_engine_shell" }
+pi_scene_shell      = { path = "../pi_scene_shell" }
 pi_node_materials   = { path = "../node_materials" }
-pi_particle_system   = { path = "../particle_system" }
+pi_particle_system  = { path = "../particle_system" }

@@ -1,5 +1,5 @@
 use pi_assets::asset::Handle;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 use crate::{iparticle_system_config::IParticleSystemConfig, base::{ParticleSystemCalculatorID, ParticleAttribute, ParticleAttributes}};
 

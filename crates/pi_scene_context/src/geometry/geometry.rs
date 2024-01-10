@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_map::smallvecmap::SmallVecMap;
 use pi_render::renderer::vertices::{RenderVertices, RenderIndices};
 

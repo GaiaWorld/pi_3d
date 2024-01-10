@@ -1,9 +1,8 @@
 use pi_atom::Atom;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_node_materials::prelude::*;
-use pi_shadow_mapping::BlockShadowMapping;
 
-use crate::{block_lighting::BlockStandardLighting};
+use crate::block_lighting::BlockStandardLighting;
 
 pub struct StandardShader {
     pub vs_module: wgpu::ShaderModule,

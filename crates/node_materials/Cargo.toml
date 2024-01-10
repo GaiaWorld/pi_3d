@@ -38,4 +38,4 @@ pi_animation        = { version = "0.1", registry = "yn" }
 pi_curves           = { version = "0.1", registry = "yn" }
 
 pi_scene_context    = { path = "../pi_scene_context" }
-pi_engine_shell     = { path = "../pi_engine_shell" }
+pi_scene_shell      = { path = "../pi_scene_shell" }

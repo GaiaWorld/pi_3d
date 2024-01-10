@@ -3,7 +3,7 @@ use std::ops::Deref;
 
 use crate::renderers::prelude::StageRenderer;
 
-pub use pi_engine_shell::prelude::{PassTag, PassTagValue};
+pub use pi_scene_shell::prelude::{PassTag, PassTagValue};
 
 mod pass_object;
 mod command;

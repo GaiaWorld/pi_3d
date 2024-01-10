@@ -1,7 +1,7 @@
 use std::{ops::Range, fmt::Debug};
 
 use pi_curves::curve::{frame::FrameDataValue, frame_curve::{FrameCurve, frames::interplate_frame_values_step}};
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_gltf::animation::Interpolation;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
@@ -263,23 +263,6 @@ pub fn p3d_anime_curve_query(cmds: &TypeAnimeAssetMgrs, key: IDAssetTypeFrameCur
         EAnimePropertyType::LocalScaling        => cmds.scaling.get(&key).is_some(),
         EAnimePropertyType::LocalRotation       => cmds.quaternion.get(&key).is_some(),
         EAnimePropertyType::LocalEulerAngles    => cmds.euler.get(&key).is_some(),
-        // EAnimePropertyType::Alpha               => cmds.alpha.get(&key).is_some(),
-        // EAnimePropertyType::MainColor           => cmds.maincolor_curves.get(&key).is_some(),
-        // EAnimePropertyType::MainTexUScale       => cmds.mainuscl_curves.get(&key).is_some(),
-        // EAnimePropertyType::MainTexVScale       => cmds.mainvscl_curves.get(&key).is_some(),
-        // EAnimePropertyType::MainTexUOffset      => cmds.mainuoff_curves.get(&key).is_some(),
-        // EAnimePropertyType::MainTexVOffset      => cmds.mainvoff_curves.get(&key).is_some(),
-        // EAnimePropertyType::OpacityTexUScale    => cmds.opacityuscl_curves.get(&key).is_some(),
-        // EAnimePropertyType::OpacityTexVScale    => cmds.opacityvscl_curves.get(&key).is_some(),
-        // EAnimePropertyType::OpacityTexUOffset   => cmds.opacityuoff_curves.get(&key).is_some(),
-        // EAnimePropertyType::OpacityTexVOffset   => cmds.opacityvoff_curves.get(&key).is_some(),
-        // EAnimePropertyType::AlphaCutoff         => cmds.alphacutoff.get(&key).is_some(),
-        // EAnimePropertyType::LightDiffuse        => cmds.lightdiffuse_curves.get(&key).is_some(),
-        // EAnimePropertyType::MaskTexUScale       => cmds.maskuscl_curves.get(&key).is_some(),
-        // EAnimePropertyType::MaskTexVScale       => cmds.maskvscl_curves.get(&key).is_some(),
-        // EAnimePropertyType::MaskTexUOffset      => cmds.maskuoff_curves.get(&key).is_some(),
-        // EAnimePropertyType::MaskTexVOffset      => cmds.maskvoff_curves.get(&key).is_some(),
-        // EAnimePropertyType::MaskCutoff          => cmds.maskcutoff_curves.get(&key).is_some(),
         EAnimePropertyType::Enable              => cmds.enable.get(&key).is_some(),
         // EAnimePropertyType::BoneOffset          => cmds.boneoff_curves.get(&key).is_some(),
         EAnimePropertyType::CameraFov           => cmds.camerafov.get(&key).is_some(),

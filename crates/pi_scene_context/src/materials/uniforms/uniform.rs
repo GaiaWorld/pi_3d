@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_assets::asset::Handle;
 
 #[derive(Component)]

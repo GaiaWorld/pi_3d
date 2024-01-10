@@ -1,6 +1,6 @@
 
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 pub trait InterfaceOpaque {
     fn as_opaque(

@@ -2,7 +2,7 @@
 use std::ops::Deref;
 
 use pi_bevy_render_plugin::SimpleInOut;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_share::ShareRefCell;
 
@@ -93,7 +93,7 @@ impl Node for RenderNode {
         )) = query.get(self.renderer_id) {
             // query.
     
-            // log::warn!("Draws: Graphic {:?}", enable.0);
+            // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
             if !enable.0 || disposed.0 {
                 return Box::pin(
                     async move {

@@ -1,7 +1,7 @@
 use brdf::NMBlockBRDF;
 use fresnel::NMBlockFresnel;
 use lighting::{NMBlackSurfaceLighting, NMBlackPBRLighting};
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_node_materials::NodeMaterialBlocks;
 use principled_brdf::PrincipledBRDF;
 use reflectivity::NMBlockReflectivity;

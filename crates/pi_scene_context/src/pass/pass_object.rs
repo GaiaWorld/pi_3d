@@ -4,7 +4,7 @@ use std::{sync::Arc, ops::{Deref, Range}};
 use pi_assets::asset::Handle;
 use crate::bindgroup::*;
 
-pub use pi_engine_shell::prelude::*;
+pub use pi_scene_shell::prelude::*;
 use pi_map::smallvecmap::SmallVecMap;
 
 pub enum DrawObj3D {

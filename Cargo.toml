@@ -13,23 +13,15 @@ members = ["crates/*"]
 
 [dependencies]
 pi_scene_context        = { path = "crates/pi_scene_context" }
-pi_engine_shell         = { path = "crates/pi_engine_shell" }
+pi_scene_shell          = { path = "crates/pi_scene_shell" }
 pi_mesh_builder         = { path = "crates/pi_mesh_builder" }
-default_render          = { path = "crates/default_render" }
 skybox                  = { path = "crates/skybox" }
 procedural_texture      = { path = "crates/procedural_texture" }
-skeletons               = { path = "crates/skeletons" }
-axis                    = { path = "crates/axis" }
-
-# particle                = { path = "crates/particle" }
 pi_gltf2_load           = { path = "crates/gltf2" }
 pi_particle_system      = { path = "crates/particle_system" }
 pi_trail_renderer       = { path = "crates/trail" }
-pi_3d_state             = { path = "crates/state" }
-
 pi_node_materials       = { path = "crates/node_materials" }
 unlit_material          = { path = "crates/unlit_material" }
-pi_shadow_mapping       = { path = "crates/shadow_mapping" }
 pi_standard_material    = { path = "crates/standard_material" }
 pi_pbr                  = { path = "crates/pbr" }
 
@@ -47,13 +39,12 @@ pi_bevy_asset           = { version = "0.1", registry = "yn" }
 pi_scene_math           = { git = "https://github.com/GaiaWorld/pi_scene" }
 pi_animation            = { version = "0.1", registry = "yn" }
 pi_curves               = { version = "0.1", registry = "yn" }
-pi_postprocess          = { version = "0.1", registry = "yn" }
-
 pi_atom                 = { version = "0.2", features = ["serde"] }
 pi_hal                  = { version = "0.1", registry = "yn" }
-
 pi_assets               = "0.13"
 pi-async-rt             = "0.1"
+pi_wy_rng               = "0.1"
+pi_share                = "=0.4.7"
 
 wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
 bevy                = { version = "0.11", default-features = false }
@@ -66,38 +57,7 @@ smallvec            = "1.9"
 crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
-
-[patch."https://github.com/GaiaWorld/pi_scene"]
-pi_scene = { path = "../pi_scene" }
-pi_scene_math = { path = "../pi_scene/crates/pi_scene_math" }
-
-[patch."https://github.com/GaiaWorld/pi_gltf.git"]
-pi_gltf = { path = "../pi_gltf" }
-
-[patch.crates-io]
-# pi_spatial = { path = "../pi_spatial" }
-pi_assets = {path = "../pi_assets"}
-# pi_async_graph = {path = "../pi_async_graph"}
-
-[patch.yn]
-# winit = { path = "../winit" }
-pi_hal = { path = "../pi_hal" }
-pi_postprocess = { path = "../pi_post_process" }
-pi_animation = { path = "../pi_animation" }
-pi_curves = { path = "../pi_curves" }
-# pi_render
-pi_render = { path = "../pi_render" }
-render_utils = { path = "../pi_render/crates/render_utils" }
-render_derive = { path = "../pi_render/crates/render_derive" }
-render_compile = { path = "../pi_render/crates/render_compile" }
-
-# pi_bevy
-pi_bevy_render_plugin = { path="../pi_bevy/crates/render" }
-pi_bevy_winit_window = { path="../pi_bevy/crates/winit_window" }
-pi_bevy_ecs_extend = { path="../pi_bevy/crates/ecs_extend" }
-pi_bevy_ecs_macro = { path="../pi_bevy/crates/ecs_extend/macro" }
-pi_bevy_asset = { path="../pi_bevy/crates/asset" }
-pi_bevy_post_process = { path="../pi_bevy/crates/post_process" }
+ahash               = "=0.8.6"
 
 [dev-dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["wgpu"] }
@@ -105,8 +65,7 @@ wgpu1           = { version = "0.16", features = ["glsl"],  package = "wgpu" }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
 bevy            = { version = "0.11", default-features = false, features = ["bevy_winit"] }
-pi_wy_rng       = "0.1"
-pi_gltf         = { git = "https://github.com/GaiaWorld/pi_gltf.git", features = ["extras"] }
+pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
 
 [[example]]
 name = "cube"

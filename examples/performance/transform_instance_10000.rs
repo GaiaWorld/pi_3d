@@ -1,9 +1,8 @@
 #![feature(box_into_inner)]
 
-use default_render::interface::InterfaceDefaultMaterial;
 use pi_3d::PluginBundleDefault;
 use pi_atom::Atom;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}};
+use pi_scene_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, run_stage::{TSystemStageInfo, ERunStageChap}};
 use pi_render::{rhi::options::RenderOptions, renderer::vertex_buffer_desc::VertexBufferDesc};
 use pi_scene_context::{plugin::Plugin, object::ObjectID,
     transforms::{command::{SingleTransformNodeModifyCommandList, ETransformNodeModifyCommand}, interface::InterfaceTransformNode},
@@ -74,7 +73,7 @@ impl Plugin for PluginTest {
 
 impl PluginTest {
     pub fn setup(
-        engine: &pi_engine_shell::engine_shell::EnginShell,
+        engine: &pi_scene_shell::engine_shell::EnginShell,
     ) {
 
         let tes_size = 100;

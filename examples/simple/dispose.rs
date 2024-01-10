@@ -1,8 +1,8 @@
 #![feature(box_into_inner)]
 
 use base::DemoScene;
-use default_render::shader::DefaultShader;
-use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
+use pi_node_materials::prelude::*;
+use pi_scene_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 use pi_scene_context::{prelude::*, scene::StageScene};
 use pi_mesh_builder::cube::*;
 use pi_wy_rng::WyRng;

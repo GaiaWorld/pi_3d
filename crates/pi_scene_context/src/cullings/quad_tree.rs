@@ -6,7 +6,7 @@
 //     na::{Isometry3, Point3},
 //     shape::{ConvexPolyhedron, Cuboid},
 // };
-// use pi_engine_shell::prelude::*;
+// use pi_scene_shell::prelude::*;
 // use pi_scene_math::{frustum::FrustumPlanes, Perspective3, Vector4};
 // use pi_spatial::OctTree;
 

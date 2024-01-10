@@ -2,7 +2,7 @@
 
 
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
-use pi_engine_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
+use pi_scene_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
 
 use pi_node_materials::prelude::BlockMainTexture;
 // use pi_node_materials::prelude::MainColor;
@@ -104,7 +104,6 @@ fn setup(
             }
         };
 
-        let animation = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), idmat, animation));
         actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
     }

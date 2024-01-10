@@ -1,4 +1,4 @@
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 use crate::{
     light::prelude::*,
@@ -18,7 +18,7 @@ pub fn sys_model_direct_lighting_modify_by_light(
     viewers: Query<(&SceneID, &ModelList)>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<&ModelLightingIndexs>,
-    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
+    // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_direct_lighting_modify_by_light"));
     scenes.iter().for_each(|(scene, queuedirect)| {
@@ -51,7 +51,7 @@ pub fn sys_model_direct_lighting_modify_by_model(
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs), Changed<LayerMask>>,
-    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
+    // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_direct_lighting_modify_by_model"));
     meshes.iter().for_each(|(idm, idscene, ids)| {
@@ -80,7 +80,7 @@ pub fn sys_model_point_lighting_modify_by_model(
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForcePointLightings), Or<(Changed<LayerMask>, Changed<ModelForcePointLightings>)>>,
-    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
+    // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_point_lighting_modify_by_model"));
     meshes.iter().for_each(|(idm, idscene, ids, forcelights)| {
@@ -120,7 +120,7 @@ pub fn sys_model_spot_lighting_modify_by_model(
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceSpotLightings), Or<(Changed<LayerMask>, Changed<ModelForceSpotLightings>)>>,
-    // mut record: ResMut<pi_engine_shell::run_stage::RunSystemRecord>,
+    // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_spot_lighting_modify_by_model"));
     meshes.iter().for_each(|(idm, idscene, ids, forcelights)| {

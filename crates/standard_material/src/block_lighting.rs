@@ -9,7 +9,7 @@ impl TNodeMaterialBlock for BlockStandardLighting {
 
     const VS_DEFINED: &'static str = "";
 
-    const BIND_DEFINES: pi_engine_shell::prelude::BindDefine = pi_engine_shell::prelude::BindDefines::LIGHTING;
+    const BIND_DEFINES: pi_scene_shell::prelude::BindDefine = pi_scene_shell::prelude::BindDefines::LIGHTING;
 
     fn depends() -> Vec<pi_atom::Atom> {
         vec![

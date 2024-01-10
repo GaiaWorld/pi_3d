@@ -3,7 +3,7 @@ use std::hash::{Hash, Hasher};
 use bevy::prelude::{Resource, ResMut};
 use crossbeam::queue::SegQueue;
 use pi_assets::{mgr::*, asset::*};
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_gltf::Gltf;
 use pi_hash::*;
@@ -177,51 +177,6 @@ impl GLTFBase {
         }
         return Ok(result);
     }
-    
-    // async fn load_images(gltf: &Gltf, base_url: &Atom, image_assets_mgr: Share<AssetMgr<ImageTexture>>, device: RenderDevice, queue: RenderQueue) -> Vec<Handle<ImageTexture>> {
-    //     let mut result = vec![];
-    //     for item in gltf.images() {
-    //         match item.source() {
-    //             pi_gltf::image::Source::Uri { uri, mime_type: _ } => {
-    //                 let path = relative_path(uri, base_url.as_str());
-    //                 let key = KeyImageTexture { url: Atom::from(path), file: true, compressed: , ..Default::default() };
-    //                 let imageresult = AssetMgr::load(&image_assets_mgr, &key);
-    //                 match imageresult {
-    //                     LoadResult::Ok(res) => {
-    //                         result.push(res);
-    //                     },
-    //                     _ => {
-    //                         let device = device.clone();
-    //                         let queue = queue.clone();
-
-    //                         let desc = ImageTexture2DDesc {
-    //                             url: key.clone(),
-    //                             device: device,
-    //                             queue: queue,
-    //                         };
-    //                         let image = ImageTexture::async_load_image(desc, imageresult).await;
-    //                         match image {
-    //                             Ok(res) => {
-    //                                 result.push(res);
-    //                             },
-    //                             Err(_e) => {
-    //                                 // 图片加载失败仍然可渲染, 使用默认图片, 因此不添加Error
-    //                                 // log::error!("load image fail, {:?}", e);
-    //                                 // errorqueue.push(String::from(key.as_str()));
-    //                                 // log::error!("load image fail,");
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             },
-    //             _ => {
-    //             // pi_gltf::image::Source::View { view, mime_type } => {
-                    
-    //             },
-    //         }
-    //     }
-    //     return result;
-    // }
 }
 pub struct GLTFBaseDesc {
     path: Atom,
@@ -276,23 +231,6 @@ pub struct GLTF {
     pub euler: Vec<Handle<TypeFrameCurve<LocalEulerAngles>>>,
     pub scaling: Vec<Handle<TypeFrameCurve<LocalScaling>>>,
     pub quaternion: Vec<Handle<TypeFrameCurve<LocalRotationQuaternion>>>,
-    // pub maincolor_curves: Vec<Handle<TypeFrameCurve<MainColor>>>,
-    // pub alpha: Vec<Handle<TypeFrameCurve<Alpha>>>,
-    // pub alphacutoff: Vec<Handle<TypeFrameCurve<Cutoff>>>,
-    // pub maskcutoff_curves: Vec<Handle<TypeFrameCurve<MaskCutoff>>>,
-    // pub mainuoff_curves: Vec<Handle<TypeFrameCurve<MainTexUOffset>>>,
-    // pub mainuscl_curves: Vec<Handle<TypeFrameCurve<MainTexUScale>>>,
-    // pub mainvoff_curves: Vec<Handle<TypeFrameCurve<MainTexVOffset>>>,
-    // pub mainvscl_curves: Vec<Handle<TypeFrameCurve<MainTexVScale>>>,
-    // pub maskuoff_curves: Vec<Handle<TypeFrameCurve<MaskTexUOffset>>>,
-    // pub maskuscl_curves: Vec<Handle<TypeFrameCurve<MaskTexUScale>>>,
-    // pub maskvoff_curves: Vec<Handle<TypeFrameCurve<MaskTexVOffset>>>,
-    // pub maskvscl_curves: Vec<Handle<TypeFrameCurve<MaskTexVScale>>>,
-    // pub opacityuoff_curves: Vec<Handle<TypeFrameCurve<OpacityTexUOffset>>>,
-    // pub opacityuscl_curves: Vec<Handle<TypeFrameCurve<OpacityTexUScale>>>,
-    // pub opacityvoff_curves: Vec<Handle<TypeFrameCurve<OpacityTexVOffset>>>,
-    // pub opacityvscl_curves: Vec<Handle<TypeFrameCurve<OpacityTexVScale>>>,
-    // pub lightdiffuse_curves: Vec<Handle<TypeFrameCurve<LightDiffuse>>>,
     pub camerafov: Vec<Handle<TypeFrameCurve<CameraFov>>>,
     pub camerasize: Vec<Handle<TypeFrameCurve<CameraOrthSize>>>,
     pub enable: Vec<Handle<TypeFrameCurve<Enable>>>,
@@ -345,23 +283,6 @@ impl  GLTF {
             euler:                  vec![],
             scaling:                vec![],
             quaternion:             vec![],
-            // maincolor_curves:       vec![],
-            // alpha:                  vec![],
-            // alphacutoff:            vec![],
-            // maskcutoff_curves:      vec![],
-            // mainuoff_curves:        vec![],
-            // mainuscl_curves:        vec![],
-            // mainvoff_curves:        vec![],
-            // mainvscl_curves:        vec![],
-            // maskuoff_curves:        vec![],
-            // maskuscl_curves:        vec![],
-            // maskvoff_curves:        vec![],
-            // maskvscl_curves:        vec![],
-            // opacityuoff_curves:     vec![],
-            // opacityuscl_curves:     vec![],
-            // opacityvoff_curves:     vec![],
-            // opacityvscl_curves:     vec![],
-            // lightdiffuse_curves:    vec![],
             camerafov:              vec![],
             camerasize:             vec![],
             enable:                 vec![],
@@ -434,18 +355,6 @@ pub type ImageID = usize;
 pub type BufferViewID = usize;
 pub type AccessorID = usize;
 
-// pub struct GLTFImage {
-//     gltfid: KeyGLTF,
-//     imageid: ImageID,
-//     data: Handle<ImageTexture>,
-// }
-
-// pub struct GLTFAccessorVB {
-//     gltfid: KeyGLTF,
-//     bufferid: KeyVertexBuffer,
-//     data: Vec<u8>,
-// }
-
 #[derive(Debug, Clone, Copy)]
 pub enum ErrorGLTF {
     ErrorBuffer,
@@ -481,98 +390,6 @@ impl GLTFTempLoaded {
     pub fn new(id: KeyGLTF, base: Handle<GLTFBase>, entity: QueryKey) -> Self {
         Self { id, gltf: base, entity }
     }
-    // pub fn load_buffers(&self, bufferqueue: Share<SegQueue<GLTFBuffer>>, errorqueue: Share<SegQueue<(KeyGLTF, ErrorGLTF)>>) {
-    //     for buffer in self.gltf.gltf.buffers() {
-    //         match buffer.source() {
-    //             pi_gltf::buffer::Source::Bin => {
-    //                 errorqueue.push((self.id.clone(), ErrorGLTF::ErrorBuffer));
-    //             },
-    //             pi_gltf::buffer::Source::Uri(path) => {
-    //                 if path.starts_with("data:") {
-    //                     if let Some(index) = path.find(',') {
-    //                         let base64_buffer = path.split_at(index + 1).1;
-    //                         let data = base64::decode(base64_buffer).unwrap();
-    //                         bufferqueue.push(GLTFBuffer { gltfid: self.id.clone(), bufferid: index, data });
-    //                     }
-    //                 } else {
-    //                     let index = buffer.index();
-    //                     let key = self.id.clone();
-    //                     let buffers = bufferqueue.clone();
-    //                     let errors = errorqueue.clone();
-    //                     let path = relative_path(path, self.id.base_url.as_str());
-    //                     RENDER_RUNTIME
-    //                     .spawn(async move {
-    //                         let result = pi_hal::file::load_from_url(&Atom::from(path)).await;
-    //                         match result {
-    //                             Ok(data) => {
-    //                                 buffers.push(GLTFBuffer { gltfid: key, bufferid: index, data });
-    //                             },
-    //                             Err(_) => {
-    //                                 errors.push((key, ErrorGLTF::ErrorBuffer));
-    //                             },
-    //                         }
-    //                     })
-    //                     .unwrap();
-    //                 }
-    //             },
-    //         }
-    //     }
-    // }
-    // pub fn load_images(
-    //     &self, imagequeue: Share<SegQueue<GLTFImage>>, errorqueue: Share<SegQueue<(KeyGLTF, ErrorGLTF)>>,
-    //     image_assets_mgr: &ShareAssetMgr<ImageTexture>, device: RenderDevice, queue: RenderQueue
-    // ) {
-    //     for item in self.gltf.gltf.images() {
-    //         let imageid = item.index();
-    //         let gltfid = self.id.clone();
-    //         match item.source() {
-    //             pi_gltf::image::Source::Uri { uri, mime_type: _ } => {
-    //                 let path = relative_path(uri, self.id.base_url.as_str());
-    //                 let key = KeyImageTexture::File(Atom::from(path), true);
-    //                 let imageresult = AssetMgr::load(image_assets_mgr, &key);
-    //                 match imageresult {
-    //                     LoadResult::Ok(res) => {
-    //                         imagequeue.push(GLTFImage { gltfid: gltfid, imageid: imageid, data: res })
-    //                     },
-    //                     _ => {
-    //                         let images = imagequeue.clone();
-    //                         let errors = errorqueue.clone();
-    //                         let device = device.clone();
-    //                         let queue = queue.clone();
-    //                         RENDER_RUNTIME
-    //                             .spawn(async move {
-    //                                 let desc = ImageTexture2DDesc {
-    //                                     url: key.clone(),
-    //                                     device: device,
-    //                                     queue: queue,
-    //                                 };
-            
-    //                                 let result = ImageTexture::async_load(desc, imageresult).await;
-    //                                 match result {
-    //                                     Ok(res) => {
-    //                                         images.push(GLTFImage { gltfid: gltfid, imageid: imageid, data: res })
-    //                                     },
-    //                                     Err(_e) => {
-    //                                         // 图片加载失败仍然可渲染, 使用默认图片, 因此不添加Error
-    //                                         // log::error!("load image fail, {:?}", e);
-    //                                         // errorqueue.push(String::from(key.as_str()));
-    //                                         // log::error!("load image fail,");
-    //                                         errors.push((gltfid, ErrorGLTF::ErrorImage));
-    //                                     }
-    //                                 }
-    
-    //                             })
-    //                             .unwrap();
-    //                     }
-    //                 }
-    //             },
-    //             _ => {
-    //             // pi_gltf::image::Source::View { view, mime_type } => {
-                    
-    //             },
-    //         }
-    //     }
-    // }
     pub fn analy(
         gltf: Handle<GLTFBase>,
         base_url: Atom,
@@ -754,117 +571,12 @@ impl GLTFTempLoaded {
                                         EAnimePropertyType::CellId => {
                                             // let curve = curve_gltf::<1, CellId>(&times, &values, design_frame_per_second, mode);
                                         },
-                                        // EAnimePropertyType::BoneOffset => {
-                                        //     let curve = curve_gltf::<1, InstanceBoneoffset>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.boneoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.boneoff_curves.push(curve);
-                                        //     };
-                                        // },
                                         EAnimePropertyType::IndicesRange => {
                                             let curve = curve_gltf::<2, IndiceRenderRange>(&times, &values, design_frame_per_second, mode);
                                             if let Ok(curve) = anime_assets.indicerange_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
                                                 result.indicerange_curves.push(curve);
                                             };
                                         },
-                                        // EAnimePropertyType::MainTexUScale => {
-                                        //     let curve = curve_gltf::<1, MainTexUScale>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.mainuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.mainuscl_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MainTexVScale => {
-                                        //     let curve = curve_gltf::<1, MainTexVScale>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.mainvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.mainvscl_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MainTexUOffset => {
-                                        //     let curve = curve_gltf::<1, MainTexUOffset>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.mainuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.mainuoff_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MainTexVOffset => {
-                                        //     let curve = curve_gltf::<1, MainTexVOffset>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.mainvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.mainvoff_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::Alpha => {
-                                        //     let curve = curve_gltf::<1, Alpha>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.alpha.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.alpha.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MainColor => {
-                                        //     let curve = curve_gltf::<3, MainColor>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.maincolor_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.maincolor_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::LightDiffuse => {
-                                        //     // let curve = curve_gltf::<3, Lightdiffuse>(&times, &values, design_frame_per_second, mode);
-                                        // },
-                                        // EAnimePropertyType::AlphaCutoff => {
-                                        //     let curve = curve_gltf::<1, Cutoff>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.alphacutoff.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.alphacutoff.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::OpacityTexUScale => {
-                                        //     let curve = curve_gltf::<1, OpacityTexUScale>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.opacityuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.opacityuscl_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::OpacityTexVScale => {
-                                        //     let curve = curve_gltf::<1, OpacityTexVScale>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.opacityvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.opacityvscl_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::OpacityTexUOffset => {
-                                        //     let curve = curve_gltf::<1, OpacityTexUOffset>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.opacityuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.opacityuoff_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::OpacityTexVOffset => {
-                                        //     let curve = curve_gltf::<1, OpacityTexVOffset>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.opacityvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.opacityvoff_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MaskCutoff => {
-                                        //     let curve = curve_gltf::<1, MaskCutoff>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.maskcutoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.maskcutoff_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MaskTexUScale => {
-                                        //     let curve = curve_gltf::<1, MaskTexUScale>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.maskuscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.maskuscl_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MaskTexVScale => {
-                                        //     let curve = curve_gltf::<1, MaskTexVScale>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.maskvscl_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.maskvscl_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MaskTexUOffset => {
-                                        //     let curve = curve_gltf::<1, MaskTexUOffset>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.maskuoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.maskuoff_curves.push(curve);
-                                        //     };
-                                        // },
-                                        // EAnimePropertyType::MaskTexVOffset => {
-                                        //     let curve = curve_gltf::<1, MaskTexVOffset>(&times, &values, design_frame_per_second, mode);
-                                        //     if let Ok(curve) = anime_assets.maskvoff_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                        //         result.maskvoff_curves.push(curve);
-                                        //     };
-                                        // },
                                         EAnimePropertyType::MainTexUScale => {
                                             let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
                                             if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
@@ -1249,69 +961,6 @@ pub fn sys_gltf_analy(
 
         base = loader.basesuccess.pop();
     }
-
-    // while let Some(_) = loader.basesuccess.pop() {
-        
-    // }
-
-    // let time0 = pi_time::Instant::now();
-    // let mut dirtyids = vec![];
-    // let mut item = loader.bufferqueue.pop();
-    // while let Some(buffer) = item {
-    //     if let Some(temp) = loader.temp.get_mut(&buffer.gltfid) {
-    //         temp.buffers.insert(buffer.bufferid, buffer.data);
-    //         dirtyids.push(buffer.gltfid);
-    //     }
-    //     item = loader.bufferqueue.pop();
-    // }
-    // let mut item = loader.imagequeue.pop();
-    // while let Some(image) = item {
-    //     if let Some(temp) = loader.temp.get_mut(&image.gltfid) {
-    //         temp.images.insert(image.imageid, image.data);
-    //         dirtyids.push(image.gltfid);
-    //     }
-    //     item = loader.imagequeue.pop();
-    // }
-    // dirtyids.drain(..).for_each(|id| {
-    //     let isok = if let Some(temp) = loader.temp.get(&id) {
-    //         temp.is_all_temp_load_ok()
-    //     } else {
-    //         false
-    //     };
-
-    //     let key_u64 = id.asset_u64();
-    //     if isok {
-    //         let result = AssetMgr::load(&assets_mgr, &key_u64);
-    //         match result {
-    //             LoadResult::Ok(data) => {
-    //                 loader.successed_temp.push(data);
-    //             },
-    //             _ => {
-    //                 if let Some(temp) = loader.temp.remove(&id) {
-    //                     let res = temp.analy(&mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys);
-    //                     let result = GLTF::async_load(res, result);
-                        
-    //                     RENDER_RUNTIME
-    //                     .spawn(async move {
-    //                         match result.await {
-    //                             Ok(data) => {
-                                    
-    //                             },
-    //                             Err(_) => todo!(),
-    //                         }
-    //                     });
-    //                 }
-    //             },
-    //         }
-    //         // if let Some(temp) = loader.temp.remove(&id) {
-    //         //     // analy(temp, loader.queue.clone(), &mut allocator, &vb_asset_mgr);
-    //         //     let res = temp.analy(&mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys);
-    //         //     if let Ok(_) = assets_mgr.insert(key_u64, res) {
-
-    //         //     }
-    //         // }
-    //     }
-    // });
     
     let mut item = loader.errorqueue.pop();
     while let Some(temp) = item {

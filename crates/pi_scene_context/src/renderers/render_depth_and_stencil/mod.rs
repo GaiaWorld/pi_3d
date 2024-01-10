@@ -1,7 +1,7 @@
 
 
 use pi_bevy_render_plugin::constant::render_state::{CompareFunction, StencilFaceState};
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_render::renderer::pipeline::{DepthStencilState, DepthBiasState};
 
 #[derive(Debug, Clone, Component, Deref, DerefMut)]

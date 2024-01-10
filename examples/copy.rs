@@ -1,7 +1,7 @@
 use bevy::app::Plugin;
 use pi_mesh_builder::quad::QuadBuilder;
 use pi_node_materials::prelude::{NodeMaterialBuilder, BlockMainTexture};
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
 
 pub fn main() {}

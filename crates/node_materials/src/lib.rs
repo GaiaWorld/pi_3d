@@ -6,7 +6,7 @@ use fresnel::{opacity_fresnel::BlockOpacityFresnel, emissive_fresnel::BlockEmiss
 use main_tex::BlockMainTexture;
 use opacity::BlockOpacityTexture;
 use pi_hash::XHashMap;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use prelude::*;
 use premultiply::*;
 
@@ -27,6 +27,8 @@ mod animation;
 mod premultiply;
 mod command;
 mod command_sys;
+mod shadowmapping;
+mod default_shader;
 pub mod prelude;
 pub mod animation_sys;
 
@@ -37,15 +39,6 @@ impl NodeMaterialBlocks {
         self.0.insert(Atom::from(T::KEY), T::info());
     }
 }
-
-// #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
-// pub enum StageNodeMaterial {
-//     InitAnimeAbout,
-//     _InitAnimeAboutApply,
-//     Command,
-//     _CommandApply,
-//     ApplyAnimeAbout,
-// }
 
 pub struct PluginNodeMaterial;
 impl Plugin for PluginNodeMaterial {
@@ -92,33 +85,6 @@ impl Plugin for PluginNodeMaterial {
 
         app.insert_resource(blocks);
 
-
-    }
-}
-
-pub struct PluginGroupNodeMaterialAnime;
-impl PluginGroup for PluginGroupNodeMaterialAnime {
-    fn build(self) -> PluginGroupBuilder {
-        let group = PluginGroupBuilder::start::<Self>();
-        group
-        // group
-        //     .add(PluginAnimeMainTexUScale       ::new())
-        //     .add(PluginAnimeMainTexVScale       ::new())
-        //     .add(PluginAnimeMainTexUOffset      ::new())
-        //     .add(PluginAnimeMainTexVOffset      ::new())
-        //     .add(PluginAnimeOpacityTexUScale    ::new())
-        //     .add(PluginAnimeOpacityTexVScale    ::new())
-        //     .add(PluginAnimeOpacityTexUOffset   ::new())
-        //     .add(PluginAnimeOpacityTexVOffset   ::new())
-        //     .add(PluginAnimeMaskTexUScale       ::new())
-        //     .add(PluginAnimeMaskTexVScale       ::new())
-        //     .add(PluginAnimeMaskTexUOffset      ::new())
-        //     .add(PluginAnimeMaskTexVOffset      ::new())
-        //     .add(PluginAnimeMainColor           ::new())
-        //     .add(PluginAnimeAlpha               ::new())
-        //     .add(PluginAnimeCutoff              ::new())
-        //     .add(PluginAnimeMaskCutoff          ::new())
-        //     .add(PluginAnimeLightDiffuse        ::new())
 
     }
 }

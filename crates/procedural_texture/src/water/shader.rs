@@ -1,5 +1,5 @@
 use pi_atom::Atom;
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 
 pub struct WaterShader {
     pub vs_module: wgpu::ShaderModule,

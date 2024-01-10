@@ -1,6 +1,5 @@
-use pi_engine_shell::prelude::*;
-use pi_node_materials::{prelude::TNodeMaterialBlock, NodeMaterialBlocks};
-
+use pi_scene_shell::prelude::*;
+use crate::{prelude::TNodeMaterialBlock, NodeMaterialBlocks};
 
 pub struct BlockShadowMapping;
 impl TNodeMaterialBlock for BlockShadowMapping {
@@ -41,7 +40,7 @@ impl TNodeMaterialBlock for BlockShadowMapping {
     const VS_DEFINED: &'static str = "
     ";
 
-    const BIND_DEFINES: pi_engine_shell::prelude::BindDefine = pi_engine_shell::prelude::BindDefines::SHADOWMAP;
+    const BIND_DEFINES: pi_scene_shell::prelude::BindDefine = pi_scene_shell::prelude::BindDefines::SHADOWMAP;
 }
 
 

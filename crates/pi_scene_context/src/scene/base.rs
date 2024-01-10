@@ -1,7 +1,7 @@
 
 use std::sync::Arc;
 
-use pi_engine_shell::prelude::*;
+use pi_scene_shell::prelude::*;
 use pi_hash::XHashSet;
 
 #[derive(Component)]
@@ -53,7 +53,7 @@ impl SceneItemsQueue {
     pub fn max_count(&self) -> u32 {
         self.max_count
     }
-    pub fn items(&self) -> std::collections::hash_set::Iter<'_, pi_engine_shell::prelude::Entity> {
+    pub fn items(&self) -> std::collections::hash_set::Iter<'_, pi_scene_shell::prelude::Entity> {
         self.items.iter()
     }
     pub fn add(&mut self, entity: Entity) -> SceneItemIndex {

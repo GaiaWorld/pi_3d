@@ -2,10 +2,9 @@
 
 
 use axis::axis::{PluginAxisBuilder, InterfaceAxis};
-use default_render::{interface::InterfaceDefaultMaterial, PluginDefaultMaterial};
 use pi_3d::PluginBundleDefault;
 use pi_atom::Atom;
-use pi_engine_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
+use pi_scene_shell::{engine_shell::AppShell, frame_time::InterfaceFrameTime, assets::local_load::PluginLocalLoad};
 use pi_render::rhi::options::RenderOptions;
 use pi_scene_context::{
     plugin::Plugin,
@@ -19,7 +18,7 @@ use pi_mesh_builder::{quad::InterfaceQuad, cube::{PluginCubeBuilder, InterfaceCu
 
 /// 实现测试代码的方法
 fn test(
-    engine: &pi_engine_shell::engine_shell::EnginShell,
+    engine: &pi_scene_shell::engine_shell::EnginShell,
 ) {
     // 设置运行帧率
     engine.frame_time(2000);
