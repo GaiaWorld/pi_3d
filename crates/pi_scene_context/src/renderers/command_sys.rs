@@ -1,5 +1,6 @@
 
 use pi_bevy_render_plugin::component::GraphId;
+use pi_null::Null;
 use pi_scene_shell::prelude::*;
 
 use crate::{
@@ -24,7 +25,7 @@ pub fn sys_create_renderer(
     cmds.drain().drain(..).for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
         if let Ok((mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
-            match graphic.add_node(name, render_node) {
+            match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
                     if let Some(mut cmd) = commands.get_entity(entity) {
                         cmd.insert(GraphId(nodeid));
@@ -65,7 +66,7 @@ pub fn sys_act_renderer_target(
                                 *depth_stencil_format = RenderDepthFormat(srt.depth_stencil_format);
                                 // log::warn!("sys_act_renderer_target Custom {:?}", srt.color_format);
                             } else {
-                                *rendertarget = RendererRenderTarget::None;
+                                *rendertarget = RendererRenderTarget::None(None);
                             }
                             if let Err(err) = graphic.set_finish(nodeid.0, false) {
                                 error.graphic(entity, err);
@@ -93,7 +94,7 @@ pub fn sys_act_renderer_target(
                     *rendersize = RenderSize::new(width as u32, height as u32);
                     *color_format = RenderColorFormat(colorformat);
                     *depth_stencil_format = RenderDepthFormat(depthstencilformat);
-                    *rendertarget = RendererRenderTarget::None;
+                    *rendertarget = RendererRenderTarget::None(None);
                 }
             },
         }
@@ -230,7 +231,7 @@ impl ActionRenderer {
             .insert(RenderAutoClearColor::default())
             .insert(RenderAutoClearDepth::default())
             .insert(RenderAutoClearStencil::default())
-            .insert(RendererRenderTarget::None)
+            .insert(RendererRenderTarget::None(None))
             .insert(RendererBlend(transparent))
             .insert(ViewerID(id_viewer))
             .insert(Postprocess::default())
@@ -244,7 +245,7 @@ impl ActionRenderer {
     ) -> Entity {
         let entity = commands.spawn_empty().id();
         let render_node = RenderNode::new(entity);
-        match render_graphic.add_node(name, render_node) {
+        match render_graphic.add_node(name, render_node, NodeId::null()) {
             Ok(nodeid) => {
                 if let Some(mut cmd) = commands.get_entity(entity) {
                     cmd.insert(GraphId(nodeid));  

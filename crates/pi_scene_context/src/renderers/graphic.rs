@@ -1,5 +1,5 @@
 
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use pi_bevy_render_plugin::SimpleInOut;
 use pi_scene_shell::prelude::*;
@@ -53,6 +53,23 @@ pub struct QueryParam<'w, 's> (
     >,
 );
 
+#[derive(SystemParam)]
+pub struct QueryParam0<'w, 's> (
+    Res<'w, PiSafeAtlasAllocator>,
+    Query<
+        'w,
+        's,
+        (
+            &'static RendererEnable, &'static DisposeReady, &'static Renderer, &'static RenderSize,
+            &'static RenderColorFormat, &'static RenderColorClear,
+            &'static RenderDepthFormat, &'static RenderDepthClear,
+            &'static RenderStencilClear,
+            &'static RenderAutoClearColor, &'static RenderAutoClearDepth, &'static RenderAutoClearStencil,
+            &'static mut RendererRenderTarget,
+        ),
+    >,
+);
+
 pub struct RenderNode {
     pub renderer_id: ObjectID,
 }
@@ -68,12 +85,116 @@ impl Node for RenderNode {
 
     type Output = SimpleInOut;
 
-    type Param = QueryParam<'static, 'static>;
+    type BuildParam = QueryParam0<'static, 'static>;
+    type RunParam = QueryParam<'static, 'static>;
+
+    fn build<'a>(
+        &'a mut self,
+        world: &'a mut World,
+        param: &'a mut SystemState<Self::BuildParam>,
+        context: RenderContext,
+        input: &'a Self::Input,
+        usage: &'a ParamUsage,
+        id: NodeId,
+        from: &'a [NodeId],
+        to: &'a [NodeId],
+    ) -> Result<Self::Output, String> {
+        
+        let mut output = SimpleInOut::default();
+
+        let mut param: QueryParam0 = param.get_mut(world);
+        let (atlas_allocator, mut query) = (param.0, param.1);
+        if let Ok((
+            enable, disposed, renderer, rendersize, colorformat, color_clear, depthstencilformat, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, mut to_final_target
+        )) = query.get_mut(self.renderer_id) {
+    
+            // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
+            if !enable.0 || disposed.0 {
+                return Ok(output);
+            }
+    
+            let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
+            let need_depth = depthstencilformat.need_depth();
+            
+            let clear_color_ops = if auto_clear_color.0 {
+                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: true }
+            } else {
+                wgpu::Operations { load: wgpu::LoadOp::Load, store: false }
+            };
+            let clear_depth_ops = if auto_clear_depth.0 {
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: true, })
+            } else { None };
+            let clear_stencil_ops = if auto_clear_stencil.0 {
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: true, })
+            } else {
+                None
+            };
+
+            // let color_view = to_final_target.view();
+            // let depth_view = to_final_target.depth_view();
+            
+            // let can_render: bool;
+            // let clear_color_attachments;
+            // let color_attachments;
+            // let clear_depth_stencil_attachment;
+            // let depth_stencil_attachment;
+            // let render_color_view;
+            // let render_depth_view;
+            let to_final_target = to_final_target.deref_mut();
+
+            match to_final_target {
+                RendererRenderTarget::FinalRender => {},
+                RendererRenderTarget::Custom(srt) => output.target = Some(srt.clone()),
+                RendererRenderTarget::None(val) => {
+                    let currlist: Vec<ShareTargetView> = vec![];
+                    let srt = if let Some(srt) = input.target.clone() {
+                        match (depthstencilformat.0.val(), &srt.target().depth) {
+                            (Some(format), Some(depthview)) => {
+                                if depthview.1.format() == format {
+                                    Some(srt)
+                                } else { None }
+                            },
+                            (None, _) => { Some(srt) },
+                            _ => { None }
+                        }
+                    } else {
+                        None
+                    };
+                    let srt = match srt {
+                        Some(srt) => {
+                            if srt.target().colors[0].1.format() == colorformat.0.val() {
+                                Some(srt)
+                            } else {
+                                None
+                            }
+                        },
+                        None => { None },
+                    };
+
+                    let srt = if let Some(srt) = srt {
+                        srt
+                    } else {
+                        let width = rendersize.width();
+                        let height = rendersize.height();
+                        let target_type = atlas_allocator.get_or_create_type(
+                            TargetDescriptor { colors_descriptor: colorformat.desc(), need_depth: need_depth,  default_width: 2048,  default_height: 2048, depth_descriptor: depthstencilformat.desc() }
+                        );
+
+                        atlas_allocator.allocate_not_hold( width, height, target_type.clone(), currlist.iter() )
+                    };
+
+                    *val = Some(srt.clone());
+                    output.target = Some(srt.clone());
+                },
+            };
+        }
+        return Ok(output);
+    }
 
     fn run<'a>(
         &'a mut self,
         world: &'a World,
-        param: &'a mut SystemState<Self::Param>,
+        param: &'a mut SystemState<Self::RunParam>,
         _: RenderContext,
         mut commands: ShareRefCell<wgpu::CommandEncoder>,
         input: &'a Self::Input,
@@ -81,7 +202,7 @@ impl Node for RenderNode {
 		_id: NodeId,
 		_from: &[NodeId],
 		_to: &[NodeId],
-    ) -> BoxFuture<'a, Result<Self::Output, String>> {
+    ) -> BoxFuture<'a, Result<(), String>> {
         // let time = pi_time::Instant::now();
 
         let mut output = SimpleInOut::default();
@@ -97,7 +218,7 @@ impl Node for RenderNode {
             if !enable.0 || disposed.0 {
                 return Box::pin(
                     async move {
-                        Ok(output)
+                        Ok(())
                     }
                 );
             }
@@ -147,19 +268,11 @@ impl Node for RenderNode {
                                 render_depth_view = None;
                             },
                             _ => {
-                                return Box::pin(
-                                    async move {
-                                        Ok(output)
-                                    }
-                                );
+                                return Box::pin( async move { Ok(()) } );
                             },
                         }
                     } else {
-                        return Box::pin(
-                            async move {
-                                Ok(output)
-                            }
-                        );
+                        return Box::pin( async move { Ok(()) } );
                     }
                 },
                 RendererRenderTarget::Custom(srt) => {
@@ -183,52 +296,18 @@ impl Node for RenderNode {
                     
                     // output.target = Some(srt.clone());
                 },
-                RendererRenderTarget::None => {
-                    // can_render = false;
-                    // return Box::pin(
-                    //     async move {
-                    //         Ok(output)
-                    //     }
-                    // );
-
-                    let currlist: Vec<ShareTargetView> = vec![];
-                    let srt = if let Some(srt) = input.target.clone() {
-                        match (depthstencilformat.0.val(), &srt.target().depth) {
-                            (Some(format), Some(depthview)) => {
-                                if depthview.1.format() == format {
-                                    Some(srt)
-                                } else { None }
-                            },
-                            (None, _) => { Some(srt) },
-                            _ => { None }
-                        }
-                    } else {
-                        None
-                    };
+                RendererRenderTarget::None(srt) => {
                     let srt = match srt {
                         Some(srt) => {
                             if srt.target().colors[0].1.format() == colorformat.0.val() {
-                                Some(srt)
+                                srt
                             } else {
-                                None
+                                return Box::pin( async move { Ok(()) } );
                             }
                         },
                         None => {
-                            None
+                            return Box::pin( async move { Ok(()) } );
                         },
-                    };
-
-                    let srt = if let Some(srt) = srt {
-                        srt
-                    } else {
-                        let width = rendersize.width();
-                        let height = rendersize.height();
-                        let target_type = atlas_allocator.get_or_create_type(
-                            TargetDescriptor { colors_descriptor: colorformat.desc(), need_depth: need_depth,  default_width: 2048,  default_height: 2048, depth_descriptor: depthstencilformat.desc() }
-                        );
-                        
-                        // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
-                        atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
                     };
                     let width = srt.rect().max.x - srt.rect().min.x;
                     let height = srt.rect().max.y - srt.rect().min.y;
@@ -309,27 +388,12 @@ impl Node for RenderNode {
                     // let time1 = pi_time::Instant::now();
                     // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
                 }
-        
-                Box::pin(
-                    async move {
-                        Ok(output)
-                    }
-                )
-            } else {
-                Box::pin(
-                    async move {
-                        Ok(output)
-                    }
-                )
             }
-        } else {
-            Box::pin(
-                async move {
-                    Ok(output)
-                }
-            )
         }
+        
+        return Box::pin( async move { Ok(()) } );
     }
+
 }
 
 // pub fn main_camera_renderer<'a>(

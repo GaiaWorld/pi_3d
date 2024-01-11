@@ -23,7 +23,6 @@ pub use pi_bevy_render_plugin::{
     asset_config::*, should_run, component::GraphId
 };
 use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
-pub use pi_window_renderer::*;
 pub use pi_render::{
     asset::*,
     renderer::{

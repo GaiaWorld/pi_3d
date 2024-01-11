@@ -31,6 +31,7 @@ impl ErrorRecord {
             GraphError::CustomRunError(_) => Self::ERROR_GRAPHIC_CUSTOM_RUN_ERR,
             GraphError::WrongNodeType => Self::ERROR_GRAPHIC_WRONG_NODE_TYPE,
             GraphError::MismatchedParam => Self::ERROR_GRAPHIC_MISMATCH_PARAM,
+            GraphError::CrossGraphDepend(_, _) => Self::ERROR_GRAPHIC_BUILD_ERR,
         };
 
         self.record(node, error);

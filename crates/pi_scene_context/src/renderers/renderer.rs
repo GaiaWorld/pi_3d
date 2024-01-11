@@ -172,19 +172,24 @@ impl Default for RenderTargetMode {
 
 #[derive(Debug, Clone, Component)]
 pub enum RendererRenderTarget {
-    None,
+    None(Option<Arc<SafeTargetView>>),
     FinalRender,
     Custom(Arc<SafeTargetView>),
 }
 impl Default for RendererRenderTarget {
     fn default() -> Self {
-        Self::None
+        Self::None(None)
     }
 }
 impl RendererRenderTarget {
     pub fn view(&self) -> Option<&wgpu::TextureView> {
         match self {
-            RendererRenderTarget::None => None,
+            RendererRenderTarget::None(srt) => if let Some(srt) = srt {
+                let view: &wgpu::TextureView = srt.target().colors[0].0.as_ref().deref();
+                Some(view)
+            } else {
+                None
+            },
             RendererRenderTarget::FinalRender => None,
             RendererRenderTarget::Custom(srt) => {
                 let view: &wgpu::TextureView = srt.target().colors[0].0.as_ref().deref();
@@ -194,7 +199,13 @@ impl RendererRenderTarget {
     }
     pub fn depth_view(&self) -> Option<&wgpu::TextureView> {
         match self {
-            RendererRenderTarget::None => None,
+            RendererRenderTarget::None(srt) => if let Some(srt) = srt {
+                if let Some(view) = srt.target().depth.as_ref() {
+                    Some(view.0.as_ref().deref())
+                } else {
+                    None
+                }
+            } else { None },
             RendererRenderTarget::FinalRender => None,
             RendererRenderTarget::Custom(srt) => {
                 if let Some(view) = srt.target().depth.as_ref() {
@@ -207,7 +218,7 @@ impl RendererRenderTarget {
     }
     pub fn is_active(&self) -> bool {
         match self {
-            RendererRenderTarget::None => false,
+            RendererRenderTarget::None(_) => true,
             RendererRenderTarget::FinalRender => true,
             RendererRenderTarget::Custom(_) => true,
         }
