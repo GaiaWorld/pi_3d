@@ -381,7 +381,7 @@ pub struct ResParticleTrailBuffer(pub Option<TrailBuffer>);
 impl TAssetCapacity for ResParticleTrailBuffer {
     const ASSET_TYPE: &'static str = "PARTICLE_TRAIL_BUFFER";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 1024 * 1024, max: 1024 * 1024, timeout: 1000 }
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 50 * 1024 * 1024, timeout: 1000 }
     }
 }
 
@@ -500,7 +500,7 @@ impl ParticleTrail {
             };
 
             // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
-            let _ = item.run(
+            item.run(
                 parentmatrix, &localmatrix, 
                 &color, &trailmodifier.color_over_lifetime.color4_interpolate.gradient, &trailmodifier.color_over_trail.color4_interpolate.gradient,
                 width, &trailmodifier.width_over_trail, *agecontrol, &age, randoms, 9999999., trailmodifier.minimun_vertex_distance,
@@ -519,14 +519,10 @@ impl ParticleTrail {
         worldmatrixs: &Vec<EmitMatrix>,
         time: &ParticleSystemTime,
         trailmodifier: &TrailModifier,
-        trailbuffer: &mut TrailBuffer,
-    ) -> (u32, u32) {
+    ) {
         let mut color = Vector4::new(1., 1., 1., 1.);
         let basesize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
         let mut localscaling = Vector3::new(1., 0., 0.);
-        let trailworldspace = trailmodifier.use_world_space;
-        let mut start = u32::MAX;
-        let mut end = 0;
         activeids.iter().for_each(|idx| {
             let randoms = randomlist.get(*idx).unwrap();
             let particlecolor = colors.get(*idx).unwrap();
@@ -561,22 +557,13 @@ impl ParticleTrail {
             };
 
             // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
-            let flag = item.run(
+            item.run(
                 &worldmatrix, &localmatrix, 
                 &color, &trailmodifier.color_over_lifetime.color4_interpolate.gradient, &trailmodifier.color_over_trail.color4_interpolate.gradient,
                 width, &trailmodifier.width_over_trail, *agecontrol, &age, randoms, 9999999., trailmodifier.minimun_vertex_distance,
-                trailworldspace
+                trailmodifier.use_world_space
             );
-
-            // log::warn!("Trail: {:?}, {:?}", age, flag);
-            if flag {
-                let (istart, iend) = trailbuffer.collect(&item, trailworldspace,  parentmatrix);
-                start = istart.min(start);
-                end = iend.max(end);
-            }
         });
-
-        (start, end)
     }
 }
 
@@ -620,6 +607,9 @@ pub struct ParticleRunningState(pub(crate) bool);
 
 #[derive(Component)]
 pub struct ParticleModifyState(pub(crate) bool);
+
+#[derive(Component)]
+pub struct ParticleStart(pub(crate) bool);
 
 /// 存活的粒子ID列表
 #[derive(Component)]

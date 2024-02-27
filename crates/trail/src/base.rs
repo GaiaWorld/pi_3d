@@ -52,7 +52,7 @@ pub struct KeyPoint {
 }
 
 #[derive(Default, Component)]
-pub struct TrailPoints(pub Vec<PathPoint>, pub Vec<Vector4>, pub Vec<Number>);
+pub struct TrailPoints(pub Vec<PathPoint>, pub Vec<Vector4>, pub Vec<Number>, pub bool);
 impl TrailPoints {
     pub fn reset(&mut self) {
         self.0.clear();
@@ -74,7 +74,7 @@ impl TrailPoints {
         distancecontrol: Number,
         limit_between_distance: Number,
         trailworldspace: bool,
-    ) -> bool {
+    ) {
         if base.time <= base.starttime + base.lifetime {
             let mut newpos = Vector3::zeros();
             let mut newaxisx = Vector3::new(1., 0., 0.);
@@ -124,7 +124,7 @@ impl TrailPoints {
             // log::warn!("Total Distance: {:?}", totaldistance);
             // log::warn!("Point: {:?}  {:?}  {:?}  {:?}  {:?}  {:?}", limit_time, base, totaldistance, newpos, newaxisx, newaxisz);
             if totaldistance < Number::EPSILON {
-                false
+                self.3 = false;
             } else {
                 let amount = (base.time - base.starttime) as f32 / base.lifetime as f32;
                 let mut color = [0., 0., 0., 0.];
@@ -133,11 +133,11 @@ impl TrailPoints {
     
                 self.1 = PathPoints::path_color(&self.0, randoms, &color, colorinterpolator2);
                 self.2 = PathPoints::path_width(&self.0, randoms, sizecontrol * coordiante_system::CoordinateSytem3::length(&newsize) / f32::sqrt(3.0), widthinterpolator);
-                true
+                self.3 = true;
             }
         } else {
             self.0.clear();
-            false
+            self.3 = false;
         }
     }
 
@@ -337,6 +337,7 @@ impl TrailBuffer {
         if 0 < self.vertices.len()  {
             let buffer = self.buffer.0.buffer();
             queue.write_buffer(buffer, 0, bytemuck::cast_slice(&self.vertices));
+            // log::error!("Buffer: {}", self.vertices.len());
             self.vertices.clear();
         }
     }

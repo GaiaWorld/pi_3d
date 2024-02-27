@@ -118,7 +118,8 @@ impl Plugin for PluginParticleSystem {
         app.add_systems(Update,
             (
                 sys_particle_active,
-                sys_emitmatrix.run_if(should_run)
+                sys_emitmatrix.run_if(should_run),
+                sys_prewarm,
             ).chain().in_set(StageParticleSystem::ParticleSysMatrix),
         );
         app.add_systems(Update, 

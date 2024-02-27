@@ -165,7 +165,7 @@ pub fn sys_velocity_for_uniform(
 }
 
 pub fn sys_enable_about_instance(
-    instances: Query<&InstanceMesh, Changed<GlobalEnable>>,
+    instances: Query<&InstanceMesh, Or<(Changed<GlobalEnable>, Changed<GlobalMatrix>, Changed<ModelInstanceAttributes>)>>,
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
     instances.iter().for_each(|instance| {

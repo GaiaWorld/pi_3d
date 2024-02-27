@@ -67,8 +67,8 @@ impl crate::Plugin for PluginMesh {
         app.configure_set(Update, StageModel::_InitInstance.after(StageModel::CreateInstance).before(StageEnable::Command).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageModel::AbstructMeshCommand.after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create));
         app.configure_set(Update, StageModel::RenderMatrix.after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand));
-        app.configure_set(Update, StageModel::InstanceEffectGeometry.after(StageModel::InstanceEffectMesh).after(StageModel::RenderMatrix).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix));
+        app.configure_set(Update, StageModel::InstanceEffectGeometry.after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
         app.configure_set(Update, StageModel::LightingCollect.after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageModel::_InitMesh));
         app.add_systems(Update, apply_deferred.in_set(StageModel::_InitInstance));

@@ -135,6 +135,7 @@ fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     let mut cfg = IParticleSystemConfig::new();
 
     cfg.name = String::from("Test");
+    cfg.prewarm = true;
     cfg.duration = 1.0;
     cfg.looping = 1;
     cfg.max_particles = count;

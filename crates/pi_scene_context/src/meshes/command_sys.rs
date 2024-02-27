@@ -3,18 +3,9 @@ use pi_scene_shell::prelude::*;
 use pi_scene_math::*;
 
 use crate::{
-    geometry::{
-        prelude::*,
-        instance::types::{ModelInstanceAttributes, InstanceAttributeAnimated}
-    },
-    pass::*,
-    renderers::prelude::*,
-    state::{MeshStates, DirtyMeshStates},
-    layer_mask::prelude::*,
-    transforms::command_sys::ActionTransformNode,
-    skeleton::prelude::*,
-    object::ActionEntity,
-    cullings::prelude::*, prelude::{TypeAnimeContexts, TypeAnimeAssetMgrs}
+    cullings::prelude::*, geometry::{
+        instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer}, prelude::*
+    }, layer_mask::prelude::*, object::ActionEntity, pass::*, prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, renderers::prelude::*, skeleton::prelude::*, state::{DirtyMeshStates, MeshStates}, transforms::command_sys::ActionTransformNode
 };
 
 use super::{
@@ -552,6 +543,7 @@ impl ActionMesh {
         commands
             .insert(InstanceSourceRefs::default())
             .insert(DirtyInstanceSourceRefs::default())
+            .insert(DirtyInstanceSourceForSingleBuffer::default())
             ;
     }
 }

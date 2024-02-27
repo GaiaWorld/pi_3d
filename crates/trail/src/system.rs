@@ -41,7 +41,7 @@ pub fn sys_trail_update(
                 let worldmatrix = &worldmatrix.matrix;
 
                 let randoms = BaseRandom { seed: random.0.gen_range(0..u64::MAX), base: random.0.gen_range(0.0..1.0), x: random.0.gen_range(0.0..1.0), y: random.0.gen_range(0.0..1.0), z: random.0.gen_range(0.0..1.0), w: random.0.gen_range(0.0..1.0) };
-                let flag = points.run(
+                points.run(
                     worldmatrix, &localmatrix.0,
                     &colorcontrol.0, &colorinterpolator.0, &colorinterpolator.0,
                     sizecontrol.0, &widthinterpolator.0,
@@ -55,7 +55,7 @@ pub fn sys_trail_update(
                 // time1 = time2;
 
                 // log::warn!("Trail Update Geometry: ");
-                if flag {
+                if points.3 {
                     if let Ok(mut geometry) = geometries.get_mut(idgeo.0) {
                         if let Some(geometry) = &mut geometry.0 {
                             let (start, end) = trailbuffer.collect(&points, worldspace.0, &parentmatrix);

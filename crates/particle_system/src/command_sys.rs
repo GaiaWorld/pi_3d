@@ -62,6 +62,7 @@ pub fn sys_create_cpu_partilce_system(
             entitycmd
                 .insert(attributes)
                 .insert(ParticleActive(true))
+                .insert(ParticleStart(false))
                 .insert(ParticleRunningState(false))
                 .insert(ParticleModifyState(false))
                 .insert(ParticleRandom::new(0))

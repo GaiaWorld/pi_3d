@@ -24,8 +24,10 @@ impl TEntityRef for InstanceMesh {
     }
 }
 
-
 #[derive(Debug, Clone, Default, Component)]
 pub struct DirtyInstanceSourceRefs;
 
 pub type InstanceSourceRefs = EntityRefInfo<DirtyInstanceSourceRefs>;
+
+#[derive(Debug, Clone, Default, Component)]
+pub struct DirtyInstanceSourceForSingleBuffer;
