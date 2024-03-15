@@ -1,5 +1,5 @@
 
-use pi_bevy_render_plugin::component::GraphId;
+use pi_bevy_render_plugin::render_cross::GraphId;
 use pi_null::Null;
 use pi_scene_shell::prelude::*;
 

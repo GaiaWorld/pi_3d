@@ -1,4 +1,5 @@
 
+use bevy_ecs::component::Component;
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector4, Matrix, Matrix2, Vector2, Number};
 use pi_share::ThreadSync;

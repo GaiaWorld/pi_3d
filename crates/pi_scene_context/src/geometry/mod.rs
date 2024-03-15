@@ -6,7 +6,7 @@ use pi_scene_shell::prelude::*;
 ///
 /// 网格信息单独与 GameObject 绑定
 
-use crate::{object::sys_dispose_ready, plugin::Plugin, prelude::*};
+use crate::{object::sys_dispose_ready, prelude::*};
 
 use self::{
     sys_vertex_buffer_use::*,
@@ -33,7 +33,7 @@ pub type GBID = Atom;
 pub struct PluginGeometry;
 impl Plugin for PluginGeometry {
 
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(ActionListGeometryCreate::default());
         app.insert_resource(VertexBufferDataMap3D(SingleVertexBufferDataMap::default()));
         

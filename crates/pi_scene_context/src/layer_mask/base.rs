@@ -1,3 +1,4 @@
+use bevy_ecs::component::Component;
 ///
 /// Layer Mask
 /// * 通过 layer mask 数据标识目标的层级信息

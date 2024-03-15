@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use bevy::prelude::{Resource, ResMut};
+use bevy_ecs::prelude::{Resource, ResMut};
 use crossbeam::queue::SegQueue;
 use pi_assets::{mgr::*, asset::*};
 use pi_scene_shell::prelude::*;

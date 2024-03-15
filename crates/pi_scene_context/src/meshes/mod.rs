@@ -40,7 +40,7 @@ pub mod prelude;
 pub struct PluginMesh;
 impl crate::Plugin for PluginMesh {
 
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(ActionListMeshCreate::default());
         app.insert_resource(ActionListInstanceMeshCreate::default());
         app.insert_resource(ActionListMeshShadow::default());

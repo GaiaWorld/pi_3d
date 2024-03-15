@@ -1,4 +1,7 @@
 
+use bevy_ecs::schedule::SystemSet;
+use bevy_ecs::system::Resource;
+use bevy_ecs::system::SystemParam;
 use pi_scene_shell::prelude::*;
 
 pub use super::material::*;

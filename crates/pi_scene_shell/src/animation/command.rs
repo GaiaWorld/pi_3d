@@ -4,10 +4,7 @@ use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation:
 
 use pi_curves::{curve::{frame::KeyFrameCurveValue, FramePerSecond}, easing::EEasingMode};
 
-use bevy::{
-    ecs::prelude::*, 
-    ecs::system::SystemParam
-};
+use bevy_ecs::{prelude::*, system::SystemParam};
 
 use crate::prelude::ActionList;
 

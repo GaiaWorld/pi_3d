@@ -1,4 +1,6 @@
 
+use bevy_ecs::component::Component;
+use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 use pi_assets::asset::Handle;
 

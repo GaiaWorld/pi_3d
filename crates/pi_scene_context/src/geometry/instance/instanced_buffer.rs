@@ -1,6 +1,7 @@
 
 use std::sync::Arc;
 
+use bevy_ecs::{component::Component, system::Resource};
 use pi_scene_shell::prelude::*;
 use pi_render::rhi::buffer::Buffer;
 

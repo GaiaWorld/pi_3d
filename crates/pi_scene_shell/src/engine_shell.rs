@@ -1,4 +1,5 @@
-use bevy::prelude::{App, Resource};
+use bevy_ecs::prelude::Resource;
+use bevy_app::prelude::App;
 use pi_bevy_asset::AssetCapacity;
 
 

@@ -26,18 +26,19 @@ pi_spatial      = "0.5"
 approx          = "0.5"
 naga            = { version = "0.12", features = [ "glsl-in" ] }
 bytemuck        = { version = "1.4", features = [ "derive" ] }
-bevy            = { version = "0.11", default-features = false }
+bevy_ecs = "0.11"
+bevy_app = "0.11"
 image           = "0.24"
 winit           = { version = "0.27", registry = "yn" }
 pollster        = "0.2"
 spin_sleep      = "1.1"
 
-pi_map              = "0.1"
+pi_map              = "0.2"
 pi_slotmap          = "0.1"
 pi_hash             = "0.1"
 pi_share            = "0.4"
 pi_null            = "0.1"
-pi_atom             = { version="0.2", features = ["serde"] }
+pi_atom             = { version="0.5", features = ["serde"] }
 
 pi_time             = "0.3"
 pi_assets           = "0.13"

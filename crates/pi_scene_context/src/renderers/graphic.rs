@@ -5,6 +5,7 @@ use pi_bevy_render_plugin::SimpleInOut;
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_share::ShareRefCell;
+use wgpu::StoreOp;
 
 use crate::pass::PassTagOrders;
 
@@ -117,15 +118,15 @@ impl Node for RenderNode {
             let need_depth = depthstencilformat.need_depth();
             
             let clear_color_ops = if auto_clear_color.0 {
-                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: true }
+                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: StoreOp::Store }
             } else {
-                wgpu::Operations { load: wgpu::LoadOp::Load, store: false }
+                wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Discard }
             };
             let clear_depth_ops = if auto_clear_depth.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: true, })
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: StoreOp::Store, })
             } else { None };
             let clear_stencil_ops = if auto_clear_stencil.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: true, })
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: StoreOp::Store, })
             } else {
                 None
             };
@@ -227,15 +228,15 @@ impl Node for RenderNode {
             let need_depth = depthstencilformat.need_depth();
             
             let clear_color_ops = if auto_clear_color.0 {
-                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: true }
+                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: StoreOp::Store }
             } else {
-                wgpu::Operations { load: wgpu::LoadOp::Load, store: false }
+                wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Discard }
             };
             let clear_depth_ops = if auto_clear_depth.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: true, })
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: StoreOp::Store, })
             } else { None };
             let clear_stencil_ops = if auto_clear_stencil.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: true, })
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: StoreOp::Store, })
             } else {
                 None
             };
@@ -339,16 +340,16 @@ impl Node for RenderNode {
                     Some( wgpu::RenderPassColorAttachment { view: render_color_view, resolve_target: None, ops: clear_color_ops, } )
                 ];
                 color_attachments = [
-                    Some( wgpu::RenderPassColorAttachment { resolve_target: None,  ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: true, }, view: render_color_view, })
+                    Some( wgpu::RenderPassColorAttachment { resolve_target: None,  ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Store, }, view: render_color_view, })
                 ];
                 if let Some(depth) = render_depth_view {
                     depth_stencil_attachment = Some(
                         wgpu::RenderPassDepthStencilAttachment {
                             view: depth,
                             depth_ops: Some(
-                                wgpu::Operations { load: wgpu::LoadOp::Load, store: true, }
+                                wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Store, }
                             ),
-                            stencil_ops: Some( wgpu::Operations { load: wgpu::LoadOp::Load, store: true, } ),
+                            stencil_ops: Some( wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Store, } ),
                         }
                     );
                     clear_depth_stencil_attachment = Some(
@@ -364,7 +365,9 @@ impl Node for RenderNode {
                         &wgpu::RenderPassDescriptor {
                             label: None,
                             color_attachments: clear_color_attachments.as_slice(),
-                            depth_stencil_attachment: clear_depth_stencil_attachment
+                            depth_stencil_attachment: clear_depth_stencil_attachment,
+                            timestamp_writes: None,
+                            occlusion_query_set: None,
                         }
                     );
                     renderpass.set_viewport(x, y, w, h, min_depth, max_depth);
@@ -378,6 +381,8 @@ impl Node for RenderNode {
                             label: Some(self.renderer_id.index().to_string().as_str()),
                             color_attachments: color_attachments.as_slice(),
                             depth_stencil_attachment: depth_stencil_attachment,
+                            timestamp_writes: None,
+                            occlusion_query_set: None,
                         }
                     );
         

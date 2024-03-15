@@ -30,7 +30,7 @@ pub type MBKK = usize;
 
 struct PluginMaterial;
 impl Plugin for PluginMaterial {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         {
             app.insert_resource(ImageTextureLoader::default());
             app.insert_resource(StateTextureLoader::default());

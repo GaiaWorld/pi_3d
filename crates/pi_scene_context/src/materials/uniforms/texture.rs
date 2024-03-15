@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use bevy_ecs::component::Component;
+use derive_deref::{DerefMut, Deref};
 use pi_scene_shell::prelude::*;
 use pi_assets::asset::Handle;
 use pi_atom::Atom;

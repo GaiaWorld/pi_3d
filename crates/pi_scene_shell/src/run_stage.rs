@@ -1,6 +1,7 @@
 
 
-use bevy::{prelude::{SystemSet, Plugin, IntoSystemSetConfig, IntoSystemConfigs, Update, apply_deferred}, ecs::system::{Resource, Res, ResMut}};
+use bevy_ecs::prelude::*;
+use bevy_app::prelude::{Plugin, Update};
 use pi_bevy_render_plugin::{PiRenderSystemSet, FrameState, should_run};
 
 use crate::prelude::{EngineInstant, ErrorRecord};
@@ -130,7 +131,7 @@ pub enum ERunStageChap {
 
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut bevy_app::prelude::App) {
         app.configure_set(Update, ERunStageChap::New);
         app.configure_set(Update, ERunStageChap::Initial.after(ERunStageChap::New));
         app.configure_set(Update, ERunStageChap::_InitialApply.after(ERunStageChap::Initial));

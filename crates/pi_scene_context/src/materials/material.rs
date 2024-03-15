@@ -1,4 +1,5 @@
 
+use bevy_ecs::{component::Component, system::Resource};
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Number, Matrix, Vector4, Vector2, Matrix2};
 

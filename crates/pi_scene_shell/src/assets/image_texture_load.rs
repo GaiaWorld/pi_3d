@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use bevy_app::{Update, App, Plugin};
+use bevy_ecs::{system::{Resource, ResMut, Res, Query}, schedule::{SystemSet, IntoSystemSetConfig, IntoSystemConfigs}, component::Component, entity::Entity, query::Changed};
 use crossbeam::queue::SegQueue;
 use pi_assets::{
     asset::Handle,

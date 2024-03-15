@@ -1,7 +1,7 @@
 
 use std::sync::Arc;
 
-use bevy::ecs::query::QueryEntityError;
+use bevy_ecs::query::QueryEntityError;
 use pi_scene_shell::prelude::*;
 use pi_scene_context::{prelude::*, geometry::instance::{instanced_buffer::{InstancedInfo, InstanceBufferAllocator}, types::ModelInstanceAttributes}};
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}};

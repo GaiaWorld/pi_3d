@@ -1,14 +1,14 @@
 use std::{marker::PhantomData, ops::Deref, fmt::Debug, hash::Hash};
 
+use bevy_app::{App, Update, Plugin};
+use bevy_ecs::{system::{Resource, Query, Commands, Res, ResMut}, component::Component, query::Changed, schedule::IntoSystemConfigs};
 use pi_assets::{asset::{Handle, Asset, GarbageEmpty}, mgr::{AssetMgr, LoadResult}};
 use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::XHashMap;
-use pi_share::{ThreadSync};
+use pi_share::ThreadSync;
 
-use crate::{run_stage::{TSystemStageInfo, ERunStageChap}, plugin::{Plugin}, object::ObjectID};
+use crate::{run_stage::{TSystemStageInfo, ERunStageChap}, object::ObjectID};
 
-
-use crate::prelude::*;
 
 #[derive(Debug, Default, Resource)]
 pub struct AssetSyncWaitOption<
@@ -229,7 +229,7 @@ where
     K: Deref<Target = Option<K0>> + Component,
     D: Asset<Key = K0> + Component,
     R: From<Handle<D>> + Component,
-    S: TSystemStageInfo + 'static + ThreadSync
+    S: TSystemStageInfo + 'static + Send + Sync
 {
     ///
     /// ref_garbage, capacity, timeout 为 AssetMgr::<D> 缓存大小, 内部会检查保证只创建一次
@@ -244,7 +244,7 @@ where
     K: Deref<Target = Option<K0>> + Component,
     D: Asset<Key = K0> + Component,
     R: From<Handle<D>> + Component,
-    S: TSystemStageInfo + 'static + ThreadSync
+    S: TSystemStageInfo + 'static + Send + Sync
 {
     fn build(&self, app: &mut App) {
         app.world.insert_resource(AssetSyncWaitOption::<K0, K, D, R>(XHashMap::default(), vec![], PhantomData));

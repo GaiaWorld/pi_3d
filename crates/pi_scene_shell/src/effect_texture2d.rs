@@ -1,5 +1,6 @@
 
-use bevy::prelude::{Deref, Component};
+use bevy_ecs::prelude::Component;
+use derive_deref::Deref;
 use pi_assets::asset::Handle;
 
 use pi_render::renderer::texture::*;

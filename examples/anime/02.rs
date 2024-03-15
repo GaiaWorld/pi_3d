@@ -127,7 +127,7 @@ pub fn main() {
 
     // while !app.ready() {
     //     #[cfg(not(target_arch = "wasm32"))]
-    //     bevy::tasks::tick_global_task_pools_on_main_thread();
+    //     bevy_tasks::tick_global_task_pools_on_main_thread();
     // }
     // app.finish();
     // app.cleanup();

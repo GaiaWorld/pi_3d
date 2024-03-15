@@ -1,6 +1,7 @@
 
 use std::hash::Hash;
 
+use derive_deref::{Deref, DerefMut};
 use pi_animation::{
     type_animation_context::{TypeAnimationContext, AnimationContextAmount},
     animation_group_manager::AnimationGroupManagerDefault,
@@ -13,9 +14,7 @@ use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFra
 use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
 
-use bevy::{
-    ecs::prelude::*, prelude::{Deref, DerefMut},
-};
+use bevy_ecs::prelude::*;
 
 #[derive(Clone, Copy, Component)]
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据

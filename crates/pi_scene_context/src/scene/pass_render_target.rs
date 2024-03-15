@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use bevy::prelude::Component;
+use bevy_ecs::prelude::Component;
 use pi_scene_shell::prelude::*;
 
 #[derive(Component)]

@@ -1,6 +1,8 @@
 
 use std::{collections::VecDeque, f32::consts::PI};
 
+use bevy_app::{App, Plugin};
+use bevy_ecs::system::Resource;
 use pi_assets::asset::Handle;
 use pi_scene_shell::prelude::*;
 use pi_scene_math::Vector3;

@@ -18,7 +18,7 @@ pub mod prelude;
 
 pub struct PluginSkeleton;
 impl Plugin for PluginSkeleton {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(ActionListSkinCreate::default());
         app.insert_resource(ActionListSkinUse::default());
         app.insert_resource(ActionListBoneCreate::default());

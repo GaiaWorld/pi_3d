@@ -11,7 +11,8 @@ mod mat4;
 
 use std::marker::PhantomData;
 
-use bevy::{prelude::{App, Plugin, IntoSystemConfigs, Entity, Update}, ecs::schedule::{SystemSet, IntoSystemSetConfig, apply_deferred}};
+use bevy_app::{App, Plugin, Update};
+use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
 
 pub use base::*;
 pub use command::*;

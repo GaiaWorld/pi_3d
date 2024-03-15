@@ -2,7 +2,7 @@
 
 use std::ops::Deref;
 
-use bevy::ecs::prelude::*;
+use bevy_ecs::prelude::*;
 
 
 use crate::object::ActionEntity;

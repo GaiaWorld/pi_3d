@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use bevy::prelude::Component;
+use bevy_ecs::prelude::Component;
 
 pub type PassTagValue = u16;
 

@@ -1,6 +1,7 @@
 
 use std::{sync::Arc, ops::{Deref, Range}};
 
+use bevy_ecs::component::Component;
 use pi_assets::asset::Handle;
 use crate::bindgroup::*;
 

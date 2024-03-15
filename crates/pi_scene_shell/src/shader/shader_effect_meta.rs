@@ -162,6 +162,7 @@ impl From<(pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>)> for Shader
                             wgpu::BindingType::StorageTexture { access: _, format: _, view_dimension: _ } => {
                                 
                             },
+                            wgpu::BindingType::AccelerationStructure => todo!(),
                         }
                     }
                 }

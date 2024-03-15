@@ -1,4 +1,5 @@
 
+use bevy_ecs::system::Resource;
 use pi_assets::asset::Handle;
 use pi_atom::Atom;
 use pi_scene_shell::prelude::*;

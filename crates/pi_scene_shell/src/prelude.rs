@@ -1,13 +1,16 @@
 use std::{ops::Range, mem::replace};
 
-pub use bevy::{
-    app::{ prelude::*, PluginGroupBuilder }, core::prelude::*, ecs::prelude::*, hierarchy::prelude::*, input::{prelude::*, InputPlugin},
-    log::prelude::*, math::prelude::*, reflect::prelude::*, time::prelude::*,
-    utils::prelude::*, window::prelude::*,
-    ecs::system::{CommandQueue, EntityCommands, SystemState, SystemParam}, prelude::{Deref, DerefMut},
-    a11y::*,
-    // winit::*,
-};
+pub use bevy_ecs::{prelude::*, system::{CommandQueue, EntityCommands, SystemState, SystemParam}};
+pub use bevy_app::{prelude::*, PluginGroupBuilder};
+pub use bevy_hierarchy::prelude::*;
+pub use bevy_input::{prelude::*, InputPlugin};
+pub use bevy_log::prelude::*;
+pub use bevy_math::prelude::*;
+pub use bevy_window::prelude::*;
+pub use bevy_time::prelude::*;
+
+
+pub use derive_deref::{DerefMut, Deref};
 pub use pi_atom::Atom;
 pub use pi_bevy_winit_window::*;
 pub use pi_bevy_ecs_extend::prelude::*;
@@ -20,7 +23,7 @@ pub use pi_bevy_asset::{
 pub use pi_bevy_render_plugin::{
     PiRenderDevice, PiRenderQueue, PiRenderGraph, PiRenderWindow, PiRenderOptions, PiSafeAtlasAllocator, PiScreenTexture,
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
-    asset_config::*, should_run, component::GraphId
+    asset_config::*, should_run, render_cross::GraphId
 };
 use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
 pub use pi_render::{
@@ -123,8 +126,18 @@ pub struct IndicesBufferDesc {
 #[derive(Debug, Deref, Clone, Hash, Component)]
 pub struct AssetKeyBufferIndices(pub KeyVertexBuffer);
 
+// TODO Send问题， 临时解决
+unsafe impl Send for AssetKeyBufferIndices {}
+unsafe impl Sync for AssetKeyBufferIndices {}
+
+
 #[derive(Deref, Component)]
 pub struct AssetResBufferIndices(pub EVerticesBufferUsage);
+
+// TODO Send问题， 临时解决
+unsafe impl Send for AssetResBufferIndices {}
+unsafe impl Sync for AssetResBufferIndices {}
+
 impl From<EVerticesBufferUsage> for AssetResBufferIndices {
     fn from(value: EVerticesBufferUsage) -> Self {
         Self(value)

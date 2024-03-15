@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use bevy::prelude::Deref;
+use derive_deref::Deref;
 use pi_assets::asset::Handle;
 use pi_render::renderer::{
     texture::{BindDataTexture2D, ImageTexture}, sampler::BindDataSampler, buildin_var::ShaderVarUniform, shader::TShaderBindCode,

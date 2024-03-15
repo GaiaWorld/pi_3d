@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use bevy::prelude::Deref;
+use derive_deref::Deref;
 use pi_render::renderer::{
     texture::BindDataTexture2D, sampler::BindDataSampler, buildin_var::ShaderVarUniform, shader::TShaderBindCode,
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer},

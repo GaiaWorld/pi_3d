@@ -1,4 +1,4 @@
-use bevy::{prelude::{ResMut, Query}, ecs::system::Res};
+use bevy_ecs::prelude::{ResMut, Query, Res};
 
 use crate::materials::prelude::{SingleIDBaseDefaultMaterial, ActionListMaterialUse, OpsMaterialUse};
 

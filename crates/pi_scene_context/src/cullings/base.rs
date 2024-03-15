@@ -1,4 +1,5 @@
 
+use bevy_ecs::component::Component;
 use parry3d::bounding_volume::Aabb;
 use pi_scene_shell::prelude::*;
 use pi_hash::XHashSet;

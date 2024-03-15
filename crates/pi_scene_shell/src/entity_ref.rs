@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, collections::hash_set::Iter};
 
-use bevy::prelude::{Entity, Component};
+use bevy_ecs::prelude::{Entity, Component};
 use pi_hash::XHashSet;
 
 pub trait TEntityRef {

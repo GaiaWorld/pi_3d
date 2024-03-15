@@ -2,6 +2,8 @@
 
 use std::ops::Range;
 
+use bevy_app::{Plugin, App};
+use bevy_ecs::system::Resource;
 use pi_assets::asset::Handle;
 use pi_scene_shell::prelude::*;
 

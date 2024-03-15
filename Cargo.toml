@@ -25,40 +25,32 @@ unlit_material          = { version = "0.0.1", registry = "yn", path = "crates/u
 pi_standard_material    = { version = "0.0.1", registry = "yn", path = "crates/standard_material" }
 pi_pbr                  = { version = "0.0.1", registry = "yn", path = "crates/pbr" }
 
-# pi_render               = { version = "0.1", registry = "yn" }
-# render_utils            = { version = "0.1", registry = "yn" }
-# render_derive           = { version = "0.1", registry = "yn" }
-# render_compile          = { version = "0.1", registry = "yn" }
-# pi_bevy_render_plugin   = { version = "0.1", registry = "yn" }
-# pi_bevy_winit_window    = { version = "0.1", registry = "yn" }
-# pi_bevy_post_process    = { version = "0.1", registry = "yn" }
-# pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
-# pi_bevy_asset           = { version = "0.1", registry = "yn" }
+pi_render               = { version = "0.1", registry = "yn" }
+render_utils            = { version = "0.1", registry = "yn" }
+render_core             = { version = "0.1", registry = "yn" }
+render_derive           = { version = "0.1", registry = "yn" }
+render_compile          = { version = "0.1", registry = "yn" }
 
-pi_render               = { version = "0.1", registry = "yn", path = "../pi_render_new_graphic" }
-render_utils            = { version = "0.1", registry = "yn", path = "../pi_render_new_graphic/crates/render_utils" }
-render_core             = { version = "0.1", registry = "yn", path = "../pi_render_new_graphic/crates/render_core" }
-render_derive           = { version = "0.1", registry = "yn", path = "../pi_render_new_graphic/crates/render_derive" }
-render_compile          = { version = "0.1", registry = "yn", path = "../pi_render_new_graphic/crates/render_compile" }
-pi_bevy_render_plugin   = { path = "../pi_bevy_new_graphic/crates/render" }
-pi_bevy_winit_window    = { path = "../pi_bevy_new_graphic/crates/winit_window" }
-pi_bevy_ecs_extend      = { path = "../pi_bevy_new_graphic/crates/ecs_extend" }
-pi_bevy_asset           = { path = "../pi_bevy_new_graphic/crates/asset" }
-pi_bevy_log             = { path = "../pi_bevy_new_graphic/crates/log" }
+pi_bevy_render_plugin   = { version = "0.1", registry = "yn" }
+pi_bevy_winit_window    = { version = "0.1", registry = "yn" }
+pi_bevy_post_process    = { version = "0.1", registry = "yn" }
+pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
+pi_bevy_asset           = { version = "0.1", registry = "yn" }
+pi_bevy_log             = { version = "0.1", registry = "yn" }
 
 pi_scene_math           = { version = "0.0.3", registry = "yn" }
 pi_animation            = { version = "0.1", registry = "yn" }
 pi_curves               = { version = "0.1", registry = "yn" }
-pi_atom                 = { version = "0.2", features = ["serde"] }
+pi_atom                 = { version = "0.5", features = ["serde"] }
 pi_hal                  = { version = "0.1", registry = "yn" }
 pi_assets               = "0.13"
 pi-async-rt             = "0.1"
 pi_wy_rng               = "0.1"
-pi_share                = "=0.4.7"
+pi_share                = "0.4"
 
 wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
-bevy                = { version = "0.11", default-features = false }
-bevy_mod_debugdump  = { version = "0.8" }
+bevy_ecs = "0.11"
+# bevy_mod_debugdump  = { version = "0.8" }
 
 log                 = "0.4"
 env_logger          = "0.9"
@@ -71,23 +63,29 @@ ahash               = "=0.8.6"
 
 [patch.yn]
 pi_gltf                 = { path = "../pi_gltf", features = ["extras"] }
-pi_render               = { path = "../pi_render_new_graphic" }
-render_utils            = { path = "../pi_render_new_graphic/crates/render_utils" }
-render_core             = { path = "../pi_render_new_graphic/crates/render_core" }
-render_derive           = { path = "../pi_render_new_graphic/crates/render_derive" }
-render_compile          = { path = "../pi_render_new_graphic/crates/render_compile" }
-pi_bevy_render_plugin   = { path="../pi_bevy_new_graphic/crates/render" }
-pi_bevy_winit_window    = { path="../pi_bevy_new_graphic/crates/winit_window" }
-pi_bevy_ecs_extend      = { path="../pi_bevy_new_graphic/crates/ecs_extend" }
-pi_bevy_asset           = { path="../pi_bevy_new_graphic/crates/asset" }
-pi_bevy_log             = { path="../pi_bevy_new_graphic/crates/log" }
+pi_render               = { path = "../pi_render" }
+render_utils            = { path = "../pi_render/crates/render_utils" }
+render_core             = { path = "../pi_render/crates/render_core" }
+render_derive           = { path = "../pi_render/crates/render_derive" }
+render_compile          = { path = "../pi_render/crates/render_compile" }
+pi_bevy_render_plugin   = { path="../pi_bevy/crates/render" }
+pi_bevy_winit_window    = { path="../pi_bevy/crates/winit_window" }
+pi_bevy_ecs_extend      = { path="../pi_bevy/crates/ecs_extend" }
+pi_bevy_asset           = { path="../pi_bevy/crates/asset" }
+pi_bevy_log             = { path="../pi_bevy/crates/log" }
+
+pi_wgpu = {path = "../pi_wgpu"}
+pi_egl = {path = "../pi_egl"}
+winit = {path = "../winit"}
+pi_hal = { path = "../pi_hal" }
+pi_postprocess = { path = "../pi_post_process"}
 
 [dev-dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["wgpu"] }
 wgpu1           = { version = "0.16", features = ["glsl"],  package = "wgpu" }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
-bevy            = { version = "0.11", default-features = false, features = ["bevy_winit"] }
+bevy            = "0.11"
 pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
 
 [[example]]
