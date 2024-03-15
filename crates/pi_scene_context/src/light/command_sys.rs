@@ -2,9 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    transforms::command_sys::*,
-    layer_mask::prelude::*,
-    shadow::prelude::LightLinkedShadowID,
+    layer_mask::prelude::*, shadow::prelude::LightLinkedShadowID, transforms::command_sys::*, viewer::prelude::ViewerDistanceCompute
 };
 
 use super::{
@@ -166,6 +164,7 @@ impl ActionLight {
         Self::as_light(commands);
         commands.insert(DirectLight);
         commands.insert(LayerMask::default());
+        commands.insert(ViewerDistanceCompute::Direction);
         commands.insert(LightDirection::default());
     }
     pub(crate) fn as_spot_light(
@@ -179,6 +178,7 @@ impl ActionLight {
         commands.insert(SpotLightInAngle(0.2));
         commands.insert(SpotLightOutAngle(0.5));
         commands.insert(LightRadius::default());
+        commands.insert(ViewerDistanceCompute::Base);
     }
     pub(crate) fn as_point_light(
         commands: &mut EntityCommands,
@@ -188,6 +188,7 @@ impl ActionLight {
         commands.insert(PointLight);
         commands.insert(LayerMask::default());
         commands.insert(LightRadius::default());
+        commands.insert(ViewerDistanceCompute::Base);
     }
     pub(crate) fn as_hemi_light(
         commands: &mut EntityCommands,
@@ -197,6 +198,7 @@ impl ActionLight {
         commands.insert(HemisphericLight);
         commands.insert(LayerMask::default());
         commands.insert(HemiGrounds::default());
+        commands.insert(ViewerDistanceCompute::Base);
     }
 }
 

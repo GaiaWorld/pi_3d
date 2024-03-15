@@ -1,7 +1,6 @@
 
 use std::{ops::Sub, sync::Arc};
 
-use bevy::prelude::Deref;
 use crossbeam::queue::SegQueue;
 use pi_assets::asset::{Asset, Size, Handle};
 use pi_scene_shell::prelude::*;

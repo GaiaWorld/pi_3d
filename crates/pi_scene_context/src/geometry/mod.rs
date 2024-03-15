@@ -33,7 +33,7 @@ pub type GBID = Atom;
 pub struct PluginGeometry;
 impl Plugin for PluginGeometry {
 
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(ActionListGeometryCreate::default());
         app.insert_resource(VertexBufferDataMap3D(SingleVertexBufferDataMap::default()));
         

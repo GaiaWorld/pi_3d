@@ -24,7 +24,7 @@ mod system;
 
 pub struct PluginTransformNode;
 impl Plugin for PluginTransformNode {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTransformNodeCreate::default())
             .insert_resource(ActionListTransformNodeLocalPosition::default())
             // .insert_resource(ActionListTransformNodeLocalRotation::default())

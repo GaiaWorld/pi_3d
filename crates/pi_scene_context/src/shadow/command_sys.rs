@@ -20,7 +20,7 @@ use super::{
 pub fn sys_create_shadow_generator(
     mut commands: Commands,
     mut cmds: ResMut<ActionListShadowGenerator>,
-    mut direct_lights: Query<(&SceneID, &GlobalEnable, &mut LightLinkedShadowID, Option<&DirectLight>, Option<&SpotLight>, &LayerMask), Or<(With<DirectLight>, With<SpotLight>)>>,
+    mut direct_lights: Query<(&SceneID, &GlobalEnable, &mut LightLinkedShadowID, Option<&DirectLight>, Option<&SpotLight>, &LayerMask, &ViewerDistanceCompute), Or<(With<DirectLight>, With<SpotLight>)>>,
     mut scene_shadow: Query<&mut SceneShadowQueue>,
     mut dynallocator: ResMut<ResBindBufferAllocator> ,
     mut matcreatecmds: ResMut<ActionListMaterialCreate>,
@@ -30,7 +30,7 @@ pub fn sys_create_shadow_generator(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
-        if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, isdirect, issopt, layermask))) = (scene_shadow.get_mut(scene), direct_lights.get_mut(light)) {
+        if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, isdirect, issopt, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), direct_lights.get_mut(light)) {
             let mat = commands.spawn_empty().id();
 
             let mut shadowcommands = if let Some(cmd) = commands.get_entity(entity) { cmd } else {
@@ -47,6 +47,7 @@ pub fn sys_create_shadow_generator(
                     .insert(ShadowLayerMask(layermask.clone()))
                     .insert(queueshadow.0.add(entity))
                     .insert(ShadowCastPassTag(passtag))
+                    .insert(viewerdistance)
                     ;
                 
                 if isdirect.is_some() {

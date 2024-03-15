@@ -47,3 +47,25 @@ impl ActionShadow {
         ActionViewer::as_viewer(commands, active);
     }
 }
+
+pub struct BundleShadowCaster(
+    RendererID,
+    ShadowMinZ,
+    ShadowMaxZ,
+    ShadowFrustumSize,
+    ShadowAngle,
+    ShadowDepthScale,
+    ShadowNormalBias,
+);
+
+pub struct BundleShadowCasterDirect(
+    ShadowLinkedLightID,
+    DirectionalShadowDirection,
+    DirectionalShadowProjection,
+);
+
+pub struct BundleShadowCasterSpot(
+    ShadowLinkedLightID,
+    DirectionalShadowDirection,
+    SpotShadowProjection,
+);

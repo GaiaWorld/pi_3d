@@ -1,4 +1,4 @@
-use bevy::{prelude::{ResMut, Query}, ecs::system::Res};
+use pi_scene_shell::prelude::{ResMut, Query, Res};
 
 use crate::materials::prelude::{SingleIDBaseDefaultMaterial, ActionListMaterialUse, OpsMaterialUse};
 

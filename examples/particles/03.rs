@@ -15,8 +15,6 @@ use pi_3d::PluginBundleDefault;
 use pi_animation::{amount::AnimationAmountCalc, loop_mode::ELoopMode};
 use pi_async_rt::rt::AsyncRuntime;
 use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_scene_shell::{frame_time::PluginFrameTime, prelude::*};
 use pi_hal::{init_load_cb, on_load, runtime::MULTI_MEDIA_RUNTIME};
@@ -394,7 +392,7 @@ pub fn main() {
     app.add_systems(Update, sys_demo_particle.in_set(StageModel::RenderMatrix));
 
     app.add_systems(Startup, setup.after(base::setup_default_mat));
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    
 
     app.run()
 }

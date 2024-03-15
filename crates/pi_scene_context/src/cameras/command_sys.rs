@@ -37,12 +37,16 @@ pub fn sys_create_camera(
 
 pub fn sys_act_camera_mode(
     mut cmds: ResMut<ActionListCameraMode>,
-    mut cameras: Query<&mut EFreeCameraMode>,
+    mut cameras: Query<(&mut EFreeCameraMode, &mut ViewerDistanceCompute)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraMode(entity, mode)| {
-        if let Ok(mut camera) = cameras.get_mut(entity) {
+        if let Ok((mut camera, mut distance)) = cameras.get_mut(entity) {
             if *camera != mode {
                 *camera = mode;
+            }
+            match mode {
+                EFreeCameraMode::Perspective => *distance = ViewerDistanceCompute::Base,
+                EFreeCameraMode::Orthograhic => *distance = ViewerDistanceCompute::Direction,
             }
         } else {
             cmds.push(OpsCameraMode(entity, mode))
@@ -203,6 +207,7 @@ impl ActionCamera {
     ) {
         commands.insert(Camera(false))
             .insert(EFreeCameraMode::default())
+            .insert(ViewerDistanceCompute::default())
             .insert(EFixedMode::default())
             .insert(CameraFov::default())
             .insert(CameraOrthSize::default())

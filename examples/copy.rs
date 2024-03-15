@@ -1,4 +1,3 @@
-use bevy::app::Plugin;
 use pi_mesh_builder::quad::QuadBuilder;
 use pi_node_materials::prelude::{NodeMaterialBuilder, BlockMainTexture};
 use pi_scene_shell::prelude::*;
@@ -8,7 +7,7 @@ pub fn main() {}
 
 pub struct PluginImageCopy;
 impl Plugin for PluginImageCopy {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderImageCopy::KEY), ShaderImageCopy::res());
     }

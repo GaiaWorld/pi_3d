@@ -6,6 +6,7 @@ pub use bevy::{
     utils::prelude::*, window::prelude::*,
     ecs::system::{CommandQueue, EntityCommands, SystemState, SystemParam}, prelude::{Deref, DerefMut},
     a11y::*,
+    ecs::query::QueryEntityError
     // winit::*,
 };
 pub use pi_atom::Atom;

@@ -1,92 +1,125 @@
 <mxfile host="65bd71144e">
     <diagram id="7W4FLCNAzhLjAAYPnn7t" name="Page-1">
-        <mxGraphModel dx="3093" dy="1669" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2139" dy="1184" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="44" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
-                    <mxGeometry x="1120" y="160" width="280" height="280" as="geometry"/>
+                <mxCell id="44" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" parent="1" vertex="1">
+                    <mxGeometry x="1840" y="160" width="280" height="280" as="geometry"/>
                 </mxCell>
-                <mxCell id="38" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
-                    <mxGeometry x="1480" y="160" width="280" height="720" as="geometry"/>
+                <mxCell id="38" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" parent="1" vertex="1">
+                    <mxGeometry x="2200" y="160" width="280" height="400" as="geometry"/>
                 </mxCell>
-                <mxCell id="37" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
-                    <mxGeometry x="760" y="480" width="280" height="280" as="geometry"/>
+                <mxCell id="36" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" parent="1" vertex="1">
+                    <mxGeometry x="1120" y="160" width="280" height="360" as="geometry"/>
                 </mxCell>
-                <mxCell id="36" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
-                    <mxGeometry x="760" y="160" width="280" height="360" as="geometry"/>
+                <mxCell id="35" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="160" width="280" height="400" as="geometry"/>
                 </mxCell>
-                <mxCell id="35" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
-                    <mxGeometry x="400" y="160" width="280" height="720" as="geometry"/>
-                </mxCell>
-                <mxCell id="34" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
+                <mxCell id="34" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" parent="1" vertex="1">
                     <mxGeometry x="40" y="160" width="280" height="720" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="New Object" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="4" value="New Object" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="80" y="280" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="NodeTree" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="5" value="NodeTree" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="80" y="360" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="6" value="Mesh Buillder" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="6" value="Mesh Buillder" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="80" y="440" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="Camera" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="7" value="Camera" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="80" y="520" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="Local RotationMatrix Calc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="280" width="200" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="11" value="Projection Matrix Calc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="600" width="200" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="12" value="Target Camera Modify Local" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="360" width="200" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="13" value="Local Matrix Calc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="440" width="200" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="14" value="World Matrix Calc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="520" width="200" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="15" value="View Matrix Calc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="680" width="200" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="17" value="Scene Uniform" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="10" value="Transform Matrix" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="800" y="280" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="18" value="Camera Uniform" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="800" y="360" width="200" height="40" as="geometry"/>
+                <mxCell id="12" value="Culling" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="330" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="20" value="Default Material Unifrom" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="800" y="600" width="200" height="40" as="geometry"/>
+                <mxCell id="13" value="Viewer / Project" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="380" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="21" value="Default Material&amp;nbsp; BeforeRender" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="1160" y="280" width="200" height="40" as="geometry"/>
+                <mxCell id="14" value="ParticleSystem" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="430" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="23" value="Opaque List Sort" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="1520" y="280" width="200" height="40" as="geometry"/>
+                <mxCell id="17" value="Scene Uniform" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="1160" y="260" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="24" value="AlphaTest List Sort" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="1520" y="360" width="200" height="40" as="geometry"/>
+                <mxCell id="18" value="Camera Uniform" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="1160" y="310" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="25" value="Transparent List Sort" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="1520" y="440" width="200" height="40" as="geometry"/>
+                <mxCell id="21" value="Default Material&amp;nbsp; BeforeRender" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="1880" y="280" width="200" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="39" value="用户操作，数据修改" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="23" value="Opaque List Sort" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="2240" y="250" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="AlphaTest List Sort" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="2240" y="310" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="Transparent List Sort" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="2240" y="370" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" value="用户操作，数据修改" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry y="40" width="360" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="40" value="计算" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
-                    <mxGeometry x="360" y="40" width="360" height="80" as="geometry"/>
-                </mxCell>
-                <mxCell id="41" value="Uniform" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="40" value="计算" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="720" y="40" width="360" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="42" value="Before Render - 收集渲染列表" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="42" value="Before Render - 收集渲染列表" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+                    <mxGeometry x="1800" y="40" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="渲染列表排序" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+                    <mxGeometry x="2160" y="40" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="内部计算应用属性&lt;br&gt;动画计算应用属性" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="40" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="...... Uniform" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1160" y="360" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
+                    <mxGeometry x="1120" y="460" width="280" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="Attribute" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1160" y="560" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" value="Uniform / Attribute" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
                     <mxGeometry x="1080" y="40" width="360" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="43" value="渲染列表排序" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="50" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="160" width="280" height="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="Time" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="440" y="270" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="52" value="Color&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="440" y="330" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="53" value="Transform Propertype" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="440" y="390" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="54" value="Geometry" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1160" y="620" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" value="渲染数据" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
                     <mxGeometry x="1440" y="40" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=south;size=80;" vertex="1" parent="1">
+                    <mxGeometry x="1480" y="160" width="280" height="400" as="geometry"/>
+                </mxCell>
+                <mxCell id="57" value="Bindgroup" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1520" y="250" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="58" value="Shader" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1520" y="310" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="59" value="Pipeline" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1520" y="370" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" value="DrawObj" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1520" y="430" width="200" height="40" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

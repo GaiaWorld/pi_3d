@@ -14,9 +14,4 @@
 ## 渲染用的实例化数据(可能有的数据)
 
 * Component
-  * InstanceColor
-    * 实例化的颜色数据
-  * InstanceTilloff
-    * 实例化的 UV 缩放与偏移数据
-  * InstanceSource
-    * 实例的源节点
+
