@@ -973,6 +973,34 @@ pub fn sys_update_buffer(
                                     &mut collectdata
                                 };
                                 let mut tempbytes = instanceattributes.bytes().clone();
+
+                                let mut matrixoffset = None;
+                                let mut coloroffset = None;
+                                let mut tilloffset = None;
+                                let mut extaoffset: Option<usize> = None;
+                                let mut extboffset: Option<usize> = None;
+                                
+                                attributes.0.iter().for_each(|v| {
+                                    match v.vtype {
+                                        EParticleAttributeType::Matrix => if instanceattributes.worldmatrix() {
+                                            matrixoffset = Some(0 as usize);
+                                        },
+                                        EParticleAttributeType::Color => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                            coloroffset = Some(offset.offset() as usize);
+                                        },
+                                        EParticleAttributeType::Tilloff => if let Some(offset) = instanceattributes.offset(&v.attr) {
+                                            tilloffset = Some(offset.offset() as usize);
+                                        },
+                                        EParticleAttributeType::Extend4A => if let Some(_offset) = instanceattributes.offset(&v.attr) {
+                                            // let mut idx = offset.offset() as usize;
+                                            // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                        },
+                                        EParticleAttributeType::Extend4B => if let Some(_offset) = instanceattributes.offset(&v.attr) {
+                                            // let mut idx = offset.offset() as usize;
+                                            // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                        },
+                                    }
+                                });
         
                                 ids.actives.iter().for_each(|idx| {
                                     let scaling = scalings.get(*idx).unwrap();
@@ -1018,30 +1046,26 @@ pub fn sys_update_buffer(
                                     let color = colors.get(*idx).unwrap();
                                     let uv = uvs.get(*idx).unwrap();
 
-                                    attributes.0.iter().for_each(|v| {
-                                        match v.vtype {
-                                            EParticleAttributeType::Matrix => if instanceattributes.worldmatrix() {
-                                                let mut idx = 0;
-                                                bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
-                                            },
-                                            EParticleAttributeType::Color => if let Some(offset) = instanceattributes.offset(&v.attr) {
-                                                let mut idx = offset.offset() as usize;
-                                                bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
-                                            },
-                                            EParticleAttributeType::Tilloff => if let Some(offset) = instanceattributes.offset(&v.attr) {
-                                                let mut idx = offset.offset() as usize;
-                                                bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
-                                            },
-                                            EParticleAttributeType::Extend4A => if let Some(_offset) = instanceattributes.offset(&v.attr) {
-                                                // let mut idx = offset.offset() as usize;
-                                                // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
-                                            },
-                                            EParticleAttributeType::Extend4B => if let Some(_offset) = instanceattributes.offset(&v.attr) {
-                                                // let mut idx = offset.offset() as usize;
-                                                // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
-                                            },
-                                        }
-                                    });
+                                    if let Some(idx) = matrixoffset {
+                                        let mut idx = idx;
+                                        bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                    }
+                                    if let Some(idx) = coloroffset {
+                                        let mut idx = idx;
+                                        bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                    }
+                                    if let Some(idx) = tilloffset {
+                                        let mut idx = idx;
+                                        bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                    }
+                                    if let Some(idx) = extaoffset {
+                                        // let mut idx = offset.offset() as usize;
+                                        // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                    }
+                                    if let Some(idx) = extboffset {
+                                        // let mut idx = offset.offset() as usize;
+                                        // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
+                                    }
                                     tempbytes.iter().for_each(|v| { collect.push(*v); });
                                 });
 
