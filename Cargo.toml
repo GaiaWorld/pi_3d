@@ -1,6 +1,6 @@
 [package]
 name = "pi_3d"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -12,18 +12,18 @@ keywords = ["3d scene"]
 members = ["crates/*"]
 
 [dependencies]
-pi_scene_context        = { version = "0.0.1", registry = "yn", path = "crates/pi_scene_context" }
-pi_scene_shell          = { version = "0.0.1", registry = "yn", path = "crates/pi_scene_shell" }
-pi_mesh_builder         = { version = "0.0.1", registry = "yn", path = "crates/pi_mesh_builder" }
-skybox                  = { version = "0.0.1", registry = "yn", path = "crates/skybox" }
-procedural_texture      = { version = "0.0.1", registry = "yn", path = "crates/procedural_texture" }
-pi_gltf2_load           = { version = "0.0.1", registry = "yn", path = "crates/gltf2" }
-pi_particle_system      = { version = "0.0.1", registry = "yn", path = "crates/particle_system" }
-pi_trail_renderer       = { version = "0.0.1", registry = "yn", path = "crates/trail" }
-pi_node_materials       = { version = "0.0.1", registry = "yn", path = "crates/node_materials" }
-unlit_material          = { version = "0.0.1", registry = "yn", path = "crates/unlit_material" }
-pi_standard_material    = { version = "0.0.1", registry = "yn", path = "crates/standard_material" }
-pi_pbr                  = { version = "0.0.1", registry = "yn", path = "crates/pbr" }
+pi_scene_context        = { version = "0.0.*", registry = "yn", path = "crates/pi_scene_context" }
+pi_scene_shell          = { version = "0.0.*", registry = "yn", path = "crates/pi_scene_shell" }
+pi_mesh_builder         = { version = "0.0.*", registry = "yn", path = "crates/pi_mesh_builder" }
+skybox                  = { version = "0.0.*", registry = "yn", path = "crates/skybox" }
+procedural_texture      = { version = "0.0.*", registry = "yn", path = "crates/procedural_texture" }
+pi_gltf2_load           = { version = "0.0.*", registry = "yn", path = "crates/gltf2" }
+pi_particle_system      = { version = "0.0.*", registry = "yn", path = "crates/particle_system" }
+pi_trail_renderer       = { version = "0.0.*", registry = "yn", path = "crates/trail" }
+pi_node_materials       = { version = "0.0.*", registry = "yn", path = "crates/node_materials" }
+unlit_material          = { version = "0.0.*", registry = "yn", path = "crates/unlit_material" }
+pi_standard_material    = { version = "0.0.*", registry = "yn", path = "crates/standard_material" }
+pi_pbr                  = { version = "0.0.*", registry = "yn", path = "crates/pbr" }
 
 pi_render               = { version = "0.1", registry = "yn" }
 render_utils            = { version = "0.1", registry = "yn" }
