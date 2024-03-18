@@ -182,6 +182,58 @@ impl OpsMeshForceHemiLighting {
 }
 pub type ActionListMeshForceHemiLighting = ActionList<OpsMeshForceHemiLighting>;
 
+pub struct BundleMeshGeometry (
+    GeometryID,
+    RenderGeometryEable,
+    MeshInstanceState,
+    DirtyInstanceSourceRefs,
+);
+
+pub struct BundleMeshRenderState (
+    CCullMode,
+    CFrontFace,
+    CPolygonMode,
+    Topology,
+    CUnClipDepth,
+    DepthWrite,
+    DepthCompare,
+    DepthBias,
+    StencilFront,
+    StencilBack,
+    StencilRead,
+    StencilWrite,
+    ModelBlend,
+);
+
+pub struct BundleMeshMaterial(
+    PassID01,
+    PassID02,
+    PassID03,
+    PassID04,
+    PassID05,
+    PassID06,
+    PassID07,
+    PassID08,
+);
+
+pub struct BundleMeshFunctionRenderModules (
+    BundleMeshLighting,
+    ModelVelocity,
+    BindSkinValue,
+    RenderAlignment,
+    ScalingMode,
+);
+
+pub struct BundleMeshLighting(
+    MeshLightingMode,
+    ModelLightingIndexs,
+    ModelForcePointLightings,
+    ModelForceSpotLightings,
+    ModelForceHemiLightings,
+    ModelPointLightingDirty,
+    ModelSpotLightingDirty,
+    ModelHemiLightingDirty,
+);
 
 pub struct BundleMesh(
     BundleTransformNode,

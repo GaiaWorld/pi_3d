@@ -44,7 +44,7 @@ pub fn main() {
     app.add_systems(Startup, pbr::setup.after(base::setup_default_mat));
     app.add_systems(Startup, base::active_lighting_shadow);
     app.add_systems(Update, display_boundingbox);
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    
 
     // app.run()
     loop { app.update(); }

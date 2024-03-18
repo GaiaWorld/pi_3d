@@ -2,8 +2,6 @@
 use pi_3d::PluginBundleDefault;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc};
 use pi_atom::Atom;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime,};
 use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
@@ -152,7 +150,7 @@ pub fn main() {
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_systems(Startup, setup.after(base::setup_default_mat));
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    
     
     app.run()
 

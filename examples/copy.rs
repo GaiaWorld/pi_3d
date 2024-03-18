@@ -8,7 +8,7 @@ pub fn main() {}
 
 pub struct PluginImageCopy;
 impl Plugin for PluginImageCopy {
-    fn build(&self, app: &mut bevy_ecs::prelude::App) {
+    fn build(&self, app: &mut bevy_app::prelude::App) {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderImageCopy::KEY), ShaderImageCopy::res());
     }

@@ -182,6 +182,31 @@ impl ViewerDirection {
 // }
 
 #[derive(Debug, Clone, Component)]
+pub enum ViewerDistanceCompute {
+    Base,
+    Direction,
+}
+impl Default for ViewerDistanceCompute {
+    fn default() -> Self {
+        Self::Base
+    }
+}
+impl ViewerDistanceCompute {
+    pub fn distance(&self, view: &Vector3, view_direction: &Vector3, target: &Vector3) -> Number {
+        match self {
+            ViewerDistanceCompute::Base => {
+                let temp = target - view;
+                temp.dot(&temp)
+            },
+            ViewerDistanceCompute::Direction => {
+                let temp = target - view;
+                view_direction.dot(&temp)
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Component)]
 pub struct BindViewer(pub Arc<ShaderBindViewer>);
 impl BindViewer {
     pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {

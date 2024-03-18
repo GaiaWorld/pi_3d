@@ -52,3 +52,28 @@
       * 缩放
       * 无缩放信息的变换矩阵
 
+## Action
+
+* [ActionSetTransform](../../../crates/pi_scene_context/src/transforms/prelude.rs)
+* [OpsTransformNode](../../../crates/pi_scene_context/src/transforms/command.rs)
+  * 创建纯节点
+* [OpsTransformNodeParent](../../../crates/pi_scene_context/src/transforms/command.rs)
+  * 设置父节点
+* [OpsTransformNodeLocalPosition](../../../crates/pi_scene_context/src/transforms/command.rs)
+  * 局部位移
+* [OpsTransformNodeLocalRotationQuaternion](../../../crates/pi_scene_context/src/transforms/command.rs)
+  * 局部旋转
+* [OpsTransformNodeLocalEuler](../../../crates/pi_scene_context/src/transforms/command.rs)
+  * 局部旋转
+* [OpsTransformNodeLocalScaling](../../../crates/pi_scene_context/src/transforms/command.rs)
+  * 局部缩放
+* [OpsNodeEnable](../../../crates/pi_scene_context/src/flags/mod.rs)
+  * 自身 Enable
+
+## Animatable - 可动画属性
+
+* [LocalPosition](../../../crates/pi_scene_context/src/transforms/transform_node.rs)
+* [LocalEulerAngles](../../../crates/pi_scene_context/src/transforms/transform_node.rs)
+* [LocalRotationQuaternion](../../../crates/pi_scene_context/src/transforms/transform_node.rs)
+* [LocalScaling](../../../crates/pi_scene_context/src/transforms/transform_node.rs)
+* [Enable](../../../crates/pi_scene_context/src/transforms/transform_node.rs)

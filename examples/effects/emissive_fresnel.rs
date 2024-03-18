@@ -135,7 +135,7 @@ pub fn main() {
 
     app.add_systems(Startup, sys_setup_ball);
     app.add_systems(Startup, setup.after(base::setup_default_mat));
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    
 
     // app.run()
     loop { app.update(); }

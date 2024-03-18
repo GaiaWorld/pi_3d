@@ -139,7 +139,7 @@ pub fn main() {
     app.add_plugins(PluginTest);
     
     app.add_systems(Startup, setup.after(base::setup_default_mat));
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    
 
     app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
     

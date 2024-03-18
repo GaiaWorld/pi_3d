@@ -1,5 +1,4 @@
 
-use bevy_ecs::prelude::{Query, Changed, ResMut};
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 

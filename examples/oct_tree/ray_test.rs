@@ -180,7 +180,7 @@ pub fn main() {
         .unwrap()
         .write_state = false;
 
-    // bevy_mod_debugdump::print_main_schedule(&mut app);
+    
 
     // app.run()
     loop {
