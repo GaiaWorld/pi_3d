@@ -49,7 +49,7 @@ pi_wy_rng               = "0.1"
 pi_share                = "0.4"
 
 wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
-bevy_ecs = "0.11"
+bevy_ecs            = "0.11"
 # bevy_mod_debugdump  = { version = "0.8" }
 
 log                 = "0.4"
@@ -68,24 +68,25 @@ render_utils            = { path = "../pi_render/crates/render_utils" }
 render_core             = { path = "../pi_render/crates/render_core" }
 render_derive           = { path = "../pi_render/crates/render_derive" }
 render_compile          = { path = "../pi_render/crates/render_compile" }
-pi_bevy_render_plugin   = { path="../pi_bevy/crates/render" }
-pi_bevy_winit_window    = { path="../pi_bevy/crates/winit_window" }
-pi_bevy_ecs_extend      = { path="../pi_bevy/crates/ecs_extend" }
-pi_bevy_asset           = { path="../pi_bevy/crates/asset" }
-pi_bevy_log             = { path="../pi_bevy/crates/log" }
+pi_bevy_render_plugin   = { path = "../pi_bevy/crates/render" }
+pi_bevy_winit_window    = { path = "../pi_bevy/crates/winit_window" }
+pi_bevy_ecs_extend      = { path = "../pi_bevy/crates/ecs_extend" }
+pi_bevy_asset           = { path = "../pi_bevy/crates/asset" }
+pi_bevy_log             = { path = "../pi_bevy/crates/log" }
 
-pi_wgpu = {path = "../pi_wgpu"}
-pi_egl = {path = "../pi_egl"}
-winit = {path = "../winit"}
-pi_hal = { path = "../pi_hal" }
-pi_postprocess = { path = "../pi_post_process"}
+pi_wgpu                 = { path = "../pi_wgpu" }
+pi_egl                  = { path = "../pi_egl" }
+# winit                   = { path = "../winit" }
+# pi_hal                  = { path = "../pi_hal" }
+# pi_postprocess          = { path = "../pi_post_process"}
 
 [dev-dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["wgpu"] }
 wgpu1           = { version = "0.16", features = ["glsl"],  package = "wgpu" }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
-bevy            = "0.11"
+bevy_a11y       = "0.11"
+bevy_app        = "0.11"
 pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
 
 [[example]]

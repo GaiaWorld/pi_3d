@@ -1,3 +1,4 @@
+use bevy_a11y::AccessibilityPlugin;
 #[allow(dead_code)]
 #[allow(unused_imports)]
 
@@ -11,7 +12,7 @@ use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator, scene::StageSc
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_standard_material::PluginStandardMaterial;
 use unlit_material::*;
-use wgpu1::Backends;
+use wgpu::Backends;
 
 use std::sync::Arc;
 use pi_async_rt::rt::AsyncRuntime;
@@ -212,7 +213,7 @@ pub fn test_plugins() -> App {
     let height = 600;
 
     let mut opt = PiRenderOptions::default();
-    opt.backends = Backends::VULKAN;
+    opt.backends = wgpu::Backends::VULKAN;
     app.insert_resource(opt);
 
 	let mut window_plugin = WindowPlugin::default();

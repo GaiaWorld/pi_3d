@@ -1,8 +1,8 @@
 use pi_scene_shell::prelude::*;
 
-use crate::{viewer::prelude::*, object::ActionEntity, scene::command_sys::ActionScene};
+use crate::{object::ActionEntity, prelude::RendererID, scene::command_sys::ActionScene, viewer::prelude::*};
 
-use super::base::*;
+use super::{base::*, DirectionalShadowDirection, DirectionalShadowProjection, SpotShadowProjection};
 
 pub struct OpsShadowGenerator(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) PassTag);
 impl OpsShadowGenerator {

@@ -176,7 +176,7 @@ impl NodeMaterialBuilder {
         let len = keys.len();
         for i in 0..len {
             let key: &Atom = keys.get(len - i - 1).unwrap();
-            if !self.blocks.contains(&**key) {
+            if !self.blocks.contains(key) {
                 if let Some(info) = infos.get(key) {
     
                     self.blocks.insert(key.clone());

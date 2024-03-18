@@ -47,7 +47,7 @@ pub fn sys_create_shadow_generator(
                     .insert(ShadowLayerMask(layermask.clone()))
                     .insert(queueshadow.0.add(entity))
                     .insert(ShadowCastPassTag(passtag))
-                    .insert(viewerdistance)
+                    .insert(viewerdistance.clone())
                     ;
                 
                 if isdirect.is_some() {
