@@ -1,6 +1,6 @@
 [package]
 name = "pi_3d"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -38,7 +38,7 @@ pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
 pi_bevy_asset           = { version = "0.1", registry = "yn" }
 pi_bevy_log             = { version = "0.1", registry = "yn" }
 
-pi_scene_math           = { version = "0.0.3", registry = "yn" }
+pi_scene_math           = { version = "0.0.*", registry = "yn" }
 pi_animation            = { version = "0.1", registry = "yn" }
 pi_curves               = { version = "0.1", registry = "yn" }
 pi_atom                 = { version = "0.5", features = ["serde"] }

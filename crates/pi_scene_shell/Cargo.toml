@@ -1,6 +1,6 @@
 [package]
 name = "pi_scene_shell"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "Framework."
@@ -13,16 +13,16 @@ log                 = "0.4"
 env_logger          = "0.9"
 wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
 naga                = { version = "0.19", features = [ "glsl-in", ] }
-bevy_ecs = "0.11"
-bevy_app = { version = "0.11", default_features = false }
-bevy_a11y = "0.11"
-bevy_hierarchy = "0.11"
-bevy_input = "0.11"
-bevy_log = "0.11"
-bevy_math = "0.11"
-bevy_reflect = "0.11"
-bevy_time = "0.11"
-bevy_window = "0.11"
+bevy_ecs            = "0.11"
+bevy_app            = { version = "0.11", default_features = false }
+bevy_a11y           = "0.11"
+bevy_hierarchy      = "0.11"
+bevy_input          = "0.11"
+bevy_log            = "0.11"
+bevy_math           = "0.11"
+bevy_reflect        = "0.11"
+bevy_time           = "0.11"
+bevy_window         = "0.11"
 
 smallvec            = "1.9"
 crossbeam           = "0.8"
@@ -69,7 +69,7 @@ pi_render               = { version = "0.1", registry = "yn" }
 render_utils            = { version = "0.1", registry = "yn" }
 render_derive           = { version = "0.1", registry = "yn" }
 
-pi_scene_math           = { version = "0.0.3", registry = "yn" }
+pi_scene_math           = { version = "0.0.*", registry = "yn" }
 pi_animation            = { version = "0.1", registry = "yn" }
 pi_curves               = { version = "0.1", registry = "yn" }
 

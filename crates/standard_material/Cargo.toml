@@ -1,6 +1,6 @@
 [package]
 name = "pi_standard_material"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -27,11 +27,11 @@ crossbeam       = "0.8"
 futures         = "0.3"
 derive_deref    = "1.1"
 
-pi_scene_context    = { version = "0.0.1", registry = "yn", path = "../pi_scene_context" }
-pi_scene_shell      = { version = "0.0.1", registry = "yn", path = "../pi_scene_shell" }
-pi_node_materials   = { version = "0.0.1", registry = "yn", path = "../node_materials" }
+pi_scene_context    = { version = "0.0.*", registry = "yn", path = "../pi_scene_context" }
+pi_scene_shell      = { version = "0.0.*", registry = "yn", path = "../pi_scene_shell" }
+pi_node_materials   = { version = "0.0.*", registry = "yn", path = "../node_materials" }
 
 pi_render           = { version = "0.1", registry = "yn" }
 render_utils        = { version = "0.1", registry = "yn" }
 render_derive       = { version = "0.1", registry = "yn" }
-pi_scene_math       = { version = "0.0.3", registry = "yn" }
+pi_scene_math       = { version = "0.0.*", registry = "yn" }

@@ -1,6 +1,6 @@
 [package]
 name = "pi_particle_system"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "particle system for Scene."
@@ -10,13 +10,13 @@ keywords = ["particle system"]
 
 [dependencies]
 pi_share        = "0.4"
-pi_slotmap = "0.1"
+pi_slotmap      = "0.1"
 pi_hash         = "0.1"
 pi_assets       = "0.13"
 pi_atom         = { version = "0.5", features = ["serde"] }
 
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
-bevy_ecs = "0.11"
+bevy_ecs        = "0.11"
 bytemuck        = { version = "1.4", features = ["derive"] }
 
 log             = "0.4"
@@ -37,7 +37,7 @@ render_derive       = { version = "0.1", registry = "yn" }
 
 pi_scene_math       = { version = "0.0.3", registry = "yn" }
 
-pi_scene_context    = { version = "0.0.1", registry = "yn", path = "../pi_scene_context" }
-pi_scene_shell      = { version = "0.0.1", registry = "yn", path = "../pi_scene_shell" }
-pi_node_materials   = { version = "0.0.1", registry = "yn", path = "../node_materials" }
-pi_trail_renderer   = { version = "0.0.1", registry = "yn", path = "../trail" }
+pi_scene_context    = { version = "0.0.*", registry = "yn", path = "../pi_scene_context" }
+pi_scene_shell      = { version = "0.0.*", registry = "yn", path = "../pi_scene_shell" }
+pi_node_materials   = { version = "0.0.*", registry = "yn", path = "../node_materials" }
+pi_trail_renderer   = { version = "0.0.*", registry = "yn", path = "../trail" }

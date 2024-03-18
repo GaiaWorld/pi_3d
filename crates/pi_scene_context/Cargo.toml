@@ -1,6 +1,6 @@
 [package]
 name = "pi_scene_context"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -26,8 +26,8 @@ pi_spatial      = "0.5"
 approx          = "0.5"
 naga            = { version = "0.12", features = [ "glsl-in" ] }
 bytemuck        = { version = "1.4", features = [ "derive" ] }
-bevy_ecs = "0.11"
-bevy_app = "0.11"
+bevy_ecs        = "0.11"
+bevy_app        = "0.11"
 image           = "0.24"
 winit           = { version = "0.27", registry = "yn" }
 pollster        = "0.2"
@@ -58,12 +58,12 @@ pi_bevy_post_process    = { version = "0.1", registry = "yn" }
 pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
 pi_bevy_asset           = { version = "0.1", registry = "yn" }
 
-pi_scene_math       = { version = "0.0.3", registry = "yn" }
+pi_scene_math       = { version = "0.0.*", registry = "yn" }
 pi_animation        = { version = "0.1", registry = "yn" }
 pi_curves           = { version = "0.1", registry = "yn" }
 
-pi_scene_shell      = { version = "0.0.1", registry = "yn", path = "../pi_scene_shell" }
-pi_mesh_builder     = { version = "0.0.1", registry = "yn", path = "../pi_mesh_builder" }
+pi_scene_shell      = { version = "0.0.*", registry = "yn", path = "../pi_scene_shell" }
+pi_mesh_builder     = { version = "0.0.*", registry = "yn", path = "../pi_mesh_builder" }
 
 [net]
 git-fetch-with-cli = true
