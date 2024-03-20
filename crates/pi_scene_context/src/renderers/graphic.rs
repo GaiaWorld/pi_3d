@@ -145,7 +145,7 @@ impl Node for RenderNode {
 
             match to_final_target {
                 RendererRenderTarget::FinalRender => {},
-                RendererRenderTarget::Custom(srt) => output.target = Some(srt.clone()),
+                RendererRenderTarget::Custom(_srt) => output.target = input.target.clone(),
                 RendererRenderTarget::None(val) => {
                     let currlist: Vec<ShareTargetView> = vec![];
                     let srt = if let Some(srt) = input.target.clone() {
@@ -173,12 +173,20 @@ impl Node for RenderNode {
                     };
 
                     let srt = if let Some(srt) = srt {
+                        log::warn!("SRT From Input.");
                         srt
                     } else {
+                        log::warn!("SRT Allocate by allocate_not_hold.");
                         let width = rendersize.width();
                         let height = rendersize.height();
                         let target_type = atlas_allocator.get_or_create_type(
-                            TargetDescriptor { colors_descriptor: colorformat.desc(), need_depth: need_depth,  default_width: 2048,  default_height: 2048, depth_descriptor: depthstencilformat.desc() }
+                            TargetDescriptor {
+                                colors_descriptor: colorformat.desc(),
+                                need_depth: need_depth, 
+                                default_width: 2048,
+                                default_height: 2048,
+                                depth_descriptor: depthstencilformat.desc()
+                            }
                         );
 
                         atlas_allocator.allocate_not_hold( width, height, target_type.clone(), currlist.iter() )

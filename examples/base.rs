@@ -108,7 +108,7 @@ impl DemoScene {
         orthographic_camera: bool
     ) -> Self {
         
-        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800 * 2, 600 * 2) {
+        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 400, 300) {
             Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
             None => None,
         };

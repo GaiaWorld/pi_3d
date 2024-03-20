@@ -3,6 +3,7 @@ use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator};
 use pi_render::{components::view::target_alloc::{TextureDescriptor, ShareTargetView, TargetDescriptor}, renderer::{sampler::{BindDataSampler, KeySampler, SamplerRes}}, rhi::device::RenderDevice};
 use pi_scene_math::Number;
+use pi_share::Share;
 use pi_slotmap::{SlotMap, DefaultKey};
 use smallvec::SmallVec;
 
@@ -31,7 +32,7 @@ impl CustomRenderTarget {
     ) -> Option<Self> {
         let currlist: Vec<ShareTargetView> = vec![];
         if let Some(sampler) = BindDataSampler::create(sample, &device, &asset_samp) {
-            let target_type = atlas_allocator.get_or_create_type(
+            let target_type = atlas_allocator.create_type(
                 TargetDescriptor {
                     colors_descriptor: Self::color_desc(&color_format),
                     need_depth: Self::need_depth(&depth_stencil_format),
@@ -40,17 +41,20 @@ impl CustomRenderTarget {
                     depth_descriptor: Self::depth_desc(&depth_stencil_format)
                 }
             );
+
+            log::warn!("CustomRenderTarget Allocate. {:?}", (width, height, color_format, depth_stencil_format));
             
             // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
-            let rt = atlas_allocator.allocate(
+            let rt = atlas_allocator.allocate_alone_not_share(
                 width,
                 height,
                 target_type.clone(),
-                currlist.iter()
+                currlist.iter(),
+                true
             );
             // log::error!("CustomTarget: {:?}", (color_format, depth_stencil_format));
             Some(
-                Self { rt, sampler, width, height, color_format, depth_stencil_format }
+                Self { rt: Share::new(rt), sampler, width, height, color_format, depth_stencil_format }
             )
         } else {
             None

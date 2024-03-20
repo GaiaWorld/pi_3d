@@ -157,7 +157,7 @@ impl BindEffectValues {
             bind.data().write_data(0, &bytes);
             offsets.sort_by(|a, b| a.0.cmp(&b.0) );
 
-            log::error!("MEAT: {:?}", meta.uniforms);
+            // log::error!("MEAT: {:?}", meta.uniforms);
     
             Some(
                 BindEffectValues { bytes, offsets, bind: Arc::new(bind), }
