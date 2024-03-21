@@ -173,10 +173,10 @@ impl Node for RenderNode {
                     };
 
                     let srt = if let Some(srt) = srt {
-                        log::warn!("SRT From Input.");
+                        // log::warn!("SRT From Input.");
                         srt
                     } else {
-                        log::warn!("SRT Allocate by allocate_not_hold.");
+                        // log::warn!("SRT Allocate by allocate.");
                         let width = rendersize.width();
                         let height = rendersize.height();
                         let target_type = atlas_allocator.get_or_create_type(
@@ -189,7 +189,7 @@ impl Node for RenderNode {
                             }
                         );
 
-                        atlas_allocator.allocate_not_hold( width, height, target_type.clone(), currlist.iter() )
+                        atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
                     };
 
                     *val = Some(srt.clone());
