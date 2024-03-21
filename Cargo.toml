@@ -1,6 +1,6 @@
 [package]
 name = "pi_3d"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
