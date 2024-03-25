@@ -1,14 +1,7 @@
 
-use bevy_ecs::system::SystemParam;
 use pi_scene_shell::prelude::*;
 
 pub use super::instance::{
-    instance_color::*,
-    instance_tilloff::*,
-    instance_boneoffset::*,
-    instance_world_matrix::*,
-    instance_float::*,
-    instance_vec4::*,
     sys_instance::*,
     InstanceMesh,
     InstanceSourceRefs,

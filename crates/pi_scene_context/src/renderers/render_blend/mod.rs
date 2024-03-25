@@ -1,6 +1,5 @@
 
 
-use bevy_ecs::component::Component;
 use pi_scene_shell::prelude::*;
 
 #[derive(Debug, Clone, Copy, Component)]

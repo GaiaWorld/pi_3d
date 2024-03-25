@@ -1,12 +1,9 @@
 
 use std::{sync::Arc, ops::{Deref, Range}};
 
-use bevy_ecs::component::Component;
-use pi_assets::asset::Handle;
 use crate::bindgroup::*;
 
 pub use pi_scene_shell::prelude::*;
-use pi_map::smallvecmap::SmallVecMap;
 
 pub enum DrawObj3D {
     Tmp(DrawObjTmp),

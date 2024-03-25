@@ -1,4 +1,3 @@
-use bevy_ecs::{component::Component, system::Resource};
 use pi_scene_shell::prelude::*;
 
 use super::vertex_buffer_useinfo::*;

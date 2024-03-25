@@ -1,5 +1,4 @@
 
-use pi_assets::{mgr::AssetMgr, asset::GarbageEmpty, homogeneous::HomogeneousMgr};
 use pi_scene_shell::{prelude::*, engine_shell::asset_capacity};
 
 
@@ -64,7 +63,7 @@ impl Plugin for PluginRenderer {
                 texture_assets_mgr
             };
             let cfg = asset_capacity::<AssetCfgRenderResUnuseTexture>(app);
-            let unusetexture_assets_mgr = HomogeneousMgr::<RenderRes<UnuseTexture>>::new(pi_assets::homogeneous::GarbageEmpty(), cfg.min, cfg.timeout);
+            let unusetexture_assets_mgr = HomogeneousMgr::<RenderRes<UnuseTexture>>::new(HomoGarbageEmpty(), cfg.min, cfg.timeout);
             let atlas = SafeAtlasAllocator::new(device, texture_assets_mgr, unusetexture_assets_mgr);
             app.insert_resource(PiSafeAtlasAllocator(atlas));
         }

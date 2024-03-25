@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use pi_assets::{asset::Handle, mgr::AssetMgr};
 use pi_scene_shell::prelude::*;
-use pi_render::rhi::sampler::SamplerDesc;
-use pi_share::Share;
 
 #[derive(Debug, Clone, Hash, Component)]
 pub struct BRDFTextureSlot(pub EKeyTexture);

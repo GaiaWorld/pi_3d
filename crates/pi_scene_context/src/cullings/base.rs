@@ -1,10 +1,6 @@
 
-use bevy_ecs::component::Component;
-use parry3d::bounding_volume::Aabb;
 use pi_scene_shell::prelude::*;
-use pi_hash::XHashSet;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
-use pi_spatial::oct_helper::OctTree;
 
 use crate::{viewer::prelude::ViewerTransformMatrix, prelude::MeshInstanceState};
 
@@ -47,7 +43,7 @@ impl pi_slotmap::Key for BoundingKey {
 	}
 }
 
-impl pi_null::Null for BoundingKey {
+impl Null for BoundingKey {
 	fn null() -> Self { Self(Entity::from_bits(u64::null())) }
 
     fn is_null(&self) -> bool { self.0.to_bits().is_null() }

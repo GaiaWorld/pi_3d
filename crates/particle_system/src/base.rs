@@ -1,11 +1,9 @@
 use std::{ops::Sub, sync::Arc};
 
 use crossbeam::queue::SegQueue;
-use pi_assets::asset::{Asset, Size, Handle};
 use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::{TToolVector3, TToolRotation, TToolMatrix}};
-use pi_share::Share;
 use pi_trail_renderer::{TrailPoints, TrailBase, TrailBuffer};
 use rand::Rng;
 

@@ -3,7 +3,6 @@ use std::ops::Deref;
 
 use crate::renderers::prelude::StageRenderer;
 
-use bevy_ecs::{component::Component, schedule::SystemSet};
 pub use pi_scene_shell::prelude::{PassTag, PassTagValue};
 
 mod pass_object;

@@ -1,18 +1,11 @@
 use std::hash::{Hash, Hasher};
 
-use bevy_ecs::prelude::{Resource, ResMut};
 use crossbeam::queue::SegQueue;
-use pi_assets::{mgr::*, asset::*};
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
 use pi_gltf::Gltf;
-use pi_hash::*;
 use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::prelude::*;
-use pi_render::rhi::RenderQueue;
-use pi_share::Share;
-use pi_async_rt::prelude::AsyncRuntime;
-use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 
 use crate::{EAnimePropertyType, curve_gltf, p3d_anime_curve_query, interpolation_from_u8, particle_system::gltf_format_particle_cfg};
 
@@ -215,7 +208,7 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase
                             return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
                         },
                     };
-                    let result: Result<std::sync::Arc<Droper<GLTFBase>>, std::io::Error> = recv.receive(key_u64, Ok(gltf)).await;
+                    let result = recv.receive(key_u64, Ok(gltf)).await;
 					result
 				}
 			}
@@ -225,8 +218,8 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase
 
 
 pub struct GLTF {
-    pub textures: Vec<Handle<pi_render::renderer::texture::ImageTexture>>,
-    pub vbs: Vec<Handle<pi_render::renderer::vertex_buffer::AssetVertexBuffer>>,
+    pub textures: Vec<Handle<ImageTexture>>,
+    pub vbs: Vec<Handle<AssetVertexBuffer>>,
     pub position: Vec<Handle<TypeFrameCurve<LocalPosition>>>,
     pub euler: Vec<Handle<TypeFrameCurve<LocalEulerAngles>>>,
     pub scaling: Vec<Handle<TypeFrameCurve<LocalScaling>>>,

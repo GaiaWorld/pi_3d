@@ -1,10 +1,7 @@
 
 
-use bevy_ecs::component::Component;
 use derive_deref::{Deref, DerefMut};
-use pi_bevy_render_plugin::constant::render_state::{CompareFunction, StencilFaceState};
 use pi_scene_shell::prelude::*;
-use pi_render::renderer::pipeline::{DepthStencilState, DepthBiasState};
 
 #[derive(Debug, Clone, Component, Deref, DerefMut)]
 pub struct DepthWrite(pub bool);

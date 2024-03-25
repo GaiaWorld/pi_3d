@@ -8,7 +8,12 @@ pub use bevy_log::prelude::*;
 pub use bevy_math::prelude::*;
 pub use bevy_window::prelude::*;
 pub use bevy_time::prelude::*;
-
+pub use parry3d::{
+    bounding_volume::Aabb,
+    na::{Isometry3 as NAIsometry3, Point3},
+    query::{Ray, RayCast},
+    shape::{ConvexPolyhedron, Cuboid},
+};
 
 pub use derive_deref::{DerefMut, Deref};
 pub use pi_atom::Atom;
@@ -23,9 +28,11 @@ pub use pi_bevy_asset::{
 pub use pi_bevy_render_plugin::{
     PiRenderDevice, PiRenderQueue, PiRenderGraph, PiRenderWindow, PiRenderOptions, PiSafeAtlasAllocator, PiScreenTexture,
     node::*, RenderContext, GraphError, constant::{ render_state::*, texture_sampler::* }, 
-    asset_config::*, should_run, render_cross::GraphId
+    asset_config::*, should_run, render_cross::GraphId, SimpleInOut
 };
-use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
+pub use pi_null::Null;
+pub use pi_map::smallvecmap::SmallVecMap;
+pub use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
 pub use pi_render::{
     asset::*,
     renderer::{
@@ -48,6 +55,7 @@ pub use pi_render::{
         pipeline::*,
         buildin_data::*,
         buildin_var::*,
+        vertex_format::TVertexFormatByteSize
     },
     rhi::{
         asset::*,
@@ -56,11 +64,18 @@ pub use pi_render::{
         RenderQueue,
         shader::WriteBuffer,
         texture::*,
+        buffer::Buffer,
+        sampler::SamplerDesc
     },
     components::view::target_alloc::*,
 };
-pub use pi_assets::asset::GarbageEmpty;
+pub use pi_assets::{asset::{GarbageEmpty, Asset, Size, Handle, Garbageer}, mgr::{AssetMgr, LoadResult}, homogeneous::{HomogeneousMgr, GarbageEmpty as HomoGarbageEmpty}};
 pub use pi_curves::curve::{ FrameIndex, FramePerSecond };
+pub use pi_spatial::oct_helper::OctTree;
+pub use pi_hash::{XHashSet, XHashMap};
+pub use pi_async_rt::prelude::AsyncRuntime;
+pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
+pub use pi_share::{Share, ThreadSync, ShareRefCell};
 
 pub use crate::run_stage::ERunStageChap;
 pub use crate::object::ObjectID;

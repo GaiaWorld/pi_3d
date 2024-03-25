@@ -1,5 +1,4 @@
 
-use bevy_ecs::component::Component;
 use pi_scene_shell::prelude::*;
 use pi_scene_math::*;
 

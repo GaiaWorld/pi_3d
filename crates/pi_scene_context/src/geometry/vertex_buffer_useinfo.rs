@@ -1,9 +1,7 @@
 use std::ops::Range;
 
-use bevy_ecs::component::Component;
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
-use pi_render::renderer::{vertex_buffer::KeyVertexBuffer, vertex_buffer_desc::VertexBufferDesc, vertices::EVerticesBufferUsage};
 
 pub trait AsKeyVertexBuffer {
     fn create(desc: &VertexBufferDesc) -> Self;

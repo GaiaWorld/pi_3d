@@ -1,10 +1,8 @@
 
 use std::ops::{Deref, DerefMut};
 
-use pi_bevy_render_plugin::SimpleInOut;
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
-use pi_share::ShareRefCell;
 use wgpu::StoreOp;
 
 use crate::pass::PassTagOrders;

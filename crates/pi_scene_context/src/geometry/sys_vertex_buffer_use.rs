@@ -1,7 +1,5 @@
 
 use pi_scene_shell::prelude::*;
-use pi_render::renderer::vertices::RenderVertices;
-
 
 use crate::geometry::geometry::RenderVerticesFrom;
 

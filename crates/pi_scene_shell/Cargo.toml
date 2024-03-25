@@ -44,12 +44,12 @@ derive_deref        = "1.1"
 serde_json          = { features = ["raw_value"], version = "1.0" }
 serde               = { features = ["derive"], version = "1.0" }
 
-pi_slotmap = "0.1"
+pi_slotmap          = "0.1"
 pi_hash             = "0.1"
 pi_share            = "0.4"
-
+pi_null             = "0.1"
 pi_time             = "0.3"
-
+pi_map              = "0.2"
 
 pi_atom             = { version="0.5", features = ["serde"] }
 

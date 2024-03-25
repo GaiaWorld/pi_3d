@@ -2,7 +2,6 @@
 use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
-use pi_hash::XHashSet;
 
 #[derive(Component)]
 pub struct Scene;

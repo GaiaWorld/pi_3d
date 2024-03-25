@@ -1,23 +1,11 @@
-// use ncollide3d::{
-//     bounding_volume::AABB,
-//     na::{Point3 as TreePoint3, Vector3},
-// };
-use parry3d::{
-    bounding_volume::Aabb,
-    na::{Isometry3, Point3},
-    query::{Ray, RayCast},
-    shape::{ConvexPolyhedron, Cuboid},
-};
 use pi_scene_shell::prelude::*;
-use pi_hash::XHashSet;
 use pi_scene_math::{Matrix, Number, Vector3, Vector4};
-use pi_spatial::oct_helper::OctTree;
 
 use super::base::{BoundingKey, TBoundingInfoCalc, TFilter};
 
 pub struct BoundingOctTree {
     pub fast: XHashSet<Entity>,
-    pub tree: OctTree<BoundingKey, (Isometry3<f32>, Cuboid)>,
+    pub tree: OctTree<BoundingKey, (NAIsometry3<f32>, Cuboid)>,
 }
 
 impl TBoundingInfoCalc for BoundingOctTree {
@@ -108,11 +96,11 @@ pub fn ab_query_func<F: TFilter>(
     arg: &mut (ConvexPolyhedron, &mut Vec<Entity>, F),
     id: BoundingKey,
     _aabb: &Aabb,
-    bind: &(Isometry3<f32>, Cuboid),
+    bind: &(NAIsometry3<f32>, Cuboid),
 ) {
     if arg.2.filter(id.0) {
         // 优化:是否需要先判断frustum与aabb
-        if parry3d::query::intersection_test(&Isometry3::identity(), &arg.0, &bind.0, &bind.1)
+        if parry3d::query::intersection_test(&NAIsometry3::identity(), &arg.0, &bind.0, &bind.1)
             .unwrap()
         {
             arg.1.push(id.0);
@@ -124,7 +112,7 @@ pub fn ray_test_func(
     arg: &mut (Ray, f32, &mut Option<Entity>),
     id: BoundingKey,
     _aabb: &Aabb,
-    bind: &(Isometry3<f32>, Cuboid),
+    bind: &(NAIsometry3<f32>, Cuboid),
 ) {
     if let Some(distance) = bind.1.cast_ray(&bind.0, &arg.0, f32::MAX, false) {
         if distance < arg.1 {
