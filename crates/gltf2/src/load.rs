@@ -336,7 +336,7 @@ pub struct KeyGLTF {
 }
 impl TAssetKeyU64 for KeyGLTF {
     fn asset_u64(&self) -> u64 {
-        let mut hasher = pi_hash::DefaultHasher::default();
+        let mut hasher = DefaultHasher::default();
         self.hash(&mut hasher);
         hasher.finish()
     }

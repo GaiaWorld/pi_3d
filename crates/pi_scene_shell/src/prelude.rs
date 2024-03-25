@@ -72,7 +72,7 @@ pub use pi_render::{
 pub use pi_assets::{asset::{GarbageEmpty, Asset, Size, Handle, Garbageer}, mgr::{AssetMgr, LoadResult}, homogeneous::{HomogeneousMgr, GarbageEmpty as HomoGarbageEmpty}};
 pub use pi_curves::curve::{ FrameIndex, FramePerSecond };
 pub use pi_spatial::oct_helper::OctTree;
-pub use pi_hash::{XHashSet, XHashMap};
+pub use pi_hash::{XHashSet, XHashMap, DefaultHasher};
 pub use pi_async_rt::prelude::AsyncRuntime;
 pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 pub use pi_share::{Share, ThreadSync, ShareRefCell};

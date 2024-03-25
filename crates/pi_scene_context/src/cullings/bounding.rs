@@ -54,7 +54,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             );
             
             
-            if let Some(d) = aabb.cast_ray(&Isometry::identity(), &ray, f32::MAX, false) {
+            if let Some(d) = aabb.cast_ray(&Isometry3::identity(), &ray, f32::MAX, false) {
                 // println!("========= id: {:?}, aabb: {:?}, dest: {}",  entity, aabb, d);
                 // println!("========= dest： {}", dest);
                 if dest > d  {
