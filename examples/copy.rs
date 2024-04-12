@@ -1,6 +1,6 @@
 use bevy_app::Plugin;
 use pi_mesh_builder::quad::QuadBuilder;
-use pi_node_materials::prelude::{NodeMaterialBuilder, BlockMainTexture};
+use pi_node_materials::prelude::{BlockMainTexture, BlockUVAtlas, NodeMaterialBuilder};
 use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
 
@@ -139,6 +139,7 @@ impl ShaderImageCopy {
             ]
         );
         
+        nodemat.apply::<BlockUVAtlas>();
         nodemat.apply::<BlockMainTexture>();
 
         nodemat.meta()

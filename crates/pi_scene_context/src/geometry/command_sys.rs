@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{hash::{Hash, Hasher}, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 
@@ -56,6 +56,12 @@ pub fn sys_create_geometry(
         ActionGeometry::init(&mut geocommands, &vertex_desc, indices_desc.clone(), id_mesh);
 
         let geo_desc = GeometryDesc { list: vertex_desc };
+        let mut hasher = DefaultHasher::default();
+        geo_desc.hash_resource(&mut hasher);
+        if instancestate.use_single_instancebuffer {
+            entity.hash(&mut hasher);
+        }
+        geocommands.insert(GeometryResourceHash(hasher.finish()));
     
         geocommands
             .remove::<AssetDescVBSlot01>()

@@ -1,14 +1,8 @@
-use std::sync::Arc;
+use std::{ops::Range, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 use crate::{
-    viewer::prelude::*,
-    bindgroup::*,
-    pass::*,
-    geometry::prelude::*,
-    transforms::prelude::*,
-    meshes::prelude::*,
-    flags::*
+    bindgroup::*, flags::*, geometry::{instance::instanced_buffer::InstanceBufferAllocator, prelude::*}, meshes::prelude::*, pass::*, transforms::prelude::*, viewer::prelude::*
 };
 
 use super::{
@@ -73,7 +67,7 @@ use super::{
 
                 // log::warn!("Bindgroups: {:?}", (true, bindgroups.0.is_some()));
                 let data = BindGroups3D::create(set0, set1, textures, lightshadow);
-                *bindgroups = PassBindGroups(Some(data));
+                *bindgroups = PassBindGroups::new(Some(data));
             } else {
                 if bindgroups.val().is_some() { *bindgroups = PassBindGroups::new(None); }
                 // log::warn!("Bindgroups: Ready False");
@@ -145,19 +139,27 @@ use super::{
                 // log::debug!("SysPassShaderRequestByPass: 1");
                 match (models.get(id_model.0), geometrys.get(id_geo.0)) {
                     (Ok(renderalignment), Ok(vb)) => {
-                        if let Ok(shader) = shader(
-                            id_pass, meta, key_meta, vb, bindgroups, renderalignment, &assets, &device
-                        ) {
-                            // log::error!("Shader Success");
-                
-                            if let Some(old) = &old_shader.0 {
-                                if old.key() != shader.key() { *old_shader = PassShader(Some(shader)) }
-                            } else { *old_shader = PassShader(Some(shader)) }
-                        } else {
-                            // log::error!("Shader Fail");
-                            if old_shader.0.is_some() {
-                                *old_shader = PassShader(None);
+
+                        let limit = device.0.limits();
+                        if vb.0.attrcount as u32 <= limit.max_vertex_attributes && vb.0.desccount as u32 <= limit.max_vertex_buffers {
+                            let renderalignment = renderalignment.shader_tag(false);
+                            if let Ok(shader) = shader(
+                                id_pass, meta, key_meta, vb, bindgroups, renderalignment, &assets, &device
+                            ) {
+                                // log::error!("Shader Success");
+                    
+                                if let Some(old) = &old_shader.0 {
+                                    if old.key() != shader.key() { *old_shader = PassShader(Some(shader)) }
+                                } else { *old_shader = PassShader(Some(shader)) }
+                            } else {
+                                // log::error!("Shader Fail");
+                                if old_shader.0.is_some() {
+                                    *old_shader = PassShader(None);
+                                }
                             }
+                        } else {
+                            log::error!("MAX_ATTRIBUTES: {}, Using Attributes: {}, MAX_BUFFER: {}, Using Buffers: {}", limit.max_vertex_attributes, vb.0.attrcount, limit.max_vertex_buffers, vb.0.desccount);
+                            *old_shader = PassShader(None);
                         }
                     },
                     _ => {
@@ -312,11 +314,11 @@ use super::{
     
     pub fn sys_pass_draw_modify_by_pass(
         models: Query<(&GeometryID, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady)>,
-        geometrys: Query<&RenderGeometryComp>,
-        mut passes: Query<(&PassModelID, &PassBindGroups, &PassPipeline, &mut PassDraw), Or<(Changed<PassPipeline>, Changed<PassDrawDirty>, Changed<PassBindGroups>, Changed<PassModelID>)>>,
+        geometrys: Query<(&RenderGeometryComp, &GeometryResourceHash)>,
+        mut passes: Query<(Entity, &PassModelID, &PassBindGroups, &PassPipeline, &mut PassDraw), Or<(Changed<PassPipeline>, Changed<PassDrawDirty>, Changed<PassBindGroups>, Changed<PassModelID>)>>,
         // mut commands: Commands,
     ) {
-        passes.iter_mut().for_each(|(id_model, bindgroups, pipeline, mut old_draw)| {
+        passes.iter_mut().for_each(|(entity, id_model, bindgroups, pipeline, mut old_draw)| {
             if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
                 if let Ok((id_geo, renderindices, rendervertex, geoenable, instances, disposed)) = models.get(id_model.0) {
                     if geoenable.0 == false || disposed.0 == true {
@@ -324,26 +326,35 @@ use super::{
                         return;
                     }
 
-                    if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
+                    if let Ok((RenderGeometryComp(Some(rendergeo)), geohash)) = geometrys.get(id_geo.0.clone()) {
                         if rendergeo.isok() {
-                            let draw = if instances.len() == 0 {
-                                DrawObj3D::Draw( Arc::new(DrawObj {
-                                    pipeline: Some(pipeline.clone()),
-                                    bindgroups: bindgroups.groups(),
-                                    vertices: rendergeo.vertices(),
-                                    instances: rendergeo.instances(),
-                                    vertex: rendervertex.apply(rendergeo),
-                                    indices: renderindices.apply(rendergeo),
-                                }))
-                            } else {
-                                DrawObj3D::Tmp( DrawObjTmp {
-                                    pipeline: Some(pipeline.clone()),
-                                    bindgroups: bindgroups.clone(),
-                                    vertices: rendergeo.vertices(),
-                                    instances: rendergeo.instances(),
-                                    vertex: rendervertex.apply(rendergeo),
-                                    indices: renderindices.apply(rendergeo),
-                                })
+                            // let draw = if instances.len() == 0 {
+                            //     DrawObj3D::Draw( Arc::new(DrawObj {
+                            //         pipeline: Some(pipeline.clone()),
+                            //         bindgroups: bindgroups.groups(),
+                            //         vertices: rendergeo.vertices(),
+                            //         instances: rendergeo.instances(),
+                            //         vertex: rendervertex.apply(rendergeo),
+                            //         indices: renderindices.apply(rendergeo),
+                            //     }))
+                            // } else {
+                            //     DrawObj3D::InstanceNotClip( DrawObjTmp {
+                            //         pipeline: Some(pipeline.clone()),
+                            //         bindgroups: bindgroups.clone(),
+                            //         vertices: rendergeo.vertices(),
+                            //         instances: rendergeo.instances(),
+                            //         instance_memory: rendergeo.instance_memory.clone(),
+                            //         vertex: rendervertex.apply(rendergeo),
+                            //         indices: renderindices.apply(rendergeo),
+                            //     })
+                            // };
+                            let draw = DrawObjTmp {
+                                pipeline: pipeline.key().clone(),
+                                passentity: entity,
+                                bindgroupshash: BindGroups3DHashResource::from(bindgroups),
+                                vertexentity: id_geo.0.clone(),
+                                vertexhash: geohash.clone(),
+                                instance_memory: rendergeo.instance_memory.clone()
                             };
 
                             *old_draw = PassDraw(Some(draw));
@@ -369,12 +380,9 @@ use super::{
     }
 
     pub fn sys_renderer_draws_modify(
-        mut renderers: Query<
-            ( ObjectID, &ViewerID, &mut Renderer, &PassTag, &RendererEnable, &RenderViewport, &RendererBlend )
-        >,
-        viewers: Query<
-            (&ModelListAfterCulling, &ViewerGlobalPosition, &DisposeReady),
-        >,
+        mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererEnable, &RenderViewport, &RendererBlend ) >,
+        viewers: Query< (&ModelListAfterCulling, &ViewerGlobalPosition, &ViewerDirection, &DisposeReady, &ViewerDistanceCompute), >,
+        scenes: Query< (&BatchParamOpaque, &BatchParamTransparent) >,
         models: Query<
             (
                 &GlobalEnable, &DisposeReady, &GlobalMatrix, &TransparentSortParam, &InstancedMeshTransparentSortCollection,
@@ -384,13 +392,19 @@ use super::{
             )
         >,
         passes: Query<
-            (&PassDraw, &PassPipeline, &PassRendererID)
+            (&PassDraw, &PassRendererID)
         >,
+        passbindgroups: Query<(&PassPipeline, &PassBindGroups)>,
+        geometrys: Query<&RenderGeometryComp>,
+        mut instancedcache: ResMut<InstanceBufferAllocator>,
         mut record: ResMut<Performance>,
+        mut allocator: ResMut<VertexBufferAllocator3D>,
+        device: Res<PiRenderDevice>,
+        queue: Res<PiRenderQueue>,
     ) {
         let time1 = pi_time::Instant::now();
 
-        renderers.iter_mut().for_each(|(_id_renderer, id_viewer, mut renderer, passtag, enable, viewport, transparent)| {
+        renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, enable, viewport, transparent)| {
             renderer.clear();
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id, id_viewer.0, enable.0);
             if enable.0 == false {
@@ -401,41 +415,49 @@ use super::{
             // let mut list_sort_blend: Vec<(Arc<DrawObj>, f32, TransparentSortParam, u8, u64)> = vec![];
             let mut opaque_list: Vec<TmpSortDrawOpaque> = vec![];
             let mut transparent_list: Vec<TmpSortDrawTransparent> = vec![];
-            let mut draws: Vec<Arc<DrawObj>> = vec![];
-            if let Ok((list_model, viewposition, disposed)) = viewers.get(id_viewer.0) {
+            let mut draws: Vec<DrawObjTmp> = vec![];
+            if let (Ok((list_model, viewposition, viewdirection, disposed, distancecomp)), Ok((batchopaque, batchtransparent))) = (viewers.get(id_viewer.0), scenes.get(idscene.0)) {
                 if disposed.0 { return; }
 
                     // log::warn!("ModelListAfterCulling: {:?}, ", (list_model.0.len()));
                     renderer.draws.viewport = viewport.val();
                     list_model.0.iter().for_each(|id_obj| {
                         if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passrecord)) = models.get(id_obj.clone()) {
-                            // log::warn!("Renderer: A");
+                            // log::warn!("Renderer: A {:?}", (disposed.0, globalenable.0));
                             if disposed.0 == true || globalenable.0 == false { return; }
                             
-                            let passids = [passrecord.0.0, passrecord.1.0, passrecord.2.0, passrecord.3.0, passrecord.4.0, passrecord.5.0, passrecord.6.0, passrecord.7.0
-                            // , passrecord.8.0, passrecord.9.0, passrecord.10.0, passrecord.11.0
-                            ];
+                            let passids = [passrecord.0.0, passrecord.1.0, passrecord.2.0, passrecord.3.0, passrecord.4.0, passrecord.5.0, passrecord.6.0, passrecord.7.0];
     
                             let index = 0;
                             let is_transparent = transparent.0;
                             if passtag.index() < passids.len() {
                                 let passid = passids[passtag.index()];
-                                // log::warn!("Renderer: Query Draw");
-                                if let Ok((PassDraw(Some(draw)), pipeline, passrendererid)) = passes.get(passid) {
-
+                                if let Ok((PassDraw(Some(draw)), passrendererid)) = passes.get(passid) {
                                     if passrendererid.0 == _id_renderer {
-                                        let temp = nodeposition.position() - &viewposition.0;
-                                        let distance = temp.x * temp.x + temp.y * temp.y + temp.z * temp.z;
+                                        let distance = 0.;
+                                        if is_transparent {
+                                            if batchtransparent.0.distance {
+                                                distancecomp.distance(&viewposition.0, &viewdirection.0, &nodeposition.position());
+                                            }
+                                        } else {
+                                            if batchopaque.0.distance {
+                                                distancecomp.distance(&viewposition.0, &viewdirection.0, &nodeposition.position());
+                                            }
+                                        }
 
                                         collect_draw(
-                                            is_transparent, index, pipeline.key(), distance, draw, rendersort,
+                                            is_transparent, index, draw.pipeline, distance, draw, rendersort,
                                             &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
                                         );
                                     } else {
                                         // log::error!("PassDraw Error {:?}", (passtag));
                                     }
                                 }
+                            } else {
+                                // log::error!("passtag.index() < passids.len() fail .");
                             }
+                        } else {
+                            // log::warn!("models.get Fail");
                         }
                     });
 
@@ -445,25 +467,97 @@ use super::{
                     // log::warn!("Opaque: {:?}", opaque_list.len());
                     // log::warn!("Transparent: {:?}", transparent_list.len());
 
+                    let mut lastdraw: Option<DrawObjTmp> = None;
                     opaque_list.iter().for_each(|tmp| {
                         // log::warn!("{:?}", tmp);
                         if let Some(draw) = draws.get(tmp.idx as usize) {
-                            renderer.draws.list.push(draw.clone());
-                            let vertex = if let Some(indices) = &draw.indices {
-                                indices.value_range().end - indices.value_range().start
-                            } else { draw.vertex.end - draw.vertex.start };
-                            count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
+
+                            if let Some(tempdraw) = &mut lastdraw {
+                                if tempdraw.can_batch_instance_memory(draw, true, instancedcache.one_mesh_max_instance_bytes()) {
+                                    let last = tempdraw.instance_memory.as_mut().unwrap();
+                                    let curr = draw.instance_memory.as_ref().unwrap();
+
+                                    curr.data.iter().for_each(|v| {
+                                        last.data.push(*v);
+                                    });
+                                    last.itemcount += curr.itemcount;
+                                } else {
+                                    // lastdraw 转 DrawObj
+                                    if let (Ok((pipeline, bindgroups)), Ok(geo)) = (passbindgroups.get(tempdraw.passentity), geometrys.get(tempdraw.vertexentity)) {
+                                        if let (Some(bindgroups), Some(geo)) = (&bindgroups.0, &geo.0) {
+                                            collect_draw_batch(tempdraw, &pipeline.0, &bindgroups.0, geo, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
+                                        } else {
+                                            // log::error!("DrawObj data fail 2.");
+                                        }
+                                    } else {
+                                        // log::error!("DrawObj data fail.");
+                                    }
+
+                                    lastdraw = Some(draw.clone());
+                                }
+                            } else {
+                                lastdraw = Some(draw.clone());
+                            }
+
                         }
                     });
+                    
+                    // lastdraw 转 DrawObj
+                    if let Some(tempdraw) = &mut lastdraw {
+                        if let (Ok((pipeline, bindgroups)), Ok(geo)) = (passbindgroups.get(tempdraw.passentity), geometrys.get(tempdraw.vertexentity)) {
+                            if let (Some(bindgroups), Some(geo)) = (&bindgroups.0, &geo.0) {
+                                collect_draw_batch(tempdraw, &pipeline.0, &bindgroups.0, geo, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
+                            } else {
+                                // log::error!("DrawObj data fail 2.");
+                            }
+                        } else {
+                            // log::error!("DrawObj data fail.");
+                        }
+                    }
                     transparent_list.iter().for_each(|tmp| {
                         if let Some(draw) = draws.get(tmp.idx as usize) {
-                            renderer.draws.list.push(draw.clone());
-                            let vertex = if let Some(indices) = &draw.indices {
-                                indices.value_range().end - indices.value_range().start
-                            } else { draw.vertex.end - draw.vertex.start };
-                            count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
+
+                            if let Some(tempdraw) = &mut lastdraw {
+                                if tempdraw.can_batch_instance_memory(draw, true, instancedcache.one_mesh_max_instance_bytes()) {
+                                    let last = tempdraw.instance_memory.as_mut().unwrap();
+                                    let curr = draw.instance_memory.as_ref().unwrap();
+
+                                    curr.data.iter().for_each(|v| {
+                                        last.data.push(*v);
+                                    });
+                                    last.itemcount += curr.itemcount;
+                                } else {
+                                    // lastdraw 转 DrawObj
+                                    if let (Ok((pipeline, bindgroups)), Ok(geo)) = (passbindgroups.get(tempdraw.passentity), geometrys.get(tempdraw.vertexentity)) {
+                                        if let (Some(bindgroups), Some(geo)) = (&bindgroups.0, &geo.0) {
+                                            collect_draw_batch(tempdraw, &pipeline.0, &bindgroups.0, geo, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
+                                        } else {
+                                            // log::error!("DrawObj data fail 2.");
+                                        }
+                                    } else {
+                                        // log::error!("DrawObj data fail.");
+                                    }
+
+                                    lastdraw = Some(draw.clone());
+                                }
+                            } else {
+                                lastdraw = Some(draw.clone());
+                            }
+
                         }
                     });
+                    // lastdraw 转 DrawObj
+                    if let Some(tempdraw) = &mut lastdraw {
+                        if let (Ok((pipeline, bindgroups)), Ok(geo)) = (passbindgroups.get(tempdraw.passentity), geometrys.get(tempdraw.vertexentity)) {
+                            if let (Some(bindgroups), Some(geo)) = (&bindgroups.0, &geo.0) {
+                                collect_draw_batch(tempdraw, &pipeline.0, &bindgroups.0, geo, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
+                            } else {
+                                // log::error!("DrawObj data fail 2.");
+                            }
+                        } else {
+                            // log::error!("DrawObj data fail.");
+                        }
+                    }
 
                     // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
             }
@@ -483,7 +577,7 @@ fn shader(
     // instance: &EVerticeExtendCode,
     vb: &VertexBufferLayoutsComp,
     bindgroups: &BindGroups3D,
-    renderalignment: &RenderAlignment,
+    renderalignment: ERenderAlignmentForShader,
     assets: & ShareAssetMgr<Shader3D>,
     device: &RenderDevice,
 ) -> Result<Handle<Shader3D>, Shader3D> {
@@ -525,14 +619,17 @@ fn shader(
 
         vs_running_model_snippets.push(set.vs_running_model_snippet(meta));
         // vs_running_model_snippets.push(instance.vs_running_code());
+
+        vs_running_model_snippets.push(key_attributes.vs_running_code(meta));
         vs_running_model_snippets.push(skin.running_code());
         vs_running_model_snippets.push(renderalignment.running_code());
 
         vs_defined_snippets.push(renderalignment.define_code());
 
         setidx += 1;
+    } else {
+        vs_running_model_snippets.push(key_attributes.vs_running_code(meta));
     }
-    vs_running_model_snippets.push(key_attributes.vs_running_code(meta));
 
     // let set2 = 
     if let Some(set) = set2 {
@@ -560,7 +657,7 @@ fn shader(
         // lighting: lightingenable,
         bind_defines: meta.binddefines,
         key_attributes: key_attributes.clone(),
-        renderalignment: renderalignment.0,
+        renderalignment: renderalignment,
     };
 
     if let Some(shader) = assets.get(&key_shader) {
@@ -653,70 +750,117 @@ fn collect_draw(
     pass: u8,
     pipeline: u64,
     distance: f32,
-    draw: &DrawObj3D,
+    draw: &DrawObjTmp,
     sort_param: &TransparentSortParam,
     opaque_list: &mut Vec<TmpSortDrawOpaque>,
     transparent_list: &mut Vec<TmpSortDrawTransparent>,
     instancessortinfo: &InstancedMeshTransparentSortCollection,
-    draws: &mut Vec<Arc<DrawObj>>,
+    draws: &mut Vec<DrawObjTmp>,
 ) {
     if is_transparent == false {
         let index = draws.len();
-        let tmpdraw =  match draw {
-            DrawObj3D::Tmp(draw) => {
-                Arc::new(DrawObj {
-                    pipeline: draw.pipeline.clone(),
-                    bindgroups: draw.bindgroups.groups(),
-                    vertices: draw.vertices.clone(),
-                    instances: draw.instances.clone(),
-                    vertex: draw.vertex.clone(),
-                    indices: draw.indices.clone(),
-                })
-            },
-            DrawObj3D::Draw(draw) => draw.clone(),
-        };
-        draws.push(tmpdraw);
-        opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline });
+        draws.push(draw.clone());
+        opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline, resourcehash: (draw.vertexhash.0, draw.bindgroupshash.0) });
     } else {
-        match draw {
-            DrawObj3D::Tmp(draw) => {
-                if instancessortinfo.0.len() <= 1 || draw.instances.end == 1 {
-                    let index = draws.len();
-                    let tmpdraw = DrawObj {
-                        pipeline: draw.pipeline.clone(),
-                        bindgroups: draw.bindgroups.groups(),
-                        vertices: draw.vertices.clone(),
-                        instances: draw.instances.clone(),
-                        vertex: draw.vertex.clone(),
-                        indices: draw.indices.clone(),
-                    };
-                    draws.push(Arc::new(tmpdraw));
-                    transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue: sort_param.clone() });
-                } else {
-                    instancessortinfo.0.iter().for_each(|(alphaindex, range)| {
-                        if range.start < range.end && range.end <= draw.instances.end {
-                            let tmpdraw = DrawObj {
-                                pipeline: draw.pipeline.clone(),
-                                bindgroups: draw.bindgroups.groups(),
-                                vertices: draw.vertices.clone(),
-                                instances: range.clone(),
-                                vertex: draw.vertex.clone(),
-                                indices: draw.indices.clone(),
-                            };
-                            let index = draws.len();
-                            draws.push(Arc::new(tmpdraw));
-                            let mut queue = sort_param.clone();
-                            queue.index += *alphaindex;
-                            transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue });
-                        }
-                    });
-                }
-            },
-            DrawObj3D::Draw(draw) => {
+        // log::warn!("instancessortinfo.0.len() {}", instancessortinfo.0.len());
+        if instancessortinfo.0.len() <= 1  {
+            let index = draws.len();
+            draws.push(draw.clone());
+            transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue: sort_param.clone(), resourcehash: (draw.vertexhash.0, draw.bindgroupshash.0) });
+        } else {
+            if let Some(instance_memory) = &draw.instance_memory {
+                let itemsize = instance_memory.data.len() / instance_memory.itemcount as usize;
+                instancessortinfo.0.iter().for_each(|(alphaindex, range)| {
+                    let start = itemsize * range.start as usize;
+                    let end = itemsize * range.end as usize;
+                    if range.start < range.end && range.end <= instance_memory.itemcount {
+                        let tmpdraw = DrawObjTmp {
+                            pipeline: draw.pipeline.clone(),
+                            bindgroupshash: draw.bindgroupshash.clone(),
+                            passentity: draw.passentity.clone(),
+                            vertexhash: draw.vertexhash.clone(),
+                            vertexentity: draw.vertexentity.clone(),
+                            instance_memory: Some(EVerteicesMemory {
+                                data: instance_memory.data.as_slice()[start..end].to_vec(),
+                                slot: instance_memory.slot,
+                                itemcount: range.end as u32 - range.start as u32
+                            }),
+                        };
+                        let index = draws.len();
+                        draws.push(tmpdraw);
+                        let mut queue = sort_param.clone();
+                        queue.index += *alphaindex;
+                        transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue, resourcehash: (draw.vertexhash.0, draw.bindgroupshash.0) });
+                    }
+                });
+            } else {
                 let index = draws.len();
                 draws.push(draw.clone());
-                transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue: sort_param.clone() });
+                transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue: sort_param.clone(), resourcehash: (draw.vertexhash.0, draw.bindgroupshash.0) });
             }
+        }
+    }
+}
+
+fn collect_draw_batch(
+    tempdraw: &mut DrawObjTmp,
+    pipeline: &Option<Handle<Pipeline3D>>,
+    bindgroups: &BindGroups3D,
+    geo: &RenderGeometry,
+    renderer: &mut Renderer,
+    instancedcache: &mut InstanceBufferAllocator,
+    allocator: &mut VertexBufferAllocator3D,
+    device: &PiRenderDevice,
+    queue: &PiRenderQueue,
+    count_vertex: &mut usize,
+) {
+    
+    if let Some(mem) = &tempdraw.instance_memory {
+        let size_per_value = mem.data.len() as u32 / mem.itemcount;
+        let mut bytelen = mem.data.len();
+        let one_mesh_max_instance_bytes = instancedcache.one_mesh_max_instance_bytes();
+        let mut instances = geo.instances();
+        if bytelen > one_mesh_max_instance_bytes {
+            let count = one_mesh_max_instance_bytes / size_per_value as usize;
+            instances.end = count as u32 + instances.start;
+            bytelen = count * size_per_value as usize;
+        }
+        let data = instancedcache.collect(&mem.data.as_slice()[0..bytelen], size_per_value, allocator, device, queue);
+        let data = if let Some(data) = data {
+            EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
+        } else {
+            let data = instancedcache.instance_initial_buffer();
+            EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
         };
+
+        let mut draw = DrawObj {
+            pipeline: pipeline.clone(),
+            bindgroups: bindgroups.groups(),
+            vertices: geo.vertices(),
+            vertex: geo.vertex_range(),
+            instances,
+            indices: geo.indices.clone(),
+        };
+        draw.insert_vertices(RenderVertices { slot: mem.slot, buffer: data, buffer_range: None, size_per_value: size_per_value as u64 });
+        draw.instances = Range { start: 0, end: mem.itemcount };
+        let vertex = if let Some(indices) = &draw.indices {
+            indices.value_range().end - indices.value_range().start
+        } else { draw.vertex.end - draw.vertex.start };
+        *count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
+        renderer.draws.list.push(Arc::new(draw));
+    } else {
+        let draw = DrawObj {
+            pipeline: pipeline.clone(),
+            bindgroups: bindgroups.groups(),
+            vertices: geo.vertices(),
+            vertex: geo.vertex_range(),
+            instances: geo.instances(),
+            indices: geo.indices.clone(),
+        };
+        let vertex = if let Some(indices) = &draw.indices {
+            indices.value_range().end - indices.value_range().start
+        } else { draw.vertex.end - draw.vertex.start };
+        *count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
+        renderer.draws.list.push(Arc::new(draw));
     }
 }

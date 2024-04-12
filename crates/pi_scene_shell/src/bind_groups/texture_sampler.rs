@@ -13,7 +13,7 @@ use pi_render::{
     },
     asset::TAssetKeyU64
 };
-use crate::{binds::*, shader::* };
+use crate::{binds::*, prelude::{EqAsResource, HashAsResource}, shader::* };
 
 
 pub type KeyShaderSetTextureSamplers = u64;
@@ -142,4 +142,15 @@ impl TShaderSetBlock for BindGroupTextureSamplers {
     // fn fs_running_code(&self) -> String {
     //     String::from("")
     // }
+}
+
+impl EqAsResource for BindGroupTextureSamplers {
+    fn eq_resource(&self, other: &Self) -> bool {
+        self.bind_group.key() == other.bind_group.key() && self.key == other.key
+    }
+}
+impl HashAsResource for BindGroupTextureSamplers {
+    fn hash_resource<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.bind_group.key().asset_u64().hash(state);
+    }
 }

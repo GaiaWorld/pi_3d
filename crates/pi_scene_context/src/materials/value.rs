@@ -66,3 +66,6 @@ pub struct AnimatorableUniformVec4F { pub value: Entity }
 pub struct AnimatorableUniformVec4G { pub value: Entity }
 #[derive(Component)]
 pub struct AnimatorableUniformVec4H { pub value: Entity }
+
+#[derive(Component)]
+pub struct TexWithAtlas;

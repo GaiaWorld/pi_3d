@@ -46,7 +46,7 @@ impl Plugin for PluginGeometry {
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap();
         let mut allocator = VertexBufferAllocator3D(VertexBufferAllocator::new(cfg.0.min, cfg.0.timeout));
-        let instanceallocator = InstanceBufferAllocator::new(1024 * 1024, &mut allocator, device, queue);
+        let instanceallocator = InstanceBufferAllocator::new(4 * 1024 * 1024, &mut allocator, device, queue);
         app.insert_resource(allocator);
         app.insert_resource(instanceallocator);
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<EVertexBufferRange>();
@@ -58,6 +58,7 @@ impl Plugin for PluginGeometry {
         app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(StageGeometry::_GeoCreate));
         app.configure_set(Update, StageGeometry::_VertexBufferLoadedApply.after(StageGeometry::VertexBufferLoaded));
         app.configure_set(Update, StageGeometry::GeometryLoaded.after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageGeometry::Upload.after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList));
         app.add_systems(Update, apply_deferred.in_set(StageGeometry::_GeoCreate) );
         app.add_systems(Update, apply_deferred.in_set(StageGeometry::_VertexBufferLoadedApply) );
 
@@ -76,7 +77,7 @@ impl Plugin for PluginGeometry {
         );
 
         app.add_systems(Update, 
-            sys_instanced_buffer_upload.in_set(ERunStageChap::Uniform)
+            sys_instanced_buffer_upload.in_set(StageGeometry::Upload)
         );
 
         app.add_systems(Update, 

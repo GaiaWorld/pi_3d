@@ -14,6 +14,19 @@ impl GeometryDesc {
         self.list.get(slot).unwrap().clone()
     }
 }
+impl HashAsResource for GeometryDesc {
+    fn hash_resource<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.list.iter().for_each(|item| {
+            item.hash_resource(state);
+        });
+    }
+}
+
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+pub struct GeometryResourceHash(pub u64);
+
+#[derive(Component, PartialEq, Eq)]
+pub struct GeometryLayoutHash(pub u64);
 
 #[derive(Resource)]
 pub struct GeometryVBLoader {

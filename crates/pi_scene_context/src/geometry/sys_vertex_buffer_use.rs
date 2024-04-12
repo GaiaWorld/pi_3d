@@ -56,110 +56,171 @@ pub fn sys_vertex_buffer_slots_loaded(
         if let (Ok(mut geometry), Ok(mut rendergeo)) = (geometries.get_mut(idgeo), meshes.get_mut(idmesh.0)) {
 
             let mut values = vec![];
+            let mut instance_memory = None;
 
             if let (Some(key), Some(res)) = (key01, res01) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 1 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key02, res02) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 2 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key03, res03) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 3 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key04, res04) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 4 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key05, res05) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 5 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key06, res06) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 6 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key07, res07) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 7 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key08, res08) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 8 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
             
             if let (Some(key), Some(res)) = (key09, res09) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 9 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
 
             if let (Some(key), Some(res)) = (key10, res10) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 10 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
 
             if let (Some(key), Some(res)) = (key11, res11) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 11 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }
             } else { return; }
 
             if let (Some(key), Some(res)) = (key12, res12) {
-                values.push((key.desc().step_mode(), RenderVertices::create(key, res)));
+                match &res.0 {
+                    EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                    EVerticesBufferTmp::Buffer(buf) => {
+                        values.push((key.desc().step_mode(), RenderVertices::create(key, buf.clone())));
+                    },
+                }
                 if desc.slot_count() == 12 {
-                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices)));
+                    geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
                     *rendergeo = RenderGeometryEable(true);
                     return;
                 }

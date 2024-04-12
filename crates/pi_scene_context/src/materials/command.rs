@@ -3,10 +3,13 @@ use pi_scene_shell::prelude::*;
 
 use crate::pass::PassTag;
 
-pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta);
+pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta, pub bool);
 impl OpsMaterialCreate {
     pub fn ops(mat: Entity, shader_meta: &str) -> Self {
-        Self(mat, Atom::from(shader_meta))
+        Self(mat, Atom::from(shader_meta), false)
+    }
+    pub fn ops_texatlas(mat: Entity, shader_meta: &str) -> Self {
+        Self(mat, Atom::from(shader_meta), true)
     }
 }
 pub type ActionListMaterialCreate = ActionList<OpsMaterialCreate>;

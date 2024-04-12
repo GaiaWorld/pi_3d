@@ -1,7 +1,4 @@
 
-
-use std::ops::Range;
-
 use pi_scene_shell::prelude::*;
 
 pub struct CubeBuilder;

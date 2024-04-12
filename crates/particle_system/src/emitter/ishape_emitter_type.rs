@@ -4,6 +4,8 @@ use crate::{iparticle_system_config::{
 }, tools::Random};
 use pi_scene_math::{Matrix, Vector3};
 
+use super::PointShapeEmitter;
+
 
 pub trait IShapeEmitterTypeValue {
     const POSITION: Vector3;
@@ -14,6 +16,78 @@ pub trait IShapeEmitterTypeValue {
     const RANDOMIZE_DIRECTION: f32;
     const SPHERIZE_DIRECTION: f32;
     const RANDOMIZE_POSITION: f32;
+}
+
+pub struct ShapeEmitter {
+    pub(crate) position: Vector3,
+    pub(crate) rotation: Vector3,
+    pub(crate) scaling: Vector3,
+    pub(crate) local_matrix: Matrix,
+    pub(crate) align_direction: bool,
+    pub(crate) randomize_direction: f32,
+    pub(crate) spherize_direction: f32,
+    pub(crate) randomize_position: f32,
+}
+impl ShapeEmitter {
+    pub fn new() -> Self {
+        Self { 
+            position: Vector3::new(0., 0., 0.),
+            rotation: Vector3::new(0., 0., 0.),
+            scaling: Vector3::new(1., 1., 1.),
+            local_matrix: Matrix::identity(),
+            align_direction: false,
+            randomize_direction: 0.,
+            spherize_direction: 0.,
+            randomize_position: 0.,
+        }
+    }
+}
+
+pub struct TypeShapeEmitter {
+    pub(crate) box_mode: EBoxShapeMode,
+    pub(crate) spawn_point_only: bool,
+    pub(crate) arc_mode: EShapeEmitterArcMode,
+    pub(crate) base: ShapeEmitter,
+    pub(crate) param: Vec<f32>,
+    pub(crate) fn_direction: fn(&TypeShapeEmitter, &mut Vector3, &Vector3, &mut Random),
+    pub(crate) fn_position: fn(&TypeShapeEmitter, &mut Vector3, f32, f32, f32, f32, &mut Random),
+    pub(crate) fn_orbit_center: fn(&Vector3, &Vector3, &mut Vector3),
+}
+impl TypeShapeEmitter {
+    pub fn new() -> Self {
+        Self {
+            box_mode: EBoxShapeMode::Volume,
+            spawn_point_only: false,
+            arc_mode: EShapeEmitterArcMode::Random,
+            base: ShapeEmitter::new(),
+            param: vec![],
+            fn_direction: PointShapeEmitter::start_direction_function,
+            fn_position: PointShapeEmitter::start_position_function,
+            fn_orbit_center: PointShapeEmitter::orbit_center,
+        }
+    }
+    pub fn orbit_center<'a>(&'a self, local_position: &'a Vector3, offset: &'a Vector3, result: &'a mut Vector3) {
+        (self.fn_orbit_center)(local_position, offset, result);
+    }
+    pub fn start_direction_function(
+        &self,
+        direction_to_update: & mut Vector3,
+        local_position: & Vector3,
+        random: & mut Random,
+    ) {
+        (self.fn_direction)(&self, direction_to_update, local_position, random);
+    }
+    pub fn start_position_function(
+        &self,
+        position_to_update: & mut Vector3,
+        _emission_loop: f32,
+        _emission_progress: f32,
+        _emission_index: f32,
+        _emission_total: f32,
+        random: & mut Random,
+    ) {
+        (self.fn_position)(&self, position_to_update, _emission_loop, _emission_progress, _emission_index, _emission_total, random);
+    }
 }
 
 /**

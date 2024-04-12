@@ -1,5 +1,5 @@
 
-use std::sync::Arc;
+use std::{hash::Hash, sync::Arc};
 
 use pi_render::{
     renderer::{
@@ -9,7 +9,7 @@ use pi_render::{
     asset::TAssetKeyU64
 };
 
-use crate::forward_rendering::binds::*;
+use crate::{forward_rendering::binds::*, prelude::{EqAsResource, HashAsResource}};
 
 #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct KeyShaderSetExtend {
@@ -194,5 +194,15 @@ vec4 GetEnvironmentBRDFTexture(vec2 uv) {
         }
 
         result
+    }
+}
+impl EqAsResource for BindGroupSetExtend {
+    fn eq_resource(&self, other: &Self) -> bool {
+        self.bind_group.key() == other.bind_group.key() && self.key == other.key
+    }
+}
+impl HashAsResource for BindGroupSetExtend {
+    fn hash_resource<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.bind_group.key().asset_u64().hash(state);
     }
 }

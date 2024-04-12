@@ -44,6 +44,7 @@ impl DistortionUVShader {
         nodemat.include(&Atom::from(BlockFloat::KEY), infos);
         nodemat.include(&Atom::from(BlockTextureChannel::KEY), infos);
         nodemat.include(&Atom::from(BlockUVOffsetSpeed::KEY), infos);
+        nodemat.include(&Atom::from(BlockUVAtlas::KEY), infos);
         nodemat.include(&Atom::from(BlockMainTexture::KEY), infos);
         nodemat.include(&Atom::from(BlockMainTextureUVOffsetSpeed::KEY), infos);
         nodemat.include(&Atom::from(BlockOpacity::KEY), infos);

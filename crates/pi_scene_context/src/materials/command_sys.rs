@@ -14,6 +14,7 @@ use super::{
         texture::*,
         uniform::*,
     },
+    value::*,
     command::*,
 };
 
@@ -27,7 +28,7 @@ pub fn sys_create_material(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader)| {
+    cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
         if commands.get_entity(entity).is_none() { 
             // log::error!("Material: Not Found!!");
@@ -47,6 +48,8 @@ pub fn sys_create_material(
         let mut matcmds = commands.entity(entity);
         ActionEntity::init(&mut matcmds);
         let keytex = Arc::new(UniformTextureWithSamplerParam::default());
+
+        if texatlas { matcmds.insert(TexWithAtlas); }
 
         matcmds
             .insert(TargetAnimatorableIsRunning)
@@ -323,11 +326,17 @@ pub fn sys_act_material_value(
 
 pub fn sys_act_material_texture(
     mut cmds: ResMut<ActionListUniformTexture>,
-    mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty)>,
+    mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty, Option<&TexWithAtlas>)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsUniformTexture(entity, param)| {
-        if let Ok((mut textureparams, mut flag)) = textureparams.get_mut(entity) {
+    cmds.drain().drain(..).for_each(|OpsUniformTexture(entity, mut param)| {
+        if let Ok((mut textureparams, mut flag, texatlas)) = textureparams.get_mut(entity) {
             // log::warn!("EUniformCommand::Texture");
+            if texatlas.is_some() {
+                param.sample.address_mode_u = EAddressMode::default();
+                param.sample.address_mode_v = EAddressMode::default();
+                param.sample.address_mode_w = EAddressMode::default();
+            }
+
             textureparams.0.insert(param.slotname.clone(), Arc::new(param));
             *flag = UniformTextureWithSamplerParamsDirty;
             return;

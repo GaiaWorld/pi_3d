@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{hash::Hash, sync::Arc};
 
 use pi_render::{
     renderer::{
@@ -8,7 +8,7 @@ use pi_render::{
     },
     asset::TAssetKeyU64
 };
-use crate::{binds::*, shader::*, prelude::{BindModelLightIndexs} };
+use crate::{binds::*, prelude::{BindModelLightIndexs, EqAsResource, HashAsResource}, shader::* };
 
 #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct KeyShaderSetModel {
@@ -176,5 +176,16 @@ impl TShaderSetBlock for BindGroupModel {
 
     fn vs_define_code(&self, set: u32) -> String {
         self.key.vs_define_code(set)
+    }
+}
+
+impl EqAsResource for BindGroupModel {
+    fn eq_resource(&self, other: &Self) -> bool {
+        self.bind_group.key() == other.bind_group.key() && self.key == other.key
+    }
+}
+impl HashAsResource for BindGroupModel {
+    fn hash_resource<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.bind_group.key().asset_u64().hash(state);
     }
 }

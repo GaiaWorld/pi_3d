@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{hash::Hasher, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
@@ -15,6 +15,7 @@ pub fn sys_create_trail_mesh(
     empty: Res<SingleEmptyEntity>,
     // mut matuse: ResMut<ActionListMaterialUse>,
     lightlimit: Res<ModelLightLimit>,
+    commonbindmodel: Res<CommonBindModel>,
 ) {
     if let Some(trailbuffer) = &trailbuffer.0 {
 
@@ -26,7 +27,7 @@ pub fn sys_create_trail_mesh(
             // matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 
             // meshcreate.push(OpsMeshCreation::ops(id_scene, id_mesh, String::from("")));
-            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0);
+            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel);
 
             if let Some(mut cmd) = commands.get_entity(id_mesh) {
                 // log::warn!("Mesh Ok");
@@ -34,6 +35,9 @@ pub fn sys_create_trail_mesh(
                 cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
                 cmd.insert(CCullMode(CullMode::Off));
                 cmd.insert(GeometryID(id_geo));
+                // 显式重置为默认
+                cmd.insert(commonbindmodel.0.clone());
+                cmd.insert(ModelStatic);
             }
 
             if let Some(mut cmd) = commands.get_entity(id_geo) {
@@ -47,6 +51,10 @@ pub fn sys_create_trail_mesh(
                 let geo_desc = GeometryDesc { list: vertex_desc };
                 let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
     
+                let mut hasher = DefaultHasher::default();
+                geo_desc.hash_resource(&mut hasher);
+                cmd.insert(GeometryResourceHash(hasher.finish()));
+
                 cmd
                     .insert(geo_desc)
                     .insert(slot)

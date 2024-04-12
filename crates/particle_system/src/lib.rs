@@ -21,7 +21,7 @@ use base::*;
 use command::*;
 use command_sys::*;
 use pi_scene_context::{prelude::*, scene::StageScene};
-use pi_trail_renderer::{TrailBuffer, sys_create_trail_mesh, StageTrail};
+use pi_trail_renderer::{TrailBuffer, StageTrail};
 use system::*;
 
 pub struct PluginParticleSystem;
@@ -34,17 +34,17 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(ActionListCPUParticleSystem::default());
         app.insert_resource(ActionListCPUParticleSystemState::default());
         app.insert_resource(ActionListCPUParticleSystemTrailMaterial::default());
-        let mut temp = ParticleSystemPerformance::default(); temp.frame_time_ms = 16; temp.update_frame_time_ms = 33;
+        let mut temp = ParticleSystemPerformance::default(); temp.frame_time_ms = 16; temp.update_frame_time_ms = 50;
         app.insert_resource(temp);
 
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleTrailBuffer>();
-        let cfg2 = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleCommonBuffer>();
+        // let cfg2 = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleCommonBuffer>();
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
         let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
         let trailbuffer = TrailBuffer::new(cfg.max as u32, &mut allocator, &device, &queue);
-        let particlecommonbuffer= ResParticleCommonBuffer::new(cfg2.max as u32, &mut allocator, &device, &queue);
-        app.insert_resource(particlecommonbuffer);
+        // let particlecommonbuffer= ResParticleCommonBuffer::new(cfg2.max as u32, &mut allocator, &device, &queue);
+        // app.insert_resource(particlecommonbuffer);
         app.insert_resource(ResParticleTrailBuffer(trailbuffer));
 
         app.configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::TrailCreate));
@@ -94,9 +94,11 @@ impl Plugin for PluginParticleSystem {
         app.add_systems(
 			Update,
             (
+                sys_gravity.run_if(should_run),
                 sys_size_over_life_time.run_if(should_run),
                 sys_color_over_life_time.run_if(should_run),
                 sys_rotation_over_life_time.run_if(should_run),
+                sys_force_over_life_time.run_if(should_run),
                 sys_velocity_over_life_time.run_if(should_run),
                 sys_orbit_over_life_time.run_if(should_run),
                 sys_speed_modifier_over_life_time.run_if(should_run),

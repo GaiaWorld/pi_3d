@@ -108,7 +108,7 @@ impl DemoScene {
         orthographic_camera: bool
     ) -> Self {
         
-        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 400, 300) {
+        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
             Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
             None => None,
         };
@@ -266,6 +266,11 @@ pub fn test_plugins() -> App {
             pi_trail_renderer::PluginTrail
         )
     );
+    app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
+    app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
+    app.insert_resource(SceneShadowLimit(
+        ShadowLimitInfo { max_count: 1, max_width: 2048, max_height: 2048, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
+    ));
 
     app.add_plugins(copy::PluginImageCopy);
     app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
@@ -287,12 +292,6 @@ pub fn test_plugins_with_gltf() -> App {
     // let mut opt = PiRenderOptions::default();
     // opt.backends = Backends::VULKAN;
     // app.insert_resource(opt);
-
-    app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 256, max_spot_light_count: 128, max_hemi_light_count: 16 }));
-    app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 16, max_spot_light_count: 16, max_hemi_light_count: 4 }));
-    app.insert_resource(SceneShadowLimit(
-        ShadowLimitInfo { max_count: 1, max_width: 2048, max_height: 2048, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
-    ));
 
 	let mut window_plugin = WindowPlugin::default();
     if let Some(primary_window) = &mut window_plugin.primary_window {
@@ -347,6 +346,12 @@ pub fn test_plugins_with_gltf() -> App {
             pi_trail_renderer::PluginTrail
         )
     );
+    
+    app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
+    app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
+    app.insert_resource(SceneShadowLimit(
+        ShadowLimitInfo { max_count: 1, max_width: 2048, max_height: 2048, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
+    ));
 
     app.add_plugins(copy::PluginImageCopy);
     app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
@@ -363,7 +368,7 @@ pub fn setup_default_mat(
     mut actionsmat: ResMut<ActionListMaterialCreate>,
 ) {
     let entity = mat.0;
-    actionsmat.push(OpsMaterialCreate(entity, KeyShaderMeta::from(DefaultShader::KEY)));
+    actionsmat.push(OpsMaterialCreate::ops(entity, DefaultShader::KEY));
 }
 
 pub fn active_lighting_shadow(mut state3d: ResMut<RunState3D>) {

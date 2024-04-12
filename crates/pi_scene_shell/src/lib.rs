@@ -32,6 +32,9 @@ mod binds;
 mod shader;
 mod pipeline;
 mod custom_rendertarget;
+mod batch;
+mod vertex_buffer_loader;
+mod vertices;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 

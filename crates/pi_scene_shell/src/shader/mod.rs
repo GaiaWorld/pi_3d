@@ -17,7 +17,6 @@ mod shader;
 mod shader_effect_meta;
 
 pub use block_code::*;
-pub use instance_code::*;
 pub use skin_code::*;
 pub use varying_code::*;
 pub use vs_begin_code::*;

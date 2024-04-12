@@ -1,8 +1,10 @@
 
 
-use std::sync::Arc;
+use std::{hash::{DefaultHasher, Hasher}, sync::Arc};
 
 use pi_scene_shell::prelude::*;
+
+use crate::prelude::{BindModel, CommonBindModel};
 
 
 #[derive(Default, Clone, Resource)]
@@ -161,6 +163,29 @@ impl BindGroups3D {
         groups
     }
 }
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct BindGroups3DHashResource(pub u64);
+impl From<&BindGroups3D> for BindGroups3DHashResource {
+    fn from(value: &BindGroups3D) -> Self {
+        let mut hasher = DefaultHasher::default();
+        if let Some(bindgroup) = &value.scene {
+            bindgroup.hash_resource(&mut hasher);
+        }
+        if let Some(bindgroup) = &value.model {
+            bindgroup.hash_resource(&mut hasher);
+        }
+        if let Some(bindgroup) = &value.textures {
+            bindgroup.hash_resource(&mut hasher);
+        }
+        if let Some(bindgroup) = &value.lightingshadow {
+            bindgroup.hash_resource(&mut hasher);
+        }
+
+        Self(hasher.finish())
+    }
+}
+
 pub type KeyPipeline3D = KeyRenderPipeline3D;
 pub type Pipeline3D = RenderRes<RenderPipeline>;
 pub type Pipeline3DUsage = Handle<Pipeline3D>;
@@ -170,7 +195,9 @@ impl Plugin for PluginRenderBindGroup {
     fn build(&self, app: &mut App) {
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         if app.world.get_resource::<ResBindBufferAllocator>().is_none() {
-            let allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
+            let mut allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
+            let commonbindmodel = CommonBindModel(BindModel::new(&mut allocator).unwrap());
+            app.insert_resource(commonbindmodel);
             app.insert_resource(allocator);
         }
         app.insert_resource(AssetBindGroupSceneWaits::default());

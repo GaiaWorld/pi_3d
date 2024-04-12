@@ -1,5 +1,5 @@
 use pi_scene_shell::prelude::*;
-use pi_node_materials::{prelude::{NodeMaterialBuilder, TNodeMaterialBlock, BlockUVOffsetSpeed, BlockMainTexture, BlockMainTextureUVOffsetSpeed}, NodeMaterialBlocks};
+use pi_node_materials::{prelude::{BlockMainTexture, BlockMainTextureUVOffsetSpeed, BlockUVAtlas, BlockUVOffsetSpeed, NodeMaterialBuilder, TNodeMaterialBlock}, NodeMaterialBlocks};
 use pi_scene_context::prelude::ActionMaterial;
 
 pub struct ShaderPBR;
@@ -203,6 +203,7 @@ impl ShaderPBR {
         // nodemat.apply::<BlockViewDirection>();
         // nodemat.apply::<BlockShadowMapping>();
         nodemat.include(&pi_atom::Atom::from(BlockUVOffsetSpeed::KEY), nodeblocks);
+        nodemat.include(&pi_atom::Atom::from(BlockUVAtlas::KEY), nodeblocks);
         nodemat.include(&pi_atom::Atom::from(BlockMainTexture::KEY), nodeblocks);
         nodemat.include(&pi_atom::Atom::from(BlockMainTextureUVOffsetSpeed::KEY), nodeblocks);
         nodemat.include(&pi_atom::Atom::from(pi_pbr::prelude::PrincipledBRDF::KEY), nodeblocks);

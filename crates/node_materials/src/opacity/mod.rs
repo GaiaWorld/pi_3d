@@ -1,4 +1,4 @@
-use crate::{base::TNodeMaterialBlock, common::BlockTextureChannel};
+use crate::{base::TNodeMaterialBlock, common::BlockTextureChannel, BlockUVAtlas};
 use pi_scene_shell::prelude::*;
 
 pub struct BlockOpacity;
@@ -67,6 +67,11 @@ impl TNodeMaterialBlock for BlockOpacityTexture {
             )
         ]
     }
+    fn depends() -> Vec<Atom> {
+        vec![
+            Atom::from(BlockUVAtlas::KEY)
+        ]
+    }
 }
 
 pub struct BlockOpacityTextureUVOffsetSpeed;
@@ -130,6 +135,11 @@ impl TNodeMaterialBlock for BlockOpacity2Texture {
                 EShaderStage::FRAGMENT,
                 EDefaultTexture::White
             )
+        ]
+    }
+    fn depends() -> Vec<Atom> {
+        vec![
+            Atom::from(BlockUVAtlas::KEY)
         ]
     }
 }

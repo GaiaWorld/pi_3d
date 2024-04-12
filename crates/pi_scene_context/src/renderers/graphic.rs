@@ -91,12 +91,12 @@ impl Node for RenderNode {
         &'a mut self,
         world: &'a mut World,
         param: &'a mut SystemState<Self::BuildParam>,
-        context: RenderContext,
+        _context: RenderContext,
         input: &'a Self::Input,
-        usage: &'a ParamUsage,
-        id: NodeId,
-        from: &'a [NodeId],
-        to: &'a [NodeId],
+        _usage: &'a ParamUsage,
+        _id: NodeId,
+        _from: &'a [NodeId],
+        _to: &'a [NodeId],
     ) -> Result<Self::Output, String> {
         
         let mut output = SimpleInOut::default();
@@ -112,22 +112,22 @@ impl Node for RenderNode {
                 return Ok(output);
             }
     
-            let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
+            // let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
             let need_depth = depthstencilformat.need_depth();
             
-            let clear_color_ops = if auto_clear_color.0 {
-                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: StoreOp::Store }
-            } else {
-                wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Discard }
-            };
-            let clear_depth_ops = if auto_clear_depth.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: StoreOp::Store, })
-            } else { None };
-            let clear_stencil_ops = if auto_clear_stencil.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: StoreOp::Store, })
-            } else {
-                None
-            };
+            // let clear_color_ops = if auto_clear_color.0 {
+            //     wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: StoreOp::Store }
+            // } else {
+            //     wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Discard }
+            // };
+            // let clear_depth_ops = if auto_clear_depth.0 {
+            //     Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: StoreOp::Store, })
+            // } else { None };
+            // let clear_stencil_ops = if auto_clear_stencil.0 {
+            //     Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: StoreOp::Store, })
+            // } else {
+            //     None
+            // };
 
             // let color_view = to_final_target.view();
             // let depth_view = to_final_target.depth_view();
@@ -215,7 +215,7 @@ impl Node for RenderNode {
         let mut output = SimpleInOut::default();
 
         let param: QueryParam = param.get(world);
-        let (screen, atlas_allocator, query) = (param.0, param.1, param.2);
+        let (screen, _atlas_allocator, query) = (param.0, param.1, param.2);
         if let Ok((
             enable, disposed, renderer, rendersize, colorformat, color_clear, depthstencilformat, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
         )) = query.get(self.renderer_id) {

@@ -1,4 +1,4 @@
-use crate::base::TNodeMaterialBlock;
+use crate::{base::TNodeMaterialBlock, BlockUVAtlas};
 use pi_scene_shell::prelude::*;
 
 pub struct BlockMainTexture;
@@ -43,6 +43,11 @@ impl TNodeMaterialBlock for BlockMainTexture {
                 EShaderStage::FRAGMENT,
                 EDefaultTexture::White
             )
+        ]
+    }
+    fn depends() -> Vec<Atom> {
+        vec![
+            Atom::from(BlockUVAtlas::KEY)
         ]
     }
 }

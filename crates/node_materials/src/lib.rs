@@ -46,6 +46,7 @@ impl Plugin for PluginNodeMaterial {
 
         blocks.regist::<BlockFloat>();
         blocks.regist::<BlockViewDirection>();
+        blocks.regist::<BlockUVAtlas>();
 
         blocks.regist::<BlockColorSpace>();
         blocks.regist::<BlockColorGray>();

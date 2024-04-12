@@ -12,11 +12,11 @@
 	vec3 diffuseBase 					= vec3(0., 0., 0.);
 	vec3 specularBase 					= vec3(0., 0., 0.);
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS));
+    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS), uMainAtlas);
     baseColor.rgb           *= mainTextureColor.rgb * mainStrength() * mainColor();
     alpha                   *= mainTextureColor.a;
 
-    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS));
+    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS), uOpacityAtlas);
     float opacityValue      = opacityChannel(opacityData);
 
     if (cutoff(opacityValue - 0.001)) {
@@ -24,7 +24,7 @@
     }
 
     vec3 emissiveColor = emissiveColor();
-    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
+    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS), uEmissionAtlas).rgb * emissiveStrength();
 
 	vec3 finalSpecular 		= specularBase * specularColor;
     vec3 finalDiffuse       = (diffuseBase * diffuseColor + emissiveColor) * baseColor.rgb;

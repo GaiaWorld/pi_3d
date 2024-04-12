@@ -1,5 +1,4 @@
 use pi_scene_shell::prelude::*;
-use pi_scene_math::*;
 
 use crate::tools::Random;
 
@@ -181,50 +180,50 @@ impl ShapeEmitter {
     }
     pub fn align_direction(&mut self, val: bool) {
         match self {
-            ShapeEmitter::Box(item) => { item.align_direction = val; },
-            ShapeEmitter::Circle(item) => { item.align_direction = val; },
-            ShapeEmitter::Cone(item) => { item.align_direction = val; },
-            ShapeEmitter::Edge(item) => { item.align_direction = val; },
-            ShapeEmitter::Hemisphere(item) => { item.align_direction = val; },
-            ShapeEmitter::Point(item) => { item.align_direction = val; },
-            ShapeEmitter::Rectangle(item) => { item.align_direction = val; },
-            ShapeEmitter::Sphere(item) => { item.align_direction = val; },
+            ShapeEmitter::Box(item) => { item.base.align_direction = val; },
+            ShapeEmitter::Circle(item) => { item.base.align_direction = val; },
+            ShapeEmitter::Cone(item) => { item.base.align_direction = val; },
+            ShapeEmitter::Edge(item) => { item.base.align_direction = val; },
+            ShapeEmitter::Hemisphere(item) => { item.base.align_direction = val; },
+            ShapeEmitter::Point(item) => { item.base.align_direction = val; },
+            ShapeEmitter::Rectangle(item) => { item.base.align_direction = val; },
+            ShapeEmitter::Sphere(item) => { item.base.align_direction = val; },
         }
     }
     pub fn randomize_direction(&mut self, val: f32) {
         match self {
-            ShapeEmitter::Box(item) => { item.randomize_direction = val; },
-            ShapeEmitter::Circle(item) => { item.randomize_direction = val; },
-            ShapeEmitter::Cone(item) => { item.randomize_direction = val; },
-            ShapeEmitter::Edge(item) => { item.randomize_direction = val; },
-            ShapeEmitter::Hemisphere(item) => { item.randomize_direction = val; },
-            ShapeEmitter::Point(item) => { item.randomize_direction = val; },
-            ShapeEmitter::Rectangle(item) => { item.randomize_direction = val; },
-            ShapeEmitter::Sphere(item) => { item.randomize_direction = val; },
+            ShapeEmitter::Box(item) => { item.base.randomize_direction = val; },
+            ShapeEmitter::Circle(item) => { item.base.randomize_direction = val; },
+            ShapeEmitter::Cone(item) => { item.base.randomize_direction = val; },
+            ShapeEmitter::Edge(item) => { item.base.randomize_direction = val; },
+            ShapeEmitter::Hemisphere(item) => { item.base.randomize_direction = val; },
+            ShapeEmitter::Point(item) => { item.base.randomize_direction = val; },
+            ShapeEmitter::Rectangle(item) => { item.base.randomize_direction = val; },
+            ShapeEmitter::Sphere(item) => { item.base.randomize_direction = val; },
         }
     }
     pub fn spherize_direction(&mut self, val: f32) {
         match self {
-            ShapeEmitter::Box(item) => { item.spherize_direction = val; },
-            ShapeEmitter::Circle(item) => { item.spherize_direction = val; },
-            ShapeEmitter::Cone(item) => { item.spherize_direction = val; },
-            ShapeEmitter::Edge(item) => { item.spherize_direction = val; },
-            ShapeEmitter::Hemisphere(item) => { item.spherize_direction = val; },
-            ShapeEmitter::Point(item) => { item.spherize_direction = val; },
-            ShapeEmitter::Rectangle(item) => { item.spherize_direction = val; },
-            ShapeEmitter::Sphere(item) => { item.spherize_direction = val; },
+            ShapeEmitter::Box(item) => { item.base.spherize_direction = val; },
+            ShapeEmitter::Circle(item) => { item.base.spherize_direction = val; },
+            ShapeEmitter::Cone(item) => { item.base.spherize_direction = val; },
+            ShapeEmitter::Edge(item) => { item.base.spherize_direction = val; },
+            ShapeEmitter::Hemisphere(item) => { item.base.spherize_direction = val; },
+            ShapeEmitter::Point(item) => { item.base.spherize_direction = val; },
+            ShapeEmitter::Rectangle(item) => { item.base.spherize_direction = val; },
+            ShapeEmitter::Sphere(item) => { item.base.spherize_direction = val; },
         }
     }
     pub fn randomize_position(&mut self, val: f32) {
         match self {
-            ShapeEmitter::Box(item) => { item.randomize_position = val; },
-            ShapeEmitter::Circle(item) => { item.randomize_position = val; },
-            ShapeEmitter::Cone(item) => { item.randomize_position = val; },
-            ShapeEmitter::Edge(item) => { item.randomize_position = val; },
-            ShapeEmitter::Hemisphere(item) => { item.randomize_position = val; },
-            ShapeEmitter::Point(item) => { item.randomize_position = val; },
-            ShapeEmitter::Rectangle(item) => { item.randomize_position = val; },
-            ShapeEmitter::Sphere(item) => { item.randomize_position = val; },
+            ShapeEmitter::Box(item) => { item.base.randomize_position = val; },
+            ShapeEmitter::Circle(item) => { item.base.randomize_position = val; },
+            ShapeEmitter::Cone(item) => { item.base.randomize_position = val; },
+            ShapeEmitter::Edge(item) => { item.base.randomize_position = val; },
+            ShapeEmitter::Hemisphere(item) => { item.base.randomize_position = val; },
+            ShapeEmitter::Point(item) => { item.base.randomize_position = val; },
+            ShapeEmitter::Rectangle(item) => { item.base.randomize_position = val; },
+            ShapeEmitter::Sphere(item) => { item.base.randomize_position = val; },
         }
     }
 }

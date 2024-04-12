@@ -305,6 +305,7 @@ impl TrailBuffer {
         for _ in 0..size {
             data.push(0);
         }
+        log::error!("TrailBuffer {}", data.len());
         if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
             Some(Self {
                 vertices: vec![],

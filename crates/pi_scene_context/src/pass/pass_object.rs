@@ -1,24 +1,49 @@
 
 use std::{sync::Arc, ops::{Deref, Range}};
 
-use crate::bindgroup::*;
+use crate::{bindgroup::*, prelude::{EVerteicesMemory, GeometryDesc, GeometryResourceHash}};
 
 pub use pi_scene_shell::prelude::*;
 
 pub enum DrawObj3D {
-    Tmp(DrawObjTmp),
+    InstanceNotClip(DrawObjTmp),
     Draw(Arc<DrawObj>)
 }
 
+#[derive(Clone)]
 pub struct DrawObjTmp {
-    pub pipeline: Option<Handle<RenderRes<RenderPipeline>>>,
-    pub bindgroups: BindGroups3D,
-    ///
-    /// * MAX_VERTEX_BUFFER : 可能的最大顶点Buffer数目, 本地电脑 16
-    pub vertices: SmallVecMap<RenderVertices, 3>,
-    pub instances: Range<u32>,
-    pub vertex: Range<u32>,
-    pub indices: Option<RenderIndices>,
+    pub pipeline: u64,
+    pub passentity: Entity,
+    pub bindgroupshash: BindGroups3DHashResource,
+    pub vertexentity: Entity,
+    pub vertexhash: GeometryResourceHash,
+    pub instance_memory: Option<EVerteicesMemory>,
+}
+impl DrawObjTmp {
+    pub fn can_batch_instance_memory(&self, other: &Self, debug: bool, max_combine_bytes: usize) -> bool {
+        // if debug {
+        //     log::warn!(
+        //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
+        //         (self.pipeline , other.pipeline),
+        //         (self.vertexhash.0 , other.vertexhash.0),
+        //         (self.bindgroupshash.0 , other.bindgroupshash.0),
+        //         (self.instance_memory.is_some() , other.instance_memory.is_some())
+        //     );
+        // }
+        if self.pipeline == other.pipeline
+            && self.vertexhash == other.vertexhash
+            && self.bindgroupshash == other.bindgroupshash
+        {
+            match (&self.instance_memory, &other.instance_memory) {
+                (Some(ins1), Some(ins2)) => {
+                    ins1.data.len() + ins2.data.len() < max_combine_bytes
+                },
+                _ => false,
+            }
+        } else {
+            false
+        }
+    }
 }
 
 pub trait TPassData<T: Clone> {
@@ -339,10 +364,23 @@ pub struct RecordPassDraw(pub [Option<ObjectID>; 8]);
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
 #[derive(Default, Clone, Component)]
-pub struct PassBindGroups(pub Option<BindGroups3D>);
-impl TPassData<Option<BindGroups3D>> for PassBindGroups {
-    fn new(val: Option<BindGroups3D>) -> Self { Self(val) }
-    fn val(&self) -> &Option<BindGroups3D> { &self.0 }
+pub struct PassBindGroups(pub Option<(BindGroups3D, BindGroups3DHashResource)>);
+impl PassBindGroups {
+    pub fn new(val: Option<BindGroups3D>) -> Self {
+        if let Some(val) = val {
+            let hash = BindGroups3DHashResource::from(&val);
+            Self(Some((val, hash)))
+        } else {
+            Self(None)
+        }
+    }
+    pub fn val(&self) -> Option<&BindGroups3D> {
+        if let Some(val) = &self.0 {
+            Some(&val.0)
+        } else {
+            None
+        }
+    }
 }
 
 /// * Set0
@@ -389,10 +427,10 @@ impl PassPipeline {
     }
 }
 #[derive(Component)]
-pub struct PassDraw(pub Option<DrawObj3D>);
+pub struct PassDraw(pub Option<DrawObjTmp>);
 impl PassDraw {
-    pub fn new(val: Option<DrawObj3D>) -> Self { Self(val) }
-    pub fn val(&self) -> &Option<DrawObj3D> { &self.0 }
+    pub fn new(val: Option<DrawObjTmp>) -> Self { Self(val) }
+    pub fn val(&self) -> &Option<DrawObjTmp> { &self.0 }
 }
 
 // #[derive(Deref, DerefMut, Resource)]

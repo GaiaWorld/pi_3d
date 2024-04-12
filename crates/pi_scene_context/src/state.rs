@@ -178,7 +178,7 @@ pub struct StateRecordCfg {
 // }
 // #[setup]
 // impl SysMeshStateToFile {
-    const FILE_NAME: &'static str = "meshstate.md";
+    const FILE_NAME: &'static str = "temp/meshstate.md";
     // #[system]
     fn sys_mesh_state_to_file(
         items: Query<(ObjectID, &MeshStates), Changed<DirtyMeshStates>>,

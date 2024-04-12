@@ -1,7 +1,6 @@
 
 
 use base::DemoScene;
-use pi_3d::StateResource;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_scene_shell::prelude::*;
 use pi_scene_context::{prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, scene::StageScene};
@@ -70,7 +69,7 @@ fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 8;
+    let temp = 4;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
@@ -89,7 +88,7 @@ fn setup(
 
                     //
                     let syskey = String::from("Test");
-                    let syscfg = demo_cfg(10., 20.);
+                    let syscfg = demo_cfg(10., 5.);
                     let calculator = commands.spawn_empty().id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
@@ -158,7 +157,6 @@ fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     cfg.looping = 1;
     cfg.max_particles = count;
     cfg.emission = (count, None);
-    cfg.gravity = OneParamInfo::TInterpolateConstant(0.5);
     cfg.start_speed = OneParamInfo::TInterpolateConstant(speed);
     cfg.start_color = FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]);
     cfg.start_size = ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(1.));
@@ -206,8 +204,6 @@ pub fn main() {
     app.add_systems(Update, pi_3d::sys_info_resource.run_if(should_run).in_set(StageScene::Create));
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
-    
-    app.world.get_resource_mut::<StateResource>().unwrap().debug = false;
 
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     

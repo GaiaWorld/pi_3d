@@ -6,6 +6,7 @@ use pi_render::renderer::{
         bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer},
         shader_stage::EShaderStage
 };
+use pi_scene_math::Matrix;
 use crate::shader::ShaderSetBind;
 
 
@@ -37,6 +38,9 @@ impl ShaderBindModelAboutMatrix {
         allocator: &mut BindBufferAllocator,
     ) -> Option<Self> {
         if let Some(range) = allocator.allocate(ShaderBindModelAboutMatrix::TOTAL_SIZE) {
+            let matrix = Matrix::identity();
+            range.write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(matrix.as_slice()));
+            range.write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(matrix.as_slice()));
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[0u32, 0u32, 0u32, 0u32]));
             Some(
                 Self {

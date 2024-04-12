@@ -379,11 +379,14 @@ impl ShaderEffectMeta {
         #[cfg(not(target_arch = "wasm32"))]
         {
             log::warn!("Shader: {:?}", key_meta);
+            let temp = String::from("temp/");
             let root_dir = std::env::current_dir().unwrap();
-            let file_name: String = key_meta.to_string() + ".vert";
+            let mut file_name: String = key_meta.to_string() + ".vert";
+            file_name = temp.clone() + file_name.as_str();
             let _ = std::fs::write(root_dir.join(file_name), vs.as_str());
             
-            let file_name = key_meta.to_string() + ".frag";
+            let mut file_name = key_meta.to_string() + ".frag";
+            file_name = temp + file_name.as_str();
             let _ = std::fs::write(root_dir.join(file_name), fs.as_str());
         }
         // log::error!("Shader: {:?}", key_meta);

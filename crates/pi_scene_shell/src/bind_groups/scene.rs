@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{hash::Hash, sync::Arc};
 
 use pi_render::{
     renderer::{
@@ -8,7 +8,7 @@ use pi_render::{
     },
     asset::TAssetKeyU64
 };
-use crate::binds::*;
+use crate::{binds::*, prelude::{EqAsResource, HashAsResource}};
 
 #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct KeyShaderSetScene {
@@ -127,5 +127,15 @@ impl TShaderSetBlock for BindGroupScene {
 
     fn vs_define_code(&self, set: u32) -> String {
         self.key.vs_define_code(set)
+    }
+}
+impl EqAsResource for BindGroupScene {
+    fn eq_resource(&self, other: &Self) -> bool {
+        self.bind_group.key() == other.bind_group.key() && self.key == other.key
+    }
+}
+impl HashAsResource for BindGroupScene {
+    fn hash_resource<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.bind_group.key().asset_u64().hash(state);
     }
 }

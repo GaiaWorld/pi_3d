@@ -145,7 +145,7 @@ pub fn sys_calc_render_matrix_instance(
 }
 
 pub fn sys_render_matrix_for_uniform(
-    mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), Changed<RenderWorldMatrix>>,
+    mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), (Changed<RenderWorldMatrix>, Without<ModelStatic>)>,
 ) {
     meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, bind_model)| {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
@@ -156,7 +156,7 @@ pub fn sys_render_matrix_for_uniform(
 }
 
 pub fn sys_velocity_for_uniform(
-    mut meshes: Query<(&ModelVelocity, &BindModel), Changed<ModelVelocity>>,
+    mut meshes: Query<(&ModelVelocity, &BindModel), (Changed<ModelVelocity>, Without<ModelStatic>)>,
 ) {
     meshes.iter_mut().for_each(|(velocity, bind_model)| {
         let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();

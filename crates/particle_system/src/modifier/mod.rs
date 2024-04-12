@@ -1,4 +1,3 @@
-pub use base::*;
 pub use color_by_speed::*;
 pub use trail::*;
 pub use color_over_lifetime::*;
@@ -8,7 +7,6 @@ pub use gravity::*;
 pub use limit_velocity_over_lifetime::*;
 pub use local_position::*;
 pub use noise::*;
-pub use render_world_matrix::*;
 pub use rotation_by_speed::*;
 pub use rotation_over_lifetime::*;
 pub use size_by_speed::*;

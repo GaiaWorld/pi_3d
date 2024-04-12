@@ -8,7 +8,6 @@ use crate::{
     cullings::prelude::*,
     geometry::prelude::*,
     renderers::prelude::*,
-    materials::prelude::*,
 };
 
 use super::{prelude::*, environment::{brdf::*, environment_texture::{EnvIrradiance, EnvTexture, EnvSampler, EnvTextureSlot}}, pass_render_target::*};
@@ -234,6 +233,8 @@ impl ActionScene {
             .insert(SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count)))
             .insert(MainCameraOpaqueTarget(None))
             .insert(MainCameraDepthTarget(None))
+            .insert(BatchParamOpaque::default())
+            .insert(BatchParamTransparent::default())
             ;
 
         entitycmds.insert(SceneShadowRenderTarget(None));

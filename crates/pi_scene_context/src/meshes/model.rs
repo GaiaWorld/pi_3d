@@ -86,7 +86,10 @@ impl Default for ModelVelocity {
 //     }
 // }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
+pub struct ModelStatic;
+
+#[derive(Component, Clone)]
 pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
 impl BindModel {
     pub fn new(
@@ -100,6 +103,9 @@ impl BindModel {
         }
     }
 }
+
+#[derive(Resource)]
+pub struct CommonBindModel(pub BindModel);
 
 #[derive(Debug, Component, Clone, Default)]
 pub struct RecordIndiceRenderRange(pub IndiceRenderRange);

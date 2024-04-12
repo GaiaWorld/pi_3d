@@ -225,6 +225,7 @@ impl StateGeometryBuffer {
         for _ in 0..size {
             data.push(0);
         }
+        log::error!("StateGeometryBuffer {}", data.len());
         if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
             Some(Self {
                 vertices: vec![],
@@ -374,9 +375,9 @@ pub fn sys_info_resource(
         states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
     );
     log::warn!(
-        "PSCount: {:?}, PSPerformance: {:?}, PSEmitMatrix: {:?}, PSDirection: {:?}, PSUpdate: {:?}, PSUpdateTrail: {:?}, {:?}, {:?}, {:?}, {:?}",
+        "PSCount: {:?}, PSPerformance: {:?}, sys_emitmatrix: {:?}, sys_direction: {:?}, sys_update_buffer: {:?}, sys_update_buffer_trail: {:?}, sys_emission: {:?}, sys_emitter: {:?}, sys_force_over_life_time: {:?}, sys_gravity: {:?}",
         psperformance.particles, performance.particlesystem, psperformance.sys_emitmatrix, psperformance.sys_direction, psperformance.sys_update_buffer, psperformance.sys_update_buffer_trail
-        , psperformance.sys_emission, psperformance.sys_emitter, psperformance.sys_ids, psperformance.sys_orbit_over_life_time
+        , psperformance.sys_emission, psperformance.sys_emitter, psperformance.sys_force_over_life_time, psperformance.sys_gravity
     );
 }
 

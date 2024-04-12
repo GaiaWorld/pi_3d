@@ -16,16 +16,17 @@ pub fn sys_create_renderer(
     mut commands: Commands,
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
-    mut viewers: Query<(&mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
+    mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
     mut error: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
-        if let Ok((mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
+        if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
             match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
                     if let Some(mut cmd) = commands.get_entity(entity) {
                         cmd.insert(GraphId(nodeid));
+                        cmd.insert(sceneid.clone());
                         ActionRenderer::init(&mut cmd, id_viewer, passtag, transparent);
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
@@ -182,7 +183,7 @@ pub fn sys_act_renderer_connect(
                     error.graphic(before, err);
                 }
             }
-            render_graphic.dump_graphviz();
+            // render_graphic.dump_graphviz();
         }
     });
 }

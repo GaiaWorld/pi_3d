@@ -50,6 +50,9 @@ impl UnlitShader {
             ]
         );
 
+        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from("uMainAtlas"), [11., 11., 0., 0.], true));
+
+        nodemat.apply::<BlockUVAtlas>();
         nodemat.apply::<BlockUVOffsetSpeed>();
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();

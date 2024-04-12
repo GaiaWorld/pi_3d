@@ -52,6 +52,7 @@ impl TwoOpacityMixShader {
         nodemat.include(&Atom::from(BlockTextureChannel::KEY), infos);
         nodemat.include(&Atom::from(BlockFresnel::KEY), infos);
         nodemat.include(&Atom::from(BlockViewDirection::KEY), infos);
+        nodemat.include(&Atom::from(BlockUVAtlas::KEY), infos);
         nodemat.include(&Atom::from(BlockUVOffsetSpeed::KEY), infos);
         nodemat.include(&Atom::from(BlockMainTexture::KEY), infos);
         nodemat.include(&Atom::from(BlockMainTextureUVOffsetSpeed::KEY), infos);

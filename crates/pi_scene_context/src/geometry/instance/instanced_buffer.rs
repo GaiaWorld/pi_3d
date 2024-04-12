@@ -46,6 +46,9 @@ pub struct InstanceBufferAllocator {
     one_mesh_max_instance_bytes: u32,
 }
 impl InstanceBufferAllocator {
+    pub fn one_mesh_max_instance_bytes(&self) -> usize {
+        self.one_mesh_max_instance_bytes as usize
+    }
     pub fn check(&self, buffer: &Buffer) -> bool {
         let mut result = true;
         self.list.iter().for_each(|item| {
@@ -60,6 +63,8 @@ impl InstanceBufferAllocator {
         for _ in 0..one_mesh_max_instance_bytes {
             data.push(0);
         }
+        
+        // log::error!("InstanceBufferAllocator {}", data.len());
         let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None).unwrap();
 
         let first = InstanceCacheBuffer {
@@ -104,6 +109,7 @@ impl InstanceBufferAllocator {
             for _ in byte_size..self.one_mesh_max_instance_bytes as usize {
                 data.push(0);
             }
+            log::error!("InstanceBufferAllocator Collect {}", data.len());
             if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
                 self.list.push(InstanceCacheBuffer {
                     vertices,

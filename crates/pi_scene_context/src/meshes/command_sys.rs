@@ -1,6 +1,5 @@
 
 use pi_scene_shell::prelude::*;
-use pi_scene_math::*;
 
 use crate::{
     cullings::prelude::*, geometry::{
@@ -24,10 +23,11 @@ pub fn sys_create_mesh(
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
+    commonbindmodel: Res<CommonBindModel>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
-        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0) == false {
+        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
     });
@@ -396,6 +396,7 @@ impl ActionMesh {
         empty: &SingleEmptyEntity,
         state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
+        commonbindmodel: &CommonBindModel,
     ) -> bool {
         let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -410,9 +411,14 @@ impl ActionMesh {
         // ActionMesh::as_instance_source(&mut entitycmd);
         entitycmd.insert(TargetAnimatorableIsRunning).insert(InstanceAttributeAnimated::default());
 
-        if let Some(bind) = BindModel::new(allocator) {
-            // log::info!("BindModel New");
-            entitycmd.insert(bind);
+        if meshinstanceattributes.bytes().len() > 0 {
+            entitycmd.insert(commonbindmodel.0.clone());
+            entitycmd.insert(ModelStatic);
+        } else {
+            if let Some(bind) = BindModel::new(allocator) {
+                // log::info!("BindModel New");
+                entitycmd.insert(bind);
+            }
         }
 
         entitycmd.insert(MeshLightingMode::default());

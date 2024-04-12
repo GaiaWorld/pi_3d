@@ -18,7 +18,6 @@ pub use base::*;
 pub use command::*;
 pub use command_sys::*;
 pub use float::*;
-pub use mat4::*;
 pub use uint::*;
 pub use int::*;
 pub use vec2::*;

@@ -8,9 +8,7 @@ use pi_trail_renderer::{TrailPoints, TrailBase, TrailBuffer};
 use rand::Rng;
 
 use crate::{
-    tools::*,
-    modifier::*,
-    emitter::ShapeEmitter,
+    modifier::*, prelude::TypeShapeEmitter, tools::*
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
@@ -34,6 +32,8 @@ pub type TCurveValue = Number;
 pub type TCurveInTangent = Number;
 pub type TCurveOutTangent = Number;
 pub type TCurveScalar = Number;
+
+pub const PARTICLE_MIN_VALUE: Number = 0.00000001;
 
 pub enum TCurveMode {
     /**
@@ -75,6 +75,13 @@ pub enum TGradienMode {
     Random,
 }
 
+fn _idx_constant(_idx: usize) -> usize {
+    0
+}
+fn _idx(idx: usize) -> usize {
+    idx
+}
+
 #[derive(Resource)]
 pub struct ParticleSystemInstant(pub pi_time::Instant);
 
@@ -87,7 +94,9 @@ pub struct ParticleSystemPerformance {
     pub sys_start_size: u32,
     pub sys_start_rotation: u32,
     pub sys_start_color: u32,
+    pub sys_gravity: u32,
     pub sys_start_texture_sheet: u32,
+    pub sys_force_over_life_time: u32,
     pub sys_size_over_life_time: u32,
     pub sys_color_over_life_time: u32,
     pub sys_rotation_over_life_time: u32,
@@ -124,6 +133,8 @@ impl ParticleSystemPerformance {
         + self.sys_start_rotation
         + self.sys_start_color
         + self.sys_start_texture_sheet
+        + self.sys_gravity
+        + self.sys_force_over_life_time
         + self.sys_size_over_life_time
         + self.sys_color_over_life_time
         + self.sys_rotation_over_life_time
@@ -212,7 +223,7 @@ pub struct ParticleCalculatorEmission {
 }
 
 #[derive(Component, Deref)]
-pub struct ParticleCalculatorShapeEmitter(pub(crate) ShapeEmitter);
+pub struct ParticleCalculatorShapeEmitter(pub(crate) TypeShapeEmitter);
 #[derive(Component)]
 pub struct ParticleCalculatorStartLifetime(pub(crate) FloatInterpolation);
 #[derive(Component)]
@@ -223,7 +234,7 @@ pub struct ParticleCalculatorStartSpeed(pub(crate) FloatInterpolation);
 pub struct ParticleCalculatorStartSize(pub(crate) StartSize);
 
 #[derive(Component)]
-pub struct ParticleCalculatorGravity(pub(crate) FloatInterpolation);
+pub struct ParticleCalculatorGravity(pub(crate) Gravity, pub Vector3);
 
 #[derive(Component)]
 pub struct ParticleCalculatorStartRotation(pub(crate) StartRotation);
@@ -345,6 +356,7 @@ impl ResParticleCommonBuffer {
             data.push(0);
         }
 
+        log::error!("ResParticleCommonBuffer {}", data.len());
         let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None);
         Self(buffer)
     }
@@ -377,7 +389,7 @@ pub struct ResParticleTrailBuffer(pub Option<TrailBuffer>);
 impl TAssetCapacity for ResParticleTrailBuffer {
     const ASSET_TYPE: &'static str = "PARTICLE_TRAIL_BUFFER";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 1024 * 1024, max: 50 * 1024 * 1024, timeout: 1000 }
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 2 * 1024 * 1024, timeout: 1000 }
     }
 }
 
@@ -455,7 +467,7 @@ impl ParticleTrail {
         localpositions: &Vec<Vector3>,
         localscalings: &Vec<Vector3>,
         localrotations: &Vec<Vector3>,
-        worldmatrixs: &Vec<EmitMatrix>,
+        worldmatrixs: &ParticleEmitMatrix,
         directions: &Vec<Direction>,
         trailmodifier: &TrailModifier,
     ) {
@@ -468,7 +480,7 @@ impl ParticleTrail {
             let agecontrol = self.lifetime.get(*idx).unwrap();
 
             let direction = directions.get(*idx).unwrap();
-            let translation = localpositions.get(*idx).unwrap() + direction.value.scale(-1. * 0.0000001 / f32::max(direction.length, 1.));
+            let translation = localpositions.get(*idx).unwrap() + direction.value.scale(-1. * PARTICLE_MIN_VALUE / f32::max(direction.length, 1.));
             let scaling = localscalings.get(*idx).unwrap();
             let eulers = localrotations.get(*idx).unwrap();
             let mut localmatrix = Matrix::identity();
@@ -492,7 +504,7 @@ impl ParticleTrail {
             } else {
                 CoordinateSytem3::transform_normal(&Vector3::new(1., 0., 0.), &localmatrix, &mut localscaling);
                 let len = CoordinateSytem3::length(&localscaling);
-                if len < 0.00000001 { 0. } else { 1. / len }
+                if len < PARTICLE_MIN_VALUE { 0. } else { 1. / len }
             };
 
             // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
@@ -512,7 +524,7 @@ impl ParticleTrail {
         localpositions: &Vec<Vector3>,
         localscalings: &Vec<Vector3>,
         localrotations: &Vec<Vector3>,
-        worldmatrixs: &Vec<EmitMatrix>,
+        worldmatrixs: &ParticleEmitMatrix,
         time: &ParticleSystemTime,
         trailmodifier: &TrailModifier,
     ) {
@@ -549,7 +561,7 @@ impl ParticleTrail {
             } else {
                 CoordinateSytem3::transform_normal(&basesize, &localmatrix, &mut localscaling);
                 let len = CoordinateSytem3::length(&localscaling);
-                if len < 0.00000001 { 0. } else { 1. / len }
+                if len < PARTICLE_MIN_VALUE { 0. } else { 1. / len }
             };
 
             // log::warn!("Trail: {:?}, {:?}", age, trailworldspace);
@@ -602,7 +614,7 @@ pub struct ParticleActive(pub bool);
 pub struct ParticleRunningState(pub(crate) bool);
 
 #[derive(Component)]
-pub struct ParticleModifyState(pub(crate) bool);
+pub struct ParticleModifyState;
 
 #[derive(Component)]
 pub struct ParticleStart(pub(crate) bool);
@@ -989,7 +1001,7 @@ impl ParticleLocalPosition {
         directions: &mut Vec<Direction>,
         randomlist: &Vec<BaseRandom>,
         time: &ParticleSystemTime,
-        emitter: &ShapeEmitter,
+        emitter: &TypeShapeEmitter,
         startspeed: &ParticleCalculatorStartSpeed,
     ) {
         let emission_total = newids.len() as f32;
@@ -1169,22 +1181,52 @@ impl ParticleColor {
 }
 
 /// 发射时的全局矩阵 - 在 World 空间发射在发射时即固定, 在 Local 空间发射实时更新为发射器全局矩阵
-#[derive(Component, Deref)]
-pub struct ParticleEmitMatrix(pub(crate) Vec<EmitMatrix>);
+#[derive(Component)]
+pub struct ParticleEmitMatrix {
+    pub(crate) emits: Vec<EmitMatrix>,
+    scaling_mode: fn(& Isometry3, & Vector3, & Vector3, & Matrix, & Matrix, & mut Vector3, & mut Matrix, & mut Matrix),
+    simulation: fn(& mut Vec<EmitMatrix>, & Vec<usize>, & Vec<usize>, & Vector3, & Rotation3, & Matrix, & Matrix),
+    idx: fn(usize) -> usize,
+}
 impl ParticleEmitMatrix {
-    pub fn new(maxcount: usize) -> Self {
-        let mut vec = Vec::with_capacity(maxcount);
+    pub fn new(maxcount: usize, scalingmode: &EScalingMode, simulation_mode: &EParticleSimulationSpace) -> Self {
+        let scaling_mode = match scalingmode {
+            EScalingMode::Hierarchy     => ParticleEmitMatrix::scaling_mode_hierarchy,
+            EScalingMode::Local         => ParticleEmitMatrix::scaling_mode_local,
+            EScalingMode::Shape         => ParticleEmitMatrix::scaling_mode_shape,
+        };
+        let simulation = match simulation_mode {
+            EParticleSimulationSpace::Local         => ParticleEmitMatrix::simulation_local,
+            EParticleSimulationSpace::World         => ParticleEmitMatrix::simulation_world,
+        };
+        let idx = match simulation_mode {
+            EParticleSimulationSpace::Local         => _idx_constant,
+            EParticleSimulationSpace::World         => _idx,
+        };
+        let maxcount = match simulation_mode {
+            EParticleSimulationSpace::Local         => 1 as usize,
+            EParticleSimulationSpace::World         => maxcount,
+        };
+
+        let mut emits = Vec::with_capacity(maxcount);
         for _ in 0..maxcount {
-            vec.push(EmitMatrix::default());
+            emits.push(EmitMatrix::default());
         }
-        Self(vec)
+
+        Self {
+            emits,
+            scaling_mode,
+            simulation,
+            idx,
+        }
+    }
+    pub fn get(&self, idx: usize) -> Option<&EmitMatrix> {
+        self.emits.get((self.idx)(idx))
     }
     pub fn emit(
         &mut self,
         newids: &Vec<IdxParticle>,
         ids: &Vec<IdxParticle>,
-        simulation: &EParticleSimulationSpace,
-        scalingmode: &EScalingMode,
         _world_matrix: &Matrix,
         _world_matrix_inv: &Matrix,
         _iso: &Isometry3,
@@ -1195,127 +1237,270 @@ impl ParticleEmitMatrix {
     ) {
         // log::warn!("EmitMatrix:");
         let mut scaling = global_scaling.clone();
-        let mut emitscaling = global_scaling.clone();
-        // let mut pose_invert = if let Some(temp) = world_matrix.append_translation(&global_position.scale(-1.)).try_inverse() {
-        //     temp
-        // } else { Matrix::identity() };
+        let mut emittermatrix = Matrix::identity();
+        let mut emittermatrix_invert = Matrix::identity();
+        (self.scaling_mode)(_iso, global_scaling, local_scaling, _world_matrix, _world_matrix_inv, &mut scaling, &mut emittermatrix, &mut emittermatrix_invert);
 
-        let (emittermatrix, emittermatrix_invert) = match scalingmode {
-            EScalingMode::Hierarchy => {
-                (_world_matrix.clone(), _world_matrix_inv.clone())
-            },
-            EScalingMode::Local => {
-                scaling.copy_from(local_scaling);
-                emitscaling.copy_from(local_scaling);
+        (self.simulation)(&mut self.emits, ids, newids, &scaling, global_rotation, &emittermatrix, &emittermatrix_invert);
 
-                let mut emittermatrix = _iso.to_matrix(); // Matrix::identity();
-                emittermatrix.append_nonuniform_scaling_mut(&emitscaling);
-                // CoordinateSytem3::matrix4_compose_rotation(&emitscaling, &global_rotation, &global_position, &mut emittermatrix);
-                let emittermatrix_invert = if let Some(temp) = emittermatrix.try_inverse() {
-                    temp
-                } else { Matrix::identity() };
-                (emittermatrix, emittermatrix_invert)
-            },
-            EScalingMode::Shape => {
-                scaling.copy_from_slice(&[1., 1., 1.]);
-
-                let mut emittermatrix = _iso.to_matrix(); // Matrix::identity();
-                emittermatrix.append_nonuniform_scaling_mut(&emitscaling);
-                // CoordinateSytem3::matrix4_compose_rotation(&emitscaling, &global_rotation, &global_position, &mut emittermatrix);
-                let emittermatrix_invert = if let Some(temp) = emittermatrix.try_inverse() {
-                    temp
-                } else { Matrix::identity() };
-                (emittermatrix, emittermatrix_invert)
-            },
-        };
-
-        // log::warn!("Emit Matrix : {:?}", emittermatrix);
-
-        match simulation {
-            EParticleSimulationSpace::Local => {
-                ids.iter().for_each(|idx| {
-                    let item = self.0.get_mut(*idx).unwrap();
-                    // item.position.clone_from(&global_position);
-                    item.scaling.clone_from(&scaling);
-                    item.rotation.clone_from(&global_rotation);
-                    item.matrix.clone_from(&emittermatrix);
-                    item.matrix_invert.clone_from(&emittermatrix_invert);
-                });
-            },
-            EParticleSimulationSpace::World => {
-                newids.iter().for_each(|idx| {
-                    let item = self.0.get_mut(*idx).unwrap();
-                    // item.position.clone_from(&global_position);
-                    item.scaling.clone_from(&scaling);
-                    item.rotation.clone_from(&global_rotation);
-                    item.matrix.clone_from(&emittermatrix);
-                    item.matrix_invert.clone_from(&emittermatrix_invert);
-                });
-            },
-        }
         // log::warn!("EmitMatrix: End");
+    }
+    pub fn scaling_mode_hierarchy<'a>(_iso: &'a Isometry3, _global_scaling: &'a Vector3, _local_scaling: &'a Vector3, _world_matrix: &'a Matrix, _world_matrix_inv: &'a Matrix, _resultscale: &'a mut Vector3, result_world_matrix: &'a mut Matrix, result_world_matrix_inv: &'a mut Matrix) {
+        result_world_matrix.clone_from(_world_matrix);
+        result_world_matrix_inv.clone_from(_world_matrix_inv);
+    }
+    pub fn scaling_mode_local<'a>(_iso: &'a Isometry3, _global_scaling: &'a Vector3, local_scaling: &'a Vector3, _world_matrix: &'a Matrix, _world_matrix_inv: &'a Matrix, resultscale: &'a mut Vector3, result_world_matrix: &'a mut Matrix, result_world_matrix_inv: &'a mut Matrix) {
+        
+        resultscale.copy_from(local_scaling);
+
+
+        result_world_matrix.clone_from(&_iso.to_matrix()); // Matrix::identity();
+        result_world_matrix.append_nonuniform_scaling_mut(local_scaling);
+        if let Some(temp) = result_world_matrix.try_inverse() {
+            result_world_matrix_inv.clone_from(&temp);
+        } else {
+            result_world_matrix_inv.fill_with_identity();
+        };
+    }
+    pub fn scaling_mode_shape<'a>(_iso: &'a Isometry3, global_scaling: &'a Vector3, _local_scaling: &'a Vector3, _world_matrix: &'a Matrix, _world_matrix_inv: &'a Matrix, resultscale: &'a mut Vector3, result_world_matrix: &'a mut Matrix, result_world_matrix_inv: &'a mut Matrix) {
+        
+        resultscale.copy_from_slice(&[1., 1., 1.]);
+
+        result_world_matrix.clone_from(&_iso.to_matrix()); // Matrix::identity();
+        result_world_matrix.append_nonuniform_scaling_mut(global_scaling);
+        if let Some(temp) = result_world_matrix.try_inverse() {
+            result_world_matrix_inv.clone_from(&temp);
+        } else {
+            result_world_matrix_inv.fill_with_identity();
+        };
+    }
+    pub fn simulation_local<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a Rotation3, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
+
+        let item = emits.get_mut(0).unwrap();
+        item.scaling.clone_from(scaling);
+        item.rotation.clone_from(global_rotation);
+        item.matrix.clone_from(emittermatrix);
+        item.matrix_invert.clone_from(emittermatrix_invert);
+    }
+    pub fn simulation_world<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a Rotation3, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
+        _newids.iter().for_each(|idx| {
+            let item = emits.get_mut(*idx).unwrap();
+            item.scaling.clone_from(scaling);
+            item.rotation.clone_from(global_rotation);
+            item.matrix.clone_from(emittermatrix);
+            item.matrix_invert.clone_from(emittermatrix_invert);
+        });
     }
 }
 
 /// 粒子局部重力影响
-#[derive(Component, Deref)]
-pub struct ParticleGravityFactor(pub(crate) Vec<GravityFactor>);
+#[derive(Component)]
+pub struct ParticleGravityFactor {
+    pub(crate) values: Vec<GravityFactor>,
+    pub(crate) _runcall: fn(&mut Vec<GravityFactor>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &ParticleEmitMatrix, &Vec<BaseRandom>, &ParticleSystemTime, &ParticleCalculatorGravity),
+    pub(crate) _idxcall: fn(usize) -> usize,
+}
 impl ParticleGravityFactor {
-    pub fn new(maxcount: usize) -> Self {
+    pub fn new(maxcount: usize, calculator: &ParticleCalculatorGravity, simulation_mode: &EParticleSimulationSpace) -> Self {
         let mut vec = Vec::with_capacity(maxcount);
-        for _ in 0..maxcount {
-            vec.push(GravityFactor::default());
+        match (&calculator.0.interpolation.mode, simulation_mode) {
+            (EInterpolationCurveMode::Constant, EParticleSimulationSpace::Local) => {
+                let maxcount = 1;
+                for _ in 0..maxcount {
+                    vec.push(GravityFactor::default());
+                }
+                Self {
+                    values: vec,
+                    _runcall: Self::_run_constant,
+                    _idxcall: _idx_constant,
+                }
+            },
+            (_, _) => {
+                for _ in 0..maxcount {
+                    vec.push(GravityFactor::default());
+                }
+                Self {
+                    values: vec,
+                    _runcall: Self::_run,
+                    _idxcall: _idx,
+                }
+            }
         }
-        Self(vec)
     }
     pub fn run(
         &mut self,
         ids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
-        emitmatrixs: &Vec<EmitMatrix>,
+        emitmatrixs: &ParticleEmitMatrix,
         randomlist: &Vec<BaseRandom>,
         time: &ParticleSystemTime,
-        gravity: &Vector3,
-        calculator: &Gravity,
+        calculator: &ParticleCalculatorGravity,
+    ) {
+        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // ids.iter().for_each(|idx| {
+        //     let item = self.values.get_mut(*idx).unwrap();
+        //     let randoms = randomlist.get(*idx).unwrap();
+        //     let age = ages.get(*idx).unwrap();
+            
+        //     let mut factor = 0.;
+        //     calculator.0.modify(&mut factor, age.progress, delta_seconds, randoms);
+
+        //     if factor.abs() < MIN_VALUE {
+        //         item.value.copy_from_slice(&[0., 0., 0.]);
+        //     } else {
+        //         let emitmatrix = emitmatrixs.get(*idx).unwrap();
+        //         CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
+        //     }
+        // });
+        (self._runcall)(&mut self.values, ids, ages, emitmatrixs, randomlist, time, calculator);
+    }
+    pub fn get(&self, idx: usize) -> Option<&GravityFactor> {
+        self.values.get((self._idxcall)(idx))
+    }
+    fn _run_constant<'a>(
+        items: &'a mut Vec<GravityFactor>,
+        _ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        emitmatrixs: &'a ParticleEmitMatrix,
+        randomlist: &'a Vec<BaseRandom>,
+        time: &'a ParticleSystemTime,
+        calculator: &'a ParticleCalculatorGravity,
+    ) {
+        let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+
+        let item = items.get_mut(0).unwrap();
+        let randoms = randomlist.get(0).unwrap();
+        let age = ages.get(0).unwrap();
+        let emitmatrix = emitmatrixs.get(0).unwrap();
+        
+        let mut factor = 0.;
+        calculator.0.modify(&mut factor, age.progress, delta_seconds, randoms);
+        // log::error!("Gravity: {}", factor);
+        if factor.abs() < PARTICLE_MIN_VALUE {
+            item.value.copy_from_slice(&[0., 0., 0.]);
+        } else {
+            CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
+        }
+    }
+    fn _run<'a>(
+        items: &'a mut Vec<GravityFactor>,
+        ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        emitmatrixs: &'a ParticleEmitMatrix,
+        randomlist: &'a Vec<BaseRandom>,
+        time: &'a ParticleSystemTime,
+        calculator: &'a ParticleCalculatorGravity,
     ) {
         let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         ids.iter().for_each(|idx| {
-            let item = self.0.get_mut(*idx).unwrap();
+            let item = items.get_mut(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
             let age = ages.get(*idx).unwrap();
             let emitmatrix = emitmatrixs.get(*idx).unwrap();
             
             let mut factor = 0.;
-            calculator.modify(&mut factor, age.progress, delta_seconds, randoms);
+            calculator.0.modify(&mut factor, age.progress, delta_seconds, randoms);
 
-            CoordinateSytem3::transform_normal(&gravity.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
+            CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
         });
     }
 }
 
 /// 粒子局部外力影响
-#[derive(Component, Deref)]
-pub struct ParticleForce(pub(crate) Vec<Force>);
+#[derive(Component)]
+pub struct ParticleForce {
+    pub(crate) values: Vec<Force>,
+    pub(crate) _runcall: fn(&mut Vec<Force>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &ParticleEmitMatrix, &Vec<BaseRandom>, &ParticleSystemTime, &ForceOverLifetime),
+    pub(crate) _idxcall: fn(usize) -> usize,
+}
 impl ParticleForce {
-    pub fn new(maxcount: usize) -> Self {
-        let mut vec = Vec::with_capacity(maxcount);
-        for _ in 0..maxcount {
-            vec.push(Force::default());
+    pub fn new(maxcount: usize, is_local_space: bool, constant: bool) -> Self {
+        match (is_local_space, constant) {
+            (true, true) => {
+                let maxcount = 1;
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount {
+                    vec.push(Force::default());
+                }
+                Self {
+                    values: vec,
+                    _runcall: Self::_run_local_constant,
+                    _idxcall: _idx_constant,
+                }
+            },
+            (_, _) => {
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount {
+                    vec.push(Force::default());
+                }
+                Self {
+                    values: vec,
+                    _runcall: Self::_run,
+                    _idxcall: _idx_constant,
+                }
+            }
         }
-        Self(vec)
+    }
+    pub fn get(&self, idx: usize) -> Option<&Force> {
+        self.values.get((self._idxcall)(idx))
     }
     pub fn run(
         &mut self,
         ids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
-        emitmatrixs: &Vec<EmitMatrix>,
+        emitmatrixs: &ParticleEmitMatrix,
+        randomlist: &Vec<BaseRandom>,
+        time: &ParticleSystemTime,
+        calculator: &ForceOverLifetime,
+    ) {
+        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // ids.iter().for_each(|idx| {
+        //     let item = self.0.get_mut(*idx).unwrap();
+        //     let randoms = randomlist.get(*idx).unwrap();
+        //     let age = ages.get(*idx).unwrap();
+        //     let emitmatrix = emitmatrixs.get(*idx).unwrap();
+
+        //     calculator.modify(item, age.progress, delta_seconds, randoms);
+
+        //     if calculator.is_local_space == false {
+        //         CoordinateSytem3::transform_normal(&item.value.clone(), &emitmatrix.matrix_invert, &mut item.value);
+        //     }
+        // });
+        (self._runcall)(&mut self.values, ids, ages, emitmatrixs, randomlist, time, calculator);
+    }
+    fn _run_local_constant<'a>(
+        items: &mut Vec<Force>,
+        _ids: &Vec<IdxParticle>,
+        ages: &Vec<AgeLifeTime>,
+        emitmatrixs: &ParticleEmitMatrix,
+        randomlist: &Vec<BaseRandom>,
+        time: &ParticleSystemTime,
+        calculator: &ForceOverLifetime,
+    ) {
+        let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        let item = items.get_mut(0).unwrap();
+        let randoms = randomlist.get(0).unwrap();
+        let age = ages.get(0).unwrap();
+        let emitmatrix = emitmatrixs.get(0).unwrap();
+
+        calculator.modify(item, age.progress, delta_seconds, randoms);
+
+        if calculator.is_local_space == false {
+            CoordinateSytem3::transform_normal(&item.value.clone(), &emitmatrix.matrix_invert, &mut item.value);
+        }
+    }
+    fn _run<'a>(
+        items: &mut Vec<Force>,
+        ids: &Vec<IdxParticle>,
+        ages: &Vec<AgeLifeTime>,
+        emitmatrixs: &ParticleEmitMatrix,
         randomlist: &Vec<BaseRandom>,
         time: &ParticleSystemTime,
         calculator: &ForceOverLifetime,
     ) {
         let delta_seconds = time.running_delta_ms as f32 / 1000.0;
         ids.iter().for_each(|idx| {
-            let item = self.0.get_mut(*idx).unwrap();
+            let item = items.get_mut(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
             let age = ages.get(*idx).unwrap();
             let emitmatrix = emitmatrixs.get(*idx).unwrap();
@@ -1365,9 +1550,7 @@ pub struct ParticleSpeedFactor(pub(crate) Vec<SpeedFactor>);
 impl ParticleSpeedFactor {
     pub fn new(maxcount: usize) -> Self {
         let mut vec = Vec::with_capacity(maxcount);
-        for _ in 0..maxcount {
-            vec.push(SpeedFactor::default());
-        }
+        for _ in 0..maxcount { vec.push(SpeedFactor::default()); }
         Self(vec)
     }
     pub fn run(
@@ -1390,42 +1573,215 @@ impl ParticleSpeedFactor {
 }
 
 /// 粒子局部轨道速度向量
-#[derive(Component, Deref)]
-pub struct ParticleOrbitVelocity(pub(crate) Vec<OrbitVelocity>);
+#[derive(Component)]
+pub struct ParticleOrbitVelocity {
+    pub(crate) values: Vec<(Vector3, Number)>,
+    pub(crate) _runcall: fn(&mut Vec<(Vector3, Number)>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &Vec<BaseRandom>, &ParticleCalculatorOrbitVelocity),
+    pub(crate) _idxcall: fn(usize) -> usize,
+}
 impl ParticleOrbitVelocity {
-    pub fn new(maxcount: usize) -> Self {
-        let mut vec = Vec::with_capacity(maxcount);
-        for _ in 0..maxcount {
-            vec.push(OrbitVelocity::default());
+    pub fn new(maxcount: usize, velocity: & ParticleCalculatorOrbitVelocity) -> Self {
+        match velocity.0.constant() {
+            true => {
+                let maxcount = 1;
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount { vec.push((Vector3::zeros(), 0.)); }
+                Self { values: vec, _runcall: Self::_run_local_constant, _idxcall: _idx_constant }
+            },
+            _ => {
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount { vec.push((Vector3::zeros(), 0.)); }
+                Self { values: vec, _runcall: Self::_run, _idxcall: _idx }
+            },
         }
-        Self(vec)
     }
-    pub fn run<T>(
+    pub fn get(&self, idx: usize) -> Option<&(Vector3, Number)> {
+        self.values.get((self._idxcall)(idx))
+    }
+    pub fn run(
         &mut self,
         ids: &Vec<IdxParticle>,
         ages: &Vec<AgeLifeTime>,
         randomlist: &Vec<BaseRandom>,
-        _: &ParticleSystemTime,
-        offset: Result<&ParticleCalculatorOrbitOffset, T>,
-        velocity: Result<&ParticleCalculatorOrbitVelocity, T>,
-        radial: Result<&ParticleCalculatorOrbitRadial, T>,
+        velocity: &ParticleCalculatorOrbitVelocity,
     ) {
-        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        // ids.iter().for_each(|idx| {
+        //     let item = self.0.get_mut(*idx).unwrap();
+        //     let randoms = randomlist.get(*idx).unwrap();
+        //     let age = ages.get(*idx).unwrap();
+
+        //     if let Ok(calculator) = offset {
+        //         calculator.0.compute(age.progress, randoms, &mut item.offset);
+        //     }
+        //     if let Ok(calculator) = velocity {
+        //         calculator.0.compute(age.progress, randoms, &mut item.orbit);
+        //         item.orbit_len = CoordinateSytem3::length_squared(&item.orbit);
+        //     }
+        //     if let Ok(calculator) = radial {
+        //         item.radial = calculator.0.interpolate(age.progress, randoms.w);
+        //     }
+        // });
+        (self._runcall)(&mut self.values, ids, ages, randomlist, velocity);
+    }
+    fn _run_local_constant<'a>(
+        items: &'a mut Vec<(Vector3, Number)>,
+        _ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        randomlist: &'a Vec<BaseRandom>,
+        calculator: &'a ParticleCalculatorOrbitVelocity,
+    ) {
+        let item = items.get_mut(0).unwrap();
+        let randoms = randomlist.get(0).unwrap();
+        let age = ages.get(0).unwrap();
+
+        calculator.0.compute(age.progress, randoms, &mut item.0);
+        item.1 = CoordinateSytem3::length_squared(&item.0);
+    }
+    fn _run<'a>(
+        items: &'a mut Vec<(Vector3, Number)>,
+        ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        randomlist: &'a Vec<BaseRandom>,
+        calculator: &'a ParticleCalculatorOrbitVelocity,
+    ) {
         ids.iter().for_each(|idx| {
-            let item = self.0.get_mut(*idx).unwrap();
+            let item = items.get_mut(*idx).unwrap();
             let randoms = randomlist.get(*idx).unwrap();
             let age = ages.get(*idx).unwrap();
 
-            if let Ok(calculator) = offset {
-                calculator.0.compute(age.progress, randoms, &mut item.offset);
-            }
-            if let Ok(calculator) = velocity {
-                calculator.0.compute(age.progress, randoms, &mut item.orbit);
-                item.orbit_len = CoordinateSytem3::length_squared(&item.orbit);
-            }
-            if let Ok(calculator) = radial {
-                item.radial = calculator.0.interpolate(age.progress, randoms.w);
-            }
+            calculator.0.compute(age.progress, randoms, &mut item.0);
+            item.1 = CoordinateSytem3::length_squared(&item.0);
+        });
+    }
+}
+
+/// 粒子局部轨道速度向量
+#[derive(Component)]
+pub struct ParticleOrbitOffset {
+    pub(crate) values: Vec<Vector3>,
+    pub(crate) _runcall: fn(&mut Vec<Vector3>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &Vec<BaseRandom>, &ParticleCalculatorOrbitOffset),
+    pub(crate) _idxcall: fn(usize) -> usize,
+}
+impl ParticleOrbitOffset {
+    pub fn new(maxcount: usize, offset: & ParticleCalculatorOrbitOffset) -> Self {
+        match offset.0.constant() {
+            true => {
+                let maxcount = 1;
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount { vec.push(Vector3::zeros()); }
+                Self { values: vec, _runcall: Self::_run_local_constant, _idxcall: _idx_constant }
+            },
+            _ => {
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount { vec.push(Vector3::zeros()); }
+                Self { values: vec, _runcall: Self::_run, _idxcall: _idx }
+            },
+        }
+    }
+    pub fn get(&self, idx: usize) -> Option<&Vector3> {
+        self.values.get((self._idxcall)(idx))
+    }
+    pub fn run(
+        &mut self,
+        ids: &Vec<IdxParticle>,
+        ages: &Vec<AgeLifeTime>,
+        randomlist: &Vec<BaseRandom>,
+        offset: &ParticleCalculatorOrbitOffset,
+    ) {
+        (self._runcall)(&mut self.values, ids, ages, randomlist, offset);
+    }
+    fn _run_local_constant<'a>(
+        items: &'a mut Vec<Vector3>,
+        _ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        randomlist: &'a Vec<BaseRandom>,
+        calculator: &'a ParticleCalculatorOrbitOffset,
+    ) {
+        let item = items.get_mut(0).unwrap();
+        let randoms = randomlist.get(0).unwrap();
+        let age = ages.get(0).unwrap();
+
+            calculator.0.compute(age.progress, randoms, item);
+    }
+    fn _run<'a>(
+        items: &'a mut Vec<Vector3>,
+        ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        randomlist: &'a Vec<BaseRandom>,
+        calculator: &'a ParticleCalculatorOrbitOffset,
+    ) {
+        ids.iter().for_each(|idx| {
+            let item = items.get_mut(*idx).unwrap();
+            let randoms = randomlist.get(*idx).unwrap();
+            let age = ages.get(*idx).unwrap();
+
+                calculator.0.compute(age.progress, randoms, item);
+        });
+    }
+}
+
+/// 粒子局部轨道速度向量
+#[derive(Component)]
+pub struct ParticleOrbitRadial {
+    pub(crate) values: Vec<Number>,
+    pub(crate) _runcall: fn(&mut Vec<Number>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &Vec<BaseRandom>, &ParticleCalculatorOrbitRadial),
+    pub(crate) _idxcall: fn(usize) -> usize,
+}
+impl ParticleOrbitRadial {
+    pub fn new(maxcount: usize, offset: & ParticleCalculatorOrbitRadial) -> Self {
+        match offset.0.mode {
+            EInterpolationCurveMode::Constant => {
+                let maxcount = 1;
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount { vec.push(0.); }
+                Self { values: vec, _runcall: Self::_run_local_constant, _idxcall: _idx_constant }
+            },
+            _ => {
+                let mut vec = Vec::with_capacity(maxcount);
+                for _ in 0..maxcount { vec.push(0.); }
+                Self { values: vec, _runcall: Self::_run, _idxcall: _idx }
+            },
+        }
+    }
+    pub fn get(&self, idx: usize) -> Option<&Number> {
+        self.values.get((self._idxcall)(idx))
+    }
+    pub fn run(
+        &mut self,
+        ids: &Vec<IdxParticle>,
+        ages: &Vec<AgeLifeTime>,
+        randomlist: &Vec<BaseRandom>,
+        radial: &ParticleCalculatorOrbitRadial,
+    ) {
+        (self._runcall)(&mut self.values, ids, ages, randomlist, radial);
+    }
+    fn _run_local_constant<'a>(
+        items: &'a mut Vec<Number>,
+        _ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        randomlist: &'a Vec<BaseRandom>,
+        calculator: &'a ParticleCalculatorOrbitRadial,
+    ) {
+        let item = items.get_mut(0).unwrap();
+        let randoms = randomlist.get(0).unwrap();
+        let age = ages.get(0).unwrap();
+
+            *item = calculator.0.interpolate(age.progress, randoms.w);
+    }
+    fn _run<'a>(
+        items: &'a mut Vec<Number>,
+        ids: &'a Vec<IdxParticle>,
+        ages: &'a Vec<AgeLifeTime>,
+        randomlist: &'a Vec<BaseRandom>,
+        calculator: &'a ParticleCalculatorOrbitRadial,
+    ) {
+        ids.iter().for_each(|idx| {
+            let item = items.get_mut(*idx).unwrap();
+            let randoms = randomlist.get(*idx).unwrap();
+            let age = ages.get(*idx).unwrap();
+
+                *item = calculator.0.interpolate(age.progress, randoms.w);
         });
     }
 }
@@ -1473,14 +1829,16 @@ impl ParticleDirection {
     pub fn run(
         &mut self,
         ids: &Vec<IdxParticle>,
-        forces: &Vec<Force>,
-        gravities: &Vec<GravityFactor>,
+        forces: &ParticleForce,
+        gravities: &ParticleGravityFactor,
         velocities: &Vec<Velocity>,
         limitscalars: &Vec<LimitVelocityScalar>,
-        orbits: &Vec<OrbitVelocity>,
+        orbitsvelocity: &ParticleOrbitVelocity,
+        orbitsoffset: &ParticleOrbitOffset,
+        orbitsradial: &ParticleOrbitRadial,
         speedfactors: &Vec<SpeedFactor>,
         positions: &mut Vec<Vector3>,
-        emitter: &ShapeEmitter,
+        emitter: &TypeShapeEmitter,
         time: &ParticleSystemTime,
     ) {
         // log::warn!("Direction: ");
@@ -1492,7 +1850,9 @@ impl ParticleDirection {
             let gravity: &GravityFactor = gravities.get(*idx).unwrap();
             let velocity: &Velocity = velocities.get(*idx).unwrap();
             let limitscalar: &LimitVelocityScalar = limitscalars.get(*idx).unwrap();
-            let orbit: &OrbitVelocity = orbits.get(*idx).unwrap();
+            let orbit_offset: &Vector3 = orbitsoffset.get(*idx).unwrap();
+            let orbit_velocity: &(Vector3, Number) = orbitsvelocity.get(*idx).unwrap();
+            let orbit_radial: &Number = orbitsradial.get(*idx).unwrap();
             let speedfactor: &SpeedFactor = speedfactors.get(*idx).unwrap();
             let direction: &mut Direction = self.0.get_mut(*idx).unwrap();
             let position = positions.get_mut(*idx).unwrap();
@@ -1503,23 +1863,22 @@ impl ParticleDirection {
 
             let mut velocity = velocity.value + direction.velocity_force + direction.velocity_start;
 
-            // 轨道速度
-            let mut orbit_center: Vector3 = Vector3::zeros();
-            emitter.orbit_center(&position, &orbit.offset, &mut orbit_center);
-            let radial_vec: Vector3 = position.sub(&orbit_center);
-            let orbit_direction = if orbit.orbit_len < 0.00000001 {
-                let temp = delta_seconds * speedfactor.value;
-                let orbit_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(orbit.orbit.x * temp, orbit.orbit.y * temp, orbit.orbit.z * temp);
-                orbit_rotation.transform_vector(&radial_vec) - radial_vec
-            }
-            else {
-                Vector3::zeros()
-            };
+            // log::error!("Velocity: {:?}", (velocity, force.value, gravity.value, direction.velocity_start));
 
-            if 0.00000001 < orbit.radial.abs() {
+            // 轨道速度
+            let mut orbit_direction = Vector3::zeros();
+            let mut orbit_center: Vector3 = Vector3::zeros();
+            emitter.orbit_center(&position, orbit_offset, &mut orbit_center);
+            let radial_vec: Vector3 = position.sub(&orbit_center);
+            if orbit_velocity.1 < PARTICLE_MIN_VALUE {
+                let temp = delta_seconds * speedfactor.value;
+                let orbit_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(orbit_velocity.0.x * temp, orbit_velocity.0.y * temp, orbit_velocity.0.z * temp);
+                orbit_direction = orbit_rotation.transform_vector(&radial_vec) - radial_vec;
+            };
+            if PARTICLE_MIN_VALUE < orbit_radial.abs() {
                 let radial_len = CoordinateSytem3::length(&radial_vec);
-                if 0.00000001 < radial_len {
-                    velocity += radial_vec.scale(1. / radial_len).scale(orbit.radial);
+                if PARTICLE_MIN_VALUE < radial_len {
+                    velocity += radial_vec.scale(1. / radial_len).scale(*orbit_radial);
                 };
             }
 
@@ -1532,7 +1891,7 @@ impl ParticleDirection {
             if limitscalar.value < Number::MAX {
                 let limitscalarval = limitscalar.value * delta_seconds;
                 let delta = directionscalar - limitscalarval;
-                if 0.00000001 < delta {
+                if PARTICLE_MIN_VALUE < delta {
                     let factor = limitscalarval + (delta) * Number::exp(Number::ln(delta + 1.0) * (0. - limitscalar.dampen));
                     // let factor = 1.0 - limitscalar.dampen * (directionscalar - limitscalar.value * delta_seconds) / directionscalar * (0.66);
                     new_direction.scale_mut(factor / directionscalar);

@@ -211,8 +211,8 @@ pub struct BoundingBoxDisplay {
     pub display: bool,
 }
 impl BoundingBoxDisplay {
-    pub const ATTRIBUTE_MINIMUM: &str = "BoxMinimum";
-    pub const ATTRIBUTE_MAXIMUM: &str = "BoxMaximum";
+    pub const ATTRIBUTE_MINIMUM: &'static str = "BoxMinimum";
+    pub const ATTRIBUTE_MAXIMUM: &'static str = "BoxMaximum";
     pub fn mesh_state() -> MeshInstanceState {
         MeshInstanceState {
             instances: vec![

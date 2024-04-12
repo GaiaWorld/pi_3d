@@ -19,6 +19,11 @@ impl ShaderWater {
 
         nodemat.fs_define = String::from("
     layout(location = 0) out vec4 gl_FragColor;
+    float Random1DTo1D(float value,float a,float b){
+        //make value more random by making it bigger
+        float random = fract(sin(value+b)*a);
+        return random;
+    }
 "
         );
 
@@ -38,21 +43,24 @@ impl ShaderWater {
         nodemat.fs = String::from("
         vec4 baseColor          = vColor;
         float alpha             = opacity() * baseColor.a;
+        vec2 screenUV           = v_pos_SS.xy / v_pos_SS.w * 0.5 + 0.5;
     
         baseColor.rgb           *= mainColor();
         
-        vec4 mainTextureColor   = mainTexture(vUV * 20., applyUVOffsetSpeed(uMainUVOS));
+        vec4 mainTextureColor   = mainTexture(vUV * 20., applyUVOffsetSpeed(uMainUVOS) + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762), Random1DTo1D(screenUV.y * 200., PI_Time.y, .762)));
     
-        vec2 screenUV           = v_pos_SS.xy / v_pos_SS.w * 0.5 + 0.5;
         vec4 emissiveTexture    = emissiveTexture(screenUV, vec2(0., 0.));
         float dDepth            = emissiveTexture.r + mainTextureColor.r * 0.01 * mainStrength();
-        dDepth                  = dDepth - v_pos_SS.z;
+        dDepth                  = dDepth - (v_pos_SS.z);
         if (dDepth < 0.) {
             discard;
         }
+        // dDepth *= 0.02;
+        // dDepth += (sin(v_pos_SS.x * 10. + PI_Time.y) * sin(v_pos_SS.y * 10. + PI_Time.y) + 0.5) * 0.5;
 
         vec4 finalColor = vec4(baseColor.rgb, alpha);
-        finalColor = mix(finalColor, vec4(0.1, 0.5, 0.6, 0.2), smoothstep(0., 0.5, dDepth));
+        finalColor = mix(finalColor, vec4(0.1, 0.5, 0.6, 0.2), smoothstep(0., 0.15, dDepth));
+        // finalColor = vec4(dDepth, 0., 0., 1.);
     
         gl_FragColor = finalColor + mainTextureColor * 0.5;
 ");

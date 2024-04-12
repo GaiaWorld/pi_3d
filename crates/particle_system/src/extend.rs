@@ -1,5 +1,4 @@
 use pi_scene_shell::prelude::*;
-use pi_scene_math::{*, coordiante_system::CoordinateSytem3, vector::TToolMatrix};
 
 use crate::{
     emitter::*,
@@ -65,7 +64,7 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
     // gravity
     let mut interpolation = FloatInterpolation::new(0.);
     parse_float_interpolation(&mut interpolation, &Some(config.gravity.clone()), TParamType::TParamGravity, 1.0, );
-    cmds.insert(ParticleCalculatorGravity(interpolation));
+    cmds.insert(ParticleCalculatorGravity(Gravity { interpolation }, Vector3::new(0., -9.8, 0.)));
 
     // VelocityOverLifetime
     if let Some(velocity_over_lifetime) = &config.velocity_over_lifetime {
@@ -75,21 +74,22 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         cmds.insert(ParticleCalculatorVelocityOverLifetime(interpolation));
     }
     // Orbit
+    let mut interpolation = TranslationInterpolate::default();
     if let Some(orbtial_velocity) = &(config.orbtial_velocity) {
-        let mut interpolation = TranslationInterpolate::default();
         TranslationInterpolate::format(orbtial_velocity, &mut interpolation);
-        cmds.insert(ParticleCalculatorOrbitVelocity(interpolation));
     }
+    cmds.insert(ParticleCalculatorOrbitVelocity(interpolation));
+    let mut interpolation = TranslationInterpolate::default();
     if let Some(orbital_offset) = &config.orbital_offset {
-        let mut interpolation = TranslationInterpolate::default();
         TranslationInterpolate::format(orbital_offset, &mut interpolation);
-        cmds.insert(ParticleCalculatorOrbitOffset(interpolation));
     }
+    cmds.insert(ParticleCalculatorOrbitOffset(interpolation));
+    let mut interpolation = FloatInterpolation::new(0.);
     if config.orbital_radial.is_some() {
-        let mut interpolation = FloatInterpolation::new(0.);
         parse_float_interpolation(&mut interpolation, &config.orbital_radial, TParamType::TParamStartSpeed, 1.0);
-        cmds.insert(ParticleCalculatorOrbitRadial(interpolation));
     }
+    cmds.insert(ParticleCalculatorOrbitRadial(interpolation));
+
     if config.speed_modifier.is_some() {
         let mut interpolation = SpeedModifier::default();
         parse_float_interpolation(&mut interpolation.speed_modifier, &config.speed_modifier, TParamType::TParamStartSpeed, 1.0);
@@ -100,6 +100,9 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         let mut interpolation = ForceOverLifetime::default();
         TranslationInterpolate::format(force_over_lifetime, &mut interpolation.translation_interpolate);
         interpolation.is_local_space = if let Some(force_space_is_local) = config.force_space_is_local { force_space_is_local != 0 } else { false };
+        cmds.insert(ParticleCalculatorForceOverLifetime(interpolation));
+    } else {
+        let interpolation = ForceOverLifetime::default();
         cmds.insert(ParticleCalculatorForceOverLifetime(interpolation));
     }
     // limitVelocityOverLifetime
@@ -228,220 +231,228 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
 
 pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
     let emitter = if let Some(shape) = &shape {
-        let mut _pos = Vector3::zeros();
-        let mut _rotation = Vector3::new(1., 1., 1.);
-        let mut _scale = Vector3::zeros();
-        let mut _randomize = None;
-        let mut _align_dir = 0;
-        let mut shape_emitter: ShapeEmitter = match shape {
+        // let mut _pos = Vector3::zeros();
+        // let mut _rotation = Vector3::new(1., 1., 1.);
+        // let mut _scale = Vector3::zeros();
+        // let mut _randomize = None;
+        // let mut _align_dir = 0;
+        let shape_emitter = match shape {
             // 2
             IShape::ShapeBox(shape) => {
-                let mut temp = BoxShapeEmitter::new();
-                temp.emit_mode = if let Some(mode) = &shape.box_emit_mode {
-                    *mode
-                } else {
-                    EBoxShapeMode::Volume
-                };
-                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
-                // _pos = shape.position.clone();
-                // _rotation = shape.rotation.clone();
-                // _scale = shape.scale.clone();
-                _randomize = shape.randomize.clone();
-                _align_dir = shape.align_dir;
-                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
-                ShapeEmitter::Box(temp)
+                BoxShapeEmitter::new(&shape)
+                // let mut temp = BoxShapeEmitter::new();
+                // temp.emit_mode = if let Some(mode) = &shape.box_emit_mode {
+                //     *mode
+                // } else {
+                //     EBoxShapeMode::Volume
+                // };
+                // if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // // _pos = shape.position.clone();
+                // // _rotation = shape.rotation.clone();
+                // // _scale = shape.scale.clone();
+                // _randomize = shape.randomize.clone();
+                // _align_dir = shape.align_dir;
+                // CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.base.local_matrix);
+                // ShapeEmitter::Box(temp)
             }
             // 3
             IShape::ShapeCircle(shape) => {
-                let mut temp = CircleShapeEmitter::new(shape.radius, shape.radius_thickness);
-                let (mode, value, spread, speed) = match &shape.arc {
-                    crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                };
-                temp.arc_mode = mode;
-                temp.arc_value = value * std::f32::consts::PI / 180.;
-                temp.arc_spread = spread;
-                temp.arc_speed = speed;
+                CircleShapeEmitter::create(&shape)
+                // let mut temp = CircleShapeEmitter::new(shape.radius, shape.radius_thickness);
+                // let (mode, value, spread, speed) = match &shape.arc {
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                // };
+                // temp.arc_mode = mode;
+                // temp.arc_value = value * std::f32::consts::PI / 180.;
+                // temp.arc_spread = spread;
+                // temp.arc_speed = speed;
 
-                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
-                // _pos = shape.position.clone();
-                // _rotation = shape.rotation.clone();
-                // _scale = shape.scale.clone();
-                _randomize = shape.randomize.clone();
-                _align_dir = shape.align_dir;
-                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
-                ShapeEmitter::Circle(temp)
+                // if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // // _pos = shape.position.clone();
+                // // _rotation = shape.rotation.clone();
+                // // _scale = shape.scale.clone();
+                // _randomize = shape.randomize.clone();
+                // _align_dir = shape.align_dir;
+                // CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.base.local_matrix);
+                // ShapeEmitter::Circle(temp)
             }
             // 0
             IShape::ShapeCone(shape) => {
-                let mut temp =
-                    ConeShapeEmitter::new(shape.radius, shape.angle * std::f32::consts::PI / 180.);
-                temp.radius_range = shape.radius_thickness;
-                temp.set_height(shape.height);
-                temp.height_range = if shape.emit_as_volume { 1.0 } else { 0.0 };
-                let (mode, value, spread, speed) = match &shape.arc {
-                    crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                };
+                ConeShapeEmitter::create(&shape)
+                // let mut temp =
+                //     ConeShapeEmitter::new(shape.radius, shape.angle * std::f32::consts::PI / 180.);
+                // temp.radius_range = shape.radius_thickness;
+                // temp.set_height(shape.height);
+                // temp.height_range = if shape.emit_as_volume { 1.0 } else { 0.0 };
+                // let (mode, value, spread, speed) = match &shape.arc {
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                // };
 
-                temp.arc_mode = mode;
-                temp.arc_value = value * std::f32::consts::PI / 180.;
-                temp.arc_spread = spread;
-                temp.arc_speed = speed;
+                // temp.arc_mode = mode;
+                // temp.arc_value = value * std::f32::consts::PI / 180.;
+                // temp.arc_spread = spread;
+                // temp.arc_speed = speed;
 
-                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
-                // _pos = shape.position.clone();
-                // _rotation = shape.rotation.clone();
-                // _scale = shape.scale.clone();
-                _randomize = shape.randomize.clone();
-                _align_dir = shape.align_dir;
-                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
-                ShapeEmitter::Cone(temp)
+                // if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // // _pos = shape.position.clone();
+                // // _rotation = shape.rotation.clone();
+                // // _scale = shape.scale.clone();
+                // _randomize = shape.randomize.clone();
+                // _align_dir = shape.align_dir;
+                // CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.base.local_matrix);
+                // ShapeEmitter::Cone(temp)
             }
             //5
             IShape::ShapeEdge(shape) => {
-                let mut temp = EdgeShapeEmitter::new();
-                temp.size = shape.radius;
-                let (mode, value, spread, speed) = match &shape.arc {
-                    crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                };
-                temp.arc_mode = mode;
-                temp.arc_value = value * std::f32::consts::PI / 180.;
-                temp.arc_spread = spread;
-                temp.arc_speed = speed;
+                EdgeShapeEmitter::create(&shape)
+                // let mut temp = EdgeShapeEmitter::new();
+                // temp.size = shape.radius;
+                // let (mode, value, spread, speed) = match &shape.arc {
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                // };
+                // temp.arc_mode = mode;
+                // temp.arc_value = value * std::f32::consts::PI / 180.;
+                // temp.arc_spread = spread;
+                // temp.arc_speed = speed;
 
-                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
-                // _pos = shape.position.clone();
-                // _rotation = shape.rotation.clone();
-                // _scale = shape.scale.clone();
-                _randomize = shape.randomize.clone();
-                _align_dir = shape.align_dir;
-                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
-                ShapeEmitter::Edge(temp)
+                // if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // // _pos = shape.position.clone();
+                // // _rotation = shape.rotation.clone();
+                // // _scale = shape.scale.clone();
+                // _randomize = shape.randomize.clone();
+                // _align_dir = shape.align_dir;
+                // CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.base.local_matrix);
+                // ShapeEmitter::Edge(temp)
             }
             //4
             IShape::ShapeHemisphere(shape) => {
-                let mut temp = HemisphereShapeEmitter::new(shape.radius, shape.radius_thickness);
-                let (mode, value, spread, speed) = match &shape.arc {
-                    crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                };
-                temp.arc_mode = mode;
-                temp.arc_value = value * std::f32::consts::PI / 180.;
-                temp.arc_spread = spread;
-                temp.arc_speed = speed;
+                HemisphereShapeEmitter::create(&shape)
+                // let mut temp = HemisphereShapeEmitter::new(shape.radius, shape.radius_thickness);
+                // let (mode, value, spread, speed) = match &shape.arc {
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                // };
+                // temp.arc_mode = mode;
+                // temp.arc_value = value * std::f32::consts::PI / 180.;
+                // temp.arc_spread = spread;
+                // temp.arc_speed = speed;
 
-                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
-                // _pos = shape.position.clone();
-                // _rotation = shape.rotation.clone();
-                // _scale = shape.scale.clone();
-                _randomize = shape.randomize.clone();
-                _align_dir = shape.align_dir;
-                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
-                ShapeEmitter::Hemisphere(temp)
+                // if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // // _pos = shape.position.clone();
+                // // _rotation = shape.rotation.clone();
+                // // _scale = shape.scale.clone();
+                // _randomize = shape.randomize.clone();
+                // _align_dir = shape.align_dir;
+                // CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.base.local_matrix);
+                // ShapeEmitter::Hemisphere(temp)
             }
             // 6
             IShape::ShapeRectangle(shape) => {
-                let mut temp = RectangleShapeEmitter::new();
+                RectangleShapeEmitter::create(&shape)
+                // let mut temp = RectangleShapeEmitter::new();
 
-                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
-                // _pos = shape.position.clone();
-                // _rotation = shape.rotation.clone();
-                // _scale = shape.scale.clone();
-                _randomize = shape.randomize.clone();
-                _align_dir = shape.align_dir;
-                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
-                ShapeEmitter::Rectangle(temp)
+                // if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // // _pos = shape.position.clone();
+                // // _rotation = shape.rotation.clone();
+                // // _scale = shape.scale.clone();
+                // _randomize = shape.randomize.clone();
+                // _align_dir = shape.align_dir;
+                // CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.base.local_matrix);
+                // ShapeEmitter::Rectangle(temp)
             }
             // 1
             IShape::ShapeSphere(shape) => {
-                let mut temp = SphereShapeEmitter::new(shape.radius, shape.radius_thickness);
-                let (mode, value, spread, speed) = match &shape.arc {
-                    crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                    crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
-                        (v.mode, v.value, v.spread, v.speed)
-                    }
-                };
+                SphereShapeEmitter::create(&shape)
+                // let mut temp = SphereShapeEmitter::new(shape.radius, shape.radius_thickness);
+                // let (mode, value, spread, speed) = match &shape.arc {
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcRandom(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcLoop(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcPingPong(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                //     crate::iparticle_system_config::IShapeArc::IShapeArcBurstSpread(v) => {
+                //         (v.mode, v.value, v.spread, v.speed)
+                //     }
+                // };
 
-                temp.arc_mode = mode;
-                temp.arc_value = value * std::f32::consts::PI / 180.;
-                temp.arc_spread = spread;
-                temp.arc_speed = speed;
+                // temp.arc_mode = mode;
+                // temp.arc_value = value * std::f32::consts::PI / 180.;
+                // temp.arc_spread = spread;
+                // temp.arc_speed = speed;
 
-                if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
-                if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
-                // _pos = shape.position.clone();
-                // _rotation = shape.rotation.clone();
-                // _scale = shape.scale.clone();
-                _randomize = shape.randomize.clone();
-                _align_dir = shape.align_dir;
-                CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.local_matrix);
-                ShapeEmitter::Sphere(temp)
+                // if let Some(val) = &shape.position { _pos.copy_from_slice(val); } else { _pos.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.rotation { _rotation.copy_from_slice(val); } else { _rotation.copy_from_slice(&[0., 0., 0.]) };
+                // if let Some(val) = &shape.scale { _scale.copy_from_slice(val); } else { _scale.copy_from_slice(&[1., 1., 1.]) };
+                // // _pos = shape.position.clone();
+                // // _rotation = shape.rotation.clone();
+                // // _scale = shape.scale.clone();
+                // _randomize = shape.randomize.clone();
+                // _align_dir = shape.align_dir;
+                // CoordinateSytem3::matrix4_compose_euler_angle(&_scale, &_rotation, &_pos, &mut temp.base.local_matrix);
+                // ShapeEmitter::Sphere(temp)
             }
             IShape::Point() => {
-                ShapeEmitter::Point(PointShapeEmitter::new())
+                PointShapeEmitter::create()
+                // ShapeEmitter::Point(PointShapeEmitter::new())
             },
         };
 
@@ -451,17 +462,18 @@ pub fn format_shape(cmds: &mut EntityCommands, shape: Option<&IShape>) {
         //     shape_emitter.scaling(Vector3::new(scale[0], scale[1], scale[2]));
         // }
 
-        shape_emitter.align_direction(_align_dir != 0);
+        // shape_emitter.align_direction(_align_dir != 0);
 
-        if let Some(randomize) = &_randomize {
-            shape_emitter.randomize_direction(randomize[0]);
-            shape_emitter.spherize_direction(randomize[1]);
-            shape_emitter.randomize_position(randomize[2]);
-        }
+        // if let Some(randomize) = &_randomize {
+        //     shape_emitter.randomize_direction(randomize[0]);
+        //     shape_emitter.spherize_direction(randomize[1]);
+        //     shape_emitter.randomize_position(randomize[2]);
+        // }
 
         shape_emitter
     } else {
-        ShapeEmitter::Point(PointShapeEmitter::new())
+        PointShapeEmitter::create()
+        // ShapeEmitter::Point(PointShapeEmitter::new())
     };
 
     cmds.insert(ParticleCalculatorShapeEmitter(emitter));

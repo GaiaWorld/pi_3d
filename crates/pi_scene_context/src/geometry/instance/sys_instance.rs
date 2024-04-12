@@ -214,7 +214,7 @@ impl Ord for TmpInstanceSort {
                         if tmp_instance_start != tmp_instance_end {
                             instancessortinfos.0.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
                         }
-                        reset_instances_buffer(idgeo.0, buffer, &collected, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
+                        reset_instances_buffer(idgeo.0, buffer, collected, tmp_instance_end, &mut slots, &mut instancedcache, &mut allocator, &device, &queue);
                     }
                 }
             }
@@ -232,7 +232,8 @@ impl Ord for TmpInstanceSort {
 pub fn reset_instances_buffer(
     idgeo: Entity,
     instancedinfo: &InstancedInfo,
-    collected: &[u8],
+    collected: Vec<u8>,
+    count: u32,
     slots: &mut (
         Query<&mut AssetResVBSlot01>,
         Query<&mut AssetResVBSlot02>,
@@ -251,20 +252,21 @@ pub fn reset_instances_buffer(
         Query<&mut AssetResVBSlot15>,
         Query<&mut AssetResVBSlot16>,
     ),
-    instancedcache: &mut InstanceBufferAllocator,
-    allocator: &mut VertexBufferAllocator3D,
-    device:&RenderDevice,
-    queue: &PiRenderQueue,
+    _instancedcache: &mut InstanceBufferAllocator,
+    _allocator: &mut VertexBufferAllocator3D,
+    _device:&RenderDevice,
+    _queue: &PiRenderQueue,
 ) {
-    let data = instancedcache.collect(&collected, instancedinfo.bytes_per_instance(), allocator, &device, &queue);
-    let data = if let Some(data) = data {
-        EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
-    } else {
-        let data = instancedcache.instance_initial_buffer();
-        EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
-    };
+    // let data = instancedcache.collect(&collected, instancedinfo.bytes_per_instance(), allocator, &device, &queue);
+    // let data = if let Some(data) = data {
+    //     EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
+    // } else {
+    //     let data = instancedcache.instance_initial_buffer();
+    //     EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
+    // };
 
-    reset_instances_buffer_range(idgeo, instancedinfo, slots, data);
+    let data = collected;
+    reset_instances_buffer_range(idgeo, instancedinfo, slots, data, count);
 }
 
 pub fn reset_instances_buffer_range(
@@ -288,8 +290,10 @@ pub fn reset_instances_buffer_range(
         Query<&mut AssetResVBSlot15>,
         Query<&mut AssetResVBSlot16>,
     ),
-    data: EVerticesBufferUsage
+    data: Vec<u8>,
+    count: u32,
 ) {
+    let data = EVerticesBufferTmp::Memory(EVerteicesMemory { data: data, itemcount: count as u32, slot: instancedinfo.slot() as u32 });
     match instancedinfo.slot() {
         EVertexBufferSlot::Slot01 => if let Ok(mut buffer) = slots.0.get_mut(idgeo)  { buffer.0 = data; },
         EVertexBufferSlot::Slot02 => if let Ok(mut buffer) = slots.1.get_mut(idgeo)  { buffer.0 = data; },
@@ -358,7 +362,7 @@ pub fn reset_instances_buffer_single(
 }
 
 fn update_instanced_buffer_for_single(
-    oldbuffer: &mut EVerticesBufferUsage,
+    oldbuffer: &mut EVerticesBufferTmp,
     collected: &[u8],
     instancedcache: &InstanceBufferAllocator,
     allocator: &mut VertexBufferAllocator3D,
@@ -366,21 +370,26 @@ fn update_instanced_buffer_for_single(
     queue: &PiRenderQueue,
 ) {
     match oldbuffer {
-        EVerticesBufferUsage::EVBRange(buffer) => {
-            let newbuffer = if instancedcache.check(buffer.buffer()) == false {
-                buffer.buffer().size() < collected.len() as u64
-            } else {
-                true
-            };
-            if newbuffer {
-                if let Some(newbuffer) = allocator.create_not_updatable_buffer(device, queue, collected, None) {
-                    *buffer = Arc::new(newbuffer);
-                }
-            } else {
-                queue.write_buffer(buffer.buffer(), 0, collected);
-                *buffer = buffer.clone();
-            }
+        EVerticesBufferTmp::Memory(_) => {
+            
         },
-        _ => { },
+        EVerticesBufferTmp::Buffer(oldbuffer) => match oldbuffer {
+            EVerticesBufferUsage::EVBRange(buffer) => {
+                let newbuffer = if instancedcache.check(buffer.buffer()) == false {
+                    buffer.buffer().size() < collected.len() as u64
+                } else {
+                    true
+                };
+                if newbuffer {
+                    if let Some(newbuffer) = allocator.create_not_updatable_buffer(device, queue, collected, None) {
+                        *buffer = Arc::new(newbuffer);
+                    }
+                } else {
+                    queue.write_buffer(buffer.buffer(), 0, collected);
+                    *buffer = buffer.clone();
+                }
+            },
+            _ => { },
+        },
     }
 }

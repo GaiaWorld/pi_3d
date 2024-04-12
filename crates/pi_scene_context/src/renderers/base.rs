@@ -12,6 +12,7 @@ pub struct TmpSortDrawOpaque {
     pub pass: u8,
     pub distance: f32,
     pub pipeline: u64,
+    pub resourcehash: (u64, u64),
 }
 impl PartialEq for TmpSortDrawOpaque {
     fn eq(&self, other: &Self) -> bool {
@@ -38,9 +39,15 @@ impl Ord for TmpSortDrawOpaque {
                     std::cmp::Ordering::Less => std::cmp::Ordering::Less,
                     std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
                     std::cmp::Ordering::Equal => {
-                        match self.distance.partial_cmp(&other.distance) {
-                            Some(order) => order,
-                            None => std::cmp::Ordering::Equal,
+                        match self.resourcehash.cmp(&other.resourcehash) {
+                            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                            std::cmp::Ordering::Equal => {
+                                match self.distance.partial_cmp(&other.distance) {
+                                    Some(order) => order,
+                                    None => std::cmp::Ordering::Equal,
+                                }
+                            },
                         }
                     },
                 }
@@ -55,6 +62,7 @@ pub struct TmpSortDrawTransparent {
     pub distance: f32,
     pub queue: TransparentSortParam,
     pub pipeline: u64,
+    pub resourcehash: (u64, u64),
 }
 impl PartialEq for TmpSortDrawTransparent {
     fn eq(&self, other: &Self) -> bool {
@@ -84,8 +92,12 @@ impl Ord for TmpSortDrawTransparent {
                         match other.distance.partial_cmp(&self.distance) {
                             Some(order) => order,
                             None => {
-                                self.pipeline.cmp(&other.pipeline)
-                            },
+                                match self.pipeline.cmp(&other.pipeline) {
+                                    std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                                    std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                                    std::cmp::Ordering::Equal => self.resourcehash.cmp(&other.resourcehash)
+                                }
+                            }
                         }
                     },
                 }

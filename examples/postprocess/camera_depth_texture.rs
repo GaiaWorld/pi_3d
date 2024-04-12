@@ -157,7 +157,7 @@ impl Plugin for PluginTest {
         actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, 0., -1., 0.));
     }
 
-    let (vertices, indices) = (BallBuilder::attrs_meta(), Some(BallBuilder::indices_meta()));
+    let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
     let state: MeshInstanceState = MeshInstanceState {
         instance_matrix: true,
         instances: vec![
@@ -180,8 +180,8 @@ impl Plugin for PluginTest {
                 for k in 0..1 {
                     let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
-                    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i + 1) as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
-                    actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
+                    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i + 1) as f32 * 3. - (tes_size) as f32, 0., j as f32 * 3. - (tes_size) as f32));
+                    actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, (i as f32).sin() * 0.5 + 1.1,  (j as f32).sin() * 0.5 + 1.1, (i as f32).sin() * 0.5 + 1.1));
                     actions.instance.vec2s.push(OpsInstanceVec2::ops(cube, (i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.), Atom::from("InsV2")));
                 }
             }
@@ -240,6 +240,12 @@ impl Plugin for PluginTest {
             actions.renderer.target.push(OpsRendererTarget::Custom(depth_renderer, KeyCustomRenderTarget::Custom(depthtarget.unwrap())));
 
             actions.renderer.connect.push(OpsRendererConnect::ops(shadow_renderer, demopass.opaque_renderer, true));
+            
+            let opaquetarget = targets.create(device, KeySampler::linear_repeat(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 128, 128 ); 
+            let (opaque_texture_renderer, opaque_texture_renderer_camera) = copy::PluginImageCopy::init(&mut commands, &mut actions, scene,
+                demopass.opaque_renderer, demopass.transparent_renderer, demopass.opaque_target, Some(KeyCustomRenderTarget::Custom(opaquetarget.unwrap()))
+            );
+            actions.renderer.connect.push(OpsRendererConnect::ops(demopass.opaque_renderer, demopass.transparent_renderer, true));
 
             let vertices = CubeBuilder::attrs_meta();
             let indices = Some(CubeBuilder::indices_meta());
@@ -253,8 +259,10 @@ impl Plugin for PluginTest {
             let distortiommat = commands.spawn_empty().id();
             actions.material.create.push(OpsMaterialCreate::ops(distortiommat, water::ShaderWater::KEY));
             actions.material.usemat.push(OpsMaterialUse::Use(source, distortiommat, DemoScene::PASS_TRANSPARENT));
-            actions.material.texture.push(OpsUniformTexture::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
-            actions.material.vec2.push(OpsUniformVec2::ops(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
+            // actions.material.texture.push(OpsUniformTexture::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
+            // actions.material.vec2.push(OpsUniformVec2::ops(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
+            
+            actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockMainTexture::KEY_TILLOFF)));
             actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, depthtarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
         }
 }

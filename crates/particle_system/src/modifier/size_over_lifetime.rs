@@ -1,5 +1,4 @@
 use pi_scene_shell::prelude::*;
-use pi_scene_math::*;
 
 #[derive(Default)]
 pub struct SizeOverLifetime {

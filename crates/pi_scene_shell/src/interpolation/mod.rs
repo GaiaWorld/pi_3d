@@ -205,6 +205,12 @@ impl TranslationInterpolate {
 
         apply_vector3_interpolation(config, &mut target.vector3_interpolate);
     }
+
+    pub fn constant(&self) -> bool {
+        self.vector3_interpolate.x.mode == EInterpolationCurveMode::Constant
+        && self.vector3_interpolate.y.mode == EInterpolationCurveMode::Constant
+        && self.vector3_interpolate.z.mode == EInterpolationCurveMode::Constant
+    }
 }
 
 #[derive(Clone)]

@@ -2,7 +2,6 @@
 use std::ops::Range;
 
 use pi_scene_shell::prelude::*;
-use pi_scene_math::*;
 
 use crate::{
     geometry::prelude::*,

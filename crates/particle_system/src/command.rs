@@ -4,10 +4,10 @@ use pi_scene_shell::prelude::*;
 use crate::{iparticle_system_config::IParticleSystemConfig, base::{ParticleSystemCalculatorID, ParticleAttribute, ParticleAttributes}};
 
 
-pub struct OpsCPUParticleCalculator(pub(crate) Entity, pub(crate) IParticleSystemConfig, pub(crate) u8);
+pub struct OpsCPUParticleCalculator(pub(crate) Entity, pub(crate) IParticleSystemConfig);
 impl OpsCPUParticleCalculator {
     pub fn ops(id: Entity, cfg: IParticleSystemConfig) -> Self {
-        Self(id, cfg, 0)
+        Self(id, cfg)
     }
 }
 pub type ActionListCPUParticleCalculator = ActionList<OpsCPUParticleCalculator>;

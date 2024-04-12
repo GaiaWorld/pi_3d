@@ -7,7 +7,7 @@ use pi_render::{renderer::{
     }, asset::ASSET_SIZE_FOR_UNKOWN};
 use crate::bind_groups::*;
 
-use super::{BindDefine, ERenderAlignment, ShaderEffectMeta};
+use super::{BindDefine, ERenderAlignment, ERenderAlignmentForShader, ShaderEffectMeta};
 
 pub trait TShaderAttributesCode {
     fn define_code(&self, location: u32) -> String;
@@ -123,7 +123,7 @@ pub struct KeyShader3D {
     pub key_meta: pi_atom::Atom,
     pub key_attributes: KeyShaderFromAttributes,
     pub bind_defines: BindDefine,
-    pub renderalignment: ERenderAlignment,
+    pub renderalignment: ERenderAlignmentForShader,
 }
 
 // pub type Shader3D = Shader<4, EKeyShader3DSetBlock>;

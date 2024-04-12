@@ -1,9 +1,7 @@
-
-use std::{sync::Arc, ops::DerefMut};
+use std::{hash::Hasher, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
-use pi_scene_math::*;
 
 use crate::{command::*, base::*, extend::format};
 
@@ -11,7 +9,7 @@ pub fn sys_create_particle_calculator(
     mut cmds: ResMut<ActionListCPUParticleCalculator>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleCalculator(entity, cfg, _)| {
+    cmds.drain().drain(..).for_each(|OpsCPUParticleCalculator(entity, cfg)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else { return; };
@@ -24,7 +22,9 @@ pub fn sys_create_particle_calculator(
 pub fn sys_create_cpu_partilce_system(
     mut cmds: ResMut<ActionListCPUParticleSystem>,
     mut commands: Commands,
-    calculators: Query<&ParticleCalculatorBase>,
+    calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorGravity, &ParticleCalculatorForceOverLifetime,
+        &ParticleCalculatorOrbitOffset, &ParticleCalculatorOrbitVelocity, &ParticleCalculatorOrbitRadial
+    )>,
     trailmodifiers: Query<&ParticleCalculatorTrail>,
     trailbuffer: Res<ResParticleTrailBuffer>,
     mut allocator: ResMut<ResBindBufferAllocator>,
@@ -33,6 +33,7 @@ pub fn sys_create_cpu_partilce_system(
     mut meshes: ResMut<ActionListMeshRenderAlignment>,
     mut performance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
+    commonbindmodel: Res<CommonBindModel>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, count)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -46,7 +47,10 @@ pub fn sys_create_cpu_partilce_system(
         };
 
         let idcalculator = calculator.0;
-        if let Ok(base) = calculators.get(idcalculator) {
+        if let Ok((
+            base, gravitycalc, forcecalc,
+            orbitoff, orbitveloc, orbitradial
+        )) = calculators.get(idcalculator) {
             // log::warn!("create_cpu_partilce_system");
             let maxcount = base.maxcount;
             performance.maxparticles = (performance.maxparticles.max(maxcount as u32) / 64 + 1) * 64;
@@ -64,7 +68,7 @@ pub fn sys_create_cpu_partilce_system(
                 .insert(ParticleActive(true))
                 .insert(ParticleStart(false))
                 .insert(ParticleRunningState(false))
-                .insert(ParticleModifyState(false))
+                .insert(ParticleModifyState)
                 .insert(ParticleRandom::new(0))
                 .insert(ParticleSystemTime::new(performance.frame_time_ms))
                 .insert(ParticleSystemEmission::new())
@@ -79,12 +83,14 @@ pub fn sys_create_cpu_partilce_system(
                 .insert(ParticleLocalRotation::new(maxcount))
                 .insert(ParticleLocalScaling::new(maxcount))
                 .insert(ParticleColor::new(maxcount))
-                .insert(ParticleEmitMatrix::new(maxcount))
-                .insert(ParticleGravityFactor::new(maxcount))
-                .insert(ParticleForce::new(maxcount))
+                .insert(ParticleEmitMatrix::new(maxcount, &base.scaling_space, &base.simulation_space))
+                .insert(ParticleGravityFactor::new(maxcount, gravitycalc, &base.simulation_space))
+                .insert(ParticleForce::new(maxcount, forcecalc.0.is_local_space, forcecalc.0.translation_interpolate.constant()))
                 .insert(ParticleVelocity::new(maxcount))
                 .insert(ParticleSpeedFactor::new(maxcount))
-                .insert(ParticleOrbitVelocity::new(maxcount))
+                .insert(ParticleOrbitVelocity::new(maxcount, orbitveloc))
+                .insert(ParticleOrbitOffset::new(maxcount, orbitoff))
+                .insert(ParticleOrbitRadial::new(maxcount, orbitradial))
                 .insert(ParticleLimitVelocityScalar::new(maxcount))
                 .insert(ParticleDirection::new(maxcount))
                 .insert(ParticleUV::new(maxcount))
@@ -98,7 +104,7 @@ pub fn sys_create_cpu_partilce_system(
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
-                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0);
+                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel);
         
                     if let Some(mut cmd) = commands.get_entity(id_mesh) {
                         // log::warn!("Mesh Ok");
@@ -106,6 +112,9 @@ pub fn sys_create_cpu_partilce_system(
                         cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
                         cmd.insert(CCullMode(CullMode::Off));
                         cmd.insert(GeometryID(id_geo));
+                        cmd.insert(ModelStatic);
+                        // 显式重置为默认
+                        cmd.insert(commonbindmodel.0.clone());
                     }
                     if let Some(mut cmd) = commands.get_entity(id_geo) {
                         // log::warn!("Geometry Ok");
@@ -118,6 +127,10 @@ pub fn sys_create_cpu_partilce_system(
                         let geo_desc = GeometryDesc { list: vertex_desc };
                         let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
                         
+                        let mut hasher = DefaultHasher::default();
+                        geo_desc.hash_resource(&mut hasher);
+                        cmd.insert(GeometryResourceHash(hasher.finish()));
+
                         cmd
                             .insert(geo_desc)
                             .insert(slot)

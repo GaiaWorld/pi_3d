@@ -12,6 +12,15 @@ impl TNodeMaterialBlock for BlockColorGray {
     const VS_DEFINED: &'static str = "";
 }
 
+pub struct BlockUVAtlas;
+impl TNodeMaterialBlock for BlockUVAtlas {
+    const KEY: &'static str = "UVATLAS";
+
+    const FS_DEFINED: &'static str = include_str!("./uv_atlas.glsl");
+
+    const VS_DEFINED: &'static str = "";
+}
+
 
 pub struct BlockColorSpace;
 impl TNodeMaterialBlock for BlockColorSpace {
