@@ -44,38 +44,17 @@ impl Plugin for PluginMaterial {
                     sys_image_texture_loaded
                 ).chain().in_set(StageTextureLoad::TextureLoading)
             );
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot01>::default());
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot02>::default());
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot03>::default());
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot04>::default());
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot05>::default());
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot06>::default());
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot07>::default());
-            app.insert_resource(ImageTextureViewLoader::<TextureSlot08>::default());
+            app.insert_resource(ImageTextureViewLoader2::default());
             app.add_systems(
                 Update,
                 (
-                    sys_image_texture_view_load_launch::<TextureSlot01, EffectBindTexture2D01Comp>,
-                    sys_image_texture_view_load_launch::<TextureSlot02, EffectBindTexture2D02Comp>,
-                    sys_image_texture_view_load_launch::<TextureSlot03, EffectBindTexture2D03Comp>,
-                    sys_image_texture_view_load_launch::<TextureSlot04, EffectBindTexture2D04Comp>,
-                    sys_image_texture_view_load_launch::<TextureSlot05, EffectBindTexture2D05Comp>,
-                    sys_image_texture_view_load_launch::<TextureSlot06, EffectBindTexture2D06Comp>,
-                    sys_image_texture_view_load_launch::<TextureSlot07, EffectBindTexture2D07Comp>,
-                    sys_image_texture_view_load_launch::<TextureSlot08, EffectBindTexture2D08Comp>,
+                    sys_image_texture_view_load_launch2
                 ).chain().in_set(StageTextureLoad::TextureRequest)
             );
             app.add_systems(
                 Update,
                 (
-                    sys_image_texture_view_loaded_check::<TextureSlot01, EffectBindTexture2D01Comp>,
-                    sys_image_texture_view_loaded_check::<TextureSlot02, EffectBindTexture2D02Comp>,
-                    sys_image_texture_view_loaded_check::<TextureSlot03, EffectBindTexture2D03Comp>,
-                    sys_image_texture_view_loaded_check::<TextureSlot04, EffectBindTexture2D04Comp>,
-                    sys_image_texture_view_loaded_check::<TextureSlot05, EffectBindTexture2D05Comp>,
-                    sys_image_texture_view_loaded_check::<TextureSlot06, EffectBindTexture2D06Comp>,
-                    sys_image_texture_view_loaded_check::<TextureSlot07, EffectBindTexture2D07Comp>,
-                    sys_image_texture_view_loaded_check::<TextureSlot08, EffectBindTexture2D08Comp>,
+                    sys_image_texture_view_loaded_check2
                 ).chain().in_set(StageTextureLoad::TextureLoaded)
             );
         }

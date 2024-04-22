@@ -8,7 +8,7 @@ use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, T
 use crate::base::*;
 
 pub fn sys_particle_active(
-    mut items: Query<(&GlobalEnable, &ParticleActive, &mut ParticleRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleActive>)>>,
+    mut items: Query<(&GlobalEnable, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
     performance: Res<ParticleSystemPerformance>,
     mut globalperformance: ResMut<Performance>,
 ) {
@@ -36,12 +36,12 @@ pub fn sys_particle_active(
 pub fn sys_prewarm(
     mut items: Query<
         (
-            (&DisposeReady, &ParticleRunningState, &LocalScaling, &GlobalMatrix, &mut ParticleGravityFactor, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleModifyState),
+            (&DisposeReady, &ParticleSystemRunningState, &LocalScaling, &GlobalMatrix, &mut ParticleGravityFactor, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemModifyState),
             (&mut ParticleSystemEmission, &mut ParticleRandom, &mut ParticleBaseRandom, &mut ParticleEmitMatrix, &mut AbsoluteTransform, &mut ParticleLocalPosition, &mut ParticleDirection),
             (&mut ParticleAgeLifetime, &mut ParticleDieWaitTime, &mut ParticleStartScaling, &mut ParticleLocalScaling, &mut ParticleLocalRotation, &mut ParticleStartColor, &mut ParticleColorAndUV),
             (&mut ParticleForce, &mut ParticleVelocity, &mut ParticleSpeedFactor, &mut ParticleLimitVelocityScalar, &mut ParticleOrbitOffset, &mut ParticleOrbitVelocity, &mut ParticleOrbitRadial, Option<&mut ParticleTrail>)
         ),
-        Changed<ParticleRunningState>
+        Changed<ParticleSystemRunningState>
     >,
     calculators: Query<(
         &ParticleCalculatorBase, &ParticleCalculatorStartModifiers, &ParticleCalculatorOverLifetime
@@ -133,7 +133,7 @@ pub fn sys_prewarm(
 pub fn sys_emission(
     scenes: Query<&SceneTime>,
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorStartModifiers)>,
-    mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleRunningState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleModifyState)>,
+    mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleSystemRunningState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleSystemModifyState)>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -167,9 +167,9 @@ pub fn sys_emission(
 fn fn_emission(
     base: &ParticleCalculatorBase, calcemission: &ParticleCalculatorEmission,
     random: &mut ParticleRandom, ids: &mut ParticleIDs, particlesystime: &mut ParticleSystemTime,
-    emission: &mut ParticleSystemEmission, randoms: &mut ParticleBaseRandom, modifystate: &mut ParticleModifyState,
+    emission: &mut ParticleSystemEmission, randoms: &mut ParticleBaseRandom, modifystate: &mut ParticleSystemModifyState,
 ) {
-    *modifystate = ParticleModifyState;
+    *modifystate = ParticleSystemModifyState;
 
     let rate_over_time = calcemission.rateovertime.interpolate(particlesystime.emission_progress, random.random()) as usize;
     // log::warn!("Emission Rate: {:?}, ", rate_over_time);
@@ -187,7 +187,7 @@ fn fn_emission(
 }
 
 pub fn sys_emitmatrix(
-    mut particle_sys: Query<(&LocalScaling, &GlobalMatrix, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix, &mut AbsoluteTransform), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&LocalScaling, &GlobalMatrix, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix, &mut AbsoluteTransform), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -226,7 +226,7 @@ fn fn_emitmatrix(
 
 pub fn sys_emitter(
     calculators: Query<&ParticleCalculatorStartModifiers>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -262,7 +262,7 @@ fn fn_emitter(
 
 pub fn sys_start_lifetime(
     calculators: Query<&ParticleCalculatorStartModifiers>,
-    mut particle_sys: Query<(Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime, &mut ParticleDieWaitTime), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime, &mut ParticleDieWaitTime), Changed<ParticleSystemModifyState>>,
     calculators_trail: Query<&ParticleCalculatorTrail>,
     mut particle_sys_trail: Query<&mut ParticleTrail>,
     mut performance: ResMut<ParticleSystemPerformance>,
@@ -308,7 +308,7 @@ fn fn_start_lifetime(
 
 pub fn sys_start_size(
     calculators: Query<&ParticleCalculatorStartModifiers>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -337,7 +337,7 @@ fn fn_start_size(
 
 pub fn sys_start_rotation(
     calculators: Query<&ParticleCalculatorStartModifiers>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -364,7 +364,7 @@ pub fn fn_start_rotation(
 
 pub fn sys_start_color(
     calculators: Query<&ParticleCalculatorStartModifiers>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartColor, &mut ParticleColorAndUV), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartColor, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -391,7 +391,7 @@ pub fn fn_start_color(
 
 pub fn sys_gravity(
     calculators: Query<&ParticleCalculatorStartModifiers>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleEmitMatrix, &ParticleBaseRandom, &mut ParticleGravityFactor), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleEmitMatrix, &ParticleBaseRandom, &mut ParticleGravityFactor), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -411,7 +411,7 @@ fn fn_gravity(calculator: &ParticleCalculatorGravity, ages: &ParticleAgeLifetime
 
 pub fn sys_force_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleEmitMatrix, &ParticleBaseRandom, &mut ParticleForce), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleEmitMatrix, &ParticleBaseRandom, &mut ParticleForce), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -440,7 +440,7 @@ pub fn fn_force_over_life_time(
 
 pub fn sys_start_texture_sheet(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -469,7 +469,7 @@ pub fn fn_start_texture_sheet(
 /// =================================== over life time
 pub fn sys_color_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartColor, &mut ParticleColorAndUV), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartColor, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -498,7 +498,7 @@ pub fn fn_color_over_life_time(
 
 pub fn sys_rotation_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -527,7 +527,7 @@ pub fn fn_rotation_over_life_time(
 
 pub fn sys_size_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -556,7 +556,7 @@ pub fn fn_size_over_life_time(
 
 pub fn sys_velocity_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleVelocity), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleVelocity), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -585,7 +585,7 @@ pub fn fn_velocity_over_life_time(
 
 pub fn sys_orbit_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleOrbitOffset, &mut ParticleOrbitVelocity, &mut ParticleOrbitRadial), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleOrbitOffset, &mut ParticleOrbitVelocity, &mut ParticleOrbitRadial), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -617,7 +617,7 @@ pub fn fn_orbit_over_life_time(
 
 pub fn sys_speed_modifier_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleSpeedFactor), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleSpeedFactor), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -646,7 +646,7 @@ pub fn fn_speed_modifier_over_life_time(
 
 pub fn sys_limit_velocity_over_life_time(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLimitVelocityScalar), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLimitVelocityScalar), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -681,7 +681,7 @@ pub fn sys_direction(
         &ParticleOrbitOffset, &ParticleOrbitVelocity, &ParticleOrbitRadial,
         &ParticleSpeedFactor, &ParticleLimitVelocityScalar,
         &mut ParticleDirection, &mut ParticleLocalPosition
-    ), Changed<ParticleModifyState>>,
+    ), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -722,7 +722,7 @@ pub fn fn_direction(
 // 
 pub fn sys_color_by_speed(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -751,7 +751,7 @@ pub fn fn_color_by_speed(
 // 
 pub fn sys_size_by_speed(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalScaling), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalScaling), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -779,7 +779,7 @@ pub fn fn_size_by_speed(
 // 
 pub fn sys_rotation_by_speed(
     calculators: Query<&ParticleCalculatorOverLifetime>,
-    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -805,7 +805,7 @@ pub fn fn_rotation_by_speed(
 }
 
 pub fn sys_ids(
-    mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime, &ParticleDieWaitTime), Changed<ParticleModifyState>>,
+    mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime, &ParticleDieWaitTime), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -855,7 +855,7 @@ pub fn fn_ids(
 pub fn sys_texturesheet(
     texturesheets: Query<&ParticleCalculatorOverLifetime>,
     mut particle_sys: Query<
-        (&ParticleIDs, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleModifyState>
+        (&ParticleIDs, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>
     >,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
@@ -885,7 +885,7 @@ pub fn fn_texturesheet(
 pub fn sys_update_buffer(
     calculators: Query<&ParticleCalculatorBase>,
     particle_sys: Query<
-        (Entity, &ParticleAttributes, &ParticleRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColorAndUV),
+        (Entity, &ParticleAttributes, &ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColorAndUV),
     >,
     meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes)>,
     mut meshrenderenables: Query<&mut RenderGeometryEable>,
@@ -1105,7 +1105,7 @@ pub fn sys_update_buffer(
 pub fn sys_update_buffer_trail(
     trailmodifiers: Query<&ParticleCalculatorTrail>,
     mut particle_sys: Query<
-        (&ParticleRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColorAndUV, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
+        (&ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColorAndUV, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut meshes: Query<&mut RenderGeometryEable>,

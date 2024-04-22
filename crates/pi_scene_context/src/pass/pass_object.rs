@@ -104,28 +104,6 @@ pub trait TPass: Default {
 #[derive(Component)]
 pub struct PassIDs(pub [Entity;8]);
 
-#[derive(Default, Clone, Component)]
-pub struct PassBlend(pub Option<bool>);
-impl TPassData<Option<bool>> for PassBlend {
-    fn new(val: Option<bool>) -> Self { Self(val) }
-    fn val(&self) -> &Option<bool> { &self.0 }
-}
-
-#[derive(Default, Clone, Component)]
-pub struct PassColorFormat(pub Option<wgpu::TextureFormat>);
-impl TPassData<Option<wgpu::TextureFormat>> for PassColorFormat {
-    fn new(val: Option<wgpu::TextureFormat>) -> Self { Self(val) }
-    fn val(&self) -> &Option<wgpu::TextureFormat> { &self.0 }
-}
-
-
-#[derive(Default, Clone, Component)]
-pub struct PassDepthFormat(pub Option<wgpu::TextureFormat>);
-impl TPassData<Option<wgpu::TextureFormat>> for PassDepthFormat {
-    fn new(val: Option<wgpu::TextureFormat>) -> Self { Self(val) }
-    fn val(&self) -> &Option<wgpu::TextureFormat> { &self.0 }
-}
-
 /// * 标识物体 已准备好的 Passs
 /// * 材质没有纹理时 在使用材质时即准备好
 /// * 材质有纹理时 在纹理准备好时才准备好

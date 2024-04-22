@@ -70,7 +70,7 @@ fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 8;
+    let temp = 10;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
@@ -89,7 +89,7 @@ fn setup(
 
                     //
                     let syskey = String::from("Test");
-                    let syscfg = demo_cfg(10., 20.);
+                    let syscfg = demo_cfg(40., 20.);
                     let calculator = commands.spawn_empty().id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());

@@ -59,9 +59,9 @@ pub fn sys_create_cpu_partilce_system(
 
             entitycmd
                 .insert(attributes)
-                .insert(ParticleActive(true))
-                .insert(ParticleRunningState(false))
-                .insert(ParticleModifyState)
+                .insert(ParticleSystemActive(true))
+                .insert(ParticleSystemRunningState(false))
+                .insert(ParticleSystemModifyState)
                 .insert(ParticleRandom::new(0))
                 .insert(ParticleSystemTime::new(performance.frame_time_ms))
                 .insert(ParticleSystemEmission::new())
@@ -161,7 +161,7 @@ pub fn sys_create_cpu_partilce_system(
 
 pub fn sys_act_partilce_system_state(
     mut cmds: ResMut<ActionListCPUParticleSystemState>,
-    mut items: Query<(&mut ParticleActive, &mut ParticleSystemTime)>,
+    mut items: Query<(&mut ParticleSystemActive, &mut ParticleSystemTime)>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {

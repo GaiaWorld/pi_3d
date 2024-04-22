@@ -1,90 +1,11 @@
+// use std::{hash::Hash, marker::PhantomData};
 
-// #[derive(Debug)]
-// pub struct SingleVertexBufferDataMap {
-//     vertices: XHashMap<KeyVertexBuffer, Vec<u8>>,
-//     instance: XHashMap<KeyVertexBuffer, Vec<u8>>,
-//     indices: XHashMap<KeyVertexBuffer, Vec<u8>>,
-// }
-// impl Default for SingleVertexBufferDataMap {
-//     fn default() -> Self {
-//         Self { vertices: XHashMap::default(), instance: XHashMap::default(), indices: XHashMap::default(), }
-//     }
-// }
-// impl SingleVertexBufferDataMap {
-//     pub fn add(&mut self, key: &KeyVertexBuffer, data: Vec<u8>) {
-//         if !self.vertices.contains_key(key) {
-//             self.vertices.insert(key.clone(), data);
-//         }
-//     }
-//     pub fn add_indices(&mut self, key: &KeyVertexBuffer, data: Vec<u8>) {
-//         if !self.indices.contains_key(key) {
-//             self.indices.insert(key.clone(), data);
-//         }
-//     }
-//     ///
-//     /// 单线程 创建 VertexBuffer - EVerticesBufferUsage
-//     pub fn single_create(
-//         &mut self,
-//         device: &RenderDevice,
-//         queue: &RenderQueue,
-//         allocator: &mut VertexBufferAllocator,
-//         asset_mgr: &Share<AssetMgr<EVertexBufferRange>>,
-//     ) -> XHashMap<KeyVertexBuffer, EVerticesBufferUsage> {
-//         let mut result = XHashMap::default();
-//         self.vertices.drain().for_each(|(key, data)| {
-//             if let Some(bufferrange) = allocator.create_not_updatable_buffer(device, queue, &data, None) {
-//                 if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
-//                     result.insert(key, EVerticesBufferUsage::Other(range));
-//                 }
-//             }
-//         });
-//         result
-//     }
-//     ///
-//     /// 单线程 创建 IndicesBuffer - EVerticesBufferUsage
-//     pub fn single_create_indices(
-//         &mut self,
-//         device: &RenderDevice,
-//         queue: &RenderQueue,
-//         allocator: &mut VertexBufferAllocator,
-//         asset_mgr: &Share<AssetMgr<EVertexBufferRange>>,
-//     ) -> XHashMap<KeyVertexBuffer, EVerticesBufferUsage> {
-//         let mut result = XHashMap::default();
-//         self.indices.drain().for_each(|(key, data)| {
-//             if let Some(bufferrange) = allocator.create_not_updatable_buffer_for_index(device, queue, &data) {
-//                 // log::warn!("create_indices {:?}, {:?}", key, bufferrange.buffer());
-//                 if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
-//                     // log::warn!("create_indices {:?}, {:?}", key, range.buffer());
-//                     result.insert(key, EVerticesBufferUsage::Other(range));
-//                 }
-//             }
-//         });
-//         result
-//     }
-//     pub fn add_instance(&mut self, key: &KeyVertexBuffer, data: Vec<u8>) {
-//         // log::info!("add_instance >>>>>>>>>>>>>>>>>>>>> {:?}", key);
-//         self.instance.insert(key.clone(), data);
-//     }
-//     /// 单线程 创建 InstanceBuffer - EVerticesBufferUsage
-//     pub fn single_create_instance(
-//         &mut self,
-//         device: &RenderDevice,
-//         queue: &RenderQueue,
-//         allocator: &mut VertexBufferAllocator,
-//     ) -> XHashMap<KeyVertexBuffer, EVerticesBufferUsage> {
-//         let mut result = XHashMap::default();
-//         self.instance.drain().for_each(|(key, data)| {
-//             if let Some(bufferrange) = allocator.create_not_updatable_buffer(device, queue, &data, None) {
-//                 result.insert(key, EVerticesBufferUsage::EVBRange(Arc::new(bufferrange)) );
-//             }
-//         });
-//         result
-//     }
-// }
+// use bevy_ecs::entity::Entity;
+// use pi_hash::{XHashMap, XHashSet};
+// use pi_render::renderer::{vertex_buffer::KeyVertexBuffer, vertex_buffer_loader::SingleVertexBufferDataMap, vertices::EVerticesBufferUsage};
 
-// #[derive(Debug)]
-// pub struct VertexBufferLoader<T: Clone + Hash + PartialEq + Eq, D: From<EVerticesBufferUsage>> {
-//     range_waits: XHashMap<KeyVertexBuffer, XHashMap<T, T>>,
+// pub struct VertexBufferLoader<D: From<EVerticesBufferUsage>> {
+//     range_waits: XHashMap<KeyVertexBuffer, XHashSet<Entity>>,
 //     p: PhantomData<D>,
 // }
 // impl<T: Clone + Hash + PartialEq + Eq, D: From<EVerticesBufferUsage>> Default for VertexBufferLoader<T, D> {
@@ -108,7 +29,7 @@
 //         }
 
 //         let list = self.range_waits.get_mut(key).unwrap();
-//         log::info!("request >>>>>>>>>>>>>>>>>>>>> {:?}", key);
+//         // log::info!("request >>>>>>>>>>>>>>>>>>>>> {:?}", key);
 //         list.insert(id.clone(), id);
 //     }
 //     pub fn request_instance(
@@ -126,7 +47,7 @@
 //         }
 
 //         let list = self.range_waits.get_mut(key).unwrap();
-//         log::info!("request >>>>>>>>>>>>>>>>>>>>> {:?}", key);
+//         // log::info!("request >>>>>>>>>>>>>>>>>>>>> {:?}", key);
 //         list.insert(id.clone(), id);
 //     }
 //     pub fn loaded(

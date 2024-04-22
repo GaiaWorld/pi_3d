@@ -611,13 +611,13 @@ impl ParticleDieWaitTime {
 }
 
 #[derive(Component)]
-pub struct ParticleActive(pub bool);
+pub struct ParticleSystemActive(pub bool);
 
 #[derive(Component)]
-pub struct ParticleRunningState(pub(crate) bool);
+pub struct ParticleSystemRunningState(pub(crate) bool);
 
 #[derive(Component)]
-pub struct ParticleModifyState;
+pub struct ParticleSystemModifyState;
 
 /// 存活的粒子ID列表
 #[derive(Component)]

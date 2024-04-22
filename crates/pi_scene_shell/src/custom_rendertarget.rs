@@ -7,7 +7,7 @@ use pi_share::Share;
 use pi_slotmap::{SlotMap, DefaultKey};
 use smallvec::SmallVec;
 
-pub type KeyRenderTarget = DefaultKey;
+pub type KeyRenderTarget = u64;
 
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum KeyCustomRenderTarget {

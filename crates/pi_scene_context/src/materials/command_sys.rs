@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{assets::texture::TextureKeyList, prelude::*};
 
 use crate::{
     pass::*,
@@ -61,31 +61,34 @@ pub fn sys_create_material(
             .insert(UniformTextureWithSamplerParamsDirty)
             .insert(FlagAnimationStartResetComp)
             .insert(DirtyMaterialRefs::default())
-            .insert(TextureSlot01(keytex.clone()))
-            .insert(TextureSlot02(keytex.clone()))
-            .insert(TextureSlot03(keytex.clone()))
-            .insert(TextureSlot04(keytex.clone()))
-            .insert(TextureSlot05(keytex.clone()))
-            .insert(TextureSlot06(keytex.clone()))
-            .insert(TextureSlot07(keytex.clone()))
-            .insert(TextureSlot08(keytex.clone()))
-            .insert(EffectBindTexture2D01Comp::default())
-            .insert(EffectBindTexture2D02Comp::default())
-            .insert(EffectBindTexture2D03Comp::default())
-            .insert(EffectBindTexture2D04Comp::default())
-            .insert(EffectBindTexture2D05Comp::default())
-            .insert(EffectBindTexture2D06Comp::default())
-            .insert(EffectBindTexture2D07Comp::default())
-            .insert(EffectBindTexture2D08Comp::default())
-            .insert(EffectBindSampler2D01Comp::default())
-            .insert(EffectBindSampler2D02Comp::default())
-            .insert(EffectBindSampler2D03Comp::default())
-            .insert(EffectBindSampler2D04Comp::default())
-            .insert(EffectBindSampler2D05Comp::default())
-            .insert(EffectBindSampler2D06Comp::default())
-            .insert(EffectBindSampler2D07Comp::default())
-            .insert(EffectBindSampler2D08Comp::default())
-            .insert(EffectBindSampler2D08Comp::default())
+            .insert(    TextureKeyList::default())
+            .insert(    EffectBindSampler2DList::default())
+            .insert(    EffectBindTexture2DList::default())
+            // .insert(TextureSlot01(keytex.clone()))
+            // .insert(TextureSlot02(keytex.clone()))
+            // .insert(TextureSlot03(keytex.clone()))
+            // .insert(TextureSlot04(keytex.clone()))
+            // .insert(TextureSlot05(keytex.clone()))
+            // .insert(TextureSlot06(keytex.clone()))
+            // .insert(TextureSlot07(keytex.clone()))
+            // .insert(TextureSlot08(keytex.clone()))
+            // .insert(EffectBindTexture2D01Comp::default())
+            // .insert(EffectBindTexture2D02Comp::default())
+            // .insert(EffectBindTexture2D03Comp::default())
+            // .insert(EffectBindTexture2D04Comp::default())
+            // .insert(EffectBindTexture2D05Comp::default())
+            // .insert(EffectBindTexture2D06Comp::default())
+            // .insert(EffectBindTexture2D07Comp::default())
+            // .insert(EffectBindTexture2D08Comp::default())
+            // .insert(EffectBindSampler2D01Comp::default())
+            // .insert(EffectBindSampler2D02Comp::default())
+            // .insert(EffectBindSampler2D03Comp::default())
+            // .insert(EffectBindSampler2D04Comp::default())
+            // .insert(EffectBindSampler2D05Comp::default())
+            // .insert(EffectBindSampler2D06Comp::default())
+            // .insert(EffectBindSampler2D07Comp::default())
+            // .insert(EffectBindSampler2D08Comp::default())
+            // .insert(EffectBindSampler2D08Comp::default())
             .insert(EffectTextureSamplersComp::default())
             ;
     });
@@ -293,43 +296,43 @@ pub fn sys_act_material_texture_from_target(
     mut tilloffcmds: ResMut<ActionListUniformVec4>,
     mut textureparams: Query<(
         &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams,
-        (&mut EffectBindTexture2D01Comp, &mut EffectBindTexture2D02Comp, &mut EffectBindTexture2D03Comp, &mut EffectBindTexture2D04Comp, 
-        &mut EffectBindTexture2D05Comp, &mut EffectBindTexture2D06Comp, &mut EffectBindTexture2D07Comp, &mut EffectBindTexture2D08Comp)
+        // (&mut EffectBindTexture2D01Comp, &mut EffectBindTexture2D02Comp, &mut EffectBindTexture2D03Comp, &mut EffectBindTexture2D04Comp, 
+        // &mut EffectBindTexture2D05Comp, &mut EffectBindTexture2D06Comp, &mut EffectBindTexture2D07Comp, &mut EffectBindTexture2D08Comp)
     )>,
     targets: Res<CustomRenderTargets>,
     mut errors: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformTextureFromRenderTarget(entity, mut param, key, tilloffslot)| {
-        if let Ok((meta, mut textureparams, mut slots)) = textureparams.get_mut(entity) {
+        if let Ok((_meta, mut textureparams)) = textureparams.get_mut(entity) {
             // log::warn!("EUniformCommand::Texture");
             if let Some(target) = targets.get(key) {
                 let tilloff = target.tilloff((0., 0., 1., 1.));
                 tilloffcmds.push(OpsUniformVec4::ops(entity, tilloffslot, tilloff.0, tilloff.1, tilloff.2, tilloff.3));
-                match meta.query_tex_slot(&param.slotname) {
-                    Some(idx) => {
-                        let bind = ETextureViewUsage::SRT(target.rt.clone());
-                        match idx {
-                            0 => { *slots.0 = EffectBindTexture2D01Comp::from(bind) },
-                            1 => { *slots.1 = EffectBindTexture2D02Comp::from(bind) },
-                            2 => { *slots.2 = EffectBindTexture2D03Comp::from(bind) },
-                            3 => { *slots.3 = EffectBindTexture2D04Comp::from(bind) },
-                            4 => { *slots.4 = EffectBindTexture2D05Comp::from(bind) },
-                            5 => { *slots.5 = EffectBindTexture2D06Comp::from(bind) },
-                            6 => { *slots.6 = EffectBindTexture2D07Comp::from(bind) },
-                            7 => { *slots.7 = EffectBindTexture2D08Comp::from(bind) },
-                            _ => { return; },
-                        };
-                    },
-                    None => {
-                        errors.record(entity, ErrorRecord::ERROR_MODIFY_ERROR_MATERIAL_TEXTURE);
-                        // log::error!("texture_from_target Error No Slot");
-                    },
-                }
-            } else {
-                // log::error!("texture_from_target Error No Target");
+            //     match meta.query_tex_slot(&param.slotname) {
+            //         Some(idx) => {
+            //             let bind = ETextureViewUsage::SRT(target.rt.clone());
+            //             match idx {
+            //                 0 => { *slots.0 = EffectBindTexture2D01Comp::from(bind) },
+            //                 1 => { *slots.1 = EffectBindTexture2D02Comp::from(bind) },
+            //                 2 => { *slots.2 = EffectBindTexture2D03Comp::from(bind) },
+            //                 3 => { *slots.3 = EffectBindTexture2D04Comp::from(bind) },
+            //                 4 => { *slots.4 = EffectBindTexture2D05Comp::from(bind) },
+            //                 5 => { *slots.5 = EffectBindTexture2D06Comp::from(bind) },
+            //                 6 => { *slots.6 = EffectBindTexture2D07Comp::from(bind) },
+            //                 7 => { *slots.7 = EffectBindTexture2D08Comp::from(bind) },
+            //                 _ => { return; },
+            //             };
+            //         },
+            //         None => {
+            //             errors.record(entity, ErrorRecord::ERROR_MODIFY_ERROR_MATERIAL_TEXTURE);
+            //             // log::error!("texture_from_target Error No Slot");
+            //         },
+            //     }
+            // } else {
+            //     // log::error!("texture_from_target Error No Target");
             }
             
-            param.url = EKeyTexture::SRT(0);
+            param.url = EKeyTexture::SRT(key);
             textureparams.0.insert(param.slotname.clone(), Arc::new(param));
         } else {
             // log::error!("texture_from_target Error No Material");

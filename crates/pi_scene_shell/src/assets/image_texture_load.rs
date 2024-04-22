@@ -1,5 +1,5 @@
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, ops::Deref};
 
 use bevy_app::{Update, App, Plugin};
 use bevy_ecs::{component::Component, entity::{self, Entity}, query::Changed, schedule::{IntoSystemConfigs, IntoSystemSetConfig, SystemSet}, system::{Query, Res, ResMut, Resource}};
@@ -16,7 +16,7 @@ use pi_render::rhi::asset::{ImageTextureDesc, TextureRes};
 use pi_share::Share;
 use crate::prelude::*;
 
-use super::environment_texture_loader::EnvironmentTextureTools;
+use super::{environment_texture_loader::EnvironmentTextureTools, texture::{ETextureSlot, TextureKeyList}};
 
 pub type IDImageTextureLoad = u64;
 
@@ -337,43 +337,6 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
     mut image_loader: ResMut<ImageTextureLoader>,
     mut state: ResMut<StateTextureLoader>,
 ) {
-    // let mut item = loader.wait.pop();
-    // let mut waitagain = vec![];
-    // while let Some((entity, key, id)) = item {
-    //     item = loader.wait.pop();
-
-    //     let key_u64 = key.asset_u64();
-    //     // let imgkey = key.url();
-    //     if let Some(image) = image_loader.query_success(id) {
-    //         let result = AssetMgr::load(&imgtex_assets_mgr, &key_u64);
-    //         // log::warn!("Texture Image Success {:?}", (key.url()));
-    //         let (success, fail) = (loader.success.clone(), loader.fail.clone());
-    //         let viewkey = key.clone();
-    //         let texkey = EKeyTexture::Image(key);
-    //         RENDER_RUNTIME.spawn(async move {
-    //             // log::error!("Texture Load Task {:?}", (texkey));
-    //             match ImageTextureView::async_load(image, viewkey, result).await {
-    //                 Ok(res) => {
-    //                     // log::warn!("Texture Load Success {:?}", (texkey));
-    //                     success.push((entity, texkey, ETextureViewUsage::Image(res)));
-    //                 }
-    //                 Err(_e) => {
-    //                     // log::error!("Texture Load Fail {:?}", (texkey));
-    //                     fail.push((entity, texkey));
-    //                 }
-    //             };
-    //         }).unwrap();
-    //     } else if let Some(_fail) = image_loader.query_failed_reason(id) {
-    //         // log::warn!("Texture Fail {:?}", (key.url(), fail));
-    //         loader.fail.push((entity, EKeyTexture::Image(key)));
-    //         state.texview_fail += 1;
-    //     } else {
-    //         // log::warn!("Texture Load Again {:?}", (id, key.url()));
-    //         waitagain.push((entity, key, id));
-    //     }
-    // }
-    // waitagain.drain(..).for_each(|item| { loader.wait.push(item) });
-    // state.texview_waiting = loader.wait.len() as u32;
     _sys_image_texture_view_loaded_check(
         &loader.wait, &loader.success, &loader.fail,
         &imgtex_assets_mgr, &mut image_loader, &mut state
@@ -509,4 +472,214 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
     fn default() -> Self {
         Self(PhantomData::<(K, D)>::default())
     }
+}
+
+
+#[derive(Resource, Default)]
+pub struct ImageTextureViewLoader2 {
+    pub wait: Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    pub success: Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
+    pub fail: Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
+}
+
+pub fn sys_image_texture_view_load_launch2(
+    // mut commands: Commands,
+    mut items: Query<(Entity, &TextureKeyList, &mut EffectBindTexture2DList), Changed<TextureKeyList>>,
+    loader: Res<ImageTextureViewLoader2>,
+    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
+    texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
+    mut image_loader: ResMut<ImageTextureLoader>,
+    queue: Res<PiRenderQueue>,
+    device: Res<PiRenderDevice>,
+    mut state: ResMut<StateTextureLoader>,
+    targets: Res<CustomRenderTargets>,
+) {
+    items.iter_mut().for_each(|(entity, param, mut cmd)| {
+        state.texview_count += 1;
+        cmd.empty();
+        // let param = param.deref();
+        let mut idx = 0;
+        param.0.iter().for_each(|key| {
+            match _sys_image_texture_view_load_launch2(entity, idx, &key.deref().url, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader, &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets) {
+                Some(data) => { 
+                    cmd.loaded_textureviewusage(idx, data);
+                },
+                None => {}
+            }
+
+            idx += 1;
+        });
+    });
+}
+
+#[inline(never)]
+fn _sys_image_texture_view_load_launch2(
+    entity: Entity,
+    slot: usize,
+    param: &EKeyTexture,
+    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureView>,
+    texres_assets_mgr: &ShareAssetMgr<TextureRes>,
+    image_loader: &mut ImageTextureLoader,
+    queue: &RenderQueue,
+    device: &RenderDevice,
+    state: &mut StateTextureLoader,
+    wait: &Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
+    fail: &Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
+    targets: &CustomRenderTargets,
+) -> Option<ETextureViewUsage> {
+    match param {
+        EKeyTexture::Tex(url) => {
+            let key_u64 = url.asset_u64();
+            let result = AssetMgr::load(&texres_assets_mgr, &key_u64);
+            match result {
+                LoadResult::Ok(texture_view) => {
+                    // log::error!("Texture While Launch: {:?}", url);
+                    state.texview_success += 1;
+                    Some(ETextureViewUsage::Tex(texture_view))
+                },
+                _ => {
+                    let (success, fail, device, queue) = (success.clone(), fail.clone(), (device).clone(), (queue).clone());
+                    let key = param.clone();
+                    let url = url.clone();
+                    RENDER_RUNTIME
+                        .spawn(async move {
+                            let desc = ImageTextureDesc { url: &url, device: &device, queue: &queue, };
+                            match TextureRes::async_load(desc, result).await {
+                                Ok(res) => {
+                                    success.push((entity, key, ETextureViewUsage::Tex(res), slot));
+                                }
+                                Err(_e) => {
+                                    // log::error!("load image fail, {:?}", e);
+                                    // log::debug!("load image fail");
+                                    fail.push((entity, key, slot));
+                                }
+                            };
+                        })
+                        .unwrap();
+                    
+                    None
+                },
+            }
+        },
+        EKeyTexture::Image(key) => {
+            // log::warn!("Texture Load {:?}", (key.url()));
+            let key_u64 = key.asset_u64();
+            let result = imgtex_assets_mgr.get(&key_u64);
+            match result {
+                Some(view) => {
+                    // log::error!("Texture While Launch: {:?}", key_u64);
+                    // log::warn!("Texture Success 0 {:?}", (key.url()));
+                    // *cmd = D::from(ETextureViewUsage::Image(view));
+                    state.texview_success += 1;
+                    Some(ETextureViewUsage::Image(view))
+                },
+                _ => {
+                    // let imgkey = key.url();
+                    let id = image_loader.create_load(key.url().clone());
+                    wait.push((entity, key.clone(), id, slot));
+                    None
+                },
+            }
+        },
+        EKeyTexture::SRT(_key) => {
+            // TODO
+            if let Some(target) = targets.get(*_key) {
+                Some(ETextureViewUsage::SRT(target.rt.clone()))
+            } else {
+                state.texview_fail += 1;
+                None
+            }
+        },
+    }
+}
+
+pub fn sys_image_texture_view_loaded_check2(
+    // entities: Query<Entity>,
+    mut items: Query<(&TextureKeyList, &mut EffectBindTexture2DList)>,
+    // mut commands: Commands,
+    loader: Res<ImageTextureViewLoader2>,
+    // image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
+    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
+    texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
+    mut image_loader: ResMut<ImageTextureLoader>,
+    mut state: ResMut<StateTextureLoader>,
+) {
+    _sys_image_texture_view_loaded_check2(
+        &loader.wait, &loader.success, &loader.fail,
+        &imgtex_assets_mgr, &mut image_loader, &mut state
+    );
+
+    let mut item = loader.success.pop();
+    while let Some((entity, _key, view, slot)) = item {
+        item = loader.success.pop();
+        // log::error!("Texture Success {:?}", _key);
+        if let Ok((_, mut item)) = items.get_mut(entity) {
+            // log::error!("Texture Success Component");
+            // log::error!("Texture From Success Queue: {:?}", view.asset_u64());
+            item.loaded_textureviewusage(slot, view);
+            state.texview_success += 1;
+        }
+    }
+
+    let whitekey = KeyTexture::from(DefaultTexture::WHITE_2D);
+    // let white = EKeyTexture::Tex(whitekey.clone());
+    let key_u64 = whitekey.asset_u64();
+    let view = texres_assets_mgr.get(&key_u64).unwrap();
+    let mut item = loader.fail.pop();
+    while let Some((entity, _key, slot)) = item {
+        item = loader.fail.pop();
+        if let Ok((_, mut item)) = items.get_mut(entity) {
+            // log::error!("Texture From Fail Queue:");
+            item.loaded_textureviewusage(slot, ETextureViewUsage::Tex(view.clone()));
+            state.texview_success += 1;
+        }
+    }
+}
+#[inline(never)]
+fn _sys_image_texture_view_loaded_check2(
+    wait: &Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
+    fail: &Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
+    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureView>,
+    image_loader: &mut ImageTextureLoader,
+    state: &mut StateTextureLoader,
+) {
+    let mut item = wait.pop();
+    let mut waitagain = vec![];
+    while let Some((entity, key, id, slot)) = item {
+        item = wait.pop();
+
+        let key_u64 = key.asset_u64();
+        // let imgkey = key.url();
+        if let Some(image) = image_loader.query_success(id) {
+            let result = AssetMgr::load(&imgtex_assets_mgr, &key_u64);
+            // log::warn!("Texture Image Success {:?}", (key.url()));
+            let (success, fail) = (success.clone(), fail.clone());
+            let viewkey = key.clone();
+            let texkey = EKeyTexture::Image(key);
+            RENDER_RUNTIME.spawn(async move {
+                // log::error!("Texture Load Task {:?}", (texkey));
+                match ImageTextureView::async_load(image, viewkey, result).await {
+                    Ok(res) => {
+                        // log::warn!("Texture Load Success {:?}", (texkey));
+                        success.push((entity, texkey, ETextureViewUsage::Image(res), slot));
+                    }
+                    Err(_e) => {
+                        // log::error!("Texture Load Fail {:?}", (texkey));
+                        fail.push((entity, texkey, slot));
+                    }
+                };
+            }).unwrap();
+        } else if let Some(_fail) = image_loader.query_failed_reason(id) {
+            // log::warn!("Texture Fail {:?}", (key.url(), fail));
+            fail.push((entity, EKeyTexture::Image(key), slot));
+            state.texview_fail += 1;
+        } else {
+            // log::warn!("Texture Load Again {:?}", (id, key.url()));
+            waitagain.push((entity, key, id, slot));
+        }
+    }
+    waitagain.drain(..).for_each(|item| { wait.push(item) });
+    state.texview_waiting = wait.len() as u32;
 }
