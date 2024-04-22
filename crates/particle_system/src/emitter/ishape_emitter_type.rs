@@ -184,7 +184,7 @@ impl Default for EShapeEmitterArcMode {
 /**
  * 形状发射器创建模式
  */
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub enum EShapeEmitterDirectionMode {
     Unity = 0,
 }

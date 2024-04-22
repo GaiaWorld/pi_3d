@@ -1,6 +1,6 @@
 [package]
 name = "pi_3d"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -53,7 +53,6 @@ bevy_ecs            = "0.11"
 # bevy_mod_debugdump  = { version = "0.8" }
 
 log                 = "0.4"
-env_logger          = "0.9"
 
 smallvec            = "1.9"
 crossbeam           = "0.8"
@@ -74,6 +73,8 @@ pi_bevy_ecs_extend      = { path = "../pi_bevy/crates/ecs_extend" }
 pi_bevy_asset           = { path = "../pi_bevy/crates/asset" }
 pi_bevy_log             = { path = "../pi_bevy/crates/log" }
 
+pi_animation            = { path = "../pi_animation" }
+
 pi_wgpu                 = { path = "../pi_wgpu" }
 pi_egl                  = { path = "../pi_egl" }
 # winit                   = { path = "../winit" }
@@ -81,13 +82,15 @@ pi_egl                  = { path = "../pi_egl" }
 # pi_postprocess          = { path = "../pi_post_process"}
 
 [dev-dependencies]
-wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["wgpu"] }
-wgpu1           = { version = "0.16", features = ["glsl"],  package = "wgpu" }
+wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
 bevy_a11y       = "0.11"
 bevy_app        = "0.11"
+bevy_window     = "0.11"
 pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
+env_logger          = "0.9"
+# pi_wgpu         = { version = "*", features = ["single_thread", "use_wgpu"] }
 
 [[example]]
 name = "cube"
@@ -321,3 +324,6 @@ path = "examples/postprocess/camera_opaque_texture.rs"
 name = "camera_depth_texture"
 path = "examples/postprocess/camera_depth_texture.rs"
 
+[[example]]
+name = "planar_shadow"
+path = "examples/lighting/planar_shadow.rs"

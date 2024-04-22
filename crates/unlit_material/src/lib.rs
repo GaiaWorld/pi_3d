@@ -8,10 +8,12 @@ use pi_scene_context::prelude::*;
 mod command;
 mod interface;
 mod effects;
+mod planar_shadow;
 
 pub use command::*;
 pub use interface::*;
 pub use effects::*;
+pub use planar_shadow::*;
 
 pub struct UnlitShader {
     pub vs_module: wgpu::ShaderModule,

@@ -11,7 +11,7 @@ use crate::shader::ShaderSetBind;
 
 
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct ShaderBindModelAboutMatrix {
     pub(crate) data: BindBufferRange,
 }
@@ -117,7 +117,7 @@ impl TShaderBindCode for ShaderBindModelAboutMatrix {
 
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseModelMatrix {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindModelAboutMatrix>,

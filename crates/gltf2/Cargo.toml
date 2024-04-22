@@ -1,6 +1,6 @@
 [package]
 name = "pi_gltf2_load"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "GLTF2 Res Manager."
@@ -18,18 +18,17 @@ pi_time         = "0.3"
 pi_atom         = { version = "0.5", features = ["serde"] }
 
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
-naga            = { version = "0.12", features = [ "glsl-in", ] }
+naga            = { version = "0.19", features = [ "glsl-in", ] }
 bevy_ecs        = "0.11"
 bytemuck        = { version = "1.4", features = ["derive"] }
 
 log             = "0.4"
-env_logger      = "0.9"
 
 smallvec        = "1.9"
 crossbeam       = "0.8"
 futures         = "0.3"
 derive_deref    = "1.1"
-base64          = "0.20.0"
+base64          = "0.21"
 
 pi_hal              = { version = "0.1", registry = "yn" }
 

@@ -1,4 +1,4 @@
-use std::{ops::Range, fmt::Debug};
+use std::ops::Range;
 
 use pi_curves::curve::{frame::FrameDataValue, frame_curve::{FrameCurve, frames::interplate_frame_values_step}};
 use pi_scene_shell::prelude::*;
@@ -6,7 +6,7 @@ use pi_gltf::animation::Interpolation;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum EAnimePropertyType {
     LocalPosition       =  0,
     LocalRotation       =  1,
@@ -179,7 +179,7 @@ impl TValue<1> for AnimatorableSint {
     }
 }
 
-pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue + Debug>(
+pub fn curve_gltf<const N: usize, T: TValue<N> + FrameDataValue>(
     times: &[f32],
     values: &[f32],
     design_frame_per_second: FramePerSecond,

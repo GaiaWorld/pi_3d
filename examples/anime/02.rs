@@ -96,9 +96,9 @@ fn setup(
                 let x = (i as f32 - size as f32 / 2.) + 0.5;
                 let y = (j as f32 - size as f32 / 2.) + 0.5;
                 let z = (k as f32 - size as f32 / 2.) + 0.5;
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(ins, x, y, z));
-                actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(ins, r, g, b));
-                actions.instance.vec4s.push(OpsInstanceVec4::ops(ins, r, g, b, 1., Atom::from("InsColor4")));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(ins, ETransformSRT::Translation(x, y, z)));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(ins, ETransformSRT::Scaling(r, g, b)));
+                actions.instance.attr.push(OpsInstanceAttr::ops(ins, EInstanceAttr::Vec4([r, g, b, 1.]), Atom::from("InsColor4")));
             }
         }
     }

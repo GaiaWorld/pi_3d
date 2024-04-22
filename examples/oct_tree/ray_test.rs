@@ -92,12 +92,14 @@ fn setup(
                     .push(OpsTransformNodeParent::ops(cube, source));
 
                 actions.transform
-                    .localpos
-                    .push(OpsTransformNodeLocalPosition::ops(
+                    .localsrt
+                    .push(OpsTransformNodeLocal::ops(
                         cube,
-                        i as f32 * 2. - (tes_size) as f32,
-                        0.,
-                        j as f32 * 2. - (tes_size) as f32,
+                        ETransformSRT::Translation(
+                            i as f32 * 2. - (tes_size) as f32,
+                            0.,
+                            j as f32 * 2. - (tes_size) as f32
+                        ),
                     ));
 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
@@ -163,7 +165,7 @@ pub fn sys_test(
     list.0
         .iter_mut()
         .for_each(|item| rays.push(RayTest(item.0, item.1, item.2, item.3)));
-    println!("res: {:?}", res.as_ref());
+    // println!("res: {:?}", res.as_ref());
 }
 pub fn main() {
     let mut app = base::test_plugins();

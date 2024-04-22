@@ -55,10 +55,10 @@ impl Plugin for PluginGeometry {
 
         app.configure_set(Update, StageGeometry::Create.after(StageModel::_InitMesh));
         app.configure_set(Update, StageGeometry::_GeoCreate.after(StageGeometry::Create));
-        app.configure_set(Update, StageGeometry::VertexBufferLoaded.after(StageGeometry::_GeoCreate));
-        app.configure_set(Update, StageGeometry::_VertexBufferLoadedApply.after(StageGeometry::VertexBufferLoaded));
-        app.configure_set(Update, StageGeometry::GeometryLoaded.after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageGeometry::Upload.after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList));
+        app.configure_set(Update, StageGeometry::VertexBufferLoaded.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate));
+        app.configure_set(Update, StageGeometry::_VertexBufferLoadedApply.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded));
+        app.configure_set(Update, StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageGeometry::Upload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList));
         app.add_systems(Update, apply_deferred.in_set(StageGeometry::_GeoCreate) );
         app.add_systems(Update, apply_deferred.in_set(StageGeometry::_VertexBufferLoadedApply) );
 
@@ -81,7 +81,10 @@ impl Plugin for PluginGeometry {
         );
 
         app.add_systems(Update, 
-            sys_dispose_about_geometry.run_if(should_run).after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            (
+                sys_dispose_about_geometry  // .run_if(should_run)
+                .after(sys_dispose_ready)
+            ).in_set(ERunStageChap::Dispose)
         );
     }
 }

@@ -288,7 +288,7 @@ impl ScalingInterpolate {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Color4Interpolate {
     pub temp_result: [f32; 4],
     pub gradient: Color4Gradient,

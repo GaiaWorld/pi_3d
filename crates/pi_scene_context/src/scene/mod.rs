@@ -41,8 +41,6 @@ impl Plugin for PluginScene {
         app.insert_resource(ActionListSceneCreate::default());
         app.insert_resource(ActionListSceneTime::default());
         app.insert_resource(ActionListSceneAmbientColor::default());
-        app.insert_resource(ActionListSceneAmbientIntensity::default());
-        app.insert_resource(ActionListSceneFogColor::default());
         app.insert_resource(ActionListSceneFogParam::default());
         app.insert_resource(ActionListSceneAnimationEnable::default());
         app.insert_resource(ActionListSceneBRDF::default());
@@ -63,8 +61,8 @@ impl Plugin for PluginScene {
             ).chain()
         );
 
-        app.configure_set(Update, StageScene::TextureRequest.after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
-        app.configure_set(Update, StageScene::TextureLoaded.after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
+        app.configure_set(Update, StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageScene::_Insert));
 
         app.add_systems(
@@ -89,17 +87,8 @@ impl Plugin for PluginScene {
         app.add_systems(
 			Update,
             (
-                sys_act_scene_time,
-                sys_act_scene_ambientcolor,
-                sys_act_scene_ambientintensity,
-                sys_act_scene_fogcolor,
-                sys_act_scene_fogparam,
-                sys_act_scene_animation_enable,
-                sys_act_scene_brdf,
-                sys_act_scene_env_texture,
-                sys_act_scene_opaque_target,
-                sys_act_scene_depth_target,
-                sys_act_scene_shadowmap,
+                sys_act_scene_ambient,
+                sys_act_scene_render,
             ).in_set(StageScene::Command)
         );
 
@@ -107,8 +96,6 @@ impl Plugin for PluginScene {
 			Update,
             (
                 sys_bind_update_scene_ambient,
-                sys_bind_update_scene_fog,
-                sys_bind_update_scene_time
             ).in_set(ERunStageChap::Uniform)
         );
 

@@ -19,7 +19,7 @@ pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 //     #[system]
     pub fn sys(
         mut list: ResMut<ActionListTestData>,
-        mut transform_commands: ResMut<ActionListTransformNodeLocalEuler>,
+        mut transform_commands: ResMut<ActionListTransformNodeLocal>,
     ) {
         list.drain().drain(..).for_each(|mut item| {
             item.1 = item.1 + 16.0;
@@ -33,7 +33,7 @@ pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
             let z = z0 * 3.1415926 * 2.;
             // transform_commands.list.push(TransformNodeCommand::ModifyPosition(item.0, Vector3::new(x.cos() * 3., 0., 0.)));
             // transform_commands.list.push(TransformNodeCommand::ModifyScaling(item.0, Vector3::new(x.cos() + 0.5, x.sin() + 0.5, x + 0.5)));
-            transform_commands.push(OpsTransformNodeLocalEuler::ops(item.0, x, y, z));
+            transform_commands.push(OpsTransformNodeLocal::ops(item.0, ETransformSRT::Euler(x, y, z)));
 
             list.push(item);
         });
@@ -78,7 +78,7 @@ fn setup(
 
     actions.mesh.indexrange.push(OpsMeshRenderIndiceRange::ops(source, Some(3), Some(12)));
     // actions.mesh.vertexrange.push(OpsMeshRenderVertexRange::ops(cube, Some(0), Some(12)));
-    actions.mesh.cullmode.push(OpsCullMode::ops(source, CullMode::Off));
+    actions.mesh.primitive_state.push(OpsPrimitiveState::ops(source, DemoScene::PASS_OPAQUE, EPrimitiveState::CCullMode(CullMode::Off)));
 
     actions.material.usemat.push(OpsMaterialUse::ops(source, defaultmat.0, DemoScene::PASS_OPAQUE));
 

@@ -1,7 +1,7 @@
 
 pub type KeyShaderDefines = u128;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Default)]
 pub struct ShaderDefinesSet {
     pub list: Vec<pi_atom::Atom>,
 }

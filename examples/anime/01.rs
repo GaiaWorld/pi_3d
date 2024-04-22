@@ -63,7 +63,7 @@ fn setup(
                 let cube: Entity = commands.spawn_empty().id();
                 actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                 actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
                 let key_curve0 = key_curve0.asset_u64();

@@ -8,7 +8,7 @@ use crate::{
 use super::{
     base::*,
     // shadow_generator::*,
-    command::*, spot::{SpotLightInAngle, SpotLightOutAngle}, hemisphere::HemiGrounds,
+    command::*, spot::SpotLightAngle, hemisphere::HemiGrounds,
 };
 
 pub fn sys_create_light(
@@ -36,27 +36,30 @@ pub fn sys_create_light(
     });
 }
 
-pub fn sys_act_light_color(
+pub fn sys_act_light_param(
     mut cmds: ResMut<ActionListLightColor>,
-    mut lights: Query<&mut LightColor>,
+    // mut lights: Query<&mut LightColor>,
+    mut directcmds: ResMut<ActionListLightParam>,
+    mut directlights: Query<&mut LightDirection>,
+    // mut directlightsmode: Query<&mut LightingMode>,
+    mut spot_cmds: ResMut<ActionListSpotLightAngle>,
+    mut spot_lights: Query<&mut SpotLightAngle>,
+    mut strength_cmds: ResMut<ActionListLightStrength>,
+    // mut strength_lights: Query<&mut LightStrength>,
+    mut radius_cmds: ResMut<ActionListLightRadius>,
+    // mut radius_lights: Query<&mut LightRadius>,
+    mut param_lights: Query<&mut LightParam>,
 ) {
     cmds.drain().drain(..).for_each(|OpsLightColor(entity, color)| {
-        if let Ok(mut lightcolor) = lights.get_mut(entity) {
-            lightcolor.0 = color;
+        if let Ok(mut lightcolor) = param_lights.get_mut(entity) {
+            lightcolor.color = color;
         }
     });
-}
-
-pub fn sys_act_light_param(
-    mut cmds: ResMut<ActionListLightParam>,
-    mut directlights: Query<&mut LightDirection>,
-    mut lights: Query<&mut LightingMode>,
-) {
-    cmds.drain().drain(..).for_each(|cmd| {
+    directcmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             ELightModifyCommand::LightingType(entity, val) => {
-                if let Ok(mut item) = lights.get_mut(entity) {
-                    *item = val;
+                if let Ok(mut item) = param_lights.get_mut(entity) {
+                    item.mode = val;
                 }
             },
             ELightModifyCommand::Directional(entity, val) => {
@@ -64,86 +67,25 @@ pub fn sys_act_light_param(
                     *item = LightDirection(val);
                 }
             },
-            // ELightModifyCommand::ShadowMinz(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.0 = ShadowMinZ(val);
-            //     }
-            // },
-            // ELightModifyCommand::ShadowMaxz(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.1 = ShadowMaxZ(val);
-            //     }
-            // },
-            // ELightModifyCommand::ShadowFrustumSize(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.2 = ShadowFrustumSize(val);
-            //     }
-            // },
-            // ELightModifyCommand::Bias(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.3 = ShadowBias(val);
-            //     }
-            // },
-            // ELightModifyCommand::NormalBias(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.4 = ShadowNormalBias(val);
-            //     }
-            // },
-            // ELightModifyCommand::DepthScale(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.5 = ShadowDepthScale(val);
-            //     }
-            // },
-            // ELightModifyCommand::AtlasSize(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.6 = ShadowAtlasSize(val);
-            //         *item.8 = ViewerSize(val, val);
-            //     }
-            // },
-            // ELightModifyCommand::ShadowEnable(entity, val) => {
-            //     if let Ok(mut item) = shadowlights.get_mut(entity) {
-            //         *item.7 = ShadowEnable(val);
-            //     }
-            // },
+        }
+    });
+    spot_cmds.drain().drain(..).for_each(|OpsSpotLightAngle(entity, outangle, inangle)| {
+        if let Ok(mut out_val) = spot_lights.get_mut(entity) {
+            out_val.out_value = outangle;
+            out_val.in_value = inangle;
+        }
+    });
+    strength_cmds.drain().drain(..).for_each(|OpsLightStrength(entity, val)| {
+        if let Ok(mut light) = param_lights.get_mut(entity) {
+            light.strength = val;
+        }
+    });
+    radius_cmds.drain().drain(..).for_each(|OpsLightRadius(entity, val)| {
+        if let Ok(mut light) = param_lights.get_mut(entity) {
+            light.radius = val;
         }
     });
 }
-
-pub fn sys_act_spot_light_angle(
-    mut cmds: ResMut<ActionListSpotLightAngle>,
-    mut lights: Query<(&mut SpotLightOutAngle, &mut SpotLightInAngle)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsSpotLightAngle(entity, outangle, inangle)| {
-        if let Ok((mut out_val, mut in_val)) = lights.get_mut(entity) {
-            out_val.0 = outangle;
-            in_val.0 = inangle;
-        }
-    });
-}
-
-pub fn sys_act_light_strength(
-    mut cmds: ResMut<ActionListLightStrength>,
-    mut lights: Query<&mut LightStrength>,
-) {
-    cmds.drain().drain(..).for_each(|OpsLightStrength(entity, val)| {
-        if let Ok(mut light) = lights.get_mut(entity) {
-            *light = LightStrength(val);
-        }
-    });
-}
-
-
-pub fn sys_act_light_radius(
-    mut cmds: ResMut<ActionListLightRadius>,
-    mut lights: Query<&mut LightRadius>,
-) {
-    cmds.drain().drain(..).for_each(|OpsLightRadius(entity, val)| {
-        if let Ok(mut light) = lights.get_mut(entity) {
-            *light = LightRadius(val);
-        }
-    });
-}
-
 
 pub struct ActionLight;
 impl ActionLight {
@@ -152,10 +94,8 @@ impl ActionLight {
     ) {
         // log::warn!("CreateLight {:?}", commands.id());
         commands
-            .insert(LightingMode::Lambert)
-            .insert(LightColor::default())
+            .insert(LightParam::default())
             .insert(LightLinkedShadowID(None))
-            .insert(LightStrength::default())
             ;
     }
     pub(crate) fn as_direct_light(
@@ -175,9 +115,7 @@ impl ActionLight {
         commands.insert(SpotLight);
         commands.insert(LayerMask::default());
         commands.insert(LightDirection::default());
-        commands.insert(SpotLightInAngle(0.2));
-        commands.insert(SpotLightOutAngle(0.5));
-        commands.insert(LightRadius::default());
+        commands.insert(SpotLightAngle{ in_value: 0.2, out_value: 0.3 });
         commands.insert(ViewerDistanceCompute::Base);
     }
     pub(crate) fn as_point_light(
@@ -187,7 +125,6 @@ impl ActionLight {
         // Self::as_shadow_light(commands);
         commands.insert(PointLight);
         commands.insert(LayerMask::default());
-        commands.insert(LightRadius::default());
         commands.insert(ViewerDistanceCompute::Base);
     }
     pub(crate) fn as_hemi_light(

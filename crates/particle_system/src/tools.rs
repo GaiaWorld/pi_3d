@@ -69,7 +69,7 @@ pub enum EParticleRenderAlignment {
     Velocity = 4,
 }
 
-#[derive(Clone, Copy, Default, PartialEq, Debug)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub enum EParticleRenderMode {
     #[default]
     Billboard = 0,
@@ -209,7 +209,6 @@ impl Default for LimitVelocityScalar {
     }
 }
 
-#[derive(Debug)]
 pub struct TextureUV {
     pub(crate) start_frame: f32,
     pub(crate) row: f32,

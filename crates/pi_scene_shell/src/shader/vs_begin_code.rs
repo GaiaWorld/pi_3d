@@ -1,7 +1,7 @@
 
 use pi_render::renderer::attributes::EVertexDataKind;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AttributeRefCode {
     pub format: String,
     pub name: String,
@@ -27,7 +27,7 @@ impl AttributeRefCode {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AttributesRef(pub Vec<AttributeRefCode>);
 impl AttributesRef {
     pub fn size(&self) -> usize {
@@ -40,7 +40,6 @@ impl AttributesRef {
     }
 }
 
-#[derive(Debug)]
 pub struct VSBeginCode;
 impl VSBeginCode {
     pub fn code(

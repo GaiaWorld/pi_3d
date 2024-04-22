@@ -225,7 +225,7 @@ impl StateGeometryBuffer {
         for _ in 0..size {
             data.push(0);
         }
-        log::error!("StateGeometryBuffer {}", data.len());
+        // log::error!("StateGeometryBuffer {}", data.len());
         if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
             Some(Self {
                 vertices: vec![],
@@ -417,10 +417,7 @@ impl PluginGroup for PluginBundleDefault {
             .add(PluginSkeleton)
             .add(PluginDefaultMaterial)
             .add(PluginDispose)
-            .add(PluginNodeMaterial)
             .add(PluginStateGlobal)
-            .add(PluginShadowGenerator)
-            .add(PluginShadowMapping)
             ;
 
         group

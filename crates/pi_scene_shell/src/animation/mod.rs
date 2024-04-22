@@ -13,6 +13,7 @@ use std::marker::PhantomData;
 
 use bevy_app::{App, Plugin, Update};
 use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
+use crate::prelude::FrameDataPrepare;
 
 pub use base::*;
 pub use command::*;
@@ -31,7 +32,7 @@ use pi_hash::XHashMap;
 
 use crate::{prelude::ERunStageChap, run_stage::should_run_with_animation};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum EAnimatorableType {
     // Mat4,
     Vec4,
@@ -75,7 +76,7 @@ impl Plugin for PluginGlobalAnimation {
         app.configure_set(Update, EStageAnimation::Create);
         app.configure_set(Update, EStageAnimation::_CreateApply.after(EStageAnimation::Create));
         app.configure_set(Update, EStageAnimation::Command.after(EStageAnimation::_CreateApply));
-        app.configure_set(Update, EStageAnimation::Running.after(EStageAnimation::Command).before(ERunStageChap::Anime));
+        app.configure_set(Update, EStageAnimation::Running.in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
         app.configure_set(Update, EStageAnimation::Dispose.after(EStageAnimation::Running).after(ERunStageChap::Dispose));
         app.add_systems(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
         
@@ -90,15 +91,9 @@ impl Plugin for PluginGlobalAnimation {
         app.add_systems(
 			Update,
             (
-                sys_act_reset_while_animationgroup_start.run_if(should_run),
-                // sys_anime_group_create.run_if(should_run),
-                sys_act_add_target_animation,
-                sys_act_add_animation_group_frame_event,
-                sys_act_add_animation_group_listen,
-                // sys_anime_start.run_if(should_run),
-                // sys_anime_pause.run_if(should_run),
-                sys_act_animation_group_action.run_if(should_run),
-                sys_act_dispose_animation_group.run_if(should_run),
+                sys_act_reset_while_animationgroup_start    , // .run_if(should_run),
+                sys_act_animation_group_action              , // .run_if(should_run),
+                sys_act_dispose_animation_group             , // .run_if(should_run),
             ).chain().in_set(EStageAnimation::Command)
         );
         
@@ -106,7 +101,7 @@ impl Plugin for PluginGlobalAnimation {
             (
                 sys_animation_removed_data_clear,
                 sys_reset_anime_performance
-            ).run_if(should_run).in_set(EStageAnimation::Dispose)
+            ).in_set(EStageAnimation::Dispose)
         );
 
         let globalaboput = GlobalAnimeAbout {
@@ -142,13 +137,16 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
         app.insert_resource(type_ctx);
 
         app.add_systems(Update, 
-            sys_apply_removed_data::<D>.run_if(should_run).before(sys_animation_removed_data_clear).in_set(EStageAnimation::Dispose)
+            (
+                sys_apply_removed_data::<D>     // .run_if(should_run)
+                .before(sys_animation_removed_data_clear)
+            ).in_set(EStageAnimation::Dispose)
         );
         app.add_systems(
 			Update,
             (
-                sys_calc_reset_animatablecomp::<D, R>.run_if(should_run),
-                sys_calc_type_anime::<D>.run_if(should_run_with_animation)
+                sys_calc_reset_animatablecomp::<D, R>   , //.run_if(should_run),
+                sys_calc_type_anime::<D>                , // .run_if(should_run_with_animation)
             ).chain().in_set(EStageAnimation::Running)
         );
     }

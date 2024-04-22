@@ -50,9 +50,9 @@ pub fn sys_shadow_param_update_while_mat_create(
 
 pub fn sys_shadow_param_update(
     shadows: Query<
-        (&LinkedMaterialID, &ShadowMinZ, &ShadowMaxZ, &ShadowBias, &ShadowNormalBias, &ShadowDepthScale),
+        (&LinkedMaterialID, &ShadowParam),
         Or<(
-            Changed<LinkedMaterialID>, Changed<ShadowMinZ>, Changed<ShadowMaxZ>, Changed<ShadowBias>, Changed<ShadowNormalBias>, Changed<ShadowDepthScale>, 
+            Changed<LinkedMaterialID>, Changed<ShadowParam>
         )>
     >,
     // mut materails: Query<
@@ -60,13 +60,13 @@ pub fn sys_shadow_param_update(
     // >,
     mut cmds: ResMut<ActionListUniformFloat>,
 ) {
-    shadows.iter().for_each(|(id_mat, minz, maxz, bias, normal_bias, depth_scale)| {
+    shadows.iter().for_each(|(id_mat, shaow)| {
 
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_BIAS), bias.0));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_NORMAL_BIAS), normal_bias.0));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_SCALE), depth_scale.0));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_MINZ), minz.0));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_MAXZ), maxz.0));
+        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_BIAS), shaow.bias));
+        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_NORMAL_BIAS), shaow.normalbias));
+        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_SCALE), shaow.depthscale));
+        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_MINZ), shaow.minz));
+        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_MAXZ), shaow.maxz));
     });
 }
 
@@ -116,22 +116,22 @@ pub fn sys_light_layermask_to_shadow(
 }
 
 pub fn sys_shadow_project_modify_by_direction_light(
-    mut shadows: Query<(&ShadowMinZ, &ShadowMaxZ, &ShadowFrustumSize, &mut DirectionalShadowProjection), Or<(Changed<ShadowMinZ>, Changed<ShadowMaxZ>, Changed<ShadowFrustumSize>)>>,
+    mut shadows: Query<(&ShadowParam, &mut DirectionalShadowProjection), Changed<ShadowParam>>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_shadow_project_modify_by_direction_light"));
-    shadows.iter_mut().for_each(|(minz, maxz, size, mut project)| {
-        *project = DirectionalShadowProjection { minz: minz.0, maxz: maxz.0, frustum_size: size.0 };
+    shadows.iter_mut().for_each(|(shaow, mut project)| {
+        *project = DirectionalShadowProjection { minz: shaow.minz, maxz: shaow.maxz, frustum_size: shaow.frustum };
     });
 }
 
 pub fn sys_shadow_project_modify_by_spot_light(
-    lights: Query<(&SpotLightOutAngle, &LightLinkedShadowID)>,
-    mut shadows: Query<(&ShadowLinkedLightID, &ShadowMinZ, &ShadowMaxZ, &mut SpotShadowProjection)>,
+    lights: Query<(&SpotLightAngle, &LightLinkedShadowID)>,
+    mut shadows: Query<(&ShadowLinkedLightID, &ShadowParam, &mut SpotShadowProjection)>,
 ) {
-    shadows.iter_mut().for_each(|(idlight, minz, maxz, mut project)| {
+    shadows.iter_mut().for_each(|(idlight, shadow, mut project)| {
         if let Ok((outangle, _)) = lights.get(idlight.0) {
-            *project = SpotShadowProjection { minz: minz.0, maxz: maxz.0, fov: outangle.0 };
+            *project = SpotShadowProjection { minz: shadow.minz, maxz: shadow.maxz, fov: outangle.out_value };
             // log::warn!("Spot {:?}", maxz.0);
         }
     });
@@ -175,7 +175,7 @@ pub fn sys_calc_view_matrix_by_light(
 
 pub fn sys_shadow_bind_modify(
     scenes: Query<(Entity, &SceneShadowInfos, &SceneShadowQueue)>,
-    shadows: Query<(&ShadowLinkedLightID, &ViewerTransformMatrix, &ShadowBias, &ShadowNormalBias, &ShadowMinZ, &ShadowMaxZ, &ShadowDepthScale)>,
+    shadows: Query<(&ShadowLinkedLightID, &ViewerTransformMatrix, &ShadowParam)>,
     indexs: Query<&SceneItemIndex>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
@@ -183,13 +183,13 @@ pub fn sys_shadow_bind_modify(
     scenes.iter().for_each(|(_entity, shadowdata, queueshadow)| {
         shadowdata.0.reset();
         queueshadow.0.items().for_each(|v| {
-            if let (Ok(indexshadow), Ok((light, matrix, bias, normalbias, _minz, _maxz, depthscale))) = (indexs.get(*v), shadows.get(*v)) {
+            if let (Ok(indexshadow), Ok((light, matrix, shadow))) = (indexs.get(*v), shadows.get(*v)) {
                 let uscale = 1.;
                 let vscale = 1.;
                 let uoff = 0.;
                 let voff = 0.;
                 if let Ok(indexlight) = indexs.get(light.0) {
-                    shadowdata.0.direct_shadow_data(indexlight.val(), indexshadow.val(), matrix.0.as_slice(), bias.0, normalbias.0, depthscale.0, 0., uscale, vscale, uoff, voff)
+                    shadowdata.0.direct_shadow_data(indexlight.val(), indexshadow.val(), matrix.0.as_slice(), shadow.bias, shadow.normalbias, shadow.depthscale, 0., uscale, vscale, uoff, voff)
                 }
             }
         });
@@ -217,57 +217,62 @@ pub fn sys_dispose_about_shadowcaster(
 
 }
 
-pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, L: TViewerLayerMask + Component>(
+pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
     mut viewers: Query<
-        (Entity, &ViewerActive, &SceneID, &L, &mut ModelList, &mut FlagModelList, &T, &T2),
-        Or<(Changed<L>, Changed<ViewerActive>)>
+        (Entity, &ViewerActive, &SceneID, &ShadowLayerMask, &mut ModelList, &mut FlagModelList),
+        (Or<(Changed<ShadowLayerMask>, Changed<ViewerActive>)>, With<T>, With<T2>)
     >,
     items: Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &MeshCastShadow),
     >,
-    // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
-    // record.0.push(String::from("sys_update_shadow_viewer_model_list_by_viewer"));
-    // let time1 = pi_time::Instant::now();
-
-    // log::debug!("CameraModelListByViewer :");
-    // log::debug!("SysModelListUpdateByCamera: ");
-    viewers.iter_mut().for_each(|(_camera, vieweractive, scene, layer, mut list_model, mut flag_list_model, _, _)| {
-        list_model.0.clear();
-        // log::warn!("CameraModelListByViewer : {:?}", _camera);
-        if vieweractive.0 {
-            // log::warn!("SysModelListUpdateByCamera: 0");
-            items.iter().for_each(|(id_obj, iscene, ilayer, instances, castshadow)| {
-                // log::debug!("SysModelListUpdateByCamera: 1");
-                if iscene == scene && layer.include(ilayer.0) && castshadow.0 {
-                    // log::debug!("SysModelListUpdateByCamera: 2");
-                    if list_model.0.contains(&id_obj) {
-                        // log::warn!("Has Include {:?}", id_obj);
-                    } else {
-                        list_model.0.insert(id_obj);
-                        *flag_list_model = FlagModelList::default();
-                    }
-                    instances.iter().for_each(|entity| {
-                        list_model.0.insert(*entity);
-                    });
-                    *flag_list_model = FlagModelList::default();
-                } else {
-                    list_model.0.remove(&id_obj);
-                    instances.iter().for_each(|entity| {
-                        list_model.0.remove(entity);
-                    });
-                    // log::warn!("{:?}", (iscene, scene, layer, ilayer));
-                }
-            });
-        }
+    viewers.iter_mut().for_each(|(_camera, vieweractive, scene, layer, mut list_model, mut flag_list_model)| {
+        _sys_update_shadow_viewer_model_list_by_viewer(
+            vieweractive, scene, layer, &mut list_model, &mut flag_list_model, &items,
+        );
     });
 
     // log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
 }
+fn _sys_update_shadow_viewer_model_list_by_viewer(
+    vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, mut list_model: &mut ModelList, mut flag_list_model: &mut FlagModelList,
+    items: &Query<
+        (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &MeshCastShadow),
+    >,
+) {
+    list_model.0.clear();
+    // log::warn!("CameraModelListByViewer : {:?}", _camera);
+    if vieweractive.0 {
+        // log::warn!("SysModelListUpdateByCamera: 0");
+        items.iter().for_each(|(id_obj, iscene, ilayer, instances, castshadow)| {
+            // log::debug!("SysModelListUpdateByCamera: 1");
+            if iscene == scene && layer.include(ilayer.0) && castshadow.0 {
+                // log::debug!("SysModelListUpdateByCamera: 2");
+                if list_model.0.contains(&id_obj) {
+                    // log::warn!("Has Include {:?}", id_obj);
+                } else {
+                    list_model.0.insert(id_obj);
+                    *flag_list_model = FlagModelList::default();
+                }
+                instances.iter().for_each(|entity| {
+                    list_model.0.insert(*entity);
+                });
+                *flag_list_model = FlagModelList::default();
+            } else {
+                list_model.0.remove(&id_obj);
+                instances.iter().for_each(|entity| {
+                    list_model.0.remove(entity);
+                });
+                // log::warn!("{:?}", (iscene, scene, layer, ilayer));
+            }
+        });
+    }
+}
 
-pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, L: TViewerLayerMask + Component>(
+pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
     mut viewers: Query<
-        (&ViewerActive, &SceneID, &L, &mut ModelList, &mut FlagModelList, &T, &T2),
+        (&ViewerActive, &SceneID, &ShadowLayerMask, &mut ModelList, &mut FlagModelList),
+        (With<T>, With<T2>)
     >,
     items: Query<
         (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh, &MeshCastShadow),
@@ -281,30 +286,59 @@ pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Compo
 
     items.iter().for_each(|(id_obj, iscene, ilayer, instances, disposestate, _, castshadow)| {
         // log::debug!("CameraModelListByModel : 0");
-        viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, mut flag_list_model, _, _)| {
+        viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, mut flag_list_model)| {
             // log::debug!("CameraModelListByModel : 1");
-            if vieweractive.0 {
-                if iscene == scene && disposestate.0 == false {
-                    if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
-                        if layer.include(ilayer.0) && castshadow.0 {
-                            list_model.0.insert(id_obj);
-                            *flag_list_model = FlagModelList::default();
-                            instances.iter().for_each(|entity| {
-                                list_model.0.insert(*entity);
-                            });
-                        } else {
-                            list_model.0.remove(&id_obj);
-                            instances.iter().for_each(|entity| {
-                                list_model.0.remove(entity);
-                            });
-                        }
-                    }
-                } else {
-                    list_model.0.remove(&id_obj);
-                }
-            }
+            _sys_update_shadow_viewer_model_list_by_model(
+                id_obj, iscene, ilayer, instances, disposestate, castshadow,
+                vieweractive, scene, layer, &mut list_model, &mut flag_list_model
+            );
+            // if vieweractive.0 {
+            //     if iscene == scene && disposestate.0 == false {
+            //         if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
+            //             if layer.include(ilayer.0) && castshadow.0 {
+            //                 list_model.0.insert(id_obj);
+            //                 *flag_list_model = FlagModelList::default();
+            //                 instances.iter().for_each(|entity| {
+            //                     list_model.0.insert(*entity);
+            //                 });
+            //             } else {
+            //                 list_model.0.remove(&id_obj);
+            //                 instances.iter().for_each(|entity| {
+            //                     list_model.0.remove(entity);
+            //                 });
+            //             }
+            //         }
+            //     } else {
+            //         list_model.0.remove(&id_obj);
+            //     }
+            // }
         });
     });
 
     // log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
+}
+fn _sys_update_shadow_viewer_model_list_by_model(
+    id_obj: Entity, iscene: &SceneID, ilayer: Option<&LayerMask>, instances: Option<&InstanceSourceRefs>, disposestate: &DisposeReady, castshadow: &MeshCastShadow,
+    vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
+) {
+    if vieweractive.0 {
+        if iscene == scene && disposestate.0 == false {
+            if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
+                if layer.include(ilayer.0) && castshadow.0 {
+                    list_model.0.insert(id_obj);
+                    *flag_list_model = FlagModelList::default();
+                    instances.iter().for_each(|entity| {
+                        list_model.0.insert(*entity);
+                    });
+                } else {
+                    list_model.0.remove(&id_obj);
+                    instances.iter().for_each(|entity| {
+                        list_model.0.remove(entity);
+                    });
+                }
+            }
+        } else {
+            list_model.0.remove(&id_obj);
+        }
+    }
 }

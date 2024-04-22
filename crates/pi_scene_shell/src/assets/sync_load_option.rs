@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Deref, fmt::Debug, hash::Hash};
+use std::{marker::PhantomData, ops::Deref, hash::Hash};
 
 use bevy_app::{App, Update, Plugin};
 use bevy_ecs::{system::{Resource, Query, Commands, Res, ResMut}, component::Component, query::Changed, schedule::IntoSystemConfigs};
@@ -10,9 +10,9 @@ use pi_share::ThreadSync;
 use crate::{run_stage::{TSystemStageInfo, ERunStageChap}, object::ObjectID};
 
 
-#[derive(Debug, Default, Resource)]
+#[derive(Default, Resource)]
 pub struct AssetSyncWaitOption<
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+    K0: Clone + Hash + PartialEq + Eq + Component,
     K: Deref<Target = Option<K0>> + Component,
     D: Asset<Key = K0> + Component,
     R: From<Handle<D>> + Component
@@ -23,7 +23,7 @@ pub struct AssetSyncWaitOption<
 );
 
 impl<
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+    K0: Clone + Hash + PartialEq + Eq + Component,
     K: Deref<Target = Option<K0>> + Component,
     D: Asset<Key = K0> + Component,
     R: From<Handle<D>> + Component
@@ -34,44 +34,8 @@ impl<
     }
 }
 
-///
-/// * K0: 资产在资源缓存表的 资产Key
-/// * K: 在功能中的 资产Key的Component 包装
-/// * D: 资产在资源缓存表的 资产数据
-/// * R: 在功能中的 资产数据的Component 包装
-/// * S: 资产Key 的更新System
-// pub struct AssetSyncLoadOption<
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     K: Deref<Target = Option<K0>> + Component,
-//     D: Asset<Key = K0> + Component,
-//     R: From<Handle<D>> + Component,
-//     S: TSystemStageInfo + 'static
-// >(PhantomData<(K, D, R, S)>);
-
-// impl<
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     K: Deref<Target = Option<K0>> + Component,
-//     D: Asset<Key = K0> + Component,
-//     R: From<Handle<D>> + Component,
-//     S: TSystemStageInfo + 'static
-// > TSystemStageInfo for AssetSyncLoadOption<K0, K, D, R, S> {
-//     fn depends() -> Vec<KeySystem> {
-//         vec![
-//             S::key(), 
-//         ]
-//     }
-// }
-
-// impl<K0, K, D, R, S> AssetSyncLoadOption<K0, K, D, R,S>
-// where
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     K: Deref<Target = Option<K0>> + Component,
-//     D: Asset<Key = K0> + Component,
-//     R: From<Handle<D>> + Component,
-//     S: TSystemStageInfo + 'static
-// {
     pub fn sys_sync_load_option_create<
-        K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+        K0: Clone + Hash + PartialEq + Eq + Component,
         K: Deref<Target = Option<K0>> + Component,
         D: Asset<Key = K0> + Component,
         R: From<Handle<D>> + Component
@@ -108,31 +72,8 @@ impl<
             }
         });
     }
-// }
-
-// pub struct AssetSyncLoadCheckOption<
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     K: Deref<Target = Option<K0>> + Component,
-//     D: Asset<Key = K0> + Component,
-//     R: From<Handle<D>> + Component
-// >(PhantomData<(K, D, R)>);
-// impl<
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     K: Deref<Target = Option<K0>> + Component,
-//     D: Asset<Key = K0> + Component,
-//     R: From<Handle<D>> + Component
-// > TSystemStageInfo for AssetSyncLoadCheckOption<K0, K, D, R> {
-// }
-
-// impl<K0, K, D, R> AssetSyncLoadCheckOption<K0, K, D, R>
-// where
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     K: Deref<Target = Option<K0>> + Component,
-//     D: Asset<Key = K0> + Component,
-//     R: From<Handle<D>> + Component
-// {
     pub fn sys_sync_load_option_check_await<
-        K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+        K0: Clone + Hash + PartialEq + Eq + Component,
         K: Deref<Target = Option<K0>> + Component,
         D: Asset<Key = K0> + Component,
         R: From<Handle<D>> + Component
@@ -169,45 +110,6 @@ impl<
             };
         });
     }
-// }
-
-
-// pub trait InterfaceAssetSyncCreate<K0, D>
-// where
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     D: Asset<Key = K0> + Component,
-//  {
-//     fn create_asset(
-//         &self,
-//         key: K0,
-//         data: D,
-//     ) -> Handle<D>;
-//     fn check_asset(
-//         &self,
-//         key: &K0,
-//     ) -> bool;
-// }
-
-// impl<K0, D> InterfaceAssetSyncCreate<K0, D> for Share<AssetMgr<D>>
-// where
-//     K0: Debug + Clone + Hash + PartialEq + Eq + Component,
-//     D: Asset<Key = K0> + Component,
-// {
-//     fn create_asset(
-//         &self,
-//         key: K0,
-//         data: D,
-//     ) -> Handle<D> {
-//         self.insert(key.clone(), data).expect("Fail")
-//     }
-
-//     fn check_asset(
-//         &self,
-//         key: &K0,
-//     ) -> bool {
-//         self.contains_key(key)
-//     }
-// }
 
 ///
 /// K0: 资产在资源缓存表的 资产Key
@@ -216,7 +118,7 @@ impl<
 /// R: 在功能中的 资产数据的Component 包装
 /// S: 资产Key 的更新System
 pub struct PluginAssetSyncLoadOption<
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+    K0: Clone + Hash + PartialEq + Eq + Component,
     K: Deref<Target = Option<K0>> + Component,
     D: Asset<Key = K0> + Component,
     R: From<Handle<D>> + Component,
@@ -225,7 +127,7 @@ pub struct PluginAssetSyncLoadOption<
 
 impl<K0, K, D, R, S> PluginAssetSyncLoadOption<K0, K, D, R, S>
 where
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+    K0: Clone + Hash + PartialEq + Eq + Component,
     K: Deref<Target = Option<K0>> + Component,
     D: Asset<Key = K0> + Component,
     R: From<Handle<D>> + Component,
@@ -240,7 +142,7 @@ where
 
 impl<K0, K, D, R, S> Plugin for PluginAssetSyncLoadOption<K0, K, D, R, S>
 where
-    K0: Debug + Clone + Hash + PartialEq + Eq + Component,
+    K0: Clone + Hash + PartialEq + Eq + Component,
     K: Deref<Target = Option<K0>> + Component,
     D: Asset<Key = K0> + Component,
     R: From<Handle<D>> + Component,

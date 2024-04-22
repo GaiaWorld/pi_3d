@@ -92,5 +92,5 @@ pub fn sys_set1_modify(
         }
     });
 
-    log::trace!("SysSet0ModifyFromScene: {:?}", pi_time::Instant::now() - time1);
+    // log::trace!("SysSet0ModifyFromScene: {:?}", pi_time::Instant::now() - time1);
 }

@@ -76,46 +76,46 @@ use super::base::*;
                     cmd.insert(data);
                 }
             });
-            geoloader.loader_09.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
-            geoloader.loader_10.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
-            geoloader.loader_11.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
-            geoloader.loader_12.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
-            geoloader.loader_13.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
-            geoloader.loader_14.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
-            geoloader.loader_15.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
-            geoloader.loader_16.loaded(&key, &range).drain(..).for_each(|(id, data)| {
-                if let Some(mut cmd) = commands.get_entity(id) {
-                    cmd.insert(data);
-                }
-            });
+            // geoloader.loader_09.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
+            // geoloader.loader_10.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
+            // geoloader.loader_11.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
+            // geoloader.loader_12.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
+            // geoloader.loader_13.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
+            // geoloader.loader_14.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
+            // geoloader.loader_15.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
+            // geoloader.loader_16.loaded(&key, &range).drain(..).for_each(|(id, data)| {
+            //     if let Some(mut cmd) = commands.get_entity(id) {
+            //         cmd.insert(data);
+            //     }
+            // });
         });
         
         let mut data1 = data_map.single_create_indices(&device, &queue, &mut allocator, &asset_mgr);

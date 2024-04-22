@@ -146,7 +146,7 @@ impl Plugin for PluginTest {
     let state: MeshInstanceState = base::instance_attr(true, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
-    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., -1., 0.));
+    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(0., -1., 0.)));
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
     actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, true));
     lights.iter().for_each(|light| {
@@ -162,8 +162,8 @@ impl Plugin for PluginTest {
                     let cube = commands.spawn_empty().id();
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
-                    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i as f32 - half) * 1., (k as f32 - half * 0.5) * 1., (j as f32 - half) * 1.));
-                    actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 0.25, 0.25, 0.25));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i as f32 - half) * 1., (k as f32 - half * 0.5) * 1., (j as f32 - half) * 1.)));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Scaling(0.25, 0.25, 0.25)));
                 }
             }
         }

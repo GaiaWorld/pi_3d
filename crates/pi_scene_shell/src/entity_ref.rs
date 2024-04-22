@@ -57,19 +57,3 @@ pub enum EventEntityRef<R: Component + TEntityRef> {
     Use(Entity, Entity, PhantomData<R>),
     UnUse(Entity, Entity, PhantomData<R>),
 }
-
-// pub fn sys_entity_ref_modify<F: Default + Clone + Component, R: Component + TEntityRef>(
-//     mut commands: Commands,
-//     entities: Query<(Entity, &R), Changed<R>>,
-//     mut items: Query<&mut EntityRefInfo<F, R>>
-// ) {
-//     entities.iter().for_each(|(entity, target)| {
-//         let id = target.id();
-//         if let Ok(mut target) = items.get_mut(id) {
-//             target.refs.insert(entity);
-//             commands.entity(id).insert(F::default());
-//         }
-//     });
-// }
-
-// pub struct EntityRefRecorder(pub XHashMap<Entity, EntityRefInfo>);

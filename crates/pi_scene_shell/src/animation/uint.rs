@@ -4,7 +4,7 @@ use pi_scene_math::Number;
 
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct AnimatorableUint(pub u32);
 impl Default for AnimatorableUint {
     fn default() -> Self {

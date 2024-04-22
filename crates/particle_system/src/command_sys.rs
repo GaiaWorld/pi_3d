@@ -22,9 +22,7 @@ pub fn sys_create_particle_calculator(
 pub fn sys_create_cpu_partilce_system(
     mut cmds: ResMut<ActionListCPUParticleSystem>,
     mut commands: Commands,
-    calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorGravity, &ParticleCalculatorForceOverLifetime,
-        &ParticleCalculatorOrbitOffset, &ParticleCalculatorOrbitVelocity, &ParticleCalculatorOrbitRadial
-    )>,
+    calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorStartModifiers, &ParticleCalculatorOverLifetime)>,
     trailmodifiers: Query<&ParticleCalculatorTrail>,
     trailbuffer: Res<ResParticleTrailBuffer>,
     mut allocator: ResMut<ResBindBufferAllocator>,
@@ -34,6 +32,7 @@ pub fn sys_create_cpu_partilce_system(
     mut performance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
+    mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, count)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -48,17 +47,12 @@ pub fn sys_create_cpu_partilce_system(
 
         let idcalculator = calculator.0;
         if let Ok((
-            base, gravitycalc, forcecalc,
-            orbitoff, orbitveloc, orbitradial
+            base, startmodifiers, overlifetime
         )) = calculators.get(idcalculator) {
             // log::warn!("create_cpu_partilce_system");
             let maxcount = base.maxcount;
             performance.maxparticles = (performance.maxparticles.max(maxcount as u32) / 64 + 1) * 64;
 
-            let mut vec_vec3_arr: Vec<Vec<Vector3>> = Vec::with_capacity(maxcount);
-            for _ in 0..maxcount {
-                vec_vec3_arr.push(vec![]);
-            }
             if let Some(val) = base.render_align() {
                 meshes.push(OpsMeshRenderAlignment::ops(entity, val));
             }
@@ -66,7 +60,6 @@ pub fn sys_create_cpu_partilce_system(
             entitycmd
                 .insert(attributes)
                 .insert(ParticleActive(true))
-                .insert(ParticleStart(false))
                 .insert(ParticleRunningState(false))
                 .insert(ParticleModifyState)
                 .insert(ParticleRandom::new(0))
@@ -78,25 +71,21 @@ pub fn sys_create_cpu_partilce_system(
                 .insert(ParticleDieWaitTime::new(maxcount))
                 .insert(ParticleStartColor::new(maxcount))
                 .insert(ParticleStartScaling::new(maxcount))
-                // .insert(ParticleStartRotation::new(maxcount))
                 .insert(ParticleLocalPosition::new(maxcount))
                 .insert(ParticleLocalRotation::new(maxcount))
                 .insert(ParticleLocalScaling::new(maxcount))
-                .insert(ParticleColor::new(maxcount))
+                .insert(ParticleColorAndUV::new(maxcount))
                 .insert(ParticleEmitMatrix::new(maxcount, &base.scaling_space, &base.simulation_space))
-                .insert(ParticleGravityFactor::new(maxcount, gravitycalc, &base.simulation_space))
-                .insert(ParticleForce::new(maxcount, forcecalc.0.is_local_space, forcecalc.0.translation_interpolate.constant()))
+                .insert(ParticleGravityFactor::new(maxcount, &startmodifiers.gravity, &base.simulation_space))
+                .insert(ParticleForce::new(maxcount, overlifetime.force.0.is_local_space, overlifetime.force.0.translation_interpolate.constant()))
                 .insert(ParticleVelocity::new(maxcount))
                 .insert(ParticleSpeedFactor::new(maxcount))
-                .insert(ParticleOrbitVelocity::new(maxcount, orbitveloc))
-                .insert(ParticleOrbitOffset::new(maxcount, orbitoff))
-                .insert(ParticleOrbitRadial::new(maxcount, orbitradial))
+                .insert(ParticleOrbitVelocity::new(maxcount, &overlifetime.orbitvelocity))
+                .insert(ParticleOrbitOffset::new(maxcount, &overlifetime.orbitoffset))
+                .insert(ParticleOrbitRadial::new(maxcount, &overlifetime.orbitradial))
                 .insert(ParticleLimitVelocityScalar::new(maxcount))
                 .insert(ParticleDirection::new(maxcount))
-                .insert(ParticleUV::new(maxcount))
                 .insert(ParticleCustomV4::new(maxcount))
-                .insert(ParticleGlobalPosList(vec_vec3_arr.clone()))
-                .insert(ParticleLocalPosList(vec_vec3_arr))
                 .insert(ParticleTrailMesh::new(trailmesh, trailgeo))
                 ;
             if let (Ok(_), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
@@ -105,12 +94,28 @@ pub fn sys_create_cpu_partilce_system(
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
                     ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel);
-        
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_04, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_05, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_06, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_07, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_08, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off)));
+
                     if let Some(mut cmd) = commands.get_entity(id_mesh) {
                         // log::warn!("Mesh Ok");
                         // meshtopology.push(OpsTopology::ops(id_mesh, PrimitiveTopology::TriangleStrip));
-                        cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
-                        cmd.insert(CCullMode(CullMode::Off));
+                        // cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
+                        // cmd.insert(CCullMode(CullMode::Off));
                         cmd.insert(GeometryID(id_geo));
                         cmd.insert(ModelStatic);
                         // 显式重置为默认

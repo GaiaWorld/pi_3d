@@ -109,7 +109,7 @@ impl InstanceBufferAllocator {
             for _ in byte_size..self.one_mesh_max_instance_bytes as usize {
                 data.push(0);
             }
-            log::error!("InstanceBufferAllocator Collect {}", data.len());
+            // log::error!("InstanceBufferAllocator Collect {}", data.len());
             if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
                 self.list.push(InstanceCacheBuffer {
                     vertices,

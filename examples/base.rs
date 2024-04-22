@@ -27,7 +27,7 @@ impl Plugin for PluginLocalLoad {
         init_load_cb(Arc::new(|path: String| {
             MULTI_MEDIA_RUNTIME
                 .spawn(async move {
-                    log::debug!("Load {}", path);
+                    // log::debug!("Load {}", path);
                     let r = std::fs::read(path.clone()).unwrap();
                     on_load(&path, r);
                 })
@@ -121,7 +121,7 @@ impl DemoScene {
 
         let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
         actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(camera, camera_position.0, camera_position.1, camera_position.2));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
         actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
         actions.camera.active.push(OpsCameraActive::ops(camera, true));
         actions.camera.size.push(OpsCameraOrthSize::ops(camera, camera_size));
@@ -163,7 +163,17 @@ impl DemoScene {
         let mesh = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
         actions.mesh.create.push(OpsMeshCreation::ops(scene, mesh, state));
         actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
-        actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
+
+        // actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::LessEqual)));
+
         mesh
     }
 }
@@ -213,10 +223,10 @@ pub fn test_plugins() -> App {
     let height = 600;
 
     let mut opt = PiRenderOptions::default();
-    opt.backends = wgpu::Backends::VULKAN;
+    // opt.backends = wgpu::Backends::VULKAN;
     app.insert_resource(opt);
 
-	let mut window_plugin = WindowPlugin::default();
+	let mut window_plugin = bevy_window::WindowPlugin::default();
     if let Some(primary_window) = &mut window_plugin.primary_window {
         primary_window.resolution.set_physical_resolution(width, height);
     }
@@ -246,6 +256,12 @@ pub fn test_plugins() -> App {
     );
             
     app.add_plugins(PluginBundleDefault);
+    
+    app.add_plugins((
+        PluginNodeMaterial,
+        // PluginShadowGenerator,
+        // PluginShadowMapping,
+    ));
     app.add_plugins(
         (
             PluginCubeBuilder,
@@ -293,7 +309,7 @@ pub fn test_plugins_with_gltf() -> App {
     // opt.backends = Backends::VULKAN;
     // app.insert_resource(opt);
 
-	let mut window_plugin = WindowPlugin::default();
+	let mut window_plugin = bevy_window::WindowPlugin::default();
     if let Some(primary_window) = &mut window_plugin.primary_window {
         primary_window.resolution.set_physical_resolution(width, height);
     }
@@ -326,6 +342,11 @@ pub fn test_plugins_with_gltf() -> App {
     );
             
     app.add_plugins(PluginBundleDefault);
+    app.add_plugins((
+        PluginNodeMaterial,
+        PluginShadowGenerator,
+        PluginShadowMapping,
+    ));
     app.add_plugins(
         (
             PluginCubeBuilder,

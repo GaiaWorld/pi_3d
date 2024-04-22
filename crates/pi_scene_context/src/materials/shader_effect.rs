@@ -7,7 +7,7 @@ pub type ShaderEffectValueUniformDesc = MaterialValueBindDesc;
 #[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
 pub struct AssetKeyShaderEffect(pub KeyShaderMeta);
 
-#[derive(Debug, Deref, DerefMut, Component)]
+#[derive(Deref, DerefMut, Component)]
 pub struct AssetResShaderEffectMeta(pub Handle<ShaderEffectMeta>);
 impl From<Handle<ShaderEffectMeta>> for AssetResShaderEffectMeta {
     fn from(value: Handle<ShaderEffectMeta>) -> Self {

@@ -88,3 +88,53 @@ impl Plugin for PluginNodeMaterial {
 
     }
 }
+
+pub struct PluginNodeMaterialSimple;
+impl Plugin for PluginNodeMaterialSimple {
+    fn build(&self, app: &mut App) {
+        let mut blocks = NodeMaterialBlocks::default();
+
+        blocks.regist::<BlockFloat>();
+        blocks.regist::<BlockViewDirection>();
+        blocks.regist::<BlockUVAtlas>();
+
+        blocks.regist::<BlockColorSpace>();
+        blocks.regist::<BlockColorGray>();
+        blocks.regist::<BlockColorHSV>();
+        blocks.regist::<BlockTextureChannel>();
+        blocks.regist::<BlockUVOffsetSpeed>();
+        
+        blocks.regist::<BlockFog>();
+        
+        blocks.regist::<BlockCutoff>();
+
+        blocks.regist::<BlockMainTexture>();
+        blocks.regist::<BlockMainTextureUVOffsetSpeed>();
+
+        blocks.regist::<BlockOpacity>();
+        blocks.regist::<BlockOpacityTexture>();
+        blocks.regist::<BlockOpacityTextureUVOffsetSpeed>();
+        
+        blocks.regist::<BlockOpacity2Texture>();
+        blocks.regist::<BlockOpacity2TextureUVOffsetSpeed>();
+
+        blocks.regist::<BlockEmissiveTexture>();
+        blocks.regist::<BlockEmissiveTextureUVOffsetSpeed>();
+        
+        blocks.regist::<BlockMixTexture>();
+        blocks.regist::<BlockMixTextureUVOffsetSpeed>();
+
+        blocks.regist::<BlockMaskTexture>();
+        blocks.regist::<BlockMaskTextureUVOffsetSpeed>();
+
+        blocks.regist::<BlockFresnel>();
+        blocks.regist::<BlockEmissiveFresnel>();
+        blocks.regist::<BlockOpacityFresnel>();
+
+        blocks.regist::<BlockPremultiplyResult>();
+
+        app.insert_resource(blocks);
+
+
+    }
+}

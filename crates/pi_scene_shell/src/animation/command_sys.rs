@@ -3,6 +3,7 @@
 use std::ops::Deref;
 
 use bevy_ecs::prelude::*;
+use bevy_ecs::system::EntityCommands;
 
 
 use crate::object::ActionEntity;
@@ -35,41 +36,25 @@ pub fn sys_create_animatorable_entity(
     cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableFloat(value.clone()));
-            if items.contains(entity) == false { ActionEntity::init(&mut cmd); }
-            match etype {
-                EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
-                EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
-            };
+            _animetable(&items, entity, &mut cmd, etype);
         }
     });
     cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec2(value.clone()));
-            if items.contains(entity) == false { ActionEntity::init(&mut cmd); }
-            match etype {
-                EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
-                EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
-            };
+            _animetable(&items, entity, &mut cmd, etype);
         }
     });
     cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec3(value.clone()));
-            if items.contains(entity) == false { ActionEntity::init(&mut cmd); }
-            match etype {
-                EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
-                EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
-            };
+            _animetable(&items, entity, &mut cmd, etype);
         }
     });
     cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec4(value.clone()));
-            if items.contains(entity) == false { ActionEntity::init(&mut cmd); }
-            match etype {
-                EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
-                EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
-            };
+            _animetable(&items, entity, &mut cmd, etype);
         }
     });
     // cmds_mat4.drain().drain(..).for_each(|OpsAnimatorableMat4(entity, linked, value)| {
@@ -80,23 +65,27 @@ pub fn sys_create_animatorable_entity(
     cmds_uint.drain().drain(..).for_each(|OpsAnimatorableUint(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableUint(value.clone()));
-            if items.contains(entity) == false { ActionEntity::init(&mut cmd); }
-            match etype {
-                EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
-                EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
-            };
+            _animetable(&items, entity, &mut cmd, etype);
         }
     });
     cmds_int.drain().drain(..).for_each(|OpsAnimatorableSint(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableInt(value.clone()));
-            if items.contains(entity) == false { ActionEntity::init(&mut cmd); }
-            match etype {
-                EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
-                EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
-            };
+            _animetable(&items, entity, &mut cmd, etype);
         }
     });
+}
+fn _animetable(
+    items: &Query<(With<DisposeReady>, With<DisposeCan>)>,
+    entity: Entity,
+    cmd: &mut EntityCommands,
+    etype: EAnimatorableEntityType, 
+) {
+    if items.contains(entity) == false { ActionEntity::init(cmd); }
+    match etype {
+        EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
+        EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
+    };
 }
 
 pub fn sys_create_animation_group(
@@ -115,13 +104,38 @@ pub fn sys_create_animation_group(
         }
     });
 }
-
+/// 顺序严格的
 pub fn sys_act_animation_group_action(
     mut cmds: ResMut<ActionListAnimationGroupAction>,
+    mut addtargetanime_cmds: ResMut<ActionListAddTargetAnime>,
+    mut frameevent_cmds: ResMut<ActionListAddAnimationFrameEvent>,
+    mut listen_cmds: ResMut<ActionListAddAnimationListen>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
     mut errors: ResMut<ErrorRecord>,
+    mut globals: ResMut<GlobalAnimeAbout>,
 ) {
+    addtargetanime_cmds.drain().drain(..).for_each(|OpsAddTargetAnimation(entity, target, animation)| {
+        if let Ok( (groupkey, idscene) ) = items.get(entity) {
+            if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+                match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
+                    Ok(_) => {},
+                    Err(_) => { errors.record(entity, ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
+                }
+            }
+        }
+    });
+    frameevent_cmds.drain().drain(..).for_each(|OpsAddAnimationFrameEvent(entity, percent, data)| {
+        if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event(groupkey.0, percent, data); }
+    });
+    listen_cmds.drain().drain(..).for_each(|listen| {
+        match listen {
+            OpsAddAnimationListen::Frame(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event_listen(groupkey.0); } },
+            OpsAddAnimationListen::Start(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_start_listen(groupkey.0); } },
+            OpsAddAnimationListen::Loop(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_loop_listen(groupkey.0); } },
+            OpsAddAnimationListen::End(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_end_listen(groupkey.0); } },
+        }
+    });
     cmds.drain().drain(..).for_each(|act| {
         match act {
             OpsAnimationGroupAction::Start(entity, param, delay_time_ms, fillmode) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
@@ -148,49 +162,6 @@ pub fn sys_act_animation_group_action(
                     }
                 }
             },
-        }
-    });
-}
-
-pub fn sys_act_add_target_animation(
-    mut cmds: ResMut<ActionListAddTargetAnime>,
-    items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
-    mut scenes: Query<&mut SceneAnimationContext>,
-    mut errors: ResMut<ErrorRecord>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAddTargetAnimation(entity, target, animation)| {
-        if let Ok( (groupkey, idscene) ) = items.get(entity) {
-            if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
-                    Ok(_) => {},
-                    Err(_) => { errors.record(entity, ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
-                }
-            }
-        }
-    });
-}
-
-pub fn sys_act_add_animation_group_frame_event(
-    mut cmds: ResMut<ActionListAddAnimationFrameEvent>,
-    items: Query<&AnimationGroupKey>,
-    mut globals: ResMut<GlobalAnimeAbout>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAddAnimationFrameEvent(entity, percent, data)| {
-        if let Ok( groupkey ) = items.get(entity) { globals.add_frame_event(groupkey.0, percent, data); }
-    });
-}
-
-pub fn sys_act_add_animation_group_listen(
-    mut cmds: ResMut<ActionListAddAnimationListen>,
-    items: Query<&AnimationGroupKey>,
-    mut globals: ResMut<GlobalAnimeAbout>,
-) {
-    cmds.drain().drain(..).for_each(|listen| {
-        match listen {
-            OpsAddAnimationListen::Frame(entity) => { if let Ok( groupkey ) = items.get(entity) { globals.add_frame_event_listen(groupkey.0); } },
-            OpsAddAnimationListen::Start(entity) => { if let Ok( groupkey ) = items.get(entity) { globals.add_start_listen(groupkey.0); } },
-            OpsAddAnimationListen::Loop(entity) => { if let Ok( groupkey ) = items.get(entity) { globals.add_loop_listen(groupkey.0); } },
-            OpsAddAnimationListen::End(entity) => { if let Ok( groupkey ) = items.get(entity) { globals.add_end_listen(groupkey.0); } },
         }
     });
 }
@@ -300,7 +271,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
             }
         }
     } else {
-        // log::trace!("Not Found Anime Type: {}", ty);
+        // // log::trace!("Not Found Anime Type: {}", ty);
     }
 
     performance.animation += (pi_time::Instant::now() - time0).as_micros() as u32;

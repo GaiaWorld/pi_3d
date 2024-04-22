@@ -111,28 +111,32 @@ impl BindEffectValues {
             // let mut offsets: XHashMap<Atom, UniformOffset> = XHashMap::default();
     
             meta.uniforms.mat4_list.iter().for_each(|item| {
-                let offset = UniformOffset::new(EUniformValueType::Mat4, bytes.len() as u16, None);
-                bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
-                offsets.push((item.0.clone(), offset));
+                Self::_new(item.0.clone(), EUniformValueType::Mat4, bytemuck::cast_slice(&item.1), &mut bytes, &mut offsets);
+                // let offset = UniformOffset::new(EUniformValueType::Mat4, bytes.len() as u16, None);
+                // bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
+                // offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.vec4_list.iter().for_each(|item| {
-                let offset = UniformOffset::new(EUniformValueType::Vec4, bytes.len() as u16, None);
-                bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
-                offsets.push((item.0.clone(), offset));
+                Self::_new(item.0.clone(), EUniformValueType::Vec4, bytemuck::cast_slice(&item.1), &mut bytes, &mut offsets);
+                // let offset = UniformOffset::new(EUniformValueType::Vec4, bytes.len() as u16, None);
+                // bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
+                // offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.vec3_list.iter().for_each(|item| {
-                let offset = UniformOffset::new(EUniformValueType::Vec3, bytes.len() as u16, None);
-                bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
+                Self::_new(item.0.clone(), EUniformValueType::Vec3, bytemuck::cast_slice(&item.1), &mut bytes, &mut offsets);
+                // let offset = UniformOffset::new(EUniformValueType::Vec3, bytes.len() as u16, None);
+                // bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
                 bytemuck::cast_slice(&[0.0f32]).iter().for_each(|v| { bytes.push(*v); });
-                offsets.push((item.0.clone(), offset));
+                // offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.vec2_list.iter().for_each(|item| {
-                let offset = UniformOffset::new(EUniformValueType::Vec2, bytes.len() as u16, None);
-                bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
-                offsets.push((item.0.clone(), offset));
+                Self::_new(item.0.clone(), EUniformValueType::Vec2, bytemuck::cast_slice(&item.1), &mut bytes, &mut offsets);
+                // let offset = UniformOffset::new(EUniformValueType::Vec2, bytes.len() as u16, None);
+                // bytemuck::cast_slice(&item.1).iter().for_each(|v| { bytes.push(*v); });
+                // offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             let fill_vec2_count    = meta.uniforms.vec2_list.len() % 2;
@@ -140,15 +144,17 @@ impl BindEffectValues {
                 bytemuck::cast_slice(&[0.0f32, 0.0f32]).iter().for_each(|v| { bytes.push(*v); });
             }
             meta.uniforms.float_list.iter().for_each(|item| {
-                let offset = UniformOffset::new(EUniformValueType::Float, bytes.len() as u16, None);
-                bytemuck::cast_slice(&[item.1]).iter().for_each(|v| { bytes.push(*v); });
-                offsets.push((item.0.clone(), offset));
+                Self::_new(item.0.clone(), EUniformValueType::Float, bytemuck::cast_slice(&[item.1]), &mut bytes, &mut offsets);
+                // let offset = UniformOffset::new(EUniformValueType::Float, bytes.len() as u16, None);
+                // bytemuck::cast_slice(&[item.1]).iter().for_each(|v| { bytes.push(*v); });
+                // offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
             meta.uniforms.uint_list.iter().for_each(|item| {
-                let offset = UniformOffset::new(EUniformValueType::Uint, bytes.len() as u16, None);
-                bytemuck::cast_slice(&[item.1]).iter().for_each(|v| { bytes.push(*v); });
-                offsets.push((item.0.clone(), offset));
+                Self::_new(item.0.clone(), EUniformValueType::Uint, bytemuck::cast_slice(&[item.1]), &mut bytes, &mut offsets);
+                // let offset = UniformOffset::new(EUniformValueType::Uint, bytes.len() as u16, None);
+                // bytemuck::cast_slice(&[item.1]).iter().for_each(|v| { bytes.push(*v); });
+                // offsets.push((item.0.clone(), offset));
                 // offsets.insert(item.0.clone(), offset);
             });
     
@@ -163,6 +169,17 @@ impl BindEffectValues {
         } else {
             None
         }
+    }
+    fn _new(
+        key: Atom,
+        vtype: EUniformValueType,
+        data: &[u8],
+        bytes: &mut Vec<u8>,
+        offsets: &mut  Vec<(Atom, UniformOffset)>,
+    ) {
+        let offset = UniformOffset::new(vtype, bytes.len() as u16, None);
+        data.iter().for_each(|v| { bytes.push(*v); });
+        offsets.push((key, offset));
     }
     pub fn animator(
         &mut self,
@@ -233,7 +250,7 @@ impl BindEffectValues {
         &self.offsets
     }
     pub fn log(&self) {
-        log::error!("{:?}", &self.offsets);
+        // log::error!("{:?}", &self.offsets);
     }
 }
 

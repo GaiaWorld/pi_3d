@@ -8,12 +8,12 @@ use pi_scene_shell::prelude::*;
 
 use super::color_over_lifetime::ColorOverLifetime;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum ETrailMode {
     Particles = 0,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum ETrailTextureMode {
     Stretch = 0,
     Tiled = 1,

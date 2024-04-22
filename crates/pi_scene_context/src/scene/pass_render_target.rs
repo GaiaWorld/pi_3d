@@ -32,19 +32,3 @@ impl MainCameraDepthTarget {
         }
     }
 }
-
-// impl ITexture for OpaqueRenderTarget {
-//     fn format(&self) -> wgpu::TextureFormat {
-//         if let Some(rt) = &self.rt {
-//             rt.target().colors[0].1.format()
-//         } else {
-//             self.default.format
-//         }
-//     }
-//     fn key(&self) -> KeyTextureViewUsage {
-//         self.data.key()
-//     }
-//     fn view(&self) -> &wgpu::TextureView {
-//         self.data.view()
-//     }
-// }

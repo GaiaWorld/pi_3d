@@ -71,53 +71,48 @@ pub fn sys_create_shadow_generator(
 pub fn sys_act_shadow_generator(
     mut cmds: ResMut<ActionListShadowGeneratorParam>,
     // mut atlassize: Query< &mut ShadowAtlasSize>,
-    mut bias: Query<&mut ShadowBias>,
-    mut normalbias: Query<&mut ShadowNormalBias>,
-    mut depthscale: Query<&mut ShadowDepthScale>,
-    mut minz: Query<&mut ShadowMinZ>,
-    mut maxz: Query<&mut ShadowMaxZ>,
-    mut frusrumsize: Query<&mut ShadowFrustumSize>,
+    mut shadow: Query<&mut ShadowParam>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsShadowGeneratorParam::ShadowMinz(entity, val) => {
-                if let Ok(mut item) = minz.get_mut(entity) {
-                    *item = ShadowMinZ(val);
+                if let Ok(mut item) = shadow.get_mut(entity) {
+                    item.minz = val;
                 } else {
                     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::ShadowMaxz(entity, val) => {
-                if let Ok(mut item) = maxz.get_mut(entity) {
-                    *item = ShadowMaxZ(val);
+                if let Ok(mut item) = shadow.get_mut(entity) {
+                    item.maxz = val;
                 } else {
                     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::ShadowFrustumSize(entity, val) => {
-                if let Ok(mut item) = frusrumsize.get_mut(entity) {
-                    *item = ShadowFrustumSize(val);
+                if let Ok(mut item) = shadow.get_mut(entity) {
+                    item.frustum = val;
                 } else {
                     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::Bias(entity, val) => {
-                if let Ok(mut item) = bias.get_mut(entity) {
-                    *item = ShadowBias(val);
+                if let Ok(mut item) = shadow.get_mut(entity) {
+                    item.bias = val;
                 } else {
                     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::NormalBias(entity, val) => {
-                if let Ok(mut item) = normalbias.get_mut(entity) {
-                    *item = ShadowNormalBias(val);
+                if let Ok(mut item) = shadow.get_mut(entity) {
+                    item.normalbias  = val;
                 } else {
                     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::DepthScale(entity, val) => {
-                if let Ok(mut item) = depthscale.get_mut(entity) {
-                    *item = ShadowDepthScale(val);
+                if let Ok(mut item) = shadow.get_mut(entity) {
+                    item.depthscale = val;
                 } else {
                     cmds.push(cmd);
                 }
@@ -137,29 +132,3 @@ pub fn sys_act_shadow_generator(
         }
     });
 }
-
-// pub fn sys_act_light_render_modify(
-//     mut lights: Query<
-//         (
-//             ObjectID, &ViewerRenderersInfo, &ShadowAtlasSize, &mut ViewerActive
-//         ),
-//         Changed<ShadowAtlasSize>
-//     >,
-//     // mut render_cmds: ResMut<SingleRendererCommandList>,
-//     mut renderercmds: ResMut<ActionListRendererModify>,
-// ) {
-//     lights.iter_mut().for_each(|(id_light, renderers, _size, mut viewactive)| {
-
-//         renderers.map.iter().for_each(|(_, v)| {
-//             let id_render = v.1.0;
-
-//             // let enable = enable.0;
-
-//             // log::warn!(">>>>>>>> {:?}", enable);
-
-//             // *viewactive = ViewerActive(enable);
-
-//             // renderercmds.push(OpsRendererCommand::Active(id_render, enable));
-//         });
-//     });
-// }

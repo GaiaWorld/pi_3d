@@ -40,7 +40,7 @@ fn setup(
     let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
+    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_OPAQUE, blend));
 
     let idmat = commands.spawn_empty().id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));

@@ -10,7 +10,7 @@ use pi_render::renderer::{
 use crate::shader::*;
 
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct ShaderBindSceneAboutEffect {
     pub(crate) data: BindBufferRange,
 }
@@ -84,7 +84,7 @@ impl TKeyBind for ShaderBindSceneAboutEffect {
 }
 
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseSceneAboutEffect {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindSceneAboutEffect>,

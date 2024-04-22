@@ -38,7 +38,7 @@ fn setup(
 
     actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
     // actions.camera.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
-    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -20.));
+    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera01, ETransformSRT::Translation(0., 0., -20.)));
     // actions.camera.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
 
     let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
@@ -63,8 +63,8 @@ fn setup(
         actions.transform.create.push(OpsTransformNode::ops(scene, node01));
         let node02 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node02, node01));
         actions.transform.create.push(OpsTransformNode::ops(scene, node02));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(node02, 10., 7.5, 0.09));
-        actions.transform.localrot.push(OpsTransformNodeLocalEuler::ops(node02, -90.2_f32.to_radians(), 0., 0.));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node02, ETransformSRT::Translation(10., 7.5, 0.09)));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node02, ETransformSRT::Euler(-90.2_f32.to_radians(), 0., 0.)));
         let node03 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node03, node02));
         actions.transform.create.push(OpsTransformNode::ops(scene, node03));
         node03
@@ -77,7 +77,7 @@ fn setup(
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
-                    actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
+                    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
 
                     //
                     let syskey = String::from("Test");
@@ -99,7 +99,7 @@ fn setup(
                     source
                 };
 
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(_item, -0.0, 0., 0.1));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(_item, ETransformSRT::Translation(-0.0, 0., 0.1)));
                 // actions.transform.localrot.push(OpsTransformNodeLocalRotation::Euler(_item, -80.2_f32.to_radians(), 0., 0.));
                 // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
 

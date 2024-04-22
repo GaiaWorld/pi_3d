@@ -6,7 +6,6 @@ use super::render_sort::TransparentSortParam;
 // pub type DrawObj3D = DrawObj;
 pub type DrawList3D = DrawList;
 
-#[derive(Debug)]
 pub struct TmpSortDrawOpaque {
     pub idx: u16,
     pub pass: u8,

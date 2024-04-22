@@ -11,7 +11,7 @@ use crate::shader::{texture_bind_code, ShaderSetBind};
 
 use crate::assets::environment_texture_loader::EnvironmentTextureTools;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindEnvIrradiance {
     pub(crate) data: BindBufferRange,
 }
@@ -101,7 +101,7 @@ impl TKeyBind for BindEnvIrradiance {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseEnvIrradiance {
     pub(crate) bind: u32,
     pub(crate) data: Arc<BindEnvIrradiance>,
@@ -112,7 +112,7 @@ impl BindUseEnvIrradiance {
     }
 }
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindEnvTexture(pub BindDataTexture2D);
 impl TShaderBindCode for ShaderBindEnvTexture {
     fn fs_define_code(&self, set: u32, bind: u32) -> String {
@@ -136,7 +136,7 @@ impl TKeyBind for ShaderBindEnvTexture {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseEnvTexture {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindEnvTexture>,
@@ -147,7 +147,7 @@ impl BindUseEnvTexture {
     }
 }
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindEnvSampler(pub BindDataSampler);
 
 impl ShaderBindEnvSampler {
@@ -196,7 +196,7 @@ impl TKeyBind for ShaderBindEnvSampler {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseEnvSampler {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindEnvSampler>,

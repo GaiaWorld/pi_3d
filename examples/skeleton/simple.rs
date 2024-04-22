@@ -136,8 +136,8 @@ fn setup(
     actions.skin.skin_create.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, bone0, &vec![bone0, bone1, bone2, bone3, bone4], 1, None));
     actions.skin.skin_use.push(OpsSkinUse::ops(source, skeleton));
 
-    actions.transform.localrot.push(OpsTransformNodeLocalEuler::ops(source, 1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2));
-    actions.mesh.cullmode.push(OpsCullMode::ops(source, CullMode::Off));
+    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Euler(1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2)));
+    actions.mesh.primitive_state.push(OpsPrimitiveState::ops(source, DemoScene::PASS_TRANSPARENT, EPrimitiveState::CCullMode( CullMode::Off )) );
 }
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 

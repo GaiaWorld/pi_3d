@@ -17,7 +17,7 @@ pub struct KeyShaderSetScene {
     // pub env: bool,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct KeyBindGroupScene {
     pub bind_viewer: Option<Arc<ShaderBindViewer>>,
     pub bind_base_effect: Option<Arc<ShaderBindSceneAboutEffect>>,
@@ -105,7 +105,7 @@ impl TShaderSetBlock for KeyBindGroupScene {
 }
 impl TAssetKeyU64 for KeyBindGroupScene {}
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BindGroupScene {
     pub(crate) bind_group: BindGroupUsage,
     pub(crate) key: KeyBindGroupScene,

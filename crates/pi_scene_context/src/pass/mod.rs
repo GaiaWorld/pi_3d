@@ -24,7 +24,7 @@ pub enum StagePassObject {
     EffectModify,
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct PassTagOrders(pub Vec<PassTag>, pub PassTagValue);
 impl PassTagOrders {
     pub fn new(orders: Vec<PassTag>) -> Self {
@@ -48,7 +48,7 @@ impl Plugin for PluginPassObject {
 
         app.configure_set(Update, StagePassObject::Create.after(StageMaterial::Command));
         app.configure_set(Update, StagePassObject::_CreateApply.after(StagePassObject::Create));
-        app.configure_set(Update, StagePassObject::EffectModify.after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup));
+        app.configure_set(Update, StagePassObject::EffectModify.in_set(FrameDataPrepare).after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup));
 
         app.add_systems(Update, 
             apply_deferred.in_set(StagePassObject::_CreateApply)

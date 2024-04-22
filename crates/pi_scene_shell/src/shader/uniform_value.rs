@@ -35,7 +35,7 @@ impl UniformValueKind {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct UniformPropertyMat4(pub UniformPropertyName, pub [f32;16], pub bool);
 impl TUnifromShaderProperty for UniformPropertyMat4 {
     fn tag(&self) -> &UniformPropertyName {
@@ -97,7 +97,7 @@ impl Ord for UniformPropertyMat4 {
 //     }
 // }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UniformPropertyVec4(pub UniformPropertyName, pub [f32;4], pub bool);
 impl UniformPropertyVec4 {
     pub fn instance(&self) -> bool { self.2 }
@@ -131,7 +131,7 @@ impl Ord for UniformPropertyVec4 {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UniformPropertyVec3(pub UniformPropertyName, pub [f32;3], pub bool);
 impl UniformPropertyVec3 {
     pub fn instance(&self) -> bool { self.2 }
@@ -165,7 +165,7 @@ impl Ord for UniformPropertyVec3 {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UniformPropertyVec2(pub UniformPropertyName, pub [f32;2], pub bool);
 impl UniformPropertyVec2 {
     pub fn instance(&self) -> bool { self.2 }
@@ -199,7 +199,7 @@ impl Ord for UniformPropertyVec2 {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UniformPropertyFloat(pub UniformPropertyName, pub f32, pub bool);
 impl UniformPropertyFloat {
     pub fn instance(&self) -> bool { self.2 }
@@ -233,7 +233,7 @@ impl Ord for UniformPropertyFloat {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UniformPropertyInt(pub UniformPropertyName, pub i32, pub bool);
 impl UniformPropertyInt {
     pub fn instance(&self) -> bool { self.2 }
@@ -267,7 +267,7 @@ impl Ord for UniformPropertyInt {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UniformPropertyUint(pub UniformPropertyName, pub u32, pub bool);
 impl UniformPropertyUint {
     pub fn instance(&self) -> bool { self.2 }
@@ -301,7 +301,7 @@ impl Ord for UniformPropertyUint {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct MaterialValueBindDesc {
     pub stage: wgpu::ShaderStages,
     pub mat4_list: Vec<UniformPropertyMat4>,
@@ -542,7 +542,7 @@ impl MaterialValueBindDesc {
             }
     
             result += "};\r\n";
-            log::info!("Uniform Count: {}", total_num);
+            // log::info!("Uniform Count: {}", total_num);
     
         }
 

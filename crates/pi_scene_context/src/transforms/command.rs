@@ -21,13 +21,19 @@ impl OpsTransformNodeParent {
 }
 pub type ActionListTransformNodeParent = ActionList<OpsTransformNodeParent>;
 
-pub struct OpsTransformNodeLocalPosition(pub Entity, pub Vector3);
-impl OpsTransformNodeLocalPosition {
-    pub fn ops(node: Entity, x: f32, y: f32, z: f32) -> Self {
-        Self(node, Vector3::new(x, y, z))
+pub enum ETransformSRT {
+    Euler(f32, f32, f32),
+    Translation(f32, f32, f32),
+    Scaling(f32, f32, f32),
+}
+
+pub struct OpsTransformNodeLocal(pub Entity, pub ETransformSRT);
+impl OpsTransformNodeLocal {
+    pub fn ops(node: Entity, val: ETransformSRT) -> Self {
+        Self(node, val)
     }
 }
-pub type ActionListTransformNodeLocalPosition = ActionList<OpsTransformNodeLocalPosition>;
+pub type ActionListTransformNodeLocal = ActionList<OpsTransformNodeLocal>;
 
 pub struct OpsTransformNodeLocalRotationQuaternion(pub Entity, pub f32, pub f32, pub f32, pub f32);
 impl OpsTransformNodeLocalRotationQuaternion {
@@ -36,22 +42,6 @@ impl OpsTransformNodeLocalRotationQuaternion {
     }
 }
 pub type ActionListTransformNodeLocalRotationQuaternion = ActionList<OpsTransformNodeLocalRotationQuaternion>;
-
-pub struct OpsTransformNodeLocalEuler(pub Entity, pub Vector3);
-impl OpsTransformNodeLocalEuler {
-    pub fn ops(node: Entity, x: f32, y: f32, z: f32) -> Self {
-        Self(node, Vector3::new(x, y, z))
-    }
-}
-pub type ActionListTransformNodeLocalEuler = ActionList<OpsTransformNodeLocalEuler>;
-
-pub struct OpsTransformNodeLocalScaling(pub Entity, pub Vector3);
-impl OpsTransformNodeLocalScaling {
-    pub fn ops(node: Entity, x: f32, y: f32, z: f32) -> Self {
-        Self(node, Vector3::new(x, y, z))
-    }
-}
-pub type ActionListTransformNodeLocalScaling = ActionList<OpsTransformNodeLocalScaling>;
 
 pub struct BundleTransformNode(
     Enable,
@@ -64,8 +54,8 @@ pub struct BundleTransformNode(
     LocalEulerAngles,
     RecordLocalPosition,
     RecordLocalScaling,
-    RecordLocalRotationQuaternion,
     RecordLocalEulerAngles,
+    RecordLocalRotationQuaternion,
     LocalRotation,
     LocalMatrix,
     GlobalMatrix,

@@ -44,6 +44,24 @@ pub struct HemisphericLight;
 // pub struct 
 
 #[derive(Component)]
+pub struct LightParam {
+    pub(crate) color: Vector3,
+    pub(crate) radius: f32,
+    pub(crate) strength: f32,
+    pub(crate) mode: LightingMode,
+}
+impl Default for LightParam {
+    fn default() -> Self {
+        Self {
+            color: Vector3::new(1., 1., 1.),
+            radius: 5.,
+            strength: 1.,
+            mode: LightingMode::Lambert,
+        }
+    }
+}
+
+#[derive(Component)]
 pub struct LightColor(pub Vector3);
 impl Default for LightColor {
     fn default() -> Self {

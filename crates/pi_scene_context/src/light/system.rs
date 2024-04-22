@@ -9,7 +9,7 @@ use crate::{
     flags::*,
 };
 
-use super::{spot::{SpotLightInAngle, SpotLightOutAngle}, hemisphere::HemiGrounds, base::*};
+use super::{spot::SpotLightAngle, hemisphere::HemiGrounds, base::*};
 
 pub fn sys_light_index_create(
     mut commands: Commands,
@@ -44,16 +44,16 @@ pub fn sys_light_index_create(
 
 pub fn sys_direct_light_update(
     items: Query<
-        (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LayerMask, &GlobalEnable, &GlobalMatrix),
-        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalMatrix>)>
+        (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightParam, &LayerMask, &GlobalEnable, &GlobalMatrix),
+        Or<(Changed<LightParam>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalMatrix>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
-    items.iter().for_each(|(_, idscene, lidx, direction, color, strength, layer, enabled, wm)| {
+    items.iter().for_each(|(_, idscene, lidx, direction, param, layer, enabled, wm)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let mut gdirection = Vector3::zeros();
             CoordinateSytem3::transform_normal(&direction.0, &wm.matrix, &mut gdirection);
-            let r = color.0.x * strength.0; let g = color.0.y * strength.0; let b = color.0.z * strength.0;
+            let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
             info.0.direct_light_data(lidx.val(), enabled.0, layer.0 as f32, gdirection.x, gdirection.y, gdirection.z, r, g, b)
         }
     });
@@ -61,47 +61,47 @@ pub fn sys_direct_light_update(
 
 pub fn sys_point_light_update(
     items: Query<
-        (&PointLight, &SceneID, &SceneItemIndex, &LightRadius, &LightColor, &LightStrength, &GlobalMatrix, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightColor>, Changed<LightStrength>, Changed<LightRadius>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
+        (&PointLight, &SceneID, &SceneItemIndex, &LightParam, &GlobalMatrix, &LayerMask, &GlobalEnable),
+        Or<(Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
-    items.iter().for_each(|(_, idscene, lidx, range, color, strength, transform, layer, enabled)| {
+    items.iter().for_each(|(_, idscene, lidx, param, transform, layer, enabled)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
-            let r = color.0.x * strength.0; let g = color.0.y * strength.0; let b = color.0.z * strength.0;
-            info.0.point_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, range.0, 1.0 / (range.0 * range.0))
+            let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
+            info.0.point_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius))
         }
     });
 }
 
 pub fn sys_spot_light_update(
     items: Query<
-        (&SpotLight, &SceneID, &SceneItemIndex, &LightDirection, &LightColor, &LightStrength, &LightRadius, &SpotLightInAngle, &SpotLightOutAngle, &GlobalMatrix, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightDirection>, Changed<LightColor>, Changed<LightStrength>, Changed<LightRadius>, Changed<SpotLightInAngle>, Changed<SpotLightOutAngle>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
+        (&SpotLight, &SceneID, &SceneItemIndex, &LightDirection, &LightParam, &SpotLightAngle, &GlobalMatrix, &LayerMask, &GlobalEnable),
+        Or<(Changed<LightDirection>, Changed<LightParam>, Changed<SpotLightAngle>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
-    items.iter().for_each(|(_, idscene, lidx, d, color, strength, range, inangel, outangle, transform, layer, enabled)| {
+    items.iter().for_each(|(_, idscene, lidx, d, param, angle, transform, layer, enabled)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
-            let r = color.0.x * strength.0; let g = color.0.y * strength.0; let b = color.0.z * strength.0;
-            info.0.spot_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, range.0, 1.0 / (range.0 * range.0), inangel.0, outangle.0, d.0.x, d.0.y, d.0.z);
+            let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
+            info.0.spot_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius), angle.in_value, angle.out_value, d.0.x, d.0.y, d.0.z);
         }
     });
 }
 
 pub fn sys_hemi_light_update(
     items: Query<
-        (&HemiGrounds, &SceneID, &SceneItemIndex, &LightColor, &GlobalMatrix, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightColor>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
+        (&HemiGrounds, &SceneID, &SceneItemIndex, &LightParam, &GlobalMatrix, &LayerMask, &GlobalEnable),
+        Or<(Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
     items.iter().for_each(|(_hemi, idscene, lidx, color, transform, layer, enabled)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
-            info.0.hemi_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, color.0.x, color.0.y, color.0.z, 1., 1., 0., 0., 0., 0.);
+            info.0.hemi_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, color.color.x, color.color.y, color.color.z, 1., 1., 0., 0., 0., 0.);
         }
     });
 }

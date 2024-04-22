@@ -59,7 +59,7 @@ fn setup(
     let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
+    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
 
     actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
     actions.transform.tree.push(OpsTransformNodeParent::ops(node, root));

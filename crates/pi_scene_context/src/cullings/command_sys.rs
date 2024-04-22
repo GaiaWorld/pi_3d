@@ -8,6 +8,8 @@ use super::{command::{ActionListMeshBounding, OpsMeshBounding, ActionListMeshBou
 pub fn sys_act_mesh_bounding(
     mut cmds: ResMut<ActionListMeshBounding>,
     mut items: Query<&mut GeometryBounding>,
+    mut culling_cmds: ResMut<ActionListMeshBoundingCullingMode>,
+    mut culling_items: Query<&mut GeometryCullingMode>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshBounding(entity, min, max)| {
         if let Ok(mut item) = items.get_mut(entity) {
@@ -17,14 +19,8 @@ pub fn sys_act_mesh_bounding(
         //     cmds.push(OpsMeshBounding(entity, min, max, count + 1))
         }
     });
-}
-
-pub fn sys_act_mesh_bounding_culling(
-    mut cmds: ResMut<ActionListMeshBoundingCullingMode>,
-    mut items: Query<&mut GeometryCullingMode>,
-) {
-    cmds.drain().drain(..).for_each(|OpsMeshBoundingCullingMode(entity, mode)| {
-        if let Ok(mut item) = items.get_mut(entity) {
+    culling_cmds.drain().drain(..).for_each(|OpsMeshBoundingCullingMode(entity, mode)| {
+        if let Ok(mut item) = culling_items.get_mut(entity) {
             item.0 = mode;
         // } else if count < 2 {
         //     cmds.push(OpsMeshBoundingCullingMode(entity, mode, count + 1))
@@ -33,16 +29,16 @@ pub fn sys_act_mesh_bounding_culling(
 }
 
 pub fn sys_act_mesh_bounding_culling_display(
-    mut cmds: ResMut<ActionListBoundingBoxDisplay>,
-    mut scenes: Query<&mut BoundingBoxDisplay>,
-    mut matuse: ResMut<ActionListMaterialUse>,
+    mut display_cmds: ResMut<ActionListBoundingBoxDisplay>,
+    mut display_scenes: Query<&mut BoundingBoxDisplay>,
+    mut display_matuse: ResMut<ActionListMaterialUse>,
     deafultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsBoundingBoxDisplay(entity, mode, pass)| {
-        if let Ok(mut item) = scenes.get_mut(entity) {
+    display_cmds.drain().drain(..).for_each(|OpsBoundingBoxDisplay(entity, mode, pass)| {
+        if let Ok(mut item) = display_scenes.get_mut(entity) {
             item.display = mode;
             if mode {
-                matuse.push(OpsMaterialUse::ops(item.mesh, deafultmat.0, pass));
+                display_matuse.push(OpsMaterialUse::ops(item.mesh, deafultmat.0, pass));
             }
         }
     });

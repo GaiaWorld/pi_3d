@@ -2,7 +2,7 @@
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Debug, Component)]
+#[derive(Component)]
 pub struct RenderMode(pub ERenderMode);
 
 

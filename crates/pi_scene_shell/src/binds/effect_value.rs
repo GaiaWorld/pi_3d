@@ -14,7 +14,7 @@ use pi_render::{
 
 use crate::shader::*;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ShaderBindEffectValue {
     pub total_size: usize,
     pub mat4_count: u8,
@@ -220,7 +220,7 @@ impl TShaderBindCode for ShaderBindEffectValue {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseEffectValue {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindEffectValue>,

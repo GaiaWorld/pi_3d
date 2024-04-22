@@ -59,7 +59,7 @@ impl Default for BaseRandom {
 /**
  * 曲线插值模式
  */
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub enum EInterpolationCurveMode {
     /**
      * 静态数值
@@ -88,7 +88,7 @@ impl Default for EInterpolationCurveMode {
 /**
  * 渐变插值模式
  */
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum EInterpolationGradienMode {
     /**
      * 静态数值

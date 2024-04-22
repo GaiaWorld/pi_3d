@@ -42,7 +42,7 @@ impl BallBuilder {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct BallParam {
     pub sectors: usize,
     pub stacks: usize,
@@ -145,7 +145,6 @@ impl Plugin for PluginBallBuilder {
     }
 }
 
-#[derive(Debug)]
 struct Triangle {
     pub a: Vector3,
     pub b: Vector3,

@@ -15,7 +15,7 @@ use pi_ecs_macros::setup;
 use pi_scene_math::Vector3;
 use pi_mesh_builder::ball::{InterfaceBall, PluginBallBuilder};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct SingleTestData {
     pub transforms: Vec<(ObjectID, f32, f32, f32)>,
 }
@@ -46,7 +46,6 @@ impl SysTest {
     }
 }
 
-#[derive(Debug)]
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn init(

@@ -6,24 +6,24 @@ use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera
 use crate::viewer::prelude::*;
 
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct Camera(pub bool);
 
-#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub enum EFixedMode {
     #[default]
     VerticalFixed,
     HorizontalFixed,
 }
 
-#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub enum EFreeCameraMode {
     #[default]
     Perspective,
     Orthograhic,
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy)]
 pub struct CameraNearFar(pub Number, pub Number);
 impl Default for CameraNearFar {
     fn default() -> Self {
@@ -31,7 +31,7 @@ impl Default for CameraNearFar {
     }
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct CameraOrthograhicParam {
     pub left: Number,
     pub right: Number,
@@ -52,7 +52,7 @@ impl TAnimatableCompRecord<CameraFov> for RecordCameraFov {
     }
 }
 
-#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
+#[derive(Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraFov(pub Number);
 impl pi_curves::curve::frame::FrameDataValue for CameraFov {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -104,7 +104,7 @@ impl TAnimatableCompRecord<CameraOrthSize> for RecordCameraOrthSize {
     }
 }
 
-#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
+#[derive(Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraOrthSize(pub Number);
 impl pi_curves::curve::frame::FrameDataValue for CameraOrthSize {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -147,7 +147,7 @@ impl TAssetCapacity for CameraOrthSize {
 }
 impl TAnimatableComp for CameraOrthSize {}
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct CameraParam {
     pub up: Vector3,
     pub nearfar: CameraNearFar,

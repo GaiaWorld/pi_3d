@@ -25,7 +25,7 @@ impl TToBlockCodeAtom for pi_render::rhi::shader::BlockCodeAtom {
 }
 
 /// 代码片段
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BlockCodeAtom {
     /// 声明代码
     pub define: Atom,
@@ -45,7 +45,7 @@ impl BlockCodeAtom {
 }
 
 /// 代码片段
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BlockCode {
     /// 声明代码
     pub define: String,
@@ -59,7 +59,7 @@ impl BlockCode {
 }
 
 /// 代码片段
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CodeSnippet(pub String);
 impl CodeSnippet {
     pub fn size(&self) -> usize {

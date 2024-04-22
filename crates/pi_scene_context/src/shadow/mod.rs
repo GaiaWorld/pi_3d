@@ -35,9 +35,9 @@ impl Plugin for PluginShadowGenerator {
 
         app.configure_set(Update, StageShadowGenerator::Create.after(StageLighting::_LightCreate).after(StageCamera::CameraCreate));
         app.configure_set(Update, StageShadowGenerator::_CreateApply.after(StageShadowGenerator::Create).before(StageRenderer::Create));
-        app.configure_set(Update, StageShadowGenerator::Command.after(StageShadowGenerator::_CreateApply).after(StageLayerMask::Command).before(StageMaterial::Command));
-        app.configure_set(Update, StageShadowGenerator::CalcMatrix.after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageShadowGenerator::Culling.after(StageShadowGenerator::CalcMatrix).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageShadowGenerator::Command.in_set(FrameDataPrepare).after(StageShadowGenerator::_CreateApply).after(StageLayerMask::Command).before(StageMaterial::Command));
+        app.configure_set(Update, StageShadowGenerator::CalcMatrix.in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix));
+        app.configure_set(Update, StageShadowGenerator::Culling.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageShadowGenerator::_CreateApply));
 
         app.add_systems(
@@ -86,8 +86,8 @@ impl Plugin for PluginShadowGenerator {
             (
                 sys_calc_proj_matrix::<DirectionalShadowProjection>,
                 sys_calc_transform_matrix::<DirectionalShadowDirection, DirectionalShadowProjection>,
-                sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, DirectionalShadowProjection, ShadowLayerMask>,
-                sys_update_shadow_viewer_model_list_by_model::<DirectionalShadowDirection, DirectionalShadowProjection, ShadowLayerMask>,
+                sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, DirectionalShadowProjection>,
+                sys_update_shadow_viewer_model_list_by_model::<DirectionalShadowDirection, DirectionalShadowProjection>,
             ).chain().after(sys_calc_view_matrix_by_light).before(sys_shadow_bind_modify).in_set(StageShadowGenerator::CalcMatrix)
         );
 
@@ -96,8 +96,8 @@ impl Plugin for PluginShadowGenerator {
             (
                 sys_calc_proj_matrix::<SpotShadowProjection>,
                 sys_calc_transform_matrix::<DirectionalShadowDirection, SpotShadowProjection>,
-                sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, SpotShadowProjection, ShadowLayerMask>,
-                sys_update_shadow_viewer_model_list_by_model::<DirectionalShadowDirection, SpotShadowProjection, ShadowLayerMask>,
+                sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, SpotShadowProjection>,
+                sys_update_shadow_viewer_model_list_by_model::<DirectionalShadowDirection, SpotShadowProjection>,
             ).chain().after(sys_calc_view_matrix_by_light).before(sys_shadow_bind_modify).in_set(StageShadowGenerator::CalcMatrix)
         );
 
@@ -105,8 +105,8 @@ impl Plugin for PluginShadowGenerator {
 			Update,
             (
                 sys_shadow_generator_apply_while_shadow_modify,
-                sys_tick_viewer_culling::<DirectionalShadowDirection, DirectionalShadowProjection, StateShadow>.run_if(should_run),
-                sys_tick_viewer_culling::<DirectionalShadowDirection, SpotShadowProjection, StateShadow>.run_if(should_run)
+                sys_tick_viewer_culling::<DirectionalShadowDirection, DirectionalShadowProjection, StateShadow>     , //.run_if(should_run),
+                sys_tick_viewer_culling::<DirectionalShadowDirection, SpotShadowProjection, StateShadow>            , // .run_if(should_run)
             ).chain().in_set(StageShadowGenerator::Culling)
         );
         app.add_systems(

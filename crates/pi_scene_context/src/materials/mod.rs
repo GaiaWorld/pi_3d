@@ -34,9 +34,9 @@ impl Plugin for PluginMaterial {
             app.insert_resource(ImageTextureLoader::default());
             app.insert_resource(StateTextureLoader::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest);
-            app.configure_set(Update, StageTextureLoad::TextureLoading.after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(FrameDataPrepare));
+            app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
             app.add_systems(
                 Update,
                 (
@@ -136,7 +136,7 @@ impl Plugin for PluginMaterial {
         app.configure_set(Update, StageMaterial::Create.after(StageShadowGenerator::Create));
         app.configure_set(Update, StageMaterial::_Init.after(StageMaterial::Create));
         app.configure_set(Update, StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
-        app.configure_set(Update, StageMaterial::Ready.after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageMaterial::Ready.in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageMaterial::_Init));
 
         app.add_systems(

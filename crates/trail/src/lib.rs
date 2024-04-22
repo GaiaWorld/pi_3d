@@ -55,13 +55,17 @@ impl Plugin for PluginTrail {
 
         app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
         app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand));
-        app.configure_set(Update, StageTrail::TrailCommand.after(StageTrail::_TrailCreate));
-        app.configure_set(Update, StageTrail::TrailUpdate.after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
+        app.configure_set(Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate));
+        app.configure_set(Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
         app.add_systems(Update, apply_deferred.in_set(StageTrail::TrailCreate));
 
         app.add_systems(Update, sys_create_trail_mesh.in_set(StageTrail::TrailCreate));
-        app.add_systems(Update, sys_act_trail_age.run_if(should_run).in_set(StageTrail::TrailCommand));
-        app.add_systems(Update, sys_trail_update.run_if(should_run).in_set(StageTrail::TrailUpdate));
+        app.add_systems(Update, (
+            sys_act_trail_age           // .run_if(should_run)
+        ).in_set(StageTrail::TrailCommand));
+        app.add_systems(Update, (
+            sys_trail_update            // .run_if(should_run)
+        ).in_set(StageTrail::TrailUpdate));
         app.add_systems(
 			Update,
             (

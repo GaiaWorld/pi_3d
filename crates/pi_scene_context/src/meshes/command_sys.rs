@@ -118,7 +118,16 @@ pub fn sys_act_mesh_modify(
     mut cmds: ResMut<ActionListMeshShadow>,
     mut castshadows: Query<&mut MeshCastShadow>,
     mut receiveshadows: Query<&mut MeshReceiveShadow>,
-    // mut meshes: Query<>,
+    mut align_cmds: ResMut<ActionListMeshRenderAlignment>,
+    mut align_items: Query<&mut RenderAlignment>,
+    mut scalingmode_cmds: ResMut<ActionListAbstructMeshScalingMode>,
+    mut scalingode_items: Query<&mut ScalingMode>,
+    mut velocity_cmds: ResMut<ActionListAbstructMeshVelocity>,
+    mut velocity_items: Query<&mut ModelVelocity>,
+    mut indices_cmds: ResMut<ActionListMeshRenderIndiceRange>,
+    mut indices_items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
+    mut vertexrange_cmds: ResMut<ActionListMeshRenderVertexRange>,
+    mut vertexrange_items: Query<&mut VertexRenderRange>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
@@ -138,15 +147,40 @@ pub fn sys_act_mesh_modify(
             },
         }
     });
+    align_cmds.drain().drain(..).for_each(|OpsMeshRenderAlignment(entity, val)| {
+        if let Ok(mut item) = align_items.get_mut(entity) {
+            // log::warn!("RenderAlignment: {:?}", (val));
+            *item = val;
+        }
+    });
+    scalingmode_cmds.drain().drain(..).for_each(|OpsAbstructMeshScalingMode(entity, val)| {
+        if let Ok(mut item) = scalingode_items.get_mut(entity) {
+            *item = val;
+        }
+    });
+    velocity_cmds.drain().drain(..).for_each(|OpsAbstructMeshVelocity(entity, val)| {
+        if let Ok(mut item) = velocity_items.get_mut(entity) {
+            *item = val;
+        }
+    });
+    indices_cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val)| {
+        // log::warn!("Range: {:?}", val);
+        if let Ok((mut item, mut record)) = indices_items.get_mut(entity) {
+            *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+            *item = IndiceRenderRange(val);
+        }
+    });
+    vertexrange_cmds.drain().drain(..).for_each(|OpsMeshRenderVertexRange(entity, val)| {
+        // log::warn!("Range: {:?}", val);
+        if let Ok(mut item) = vertexrange_items.get_mut(entity) {
+            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+            *item = VertexRenderRange(val);
+        }
+    });
 }
 
 pub fn sys_act_instance_attribute(
-    mut cmdsfloat: ResMut<ActionListInstanceFloat>,
-    mut cmdsvec4s: ResMut<ActionListInstanceVec4>,
-    mut cmdsvec3s: ResMut<ActionListInstanceVec3>,
-    mut cmdsvec2s: ResMut<ActionListInstanceVec2>,
-    mut cmdsuints: ResMut<ActionListInstanceUint>,
-    mut cmdssints: ResMut<ActionListInstanceSint>,
+    mut cmdsfloat: ResMut<ActionListInstanceAttr>,
     mut instances: Query<&mut ModelInstanceAttributes>,
 
     mut animator_vec4: ResMut<ActionListAnimatorableVec4>,
@@ -155,232 +189,76 @@ pub fn sys_act_instance_attribute(
     mut animator_float: ResMut<ActionListAnimatorableFloat>,
     mut animator_uint: ResMut<ActionListAnimatorableUint>,
     mut animator_sint: ResMut<ActionListAnimatorableSint>,
+
+    mut pointlight_cmds: ResMut<ActionListMeshForcePointLighting>,
+    mut pointlight_items: Query<&mut ModelForcePointLightings>,
+    mut spotlight_cmds: ResMut<ActionListMeshForceSpotLighting>,
+    mut spotlight_items: Query<&mut ModelForceSpotLightings>,
+    mut hemilight_cmds: ResMut<ActionListMeshForceHemiLighting>,
+    mut hemilight_items: Query<&mut ModelForceHemiLightings>,
+    mut skinoff_cmds: ResMut<ActionListBoneOffset>,
+    skinoff_items: Query<&BindModel>,
 ) {
 
-    cmdsfloat.drain().drain(..).for_each(|OpsInstanceFloat(instance, val, attr)| {
+    cmdsfloat.drain().drain(..).for_each(|OpsInstanceAttr(instance, val, attr)| {
         if let Ok(mut attributes) = instances.get_mut(instance) {
             if let Some(offset) = attributes.offset(&attr) {
                 if let Some(target) = offset.entity() {
-                    animator_float.push(OpsAnimatorableFloat::ops(target, instance, AnimatorableFloat(val), EAnimatorableEntityType::Attribute));
+                    match val {
+                        EInstanceAttr::Float(val) => animator_float.push(OpsAnimatorableFloat::ops(target, instance, AnimatorableFloat(val), EAnimatorableEntityType::Attribute)),
+                        EInstanceAttr::Int(val) => animator_sint.push(OpsAnimatorableSint::ops(target, instance, AnimatorableSint(val), EAnimatorableEntityType::Attribute)),
+                        EInstanceAttr::Uint(val) => animator_uint.push(OpsAnimatorableUint::ops(target, instance, AnimatorableUint(val), EAnimatorableEntityType::Attribute)),
+                        EInstanceAttr::Vec4(val) => animator_vec4.push(OpsAnimatorableVec4::ops(target, instance, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Attribute)),
+                        EInstanceAttr::Vec3(val) => animator_vec3.push(OpsAnimatorableVec3::ops(target, instance, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Attribute)),
+                        EInstanceAttr::Vec2(val) => animator_vec2.push(OpsAnimatorableVec2::ops(target, instance, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Attribute)),
+                    }
                 } else {
                     let mut offset = offset.offset() as usize;
-                    bytemuck::cast_slice(&[offset]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
+                    match val {
+                        EInstanceAttr::Float(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::Uint(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::Int(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::Vec4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::Vec3(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::Vec2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                    }
+                    ;
                 }
             }
         }
     });
-    cmdsvec4s.drain().drain(..).for_each(|OpsInstanceVec4(instance, val, attr)| {
-        if let Ok(mut attributes) = instances.get_mut(instance) {
-            if let Some(offset) = attributes.offset(&attr) {
-                if let Some(target) = offset.entity() {
-                    animator_vec4.push(OpsAnimatorableVec4::ops(target, instance, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Attribute));
-                } else {
-                    let mut offset = offset.offset() as usize;
-                    bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
-                }
-            }
-        }
-    });
-    cmdsvec3s.drain().drain(..).for_each(|OpsInstanceVec3(instance, val, attr)| {
-        if let Ok(mut attributes) = instances.get_mut(instance) {
-            if let Some(offset) = attributes.offset(&attr) {
-                if let Some(target) = offset.entity() {
-                    animator_vec3.push(OpsAnimatorableVec3::ops(target, instance, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Attribute));
-                } else {
-                    let mut offset = offset.offset() as usize;
-                    bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
-                }
-            }
-        }
-    });
-    cmdsvec2s.drain().drain(..).for_each(|OpsInstanceVec2(instance, val, attr)| {
-        if let Ok(mut attributes) = instances.get_mut(instance) {
-            if let Some(offset) = attributes.offset(&attr) {
-                if let Some(target) = offset.entity() {
-                    animator_vec2.push(OpsAnimatorableVec2::ops(target, instance, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Attribute));
-                } else {
-                    let mut offset = offset.offset() as usize;
-                    bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
-                }
-            }
-        }
-    });
-    cmdsuints.drain().drain(..).for_each(|OpsInstanceUint(instance, val, attr)| {
-        if let Ok(mut attributes) = instances.get_mut(instance) {
-            if let Some(offset) = attributes.offset(&attr) {
-                if let Some(target) = offset.entity() {
-                    animator_uint.push(OpsAnimatorableUint::ops(target, instance, AnimatorableUint(val), EAnimatorableEntityType::Attribute));
-                } else {
-                    let mut offset = offset.offset() as usize;
-                    bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
-                }
-            }
-        }
-    });
-    cmdssints.drain().drain(..).for_each(|OpsInstanceSint(instance, val, attr)| {
-        if let Ok(mut attributes) = instances.get_mut(instance) {
-            if let Some(offset) = attributes.offset(&attr) {
-                if let Some(target) = offset.entity() {
-                    animator_sint.push(OpsAnimatorableSint::ops(target, instance, AnimatorableSint(val), EAnimatorableEntityType::Attribute));
-                } else {
-                    let mut offset = offset.offset() as usize;
-                    bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; });
-                }
-            }
-        }
-    });
-}
-
-pub fn sys_act_abstruct_mesh_render_alignment(
-    mut cmds: ResMut<ActionListMeshRenderAlignment>,
-    mut items: Query<&mut RenderAlignment>,
-) {
-    cmds.drain().drain(..).for_each(|OpsMeshRenderAlignment(entity, val)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            // log::warn!("RenderAlignment: {:?}", (val));
-            *item = val;
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsMeshRenderAlignment(entity, val, count + 1));
-            // }
-        }
-    });
-}
-
-pub fn sys_act_abstruct_mesh_scaling_mode(
-    mut cmds: ResMut<ActionListAbstructMeshScalingMode>,
-    mut items: Query<&mut ScalingMode>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAbstructMeshScalingMode(entity, val)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsAbstructMeshScalingMode(entity, val, count + 1));
-            // }
-        }
-    });
-}
-
-pub fn sys_act_abstruct_mesh_velocity(
-    mut cmds: ResMut<ActionListAbstructMeshVelocity>,
-    mut items: Query<&mut ModelVelocity>,
-) {
-    cmds.drain().drain(..).for_each(|OpsAbstructMeshVelocity(entity, val)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsAbstructMeshVelocity(entity, val, count + 1));
-            // }
-        }
-    });
-}
-
-pub fn sys_act_mesh_render_indice(
-    mut cmds: ResMut<ActionListMeshRenderIndiceRange>,
-    mut items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val)| {
+    pointlight_cmds.drain().drain(..).for_each(|OpsMeshForcePointLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
-        if let Ok((mut item, mut record)) = items.get_mut(entity) {
-            *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-            *item = IndiceRenderRange(val);
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsMeshRenderIndiceRange(entity, val, count + 1));
-            // }
-        }
-    });
-}
-
-pub fn sys_act_mesh_render_vertex_range(
-    mut cmds: ResMut<ActionListMeshRenderVertexRange>,
-    mut items: Query<&mut VertexRenderRange>,
-    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsMeshRenderVertexRange(entity, val)| {
-        // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = items.get_mut(entity) {
-            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-            *item = VertexRenderRange(val);
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsMeshRenderVertexRange(entity, val, count + 1));
-            // }
-        }
-    });
-}
-
-pub fn sys_act_mesh_force_point_lighting(
-    mut cmds: ResMut<ActionListMeshForcePointLighting>,
-    mut items: Query<&mut ModelForcePointLightings>,
-    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsMeshForcePointLighting(entity, light, isadd)| {
-        // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = items.get_mut(entity) {
+        if let Ok(mut item) = pointlight_items.get_mut(entity) {
             // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
             match item.0.binary_search(&light) {
                 Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
                 Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
             }
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsMeshForcePointLighting(entity, light, isadd, count + 1));
-            // }
         }
     });
-}
-
-pub fn sys_act_mesh_force_spot_lighting(
-    mut cmds: ResMut<ActionListMeshForceSpotLighting>,
-    mut items: Query<&mut ModelForceSpotLightings>,
-    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsMeshForceSpotLighting(entity, light, isadd)| {
+    spotlight_cmds.drain().drain(..).for_each(|OpsMeshForceSpotLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = items.get_mut(entity) {
+        if let Ok(mut item) = spotlight_items.get_mut(entity) {
             // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
             match item.0.binary_search(&light) {
                 Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
                 Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
             }
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsMeshForceSpotLighting(entity, light, isadd, count + 1));
-            // }
         }
     });
-}
-
-pub fn sys_act_mesh_force_hemi_lighting(
-    mut cmds: ResMut<ActionListMeshForceHemiLighting>,
-    mut items: Query<&mut ModelForceHemiLightings>,
-    // mut items: Query<(&mut VertexRenderRange, &mut RecordVertexRenderRange)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsMeshForceHemiLighting(entity, light, isadd)| {
+    hemilight_cmds.drain().drain(..).for_each(|OpsMeshForceHemiLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = items.get_mut(entity) {
+        if let Ok(mut item) = hemilight_items.get_mut(entity) {
             // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
             match item.0.binary_search(&light) {
                 Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
                 Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
             }
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsMeshForceHemiLighting(entity, light, isadd, count + 1));
-            // }
         }
     });
-}
-
-pub fn sys_act_model_skinoffset(
-    mut cmds: ResMut<ActionListBoneOffset>,
-    items: Query<&BindModel>,
-) {
-    cmds.drain().drain(..).for_each(|OpsBoneOffset(entity, offset)| {
-        if let Ok(bind) = items.get(entity) {
+    skinoff_cmds.drain().drain(..).for_each(|OpsBoneOffset(entity, offset)| {
+        if let Ok(bind) = skinoff_items.get(entity) {
             bind.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[offset]));
         }
     });
@@ -426,9 +304,9 @@ impl ActionMesh {
         entitycmd.insert(ModelForcePointLightings::default());
         entitycmd.insert(ModelForceSpotLightings::default());
         entitycmd.insert(ModelForceHemiLightings::default());
-        entitycmd.insert(ModelPointLightingDirty::default());
-        entitycmd.insert(ModelSpotLightingDirty::default());
-        entitycmd.insert(ModelHemiLightingDirty::default());
+        // entitycmd.insert(ModelPointLightingDirty::default());
+        // entitycmd.insert(ModelSpotLightingDirty::default());
+        // entitycmd.insert(ModelHemiLightingDirty::default());
 
         entitycmd.insert(MeshStates::default());
         entitycmd.insert(DirtyMeshStates);
@@ -436,19 +314,23 @@ impl ActionMesh {
         entitycmd.insert(meshinstanceattributes);
         entitycmd.insert(state);
 
-        create_passobj::<Pass01, PassID01>(entity, commands, empty.id(), scene );
-        create_passobj::<Pass02, PassID02>(entity, commands, empty.id(), scene );
-        create_passobj::<Pass03, PassID03>(entity, commands, empty.id(), scene );
-        create_passobj::<Pass04, PassID04>(entity, commands, empty.id(), scene );
-        create_passobj::<Pass05, PassID05>(entity, commands, empty.id(), scene );
-        create_passobj::<Pass06, PassID06>(entity, commands, empty.id(), scene );
-        create_passobj::<Pass07, PassID07>(entity, commands, empty.id(), scene );
-        create_passobj::<Pass08, PassID08>(entity, commands, empty.id(), scene );
-        // create_passobj::<Pass09, PassID09>(entity, commands, empty.id(), scene );
-        // create_passobj::<Pass10, PassID10>(entity, commands, empty.id(), scene );
-        // create_passobj::<Pass11, PassID11>(entity, commands, empty.id(), scene );
-        // create_passobj::<Pass12, PassID12>(entity, commands, empty.id(), scene );
-
+        let id01 = commands.spawn_empty().id();
+        let id02 = commands.spawn_empty().id();
+        let id03 = commands.spawn_empty().id();
+        let id04 = commands.spawn_empty().id();
+        let id05 = commands.spawn_empty().id();
+        let id06 = commands.spawn_empty().id();
+        let id07 = commands.spawn_empty().id();
+        let id08 = commands.spawn_empty().id();
+        commands.entity(entity).insert(PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]));
+        create_passobj(commands, id01, entity, scene, empty.id(), PassTag::PASS_TAG_01);
+        create_passobj(commands, id02, entity, scene, empty.id(), PassTag::PASS_TAG_02);
+        create_passobj(commands, id03, entity, scene, empty.id(), PassTag::PASS_TAG_03);
+        create_passobj(commands, id04, entity, scene, empty.id(), PassTag::PASS_TAG_04);
+        create_passobj(commands, id05, entity, scene, empty.id(), PassTag::PASS_TAG_05);
+        create_passobj(commands, id06, entity, scene, empty.id(), PassTag::PASS_TAG_06);
+        create_passobj(commands, id07, entity, scene, empty.id(), PassTag::PASS_TAG_07);
+        create_passobj(commands, id08, entity, scene, empty.id(), PassTag::PASS_TAG_08);
         return true;
     }
     pub(crate) fn as_mesh(
@@ -479,19 +361,24 @@ impl ActionMesh {
             .insert(LayerMask::default())
             .insert(AbstructMeshCullingFlag(false))
             .insert(TransparentSortParam::opaque())
-            .insert(CCullMode(CullMode::Back))
-            .insert(CFrontFace(FrontFace::Ccw))
-            .insert(CPolygonMode(PolygonMode::Fill))
-            .insert(Topology(PrimitiveTopology::TriangleList))
-            .insert(CUnClipDepth(unclipdepth))
-            .insert(DepthWrite::default())
-            .insert(DepthCompare::default())
-            .insert(DepthBias::default())
-            .insert(StencilFront::default())
-            .insert(StencilBack::default())
-            .insert(StencilRead::default())
-            .insert(StencilWrite::default())
-            .insert(ModelBlend::default())
+
+            // .insert(CCullMode(CullMode::Back))
+            // .insert(CFrontFace(FrontFace::Ccw))
+            // .insert(CPolygonMode(PolygonMode::Fill))
+            // .insert(Topology(PrimitiveTopology::TriangleList))
+            // .insert(CUnClipDepth(unclipdepth))
+            // .insert(PrimitiveState { cull: CullMode::Back, frontface: FrontFace::Ccw, polygon: PolygonMode::Fill, topology: PrimitiveTopology::TriangleList, unclip_depth: unclipdepth })
+
+            // .insert(DepthWrite::default())
+            // .insert(DepthCompare::default())
+            // .insert(DepthBias::default())
+            // .insert(StencilFront::default())
+            // .insert(StencilBack::default())
+            // .insert(StencilRead::default())
+            // .insert(StencilWrite::default())
+
+            // .insert(ModelBlend::default())
+
             .insert(BindSkinValue(None))
             .insert(ModelVelocity::default())
             .insert(RenderAlignment::default())
@@ -504,36 +391,6 @@ impl ActionMesh {
             .insert(InstancedMeshTransparentSortCollection(vec![]))
             ;
     }
-    // pub fn create(
-    //     app: &mut App,
-    //     scene: Entity,
-    // ) -> Entity {
-    //     let mut queue = CommandQueue::default();
-    //     let mut commands = Commands::new(&mut queue, &app.world);
-
-    //     let entity = commands.spawn_empty().id();
-    //     queue.apply(&mut app.world);
-
-    //     let mut cmds = app.world.get_resource_mut::<ActionListMeshCreate>().unwrap();
-    //     cmds.push(OpsMeshCreation(scene, entity));
-
-    //     entity
-    // }
-
-    // pub fn use_geometry(
-    //     app: &mut App,
-    //     id_mesh: Entity,
-    //     vertex_desc: Vec<VertexBufferDesc>,
-    //     indices_desc: Option<IndicesBufferDesc>,
-    // ) {
-    //     let mut queue = CommandQueue::default();
-    //     let mut commands = Commands::new(&mut queue, &app.world);
-
-    //     let id_geo = commands.spawn_empty().id();
-
-    //     let mut cmds = app.world.get_resource_mut::<ActionListGeometryCreate>().unwrap();
-    //     ActionGeometry::create(&mut cmds, id_geo, id_mesh, vertex_desc, indices_desc);
-    // }
 
     pub fn modify(
         app: &mut App,
@@ -582,24 +439,15 @@ impl ActionInstanceMesh {
     }
 }
 
-fn create_passobj<T: TPass + Component, T2: TPassID + Component>(
-    model: Entity,
+fn create_passobj(
     commands: &mut Commands,
-    empty: Entity,
+    id: Entity,
+    idmodel: Entity,
     scene: Entity,
-) -> ObjectID {
-    let id = commands.spawn_empty().id();
-
-    let passid = T2::new(id);
-    commands.entity(model).insert(passid);
-    // log::warn!("Model Pass: {:?}", (model, T2::TAG, id, scene));
-
+    empty: Entity,
+    tag: PassTag,
+) {
     let mut entitycmd = commands.entity(id);
-    ActionEntity::init(&mut entitycmd);
-    ActionPassObject::init(&mut entitycmd, empty, model, scene);
-    entitycmd.insert(T::default());
-    entitycmd.insert(T::TAG);
-
-
-    id
+    ActionEntity::init(&mut entitycmd); ActionPassObject::init(&mut entitycmd, empty, idmodel, scene);
+    entitycmd.insert(tag);
 }

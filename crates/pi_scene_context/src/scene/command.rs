@@ -36,34 +36,26 @@ impl OpsSceneTime {
 }
 pub type ActionListSceneTime = ActionList<OpsSceneTime>;
 
-pub struct OpsSceneAmbientColor(pub(crate) Entity, pub(crate) f32, pub(crate) f32, pub(crate) f32, pub(crate) u8);
+pub enum ESceneAmbientOps {
+    Color(f32, f32, f32),
+    Intensity(f32)
+}
+pub struct OpsSceneAmbientColor(pub(crate) Entity, pub(crate)ESceneAmbientOps);
 impl OpsSceneAmbientColor {
-    pub fn ops(scene: Entity, r: f32, g: f32, b: f32) -> Self {
-        Self(scene, r, g, b, 0)
+    pub fn ops(scene: Entity, val: ESceneAmbientOps) -> Self {
+        Self(scene, val)
     }
 }
 pub type ActionListSceneAmbientColor = ActionList<OpsSceneAmbientColor>;
 
-pub struct OpsSceneAmbientIntensity(pub(crate) Entity, pub(crate) f32, pub(crate) u8);
-impl OpsSceneAmbientIntensity {
-    pub fn ops(scene: Entity, intensity: f32) -> Self {
-        Self(scene, intensity, 0)
-    }
+pub enum EFogOps {
+    Color(f32, f32, f32),
+    Param(FogParam),
 }
-pub type ActionListSceneAmbientIntensity = ActionList<OpsSceneAmbientIntensity>;
-
-pub struct OpsSceneFogColor(pub(crate) Entity, pub(crate) f32, pub(crate) f32, pub(crate) f32, pub(crate) u8);
-impl OpsSceneFogColor {
-    pub fn ops(scene: Entity, r: f32, g: f32, b: f32) -> Self {
-        Self(scene, r, g, b, 0)
-    }
-}
-pub type ActionListSceneFogColor = ActionList<OpsSceneFogColor>;
-
-pub struct OpsSceneFogParam(pub(crate) Entity, pub(crate) FogParam, pub(crate) u8);
+pub struct OpsSceneFogParam(pub(crate) Entity, pub(crate) EFogOps);
 impl OpsSceneFogParam {
-    pub fn ops(scene: Entity, param: FogParam) -> Self {
-        Self(scene, param, 0)
+    pub fn ops(scene: Entity, param: EFogOps) -> Self {
+        Self(scene, param)
     }
 }
 pub type ActionListSceneFogParam = ActionList<OpsSceneFogParam>;

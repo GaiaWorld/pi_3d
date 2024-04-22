@@ -44,7 +44,7 @@ impl Skeleton {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct BindSkinValue(pub Option<Arc<ShaderBindModelAboutSkinValue>>);
 
 

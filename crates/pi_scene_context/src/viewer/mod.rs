@@ -18,11 +18,10 @@ pub mod prelude;
 /// * S - 获取 ViewerViewMatrix 需要依赖的 System
 /// * T2 - 获取 ViewerProjectionMatrix 的 Component
 /// * S2 - 获取 ViewerProjectionMatrix 需要依赖的 System
-#[derive(Debug)]
 pub struct PluginViewerBase;
 impl Plugin for PluginViewerBase {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, StageViewer::ForceInclude.before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageViewer::ForceInclude.in_set(FrameDataPrepare).before(ERunStageChap::Uniform));
         app.insert_resource(ActionListViewerForceInclude::default());
         app.add_systems(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
     }

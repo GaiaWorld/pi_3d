@@ -68,7 +68,7 @@ use super::prelude::*;
         state.calc_local_time = (time1 - time).as_micros() as u32;
     }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct TmpCalcWorldMatrix {
     node: Entity,
     dirty: bool,

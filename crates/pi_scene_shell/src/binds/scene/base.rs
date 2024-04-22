@@ -9,7 +9,7 @@ use pi_render::renderer::{
 use crate::shader::*;
 
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct ShaderBindViewer {
     pub(crate) data: BindBufferRange,
 }
@@ -82,7 +82,7 @@ impl TKeyBind for ShaderBindViewer {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseViewer {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindViewer>,

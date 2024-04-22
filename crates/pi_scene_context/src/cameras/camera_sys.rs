@@ -19,14 +19,14 @@ use super::camera::*;
     pub(crate) fn sys_update_camera_param(
         mut cameras: Query<
             (
-                &EFreeCameraMode, &CameraFov, &CameraNearFar, &CameraOrthSize, &EFixedMode, &mut CameraParam,
+                &CameraFov, &CameraOrthSize, &mut CameraParam,
             ),
-            Or<(Changed<EFreeCameraMode>, Changed<CameraFov>, Changed<CameraNearFar>, Changed<CameraOrthSize>, Changed<EFixedMode>)>
+            Or<(Changed<CameraFov>, Changed<CameraOrthSize>)>
         >,
     ) {
         // log::debug!("CameraParam :");
-        cameras.iter_mut().for_each(|(mode, fov, nearfar, size, fixmode, mut param)| {
-            // log::debug!("CameraParam : 0");
-            *param = CameraParam::create(mode, fixmode, fov, nearfar, size);
+        cameras.iter_mut().for_each(|(fov, size, mut param)| {
+            param.fov = fov.clone();
+            param.orth = size.clone();
         });
     }

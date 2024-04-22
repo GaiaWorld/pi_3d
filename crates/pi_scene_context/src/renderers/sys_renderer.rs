@@ -76,41 +76,41 @@ use super::{
     }
 
 /// 渲染器搜集渲染
-    pub fn sys_pass_shader_request_by_model<T: TPass + Component, I: TPassID + Component>(
+    pub fn sys_pass_shader_request_by_model(
         models: Query<
             (
-                &GeometryID, &I
+                &GeometryID, &PassIDs
             ),
             Or<(Changed<GeometryID>, Changed<RenderAlignment>)>,
         >,
-        mut passes: Query<&mut PassGeometryID, With<T>>,
+        mut passes: Query<&mut PassGeometryID>,
     ) {
         // let time1 = pi_time::Instant::now();
 
         models.iter().for_each(
-            |(id_geo, passid)| {
-                if let Ok(mut idgeometry) = passes.get_mut(passid.id()) {
-                    *idgeometry = PassGeometryID(id_geo.0);
-                }
+            |(id_geo, passids)| {
+                passids.0.iter().for_each(|id| {
+                    if let Ok(mut idgeometry) = passes.get_mut(*id) { *idgeometry = PassGeometryID(id_geo.0); }
+                });
             }
         );
 
         // log::debug!("SysPassShaderRequestByModel: {:?}", pi_time::Instant::now() - time1);
     }
-    pub fn sys_pass_shader_request_by_geometry<T: TPass + Component, I: TPassID + Component>(
+    pub fn sys_pass_shader_request_by_geometry(
         models: Query<
-            (&GeometryID, &I),
+            (&GeometryID, &PassIDs),
         >,
         geometrys: Query<(Entity, &MeshID), Changed<VertexBufferLayoutsComp>>,
-        mut passes: Query<&mut PassGeometryID, With<T>>,
+        mut passes: Query<&mut PassGeometryID>,
     ) {
         // let time1 = pi_time::Instant::now();
         geometrys.iter().for_each(|(entity, idmesh)| {
-            if let Ok((idgeo, idpass)) = models.get(idmesh.0) {
-                if entity == idgeo.0 {
-                    if let Ok(mut idgeometry) = passes.get_mut(idpass.id()) {
-                        *idgeometry = PassGeometryID(entity);
-                    }
+            if let Ok((id_geo, passids)) = models.get(idmesh.0) {
+                if entity == id_geo.0 {
+                    passids.0.iter().for_each(|id| {
+                        if let Ok(mut idgeometry) = passes.get_mut(*id) { *idgeometry = PassGeometryID(id_geo.0); }
+                    });
                 }
             }
         });
@@ -158,7 +158,7 @@ use super::{
                                 }
                             }
                         } else {
-                            log::error!("MAX_ATTRIBUTES: {}, Using Attributes: {}, MAX_BUFFER: {}, Using Buffers: {}", limit.max_vertex_attributes, vb.0.attrcount, limit.max_vertex_buffers, vb.0.desccount);
+                            // log::error!("MAX_ATTRIBUTES: {}, Using Attributes: {}, MAX_BUFFER: {}, Using Buffers: {}", limit.max_vertex_attributes, vb.0.attrcount, limit.max_vertex_buffers, vb.0.desccount);
                             *old_shader = PassShader(None);
                         }
                     },
@@ -175,75 +175,72 @@ use super::{
         // log::debug!("SysPassShaderRequestByPass: {:?}", pi_time::Instant::now() - time1);
     }
 
-    pub fn sys_pass_pipeline_request_by_model<T: TPass + Component, I: TPassID + Component>(
+    pub fn sys_pass_pipeline_request_by_model(
         models: Query<
-            (&I, &DisposeReady),
+            (&DisposeReady, &PassIDs),
             Or<(
-                Changed<ModelBlend>, Changed<GeometryID>,
-                Changed<CCullMode>, Changed<Topology>, Changed<CPolygonMode>, Changed<CFrontFace>, Changed<CUnClipDepth>,
-                Changed<DepthWrite>, Changed<DepthCompare>, Changed<DepthBias>, Changed<StencilFront>, Changed<StencilBack>, Changed<StencilRead>, Changed<StencilWrite>
+                Changed<GeometryID>,
             )>
         >,
-        mut passes: Query<&mut PassPipelineStateDirty, (With<T>, With<PassPipeline>)>,
+        mut passes: Query<&mut PassPipelineStateDirty, With<PassPipeline>>,
     ) {
         // let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(passid, disposeenable)|{
+        models.iter().for_each(|(disposeenable, passids)|{
             if disposeenable.0 == true { return; }
-            if let Ok(mut flag ) = passes.get_mut(passid.id()) {
-                // log::warn!("PassPipeline: By Model Modify");
-                *flag = PassPipelineStateDirty;
-            }
+            passids.0.iter().for_each(|id| {
+                if let Ok(mut flag ) = passes.get_mut(*id) { *flag = PassPipelineStateDirty; }
+            });
         });
 
-        // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
+        // // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
-    
-    pub fn sys_pass_pipeline_request_by_renderer<T: TPass + Component, I: TPassID + Component>(
+
+    pub fn sys_pass_pipeline_request_by_renderer(
         renderers: Query<(&RendererEnable, &ViewerID, &PassTag), Or<(Changed<RenderColorFormat>, Changed<RenderDepthFormat>, Changed<RendererBlend>, Changed<RendererEnable>, Changed<PassTag>)>>,
         viewers: Query<(&ModelList, &ForceIncludeModelList)>,
-        models: Query<&I>,
-        mut passes: Query<&mut PassPipelineStateDirty, With<T>>,
+        modelspass: Query<&PassIDs>,
+        mut passes: Query<&mut PassPipelineStateDirty>,
     ) {
         // let time1 = pi_time::Instant::now();
         renderers.iter().for_each(|(enable, idviewer, passtag)| {
-            if enable.0 && T::TAG == *passtag {
+            if enable.0 {
                 if let Ok((modellist, forcemodels)) = viewers.get(idviewer.0) {
                     modellist.0.iter().for_each(|idmodel| {
-                        if let Ok(passid) = models.get(*idmodel) {
-                            if let Ok( mut flag ) = passes.get_mut(passid.id()) {
-                                // log::warn!("PassPipeline: By Renderer Modify");
-                                *flag = PassPipelineStateDirty;
-                            }
-                        }
+                        if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
                     });
                     forcemodels.0.iter().for_each(|idmodel| {
-                        if let Ok(passid) = models.get(*idmodel) {
-                            if let Ok( mut flag ) = passes.get_mut(passid.id()) {
-                                // log::warn!("PassPipeline: By Renderer Modify");
-                                *flag = PassPipelineStateDirty;
-                            }
-                        }
+                        if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
                     });
                 }
             }
         });
     }
+    fn _pass_pipeline_request_by_renderer(
+        passid: Entity,
+        passes: &mut Query<&mut PassPipelineStateDirty>,
+    ) {
+        if let Ok( mut flag ) = passes.get_mut(passid) { *flag = PassPipelineStateDirty; }
+    }
 
     pub fn sys_pass_pipeline(
         renderers: Query<(&RenderColorFormat, &RenderDepthFormat, &RendererBlend)>,
-        models: Query<
-            (
-                &GeometryID,
-                (&CCullMode, &Topology, &CPolygonMode, &CFrontFace, &CUnClipDepth),
-                &ModelBlend,
-                (&DepthWrite, &DepthCompare, &DepthBias, &StencilFront, &StencilBack, &StencilRead, &StencilWrite)
-            ),
-        >,
+        models: Query<&GeometryID>,
         geometrys: Query<&VertexBufferLayoutsComp>, 
         mut passes: Query<
-            (ObjectID, &DisposeReady, &PassModelID, &PassBindGroups, &PassShader, &mut PassPipeline, &PassRendererID),
-            Or<(Changed<PassShader>, Changed<PassPipelineStateDirty>, Changed<PassRendererID>)>
+            (
+                ObjectID, &DisposeReady, &PassModelID, &PassBindGroups, &PassShader, &mut PassPipeline, &PassRendererID,
+                (
+                    &PrimitiveState,
+                    &ModelBlend,
+                    &DepthState, &StencilState
+                )
+            ),
+            Or<(
+                Changed<PassShader>, Changed<PassPipelineStateDirty>, Changed<PassRendererID>,
+                Changed<ModelBlend>, Changed<PrimitiveState>,
+                Or<(Changed<DepthState>, Changed<StencilState>)>
+            )>
         >,
         assets: ResMut<ShareAssetMgr<Pipeline3D>>,
         device: Res<PiRenderDevice>,
@@ -251,25 +248,25 @@ use super::{
     ) {
         // let time1 = pi_time::Instant::now();
 
-        passes.iter_mut().for_each(|(id_pass, disposeready, id_model, bindgroups, shader, mut oldpipeline, idrenderer)| {
+        passes.iter_mut().for_each(|(
+            id_pass, disposeready, id_model, bindgroups, shader, mut oldpipeline, idrenderer,
+            (cull,
+            blend,
+            depth_state, stencil_state)
+        )| {
             if disposeready.0 == true { return; }
             // log::warn!("SysPipeline: 0 Pass");
             if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
                 // log::warn!("SysPipeline: 1 Pass");
-                if let Ok((
-                    id_geo, 
-                    (cull, topology, polygon, face, unclip_depth),
-                    blend,
-                    (depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write)
-                )) = models.get(id_model.0) {
+                if let Ok(id_geo) = models.get(id_model.0) {
                     // log::warn!("SysPipeline: 2 Pass {:?}", (geometrys.get(id_geo.0).is_ok(), renderers.get(idrenderer.0).is_ok()));
                     match (geometrys.get(id_geo.0), renderers.get(idrenderer.0)) {
                         (Ok(vb), Ok((colorformat, depthstencilformat, blendenable))) => {
                             let blend = if blendenable.0 { blend.clone() } else { ModelBlend::default() };
                             if let Ok(pipeline) = pipeline(
                                 shader, bindgroups, vb, &colorformat.0, &depthstencilformat.0,
-                                blend, depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write,
-                                cull, topology, polygon, face, unclip_depth,
+                                blend, depth_state, stencil_state,
+                                cull,
                                 id_pass, & assets, &device
                             ) {
                                 // log::warn!("SysPipeline: {:?}", (colorformat, passtag, passpasstag));
@@ -294,22 +291,24 @@ use super::{
             }
         });
 
-        // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
+        // // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
 
 
-    pub fn sys_pass_draw_modify_by_model<T: TPass + Component, I: TPassID + Component>(
-        models: Query<&I, Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<VertexRenderRange>, Changed<DisposeReady>)>>,
-        mut passes: Query<&mut PassDrawDirty, With<T>>,
-        // mut commands: Commands,
+    pub fn sys_pass_draw_modify_by_model(
+        models: Query<
+            (&PassIDs), 
+            Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<VertexRenderRange>, Changed<DisposeReady>)>
+        >,
+        mut passes: Query<&mut PassDrawDirty>,
     ) {
-        models.iter().for_each(|id_pass| {
-            if let Ok(mut drawdirty) = passes.get_mut(id_pass.id()) {
-                *drawdirty = PassDrawDirty;
-            }
+        models.iter().for_each(|(passids)| {
+            passids.0.iter().for_each(|id| {
+                if let Ok(mut drawdirty) = passes.get_mut(*id) { *drawdirty = PassDrawDirty; }
+            });
         });
 
-        // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
+        // // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
     
     pub fn sys_pass_draw_modify_by_pass(
@@ -376,7 +375,7 @@ use super::{
             }
         });
 
-        // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
+        // // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_renderer_draws_modify(
@@ -386,9 +385,7 @@ use super::{
         models: Query<
             (
                 &GlobalEnable, &DisposeReady, &GlobalMatrix, &TransparentSortParam, &InstancedMeshTransparentSortCollection,
-                (&PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08
-                    // ,&PassID09, &PassID10, &PassID11, &PassID12
-                )
+                &PassIDs
             )
         >,
         passes: Query<
@@ -422,12 +419,11 @@ use super::{
                     // log::warn!("ModelListAfterCulling: {:?}, ", (list_model.0.len()));
                     renderer.draws.viewport = viewport.val();
                     list_model.0.iter().for_each(|id_obj| {
-                        if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passrecord)) = models.get(id_obj.clone()) {
+                        if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passids)) = models.get(id_obj.clone()) {
                             // log::warn!("Renderer: A {:?}", (disposed.0, globalenable.0));
                             if disposed.0 == true || globalenable.0 == false { return; }
-                            
-                            let passids = [passrecord.0.0, passrecord.1.0, passrecord.2.0, passrecord.3.0, passrecord.4.0, passrecord.5.0, passrecord.6.0, passrecord.7.0];
-    
+                            let passids = passids.0;
+
                             let index = 0;
                             let is_transparent = transparent.0;
                             if passtag.index() < passids.len() {
@@ -566,7 +562,7 @@ use super::{
         });
 
         record.drawobjs = (pi_time::Instant::now() - time1).as_micros() as u32;
-        // log::trace!("SysRendererDraws: {:?}", pi_time::Instant::now() - time1);
+        // // log::trace!("SysRendererDraws: {:?}", pi_time::Instant::now() - time1);
     }
 
 
@@ -600,7 +596,7 @@ fn shader(
     let fs_running_before_effect_snippets = vec![];
     let fs_running_after_effect_snippets = vec![];
 
-    // log::error!("Shader: {:?}", key_meta);
+    log::error!("Shader: {:?}", key_meta);
     // log::error!("{:?}", key_attributes);
     // log::error!("{:?}", key_attributes.vs_define_code());
 
@@ -690,8 +686,8 @@ fn pipeline(
     colorformat: &ColorFormat,
     depthstencilformat: &DepthStencilFormat,
     blend: ModelBlend,
-    depth_write: &DepthWrite, compare: &DepthCompare, bias: &DepthBias, stencil_front: &StencilFront, stencil_back: &StencilBack, stencil_read: &StencilRead, stencil_write: &StencilWrite,
-    cull: &CCullMode, topology: &Topology, polygon: &CPolygonMode, face: &CFrontFace, unclip_depth: &CUnClipDepth,
+    depth_state: &DepthState, stencil_state: &StencilState,
+    cull: &PrimitiveState,
     _id_pass: Entity,
     assets: &ShareAssetMgr<Pipeline3D>,
     device: &RenderDevice,
@@ -710,14 +706,14 @@ fn pipeline(
         Some(
             depth_stencil_state(
                 pass_depth_format,
-                depth_write, compare, bias, stencil_front, stencil_back, stencil_read, stencil_write
+                depth_state, stencil_state
             )
         )
     } else { None };
 
     let targets = RenderTargetState::color_target(pass_color_format, &blend);
     let key_state = KeyRenderPipelineState {
-        primitive: PrimitiveState::state(cull, topology, polygon, face, unclip_depth),
+        primitive: cull.state(),
         target_state: targets[0].clone(),
         depth_stencil: depth_stencil,
         multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false }

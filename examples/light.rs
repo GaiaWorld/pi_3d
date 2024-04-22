@@ -17,7 +17,7 @@ impl DemoLight {
         actions: &mut pi_3d::ActionSets,
     ) -> Entity {
         let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(light, 0., 20., -10.));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(0., 20., -10.)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
         actions.light.param.push(ELightModifyCommand::Directional(light, Vector3::new(-0., -2., 1.)));
@@ -37,7 +37,7 @@ impl DemoLight {
         layer: u32,
     ) -> Entity {
         let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(light, position.0, position.1, position.2));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
         actions.light.param.push(ELightModifyCommand::Directional(light, Vector3::new(direction.0, direction.1, direction.2)));
@@ -56,7 +56,7 @@ impl DemoLight {
         layer: u32,
     ) -> Entity {
         let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(light, position.0, position.1, position.2));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Point));
         actions.light.color.push(OpsLightColor::ops(light, color.0, color.1, color.2));
@@ -75,7 +75,7 @@ impl DemoLight {
         layer: u32,
     ) -> Entity {
         let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(light, position.0, position.1, position.2));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Spot));
         actions.light.param.push(ELightModifyCommand::Directional(light, Vector3::new(direction.0, direction.1, direction.2)));

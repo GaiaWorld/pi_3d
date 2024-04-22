@@ -19,13 +19,13 @@ use crate::{binds::*, prelude::{EqAsResource, HashAsResource}, shader::* };
 pub type KeyShaderSetTextureSamplers = u64;
 
 
-#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct EffectTextureSamplers {
     pub textures: Vec<ETextureViewUsage>,
     pub samplers: Vec<BindDataSampler>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct KeyBindGroupTextureSamplers {
     pub meta: Handle<ShaderEffectMeta>,
     key_bindgroup: KeyBindGroup,
@@ -87,7 +87,7 @@ impl Eq for KeyBindGroupTextureSamplers {
 }
 impl TAssetKeyU64 for KeyBindGroupTextureSamplers {}
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BindGroupTextureSamplers {
     pub(crate) bind_group: BindGroupUsage,
     pub(crate) key: KeyBindGroupTextureSamplers,

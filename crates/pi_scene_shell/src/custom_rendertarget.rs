@@ -42,7 +42,7 @@ impl CustomRenderTarget {
                 }
             );
 
-            log::warn!("CustomRenderTarget Allocate. {:?}", (width, height, color_format, depth_stencil_format));
+            // log::warn!("CustomRenderTarget Allocate. {:?}", (width, height, color_format, depth_stencil_format));
             
             // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
             let rt = atlas_allocator.allocate_alone_not_share(

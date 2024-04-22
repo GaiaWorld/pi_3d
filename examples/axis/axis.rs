@@ -21,7 +21,7 @@ use pi_scene_context::{
 use pi_scene_math::*;
 use axis::{axis::{InterfaceAxis, PluginAxisBuilder}, interface::InterfaceAxisMaterial, PluginAxis};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct SingleTestData {
     pub transforms: Vec<(ObjectID, f32, f32, f32)>,
 }

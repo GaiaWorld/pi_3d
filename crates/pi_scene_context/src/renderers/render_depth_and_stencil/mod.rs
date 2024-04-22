@@ -3,267 +3,125 @@
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct DepthWrite(pub bool);
-impl Default for DepthWrite {
-    fn default() -> Self {
-        Self(true)
-    }
-}
-pub struct OpsDepthWrite(pub(crate) Entity, pub(crate) DepthWrite, pub(crate) u16);
-impl OpsDepthWrite {
-    pub fn ops(mesh: Entity, val: bool) -> Self {
-        Self(mesh, DepthWrite(val), 0)
-    }
-}
-pub type ActionListDepthWrite = ActionList<OpsDepthWrite>;
+use super::*;
 
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct DepthCompare(pub CompareFunction);
-impl Default for DepthCompare {
-    fn default() -> Self {
-        Self(CompareFunction::LessEqual)
-    }
+#[derive(Clone, Component)]
+pub struct DepthState {
+    pub depth_write: bool,
+    pub compare: CompareFunction,
+    pub bias: DepthBiasState,
 }
-pub struct OpsDepthCompare(pub(crate) Entity, pub(crate) DepthCompare, pub(crate) u16);
-impl OpsDepthCompare {
-    pub fn ops(mesh: Entity, val: CompareFunction) -> Self {
-        Self(mesh, DepthCompare(val), 0)
-    }
-}
-pub type ActionListDepthCompare = ActionList<OpsDepthCompare>;
-
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct DepthBias(pub DepthBiasState);
-impl Default for DepthBias {
+impl Default for DepthState {
     fn default() -> Self {
-        Self(
-            DepthBiasState {
+        Self {
+            depth_write: true,
+            compare: CompareFunction::Always,
+            bias: DepthBiasState {
                 constant: 0,
                 slope_scale: 0,
                 clamp: 0,
+            },
+        }
+    }
+}
+pub enum EDepthState {
+    Write(bool),
+    Compare(CompareFunction),
+    Bias(DepthBiasState),
+}
+pub struct OpsDepthState(pub(crate) Entity, pub(crate) PassTag, pub(crate) EDepthState);
+impl OpsDepthState {
+    pub fn ops(mesh: Entity, pass: PassTag, val: EDepthState) -> Self {
+        Self(mesh, pass, val)
+    }
+}
+pub type ActionListDepthState = ActionList<OpsDepthState>;
+pub fn sys_act_depth_state(
+    mut cmds: ResMut<ActionListDepthState>,
+    models: Query<&PassIDs>,
+    mut items: Query<&mut DepthState>,
+) {
+    cmds.drain().drain(..).for_each(|OpsDepthState(entity, tag, cmd)| {
+        if let Ok(passids) = models.get(entity) {
+            let passid = passids.0[tag.index()];
+
+            if let Ok(mut item) = items.get_mut(passid) {
+                match cmd {
+                    EDepthState::Write(val) => item.depth_write = val,
+                    EDepthState::Compare(val) => item.compare = val,
+                    EDepthState::Bias(val) => item.bias = val,
+                }
             }
-        )
-    }
+        }
+    });
 }
 
-pub struct OpsDepthBias(pub(crate) Entity, pub(crate) DepthBias, pub(crate) u16);
-impl OpsDepthBias {
-    pub fn ops(mesh: Entity, constant: i32, slope_scale: i32, clamp: i32) -> Self {
-        Self(mesh, DepthBias(DepthBiasState {
-            constant,
-            slope_scale,
-            clamp,
-        }), 0)
-    }
+#[derive(Clone, Component)]
+pub struct StencilState {
+    pub stencil_front: StencilFaceState,
+    pub stencil_back: StencilFaceState,
+    pub stencil_read: u32,
+    pub stencil_write: u32,
 }
-pub type ActionListDepthBias = ActionList<OpsDepthBias>;
-
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct StencilFront(pub StencilFaceState);
-impl Default for StencilFront {
+impl Default for StencilState {
     fn default() -> Self {
-        Self(StencilFaceState::IGNORE)
+        Self {
+            stencil_front: StencilFaceState::IGNORE,
+            stencil_back: StencilFaceState::IGNORE,
+            stencil_read: 0,
+            stencil_write: 0,
+        }
     }
 }
-pub struct OpsStencilFront(pub(crate) Entity, pub(crate) StencilFront, pub(crate) u16);
-impl OpsStencilFront {
-    pub fn ops(
-        mesh: Entity,
-        compare: CompareFunction,
-        fail_op: StencilOperation,
-        depth_fail_op: StencilOperation,
-        pass_op: StencilOperation,
-    ) -> Self {
-        Self(mesh, StencilFront(StencilFaceState { compare, fail_op, depth_fail_op, pass_op }), 0)
+pub enum EStencilState {
+    Front(StencilFaceState),
+    Back(StencilFaceState),
+    Read(u32),
+    Write(u32),
+}
+pub struct OpsStencilState(pub(crate) Entity, pub(crate) PassTag, pub(crate) EStencilState);
+impl OpsStencilState {
+    pub fn ops(mesh: Entity, pass: PassTag, val: EStencilState) -> Self {
+        Self(mesh, pass, val)
     }
 }
-pub type ActionListStencilFront = ActionList<OpsStencilFront>;
+pub type ActionListStencilState = ActionList<OpsStencilState>;
+pub fn sys_act_stencil_state(
+    mut cmds: ResMut<ActionListStencilState>,
+    models: Query<&PassIDs>,
+    mut items: Query<&mut StencilState>,
+) {
+    cmds.drain().drain(..).for_each(|OpsStencilState(entity, tag, cmd)| {
+        if let Ok(passids) = models.get(entity) {
+            let passid = passids.0[tag.index()];
 
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct StencilBack(pub StencilFaceState);
-impl Default for StencilBack {
-    fn default() -> Self {
-        Self(StencilFaceState::IGNORE)
-    }
+            if let Ok(mut item) = items.get_mut(passid) {
+                match cmd {
+                    EStencilState::Front(val) => item.stencil_front = val,
+                    EStencilState::Back(val) => item.stencil_back = val,
+                    EStencilState::Read(val) => item.stencil_read = val,
+                    EStencilState::Write(val) => item.stencil_write = val,
+                }
+            }
+        }
+    });
 }
-pub struct OpsStencilBack(pub(crate) Entity, pub(crate) StencilBack, pub(crate) u16);
-impl OpsStencilBack {
-    pub fn ops(
-        mesh: Entity,
-        compare: CompareFunction,
-        fail_op: StencilOperation,
-        depth_fail_op: StencilOperation,
-        pass_op: StencilOperation,
-    ) -> Self {
-        Self(mesh, StencilBack(StencilFaceState { compare, fail_op, depth_fail_op, pass_op }), 0)
-    }
-}
-pub type ActionListStencilBack = ActionList<OpsStencilBack>;
-
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct StencilRead(pub u32);
-impl Default for StencilRead {
-    fn default() -> Self {
-        Self(0)
-    }
-}
-pub struct OpsStencilRead(pub(crate) Entity, pub(crate) StencilRead, pub(crate) u16);
-impl OpsStencilRead {
-    pub fn ops(mesh: Entity, val: u32) -> Self {
-        Self(mesh, StencilRead(val), 0)
-    }
-}
-pub type ActionListStencilRead = ActionList<OpsStencilRead>;
-
-#[derive(Debug, Clone, Component, Deref, DerefMut)]
-pub struct StencilWrite(pub u32);
-impl Default for StencilWrite {
-    fn default() -> Self {
-        Self(0)
-    }
-}
-pub struct OpsStencilWrite(pub(crate) Entity, pub(crate) StencilWrite, pub(crate) u16);
-impl OpsStencilWrite {
-    pub fn ops(mesh: Entity, val: u32) -> Self {
-        Self(mesh, StencilWrite(val), 0)
-    }
-}
-pub type ActionListStencilWrite = ActionList<OpsStencilWrite>;
 
 pub fn depth_stencil_state(
     format: wgpu::TextureFormat,
-    depth_write: &DepthWrite,
-    compare: &DepthCompare,
-    bias: &DepthBias,
-    stencil_front: &StencilFront,
-    stencil_back: &StencilBack,
-    stencil_read: &StencilRead,
-    stencil_write: &StencilWrite,
+    depth: &DepthState,
+    stencil: &StencilState,
 ) -> DepthStencilState {
     DepthStencilState {
         format,
-        depth_write_enabled: depth_write.0,
-        depth_compare: compare.0.val2(),
+        depth_write_enabled: depth.depth_write,
+        depth_compare: depth.compare.val2(),
         stencil: wgpu::StencilState {
-            front: stencil_front.val(),
-            back: stencil_back.val(),
-            read_mask: stencil_read.0,
-            write_mask: stencil_write.0,
+            front: stencil.stencil_front.val(),
+            back: stencil.stencil_back.val(),
+            read_mask: stencil.stencil_read,
+            write_mask: stencil.stencil_write,
         },
-        bias: bias.0,
+        bias: depth.bias,
     }
-}
-
-pub fn sys_act_depth_write(
-    mut cmds: ResMut<ActionListDepthWrite>,
-    mut items: Query<&mut DepthWrite>,
-) {
-    cmds.drain().drain(..).for_each(|OpsDepthWrite(entity, val, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsDepthWrite(entity, val, count + 1));
-        }
-    });
-}
-
-pub fn sys_act_depth_compare(
-    mut cmds: ResMut<ActionListDepthCompare>,
-    mut items: Query<&mut DepthCompare>,
-) {
-    cmds.drain().drain(..).for_each(|OpsDepthCompare(entity, val, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsDepthCompare(entity, val, count + 1));
-        }
-    });
-}
-
-pub fn sys_act_depth_bias(
-    mut cmds: ResMut<ActionListDepthBias>,
-    mut items: Query<&mut DepthBias>,
-) {
-    cmds.drain().drain(..).for_each(|OpsDepthBias(entity, val, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsDepthBias(entity, val, count + 1));
-        }
-    });
-}
-
-pub fn sys_act_stencil_front(
-    mut cmds: ResMut<ActionListStencilFront>,
-    mut items: Query<&mut StencilFront>,
-) {
-    cmds.drain().drain(..).for_each(|OpsStencilFront(entity, val, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsStencilFront(entity, val, count + 1));
-        }
-    });
-}
-
-
-pub fn sys_act_stencil_back(
-    mut cmds: ResMut<ActionListStencilBack>,
-    mut items: Query<&mut StencilBack>,
-) {
-    cmds.drain().drain(..).for_each(|OpsStencilBack(entity, val, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsStencilBack(entity, val, count + 1));
-        }
-    });
-}
-
-
-pub fn sys_act_stencil_read(
-    mut cmds: ResMut<ActionListStencilRead>,
-    mut items: Query<&mut StencilRead>,
-) {
-    cmds.drain().drain(..).for_each(|OpsStencilRead(entity, val, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsStencilRead(entity, val, count + 1));
-        }
-    });
-}
-pub fn sys_act_stencil_write(
-    mut cmds: ResMut<ActionListStencilWrite>,
-    mut items: Query<&mut StencilWrite>,
-) {
-    cmds.drain().drain(..).for_each(|OpsStencilWrite(entity, val, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = val;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsStencilWrite(entity, val, count + 1));
-        }
-    });
 }

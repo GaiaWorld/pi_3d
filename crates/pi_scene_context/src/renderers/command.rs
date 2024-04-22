@@ -30,7 +30,7 @@ impl OpsRendererTarget {
 pub type ActionListRendererTarget = ActionList<OpsRendererTarget>;
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum OpsRendererCommand {
     Active(Entity, bool),
     Blend(Entity, bool),

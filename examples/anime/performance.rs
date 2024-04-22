@@ -80,9 +80,9 @@ fn setup(
                 let cube: Entity = commands.spawn_empty().id();
                 actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
 
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32)));
 
-                actions.instance.vec4s.push(OpsInstanceVec4::ops(cube, 1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row, Atom::from("InsTilloff")));
+                actions.instance.attr.push(OpsInstanceAttr::ops(cube, EInstanceAttr::Vec4([1.0 / cell_col, 1.0 / cell_row, (i % 4) as f32 / cell_col, (j % 4) as f32 / cell_row]), Atom::from("InsTilloff")));
                 
                 let key_curve0 = pi_atom::Atom::from((i * tes_size + j).to_string());
                 let key_curve0 = key_curve0.asset_u64();

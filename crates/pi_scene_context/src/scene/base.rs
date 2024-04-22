@@ -89,47 +89,6 @@ pub struct SceneShadowQueue(pub SceneItemsQueue);
 #[derive(Component)]
 pub struct SceneShadowInfosDirty;
 
-// pub struct ShadowRenderTarget {
-//     pub rt: ShareTargetView,
-//     pub sampler: BindDataSampler,
-//     pub color_format: RenderColorFormat, 
-//     pub depth_stencil_format: RenderDepthFormat, 
-//     pub width: u32, 
-//     pub height: u32,
-// }
-// impl ShadowRenderTarget {
-//     pub fn new(device: &PiRenderDevice, sample: KeySampler,
-//         asset_samp: &ShareAssetMgr<SamplerRes>, atlas_allocator: &PiSafeAtlasAllocator,
-//         color_format: RenderColorFormat, depth_stencil_format: RenderDepthFormat, width: u32, height: u32
-//     ) -> Option<Self> {
-//         let currlist: Vec<ShareTargetView> = vec![];
-//         if let Some(sampler) = BindDataSampler::create(sample, &device, &asset_samp) {
-//             let target_type = atlas_allocator.get_or_create_type(
-//                 TargetDescriptor {
-//                     colors_descriptor: color_format.desc(),
-//                     need_depth: depth_stencil_format.need_depth(),
-//                     default_width: width,
-//                     default_height: height,
-//                     depth_descriptor: depth_stencil_format.desc()
-//                 }
-//             );
-            
-//             // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
-//             let rt = atlas_allocator.allocate(
-//                 width,
-//                 height,
-//                 target_type.clone(),
-//                 currlist.iter()
-//             );
-//             Some(
-//                 Self { rt, sampler, color_format, depth_stencil_format, width, height }
-//             )
-//         } else {
-//             None
-//         }
-//     }
-// }
-
 
 #[derive(Component)]
 pub struct SceneShadowRenderTarget(pub Option<KeyRenderTarget>);

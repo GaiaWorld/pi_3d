@@ -18,7 +18,7 @@ use pi_scene_math::{Vector3, Vector4};
 use unlit_material::{interface::InterfaceUnlitMaterial, PluginUnlitMaterial};
 use pi_mesh_builder::cube::{InterfaceCube, CubeBuilder, PluginCubeBuilder};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct SingleTestData {
     pub transforms: Vec<(ObjectID, f32, f32, f32)>,
 }
@@ -49,7 +49,6 @@ impl SysTest {
     }
 }
 
-#[derive(Debug)]
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn init(

@@ -31,9 +31,6 @@ pub struct TrailSize(pub f32);
 #[derive(Component)]
 pub struct TrailRandom(pub WyRng);
 
-// #[derive(Component)]
-// pub struct TrailMesh(pub Entity);
-
 #[derive(Component)]
 pub struct TrailGeometry(pub Entity);
 
@@ -224,7 +221,7 @@ impl TrailPoints {
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Component)]
 pub struct TrailBase {
     /// 启动时间点
     pub starttime: u32,
@@ -305,7 +302,7 @@ impl TrailBuffer {
         for _ in 0..size {
             data.push(0);
         }
-        log::error!("TrailBuffer {}", data.len());
+        // log::error!("TrailBuffer {}", data.len());
         if let Some(buffer) = allocator.create_not_updatable_buffer_pre(device, queue, &data, None) {
             Some(Self {
                 vertices: vec![],

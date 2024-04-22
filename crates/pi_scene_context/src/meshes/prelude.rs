@@ -27,18 +27,24 @@ pub struct ActionSetMesh<'w> {
     pub create: ResMut<'w, ActionListMeshCreate>,
     pub shadow: ResMut<'w, ActionListMeshShadow>,
     pub blend: ResMut<'w, ActionListBlend>,
-    pub cullmode: ResMut<'w, ActionListCullMode>,
-    pub polygonmode: ResMut<'w, ActionListPolyginMode>,
-    pub frontface: ResMut<'w, ActionListFrontFace>,
-    pub topology: ResMut<'w, ActionListTopology>,
-    pub unclip_depth: ResMut<'w, ActionListUnClipDepth>,
-    pub depth_write: ResMut<'w, ActionListDepthWrite>,
-    pub depth_compare: ResMut<'w, ActionListDepthCompare>,
-    pub depth_bias: ResMut<'w, ActionListDepthBias>,
-    pub stencil_front: ResMut<'w, ActionListStencilFront>,
-    pub stencil_back: ResMut<'w, ActionListStencilBack>,
-    pub stencil_read: ResMut<'w, ActionListStencilRead>,
-    pub stencil_write: ResMut<'w, ActionListStencilWrite>,
+    
+    pub primitive_state: ResMut<'w, ActionListPrimitiveState>,
+    // pub cullmode: ResMut<'w, ActionListCullMode>,
+    // pub polygonmode: ResMut<'w, ActionListPolyginMode>,
+    // pub frontface: ResMut<'w, ActionListFrontFace>,
+    // pub topology: ResMut<'w, ActionListTopology>,
+    // pub unclip_depth: ResMut<'w, ActionListUnClipDepth>,
+
+    pub depth_state: ResMut<'w, ActionListDepthState>,
+    pub stencil_state: ResMut<'w, ActionListStencilState>,
+    // pub depth_write: ResMut<'w, ActionListDepthWrite>,
+    // pub depth_compare: ResMut<'w, ActionListDepthCompare>,
+    // pub depth_bias: ResMut<'w, ActionListDepthBias>,
+    // pub stencil_front: ResMut<'w, ActionListStencilFront>,
+    // pub stencil_back: ResMut<'w, ActionListStencilBack>,
+    // pub stencil_read: ResMut<'w, ActionListStencilRead>,
+    // pub stencil_write: ResMut<'w, ActionListStencilWrite>,
+
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
     pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
     pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
@@ -52,12 +58,7 @@ pub struct ActionSetMesh<'w> {
 #[derive(SystemParam)]
 pub struct ActionSetInstanceMesh<'w> {
     pub create: ResMut<'w, ActionListInstanceMeshCreate>,
-    pub floats: ResMut<'w, ActionListInstanceFloat>,
-    pub vec4s: ResMut<'w, ActionListInstanceVec4>,
-    pub vec3s: ResMut<'w, ActionListInstanceVec3>,
-    pub vec2s: ResMut<'w, ActionListInstanceVec2>,
-    pub uints: ResMut<'w, ActionListInstanceUint>,
-    pub sints: ResMut<'w, ActionListInstanceSint>,
+    pub attr: ResMut<'w, ActionListInstanceAttr>,
 }
 
 #[derive(SystemParam)]

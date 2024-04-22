@@ -63,7 +63,7 @@ fn setup(
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
-                    actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
+                    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
 
                     //
                     let syskey = String::from("Test");
@@ -85,7 +85,7 @@ fn setup(
                     source
                 };
 
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(_item, -12.0, 0., 10.));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(_item, ETransformSRT::Translation(-12.0, 0., 10.)));
                 // actions.transform.localrot.push(OpsTransformNodeLocalRotation::Euler(item, random.gen_range(euler.clone()), random.gen_range(euler.clone()), random.gen_range(euler.clone())));
                 // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
 

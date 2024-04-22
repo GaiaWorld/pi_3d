@@ -1,32 +1,32 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Number, SQuaternion};
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct NodeDown(pub Option<Entity>);
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct NodeUp(pub Entity);
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct NodeBrothers {
     pub idx: usize,
     pub pre: Option<Entity>,
     pub next: Option<Entity>,
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct TransformNode;
 
 #[derive(Clone, Copy, Component)]
 pub struct TransformNodeDirty;
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalDirtyRotation;
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalDirtyScaling;
 
-#[derive(Debug, Clone, Component, Default)]
+#[derive(Clone, Component, Default)]
 pub struct RecordLocalPosition(pub LocalPosition);
 impl TAnimatableCompRecord<LocalPosition> for RecordLocalPosition {
     fn comp(&self) -> LocalPosition {
@@ -34,7 +34,7 @@ impl TAnimatableCompRecord<LocalPosition> for RecordLocalPosition {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalPosition(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalPosition {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -79,7 +79,7 @@ impl TAnimatableComp for LocalPosition {
 
 }
 
-#[derive(Debug, Clone, Component, Default)]
+#[derive(Clone, Component, Default)]
 pub struct RecordLocalEulerAngles(pub LocalEulerAngles);
 impl TAnimatableCompRecord<LocalEulerAngles> for RecordLocalEulerAngles {
     fn comp(&self) -> LocalEulerAngles {
@@ -87,7 +87,7 @@ impl TAnimatableCompRecord<LocalEulerAngles> for RecordLocalEulerAngles {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalEulerAngles(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -132,7 +132,7 @@ impl TAnimatableComp for LocalEulerAngles {
 
 }
 
-#[derive(Debug, Clone, Component, Default)]
+#[derive(Clone, Component, Default)]
 pub struct RecordLocalRotationQuaternion(pub LocalRotationQuaternion);
 impl TAnimatableCompRecord<LocalRotationQuaternion> for RecordLocalRotationQuaternion {
     fn comp(&self) -> LocalRotationQuaternion {
@@ -140,7 +140,7 @@ impl TAnimatableCompRecord<LocalRotationQuaternion> for RecordLocalRotationQuate
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalRotationQuaternion(pub SQuaternion<Number>);
 impl LocalRotationQuaternion {
     pub fn create(x: Number, y: Number, z: Number, w: Number) -> Self {
@@ -230,13 +230,13 @@ impl TAnimatableComp for LocalRotationQuaternion {
 
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalRoationWithQuaternion(pub bool);
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalRotation(pub Rotation3);
 
-#[derive(Debug, Clone, Component, Default)]
+#[derive(Clone, Component, Default)]
 pub struct RecordLocalScaling(pub LocalScaling);
 impl TAnimatableCompRecord<LocalScaling> for RecordLocalScaling {
     fn comp(&self) -> LocalScaling {
@@ -244,7 +244,7 @@ impl TAnimatableCompRecord<LocalScaling> for RecordLocalScaling {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalScaling(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -290,7 +290,7 @@ impl TAnimatableComp for LocalScaling {
 }
 
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct LocalMatrix(pub Matrix);
 impl LocalMatrix {
     pub fn new(m: Matrix) -> Self {
@@ -327,23 +327,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
     }
 }
 
-// #[derive(Debug, Clone, Component)]
-// pub struct WorldMatrix(pub Matrix, pub bool);
-// impl WorldMatrix {
-//     pub fn new(m: Matrix) -> Self {
-//         Self(m, true)
-//     }
-// }
-
-// #[derive(Debug, Clone, Component)]
-// pub struct WorldMatrixInv(pub Matrix, pub bool);
-// impl WorldMatrixInv {
-//     pub fn new(m: Matrix) -> Self {
-//         Self(m, true)
-//     }
-// }
-
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct GlobalMatrix {
     pub matrix: Matrix,
     pub matrix_inv: Matrix,

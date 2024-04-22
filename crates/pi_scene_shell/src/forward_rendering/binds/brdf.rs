@@ -8,7 +8,7 @@ use pi_render::renderer::{
 };
 use crate::shader::{texture_bind_code, sampler_bind_code};
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindBRDFTexture(pub BindDataTexture2D);
 impl TShaderBindCode for ShaderBindBRDFTexture {
     fn fs_define_code(&self, set: u32, bind: u32) -> String {
@@ -32,7 +32,7 @@ impl TKeyBind for ShaderBindBRDFTexture {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseBRDFTexture {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindBRDFTexture>,
@@ -43,7 +43,7 @@ impl BindUseBRDFTexture {
     }
 }
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindBRDFSampler(pub BindDataSampler);
 impl TShaderBindCode for ShaderBindBRDFSampler {
     fn vs_define_code(&self, _set: u32, _bind: u32) -> String {
@@ -68,7 +68,7 @@ impl TKeyBind for ShaderBindBRDFSampler {
         )
     }
 }
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseBRDFSampler {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindBRDFSampler>,

@@ -51,21 +51,4 @@ pub trait SlotActiveRequire {
 }
 
 #[derive(Component)]
-pub struct AnimatorableUniformVec4A { pub value: Entity }
-#[derive(Component)]
-pub struct AnimatorableUniformVec4B { pub value: Entity }
-#[derive(Component)]
-pub struct AnimatorableUniformVec4C { pub value: Entity }
-#[derive(Component)]
-pub struct AnimatorableUniformVec4D { pub value: Entity }
-#[derive(Component)]
-pub struct AnimatorableUniformVec4E { pub value: Entity }
-#[derive(Component)]
-pub struct AnimatorableUniformVec4F { pub value: Entity }
-#[derive(Component)]
-pub struct AnimatorableUniformVec4G { pub value: Entity }
-#[derive(Component)]
-pub struct AnimatorableUniformVec4H { pub value: Entity }
-
-#[derive(Component)]
 pub struct TexWithAtlas;

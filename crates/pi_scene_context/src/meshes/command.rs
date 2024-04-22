@@ -43,53 +43,34 @@ pub enum OpsMeshShadow {
 }
 pub type ActionListMeshShadow = ActionList<OpsMeshShadow>;
 
-pub struct OpsInstanceFloat(pub(crate) Entity, pub(crate) Number, pub Atom);
-impl OpsInstanceFloat {
-    pub fn ops(instance: Entity, val: Number, attr: Atom) -> Self {
+pub enum EInstanceAttr {
+    Float(Number),
+    Uint(u32),
+    Int(i32),
+    Vec4([Number; 4]),
+    Vec3([Number; 3]),
+    Vec2([Number; 2]),
+}
+// impl EInstanceAttr {
+//     pub fn bytes(&self) -> Vec<u8> {
+//         match self {
+//             EInstanceAttr::Float(val) => bytemuck::cast_slice([*val]),
+//             EInstanceAttr::Uint(val)  => bytemuck::cast(a),
+//             EInstanceAttr::Int(val)   => bytemuck::cast(a),
+//             EInstanceAttr::Vec4(val)  => bytemuck::cast(a),
+//             EInstanceAttr::Vec3(val)  => bytemuck::cast(a),
+//             EInstanceAttr::Vec2(val)  => bytemuck::cast(a),
+//         }
+//     }
+// }
+
+pub struct OpsInstanceAttr(pub(crate) Entity, pub(crate) EInstanceAttr, pub Atom);
+impl OpsInstanceAttr {
+    pub fn ops(instance: Entity, val: EInstanceAttr, attr: Atom) -> Self {
         Self(instance, val, attr)
     }
 }
-pub type ActionListInstanceFloat = ActionList<OpsInstanceFloat>;
-
-pub struct OpsInstanceVec4(pub(crate) Entity, pub(crate) [Number; 4], pub Atom);
-impl OpsInstanceVec4 {
-    pub fn ops(instance: Entity, x: Number, y: Number, z: Number, w: Number, attr: Atom) -> Self {
-        Self(instance, [x, y, z, w], attr)
-    }
-}
-pub type ActionListInstanceVec4 = ActionList<OpsInstanceVec4>;
-
-pub struct OpsInstanceVec3(pub(crate) Entity, pub(crate) [Number; 3], pub Atom);
-impl OpsInstanceVec3 {
-    pub fn ops(instance: Entity, x: Number, y: Number, z: Number, attr: Atom) -> Self {
-        Self(instance, [x, y, z], attr)
-    }
-}
-pub type ActionListInstanceVec3 = ActionList<OpsInstanceVec3>;
-
-pub struct OpsInstanceVec2(pub(crate) Entity, pub(crate) [Number; 2], pub Atom);
-impl OpsInstanceVec2 {
-    pub fn ops(instance: Entity, x: Number, y: Number, attr: Atom) -> Self {
-        Self(instance, [x, y], attr)
-    }
-}
-pub type ActionListInstanceVec2 = ActionList<OpsInstanceVec2>;
-
-pub struct OpsInstanceUint(pub(crate) Entity, pub(crate) u32, pub Atom);
-impl OpsInstanceUint {
-    pub fn ops(instance: Entity, x: u32, attr: Atom) -> Self {
-        Self(instance, x, attr)
-    }
-}
-pub type ActionListInstanceUint = ActionList<OpsInstanceUint>;
-
-pub struct OpsInstanceSint(pub(crate) Entity, pub(crate) i32, pub Atom);
-impl OpsInstanceSint {
-    pub fn ops(instance: Entity, x: i32, attr: Atom) -> Self {
-        Self(instance, x, attr)
-    }
-}
-pub type ActionListInstanceSint = ActionList<OpsInstanceSint>;
+pub type ActionListInstanceAttr = ActionList<OpsInstanceAttr>;
 
 pub struct OpsTargetAnimationAttribute(pub(crate) Entity, pub(crate) Atom, pub(crate) Entity, pub(crate) u64);
 impl OpsTargetAnimationAttribute {
@@ -189,30 +170,25 @@ pub struct BundleMeshGeometry (
 );
 
 pub struct BundleMeshRenderState (
-    CCullMode,
-    CFrontFace,
-    CPolygonMode,
-    Topology,
-    CUnClipDepth,
-    DepthWrite,
-    DepthCompare,
-    DepthBias,
-    StencilFront,
-    StencilBack,
-    StencilRead,
-    StencilWrite,
-    ModelBlend,
+    // CCullMode,
+    // CFrontFace,
+    // CPolygonMode,
+    // Topology,
+    // CUnClipDepth,
+
+    // DepthWrite,
+    // DepthCompare,
+    // DepthBias,
+    // StencilFront,
+    // StencilBack,
+    // StencilRead,
+    // StencilWrite,
+
+    // ModelBlend,
 );
 
 pub struct BundleMeshMaterial(
-    PassID01,
-    PassID02,
-    PassID03,
-    PassID04,
-    PassID05,
-    PassID06,
-    PassID07,
-    PassID08,
+    PassIDs,
 );
 
 pub struct BundleMeshFunctionRenderModules (
@@ -229,9 +205,9 @@ pub struct BundleMeshLighting(
     ModelForcePointLightings,
     ModelForceSpotLightings,
     ModelForceHemiLightings,
-    ModelPointLightingDirty,
-    ModelSpotLightingDirty,
-    ModelHemiLightingDirty,
+    // ModelPointLightingDirty,
+    // ModelSpotLightingDirty,
+    // ModelHemiLightingDirty,
 );
 
 pub struct BundleMesh(
@@ -252,19 +228,22 @@ pub struct BundleMesh(
     LayerMask,
     AbstructMeshCullingFlag,
     TransparentSortParam,
-    CCullMode,
-    CFrontFace,
-    CPolygonMode,
-    Topology,
-    CUnClipDepth,
-    DepthWrite,
-    DepthCompare,
-    DepthBias,
-    StencilFront,
-    StencilBack,
-    StencilRead,
-    StencilWrite,
-    ModelBlend,
+
+    // CCullMode,
+    // CFrontFace,
+    // CPolygonMode,
+    // Topology,
+    // CUnClipDepth,
+
+    // DepthWrite,
+    // DepthCompare,
+    // DepthBias,
+    // StencilFront,
+    // StencilBack,
+    // StencilRead,
+    // StencilWrite,
+
+    // ModelBlend,
     BindSkinValue,
     ModelVelocity,
     RenderAlignment,
@@ -278,22 +257,15 @@ pub struct BundleMesh(
     MeshInstanceState,
     // InstanceSourceRefs,
     DirtyInstanceSourceRefs,
-    PassID01,
-    PassID02,
-    PassID03,
-    PassID04,
-    PassID05,
-    PassID06,
-    PassID07,
-    PassID08,
+    PassIDs,
     MeshLightingMode,
     ModelLightingIndexs,
     ModelForcePointLightings,
     ModelForceSpotLightings,
     ModelForceHemiLightings,
-    ModelPointLightingDirty,
-    ModelSpotLightingDirty,
-    ModelHemiLightingDirty,
+    // ModelPointLightingDirty,
+    // ModelSpotLightingDirty,
+    // ModelHemiLightingDirty,
 );
 
 pub struct BundleInstanceMesh(

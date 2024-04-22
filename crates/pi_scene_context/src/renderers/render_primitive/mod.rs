@@ -2,194 +2,74 @@
 
 use pi_scene_shell::prelude::*;
 
-/// * 默认值 Back
-#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
-pub struct CCullMode(pub CullMode);
-pub struct OpsCullMode(pub(crate) Entity, pub(crate) CCullMode, pub u16);
-impl OpsCullMode {
-    pub fn ops(mesh: Entity, mode: CullMode) -> Self {
-        Self(mesh, CCullMode(mode), 0)
-    }
-}
-pub type ActionListCullMode = ActionList<OpsCullMode>;
-pub fn sys_act_mesh_cull_mode(
-    mut cmds: ResMut<ActionListCullMode>,
-    mut items: Query<&mut CCullMode>,
-) {
-    cmds.drain().drain(..).for_each(|OpsCullMode(entity, mode, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = mode;
-            return;
-        }
+use super::*;
 
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsCullMode(entity, mode, count + 1));
-        }
-    });
-}
-
-// #[derive(Debug, Clone, Copy)]
-/// * 默认值 Fill
-#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
-pub struct CPolygonMode(pub PolygonMode);
-pub struct OpsPolygonMode(pub(crate) Entity, pub(crate) CPolygonMode, pub u16);
-impl OpsPolygonMode {
-    pub fn ops(mesh: Entity, mode: PolygonMode) -> Self {
-        Self(mesh, CPolygonMode(mode), 0)
-    }
-}
-pub type ActionListPolyginMode = ActionList<OpsPolygonMode>;
-pub fn sys_act_mesh_polygon_mode(
-    mut cmds: ResMut<ActionListPolyginMode>,
-    mut items: Query<&mut CPolygonMode>,
-) {
-    cmds.drain().drain(..).for_each(|OpsPolygonMode(entity, mode, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = mode;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsPolygonMode(entity, mode, count + 1));
-        }
-    });
-}
-
-// #[derive(Debug, Clone, Copy)]
-/// * 默认值 Fill
-#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
-pub struct Topology(pub PrimitiveTopology);
-pub struct OpsTopology(pub(crate) Entity, pub(crate) Topology, pub u16);
-impl OpsTopology {
-    pub fn ops(mesh: Entity, mode: PrimitiveTopology) -> Self {
-        Self(mesh, Topology(mode), 0)
-    }
-}
-pub type ActionListTopology = ActionList<OpsTopology>;
-pub fn sys_act_mesh_topolygon(
-    mut cmds: ResMut<ActionListTopology>,
-    mut items: Query<&mut Topology>,
-) {
-    cmds.drain().drain(..).for_each(|OpsTopology(entity, mode, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = mode;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsTopology(entity, mode, count + 1));
-        }
-    });
-}
-
-// #[derive(Debug, Clone, Copy)]
-/// * 默认值 Fill
-#[derive(Debug, Clone, Copy, Component)]
-pub struct CUnClipDepth(pub bool);
-pub struct OpsUnClipDepth(pub(crate) Entity, pub(crate) bool, pub u16);
-impl OpsUnClipDepth {
-    pub fn ops(mesh: Entity, mode: bool) -> Self {
-        Self(mesh, mode, 0)
-    }
-}
-pub type ActionListUnClipDepth = ActionList<OpsUnClipDepth>;
-pub fn sys_act_mesh_unclip_depth(
-    mut cmds: ResMut<ActionListUnClipDepth>,
-    mut items: Query<&mut CUnClipDepth>,
-) {
-    cmds.drain().drain(..).for_each(|OpsUnClipDepth(entity, mode, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = CUnClipDepth(mode);
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsUnClipDepth(entity, mode, count + 1));
-        }
-    });
-}
-
-/// * 默认值 Ccw
-#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
-pub struct CFrontFace(pub FrontFace);
-pub struct OpsFrontFace(pub(crate) Entity, pub(crate) CFrontFace, pub u16);
-impl OpsFrontFace {
-    pub fn ops(mesh: Entity, mode: FrontFace) -> Self {
-        Self(mesh, CFrontFace(mode), 0)
-    }
-}
-pub type ActionListFrontFace = ActionList<OpsFrontFace>;
-pub fn sys_act_mesh_frontface(
-    mut cmds: ResMut<ActionListFrontFace>,
-    mut items: Query<&mut CFrontFace>,
-) {
-    cmds.drain().drain(..).for_each(|OpsFrontFace(entity, mode, count)| {
-        if let Ok(mut item) = items.get_mut(entity) {
-            *item = mode;
-            return;
-        }
-
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsFrontFace(entity, mode, count + 1));
-        }
-    });
-}
-
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct PrimitiveState {
-    // pub state: wgpu::PrimitiveState,
+    pub cull: CullMode,
+    pub polygon: PolygonMode,
+    pub topology: PrimitiveTopology,
+    pub unclip_depth: bool,
+    pub frontface: FrontFace,
+}
+impl Default for PrimitiveState {
+    fn default() -> Self {
+        Self {
+            cull: CullMode::Back,
+            polygon: PolygonMode::Fill,
+            topology: PrimitiveTopology::TriangleList,
+            unclip_depth: false,
+            frontface: FrontFace::Ccw,
+        }
+    }
 }
 impl PrimitiveState {
-    pub fn state(cull: &CCullMode, topology: &Topology, polygon: &CPolygonMode, face: &CFrontFace, unclip_depth: &CUnClipDepth) -> wgpu::PrimitiveState {
+    pub fn state(&self) -> wgpu::PrimitiveState {
         wgpu::PrimitiveState {
-            topology: topology.val(),
-            front_face: face.val(),
-            polygon_mode: polygon.val(),
-            cull_mode: cull.val(),
+            topology: self.topology.val(),
+            front_face: self.frontface.val(),
+            polygon_mode: self.polygon.val(),
+            cull_mode: self.cull.val(),
             // 不设置可能渲染出来黑的
-            unclipped_depth: unclip_depth.0,
+            unclipped_depth: self.unclip_depth,
             ..Default::default()
         }
     }
-    // pub fn new(cull: &ECullMode, polygon: &PolygonMode, face: &FrontFace) -> Self {
-    //     Self {
-    //         state: wgpu::PrimitiveState {
-    //             topology: wgpu::PrimitiveTopology::TriangleList,
-    //             front_face: face.val(),
-    //             polygon_mode: polygon.val(),
-    //             cull_mode: cull.mode(),
-    //             // 不设置可能渲染出来黑的
-    //             #[cfg(not(target_arch = "wasm32"))]
-    //             unclipped_depth: true,
-    //             ..Default::default()
-    //         }
-    //     }
-    // }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum ERenderPrimitiveCommand {
-    CullMode(CCullMode),
-    PolygonMode(CPolygonMode),
-    FrontFace(CFrontFace),
+pub enum EPrimitiveState {
+    CCullMode   (CullMode),
+    CPolygonMode(PolygonMode),
+    CFrontFace  (FrontFace),
+    CUnClipDepth(bool),
+    Topology    (PrimitiveTopology),
 }
 
-pub struct ActionRenderPrimitive;
-impl ActionRenderPrimitive {
-    pub fn modify(
-        commands: &mut EntityCommands,
-        val: ERenderPrimitiveCommand,
-    ) {
-        match val {
-            ERenderPrimitiveCommand::CullMode(value) => {
-                commands.insert(value);
-            },
-            ERenderPrimitiveCommand::PolygonMode(value) => {
-                commands.insert(value);
-            },
-            ERenderPrimitiveCommand::FrontFace(value) => {
-                commands.insert(value);
-            },
-        }
+pub struct OpsPrimitiveState(pub(crate) Entity, pub(crate) PassTag, pub(crate)EPrimitiveState);
+impl OpsPrimitiveState {
+    pub fn ops(model: Entity, passtag: PassTag, cmd: EPrimitiveState) -> Self {
+        Self(model, passtag, cmd)
     }
+}
+pub type ActionListPrimitiveState = ActionList<OpsPrimitiveState>;
+pub fn sys_act_mesh_primitive_state(
+    mut cmds: ResMut<ActionListPrimitiveState>,
+    models: Query<&PassIDs>,
+    mut items: Query<&mut PrimitiveState>,
+) {
+    cmds.drain().drain(..).for_each(|OpsPrimitiveState(entity, tag, cmd)| {
+        if let Ok(passids) = models.get(entity) {
+            let passid = passids.0[tag.index()];
+
+            if let Ok(mut item) = items.get_mut(passid) {
+                match cmd {
+                    EPrimitiveState::CCullMode      (val) =>  item.cull = val ,
+                    EPrimitiveState::CPolygonMode   (val) => item.polygon = val ,
+                    EPrimitiveState::CFrontFace     (val) => item.frontface = val ,
+                    EPrimitiveState::CUnClipDepth   (val) => item.unclip_depth = val ,
+                    EPrimitiveState::Topology       (val) => item.topology = val ,
+                }
+            }
+        }
+    });
 }

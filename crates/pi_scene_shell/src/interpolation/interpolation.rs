@@ -377,7 +377,7 @@ pub fn scale_curve(mut curve: ICurve, scale: f32) -> ICurve {
 
 
 //#region 渐变插值
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Color4Gradient {
     pub mode: EInterpolationGradienMode,
     pub constant0: Option<[f32; 4]>,

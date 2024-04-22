@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct BRDFTextureSlot(pub EKeyTexture);
 impl BRDFTextureSlot {
     pub fn key(&self) -> &EKeyTexture {

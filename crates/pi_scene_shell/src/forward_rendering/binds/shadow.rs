@@ -124,7 +124,7 @@ impl BindUseShadowData {
 }
 
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindShadowTexture(pub BindDataTexture2D);
 impl TShaderBindCode for ShaderBindShadowTexture {
     fn fs_define_code(&self, set: u32, binding: u32) -> String {
@@ -148,7 +148,7 @@ impl TKeyBind for ShaderBindShadowTexture {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseShadowTexture {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindShadowTexture>,
@@ -159,7 +159,7 @@ impl BindUseShadowTexture {
     }
 }
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindShadowSampler(pub BindDataSampler);
 
 impl TShaderBindCode for ShaderBindShadowSampler {
@@ -184,7 +184,7 @@ impl TKeyBind for ShaderBindShadowSampler {
 }
 
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseShadowSampler {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindShadowSampler>,

@@ -15,7 +15,7 @@ pub struct KeyShaderSetModel {
     pub skin: ESkinCode,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct KeyBindGroupModel {
     pub matrix: Option<Arc<ShaderBindModelAboutMatrix>>,
     pub skin: Option<Arc<ShaderBindModelAboutSkinValue>>,
@@ -139,7 +139,7 @@ impl TShaderSetBlock for KeyBindGroupModel {
 }
 impl TAssetKeyU64 for KeyBindGroupModel {}
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BindGroupModel {
     pub(crate) bind_group: BindGroupUsage,
     pub(crate) key: KeyBindGroupModel,

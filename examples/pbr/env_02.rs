@@ -149,8 +149,8 @@ impl Plugin for PluginTest {
         let cube = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
         actions.material.usemat.push(OpsMaterialUse::Use(cube, lightingmat, DemoScene::PASS_OPAQUE));
-        actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 100., 1., 100.));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, 0., -1., 0.));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Scaling(100., 1., 100.)));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(0., -1., 0.)));
     }
 
     let (vertices, indices) = (BallBuilder::attrs_meta(), Some(BallBuilder::indices_meta()));
@@ -174,9 +174,9 @@ impl Plugin for PluginTest {
                 for k in 0..1 {
                     let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
-                    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i + 1) as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
-                    actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
-                    actions.instance.vec2s.push(OpsInstanceVec2::ops(cube, (i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.), Atom::from("InsV2")));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Scaling(1.,  1., 1.)));
+                    actions.instance.attr.push(OpsInstanceAttr::ops(cube, EInstanceAttr::Vec2([(i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.)]), Atom::from("InsV2")));
                 }
             }
         }

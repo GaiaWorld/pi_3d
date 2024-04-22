@@ -57,7 +57,7 @@ pub type BindDefine = u32;
 ///     * FS Before Effect Snippets
 ///     * Effect VS Running Code
 ///     * FS After Effect Snippets
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ShaderEffectMeta {
     pub uniforms: Arc<MaterialValueBindDesc>,
     pub textures: Arc<EffectUniformTexture2DDescs>,
@@ -378,7 +378,7 @@ impl ShaderEffectMeta {
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            log::warn!("Shader: {:?}", key_meta);
+            // log::warn!("Shader: {:?}", key_meta);
             let temp = String::from("temp/");
             let root_dir = std::env::current_dir().unwrap();
             let mut file_name: String = key_meta.to_string() + ".vert";

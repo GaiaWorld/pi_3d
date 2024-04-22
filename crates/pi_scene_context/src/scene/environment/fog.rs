@@ -5,13 +5,13 @@ use pi_scene_shell::prelude::*;
 
 use super::BindSceneEffect;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct FogLinearParam {
     pub start: f32,
     pub end: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct FogExpParam {
     pub density_fallof: f32,
 }
@@ -21,7 +21,7 @@ impl Default for FogExpParam {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct FogExp2Param {
     pub density_fallof: f32,
 }
@@ -31,7 +31,7 @@ impl Default for FogExp2Param {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct FogAltitudeBaseParam {
     pub h_while_max_density: f32,
     pub density_fallof: f32,
@@ -43,7 +43,7 @@ impl Default for FogAltitudeBaseParam {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum FogParam {
     None,
     Linear(FogLinearParam),
@@ -69,12 +69,14 @@ impl FogParam {
 }
 
 #[derive(Component)]
-pub struct SceneFogColor(pub f32, pub f32, pub f32);
+pub struct SceneFog {
+    pub param: FogParam,
+    pub r: Number,
+    pub g: Number,
+    pub b: Number,
+}
 
-#[derive(Component)]
-pub struct SceneFogParam(pub FogParam);
-
-pub fn update_scenefog_uniform(color: &SceneFogColor, param: &SceneFogParam, bind: &mut BindSceneEffect) {
-    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_INFO as usize, bytemuck::cast_slice(&[color.0, color.1, color.2]));
-    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_PARAM as usize, bytemuck::cast_slice(&param.0.as_array()));
+pub fn update_scenefog_uniform(fog: &SceneFog, bind: &mut BindSceneEffect) {
+    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_INFO as usize, bytemuck::cast_slice(&[fog.r, fog.g, fog.b]));
+    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_PARAM as usize, bytemuck::cast_slice(&fog.param.as_array()));
 }

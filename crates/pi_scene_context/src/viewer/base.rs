@@ -5,31 +5,31 @@ use pi_scene_shell::prelude::*;
 use crate::transforms::prelude::*;
 
 
-#[derive(Debug, Default, Clone, Component)]
+#[derive(Default, Clone, Component)]
 pub struct ForceIncludeModelList(pub XHashSet<Entity>);
 
-#[derive(Debug, Default, Clone, Component)]
+#[derive(Default, Clone, Component)]
 pub struct FlagForceIncludeModelList;
 
-#[derive(Debug, Default, Clone, Component)]
+#[derive(Default, Clone, Component)]
 pub struct ModelList(pub XHashSet<Entity>);
 
-#[derive(Debug, Default, Clone, Component)]
+#[derive(Default, Clone, Component)]
 pub struct FlagModelList(pub bool);
 
-#[derive(Debug, Default, Component)]
+#[derive(Default, Component)]
 pub struct ModelListAdd(pub XHashSet<Entity>);
 
 #[derive(Component)]
 pub struct FlagModelListAdd(pub bool);
 
-#[derive(Debug, Default, Component)]
+#[derive(Default, Component)]
 pub struct ModelListDel(pub XHashSet<Entity>);
 
 #[derive(Component)]
 pub struct FlagModelListDel(pub bool);
 
-#[derive(Debug, Default, Component)]
+#[derive(Default, Component)]
 pub struct ModelListAfterCulling(pub Vec<Entity>);
 
 /// 视口ID - 可能是 相机、灯光
@@ -37,24 +37,11 @@ pub struct ModelListAfterCulling(pub Vec<Entity>);
 pub struct ViewerID(pub Entity);
 
 /// 视口状态
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct ViewerActive(pub bool);
 
-// /// 视口尺寸
-// #[derive(Debug, Clone, Copy, Component)]
-// pub struct ViewerSize(pub u32, pub u32);
-// impl Default for ViewerSize {
-//     fn default() -> Self {
-//         Self(Self::DEFAULT_WIDTH, Self::DEFAULT_HEIGHT)
-//     }
-// }
-// impl ViewerSize {
-//     pub const DEFAULT_WIDTH: u32 = 100;
-//     pub const DEFAULT_HEIGHT: u32 = 100;
-// }
-
 /// 视口尺寸
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct ViewerAspect(pub f32);
 impl Default for ViewerAspect {
     fn default() -> Self {
@@ -88,7 +75,7 @@ pub struct ViewerRenderTargetFormatOption {
     pub depth_stencil: wgpu::TextureFormat,
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct ViewerViewMatrix(pub Matrix);
 impl Default for ViewerViewMatrix {
     fn default() -> Self {
@@ -109,7 +96,7 @@ impl ViewerViewMatrix {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct ViewerProjectionMatrix(pub Matrix);
 impl Default for ViewerProjectionMatrix {
     fn default() -> Self {
@@ -121,12 +108,7 @@ impl ViewerProjectionMatrix {
         range.write_data(ShaderBindViewer::OFFSET_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
-// impl Uniform for ViewerProjectionMatrix {
-//     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-//         bytes_write_to_memory(bytemuck::cast_slice(self.0.transpose().as_slice()), index as usize + ShaderBindSceneAboutBase::OFFSET_PROJECT_MATRIX as usize, buffer);
-//     }
-// }
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct ViewerTransformMatrix(pub Matrix);
 impl Default for ViewerTransformMatrix {
     fn default() -> Self {
@@ -138,13 +120,7 @@ impl ViewerTransformMatrix {
         range.write_data(ShaderBindViewer::OFFSET_VIEW_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
-// impl Uniform for ViewerTransformMatrix {
-//     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-//         //  log::debug!(">>>>>>>>> {:?}", self.0.as_slice());
-//         bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + ShaderBindSceneAboutBase::OFFSET_VIEW_PROJECT_MATRIX as usize, buffer);
-//     }
-// }
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct ViewerGlobalPosition(pub Vector3);
 impl Default for ViewerGlobalPosition {
     fn default() -> Self {
@@ -156,12 +132,8 @@ impl ViewerGlobalPosition {
         range.write_data(ShaderBindViewer::OFFSET_CAMERA_POSITION as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
-// impl Uniform for ViewerGlobalPosition {
-//     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-//         bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + ShaderBindSceneAboutBase::OFFSET_CAMERA_POSITION as usize, buffer);
-//     }
-// }
-#[derive(Debug, Clone, Component)]
+
+#[derive(Clone, Component)]
 pub struct ViewerDirection(pub Vector3);
 impl Default for ViewerDirection {
     fn default() -> Self {
@@ -173,13 +145,8 @@ impl ViewerDirection {
         range.write_data(ShaderBindViewer::OFFSET_CAMERA_DIRECTION as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
-// impl Uniform for ViewerDirection {
-//     fn write_into(&self, index: u32, buffer: &mut [u8]) {
-//         bytes_write_to_memory(bytemuck::cast_slice(self.0.as_slice()), index as usize + ShaderBindSceneAboutBase::OFFSET_CAMERA_DIRECTION as usize, buffer);
-//     }
-// }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub enum ViewerDistanceCompute {
     Base,
     Direction,
@@ -204,7 +171,7 @@ impl ViewerDistanceCompute {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct BindViewer(pub Arc<ShaderBindViewer>);
 impl BindViewer {
     pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {

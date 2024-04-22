@@ -41,7 +41,17 @@ impl PluginImageCopy {
             
             let plane = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(plane, scene));
             actions.mesh.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
-            actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
+
+            // actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
+
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             
@@ -90,7 +100,17 @@ impl PluginImageCopy {
             
             let plane = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(plane, scene));
             actions.mesh.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
-            actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
+
+            // actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
+
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             

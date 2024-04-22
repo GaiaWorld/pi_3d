@@ -50,7 +50,7 @@ fn setup(
 
     let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState::default()));
-    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., 10., 0.));
+    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(0., 10., 0.)));
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     let id_geo = commands.spawn_empty().id();
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
@@ -113,17 +113,17 @@ fn setup(
         // } else {
             actions.transform.create.push(OpsTransformNode::ops(scene, source));
         // }
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0)));
-        actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(source, 4., 4., 4.));
-        actions.transform.localrot.push(OpsTransformNodeLocalEuler::ops(source, 3., 0., 0.));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0))));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(4., 4., 4.)));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Euler(3., 0., 0.)));
 
         let trail = commands.spawn_empty().id();
         actions.trail.create.push(OpsTrail::ops(scene, source, trail));
         actions.trail.age.push(OpsTrailAgeControl::ops(trail, 500));
         actions.material.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));
         let mut blend = ModelBlend::default(); blend.combine();
-        actions.mesh.blend.push(OpsRenderBlend::ops(trail, blend));
-        actions.mesh.depth_compare.push(OpsDepthCompare::ops(trail, CompareFunction::Always));
+        actions.mesh.blend.push(OpsRenderBlend::ops(trail, DemoScene::PASS_TRANSPARENT, blend));
+        actions.mesh.depth_state.push(OpsDepthState::ops(trail, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
     }
 }
 

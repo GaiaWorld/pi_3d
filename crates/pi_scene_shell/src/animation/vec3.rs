@@ -4,7 +4,7 @@ use pi_scene_math::{Vector3, Number};
 
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct AnimatorableVec3(pub Vector3);
 impl Default for AnimatorableVec3 {
     fn default() -> Self {

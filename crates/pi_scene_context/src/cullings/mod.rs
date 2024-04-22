@@ -5,7 +5,7 @@ use pi_scene_math::Vector3;
 
 use crate::{prelude::StageModel, viewer::prelude::sys_abstructmesh_culling_flag_reset, scene::StageScene, materials::prelude::StageMaterial};
 
-use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::{sys_update_culling_by_worldmatrix, sys_update_culling_by_cullinginfo}, command::{ActionListMeshBounding, ActionListMeshBoundingCullingMode, ActionListBoundingBoxDisplay}, command_sys::{sys_act_mesh_bounding, sys_act_mesh_bounding_culling, sys_act_mesh_bounding_culling_display}};
+use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::{sys_update_culling_by_worldmatrix, sys_update_culling_by_cullinginfo}, command::{ActionListMeshBounding, ActionListMeshBoundingCullingMode, ActionListBoundingBoxDisplay}, command_sys::{sys_act_mesh_bounding, sys_act_mesh_bounding_culling_display}};
 
 mod bounding_box;
 mod bounding_sphere;
@@ -27,7 +27,7 @@ pub enum StageCulling {
     CalcBounding,
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Clone, Component)]
 pub struct IsCulled;
 
 pub trait TIntersect {
@@ -52,8 +52,7 @@ impl Plugin for PluginCulling {
         ).in_set(StageCulling::Command));
 
         app.add_systems(Update, (
-            sys_act_mesh_bounding,
-            sys_act_mesh_bounding_culling
+            sys_act_mesh_bounding
         ).in_set(StageModel::AbstructMeshCommand));
 
         app.add_systems(
@@ -75,35 +74,3 @@ pub trait InterfaceBoundingInfo {
         max: Vector3,
     );
 }
-
-// impl InterfaceBoundingInfo for crate::engine::Engine {
-//     fn set_bounding(
-//         &mut self,
-//         object: ObjectID,
-//         min: Vector3,
-//         max: Vector3,
-//     ) {
-//         let world = self.world();
-
-//         let commands = world.get_resource_mut::<SingleCullingCommandList>().unwrap();
-//         commands.list.push(CullingCommand::Bounding(object, min, max));
-//     }
-// }
-
-// pub trait InterfaceBoundingInfo<T>
-//     where T: TEngine
-// {
-//     fn set_bounding(
-//         engine: &T,
-//         object: ObjectID,
-//         min: Vector3,
-//         max: Vector3,
-//     ) -> &T {
-//         let world = engine.world();
-
-//         let commands = world.get_resource_mut::<SingleCullingCommandList>().unwrap();
-//         commands.list.push(CullingCommand::Bounding(object, min, max));
-        
-//         engine
-//     }
-// }

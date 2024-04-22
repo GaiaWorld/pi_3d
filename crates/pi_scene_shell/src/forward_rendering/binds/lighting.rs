@@ -11,7 +11,7 @@ use crate::shader::ShaderSetBind;
 
 
 ////////////////////////////////// Lighting LightIndex
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindModelLightIndexs {
     pub(crate) data: BindBufferRange,
     pub direct_count: u32,
@@ -164,7 +164,7 @@ impl TKeyBind for BindModelLightIndexs {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseModelLightIndexs {
     pub(crate) bind: u32,
     pub(crate) data: Arc<BindModelLightIndexs>,

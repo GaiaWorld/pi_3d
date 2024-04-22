@@ -329,7 +329,7 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, (GLTF, u64), G> for GLTF  {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct KeyGLTF {
     pub base_url: KeyGLTFBase,
     pub dyn_desc: GLTFDynamicJson,
@@ -348,7 +348,7 @@ pub type ImageID = usize;
 pub type BufferViewID = usize;
 pub type AccessorID = usize;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum ErrorGLTF {
     ErrorBuffer,
     ErrorAccessor,

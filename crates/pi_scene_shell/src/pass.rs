@@ -13,6 +13,14 @@ impl Deref for PassTag {
     }
 }
 impl PassTag {
+    pub const PASS_01: u16 = 0b0000_0000_0000_0001;
+    pub const PASS_02: u16 = 0b0000_0000_0000_0010;
+    pub const PASS_03: u16 = 0b0000_0000_0000_0100;
+    pub const PASS_04: u16 = 0b0000_0000_0000_1000;
+    pub const PASS_05: u16 = 0b0000_0000_0001_0000;
+    pub const PASS_06: u16 = 0b0000_0000_0010_0000;
+    pub const PASS_07: u16 = 0b0000_0000_0100_0000;
+    pub const PASS_08: u16 = 0b0000_0000_1000_0000;
     pub const PASS_TAG_01: PassTag = PassTag(0b0000_0000_0000_0001);
     pub const PASS_TAG_02: PassTag = PassTag(0b0000_0000_0000_0010);
     pub const PASS_TAG_03: PassTag = PassTag(0b0000_0000_0000_0100);

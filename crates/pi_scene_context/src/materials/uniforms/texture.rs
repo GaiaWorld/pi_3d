@@ -5,7 +5,7 @@ use pi_scene_shell::prelude::*;
 
 use crate::materials::value::{UniformBind, SlotActiveRequire};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum ETextureSlot {
     Slot0,
     Slot1,
@@ -13,7 +13,7 @@ pub enum ETextureSlot {
     Slot3,
 }
 
-#[derive(Debug, Clone, Default, Component)]
+#[derive(Clone, Default, Component)]
 pub struct UniformTextureWithSamplerParams(pub XHashMap<Atom, Arc<UniformTextureWithSamplerParam>>);
 
 #[derive(Component)]
@@ -36,7 +36,7 @@ pub trait UniformTexture {
 // }
 
 // ==== ==== ==== ==== 1
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot01(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot01 {
     fn bind(&self) -> u32 {
@@ -99,7 +99,7 @@ impl UniformTexture for TextureResSlot01 {
 // }
 
 // ==== ==== ==== ==== 2
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot02(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot02 {
     fn bind(&self) -> u32 {
@@ -162,7 +162,7 @@ impl UniformTexture for TextureResSlot02 {
 // }
 
 // ==== ==== ==== ==== 3
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot03(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot03 {
     fn bind(&self) -> u32 {
@@ -226,7 +226,7 @@ impl UniformTexture for TextureResSlot03 {
 
 // ==== ==== ==== ==== 4
 
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot04(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot04 {
     fn bind(&self) -> u32 {
@@ -291,7 +291,7 @@ impl UniformTexture for TextureResSlot04 {
 
 // ==== ==== ==== ==== 5
 
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot05(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot05 {
     fn bind(&self) -> u32 {
@@ -335,7 +335,7 @@ impl UniformTexture for TextureResSlot05 {
 
 // ==== ==== ==== ==== 6
 
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot06(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot06 {
     fn bind(&self) -> u32 {
@@ -378,7 +378,7 @@ impl UniformTexture for TextureResSlot06 {
 
 // ==== ==== ==== ==== 7
 
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot07(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot07 {
     fn bind(&self) -> u32 {
@@ -421,7 +421,7 @@ impl UniformTexture for TextureResSlot07 {
 
 // ==== ==== ==== ==== 8
 
-#[derive(Debug, Clone, Hash, Component)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureSlot08(pub Arc<UniformTextureWithSamplerParam>);
 impl UniformBind for TextureSlot08 {
     fn bind(&self) -> u32 {

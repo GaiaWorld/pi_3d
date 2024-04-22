@@ -26,11 +26,8 @@ pub struct PluginTransformNode;
 impl Plugin for PluginTransformNode {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListTransformNodeCreate::default())
-            .insert_resource(ActionListTransformNodeLocalPosition::default())
-            // .insert_resource(ActionListTransformNodeLocalRotation::default())
-            .insert_resource(ActionListTransformNodeLocalEuler::default())
+            .insert_resource(ActionListTransformNodeLocal::default())
             .insert_resource(ActionListTransformNodeLocalRotationQuaternion::default())
-            .insert_resource(ActionListTransformNodeLocalScaling::default())
             .insert_resource(ActionListTransformNodeParent::default())
             .insert_resource(StateTransform::default())
             .insert_resource(TransformDirtyRoots::default())
@@ -52,9 +49,7 @@ impl Plugin for PluginTransformNode {
         app.add_systems(
 			Update,
             (
-                sys_act_local_euler,
-                sys_act_local_position,
-                sys_act_local_scaling,
+                sys_act_local,
             ).in_set(StageTransform::TransformCommand)
         );
         app.add_systems(
@@ -67,7 +62,7 @@ impl Plugin for PluginTransformNode {
                 sys_tree_layer_changed,
                 sys_world_matrix_calc,
                 sys_world_matrix_calc2,
-            ).chain().run_if(should_run).in_set(StageTransform::TransformCalcMatrix)
+            ).chain().in_set(StageTransform::TransformCalcMatrix)
         );
 
         app.add_systems(

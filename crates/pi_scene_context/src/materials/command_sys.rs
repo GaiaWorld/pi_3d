@@ -95,10 +95,7 @@ pub fn sys_act_material_use(
     mut cmds: ResMut<ActionListMaterialUse>,
     mut renderobjectcmds: ResMut<ActionListPassObject>,
     mut materials: Query<(&mut MaterialRefs, &mut DirtyMaterialRefs)>,
-    meshes: Query<(
-        & PassID01, & PassID02, & PassID03, & PassID04, & PassID05, & PassID06, & PassID07, & PassID08,
-        // & PassID09, & PassID10, & PassID11, & PassID12
-    )>,
+    meshes: Query<& PassIDs>,
     mut linkedtargets: Query<&mut LinkedMaterialID>,
     passes: Query<&PassMaterialID>,
     empty: Res<SingleEmptyEntity>,
@@ -121,21 +118,7 @@ pub fn sys_act_material_use(
                             }
                         }
                     } else if let Ok(passid) = meshes.get(id_mesh) {
-                        let id_pass = match pass {
-                            PassTag::PASS_TAG_01 => { passid.0.0 },
-                            PassTag::PASS_TAG_02 => { passid.1.0 },
-                            PassTag::PASS_TAG_03 => { passid.2.0 },
-                            PassTag::PASS_TAG_04 => { passid.3.0 },
-                            PassTag::PASS_TAG_05 => { passid.4.0 },
-                            PassTag::PASS_TAG_06 => { passid.5.0 },
-                            PassTag::PASS_TAG_07 => { passid.6.0 },
-                            PassTag::PASS_TAG_08 => { passid.7.0 },
-                            // PassTag::PASS_TAG_09 => { passid.8.0 },
-                            // PassTag::PASS_TAG_10 => { passid.9.0 },
-                            // PassTag::PASS_TAG_11 => { passid.10.0 },
-                            // PassTag::PASS_TAG_12 => { passid.11.0 },
-                            _ => { passid.7.0 }
-                        };
+                        let id_pass = passid.0[pass.index()];
 
                         if let Ok(matid) = passes.get(id_pass) {
                             // log::error!("Material Use Pass {:?}", pass);
@@ -204,16 +187,7 @@ pub fn sys_act_material_value(
         if let Ok(mut bindvalue) = bindvalues.get_mut(entity) {
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let value = bytemuck::cast_slice(&val);
-                match bindvalue.offset(&slot) {
-                    Some(offset) => {
-                        let (strip, offset, _entity) = offset.strip_offset();
-                        if strip <= value.len() {
-                            bindvalue.update(offset, &value[0..strip]);
-                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
-                        }
-                    },
-                    None => {},
-                }
+                _bind_value(bindvalue, &slot, value);
             }
         }
     });
@@ -222,18 +196,8 @@ pub fn sys_act_material_value(
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let val = [x, y, z, w];
                 let value = bytemuck::cast_slice(&val);
-                match bindvalue.offset(&slot) {
-                    Some(offset) => {
-                        let (strip, offset, entity) = offset.strip_offset();
-                        if strip <= value.len() {
-                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
-                            bindvalue.update(offset, &value[0..strip]);
-                        }
-                        if let Some(target) = entity {
-                            animator_vec4.push(OpsAnimatorableVec4::ops(target, linked, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Uniform));
-                        }
-                    },
-                    None => {},
+                if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                    animator_vec4.push(OpsAnimatorableVec4::ops(target, linked, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Uniform));
                 }
             }
         }
@@ -243,18 +207,8 @@ pub fn sys_act_material_value(
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let val = [x, y, z];
                 let value = bytemuck::cast_slice(&val);
-                match bindvalue.offset(&slot) {
-                    Some(offset) => {
-                        let (strip, offset, entity) = offset.strip_offset();
-                        if strip <= value.len() {
-                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
-                            bindvalue.update(offset, &value[0..strip]);
-                        }
-                        if let Some(target) = entity {
-                            animator_vec3.push(OpsAnimatorableVec3::ops(target, linked, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Uniform));
-                        }
-                    },
-                    None => {},
+                if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                    animator_vec3.push(OpsAnimatorableVec3::ops(target, linked, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Uniform));
                 }
             }
         }
@@ -264,18 +218,8 @@ pub fn sys_act_material_value(
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let val = [x, y];
                 let value = bytemuck::cast_slice(&val);
-                match bindvalue.offset(&slot) {
-                    Some(offset) => {
-                        let (strip, offset, entity) = offset.strip_offset();
-                        if strip <= value.len() {
-                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
-                            bindvalue.update(offset, &value[0..strip]);
-                        }
-                        if let Some(target) = entity {
-                            animator_vec2.push(OpsAnimatorableVec2::ops(target, linked, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Uniform));
-                        }
-                    },
-                    None => {},
+                if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                    animator_vec2.push(OpsAnimatorableVec2::ops(target, linked, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Uniform));
                 }
             }
         }
@@ -285,18 +229,8 @@ pub fn sys_act_material_value(
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let vv = [val];
                 let value = bytemuck::cast_slice(&vv);
-                match bindvalue.offset(&slot) {
-                    Some(offset) => {
-                        let (strip, offset, entity) = offset.strip_offset();
-                        if strip <= value.len() {
-                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
-                            bindvalue.update(offset, &value[0..strip]);
-                        }
-                        if let Some(target) = entity {
-                            animator_float.push(OpsAnimatorableFloat::ops(target, linked, AnimatorableFloat(val), EAnimatorableEntityType::Uniform));
-                        }
-                    },
-                    None => {},
+                if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                    animator_float.push(OpsAnimatorableFloat::ops(target, linked, AnimatorableFloat(val), EAnimatorableEntityType::Uniform));
                 }
             }
         }
@@ -306,22 +240,32 @@ pub fn sys_act_material_value(
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let vv = [val];
                 let value = bytemuck::cast_slice(&vv);
-                match bindvalue.offset(&slot) {
-                    Some(offset) => {
-                        let (strip, offset, entity) = offset.strip_offset();
-                        if strip <= value.len() {
-                            bindvalue.bind().data().write_data(offset, &value[0..strip]);
-                            bindvalue.update(offset, &value[0..strip]);
-                        }
-                        if let Some(target) = entity {
-                            animator_uint.push(OpsAnimatorableUint::ops(target, linked, AnimatorableUint(val), EAnimatorableEntityType::Uniform));
-                        }
-                    },
-                    None => {},
+                if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                    animator_uint.push(OpsAnimatorableUint::ops(target, linked, AnimatorableUint(val), EAnimatorableEntityType::Uniform));
                 }
             }
         }
     });
+}
+
+fn _bind_value(
+    bindvalue: &mut BindEffectValues,
+    slot: &Atom,
+    value: &[u8],
+) -> Option<Entity> {
+    match bindvalue.offset(&slot) {
+        Some(offset) => {
+            let (strip, offset, _entity) = offset.strip_offset();
+            if strip <= value.len() {
+                bindvalue.update(offset, &value[0..strip]);
+                bindvalue.bind().data().write_data(offset, &value[0..strip]);
+            }
+            _entity
+        },
+        None => {
+            None
+        },
+    }
 }
 
 pub fn sys_act_material_texture(

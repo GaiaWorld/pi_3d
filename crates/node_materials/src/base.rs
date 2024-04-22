@@ -143,7 +143,7 @@ impl NodeMaterialBuilder {
             }
 
             if layer > 128 {
-                log::error!("NodeMaterialBlockInfo Error");
+                // log::error!("NodeMaterialBlockInfo Error");
                 return;
             }
 
@@ -162,7 +162,7 @@ impl NodeMaterialBuilder {
                         single.push(key.clone());
                     }
                 } else {
-                    log::error!("Node MaterialBlock Not Found: {:?}", key);
+                    // log::error!("Node MaterialBlock Not Found: {:?}", key);
                 }
             });
             tempkeys = temp;

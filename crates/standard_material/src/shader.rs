@@ -41,6 +41,7 @@ impl StandardShader {
             ]
         );
 
+        nodemat.apply::<BlockUVAtlas>();
         nodemat.apply::<BlockUVOffsetSpeed>();
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();

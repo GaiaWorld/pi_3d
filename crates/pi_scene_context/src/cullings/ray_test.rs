@@ -10,7 +10,7 @@ use crate::{
 pub struct RayTest(pub Entity, pub Entity, pub f32, pub f32);
 pub type ActionListRayTest = ActionList<RayTest>;
 
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Default)]
 pub struct RayTestID(Option<Entity>);
 
 pub struct PluginRayTest;

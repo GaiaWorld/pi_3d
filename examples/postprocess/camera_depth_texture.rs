@@ -153,8 +153,8 @@ impl Plugin for PluginTest {
         actions.material.usemat.push(OpsMaterialUse::Use(cube, predepthmat, DemoScene::PASS_PRE_DEPTH));
 
         actions.mesh.shadow.push(OpsMeshShadow::CastShadow(cube, true));
-        actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 100., 1., 100.));
-        actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, 0., -1., 0.));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Scaling(100., 1., 100.)));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(0., -1., 0.)));
     }
 
     let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
@@ -180,9 +180,9 @@ impl Plugin for PluginTest {
                 for k in 0..1 {
                     let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
-                    actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i + 1) as f32 * 3. - (tes_size) as f32, 0., j as f32 * 3. - (tes_size) as f32));
-                    actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, (i as f32).sin() * 0.5 + 1.1,  (j as f32).sin() * 0.5 + 1.1, (i as f32).sin() * 0.5 + 1.1));
-                    actions.instance.vec2s.push(OpsInstanceVec2::ops(cube, (i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.), Atom::from("InsV2")));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 3. - (tes_size) as f32, 0., j as f32 * 3. - (tes_size) as f32)));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Euler((i as f32).sin() * 0.5 + 1.1,  (j as f32).sin() * 0.5 + 1.1, (i as f32).sin() * 0.5 + 1.1)));
+                    actions.instance.attr.push(OpsInstanceAttr::ops(cube, EInstanceAttr::Vec2([(i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.)]), Atom::from("InsV2")));
                 }
             }
         }
@@ -251,10 +251,10 @@ impl Plugin for PluginTest {
             let indices = Some(CubeBuilder::indices_meta());
             let state = MeshInstanceState::default();
             let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
-            actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(source, 100., 0.5, 100.));
+            actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(100., 0.5, 100.)));
             actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, false));
             let mut blend = ModelBlend::default(); blend.combine();
-            actions.mesh.blend.push(OpsRenderBlend::Blend(source, blend));
+            actions.mesh.blend.push(OpsRenderBlend::Blend(source, DemoScene::PASS_TRANSPARENT, blend));
 
             let distortiommat = commands.spawn_empty().id();
             actions.material.create.push(OpsMaterialCreate::ops(distortiommat, water::ShaderWater::KEY));

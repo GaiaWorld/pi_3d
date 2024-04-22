@@ -37,7 +37,7 @@ impl Plugin for PluginLighting {
         app.configure_set(Update, StageLighting::LightCreate.after(StageScene::Create));
         app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageLighting::LightingCommand.after(StageLighting::_LightCreate));
-        app.configure_set(Update, StageLighting::LightingUniform.after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageLighting::LightingUniform.run_if(should_run_with_lighting).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageLighting::_LightCreate));
 
 
@@ -59,19 +59,15 @@ impl Plugin for PluginLighting {
             (
                 sys_light_index_create,
                 sys_act_light_param,
-                sys_act_light_color,
-                sys_act_spot_light_angle,
-                sys_act_light_radius,
-                sys_act_light_strength,
             ).chain().in_set(StageLighting::LightingCommand)
         );
         app.add_systems(
 			Update,
             (
-                sys_direct_light_update.run_if(should_run_with_lighting),
-                sys_spot_light_update.run_if(should_run_with_lighting),
-                sys_point_light_update.run_if(should_run_with_lighting),
-                sys_hemi_light_update.run_if(should_run_with_lighting),
+                sys_direct_light_update,
+                sys_spot_light_update,
+                sys_point_light_update,
+                sys_hemi_light_update,
             ).chain().in_set(StageLighting::LightingUniform)
         );
         

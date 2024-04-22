@@ -98,8 +98,8 @@ fn setup(
             for _k in 0..1 {
                 let instance = commands.spawn_empty().id(); actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
                 let node = commands.spawn_empty().id(); actions.transform.create.push(OpsTransformNode::ops(scene, node));
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(node, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
-                actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(node, 0.2, 0.2, 0.2));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
 
                 actions.transform.tree.push(OpsTransformNodeParent::ops(instance, node));
 

@@ -5,7 +5,7 @@ use crate::engine_shell::EnginShell;
 use bevy_app::{Plugin, Update};
 use bevy_ecs::{prelude::{Resource, ResMut}, schedule::IntoSystemConfigs};
 
-#[derive(Debug, Resource)]
+#[derive(Resource)]
 pub struct SingleFrameTimeCommand {
     pub last: pi_time::Instant,
     pub frame_ms: u64,

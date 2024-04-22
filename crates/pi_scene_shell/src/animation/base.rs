@@ -24,7 +24,7 @@ pub type KeyAnimeCurve = String;
 
 pub type IDAssetTypeFrameCurve = u64;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Component, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneID(pub Entity);
 
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
@@ -60,19 +60,19 @@ impl<D: TAnimatableComp> TypeAnimeContext<D> {
     }
 }
 
-pub trait TAnimatableComp: Default + FrameDataValue + Component + std::fmt::Debug + TAssetCapacity {
+pub trait TAnimatableComp: Default + FrameDataValue + Component + TAssetCapacity {
 
 }
 pub trait TAnimatableCompRecord<T: TAnimatableComp>: Component {
     fn comp(&self) -> T;
 }
 
-#[derive(Debug, Default, Component)]
+#[derive(Default, Component)]
 pub struct AnimationGroups {
     pub map: XHashMap<AnimationGroupID, AnimationGroupID>,
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub struct TagGroupListen;
 impl TagGroupListen {
     pub const START : u8   = 0b0000_0001;

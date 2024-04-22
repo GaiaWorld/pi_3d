@@ -46,7 +46,7 @@ pub struct ListTestData(Vec<(Entity, Entity)>, Option<Entity>, WyRng);
             let cube: Entity = commands.spawn_empty().id();
             actions.mesh.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState::default()));
             actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
-            actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, random.gen_range(-5.0f32..5.0f32) as f32 * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5));
+            actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(random.gen_range(-5.0f32..5.0f32) as f32 * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5)));
 
             let id_geo = commands.spawn_empty().id();
             let attrs = CubeBuilder::attrs_meta();
@@ -115,8 +115,8 @@ fn setup(
                 // let idmat = defaultmat.0;
                 actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32));
-                actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(source, 0.2, 0.2, 0.2));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
 
                 testdata.0.push((source, idmat));
             }

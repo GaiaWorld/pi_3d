@@ -194,34 +194,6 @@ pub struct ImageTextureViewLoaderRecord {
     pub fail: Share<SegQueue<(ObjectID, EKeyTexture)>>,
 }
 
-// #[derive(Resource)]
-// pub struct ImageTextureViewLoader {
-//     pub wait: Share<SegQueue<(ObjectID, KeyImageTextureView, ESlot)>>,
-//     pub success: Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, ESlot)>>,
-//     pub fail: Share<SegQueue<(ObjectID, EKeyTexture, ESlot)>>,
-// }
-// impl Default for ImageTextureViewLoader {
-//     fn default() -> Self {
-//         Self { wait: Share::new(SegQueue::new()), success: Share::new(SegQueue::new()), fail: Share::new(SegQueue::new()), }
-//     }
-// }
-
-// pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component>(
-//     // mut commands: Commands,s
-//     mut items: Query<(Entity, &K, &mut D), Changed<K>>,
-//     loader: Res<ImageTextureViewLoader>,
-//     image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
-//     imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
-//     texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
-//     mut image_loader: ResMut<ImageTextureLoader>,
-//     queue: Res<PiRenderQueue>,
-//     device: Res<PiRenderDevice>,
-//     mut state: ResMut<StateTextureLoader>,
-// ) {
-//     items.iter_mut().for_each(|(entity, param, mut cmd)| {
-//     });
-// }
-
 pub fn sys_image_texture_view_load_launch_call<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component>(
     entity: Entity, param: &K, cmd: &mut D,
     loader: &ImageTextureViewLoaderRecord,
@@ -267,7 +239,7 @@ pub fn sys_image_texture_view_load_launch_call<K: std::ops::Deref<Target = EKeyT
                                     }
                                     Err(_e) => {
                                         // log::error!("load image fail, {:?}", e);
-                                        log::debug!("load image fail");
+                                        // log::debug!("load image fail");
                                         fail.push((entity, key));
                                     }
                                 };
@@ -339,7 +311,7 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
                 } else if entities.contains(entity) {
                     waitagain.push((entity, key));
                 } else {
-                    log::warn!("TexFail: {:?}", entity);
+                    // log::warn!("TexFail: {:?}", entity);
                     state.texview_fail += 1;
                 }
                 // if let Some(mut cmd) = commands.get_entity(entity) {

@@ -60,60 +60,39 @@ pub fn sys_act_local_rotation(
             // log::error!("act_local_rotation {:?}", (entity, &data));
             record.0 = data.clone();
             *node = data;
-        // } else {
-        //     if count < 4 {
-        //         cmds.push(OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w, count + 1));
-        //     }
         }
     });
 }
 
-pub fn sys_act_local_position(
-    mut cmds: ResMut<ActionListTransformNodeLocalPosition>,
+pub fn sys_act_local(
+    mut cmds: ResMut<ActionListTransformNodeLocal>,
     mut nodes: Query<(&mut LocalPosition, &mut RecordLocalPosition)>,
+    mut nodes_euler: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles)>,
+    mut nodes_scaling: Query<(&mut LocalScaling, &mut RecordLocalScaling)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalPosition(entity, val)| {
-        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
-            // log::warn!("transform_Position {:?} Val: {:?}", entity, val);
-            record.0 = LocalPosition(val);
-            *node = LocalPosition(val);
-        // } else {
-        //     if count < 4 {
-        //         cmds.push(OpsTransformNodeLocalPosition(entity, val, count + 1));
-        //     }
-        }
-    });
-}
-
-pub fn sys_act_local_euler(
-    mut cmds: ResMut<ActionListTransformNodeLocalEuler>,
-    mut nodes: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalEuler(entity, val)| {
-        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
-            record.0 = LocalEulerAngles(val);
-            *node = LocalEulerAngles(val);
-            // log::error!("sys_act_local_euler {:?}", (entity, &val));
-        // } else {
-        //     if count < 4 {
-        //         cmds.push(OpsTransformNodeLocalEuler(entity, val, count + 1));
-        //     }
-        }
-    });
-}
-
-pub fn sys_act_local_scaling(
-    mut cmds: ResMut<ActionListTransformNodeLocalScaling>,
-    mut nodes: Query<(&mut LocalScaling, &mut RecordLocalScaling)>,
-) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalScaling(entity, val)| {
-        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
-            record.0 = LocalScaling(val);
-            *node = LocalScaling(val);
-        // } else {
-        //     if count < 2 {
-        //         cmds.push(OpsTransformNodeLocalScaling(entity, val, count + 1));
-        //     }
+    cmds.drain().drain(..).for_each(|OpsTransformNodeLocal(entity, val)| {
+        match val {
+            ETransformSRT::Euler(x, y, z) => {
+                if let Ok((mut node, mut record)) = nodes_euler.get_mut(entity) {
+                    let val = Vector3::new(x, y, z);
+                    record.0 = LocalEulerAngles(val);
+                    *node = LocalEulerAngles(val);
+                }
+            },
+            ETransformSRT::Translation(x, y, z) => {
+                if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+                    let val = Vector3::new(x, y, z);
+                    record.0 = LocalPosition(val);
+                    *node = LocalPosition(val);
+                }
+            },
+            ETransformSRT::Scaling(x, y, z) => {
+                if let Ok((mut node, mut record)) = nodes_scaling.get_mut(entity) {
+                    let val = Vector3::new(x, y, z);
+                    record.0 = LocalScaling(val);
+                    *node = LocalScaling(val);
+                }
+            },
         }
     });
 }

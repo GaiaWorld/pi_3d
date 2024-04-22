@@ -23,7 +23,7 @@ impl Default for RendererGraphicParam {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RendererGraphicDesc {
     pub pre: Option<Entity>,
     pub curr: String,

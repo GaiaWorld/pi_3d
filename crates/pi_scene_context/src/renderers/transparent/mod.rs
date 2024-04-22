@@ -3,7 +3,7 @@ use std::mem::replace;
 use pi_scene_shell::prelude::*;
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum TransparentCommand {
     Apply(),
     Undo(),
@@ -26,7 +26,7 @@ impl ActionRenderTransparent {
     }
 }
 
-#[derive(Debug, Default, Resource)]
+#[derive(Default, Resource)]
 pub struct SingleTransparentCommandList {
     list: Vec<TransparentCommand>
 }

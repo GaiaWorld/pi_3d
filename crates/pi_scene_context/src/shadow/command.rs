@@ -32,14 +32,8 @@ impl ActionShadow {
         active: bool,
     ) {
         commands
-            .insert(ShadowMinZ::default())
-            .insert(ShadowMaxZ::default())
-            .insert(ShadowFrustumSize::default())
+            .insert(ShadowParam::default())
             .insert(ShadowAngle::default())
-            // .insert(ShadowAtlasSize::default())
-            .insert(ShadowDepthScale::default())
-            .insert(ShadowBias::default())
-            .insert(ShadowNormalBias::default())
             ;
 
         ActionEntity::init(commands);
@@ -50,12 +44,8 @@ impl ActionShadow {
 
 pub struct BundleShadowCaster(
     RendererID,
-    ShadowMinZ,
-    ShadowMaxZ,
-    ShadowFrustumSize,
+    ShadowParam,
     ShadowAngle,
-    ShadowDepthScale,
-    ShadowNormalBias,
 );
 
 pub struct BundleShadowCasterDirect(

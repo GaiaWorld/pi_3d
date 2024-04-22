@@ -47,12 +47,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListMeshRenderAlignment::default());
         app.insert_resource(ActionListAbstructMeshScalingMode::default());
         app.insert_resource(ActionListAbstructMeshVelocity::default());
-        app.insert_resource(ActionListInstanceFloat::default());
-        app.insert_resource(ActionListInstanceVec4::default());
-        app.insert_resource(ActionListInstanceVec3::default());
-        app.insert_resource(ActionListInstanceVec2::default());
-        app.insert_resource(ActionListInstanceUint::default());
-        app.insert_resource(ActionListInstanceSint::default());
+        app.insert_resource(ActionListInstanceAttr::default());
         app.insert_resource(ActionListMeshRenderIndiceRange::default());
         app.insert_resource(ActionListMeshRenderVertexRange::default());
         app.insert_resource(ActionListBoneOffset::default());
@@ -65,11 +60,11 @@ impl crate::Plugin for PluginMesh {
         app.configure_set(Update, StageModel::_InitMesh.after(StageModel::CreateMesh).before(StageLayerMask::Command).before(StageEnable::Command));
         app.configure_set(Update, StageModel::CreateInstance.after(StageModel::_InitMesh));
         app.configure_set(Update, StageModel::_InitInstance.after(StageModel::CreateInstance).before(StageEnable::Command).before(StageTransform::TransformCommand));
-        app.configure_set(Update, StageModel::AbstructMeshCommand.after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create));
-        app.configure_set(Update, StageModel::RenderMatrix.after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix));
-        app.configure_set(Update, StageModel::InstanceEffectMesh.after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix));
-        app.configure_set(Update, StageModel::InstanceEffectGeometry.after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageModel::LightingCollect.after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageModel::AbstructMeshCommand.in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create));
+        app.configure_set(Update, StageModel::RenderMatrix.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix));
+        app.configure_set(Update, StageModel::InstanceEffectMesh.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix));
+        app.configure_set(Update, StageModel::InstanceEffectGeometry.in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageModel::LightingCollect.in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform));
         app.add_systems(Update, apply_deferred.in_set(StageModel::_InitMesh));
         app.add_systems(Update, apply_deferred.in_set(StageModel::_InitInstance));
 
@@ -82,18 +77,9 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(
 			Update,
             (
-                sys_act_model_skinoffset,
                 sys_act_target_animation_attribute,
                 sys_act_instance_attribute.after(sys_act_target_animation_attribute),
                 sys_act_mesh_modify,
-                sys_act_abstruct_mesh_render_alignment,
-                sys_act_abstruct_mesh_scaling_mode,
-                sys_act_abstruct_mesh_velocity,
-                sys_act_mesh_render_indice,
-                sys_act_mesh_render_vertex_range,
-                sys_act_mesh_force_point_lighting,
-                sys_act_mesh_force_spot_lighting,
-                sys_act_mesh_force_hemi_lighting,
             ).in_set(StageModel::AbstructMeshCommand)
         );
         app.add_systems(Update, 
@@ -115,20 +101,20 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(
 			Update,
             (
-                sys_animator_update_instance_attribute.run_if(should_run),
-                sys_tick_instanced_buffer_update.run_if(should_run),
-                sys_tick_instanced_buffer_update_single.run_if(should_run),
-                sys_tick_culling_box.run_if(should_run),
+                sys_animator_update_instance_attribute  , // .run_if(should_run),
+                sys_tick_instanced_buffer_update        , // .run_if(should_run),
+                sys_tick_instanced_buffer_update_single , // .run_if(should_run),
+                sys_tick_culling_box                    , // .run_if(should_run),
             ).chain().in_set(StageModel::InstanceEffectGeometry)
         );
 
         app.add_systems(
 			Update,
             (
-                sys_model_direct_lighting_modify_by_light.run_if(should_run_with_lighting),
-                sys_model_direct_lighting_modify_by_model.run_if(should_run_with_lighting),
-                sys_model_point_lighting_modify_by_model.run_if(should_run_with_lighting),
-                sys_model_spot_lighting_modify_by_model.run_if(should_run_with_lighting),
+                sys_model_direct_lighting_modify_by_light       , // .run_if(should_run_with_lighting),
+                sys_model_direct_lighting_modify_by_model       , // .run_if(should_run_with_lighting),
+                sys_model_point_lighting_modify_by_model        , // .run_if(should_run_with_lighting),
+                sys_model_spot_lighting_modify_by_model         , // .run_if(should_run_with_lighting),
             ).chain().in_set(StageModel::LightingCollect)
         );
 

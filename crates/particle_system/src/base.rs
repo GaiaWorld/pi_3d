@@ -217,51 +217,58 @@ pub struct ParticleAttribute {
 pub struct ParticleAttributes(pub Vec<ParticleAttribute>);
 
 #[derive(Component)]
+pub struct ParticleCalculatorStartModifiers {
+    pub(crate) emission: ParticleCalculatorEmission,
+    pub(crate) shapeemitter: ParticleCalculatorShapeEmitter,
+    pub(crate) startlifetime: ParticleCalculatorStartLifetime,
+    pub(crate) startcolor: ParticleCalculatorStartColor,
+    pub(crate) startspeed: ParticleCalculatorStartSpeed,
+    pub(crate) startsize: ParticleCalculatorStartSize,
+    pub(crate) gravity: ParticleCalculatorGravity,
+    pub(crate) startrotation: ParticleCalculatorStartRotation,
+}
+
 pub struct ParticleCalculatorEmission {
     pub(crate) bursts: Vec<TBurstData>,
     pub(crate) rateovertime: FloatInterpolation,
 }
-
-#[derive(Component, Deref)]
 pub struct ParticleCalculatorShapeEmitter(pub(crate) TypeShapeEmitter);
-#[derive(Component)]
 pub struct ParticleCalculatorStartLifetime(pub(crate) FloatInterpolation);
-#[derive(Component)]
 pub struct ParticleCalculatorStartColor(pub(crate) StartColor);
-#[derive(Component)]
 pub struct ParticleCalculatorStartSpeed(pub(crate) FloatInterpolation);
-#[derive(Component)]
 pub struct ParticleCalculatorStartSize(pub(crate) StartSize);
-
-#[derive(Component)]
 pub struct ParticleCalculatorGravity(pub(crate) Gravity, pub Vector3);
-
-#[derive(Component)]
 pub struct ParticleCalculatorStartRotation(pub(crate) StartRotation);
 
-#[derive(Component)]
-pub struct ParticleCalculatorVelocityOverLifetime(pub(crate) VelocityOverLifetime);
-#[derive(Component)]
-pub struct ParticleCalculatorLimitVelocityOverLifetime(pub(crate) LimitVelocityOverLifetime);
-#[derive(Component)]
 pub struct ParticleCalculatorForceOverLifetime(pub(crate) ForceOverLifetime);
-#[derive(Component)]
-pub struct ParticleCalculatorSpeedModifier(pub(crate) SpeedModifier);
-#[derive(Component)]
 pub struct ParticleCalculatorOrbitRadial(pub(crate) FloatInterpolation);
-#[derive(Component)]
 pub struct ParticleCalculatorOrbitOffset(pub(crate) TranslationInterpolate);
-#[derive(Component)]
 pub struct ParticleCalculatorOrbitVelocity(pub(crate) TranslationInterpolate);
 
 #[derive(Component)]
-pub struct ParticleCalculatorSizeOverLifetime(pub(crate) SizeOverLifetime);
-#[derive(Component)]
-pub struct ParticleCalculatorSizeBySpeed(pub(crate) SizeBySpeed);
+pub struct ParticleCalculatorOverLifetime {
+    pub(crate) orbitoffset: ParticleCalculatorOrbitOffset,
+    pub(crate) orbitvelocity: ParticleCalculatorOrbitVelocity,
+    pub(crate) orbitradial: ParticleCalculatorOrbitRadial,
+    pub(crate) force: ParticleCalculatorForceOverLifetime,
+    pub(crate) size: Option<ParticleCalculatorSizeOverLifetime>,
+    pub(crate) velocity: Option<ParticleCalculatorVelocityOverLifetime>,
+    pub(crate) speed: Option<ParticleCalculatorSpeedModifier>,
+    pub(crate) rotation: Option<ParticleCalculatorRotationOverLifetime>,
+    pub(crate) color: Option<ParticleCalculatorColorOverLifetime>,
+    pub(crate) sizebyspeed: Option<ParticleCalculatorSizeBySpeed>,
+    pub(crate) colorbyspeed: Option<ParticleCalculatorColorBySpeed>,
+    pub(crate) rotationbyspeed: Option<ParticleCalculatorRotationBySpeed>,
+    pub(crate) texturesheet: Option<ParticleCalculatorTextureSheet>,
+    pub(crate) limitvelocity: Option<ParticleCalculatorLimitVelocityOverLifetime>
+}
 
-#[derive(Component)]
+pub struct ParticleCalculatorVelocityOverLifetime(pub(crate) VelocityOverLifetime);
+pub struct ParticleCalculatorLimitVelocityOverLifetime(pub(crate) LimitVelocityOverLifetime);
+pub struct ParticleCalculatorSpeedModifier(pub(crate) SpeedModifier);
+pub struct ParticleCalculatorSizeOverLifetime(pub(crate) SizeOverLifetime);
+pub struct ParticleCalculatorSizeBySpeed(pub(crate) SizeBySpeed);
 pub struct ParticleCalculatorRotationOverLifetime(pub(crate) RotationOverLifetime);
-#[derive(Component)]
 pub struct ParticleCalculatorRotationBySpeed(pub(crate) RotationBySpeed);
 
 #[derive(Component)]
@@ -272,12 +279,8 @@ pub struct ParticleCalculatorCustomV4 {
     pub(crate) w: FloatInterpolation,
 }
 
-#[derive(Component)]
 pub struct ParticleCalculatorColorOverLifetime(pub(crate) ColorOverLifetime);
-#[derive(Component)]
 pub struct ParticleCalculatorColorBySpeed(pub(crate) ColorBySpeed);
-
-#[derive(Component)]
 pub struct ParticleCalculatorTextureSheet(pub(crate) TextureSheet);
 
 #[derive(Component)]
@@ -356,7 +359,7 @@ impl ResParticleCommonBuffer {
             data.push(0);
         }
 
-        log::error!("ResParticleCommonBuffer {}", data.len());
+        // log::error!("ResParticleCommonBuffer {}", data.len());
         let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None);
         Self(buffer)
     }
@@ -615,9 +618,6 @@ pub struct ParticleRunningState(pub(crate) bool);
 
 #[derive(Component)]
 pub struct ParticleModifyState;
-
-#[derive(Component)]
-pub struct ParticleStart(pub(crate) bool);
 
 /// 存活的粒子ID列表
 #[derive(Component)]
@@ -1125,51 +1125,6 @@ impl ParticleLocalScaling {
         directions: &Vec<Direction>,
         randomlist: &Vec<BaseRandom>,
         calculator: &SizeBySpeed,
-    ) {
-        activeids.iter().for_each(|idx| {
-            let direction = directions.get(*idx).unwrap();
-            let randoms = randomlist.get(*idx).unwrap();
-            let item = self.0.get_mut(*idx).unwrap();
-            calculator.modify(item, direction.length, randoms);
-        });
-    }
-}
-
-/// 粒子实时颜色
-#[derive(Component, Deref, DerefMut)]
-pub struct ParticleColor(pub(crate) Vec<Vector4>);
-impl ParticleColor {
-    pub fn new(maxcount: usize) -> Self {
-        let mut vec = Vec::with_capacity(maxcount);
-        for _ in 0..maxcount {
-            vec.push(Vector4::new(1., 1., 1., 1.));
-        }
-        Self(vec)
-    }
-    pub fn run(
-        &mut self,
-        activeids: &Vec<IdxParticle>,
-        ages: &Vec<AgeLifeTime>,
-        startcolors: &Vec<Vector4>,
-        randomlist: &Vec<BaseRandom>,
-        calculator: &ColorOverLifetime,
-    ) {
-        activeids.iter().for_each(|idx| {
-            let age = ages.get(*idx).unwrap();
-            let startcolor = startcolors.get(*idx).unwrap();
-            let randoms = randomlist.get(*idx).unwrap();
-            let item = self.0.get_mut(*idx).unwrap();
-            calculator.modify(item, age.progress, randoms);
-            *item = item.component_mul(startcolor);
-            // log::warn!("Color: {:?}", item);
-        });
-    }
-    pub fn speed(
-        &mut self,
-        activeids: &Vec<IdxParticle>,
-        directions: &Vec<Direction>,
-        randomlist: &Vec<BaseRandom>,
-        calculator: &ColorBySpeed,
     ) {
         activeids.iter().for_each(|idx| {
             let direction = directions.get(*idx).unwrap();
@@ -1911,8 +1866,63 @@ impl ParticleDirection {
     }
 }
 
+/// 粒子实时颜色
+#[derive(Component)]
+pub struct ParticleColorAndUV {
+    pub(crate) color: ParticleColor,
+    pub(crate) uv: ParticleUV,
+}
+impl ParticleColorAndUV {
+    pub fn new(maxcount: usize) -> Self {
+        Self { color: ParticleColor::new(maxcount), uv: ParticleUV::new(maxcount) }
+    }
+}
 
-#[derive(Component, Deref)]
+/// 粒子实时颜色
+pub struct ParticleColor(pub(crate) Vec<Vector4>);
+impl ParticleColor {
+    pub fn new(maxcount: usize) -> Self {
+        let mut vec = Vec::with_capacity(maxcount);
+        for _ in 0..maxcount {
+            vec.push(Vector4::new(1., 1., 1., 1.));
+        }
+        Self(vec)
+    }
+    pub fn run(
+        &mut self,
+        activeids: &Vec<IdxParticle>,
+        ages: &Vec<AgeLifeTime>,
+        startcolors: &Vec<Vector4>,
+        randomlist: &Vec<BaseRandom>,
+        calculator: &ColorOverLifetime,
+    ) {
+        activeids.iter().for_each(|idx| {
+            let age = ages.get(*idx).unwrap();
+            let startcolor = startcolors.get(*idx).unwrap();
+            let randoms = randomlist.get(*idx).unwrap();
+            let item = self.0.get_mut(*idx).unwrap();
+            calculator.modify(item, age.progress, randoms);
+            *item = item.component_mul(startcolor);
+            // log::warn!("Color: {:?}", item);
+        });
+    }
+    pub fn speed(
+        &mut self,
+        activeids: &Vec<IdxParticle>,
+        directions: &Vec<Direction>,
+        randomlist: &Vec<BaseRandom>,
+        calculator: &ColorBySpeed,
+    ) {
+        activeids.iter().for_each(|idx| {
+            let direction = directions.get(*idx).unwrap();
+            let randoms = randomlist.get(*idx).unwrap();
+            let item = self.0.get_mut(*idx).unwrap();
+            calculator.modify(item, direction.length, randoms);
+        });
+    }
+}
+
+
 pub struct ParticleUV(pub(crate) Vec<TextureUV>);
 impl ParticleUV {
     pub fn new(maxcount: usize) -> Self {
@@ -1961,9 +1971,3 @@ impl ParticleCustomV4 {
         Self(vec)
     }
 }
-
-#[derive(Component)]
-pub struct ParticleGlobalPosList(pub(crate) Vec<Vec<Vector3>>);
-
-#[derive(Component)]
-pub struct ParticleLocalPosList(pub(crate) Vec<Vec<Vector3>>);

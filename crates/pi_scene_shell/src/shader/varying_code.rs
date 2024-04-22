@@ -1,7 +1,7 @@
 use pi_atom::Atom;
 
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum EVaryingKind {
     GLPosition,
     GLFragColor,
@@ -15,7 +15,7 @@ impl EVaryingKind {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Varying {
     pub format: Atom,
     pub name: Atom,
@@ -51,7 +51,7 @@ impl Varying {
 }
 
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Default)]
 pub struct Varyings(pub Vec<Varying>);
 impl Varyings {
     pub fn size(&self) -> usize {
@@ -79,8 +79,6 @@ impl From<&pi_render::rhi::shader::ShaderVarying> for Varyings {
     }
 }
 
-
-#[derive(Debug)]
 pub struct VaryingCode;
 impl VaryingCode {
     pub fn vs_code(values: &Varyings) -> String {

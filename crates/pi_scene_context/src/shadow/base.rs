@@ -35,62 +35,18 @@ pub struct LightLinkedShadowID(pub Option<Entity>);
 #[derive(Deref, Component)]
 pub struct ShadowIndex(pub u32);
 
-#[derive(Deref, Component)]
-pub struct ShadowMinZ(pub f32);
-impl Default for ShadowMinZ {
-    fn default() -> Self {
-        Self(0.)
-    }
+#[derive(Component)]
+pub struct ShadowParam {
+    pub minz: f32,
+    pub maxz: f32,
+    pub frustum: f32,
+    pub bias: f32,
+    pub normalbias: f32,
+    pub depthscale: f32,
 }
-
-#[derive(Deref, Component)]
-pub struct ShadowMaxZ(pub f32);
-impl Default for ShadowMaxZ {
+impl Default for ShadowParam {
     fn default() -> Self {
-        Self(20.)
-    }
-}
-
-#[derive(Deref, Component)]
-pub struct ShadowFrustumSize(pub f32);
-impl Default for ShadowFrustumSize {
-    fn default() -> Self {
-        Self(10.)
-    }
-}
-
-// #[derive(Deref, Component)]
-// pub struct ShadowAtlasSize(pub u32);
-// impl ShadowAtlasSize {
-//     pub const DEFAULT: u32 = 1024;
-// }
-// impl Default for ShadowAtlasSize {
-//     fn default() -> Self {
-//         Self(Self::DEFAULT)
-//     }
-// }
-
-#[derive(Deref, Component)]
-pub struct ShadowBias(pub f32);
-impl Default for ShadowBias {
-    fn default() -> Self {
-        Self(0.001)
-    }
-}
-
-#[derive(Deref, Component)]
-pub struct ShadowNormalBias(pub f32);
-impl Default for ShadowNormalBias {
-    fn default() -> Self {
-        Self(0.001)
-    }
-}
-
-#[derive(Deref, Component)]
-pub struct ShadowDepthScale(pub f32);
-impl Default for ShadowDepthScale {
-    fn default() -> Self {
-        Self(1.)
+        Self { minz: 0., maxz: 20., frustum: 10., bias: 0.001, normalbias: 0.001, depthscale: 1.0 }
     }
 }
 

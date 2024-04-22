@@ -4,7 +4,7 @@ use pi_futures::BoxFuture;
 use pi_render::renderer::texture::{ImageTexture, ImageTexture2DDesc, ErrorImageTexture};
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 #[allow(dead_code)]
 struct Irradiance {
     polynomials: Option<bool>,
@@ -19,13 +19,13 @@ struct Irradiance {
     xy: [f64; 3],
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Mipmap {
     length: u64,
     position: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 #[allow(non_snake_case)]
 struct Specular {
     mipmaps: Vec<Mipmap>,
@@ -33,7 +33,7 @@ struct Specular {
     specularDataPosition: Option<u64>
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct EnvironmentInfo {
     #[allow(dead_code)]
     version: u64,

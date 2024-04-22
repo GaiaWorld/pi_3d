@@ -41,6 +41,10 @@ impl pi_slotmap::Key for BoundingKey {
 	fn index(&self) -> usize {
 		self.0.index() as usize
 	}
+    
+    fn with(_idx: usize) -> Self {
+        todo!()
+    }
 }
 
 impl Null for BoundingKey {
@@ -178,7 +182,7 @@ impl SceneBoundingPool {
             },
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(item) => {
-                println!("================otctree");
+                // println!("================otctree");
                 item.culling(&transform, filter, result);
             },
         }

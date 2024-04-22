@@ -8,7 +8,7 @@ use pi_render::renderer::{buildin_data::{EDefaultTexture, DefaultTexture}, sampl
 use super::{UniformPropertyName, TBindDescToShaderCode, ShaderSetBind, TUnifromShaderProperty};
 
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct UniformSamplerDesc {
     pub slotname: UniformPropertyName,
     pub ty: wgpu::SamplerBindingType,
@@ -60,7 +60,7 @@ impl TBindDescToShaderCode for UniformSamplerDesc {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Clone, Hash)]
 pub struct UniformTexture2DDesc {
     pub slotname: UniformPropertyName,
     pub tex_sampler_type: wgpu::TextureSampleType,
@@ -168,7 +168,7 @@ impl Ord for UniformTexture2DDesc {
 }
 
 /// * 材质的纹理设置参数
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Hash)]
 pub struct UniformTextureWithSamplerParam {
     pub slotname: UniformPropertyName,
     pub filter: bool,
@@ -206,14 +206,14 @@ impl Ord for UniformTextureWithSamplerParam {
 
 /// * 根据 shader 描述 & 设置的效果纹理参数 构建的纹理使用信息
 /// * 数据放在渲染物体上
-#[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
+#[derive(Clone, Default, Hash, PartialEq, Eq)]
 pub struct EffectUniformTextureWithSamplerUseinfo(pub Vec<(Arc<UniformTextureWithSamplerParam>, Arc<UniformTexture2DDesc>, Arc<UniformSamplerDesc>)>);
 
 /// * 从 shader 描述生成的 纹理描述数组,
 /// * 能通过 纹理属性名称 获取 纹理槽位序号
 /// * 能通过 纹理的使用信息 生成 纹理的Uniform描述数组(数组序号对应纹理槽位序号)
 /// * 如果某个槽位没有设置 则 根据 shader 描述中对应声明使用默认纹理设置
-#[derive(Debug, Clone, Deref)]
+#[derive(Clone, Deref)]
 pub struct EffectUniformTexture2DDescs(pub Vec<Arc<UniformTexture2DDesc>>);
 impl From<Vec<Arc<UniformTexture2DDesc>>> for EffectUniformTexture2DDescs {
     fn from(mut value: Vec<Arc<UniformTexture2DDesc>>) -> Self {

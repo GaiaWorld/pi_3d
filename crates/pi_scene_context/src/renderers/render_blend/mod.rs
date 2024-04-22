@@ -1,8 +1,9 @@
 
 
 use pi_scene_shell::prelude::*;
+use super::*;
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Clone, Copy, Component)]
 pub struct ModelBlend {
     pub enable: bool,
     pub src_color: BlendFactor,
@@ -42,30 +43,33 @@ impl ModelBlend {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum OpsRenderBlend {
     Disable(Entity),
-    Blend(Entity, ModelBlend),
+    Blend(Entity, PassTag, ModelBlend),
 }
 impl OpsRenderBlend {
-    pub fn ops(mesh: Entity, mode: ModelBlend) -> Self {
-        Self::Blend(mesh, mode)
+    pub fn ops(mesh: Entity, pass: PassTag, mode: ModelBlend) -> Self {
+        Self::Blend(mesh, pass, mode)
     }
 }
 
 pub type ActionListBlend = ActionList<OpsRenderBlend>;
 pub fn sys_act_model_blend(
     mut cmds: ResMut<ActionListBlend>,
-    mut meshes: Query<&mut ModelBlend>,
+    models: Query<&PassIDs>,
+    mut items: Query<&mut ModelBlend>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsRenderBlend::Disable(_) => todo!(),
-            OpsRenderBlend::Blend(entity, value) => {
-                if let Ok(mut mode) = meshes.get_mut(entity) {
-                    *mode = value;
-                } else {
-                    cmds.push(OpsRenderBlend::Blend(entity, value));
+            OpsRenderBlend::Blend(entity, tag, value) => {
+                if let Ok(passids) = models.get(entity) {
+                    let passid = passids.0[tag.index()];
+        
+                    if let Ok(mut item) = items.get_mut(passid) {
+                        *item = value;
+                    }
                 }
             },
         }

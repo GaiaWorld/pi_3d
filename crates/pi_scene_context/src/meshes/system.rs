@@ -219,7 +219,7 @@ pub fn sys_dispose_about_mesh(
     items: Query<
         (
             Entity, &DisposeReady,
-            &PassID01, &PassID02, &PassID03, &PassID04, &PassID05, &PassID06, &PassID07, &PassID08,
+            &PassIDs,
             &GeometryID, &InstanceSourceRefs, &Mesh, Option<&SkeletonID>, &ModelInstanceAttributes
         ),
         Or<(Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
@@ -231,7 +231,7 @@ pub fn sys_dispose_about_mesh(
     mut skeletons: Query<(&mut SkeletonRefs, &Skeleton)>,
 ) {
     items.iter().for_each(|(
-        entity, state, pass01, pass02, pass03, pass04, pass05, pass06, pass07, pass08,
+        entity, state, passids,
         idgeo, instancerefs, _, idskin, animators
     )| {
         if state.0 == false { return; }
@@ -247,14 +247,9 @@ pub fn sys_dispose_about_mesh(
             disposereadylist.push(OpsDisposeReadyForRef::ops(*instance));
         });
 
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass01.id()));
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass02.id()));
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass03.id()));
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass04.id()));
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass05.id()));
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass06.id()));
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass07.id()));
-        disposereadylist.push(OpsDisposeReadyForRef::ops(pass08.id()));
+        passids.0.iter().for_each(|id| {
+            disposereadylist.push(OpsDisposeReadyForRef::ops(*id));
+        });
 
         // // Mesh - Geometry 一对一 直接销毁
         // if let Ok(mut georefs) = geometries.get_mut(idgeo.0) {

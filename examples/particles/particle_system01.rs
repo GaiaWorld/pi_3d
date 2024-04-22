@@ -84,7 +84,7 @@ fn setup(
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
-                    actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
+                    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
                     actions.mesh.render_queue.push(OpsRenderQueue::ops(source, 0, _k % 2));
 
                     //
@@ -107,9 +107,9 @@ fn setup(
                     source
                 };
 
-                actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(item, random.gen_range(size.clone()), random.gen_range(size.clone()), random.gen_range(size.clone())));
-                actions.transform.localrot.push(OpsTransformNodeLocalEuler::ops(item, random.gen_range(euler.clone()), random.gen_range(euler.clone()), random.gen_range(euler.clone())));
-                actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Translation(random.gen_range(size.clone()), random.gen_range(size.clone()), random.gen_range(size.clone()))));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Euler(random.gen_range(euler.clone()), random.gen_range(euler.clone()), random.gen_range(euler.clone()))));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
             }
         }
     }

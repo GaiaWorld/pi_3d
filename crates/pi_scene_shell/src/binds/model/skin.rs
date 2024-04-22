@@ -14,7 +14,7 @@ use crate::shader::*;
 
 
 /// 数据从 Skeleton 创建, 以 Arc 数据拷贝到 ModelBind
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct ShaderBindModelAboutSkinValue {
     pub(crate) skin: ESkinCode,
     pub(crate) data: BindBufferRange,
@@ -165,7 +165,7 @@ impl TShaderBindCode for ShaderBindModelAboutSkinValue {
 }
 
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseSkinValue {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindModelAboutSkinValue>,

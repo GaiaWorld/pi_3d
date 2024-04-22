@@ -9,7 +9,7 @@ use pi_render::renderer::{
 use crate::shader::{texture_bind_code, sampler_bind_code};
 
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindMainCameraOpaqueTexture(pub BindDataTexture2D);
 impl TShaderBindCode for ShaderBindMainCameraOpaqueTexture {
     fn fs_define_code(&self, set: u32, binding: u32) -> String {
@@ -33,7 +33,7 @@ impl TKeyBind for ShaderBindMainCameraOpaqueTexture {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseMainCameraOpaqueTexture {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindMainCameraOpaqueTexture>,
@@ -44,7 +44,7 @@ impl BindUseMainCameraOpaqueTexture {
     }
 }
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindMainCameraOpaqueSampler(pub BindDataSampler);
 
 impl TShaderBindCode for ShaderBindMainCameraOpaqueSampler {
@@ -68,7 +68,7 @@ impl TKeyBind for ShaderBindMainCameraOpaqueSampler {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseMainCameraOpaqueSampler {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindMainCameraOpaqueSampler>,
@@ -81,7 +81,7 @@ impl BindUseMainCameraOpaqueSampler {
 
 
 ///////////// Depth Texture
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindMainCameraDepthTexture(pub BindDataTexture2D);
 impl TShaderBindCode for ShaderBindMainCameraDepthTexture {
     fn fs_define_code(&self, set: u32, binding: u32) -> String {
@@ -105,7 +105,7 @@ impl TKeyBind for ShaderBindMainCameraDepthTexture {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseMainCameraDepthTexture {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindMainCameraDepthTexture>,
@@ -116,7 +116,7 @@ impl BindUseMainCameraDepthTexture {
     }
 }
 
-#[derive(Debug, Clone, Deref, Hash, PartialEq, Eq)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindMainCameraDepthSampler(pub BindDataSampler);
 impl TShaderBindCode for ShaderBindMainCameraDepthSampler {
     fn fs_define_code(&self, set: u32, binding: u32) -> String {
@@ -139,7 +139,7 @@ impl TKeyBind for ShaderBindMainCameraDepthSampler {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindUseMainCameraDepthSampler {
     pub(crate) bind: u32,
     pub(crate) data: Arc<ShaderBindMainCameraDepthSampler>,

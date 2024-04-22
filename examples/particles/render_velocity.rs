@@ -65,7 +65,7 @@ fn setup(
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
-                    actions.mesh.blend.push(OpsRenderBlend::ops(source, blend));
+                    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
                     //
                     let syskey = String::from("Test");
                     let syscfg = demo_cfg(10., 1.);
