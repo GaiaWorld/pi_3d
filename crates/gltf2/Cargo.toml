@@ -1,6 +1,6 @@
 [package]
 name = "pi_gltf2_load"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "GLTF2 Res Manager."

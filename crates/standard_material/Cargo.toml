@@ -1,6 +1,6 @@
 [package]
 name = "pi_standard_material"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."

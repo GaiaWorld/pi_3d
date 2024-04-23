@@ -77,7 +77,7 @@ pub fn sys_env_texture_load_launch(
             _ => {
                 // let imgkey = key.url();
                 let id = image_loader.create_load_env(key.url().clone());
-                loader.wait.push((entity, key.clone(), id));
+                loader.wait.push((entity, key.clone(), id, 0));
             },
         }
     });
@@ -95,7 +95,7 @@ pub fn sys_env_texture_loaded_check(
 ) {
     let mut item = loader.wait.pop();
     let mut waitagain = vec![];
-    while let Some((entity, key, id)) = item {
+    while let Some((entity, key, id, _)) = item {
         item = loader.wait.pop();
 
         let key_u64 = key.asset_u64();
@@ -108,23 +108,23 @@ pub fn sys_env_texture_loaded_check(
             let texkey = EKeyTexture::Image(key);
             RENDER_RUNTIME.spawn(async move {
                 match ImageTextureView::async_load(image, viewkey, result).await {
-                    Ok(res) => { success.push((entity, texkey, ETextureViewUsage::Image(res))); }
-                    Err(_e) => { fail.push((entity, texkey)); }
+                    Ok(res) => { success.push((entity, texkey, ETextureViewUsage::Image(res), 0)); }
+                    Err(_e) => { fail.push((entity, texkey, 0)); }
                 };
             })
             .unwrap();
         } else if let Some(_fail) = image_loader.query_failed_reason(id) {
-            loader.fail.push((entity, EKeyTexture::Image(key)));
+            loader.fail.push((entity, EKeyTexture::Image(key), 0));
             state.texview_fail += 1;
         } else {
-            waitagain.push((entity, key, id));
+            waitagain.push((entity, key, id, 0));
         }
     }
     waitagain.drain(..).for_each(|item| { loader.wait.push(item) });
     state.texview_waiting = loader.wait.len() as u32;
 
     let mut item = loader.success.pop();
-    while let Some((entity, _key, view)) = item {
+    while let Some((entity, _key, view, _)) = item {
         item = loader.success.pop();
         if let Ok((_, mut item, mut irradiance)) = items.get_mut(entity) {
             *item = EnvTexture::from(view);

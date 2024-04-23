@@ -1,6 +1,6 @@
 [package]
 name = "pi_particle_system"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "particle system for Scene."
