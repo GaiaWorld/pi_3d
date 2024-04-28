@@ -20,41 +20,51 @@ impl OpsLightCreate {
 }
 pub type ActionListLightCreate = ActionList<OpsLightCreate>;
 
-pub struct OpsLightColor(pub(crate) Entity, pub(crate) Vector3);
-impl OpsLightColor {
-    pub fn ops(light: Entity, r: Number, g: Number, b: Number) -> Self {
-        Self(light, Vector3::new(r, g, b))
+// pub struct OpsLightColor(pub(crate) Entity, pub(crate) Vector3);
+// impl OpsLightColor {
+//     pub fn ops(light: Entity, r: Number, g: Number, b: Number) -> Self {
+//         Self(light, Vector3::new(r, g, b))
+//     }
+// }
+// pub type ActionListLightColor = ActionList<OpsLightColor>;
+
+pub enum ELightModify {
+    Color(Number, Number, Number),
+    LightingType(LightingMode),
+    Directional(Vector3),
+    SpotAngle(f32, f32),
+    Strength(f32),
+    Radius(f32),
+}
+pub struct OpsLightParam(pub(crate) Entity, pub(crate) ELightModify);
+impl OpsLightParam {
+    pub fn ops(light: Entity, param: ELightModify) -> Self {
+        Self(light, param)
     }
 }
-pub type ActionListLightColor = ActionList<OpsLightColor>;
-
-pub enum ELightModifyCommand {
-    LightingType(Entity, LightingMode),
-    Directional(Entity, Vector3),
-}
-pub type ActionListLightParam = ActionList<ELightModifyCommand>;
+pub type ActionListLightParam = ActionList<OpsLightParam>;
 
 
-pub struct OpsSpotLightAngle(pub(crate) Entity, pub(crate) f32, pub(crate) f32);
-impl OpsSpotLightAngle {
-    pub fn ops(light: Entity, outangle: f32, inangle: f32) -> Self {
-        Self(light, outangle, inangle)
-    }
-}
-pub type ActionListSpotLightAngle = ActionList<OpsSpotLightAngle>;
+// pub struct OpsSpotLightAngle(pub(crate) Entity, pub(crate) f32, pub(crate) f32);
+// impl OpsSpotLightAngle {
+//     pub fn ops(light: Entity, outangle: f32, inangle: f32) -> Self {
+//         Self(light, outangle, inangle)
+//     }
+// }
+// pub type ActionListSpotLightAngle = ActionList<OpsSpotLightAngle>;
 
-pub struct OpsLightStrength(pub(crate) Entity, pub(crate) f32);
-impl OpsLightStrength {
-    pub fn ops(light: Entity, strength: f32) -> Self {
-        Self(light, strength)
-    }
-}
-pub type ActionListLightStrength = ActionList<OpsLightStrength>;
+// pub struct OpsLightStrength(pub(crate) Entity, pub(crate) f32);
+// impl OpsLightStrength {
+//     pub fn ops(light: Entity, strength: f32) -> Self {
+//         Self(light, strength)
+//     }
+// }
+// pub type ActionListLightStrength = ActionList<OpsLightStrength>;
 
-pub struct OpsLightRadius(pub(crate) Entity, pub(crate) f32);
-impl OpsLightRadius {
-    pub fn ops(light: Entity, radius: f32) -> Self {
-        Self(light, radius)
-    }
-}
-pub type ActionListLightRadius = ActionList<OpsLightRadius>;
+// pub struct OpsLightRadius(pub(crate) Entity, pub(crate) f32);
+// impl OpsLightRadius {
+//     pub fn ops(light: Entity, radius: f32) -> Self {
+//         Self(light, radius)
+//     }
+// }
+// pub type ActionListLightRadius = ActionList<OpsLightRadius>;

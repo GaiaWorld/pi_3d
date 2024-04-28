@@ -107,6 +107,9 @@ impl DemoScene {
         camera_position: (f32, f32, f32),
         orthographic_camera: bool
     ) -> Self {
+        let freemode = if orthographic_camera {
+            EFreeCameraMode::Orthograhic
+        } else { EFreeCameraMode::Perspective };
         
         let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
             Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
@@ -122,12 +125,12 @@ impl DemoScene {
         let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
         actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
-        actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
-        actions.camera.active.push(OpsCameraActive::ops(camera, true));
-        actions.camera.size.push(OpsCameraOrthSize::ops(camera, camera_size));
-        actions.camera.fov.push(OpsCameraFov::ops(camera, camera_fov));
-        actions.camera.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
-        actions.camera.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
+        actions.camera.param.push(OpsCameraModify::ops(camera, ECameraModify::FreeMode( freemode ) ));
+        actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::Active( true )));
+        actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::OrthSize( camera_size )));
+        actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::Fov( camera_fov )));
+        actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::Aspect( 800. / 600. )) );
+        actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::NearFar( 0.1,  100.)));
         actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
 
         let opaque_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));

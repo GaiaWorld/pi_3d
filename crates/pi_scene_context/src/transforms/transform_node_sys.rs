@@ -92,6 +92,8 @@ pub fn sys_tree_layer_changed(
 
     state.calc_world_time = (time1 - time).as_micros() as u32;
 }
+
+#[inline(never)]
 fn iter_dirty(
     entity: Entity,
     parent: Entity,
@@ -258,6 +260,7 @@ fn iter_dirty(
     }
 
 
+#[inline(never)]
 fn _calc_world_one(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
@@ -290,6 +293,7 @@ fn _calc_world_one(
     }
 }
 
+#[inline(never)]
 fn calc_world_bytree(
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
     transforms: &mut Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
@@ -325,6 +329,7 @@ fn calc_world_bytree(
     return deep;
 }
 
+#[inline(never)]
 fn calc_world_one_bytree(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
@@ -358,6 +363,7 @@ fn calc_world_one_bytree(
     }
 }
 
+#[inline(never)]
 fn calc_world_root_bytree(
     penable: bool,
     p_m: &Matrix,

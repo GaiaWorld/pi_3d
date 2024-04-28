@@ -42,20 +42,20 @@ impl ActionShadow {
     }
 }
 
-pub struct BundleShadowCaster(
-    RendererID,
-    ShadowParam,
-    ShadowAngle,
-);
+// pub struct BundleShadowCaster(
+//     RendererID,
+//     ShadowParam,
+//     ShadowAngle,
+// );
 
-pub struct BundleShadowCasterDirect(
-    ShadowLinkedLightID,
-    DirectionalShadowDirection,
-    DirectionalShadowProjection,
-);
+// pub struct BundleShadowCasterDirect(
+//     ShadowLinkedLightID,
+//     DirectionalShadowDirection,
+//     DirectionalShadowProjection,
+// );
 
-pub struct BundleShadowCasterSpot(
-    ShadowLinkedLightID,
-    DirectionalShadowDirection,
-    SpotShadowProjection,
-);
+// pub struct BundleShadowCasterSpot(
+//     ShadowLinkedLightID,
+//     DirectionalShadowDirection,
+//     SpotShadowProjection,
+// );

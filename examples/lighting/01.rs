@@ -58,7 +58,7 @@ impl Plugin for PluginTest {
         let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
         actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
     
-        actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 2.));
+        actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
         
         let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
@@ -109,7 +109,7 @@ impl Plugin for PluginTest {
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
-    actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, true));
+    actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
     
     let ins = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(ins, scene));
     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, ins));

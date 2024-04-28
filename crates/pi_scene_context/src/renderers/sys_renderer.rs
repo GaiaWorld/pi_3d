@@ -216,6 +216,8 @@ use super::{
             }
         });
     }
+    
+    #[inline(never)]
     fn _pass_pipeline_request_by_renderer(
         passid: Entity,
         passes: &mut Query<&mut PassPipelineStateDirty>,
@@ -566,6 +568,7 @@ use super::{
     }
 
 
+#[inline(never)]
 fn shader(
     _id_pass: Entity,
     meta: &Handle<ShaderEffectMeta>,
@@ -596,7 +599,7 @@ fn shader(
     let fs_running_before_effect_snippets = vec![];
     let fs_running_after_effect_snippets = vec![];
 
-    log::error!("Shader: {:?}", key_meta);
+    // log::error!("Shader: {:?}", key_meta);
     // log::error!("{:?}", key_attributes);
     // log::error!("{:?}", key_attributes.vs_define_code());
 
@@ -679,6 +682,7 @@ fn shader(
     }
 }
 
+#[inline(never)]
 fn pipeline(
     shader: &Handle<Shader3D>,
     bindgroups: &BindGroups3D,
@@ -741,6 +745,7 @@ fn pipeline(
     }
 }
 
+#[inline(never)]
 fn collect_draw(
     is_transparent: bool,
     pass: u8,
@@ -798,6 +803,7 @@ fn collect_draw(
     }
 }
 
+#[inline(never)]
 fn collect_draw_batch(
     tempdraw: &mut DrawObjTmp,
     pipeline: &Option<Handle<Pipeline3D>>,

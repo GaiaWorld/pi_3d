@@ -26,7 +26,7 @@ pub fn sys_create_scene(
 
     mut meshrenderqueue: ResMut<ActionListRenderQueue>,
     mut geocreate: ResMut<ActionListGeometryCreate>,
-    mut meshboundingmode: ResMut<ActionListMeshBoundingCullingMode>,
+    mut meshstate: ResMut<ActionListMeshStateModify>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool)| {
 
@@ -37,7 +37,7 @@ pub fn sys_create_scene(
 
         if let Some(mut entitycmds) = commands.get_entity(entity) {
             meshcreate.push(OpsMeshCreation::ops(entity, bounding, BoundingBoxDisplay::mesh_state()));
-            meshboundingmode.push(OpsMeshBoundingCullingMode::ops(bounding, ECullingStrategy::None));
+            meshstate.push(OpsMeshStateModify::ops(bounding, EMeshStateModify::BoundingCullingMode( ECullingStrategy::None )));
 
             // meshpolygin.push(OpsPolygonMode::ops(bounding, PolygonMode::Line));
             meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_01, EPrimitiveState::CPolygonMode(PolygonMode::Line)));

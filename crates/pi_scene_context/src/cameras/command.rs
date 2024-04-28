@@ -19,70 +19,87 @@ impl OpsCameraCreation {
 }
 pub type ActionListCameraCreate = ActionList<OpsCameraCreation>;
 
-pub struct OpsCameraMode(pub(crate) Entity, pub(crate) EFreeCameraMode);
-impl OpsCameraMode {
-    pub fn ops(camera: Entity, as_orthograhic: bool) -> Self {
-        if as_orthograhic {
-            Self(camera, EFreeCameraMode::Orthograhic)
-        } else {
-            Self(camera, EFreeCameraMode::Perspective)
-        }
+pub enum ECameraModify {
+    FreeMode(EFreeCameraMode),
+    Active(bool),
+    FixMode(EFixedMode),
+    Fov(Number),
+    OrthSize(Number),
+    Aspect(Number),
+    NearFar(Number, Number),
+}
+pub struct OpsCameraModify(pub(crate) Entity, pub(crate) ECameraModify);
+impl OpsCameraModify {
+    pub fn ops(camera: Entity, val: ECameraModify) -> Self {
+        Self(camera, val)
     }
 }
-pub type ActionListCameraMode = ActionList<OpsCameraMode>;
+pub type ActionListCameraModify = ActionList<OpsCameraModify>;
 
-pub struct OpsCameraActive(pub(crate) Entity, pub(crate) bool);
-impl OpsCameraActive {
-    pub fn ops(camera: Entity, active: bool) -> Self {
-        Self(camera, active)
-    }
-}
-pub type ActionListCameraActive = ActionList<OpsCameraActive>;
+// pub struct OpsCameraMode(pub(crate) Entity, pub(crate) EFreeCameraMode);
+// impl OpsCameraMode {
+//     pub fn ops(camera: Entity, as_orthograhic: bool) -> Self {
+//         if as_orthograhic {
+//             Self(camera, EFreeCameraMode::Orthograhic)
+//         } else {
+//             Self(camera, EFreeCameraMode::Perspective)
+//         }
+//     }
+// }
+// pub type ActionListCameraMode = ActionList<OpsCameraMode>;
+
+// pub struct OpsCameraActive(pub(crate) Entity, pub(crate) bool);
+// impl OpsCameraActive {
+//     pub fn ops(camera: Entity, active: bool) -> Self {
+//         Self(camera, active)
+//     }
+// }
+// pub type ActionListCameraActive = ActionList<OpsCameraActive>;
 
 
-pub struct OpsCameraFixedMode(pub(crate) Entity, pub(crate) EFixedMode);
-impl OpsCameraFixedMode {
-    pub fn ops(camera: Entity, as_horizontal: bool) -> Self {
-        if as_horizontal {
-            Self(camera, EFixedMode::HorizontalFixed)
-        } else {
-            Self(camera, EFixedMode::VerticalFixed)
-        }
-    }
-}
-pub type ActionListCameraFixedMode = ActionList<OpsCameraFixedMode>;
+// pub struct OpsCameraFixedMode(pub(crate) Entity, pub(crate) EFixedMode);
+// impl OpsCameraFixedMode {
+//     pub fn ops(camera: Entity, as_horizontal: bool) -> Self {
+//         if as_horizontal {
+//             Self(camera, EFixedMode::HorizontalFixed)
+//         } else {
+//             Self(camera, EFixedMode::VerticalFixed)
+//         }
+//     }
+// }
+// pub type ActionListCameraFixedMode = ActionList<OpsCameraFixedMode>;
 
-pub struct OpsCameraNearFar(pub(crate) Entity, pub(crate) CameraNearFar);
-impl OpsCameraNearFar {
-    pub fn ops(camera: Entity, near: Number, far: Number) -> Self {
-        Self(camera, CameraNearFar(near, far))
-    }
-}
-pub type ActionListCameraNearFar = ActionList<OpsCameraNearFar>;
+// pub struct OpsCameraNearFar(pub(crate) Entity, pub(crate) CameraNearFar);
+// impl OpsCameraNearFar {
+//     pub fn ops(camera: Entity, near: Number, far: Number) -> Self {
+//         Self(camera, CameraNearFar(near, far))
+//     }
+// }
+// pub type ActionListCameraNearFar = ActionList<OpsCameraNearFar>;
 
-pub struct OpsCameraFov(pub(crate) Entity, pub(crate) CameraFov);
-impl OpsCameraFov {
-    pub fn ops(camera: Entity, fov: Number) -> Self {
-        Self(camera, CameraFov(fov))
-    }
-}
-pub type ActionListCameraFov = ActionList<OpsCameraFov>;
+// pub struct OpsCameraFov(pub(crate) Entity, pub(crate) CameraFov);
+// impl OpsCameraFov {
+//     pub fn ops(camera: Entity, fov: Number) -> Self {
+//         Self(camera, CameraFov(fov))
+//     }
+// }
+// pub type ActionListCameraFov = ActionList<OpsCameraFov>;
 
-pub struct OpsCameraOrthSize(pub(crate) Entity, pub(crate) CameraOrthSize);
-impl OpsCameraOrthSize {
-    pub fn ops(camera: Entity, size: Number) -> Self {
-        Self(camera, CameraOrthSize(size))
-    }
-}
-pub type ActionListCameraOrthSize = ActionList<OpsCameraOrthSize>;
+// pub struct OpsCameraOrthSize(pub(crate) Entity, pub(crate) CameraOrthSize);
+// impl OpsCameraOrthSize {
+//     pub fn ops(camera: Entity, size: Number) -> Self {
+//         Self(camera, CameraOrthSize(size))
+//     }
+// }
+// pub type ActionListCameraOrthSize = ActionList<OpsCameraOrthSize>;
 
-pub struct OpsCameraAspect(pub(crate) Entity, pub(crate) f32);
-impl OpsCameraAspect {
-    pub fn ops(camera: Entity, value: f32) -> Self {
-        Self(camera, value)
-    }
-}
-pub type ActionListCameraAspect = ActionList<OpsCameraAspect>;
+// pub struct OpsCameraAspect(pub(crate) Entity, pub(crate) f32);
+// impl OpsCameraAspect {
+//     pub fn ops(camera: Entity, value: f32) -> Self {
+//         Self(camera, value)
+//     }
+// }
+// pub type ActionListCameraAspect = ActionList<OpsCameraAspect>;
 
 // pub struct OpsCameraPixelSize(pub(crate) Entity, pub(crate) u32, pub(crate) u32);
 // impl OpsCameraPixelSize {

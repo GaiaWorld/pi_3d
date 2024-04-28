@@ -69,14 +69,14 @@ fn setup(
     let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
     actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
     let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
-    actions.mesh.indexrange.push(OpsMeshRenderIndiceRange::ops(source, Some(3), Some(12)));
+    actions.mesh.value_state.push(OpsAbstructMeshValueStateModify::ops(source, EMeshValueStateModify::IndiceRange(Some((3, 12)))));
     // actions.mesh.vertexrange.push(OpsMeshRenderVertexRange::ops(cube, Some(0), Some(12)));
     actions.mesh.primitive_state.push(OpsPrimitiveState::ops(source, DemoScene::PASS_OPAQUE, EPrimitiveState::CCullMode(CullMode::Off)));
 

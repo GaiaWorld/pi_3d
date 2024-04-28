@@ -58,7 +58,7 @@ impl Plugin for PluginTest {
         let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
         actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
     
-        actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 0.7));
+        actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 0.7 )));
         actions.camera.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
 
         let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));

@@ -59,7 +59,7 @@ impl Plugin for PluginTest {
         let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
         actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
     
-        actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 0.7));
+        actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 0.7 )));
         actions.camera.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
 
         let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
@@ -148,9 +148,9 @@ impl Plugin for PluginTest {
 
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(0., -1., 0.)));
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
-    actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, true));
+    actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
     lights.iter().for_each(|light| {
-        actions.abstructmesh.force_point_light.push(OpsMeshForcePointLighting::ops(source, *light, true));
+        actions.mesh.forcelighting.push(OpsMeshForceLighting::ops(source, *light, EMeshForceLighting::ForcePointLighting(true)));
     });
 
         let cell_col = 4.;

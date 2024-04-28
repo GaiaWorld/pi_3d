@@ -28,10 +28,10 @@ impl Plugin for PluginLighting {
         // app.world.insert_resource(SingleLightCreateCommands::default());
         app.insert_resource(ActionListLightCreate::default());
         app.insert_resource(ActionListLightParam::default());
-        app.insert_resource(ActionListLightColor::default());
-        app.insert_resource(ActionListSpotLightAngle::default());
-        app.insert_resource(ActionListLightStrength::default());
-        app.insert_resource(ActionListLightRadius::default());
+        // app.insert_resource(ActionListLightColor::default());
+        // app.insert_resource(ActionListSpotLightAngle::default());
+        // app.insert_resource(ActionListLightStrength::default());
+        // app.insert_resource(ActionListLightRadius::default());
         app.insert_resource(StateLight::default());
         
         app.configure_set(Update, StageLighting::LightCreate.after(StageScene::Create));

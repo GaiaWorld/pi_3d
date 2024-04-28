@@ -13,13 +13,13 @@ impl OpsMeshBounding {
 pub type ActionListMeshBounding = ActionList<OpsMeshBounding>;
 
 
-pub struct OpsMeshBoundingCullingMode(pub(crate) Entity, pub(crate) ECullingStrategy);
-impl OpsMeshBoundingCullingMode {
-    pub fn ops(entity: Entity, mode: ECullingStrategy) -> Self {
-        Self(entity, mode)
-    }
-}
-pub type ActionListMeshBoundingCullingMode = ActionList<OpsMeshBoundingCullingMode>;
+// pub struct OpsMeshBoundingCullingMode(pub(crate) Entity, pub(crate) ECullingStrategy);
+// impl OpsMeshBoundingCullingMode {
+//     pub fn ops(entity: Entity, mode: ECullingStrategy) -> Self {
+//         Self(entity, mode)
+//     }
+// }
+// pub type ActionListMeshBoundingCullingMode = ActionList<OpsMeshBoundingCullingMode>;
 
 pub struct OpsBoundingBoxDisplay(pub(crate) Entity, pub(crate) bool, pub(crate) PassTag);
 impl OpsBoundingBoxDisplay {

@@ -43,17 +43,17 @@ impl crate::Plugin for PluginMesh {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListMeshCreate::default());
         app.insert_resource(ActionListInstanceMeshCreate::default());
-        app.insert_resource(ActionListMeshShadow::default());
-        app.insert_resource(ActionListMeshRenderAlignment::default());
-        app.insert_resource(ActionListAbstructMeshScalingMode::default());
-        app.insert_resource(ActionListAbstructMeshVelocity::default());
+        app.insert_resource(ActionListMeshStateModify::default());
+        app.insert_resource(ActionListAbstructMeshValueStateModify::default());
+        // app.insert_resource(ActionListAbstructMeshScalingMode::default());
+        // app.insert_resource(ActionListAbstructMeshVelocity::default());
         app.insert_resource(ActionListInstanceAttr::default());
-        app.insert_resource(ActionListMeshRenderIndiceRange::default());
-        app.insert_resource(ActionListMeshRenderVertexRange::default());
-        app.insert_resource(ActionListBoneOffset::default());
-        app.insert_resource(ActionListMeshForcePointLighting::default());
-        app.insert_resource(ActionListMeshForceSpotLighting::default());
-        app.insert_resource(ActionListMeshForceHemiLighting::default());
+        // app.insert_resource(ActionListMeshRenderIndiceRange::default());
+        // app.insert_resource(ActionListMeshRenderVertexRange::default());
+        // app.insert_resource(ActionListBoneOffset::default());
+        app.insert_resource(ActionListMeshForceLighting::default());
+        // app.insert_resource(ActionListMeshForceSpotLighting::default());
+        // app.insert_resource(ActionListMeshForceHemiLighting::default());
         app.insert_resource(ActionListTargetAnimationAttribute::default());
 
         app.configure_set(Update, StageModel::CreateMesh.after(StageMaterial::Create));

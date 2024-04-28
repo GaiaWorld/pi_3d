@@ -28,7 +28,7 @@ pub fn sys_create_cpu_partilce_system(
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
     mut disposeready: ResMut<ActionListDisposeReadyForRef>,
-    mut meshes: ResMut<ActionListMeshRenderAlignment>,
+    mut meshes: ResMut<ActionListMeshStateModify>,
     mut performance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
@@ -54,7 +54,7 @@ pub fn sys_create_cpu_partilce_system(
             performance.maxparticles = (performance.maxparticles.max(maxcount as u32) / 64 + 1) * 64;
 
             if let Some(val) = base.render_align() {
-                meshes.push(OpsMeshRenderAlignment::ops(entity, val));
+                meshes.push(OpsMeshStateModify::ops(entity, EMeshStateModify::Alignment(val)));
             }
 
             entitycmd
@@ -162,7 +162,17 @@ pub fn sys_create_cpu_partilce_system(
 pub fn sys_act_partilce_system_state(
     mut cmds: ResMut<ActionListCPUParticleSystemState>,
     mut items: Query<(&mut ParticleSystemActive, &mut ParticleSystemTime)>,
+    mut trail_cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
+    trail_items: Query<&ParticleTrailMesh>,
+    mut actions: ResMut<ActionListMaterialUse>,
 ) {
+    trail_cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count)| {
+        if let Ok(trail) = trail_items.get(entity) {
+            actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
+        } else if count < 8 {
+            trail_cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
+        }
+    });
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsCPUParticleSystemState::Start(entity, count) => {
@@ -190,16 +200,16 @@ pub fn sys_act_partilce_system_state(
     });
 }
 
-pub fn sys_act_particle_system_trail_material(
-    mut cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
-    items: Query<&ParticleTrailMesh>,
-    mut actions: ResMut<ActionListMaterialUse>,
-) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count)| {
-        if let Ok(trail) = items.get(entity) {
-            actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
-        } else if count < 8 {
-            cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
-        }
-    });
-}
+// pub fn sys_act_particle_system_trail_material(
+//     mut trail_cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
+//     trail_items: Query<&ParticleTrailMesh>,
+//     mut actions: ResMut<ActionListMaterialUse>,
+// ) {
+//     trail_cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count)| {
+//         if let Ok(trail) = trail_items.get(entity) {
+//             actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
+//         } else if count < 8 {
+//             trail_cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
+//         }
+//     });
+// }

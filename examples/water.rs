@@ -80,7 +80,7 @@ pub fn setup(
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderWater::KEY), ShaderWater::meta(&mut nodematblocks));
-    log::warn!("PluginShaderWater Regist!!!");
+    // log::warn!("PluginShaderWater Regist!!!");
 }
 
 pub struct PluginShaderWater;

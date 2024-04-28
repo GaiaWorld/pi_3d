@@ -141,7 +141,7 @@ pub fn sys_calc_render_matrix_instance(
     });
     
     let time1 = pi_time::Instant::now();
-    log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
+    // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
 }
 
 pub fn sys_render_matrix_for_uniform(

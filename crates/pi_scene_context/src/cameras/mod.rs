@@ -38,15 +38,15 @@ pub struct PluginCamera;
 impl Plugin for PluginCamera {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListCameraCreate::default());
-        app.insert_resource(ActionListCameraMode::default());
+        app.insert_resource(ActionListCameraModify::default());
         app.insert_resource(ActionListCameraTarget::default());
-        app.insert_resource(ActionListCameraActive::default());
-        app.insert_resource(ActionListCameraFixedMode::default());
-        app.insert_resource(ActionListCameraFov::default());
-        app.insert_resource(ActionListCameraOrthSize::default());
-        app.insert_resource(ActionListCameraAspect::default());
+        // app.insert_resource(ActionListCameraActive::default());
+        // app.insert_resource(ActionListCameraFixedMode::default());
+        // app.insert_resource(ActionListCameraFov::default());
+        // app.insert_resource(ActionListCameraOrthSize::default());
+        // app.insert_resource(ActionListCameraAspect::default());
         // app.insert_resource(ActionListCameraPixelSize::default());
-        app.insert_resource(ActionListCameraNearFar::default());
+        // app.insert_resource(ActionListCameraNearFar::default());
         // app.insert_resource(ActionListCameraRenderer::default());
         app.insert_resource(StateCamera::default());
 

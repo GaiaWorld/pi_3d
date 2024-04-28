@@ -5,7 +5,7 @@ use pi_scene_math::Vector3;
 
 use crate::{prelude::StageModel, viewer::prelude::sys_abstructmesh_culling_flag_reset, scene::StageScene, materials::prelude::StageMaterial};
 
-use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::{sys_update_culling_by_worldmatrix, sys_update_culling_by_cullinginfo}, command::{ActionListMeshBounding, ActionListMeshBoundingCullingMode, ActionListBoundingBoxDisplay}, command_sys::{sys_act_mesh_bounding, sys_act_mesh_bounding_culling_display}};
+use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::*, command::*, command_sys::*};
 
 mod bounding_box;
 mod bounding_sphere;
@@ -41,7 +41,6 @@ pub struct PluginCulling;
 impl Plugin for PluginCulling {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListMeshBounding::default());
-        app.insert_resource(ActionListMeshBoundingCullingMode::default());
         app.insert_resource(ActionListBoundingBoxDisplay::default());
 
         app.configure_set(Update, StageCulling::Command.after(StageScene::_Insert).before(StageMaterial::Command));

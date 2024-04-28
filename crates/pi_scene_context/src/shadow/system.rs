@@ -234,8 +234,9 @@ pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix + Comp
 
     // log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
 }
+#[inline(never)]
 fn _sys_update_shadow_viewer_model_list_by_viewer(
-    vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, mut list_model: &mut ModelList, mut flag_list_model: &mut FlagModelList,
+    vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
     items: &Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &MeshCastShadow),
     >,
@@ -292,31 +293,12 @@ pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Compo
                 id_obj, iscene, ilayer, instances, disposestate, castshadow,
                 vieweractive, scene, layer, &mut list_model, &mut flag_list_model
             );
-            // if vieweractive.0 {
-            //     if iscene == scene && disposestate.0 == false {
-            //         if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
-            //             if layer.include(ilayer.0) && castshadow.0 {
-            //                 list_model.0.insert(id_obj);
-            //                 *flag_list_model = FlagModelList::default();
-            //                 instances.iter().for_each(|entity| {
-            //                     list_model.0.insert(*entity);
-            //                 });
-            //             } else {
-            //                 list_model.0.remove(&id_obj);
-            //                 instances.iter().for_each(|entity| {
-            //                     list_model.0.remove(entity);
-            //                 });
-            //             }
-            //         }
-            //     } else {
-            //         list_model.0.remove(&id_obj);
-            //     }
-            // }
         });
     });
 
     // log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
 }
+#[inline(never)]
 fn _sys_update_shadow_viewer_model_list_by_model(
     id_obj: Entity, iscene: &SceneID, ilayer: Option<&LayerMask>, instances: Option<&InstanceSourceRefs>, disposestate: &DisposeReady, castshadow: &MeshCastShadow,
     vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,

@@ -60,7 +60,7 @@ fn setup(
     actions.transform
         .localpos
         .push(OpsTransformNodeLocalPosition::ops(camera01, 0., 0., -10.));
-    actions.camera.active.push(OpsCameraActive::ops(camera01, true));
+    actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::Active( true )));
     actions.camera
         .size
         .push(OpsCameraOrthSize::ops(camera01, tes_size as f32));

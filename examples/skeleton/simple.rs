@@ -40,7 +40,7 @@ fn setup(
     let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
     actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState::default()));

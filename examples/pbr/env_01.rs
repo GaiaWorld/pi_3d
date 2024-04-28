@@ -58,7 +58,7 @@ impl Plugin for PluginTest {
         let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
         actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
     
-        actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 2.));
+        actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
 
         actions.scene.brdf.push(OpsSceneBRDF::ops(scene, Atom::from("./assets/images/fractal.png"), false));
         // actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01_image.env")), true));
@@ -165,9 +165,9 @@ impl Plugin for PluginTest {
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
-    actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, true));
+    actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
     lights.iter().for_each(|light| {
-        actions.abstructmesh.force_point_light.push(OpsMeshForcePointLighting::ops(source, *light, true));
+        actions.mesh.forcelighting.push(OpsMeshForceLighting::ops(source, *light, EMeshForceLighting::ForcePointLighting(true)));
     });
 
         for i in 0..tes_size {

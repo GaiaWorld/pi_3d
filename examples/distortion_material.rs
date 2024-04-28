@@ -72,7 +72,7 @@ pub fn setup(
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderDistortion::KEY), ShaderDistortion::meta(&mut nodematblocks));
-    log::warn!("PluginPBRMaterial Regist!!!");
+    // log::warn!("PluginPBRMaterial Regist!!!");
 }
 
 pub struct PluginDistortionMaterial;

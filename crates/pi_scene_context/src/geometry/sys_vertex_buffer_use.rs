@@ -11,6 +11,7 @@ use super::{
     geometry::*
 };
 
+#[inline(never)]
 fn _sys_vertex_buffer_slots_loaded(
     mut values: Vec<(wgpu::VertexStepMode, RenderVertices)>,
     mut instance_memory: Option<EVerteicesMemory>,

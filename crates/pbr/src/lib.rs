@@ -26,7 +26,7 @@ pub fn setup(
     blocks.regist::<NMBlackSurfaceLighting>();
     blocks.regist::<NMBlackPBRLighting>();
     blocks.regist::<PrincipledBRDF>();
-    log::warn!("PluginPBR: PrincipledBRDF !!!!");
+    // log::warn!("PluginPBR: PrincipledBRDF !!!!");
 }
 
 pub struct PluginPBR;

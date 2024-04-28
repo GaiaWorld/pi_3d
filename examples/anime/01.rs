@@ -39,7 +39,7 @@ fn setup(
     actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
-    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());

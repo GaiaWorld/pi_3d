@@ -69,7 +69,7 @@ impl Plugin for PluginParticleSystem {
         app.add_systems(
 			Update,
             (
-                sys_act_particle_system_trail_material,
+                // sys_act_particle_system_trail_material,
                 sys_act_partilce_system_state,
             ).chain().in_set(StageParticleSystem::ParticleSysCommand),
         );
@@ -83,27 +83,29 @@ impl Plugin for PluginParticleSystem {
         app.add_systems(
 			Update,
             (
-                sys_emitter             , // .run_if(should_run),
-                sys_start_lifetime      , // .run_if(should_run),
-                sys_start_size          , // .run_if(should_run),
-                sys_start_rotation      , // .run_if(should_run),
-                sys_start_color         , // .run_if(should_run),
-                sys_start_texture_sheet , // .run_if(should_run),
+                sys_start
+                // sys_emitter             , // .run_if(should_run),
+                // sys_start_lifetime      , // .run_if(should_run),
+                // sys_start_size          , // .run_if(should_run),
+                // sys_start_rotation      , // .run_if(should_run),
+                // sys_start_color         , // .run_if(should_run),
+                // sys_start_texture_sheet , // .run_if(should_run),
             ).after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart),
         );
         app.add_systems(
 			Update,
             (
-                sys_gravity                         , // .run_if(should_run),
-                sys_size_over_life_time             , // .run_if(should_run),
-                sys_color_over_life_time            , // .run_if(should_run),
-                sys_rotation_over_life_time         , // .run_if(should_run),
-                sys_force_over_life_time            , // .run_if(should_run),
-                sys_velocity_over_life_time         , // .run_if(should_run),
-                sys_orbit_over_life_time            , // .run_if(should_run),
-                sys_speed_modifier_over_life_time   , // .run_if(should_run),
-                sys_limit_velocity_over_life_time   , // .run_if(should_run),
-                sys_texturesheet                    , // .run_if(should_run),
+                sys_over_lifetime,
+                // sys_gravity                         , // .run_if(should_run),
+                // sys_size_over_life_time             , // .run_if(should_run),
+                // sys_color_over_life_time            , // .run_if(should_run),
+                // sys_rotation_over_life_time         , // .run_if(should_run),
+                // sys_force_over_life_time            , // .run_if(should_run),
+                // sys_velocity_over_life_time         , // .run_if(should_run),
+                // sys_orbit_over_life_time            , // .run_if(should_run),
+                // sys_speed_modifier_over_life_time   , // .run_if(should_run),
+                // sys_limit_velocity_over_life_time   , // .run_if(should_run),
+                // sys_texturesheet                    , // .run_if(should_run),
             ).in_set(StageParticleSystem::ParticleSysParamOverLifetime),
         );
         app.add_systems(Update, 
@@ -113,9 +115,10 @@ impl Plugin for PluginParticleSystem {
         app.add_systems(
 			Update,
             (
-                sys_color_by_speed              , // .run_if(should_run),
-                sys_size_by_speed               , // .run_if(should_run),
-                sys_rotation_by_speed           , // .run_if(should_run),
+                sys_by_speed,
+                // sys_color_by_speed              , // .run_if(should_run),
+                // sys_size_by_speed               , // .run_if(should_run),
+                // sys_rotation_by_speed           , // .run_if(should_run),
             ).in_set(StageParticleSystem::ParticleSysParamBySpeed),
         );
         app.add_systems(Update,

@@ -229,6 +229,7 @@ impl Ord for TmpInstanceSort {
         instancedcache.upload(&queue);
     }
 
+#[inline(never)]
 pub fn reset_instances_buffer(
     idgeo: Entity,
     instancedinfo: &InstancedInfo,
@@ -269,6 +270,7 @@ pub fn reset_instances_buffer(
     reset_instances_buffer_range(idgeo, instancedinfo, slots, data, count);
 }
 
+#[inline(never)]
 pub fn reset_instances_buffer_range(
     idgeo: Entity,
     instancedinfo: &InstancedInfo,
@@ -315,6 +317,7 @@ pub fn reset_instances_buffer_range(
     };
 }
 
+#[inline(never)]
 pub fn reset_instances_buffer_single(
     idgeo: Entity,
     instancedinfo: &InstancedInfo,

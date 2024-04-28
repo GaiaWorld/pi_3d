@@ -44,7 +44,7 @@ pub fn setup(
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderPreDepth::KEY), ShaderPreDepth::meta(&mut nodematblocks));
-    log::warn!("PluginShaderPreDepth Regist!!!");
+    // log::warn!("PluginShaderPreDepth Regist!!!");
 }
 
 pub struct PluginShaderPreDepth;

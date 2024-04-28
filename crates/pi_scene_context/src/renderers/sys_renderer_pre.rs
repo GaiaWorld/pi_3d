@@ -71,6 +71,8 @@ pub fn sys_sets_modify_by_viewer(
 
     // log::trace!("SysSet0ModifyByRendererID: {:?}", pi_time::Instant::now() - time1);
 }
+
+#[inline(never)]
 fn _sets_modify_by_viewer(
     idrenderer: Entity,
     idviewer: Entity,
@@ -92,6 +94,8 @@ fn _sets_modify_by_viewer(
         }
     });
 }
+
+#[inline(never)]
 fn __sets_modify_by_viewer(
     idrenderer: Entity,
     idviewer: Entity,

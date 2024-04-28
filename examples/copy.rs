@@ -60,7 +60,7 @@ impl PluginImageCopy {
             actions.mesh.layermask.push(OpsLayerMask::ops(copycamera, 0));
             actions.mesh.layermask.push(OpsLayerMask::ops(plane, 0));
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
-            actions.camera.active.push(OpsCameraActive::ops(copycamera, true));
+            actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
             let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
@@ -119,7 +119,7 @@ impl PluginImageCopy {
             actions.mesh.layermask.push(OpsLayerMask::ops(copycamera, 0));
             actions.mesh.layermask.push(OpsLayerMask::ops(plane, 0));
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
-            actions.camera.active.push(OpsCameraActive::ops(copycamera, true));
+            actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
             let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
