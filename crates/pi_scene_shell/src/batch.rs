@@ -1,4 +1,4 @@
-use bevy_ecs::component::Component;
+// use bevy_ecs::component::Component;
 
 
 pub struct BatchParam {
@@ -15,8 +15,8 @@ impl Default for BatchParam {
     }
 }
 
-#[derive(Component, Default)]
+#[derive( Default)]
 pub struct BatchParamOpaque(pub BatchParam);
 
-#[derive(Component, Default)]
+#[derive( Default)]
 pub struct BatchParamTransparent(pub BatchParam);

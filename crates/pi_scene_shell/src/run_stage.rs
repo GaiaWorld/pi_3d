@@ -1,8 +1,12 @@
 
 
-use bevy_ecs::prelude::*;
-use bevy_app::prelude::{Plugin, Update};
+// use bevy_ecs::prelude::*;
+// use bevy_app::prelude::{Plugin, Update};
 use pi_bevy_render_plugin::{PiRenderSystemSet, FrameState, should_run};
+use pi_world::schedule::Update;
+use pi_world::schedule_config::{IntoSystemConfigs, SystemSet};
+use pi_world::single_res::{SingleRes, SingleResMut};
+use pi_world_extend_plugin::plugin::Plugin;
 
 use crate::prelude::{EngineInstant, ErrorRecord};
 use crate::prelude::FrameDataPrepare;
@@ -132,32 +136,32 @@ pub enum ERunStageChap {
 
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
-    fn build(&self, app: &mut bevy_app::prelude::App) {
-        app.configure_set(Update, ERunStageChap::New);
-        app.configure_set(Update, ERunStageChap::Initial.after(ERunStageChap::New));
-        app.configure_set(Update, ERunStageChap::_InitialApply.after(ERunStageChap::Initial));
-        app.configure_set(Update, ERunStageChap::AnimeAmount.in_set(FrameDataPrepare).after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, ERunStageChap::Anime.in_set(FrameDataPrepare).after(ERunStageChap::AnimeAmount));
-        app.configure_set(Update, ERunStageChap::Uniform.in_set(FrameDataPrepare).after(ERunStageChap::Anime));
-        app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::Uniform));
-        app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
-        app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
+    fn build(&self, app: &mut pi_world::prelude::App) {
+        // app.configure_set(Update, ERunStageChap::New);
+        // app.configure_set(Update, ERunStageChap::Initial);
+        // app.configure_set(Update, ERunStageChap::_InitialApply);
+        // app.configure_set(Update, ERunStageChap::AnimeAmount.in_set(FrameDataPrepare).after(ERunStageChap::_InitialApply));
+        // app.configure_set(Update, ERunStageChap::Anime.in_set(FrameDataPrepare).after(ERunStageChap::AnimeAmount));
+        // app.configure_set(Update, ERunStageChap::Uniform.in_set(FrameDataPrepare).after(ERunStageChap::Anime));
+        // app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::Uniform));
+        // app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
+        // app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
 
-        app.insert_resource(ErrorRecord(vec![], false));
+        app.world.register_single_res(ErrorRecord(vec![], false));
 
-        app.insert_resource(RunState3D::default());
+        app.world.register_single_res(RunState3D::default());
 
-        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
-        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
+        // app.add_system(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
+        // app.add_system(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
 
-        app.insert_resource(RunSystemRecord::default());
-        app.add_systems(Update, sys_reset_system_record.in_set(ERunStageChap::StateCheck));
+        app.world.register_single_res(RunSystemRecord::default());
+        app.add_system(Update, sys_reset_system_record);
 
-        app.insert_resource(EngineInstant(pi_time::Instant::now()));
+        app.world.register_single_res(EngineInstant(pi_time::Instant::now()));
     }
 }
 
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct RunState3D(u32);
 impl Default for RunState3D {
     fn default() -> Self {
@@ -192,23 +196,23 @@ impl RunState3D {
 }
 
 pub fn should_run_with_lighting(
-    state: Res<FrameState>,
-    state3d: Res<RunState3D>,
+    state: SingleRes<FrameState>,
+    state3d: SingleRes<RunState3D>,
 ) -> bool {
     should_run(state) && (state3d.0 & RunState3D::USE_LIGHTING) == RunState3D::USE_LIGHTING
 }
 
 pub fn should_run_with_animation(
-    state: Res<FrameState>,
-    state3d: Res<RunState3D>,
+    state: SingleRes<FrameState>,
+    state3d: SingleRes<RunState3D>,
 ) -> bool {
     should_run(state) && (state3d.0 & RunState3D::ANIMATION) == RunState3D::ANIMATION
 }
 
-#[derive(Default, Resource)]
+#[derive(Default)]
 pub struct RunSystemRecord(pub Vec<String>);
 
-pub fn sys_reset_system_record(mut record: ResMut<RunSystemRecord>) {
+pub fn sys_reset_system_record(mut record: SingleResMut<RunSystemRecord>) {
     // #[cfg(not(target_arch = "wasm32"))]
     // {
     //     let mut txt = String::from("");

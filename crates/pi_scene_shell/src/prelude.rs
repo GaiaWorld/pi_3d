@@ -1,12 +1,12 @@
 use std::{hash::Hash, mem::replace, ops::Range};
 
-pub use bevy_ecs::{prelude::*, system::{CommandQueue, EntityCommands, SystemState, SystemParam}};
-pub use bevy_app::{prelude::*, PluginGroupBuilder};
-pub use bevy_hierarchy::prelude::*;
-pub use bevy_input::{prelude::*, InputPlugin};
-pub use bevy_log::prelude::*;
-pub use bevy_math::prelude::*;
-pub use bevy_time::prelude::*;
+// pub use bevy_ecs::{prelude::*, system::{CommandQueue, EntityCommands, SystemState, SystemParam}};
+// pub use bevy_app::{prelude::*, PluginGroupBuilder};
+// pub use bevy_hierarchy::prelude::*;
+// pub use bevy_input::{prelude::*, InputPlugin};
+// pub use bevy_log::prelude::*;
+// pub use bevy_math::prelude::*;
+// pub use bevy_time::prelude::*;
 pub use parry3d::{
     bounding_volume::Aabb,
     na::{Isometry3 as NAIsometry3, Point3},
@@ -75,6 +75,7 @@ pub use pi_hash::{XHashSet, XHashMap, DefaultHasher};
 pub use pi_async_rt::prelude::AsyncRuntime;
 pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 pub use pi_share::{Share, ThreadSync, ShareRefCell};
+use pi_world::world::Entity;
 
 pub use crate::run_stage::ERunStageChap;
 pub use crate::object::ObjectID;
@@ -102,35 +103,35 @@ pub use crate::custom_rendertarget::*;
 pub use crate::object::*;
 pub use crate::batch::*;
 
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);
 
 ///
-#[derive(Default, Clone, Hash, PartialEq, Eq, Component)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct EffectTextureSamplersComp(pub Option<EffectTextureSamplers>);
 
 /////////////////////////////////////// Global Control
-#[derive(Component)]
+// #[derive(Component)]
 pub enum GlobalColorSpace {
     Linear,
     Gamma,
 }
 
 /////////////////////////////////////// Bind Buffer
-#[derive(Resource, DerefMut, Deref)]
+#[derive( DerefMut, Deref)]
 pub struct ResBindBufferAllocator(pub BindBufferAllocator);
 
 ////////////////////////////////////// Vertex Buffer
-#[derive(Resource, DerefMut, Deref)]
+#[derive( DerefMut, Deref)]
 pub struct VertexBufferAllocator3D(pub VertexBufferAllocator);
 
-#[derive(Default, Deref, DerefMut, Resource)]
+#[derive(Default, Deref, DerefMut, )]
 pub struct VBLoaderSlot<T: Clone + core::hash::Hash + PartialEq + Eq, D: From<EVerticesBufferUsage>>(pub VertexBufferLoader<T, D>);
 
-#[derive(Resource, DerefMut, Deref)]
+#[derive( DerefMut, Deref)]
 pub struct VertexBufferDataMap3D(pub SingleVertexBufferDataMap);
 
-#[derive(Component, Clone)]
+#[derive( Clone)]
 pub struct IndicesBufferDesc {
     pub format: wgpu::IndexFormat,
     /// bytes 范围
@@ -138,7 +139,7 @@ pub struct IndicesBufferDesc {
     pub buffer: KeyVertexBuffer,
 }
 
-#[derive(Deref, Clone, Hash, Component)]
+#[derive(Deref, Clone, Hash, )]
 pub struct AssetKeyBufferIndices(pub KeyVertexBuffer);
 
 // TODO Send问题， 临时解决
@@ -173,7 +174,7 @@ impl HashAsResource for VertexBufferDesc {
     }
 }
 
-#[derive(Deref, Component)]
+#[derive(Deref, )]
 pub struct AssetResBufferIndices(pub EVerticesBufferUsage);
 
 // TODO Send问题， 临时解决
@@ -186,13 +187,13 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
     }
 }
 
-#[derive(Component)]
+// #[derive(Component)]
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts, pub KeyShaderFromAttributes);
 
 ////////////////////////////////////// Shader
 pub type KeyShaderMeta = Atom;
 
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct ResBindsRecorder();
 
 /// 操作队列 最多等待 ACTION_WAIT_FRAME 帧
@@ -203,7 +204,7 @@ pub trait TAction {
 }
 
 ////////////////////////////////////// Commands
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct ActionList<T: Send + Sync + 'static>(Vec<T>);
 impl<T: Send + Sync> Default for ActionList<T> {
     fn default() -> Self {
@@ -229,7 +230,7 @@ impl<T: Send + Sync> ActionList<T> {
     }
 }
 
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct SingleEmptyEntity(Entity);
 impl SingleEmptyEntity {
     pub fn new(id: Entity) -> Self {
@@ -241,7 +242,7 @@ impl SingleEmptyEntity {
 }
 
 
-#[derive(Resource, Default)]
+#[derive( Default)]
 pub struct Performance {
     pub worldmatrix: u32,
     pub culling: u32,

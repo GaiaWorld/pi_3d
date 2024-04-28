@@ -1,7 +1,7 @@
 
 use std::sync::Arc;
 
-use bevy_ecs::component::Component;
+// use bevy_ecs::component::Component;
 use pi_render::renderer::texture::*;
 use wgpu::{TextureView, TextureFormat};
 
@@ -21,7 +21,7 @@ pub enum ETextureSlot {
     Tex08,
 }
 
-#[derive(Clone, Hash, Component)]
+#[derive(Clone, Hash)]
 pub struct TextureKeyList (pub [crate::Arc<UniformTextureWithSamplerParam>; TEXTURE_SLOT_COUNT]);
 impl Default for TextureKeyList {
     fn default() -> Self {

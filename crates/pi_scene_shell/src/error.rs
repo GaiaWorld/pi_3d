@@ -1,15 +1,16 @@
-use bevy_ecs::{system::Resource, entity::Entity};
+// use bevy_ecs::{system::Resource, entity::Entity};
 use pi_bevy_render_plugin::GraphError;
-
+use pi_world::world::Entity;
+use pi_slotmap::Key;
 
 pub type EErorr = u32;
 
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct ErrorRecord(pub Vec<u32>, pub bool);
 impl ErrorRecord {
     pub fn record(&mut self, entity: Entity, error: EErorr) {
         if self.1 {
-            self.0.push(entity.index());
+            self.0.push(entity.index() as u32);
             self.0.push(error);
         }
     }

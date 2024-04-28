@@ -1,10 +1,10 @@
-use bevy_ecs::component::Component;
+// use bevy_ecs::component::Component;
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::{Vector3, Number};
 
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy)]
 pub struct AnimatorableVec3(pub Vector3);
 impl Default for AnimatorableVec3 {
     fn default() -> Self {
@@ -42,7 +42,7 @@ impl TAssetCapacity for AnimatorableVec3 {
 }
 impl TAnimatableComp for AnimatorableVec3 {}
 
-#[derive(Clone, Copy, Component, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct RecordAnimatorableVec3(pub AnimatorableVec3);
 impl TAnimatableCompRecord<AnimatorableVec3> for RecordAnimatorableVec3 {
     fn comp(&self) -> AnimatorableVec3 {

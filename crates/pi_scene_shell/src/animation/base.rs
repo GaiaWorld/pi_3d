@@ -13,10 +13,11 @@ use pi_bevy_asset::TAssetCapacity;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FrameIndex};
 use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
+use pi_world::{query::Query, world::Entity};
 
-use bevy_ecs::prelude::*;
+// use bevy_ecs::prelude::*;
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy)]
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
 pub struct FlagAnimationStartResetComp;
 
@@ -24,7 +25,7 @@ pub type KeyAnimeCurve = String;
 
 pub type IDAssetTypeFrameCurve = u64;
 
-#[derive(Clone, Copy, PartialEq, Eq, Component, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SceneID(pub Entity);
 
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
@@ -50,8 +51,8 @@ impl<F: FrameDataValue+ 'static> AsRef<FrameCurve<F>> for AssetTypeFrameCurve<F>
     }
 }
 
-#[derive(Resource, Deref, DerefMut)]
-pub struct TypeAnimeContext<D: TAnimatableComp> {
+#[derive(Deref, DerefMut)]
+pub struct TypeAnimeContext<D: TAnimatableComp + 'static> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
 }
 impl<D: TAnimatableComp> TypeAnimeContext<D> {
@@ -60,14 +61,14 @@ impl<D: TAnimatableComp> TypeAnimeContext<D> {
     }
 }
 
-pub trait TAnimatableComp: Default + FrameDataValue + Component + TAssetCapacity {
+pub trait TAnimatableComp: Default + FrameDataValue  + TAssetCapacity + Sync +Send {
 
 }
-pub trait TAnimatableCompRecord<T: TAnimatableComp>: Component {
+pub trait TAnimatableCompRecord<T: TAnimatableComp> : Sync +Send{
     fn comp(&self) -> T;
 }
 
-#[derive(Default, Component)]
+#[derive(Default)]
 pub struct AnimationGroups {
     pub map: XHashMap<AnimationGroupID, AnimationGroupID>,
 }
@@ -83,10 +84,10 @@ impl TagGroupListen {
 
 pub type AnimeFrameEventData = u32;
 
-#[derive(Component)]
+
 pub struct AnimationGroupKey(pub DefaultKey);
 
-#[derive(Component)]
+
 pub struct AnimationGroupScene(pub Entity);
 
 pub enum EAnimatorableEntityType {
@@ -94,13 +95,11 @@ pub enum EAnimatorableEntityType {
     Attribute,
 }
 
-#[derive(Component)]
+
 pub struct AnimatorableUniform;
 
-#[derive(Component)]
 pub struct AnimatorableAttribute;
 
-#[derive(Resource)]
 pub struct GlobalAnimeAbout {
     pub ty_alloc: KeyFrameDataTypeAllocator,
     pub runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap<Entity>,
@@ -142,10 +141,10 @@ impl GlobalAnimeAbout {
     }
 }
 
-#[derive(Resource, Deref, DerefMut, Default)]
+#[derive( Deref, DerefMut, Default)]
 pub struct GlobalAnimeEvents(pub Vec<(Entity, Entity, u8, u32)>);
 
-#[derive(Component)]
+
 pub struct SceneAnimationContext(pub AnimationContextAmount<Entity, AnimationGroupManagerDefault<Entity>>);
 impl SceneAnimationContext {
     pub fn new() -> Self {

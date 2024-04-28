@@ -2,8 +2,17 @@
 
 use std::ops::Deref;
 
-use bevy_ecs::prelude::*;
-use bevy_ecs::system::EntityCommands;
+// use bevy_ecs::system::Commands;
+// use bevy_ecs::prelude::*;
+// use bevy_ecs::system::EntityCommands;
+use pi_world::alter::Alter;
+use pi_world::filter::Changed;
+use pi_world::filter::With;
+use pi_world::insert::Insert;
+use pi_world::query::Query;
+use pi_world::single_res::SingleRes;
+use pi_world::single_res::SingleResMut;
+use pi_world::world::Entity;
 
 
 use crate::object::ActionEntity;
@@ -13,6 +22,7 @@ use crate::object::DisposeReady;
 use crate::object::OpsDisposeCan;
 use crate::prelude::{Performance, ErrorRecord};
 
+use super::AnimatorableFloat;
 use super::RecordAnimatorableUint;
 use super::base::*;
 use super::command::*;
@@ -23,82 +33,84 @@ use super::vec3::RecordAnimatorableVec3;
 use super::vec4::RecordAnimatorableVec4;
 
 pub fn sys_create_animatorable_entity(
-    mut cmds_float: ResMut<ActionListAnimatorableFloat>,
-    mut cmds_vec2: ResMut<ActionListAnimatorableVec2>,
-    mut cmds_vec3: ResMut<ActionListAnimatorableVec3>,
-    mut cmds_vec4: ResMut<ActionListAnimatorableVec4>,
+    mut cmds_float: SingleResMut<ActionListAnimatorableFloat>,
+    mut cmds_vec2: SingleResMut<ActionListAnimatorableVec2>,
+    mut cmds_vec3: SingleResMut<ActionListAnimatorableVec3>,
+    mut cmds_vec4: SingleResMut<ActionListAnimatorableVec4>,
     // mut cmds_mat4: ResMut<ActionListAnimatorableMat4>,
-    mut cmds_uint: ResMut<ActionListAnimatorableUint>,
-    mut cmds_int: ResMut<ActionListAnimatorableSint>,
-    mut commands: Commands,
-    items: Query<(With<DisposeReady>, With<DisposeCan>)>
+    mut cmds_uint: SingleResMut<ActionListAnimatorableUint>,
+    mut cmds_int: SingleResMut<ActionListAnimatorableSint>,
+    mut commands: Alter<(), (), (AnimatorableFloat, AnimatorableLink, RecordAnimatorableFloat), ()>,
+    items: Query<(), (With<DisposeReady>, With<DisposeCan>)>
 ) {
-    cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, linked, value, etype)| {
-        if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableFloat(value.clone()));
-            _animetable(&items, entity, &mut cmd, etype);
-        }
-    });
-    cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, linked, value, etype)| {
-        if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec2(value.clone()));
-            _animetable(&items, entity, &mut cmd, etype);
-        }
-    });
-    cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, linked, value, etype)| {
-        if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec3(value.clone()));
-            _animetable(&items, entity, &mut cmd, etype);
-        }
-    });
-    cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, linked, value, etype)| {
-        if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec4(value.clone()));
-            _animetable(&items, entity, &mut cmd, etype);
-        }
-    });
-    // cmds_mat4.drain().drain(..).for_each(|OpsAnimatorableMat4(entity, linked, value)| {
-    //     if let Some(mut cmd) = commands.get_entity(entity) {
-    //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec4(value.clone()));
+   
+    // cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, linked, value, etype)| {
+    //     if commands.get(entity).is_ok() {
+    //         commands.alter(entity, (value.clone(),AnimatorableLink(linked), RecordAnimatorableFloat(value.clone())));//.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableFloat(value.clone()));
+    //         _animetable(&items, entity, &mut commands, etype);
     //     }
     // });
-    cmds_uint.drain().drain(..).for_each(|OpsAnimatorableUint(entity, linked, value, etype)| {
-        if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableUint(value.clone()));
-            _animetable(&items, entity, &mut cmd, etype);
-        }
-    });
-    cmds_int.drain().drain(..).for_each(|OpsAnimatorableSint(entity, linked, value, etype)| {
-        if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableInt(value.clone()));
-            _animetable(&items, entity, &mut cmd, etype);
-        }
-    });
+    // cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, linked, value, etype)| {
+    //     if let Some(mut cmd) = commands.get_entity(entity) {
+    //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec2(value.clone()));
+    //         _animetable(&items, entity, &mut cmd, etype);
+    //     }
+    // });
+    // cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, linked, value, etype)| {
+    //     if let Some(mut cmd) = commands.get_entity(entity) {
+    //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec3(value.clone()));
+    //         _animetable(&items, entity, &mut cmd, etype);
+    //     }
+    // });
+    // cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, linked, value, etype)| {
+    //     if let Some(mut cmd) = commands.get_entity(entity) {
+    //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec4(value.clone()));
+    //         _animetable(&items, entity, &mut cmd, etype);
+    //     }
+    // });
+    // // cmds_mat4.drain().drain(..).for_each(|OpsAnimatorableMat4(entity, linked, value)| {
+    // //     if let Some(mut cmd) = commands.get_entity(entity) {
+    // //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableVec4(value.clone()));
+    // //     }
+    // // });
+    // cmds_uint.drain().drain(..).for_each(|OpsAnimatorableUint(entity, linked, value, etype)| {
+    //     if let Some(mut cmd) = commands.get_entity(entity) {
+    //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableUint(value.clone()));
+    //         _animetable(&items, entity, &mut cmd, etype);
+    //     }
+    // });
+    // cmds_int.drain().drain(..).for_each(|OpsAnimatorableSint(entity, linked, value, etype)| {
+    //     if let Some(mut cmd) = commands.get_entity(entity) {
+    //         cmd.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableInt(value.clone()));
+    //         _animetable(&items, entity, &mut cmd, etype);
+    //     }
+    // });
+    todo!();
 }
-fn _animetable(
-    items: &Query<(With<DisposeReady>, With<DisposeCan>)>,
-    entity: Entity,
-    cmd: &mut EntityCommands,
-    etype: EAnimatorableEntityType, 
-) {
-    if items.contains(entity) == false { ActionEntity::init(cmd); }
-    match etype {
-        EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
-        EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
-    };
-}
+// fn _animetable(
+//     items: &Query<(), (With<DisposeReady>, With<DisposeCan>)>,
+//     entity: Entity,
+//     cmd: &mut EntityCommands,
+//     etype: EAnimatorableEntityType, 
+// ) {
+//     if items.contains(entity) == false { ActionEntity::init(cmd); }
+//     match etype {
+//         EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
+//         EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),
+//     };
+// }
 
 pub fn sys_create_animation_group(
-    mut cmds: ResMut<ActionListAnimeGroupCreate>,
-    mut commands: Commands,
+    mut cmds: SingleResMut<ActionListAnimeGroupCreate>,
+    mut commands: Alter<(), (), (AnimationGroupKey, AnimationGroupScene), ()>,
     mut scenes: Query<&mut SceneAnimationContext>,
-    mut globals: ResMut<GlobalAnimeAbout>,
+    mut globals: SingleResMut<GlobalAnimeAbout>,
 ) {
     cmds.drain().drain(..).for_each(|OpsAnimationGroupCreation(scene, entity)| {
         if let Ok(mut ctx) = scenes.get_mut(scene) {
-            if let Some(mut commands) = commands.get_entity(entity) {
+            if let Ok(_) = commands.get(entity) {
                 let id_group = ctx.0.create_animation_group();
-                commands.insert(AnimationGroupKey(id_group)).insert(AnimationGroupScene(scene));
+                commands.alter(entity, (AnimationGroupKey(id_group),AnimationGroupScene(scene)));
                 globals.record_group(id_group, entity);
             }
         }
@@ -106,14 +118,14 @@ pub fn sys_create_animation_group(
 }
 /// 顺序严格的
 pub fn sys_act_animation_group_action(
-    mut cmds: ResMut<ActionListAnimationGroupAction>,
-    mut addtargetanime_cmds: ResMut<ActionListAddTargetAnime>,
-    mut frameevent_cmds: ResMut<ActionListAddAnimationFrameEvent>,
-    mut listen_cmds: ResMut<ActionListAddAnimationListen>,
+    mut cmds: SingleResMut<ActionListAnimationGroupAction>,
+    mut addtargetanime_cmds: SingleResMut<ActionListAddTargetAnime>,
+    mut frameevent_cmds: SingleResMut<ActionListAddAnimationFrameEvent>,
+    mut listen_cmds: SingleResMut<ActionListAddAnimationListen>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
-    mut errors: ResMut<ErrorRecord>,
-    mut globals: ResMut<GlobalAnimeAbout>,
+    mut errors: SingleResMut<ErrorRecord>,
+    mut globals: SingleResMut<GlobalAnimeAbout>,
 ) {
     addtargetanime_cmds.drain().drain(..).for_each(|OpsAddTargetAnimation(entity, target, animation)| {
         if let Ok( (groupkey, idscene) ) = items.get(entity) {
@@ -167,11 +179,11 @@ pub fn sys_act_animation_group_action(
 }
 
 pub fn sys_act_dispose_animation_group(
-    mut cmds: ResMut<ActionListAnimeGroupDispose>,
+    mut cmds: SingleResMut<ActionListAnimeGroupDispose>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
-    mut disposecan: ResMut<ActionListDisposeCan>,
-    mut globals: ResMut<GlobalAnimeAbout>,
+    mut disposecan: SingleResMut<ActionListDisposeCan>,
+    mut globals: SingleResMut<GlobalAnimeAbout>,
 ) {
     cmds.drain().drain(..).for_each(|OpsAnimationGroupDispose(entity)| {
         if let Ok( (groupkey, idscene) ) = items.get(entity) {
@@ -186,7 +198,7 @@ pub fn sys_act_dispose_animation_group(
 }
 
 pub fn sys_act_reset_while_animationgroup_start(
-    mut cmds: ResMut<ActionListAnimeGroupStartReset>,
+    mut cmds: SingleResMut<ActionListAnimeGroupStartReset>,
     groups: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     scenes: Query<&SceneAnimationContext>,
     mut items: Query<&mut FlagAnimationStartResetComp>,
@@ -228,11 +240,11 @@ pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecor
 
 /// 动画计算
 pub fn sys_calc_type_anime<D: TAnimatableComp>(
-    type_ctx: Res<TypeAnimeContext<D>>,
-    runinfos: Res<GlobalAnimeAbout>,
+    type_ctx: SingleRes<TypeAnimeContext<D>>,
+    runinfos: SingleRes<GlobalAnimeAbout>,
     mut items: Query<(&mut D, Option<&AnimatorableLink>)>,
     mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
-    mut performance: ResMut<Performance>,
+    mut performance: SingleResMut<Performance>,
     // empty: Res<SingleEmptyEntity>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -280,8 +292,8 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
 }
 
 pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(
-    mut type_ctx: ResMut<TypeAnimeContext<D>>,
-    scenes: Query<& SceneAnimationContext>,
+    mut type_ctx: SingleResMut<TypeAnimeContext<D>>,
+    scenes: Query<&SceneAnimationContext>,
 ) {
     scenes.iter().for_each(| ctx | {
         ctx.0.apply_removed_animations(&mut type_ctx.ctx);
@@ -289,7 +301,7 @@ pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(
 }
 
 pub fn sys_reset_anime_performance(
-    mut performance: ResMut<Performance>,
+    mut performance: SingleResMut<Performance>,
 ) {
     performance.animation = 0;
 }

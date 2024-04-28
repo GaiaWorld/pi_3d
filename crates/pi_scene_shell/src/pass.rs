@@ -1,10 +1,10 @@
 use std::ops::Deref;
 
-use bevy_ecs::prelude::Component;
+// use bevy_ecs::prelude::Component;
 
 pub type PassTagValue = u16;
 
-#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy,  PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PassTag(PassTagValue);
 impl Deref for PassTag {
     type Target = PassTagValue;

@@ -4,4 +4,4 @@ pub enum ErrorPlugin {
     ResourceError(&'static str),
 }
 
-pub use bevy_app::prelude::Plugin;
+// pub use bevy_app::prelude::Plugin;

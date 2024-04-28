@@ -1,12 +1,12 @@
 
-use bevy_ecs::prelude::Component;
+// use bevy_ecs::prelude::Component;
 use pi_assets::asset::Handle;
 
 use pi_render::renderer::texture::*;
 
 use crate::assets::texture::TEXTURE_SLOT_COUNT;
 
-#[derive(Default, Clone, Hash, PartialEq, Eq, Component)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct EffectBindTexture2DList {
     pub data: [Option<ETextureViewUsage>; TEXTURE_SLOT_COUNT],
     pub loaded: Vec<usize>,

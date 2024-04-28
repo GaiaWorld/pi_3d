@@ -1,10 +1,10 @@
-use bevy_ecs::system::Resource;
+// use bevy_ecs::system::Resource;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator};
 use pi_render::{components::view::target_alloc::{TextureDescriptor, ShareTargetView, TargetDescriptor}, renderer::{sampler::{BindDataSampler, KeySampler, SamplerRes}}, rhi::device::RenderDevice};
 use pi_scene_math::Number;
 use pi_share::Share;
-use pi_slotmap::{SlotMap, DefaultKey};
+use pi_slotmap::SlotMap;
 use smallvec::SmallVec;
 
 pub type KeyRenderTarget = u64;
@@ -139,7 +139,7 @@ impl CustomRenderTarget {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive( Default)]
 pub struct CustomRenderTargets(pub SlotMap<KeyRenderTarget, CustomRenderTarget>);
 impl CustomRenderTargets {
     pub fn create(

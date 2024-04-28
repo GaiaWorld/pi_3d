@@ -1,10 +1,10 @@
-use bevy_ecs::component::Component;
+// use bevy_ecs::component::Component;
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::Number;
 
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy)]
 pub struct AnimatorableFloat(pub Number);
 impl Default for AnimatorableFloat {
     fn default() -> Self {
@@ -37,7 +37,7 @@ impl TAssetCapacity for AnimatorableFloat {
 impl TAnimatableComp for AnimatorableFloat {}
 
 
-#[derive(Clone, Copy, Component, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct RecordAnimatorableFloat(pub AnimatorableFloat);
 impl TAnimatableCompRecord<AnimatorableFloat> for RecordAnimatorableFloat {
     fn comp(&self) -> AnimatorableFloat {

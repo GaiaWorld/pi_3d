@@ -2,10 +2,12 @@
 use crate::run_stage::ERunStageChap;
 
 use crate::engine_shell::EnginShell;
-use bevy_app::{Plugin, Update};
-use bevy_ecs::{prelude::{Resource, ResMut}, schedule::IntoSystemConfigs};
+use pi_world::{prelude::{App, SingleResMut}, schedule::Update};
+use pi_world_extend_plugin::plugin::Plugin;
+// use bevy_app::{Plugin, Update};
+// use bevy_ecs::{prelude::{Resource, ResMut}, schedule::IntoSystemConfigs};
 
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct SingleFrameTimeCommand {
     pub last: pi_time::Instant,
     pub frame_ms: u64,
@@ -43,7 +45,7 @@ impl InterfaceFrameTime for EnginShell {
         &mut self,
         ms: u64,
     ) -> &Self {
-        let mut frame = self.world.get_resource_mut::<SingleFrameTimeCommand>().unwrap();
+        let mut frame = self.world.get_single_res_mut::<SingleFrameTimeCommand>().unwrap();
         frame.frame_ms = ms;
 
         self
@@ -51,7 +53,7 @@ impl InterfaceFrameTime for EnginShell {
 }
 #[cfg(not(target_arch = "wasm32"))]
 pub fn sys_frame_time(
-    mut frame: ResMut<SingleFrameTimeCommand>,
+    mut frame: SingleResMut<SingleFrameTimeCommand>,
 ) {
 
     let last = frame.last;
@@ -86,10 +88,10 @@ pub fn sys_frame_time(
 pub struct PluginFrameTime;
 impl Plugin for PluginFrameTime {
 
-    fn build(&self, app: &mut bevy_app::prelude::App) {
-        app.world.insert_resource(SingleFrameTimeCommand::default());
+    fn build(&self, app: &mut App) {
+        app.world.register_single_res(SingleFrameTimeCommand::default());
 
         #[cfg(not(target_arch = "wasm32"))]
-        app.add_systems(Update, sys_frame_time.in_set(ERunStageChap::Initial));
+        app.add_system(Update, sys_frame_time);
     }
 }
