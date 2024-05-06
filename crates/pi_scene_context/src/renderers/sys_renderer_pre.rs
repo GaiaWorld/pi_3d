@@ -23,7 +23,7 @@ pub use super::sys_bindgroup_3::*;
 pub fn sys_sets_modify_by_viewer(
     viewers: Query<
         (ObjectID, &SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo),
-        Or<(Changed<BindViewer>, Changed<FlagModelList>, Changed<ForceIncludeModelList>, Changed<DirtyViewerRenderersInfo>)>,
+        (Changed<BindViewer>, Changed<FlagModelList>, Changed<ForceIncludeModelList>, Changed<DirtyViewerRenderersInfo>),
     >,
     renderers: Query<(&RendererEnable, &PassTag)>,
     modelspass: Query<&PassIDs>,
@@ -142,7 +142,7 @@ pub fn sys_passrendererid_pass_reset(
 }
 
 pub fn sys_sets_modify_by_scene_extend(
-    scenes: Query<Entity, Or<(Changed<BRDFTexture>, Changed<MainCameraOpaqueTarget>, Changed<MainCameraDepthTarget>, Changed<EnvTexture>, Changed<SceneShadowRenderTarget>)>>,
+    scenes: Query<Entity, (Changed<BRDFTexture>, Changed<MainCameraOpaqueTarget>, Changed<MainCameraDepthTarget>, Changed<EnvTexture>, Changed<SceneShadowRenderTarget>)>,
     mut passes: Query<(&mut PassSceneForSet3, &SceneID)>,
 ) {
     let time1 = pi_time::Instant::now();
@@ -161,9 +161,9 @@ pub fn sys_sets_modify_by_model(
         (
             Entity, &PassIDs
         ),
-        Or<(
-            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Added<ModelLightingIndexs>
-        )>,
+        (
+            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, /* Added<ModelLightingIndexs> */
+        ),
     >,
     mut passes: Query<&mut PassModelID>,
 ) {

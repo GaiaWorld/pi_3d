@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 
 use super::BindSceneEffect;
 
-#[derive(Component)]
+// 
 pub struct AmbientColor(pub f32, pub f32, pub f32, pub f32);
 
 pub fn update_ambient_uniform(color: &AmbientColor, bind: &mut BindSceneEffect) {

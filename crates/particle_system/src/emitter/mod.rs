@@ -28,7 +28,6 @@ pub struct SerializationObject {
     pub direction2: Option<Vector3>
 }
 
-#[derive(Component)]
 pub enum ShapeEmitter {
     Box(BoxShapeEmitter),
     Circle(CircleShapeEmitter),

@@ -193,21 +193,21 @@ pub type Pipeline3DUsage = Handle<Pipeline3D>;
 pub struct PluginRenderBindGroup;
 impl Plugin for PluginRenderBindGroup {
     fn build(&self, app: &mut App) {
-        let device = app.world.get_resource::<PiRenderDevice>().unwrap();
-        if app.world.get_resource::<ResBindBufferAllocator>().is_none() {
+        let device = app.world.get_single_res::<PiRenderDevice>().unwrap();
+        if app.world.get_single_res::<ResBindBufferAllocator>().is_none() {
             let mut allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
             let commonbindmodel = CommonBindModel(BindModel::new(&mut allocator).unwrap());
-            app.insert_resource(commonbindmodel);
-            app.insert_resource(allocator);
+            app.world.insert_single_res(commonbindmodel);
+            app.world.insert_single_res(allocator);
         }
-        app.insert_resource(AssetBindGroupSceneWaits::default());
-        app.insert_resource(AssetBindGroupModelWaits::default());
-        app.insert_resource(AssetBindGroupTextureSamplersWaits::default());
+        app.world.insert_single_res(AssetBindGroupSceneWaits::default());
+        app.world.insert_single_res(AssetBindGroupModelWaits::default());
+        app.world.insert_single_res(AssetBindGroupTextureSamplersWaits::default());
 
-        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<BindGroup>();
-        app.insert_resource(ShareAssetMgr::<BindGroup>::create(GarbageEmpty(), false, &cfg));
-        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<BindGroupLayout>();
-        app.insert_resource(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg));
+        let cfg = app.world.get_single_res_mut::<AssetMgrConfigs>().unwrap().query::<BindGroup>();
+        app.world.insert_single_res(ShareAssetMgr::<BindGroup>::create(GarbageEmpty(), false, &cfg));
+        let cfg = app.world.get_single_res_mut::<AssetMgrConfigs>().unwrap().query::<BindGroupLayout>();
+        app.world.insert_single_res(ShareAssetMgr::<BindGroupLayout>::create(GarbageEmpty(), false, &cfg));
 
     }
 }

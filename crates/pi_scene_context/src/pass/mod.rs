@@ -17,14 +17,14 @@ pub use system::*;
 
 use crate::materials::prelude::StageMaterial;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
 pub enum StagePassObject {
     Create,
     _CreateApply,
     EffectModify,
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct PassTagOrders(pub Vec<PassTag>, pub PassTagValue);
 impl PassTagOrders {
     pub fn new(orders: Vec<PassTag>) -> Self {
@@ -43,24 +43,25 @@ impl PassTagOrders {
 pub struct PluginPassObject;
 impl Plugin for PluginPassObject {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListPassObject::default());
+        app.world.insert_single_res(ActionListPassObject::default());
         
 
-        app.configure_set(Update, StagePassObject::Create.after(StageMaterial::Command));
-        app.configure_set(Update, StagePassObject::_CreateApply.after(StagePassObject::Create));
-        app.configure_set(Update, StagePassObject::EffectModify.in_set(FrameDataPrepare).after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup));
+        // app.configure_set(Update, StagePassObject::Create.after(StageMaterial::Command));
+        // app.configure_set(Update, StagePassObject::_CreateApply.after(StagePassObject::Create));
+        // app.configure_set(Update, StagePassObject::EffectModify.in_set(FrameDataPrepare).after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup));
 
-        app.add_systems(Update, 
-            apply_deferred.in_set(StagePassObject::_CreateApply)
+        // app.add_system(Update, 
+        //     apply_deferred.in_set(StagePassObject::_CreateApply)
+        // );
+        app.add_system(Update, 
+            sys_create_pass_object
         );
-        app.add_systems(Update, 
-            sys_create_pass_object.in_set(StagePassObject::Create)
+        app.add_system(Update, 
+            
+                sys_modify_pass_effect_by_material
         );
-        app.add_systems(Update, 
-            (
-                sys_modify_pass_effect_by_material,
+        app.add_system(Update, 
                 sys_modify_pass_effect_by_pass
-            ).chain().in_set(StagePassObject::EffectModify)
         );
     }
 }

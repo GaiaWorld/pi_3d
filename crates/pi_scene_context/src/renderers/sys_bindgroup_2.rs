@@ -6,7 +6,7 @@ use crate::pass::*;
 use super::base::*;
 
 pub fn sys_set2_modify(
-    mut items: Query<(&PassEffectReady, &PassBindEffectTextures, &mut PassBindGroupTextureSamplers), Or<(Changed<PassBindEffectTextures>, Changed<PassEffectReady>)>>,
+    mut items: Query<(&PassEffectReady, &PassBindEffectTextures, &mut PassBindGroupTextureSamplers), (Changed<PassBindEffectTextures>, Changed<PassEffectReady>)>,
     device: Res<PiRenderDevice>,
     asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
     asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,

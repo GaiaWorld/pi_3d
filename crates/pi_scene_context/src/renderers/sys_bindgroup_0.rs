@@ -10,7 +10,7 @@ use crate::{
 use super::base::*;
 
 pub fn sys_set0_modify(
-    mut items: Query<(&PassModelID, &PassSceneID, &PassViewerID, &PassEffectReady, &mut PassBindGroupScene), Or<(Changed<PassSceneID>, Changed<PassViewerID>, Changed<PassEffectReady>)>>,
+    mut items: Query<(&PassModelID, &PassSceneID, &PassViewerID, &PassEffectReady, &mut PassBindGroupScene), (Changed<PassSceneID>, Changed<PassViewerID>, Changed<PassEffectReady>)>,
     viewers: Query<Option<&BindViewer>>,
     scenes: Query<&BindSceneEffect>,
     device: Res<PiRenderDevice>,

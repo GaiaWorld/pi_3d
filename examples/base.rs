@@ -192,7 +192,7 @@ pub fn sys_scene_time_from_frame(
 pub struct PluginSceneTimeFromPluginFrame;
 impl Plugin for PluginSceneTimeFromPluginFrame {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.add_system(
             Update,
             sys_scene_time_from_frame.after(pi_scene_shell::frame_time::sys_frame_time).in_set(StageScene::Create)
         );
@@ -208,7 +208,7 @@ impl AddEvent for App {
 	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
 		if !self.world.contains_resource::<Events<T>>() {
 			self.init_resource::<Events<T>>()
-				.add_systems(Update, Events::<T>::update_system);
+				.add_system(Update, Events::<T>::update_system);
 		}
 		self
 	}
@@ -293,7 +293,7 @@ pub fn test_plugins() -> App {
 
     app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
     
-    app.add_systems(Startup, setup_default_mat);
+    app.add_system(Startup, setup_default_mat);
     
     app
 }
@@ -379,7 +379,7 @@ pub fn test_plugins_with_gltf() -> App {
 
     app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
 
-    app.add_systems(Startup, setup_default_mat);
+    app.add_system(Startup, setup_default_mat);
     
     app
 }

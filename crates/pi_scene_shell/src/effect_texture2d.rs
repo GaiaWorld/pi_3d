@@ -1,5 +1,5 @@
 
-// use bevy_ecs::prelude::Component;
+
 use pi_assets::asset::Handle;
 
 use pi_render::renderer::texture::*;

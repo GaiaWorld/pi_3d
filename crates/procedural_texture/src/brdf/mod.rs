@@ -17,7 +17,7 @@ fn setup(
 pub struct PluginBRDFMaterial;
 impl Plugin for PluginBRDFMaterial {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, setup);
+        app.add_system(Update, setup);
     }
     // fn init(
     //     &mut self,

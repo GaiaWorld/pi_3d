@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
 pub enum StageSkeleton {
     SkinCreate,
     _SkinCreate,
@@ -10,10 +10,10 @@ pub enum StageSkeleton {
     Calc,
 }
 
-#[derive(Component)]
+
 pub struct SkeletonInitBaseMatrix;
 
-#[derive(Component)]
+
 pub struct Skeleton {
     pub root: ObjectID,
     pub bones: Vec<ObjectID>,
@@ -44,11 +44,11 @@ impl Skeleton {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct BindSkinValue(pub Option<Arc<ShaderBindModelAboutSkinValue>>);
 
 
-#[derive(Component)]
+
 pub struct SkeletonID(pub ObjectID);
 impl TEntityRef for SkeletonID {
     fn id(&self) -> Entity {
@@ -56,10 +56,10 @@ impl TEntityRef for SkeletonID {
     }
 }
 
-#[derive(Default, Clone, Component)]
+#[derive(Default, Clone, )]
 pub struct DirtySkeletonRefs(pub bool);
 
 pub type SkeletonRefs = EntityRefInfo<DirtySkeletonRefs>;
 
-#[derive(Component)]
+
 pub struct SkeletonBonesDirty(pub bool);

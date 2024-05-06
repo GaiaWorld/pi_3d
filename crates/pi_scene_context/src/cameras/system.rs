@@ -2,7 +2,6 @@ use pi_scene_shell::prelude::*;
 
 use crate::prelude::{Camera, ViewerRenderersInfo, OpsDisposeReadyForRef};
 
-
 pub fn sys_dispose_about_camera(
     items: Query<(Entity, &DisposeReady, &Camera), Changed<DisposeReady>>,
     renderers: Query<&ViewerRenderersInfo>,

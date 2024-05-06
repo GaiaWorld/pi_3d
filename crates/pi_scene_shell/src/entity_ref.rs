@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, collections::hash_set::Iter};
 
-// use bevy_ecs::prelude::{Entity, Component};
+
 use pi_hash::XHashSet;
 use pi_world::world::Entity;
 
@@ -8,7 +8,7 @@ pub trait TEntityRef {
     fn id(&self) -> Entity;
 }
 
-// #[derive(Component)]
+
 pub struct EntityRefInfo<F: Default + Clone > {
     refs: XHashSet<Entity>,
     pub dirty: bool,

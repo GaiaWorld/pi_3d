@@ -368,7 +368,7 @@ impl AddEvent for App {
     fn add_frame_event<T: Event>(&mut self) -> &mut Self {
         if !self.world.contains_resource::<Events<T>>() {
             self.init_resource::<Events<T>>()
-                .add_systems(Update, Events::<T>::update_system);
+                .add_system(Update, Events::<T>::update_system);
         }
         self
     }
@@ -389,9 +389,9 @@ pub fn main() {
     app.add_plugins(PluginTest);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Update, sys_demo_particle.in_set(StageModel::RenderMatrix));
+    app.add_system(Update, sys_demo_particle.in_set(StageModel::RenderMatrix));
 
-    app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_system(Startup, setup.after(base::setup_default_mat));
     
 
     app.run()

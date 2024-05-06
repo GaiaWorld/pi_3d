@@ -6,8 +6,7 @@ use pi_bevy_render_plugin::{PiRenderSystemSet, FrameState, should_run};
 use pi_world::schedule::Update;
 use pi_world::schedule_config::{IntoSystemConfigs, SystemSet};
 use pi_world::single_res::{SingleRes, SingleResMut};
-use pi_world_extend_plugin::plugin::Plugin;
-
+use pi_world::prelude::Plugin;
 use crate::prelude::{EngineInstant, ErrorRecord};
 use crate::prelude::FrameDataPrepare;
 
@@ -147,17 +146,17 @@ impl Plugin for PluginRunstage {
         // app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
         // app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
 
-        app.world.register_single_res(ErrorRecord(vec![], false));
+        app.world.insert_single_res(ErrorRecord(vec![], false));
 
-        app.world.register_single_res(RunState3D::default());
+        app.world.insert_single_res(RunState3D::default());
 
         // app.add_system(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
         // app.add_system(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
 
-        app.world.register_single_res(RunSystemRecord::default());
+        app.world.insert_single_res(RunSystemRecord::default());
         app.add_system(Update, sys_reset_system_record);
 
-        app.world.register_single_res(EngineInstant(pi_time::Instant::now()));
+        app.world.insert_single_res(EngineInstant(pi_time::Instant::now()));
     }
 }
 

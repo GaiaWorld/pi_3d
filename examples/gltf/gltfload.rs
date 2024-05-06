@@ -72,8 +72,8 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     
-    app.add_systems(Startup, setup.after(base::setup_default_mat));
-    app.add_systems(Update, sys_load_check);
+    app.add_system(Startup, setup.after(base::setup_default_mat));
+    app.add_system(Update, sys_load_check);
     
     
     // app.run()

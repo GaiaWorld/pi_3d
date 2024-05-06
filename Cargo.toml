@@ -73,7 +73,6 @@ pi_bevy_ecs_extend      = { path = "../pi_bevy/crates/ecs_extend" }
 pi_bevy_asset           = { path = "../pi_bevy/crates/asset" }
 pi_bevy_log             = { path = "../pi_bevy/crates/log" }
 pi_bevy_post_process    = { path = "../pi_bevy/crates/post_process" }
-# pi_world_extend_plugin  = { path = "../pi_bevy/crates/plugin"}
 # pi_animation            = { path = "../pi_animation" }
 
 # pi_wgpu                 = { path = "../pi_wgpu" }
@@ -84,7 +83,7 @@ pi_bevy_post_process    = { path = "../pi_bevy/crates/post_process" }
 
 [patch.crates-io]
 pi_world = { path = "../pi_world" }
-pi_world_macros = {path = "../pi_world/macros", version="0.1", registry = "yn"}
+pi_world_macros = {path = "../pi_world/macros"}
 
 [dev-dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }

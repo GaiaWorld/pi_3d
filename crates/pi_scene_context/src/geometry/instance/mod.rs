@@ -10,12 +10,12 @@ pub mod instance_float;
 pub mod instance_vec4;
 pub mod instance_vec3;
 pub mod sys_instance;
-
-#[derive(Debug, Clone, Component)]
+use pi_slotmap::Key;
+#[derive(Debug, Clone, )]
 pub struct InstanceMesh(pub Entity);
 impl InstanceMesh {
     pub fn id(&self) -> String {
-        self.0.to_bits().to_string()
+        self.0.data().as_ffi().to_string()
     }
 }
 impl TEntityRef for InstanceMesh {
@@ -24,10 +24,10 @@ impl TEntityRef for InstanceMesh {
     }
 }
 
-#[derive(Debug, Clone, Default, Component)]
+#[derive(Debug, Clone, Default, )]
 pub struct DirtyInstanceSourceRefs;
 
 pub type InstanceSourceRefs = EntityRefInfo<DirtyInstanceSourceRefs>;
 
-#[derive(Debug, Clone, Default, Component)]
+#[derive(Debug, Clone, Default, )]
 pub struct DirtyInstanceSourceForSingleBuffer;

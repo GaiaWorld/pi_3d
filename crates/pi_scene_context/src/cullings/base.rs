@@ -1,6 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
+use pi_slotmap::Key;
 
 use crate::{viewer::prelude::ViewerTransformMatrix, prelude::MeshInstanceState};
 
@@ -24,18 +25,18 @@ pub trait TBoundingInfoCalc {
 pub struct BoundingKey(pub Entity);
 impl Default for BoundingKey {
     fn default() -> Self {
-        Self(Entity::from_bits(0))
+        Self(Entity::from(0.data()))
     }
 }
 impl From<pi_slotmap::KeyData> for BoundingKey {
     fn from(value: pi_slotmap::KeyData) -> Self {
         let bits = value.as_ffi();
-        Self(Entity::from_bits(bits))
+        Self(Entity::from(0.data()))
     }
 }
 impl pi_slotmap::Key for BoundingKey {
     fn data(&self) -> pi_slotmap::KeyData {
-        pi_slotmap::KeyData::from_ffi(self.0.to_bits())
+        /* pi_slotmap::KeyData::from_ffi( */self.0.data()/* ) */
     }
 
 	fn index(&self) -> usize {
@@ -48,9 +49,9 @@ impl pi_slotmap::Key for BoundingKey {
 }
 
 impl Null for BoundingKey {
-	fn null() -> Self { Self(Entity::from_bits(u64::null())) }
+	fn null() -> Self { Self(Entity::from(u64::null().data())) }
 
-    fn is_null(&self) -> bool { self.0.to_bits().is_null() }
+    fn is_null(&self) -> bool { self.0.data().is_null() }
 }
 
 
@@ -67,7 +68,7 @@ pub enum ECullingStrategy {
     STANDARD,
 }
 
-#[derive(Component)]
+
 pub struct GeometryBounding {
     pub minimum: Vector3,
     pub maximum: Vector3,
@@ -96,11 +97,11 @@ pub trait TFilter {
 }
 
 
-#[derive(Component, Default)]
+#[derive( Default)]
 pub struct GeometryCullingMode(pub ECullingStrategy);
 
 
-#[derive(Component)]
+
 pub enum SceneBoundingPool {
     List(VecBoundingInfoCalc),
     QuadTree(),
@@ -209,7 +210,7 @@ impl SceneBoundingPool {
     }
 }
 
-#[derive(Component)]
+
 pub struct BoundingBoxDisplay {
     pub mesh: Entity,
     pub display: bool,

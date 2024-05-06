@@ -68,7 +68,7 @@ impl FogParam {
     }
 }
 
-#[derive(Component)]
+// 
 pub struct SceneFog {
     pub param: FogParam,
     pub r: Number,

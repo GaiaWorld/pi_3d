@@ -9,7 +9,7 @@ use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode, Boun
 
 pub fn sys_update_culling_by_worldmatrix(
     mut scenes: Query<&mut SceneBoundingPool>,
-    items: Query<(Entity, &RenderWorldMatrix, &SceneID, &DisposeReady), Or<(Changed<RenderWorldMatrix>, Changed<DisposeReady>)>>,
+    items: Query<(Entity, &RenderWorldMatrix, &SceneID, &DisposeReady), (Changed<RenderWorldMatrix>, Changed<DisposeReady>)>,
     boundings: Query<(&GeometryBounding, &GeometryCullingMode)>,
     instances: Query<&InstanceMesh>,
 ) {
@@ -43,7 +43,7 @@ pub fn sys_update_culling_by_worldmatrix(
 pub fn sys_update_culling_by_cullinginfo(
     mut scenes: Query<&mut SceneBoundingPool>,
     items: Query<(&RenderWorldMatrix, &DisposeReady), Changed<RenderWorldMatrix>>,
-    boundings: Query<(Entity, &SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs), Or<(Changed<GeometryBounding>, Changed<GeometryCullingMode>)>>,
+    boundings: Query<(Entity, &SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs), (Changed<GeometryBounding>, Changed<GeometryCullingMode>)>,
 ) {
     boundings.iter().for_each(|(entity, idscene, info, mode, instances)| {
         // log::error!("AAAA");
@@ -70,7 +70,7 @@ pub fn sys_update_culling_by_cullinginfo(
 }
 
 pub fn sys_tick_culling_box(
-    scenes: Query<(&BoundingBoxDisplay, &SceneBoundingPool), Or<(Changed<SceneBoundingPool>, Changed<BoundingBoxDisplay>)>>,
+    scenes: Query<(&BoundingBoxDisplay, &SceneBoundingPool), (Changed<SceneBoundingPool>, Changed<BoundingBoxDisplay>)>,
     actives: Query<(&GlobalEnable, &GeometryBounding, &RenderWorldMatrix, &AbstructMeshCullingFlag)>,
     mut sources: Query<
         (

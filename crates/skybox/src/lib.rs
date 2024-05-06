@@ -35,7 +35,7 @@ pub mod texture;
 
 // impl InterfaceSkybox for EnginShell {
 //     fn new_skybox(&self, scene: ObjectID) -> ObjectID {
-//         let material = self.world().get_resource::<SingleSkyboxMaterial>().unwrap();
+//         let material = self.world().get_single_res::<SingleSkyboxMaterial>().unwrap();
 
 //         let entity = self.new_cube(scene);
 //         self.use_material(entity, material.0.0.clone());
@@ -54,7 +54,7 @@ fn setup(
 pub struct PluginSkybox;
 impl Plugin for PluginSkybox {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, setup);
+        app.add_system(Update, setup);
     }
     // fn init(
     //     &mut self,
@@ -65,7 +65,7 @@ impl Plugin for PluginSkybox {
         
     //     let material = engine.new_object();
     //     engine.as_material(material, KeyShaderMeta::from(SkyboxShader::KEY), EPassTag::Sky);
-    //     engine.world_mut().insert_resource(SingleSkyboxMaterial(MaterialID(material)));
+    //     engine.world_mut().world.insert_single_res(SingleSkyboxMaterial(MaterialID(material)));
 
     //     Ok(())
     // }

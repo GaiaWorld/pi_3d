@@ -19,7 +19,7 @@ use super::{
 pub fn sys_calc_render_matrix(
     mut meshes: Query<
         (ObjectID, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut AbsoluteTransform),
-        (Without<InstanceMesh>, Or<(Changed<GlobalMatrix>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
+        (Without<InstanceMesh>, (Changed<GlobalMatrix>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>))
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
@@ -81,7 +81,7 @@ pub fn sys_calc_render_matrix_instance(
     meshes: Query<&RenderAlignment>,
     mut instances: Query<
         (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalMatrix, &InstanceMesh, &mut AbsoluteTransform),
-        Or<(Changed<GlobalMatrix>, Changed<ModelVelocity>, Changed<ScalingMode>)>
+        (Changed<GlobalMatrix>, Changed<ModelVelocity>, Changed<ScalingMode>)
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
 ) {
@@ -165,7 +165,7 @@ pub fn sys_velocity_for_uniform(
 }
 
 pub fn sys_enable_about_instance(
-    instances: Query<&InstanceMesh, Or<(Changed<GlobalEnable>, Changed<GlobalMatrix>, Changed<ModelInstanceAttributes>)>>,
+    instances: Query<&InstanceMesh, (Changed<GlobalEnable>, Changed<GlobalMatrix>, Changed<ModelInstanceAttributes>)>,
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
     instances.iter().for_each(|instance| {
@@ -222,7 +222,7 @@ pub fn sys_dispose_about_mesh(
             &PassIDs,
             &GeometryID, &InstanceSourceRefs, &Mesh, Option<&SkeletonID>, &ModelInstanceAttributes
         ),
-        Or<(Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
+        (Changed<DisposeReady>, Changed<InstanceSourceRefs>),
     >,
     mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,

@@ -5,43 +5,43 @@ use pi_scene_shell::prelude::*;
 use crate::transforms::prelude::*;
 
 
-#[derive(Default, Clone, Component)]
+#[derive(Default, Clone, )]
 pub struct ForceIncludeModelList(pub XHashSet<Entity>);
 
-#[derive(Default, Clone, Component)]
+#[derive(Default, Clone, )]
 pub struct FlagForceIncludeModelList;
 
-#[derive(Default, Clone, Component)]
+#[derive(Default, Clone, )]
 pub struct ModelList(pub XHashSet<Entity>);
 
-#[derive(Default, Clone, Component)]
+#[derive(Default, Clone, )]
 pub struct FlagModelList(pub bool);
 
-#[derive(Default, Component)]
+#[derive(Default, )]
 pub struct ModelListAdd(pub XHashSet<Entity>);
 
-#[derive(Component)]
+
 pub struct FlagModelListAdd(pub bool);
 
-#[derive(Default, Component)]
+#[derive(Default, )]
 pub struct ModelListDel(pub XHashSet<Entity>);
 
-#[derive(Component)]
+
 pub struct FlagModelListDel(pub bool);
 
-#[derive(Default, Component)]
+#[derive(Default, )]
 pub struct ModelListAfterCulling(pub Vec<Entity>);
 
 /// 视口ID - 可能是 相机、灯光
-#[derive(Component)]
+
 pub struct ViewerID(pub Entity);
 
 /// 视口状态
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, )]
 pub struct ViewerActive(pub bool);
 
 /// 视口尺寸
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, )]
 pub struct ViewerAspect(pub f32);
 impl Default for ViewerAspect {
     fn default() -> Self {
@@ -49,7 +49,7 @@ impl Default for ViewerAspect {
     }
 }
 
-#[derive(Component)]
+
 pub struct ViewerCullFilter {
     _test: Vec<Entity>
 }
@@ -69,13 +69,13 @@ impl ViewerCullFilter {
     }
 }
 
-#[derive(Component)]
+
 pub struct ViewerRenderTargetFormatOption {
     pub color: wgpu::TextureFormat,
     pub depth_stencil: wgpu::TextureFormat,
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct ViewerViewMatrix(pub Matrix);
 impl Default for ViewerViewMatrix {
     fn default() -> Self {
@@ -96,7 +96,7 @@ impl ViewerViewMatrix {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct ViewerProjectionMatrix(pub Matrix);
 impl Default for ViewerProjectionMatrix {
     fn default() -> Self {
@@ -108,7 +108,7 @@ impl ViewerProjectionMatrix {
         range.write_data(ShaderBindViewer::OFFSET_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct ViewerTransformMatrix(pub Matrix);
 impl Default for ViewerTransformMatrix {
     fn default() -> Self {
@@ -120,7 +120,7 @@ impl ViewerTransformMatrix {
         range.write_data(ShaderBindViewer::OFFSET_VIEW_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
 }
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct ViewerGlobalPosition(pub Vector3);
 impl Default for ViewerGlobalPosition {
     fn default() -> Self {
@@ -133,7 +133,7 @@ impl ViewerGlobalPosition {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct ViewerDirection(pub Vector3);
 impl Default for ViewerDirection {
     fn default() -> Self {
@@ -146,7 +146,7 @@ impl ViewerDirection {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub enum ViewerDistanceCompute {
     Base,
     Direction,
@@ -171,7 +171,7 @@ impl ViewerDistanceCompute {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct BindViewer(pub Arc<ShaderBindViewer>);
 impl BindViewer {
     pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {
@@ -191,7 +191,7 @@ pub trait TViewerProjectMatrix {
     fn project_matrix(&self, ratio: f32) -> ViewerProjectionMatrix;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StageViewer {
     ForceInclude,
 }

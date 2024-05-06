@@ -69,7 +69,7 @@ impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ListTestData(vec![], None, pi_wy_rng::WyRng::default()));
         app.configure_set(Update, StageTest::Cmd.before(StageScene::Create));
-        app.add_systems(Update, sys.in_set(StageTest::Cmd));
+        app.add_system(Update, sys.in_set(StageTest::Cmd));
     }
 }
 
@@ -135,12 +135,12 @@ pub fn main() {
     let mut app = base::test_plugins();
     
     app.add_plugins(PluginTest);
-    app.add_systems(Update, pi_3d::sys_info_node);
-    app.add_systems(Update, pi_3d::sys_info_resource);
-    app.add_systems(Update, pi_3d::sys_info_draw);
+    app.add_system(Update, pi_3d::sys_info_node);
+    app.add_system(Update, pi_3d::sys_info_resource);
+    app.add_system(Update, pi_3d::sys_info_draw);
     
     
-    app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_system(Startup, setup.after(base::setup_default_mat));
     
     
     // app.run()

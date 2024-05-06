@@ -1,9 +1,9 @@
 
 use crate::run_stage::ERunStageChap;
-
+use pi_world::prelude::Plugin;
 use crate::engine_shell::EnginShell;
 use pi_world::{prelude::{App, SingleResMut}, schedule::Update};
-use pi_world_extend_plugin::plugin::Plugin;
+
 // use bevy_app::{Plugin, Update};
 // use bevy_ecs::{prelude::{Resource, ResMut}, schedule::IntoSystemConfigs};
 
@@ -89,7 +89,7 @@ pub struct PluginFrameTime;
 impl Plugin for PluginFrameTime {
 
     fn build(&self, app: &mut App) {
-        app.world.register_single_res(SingleFrameTimeCommand::default());
+        app.world.insert_single_res(SingleFrameTimeCommand::default());
 
         #[cfg(not(target_arch = "wasm32"))]
         app.add_system(Update, sys_frame_time);

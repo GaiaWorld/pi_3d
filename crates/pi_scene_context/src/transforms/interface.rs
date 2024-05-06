@@ -69,10 +69,10 @@ pub trait InterfaceTransformNode {
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleTransformNodeCreateCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleTransformNodeCreateCommandList>().unwrap();
 //         commands.list.push(ETransformNodeCreateCommand::Create(object));
 
-//         let commands = world.get_resource_mut::<SingleLayerMaskCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleLayerMaskCommandList>().unwrap();
 //         commands.list.push(LayerMaskCommand::Set(object, LayerMask::default()));
         
 //         self
@@ -85,7 +85,7 @@ pub trait InterfaceTransformNode {
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleTransformNodeModifyCommandList>().unwrap();
 //         commands.list.push(ETransformNodeModifyCommand::ModifyPosition(node, position));
 
 //         self
@@ -98,7 +98,7 @@ pub trait InterfaceTransformNode {
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleTransformNodeModifyCommandList>().unwrap();
 //         commands.list.push(ETransformNodeModifyCommand::ModifyRotation(node, euler_angle));
 
 //         self
@@ -111,7 +111,7 @@ pub trait InterfaceTransformNode {
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleTreeCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleTreeCommandList>().unwrap();
 //         commands.list.push(TreeCommand::Remove(node));
 //         commands.list.push(TreeCommand::Append(node, parent));
 
@@ -125,7 +125,7 @@ pub trait InterfaceTransformNode {
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleTransformNodeModifyCommandList>().unwrap();
 //         commands.list.push(ETransformNodeModifyCommand::ModifyRotationQuaternion(node, quat));
 
 //         self
@@ -138,7 +138,7 @@ pub trait InterfaceTransformNode {
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleTransformNodeModifyCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleTransformNodeModifyCommandList>().unwrap();
 //         commands.list.push(ETransformNodeModifyCommand::ModifyScaling(node, scaling));
 
 //         self

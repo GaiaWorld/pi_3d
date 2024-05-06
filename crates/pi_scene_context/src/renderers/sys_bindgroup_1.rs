@@ -10,7 +10,7 @@ use crate::{
 use super::base::*;
 
 pub fn sys_set1_modify(
-    mut items: Query<(&PassModelID, &PassBindEffectValue, &PassEffectReady, &mut PassBindGroupModel), Or<(Changed<PassModelID>, Changed<PassEffectReady>, Changed<PassBindEffectValue>)>>,
+    mut items: Query<(&PassModelID, &PassBindEffectValue, &PassEffectReady, &mut PassBindGroupModel), (Changed<PassModelID>, Changed<PassEffectReady>, Changed<PassBindEffectValue>)>,
     models: Query<
         (
             Option<&BindModel>, &BindSkinValue, Option<&SkeletonID>, &ModelLightingIndexs

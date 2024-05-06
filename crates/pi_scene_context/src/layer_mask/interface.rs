@@ -18,7 +18,7 @@
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleLayerMaskCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleLayerMaskCommandList>().unwrap();
 //         commands.list.push(LayerMaskCommand::Set(object, layer));
 
 //         self

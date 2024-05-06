@@ -20,7 +20,7 @@ use super::{
     pub fn sys_pass_bind_groups(
         mut passes: Query<
             (ObjectID, &PassModelID, &PassEffectReady, &PassBindGroupScene, &PassBindGroupModel, &PassBindGroupTextureSamplers, &PassBindGroupLightingShadow, &mut PassBindGroups),
-            Or<(Changed<PassEffectReady>, Changed<PassBindGroupScene>, Changed<PassBindGroupModel>, Changed<PassBindGroupTextureSamplers>, Changed<PassBindGroupLightingShadow>)>
+            (Changed<PassEffectReady>, Changed<PassBindGroupScene>, Changed<PassBindGroupModel>, Changed<PassBindGroupTextureSamplers>, Changed<PassBindGroupLightingShadow>)
         >,
     ) {
         passes.iter_mut().for_each(|(_id_pass, _id_model, ready, set0, set1, set2, set_3, mut bindgroups)| {
@@ -81,7 +81,7 @@ use super::{
             (
                 &GeometryID, &PassIDs
             ),
-            Or<(Changed<GeometryID>, Changed<RenderAlignment>)>,
+            (Changed<GeometryID>, Changed<RenderAlignment>),
         >,
         mut passes: Query<&mut PassGeometryID>,
     ) {
@@ -124,7 +124,7 @@ use super::{
         geometrys: Query<&VertexBufferLayoutsComp>, 
         mut passes: Query<
             (ObjectID, &DisposeReady, &PassModelID, &PassGeometryID, &PassEffectReady, &PassBindGroups, &mut PassShader),
-            Or<(Changed<PassBindGroups>, Changed<PassGeometryID>)>
+            (Changed<PassBindGroups>, Changed<PassGeometryID>)
         >,
         assets: Res<ShareAssetMgr<Shader3D>>,
         device: Res<PiRenderDevice>,
@@ -178,9 +178,9 @@ use super::{
     pub fn sys_pass_pipeline_request_by_model(
         models: Query<
             (&DisposeReady, &PassIDs),
-            Or<(
+            (
                 Changed<GeometryID>,
-            )>
+            )
         >,
         mut passes: Query<&mut PassPipelineStateDirty, With<PassPipeline>>,
     ) {
@@ -197,7 +197,7 @@ use super::{
     }
 
     pub fn sys_pass_pipeline_request_by_renderer(
-        renderers: Query<(&RendererEnable, &ViewerID, &PassTag), Or<(Changed<RenderColorFormat>, Changed<RenderDepthFormat>, Changed<RendererBlend>, Changed<RendererEnable>, Changed<PassTag>)>>,
+        renderers: Query<(&RendererEnable, &ViewerID, &PassTag), (Changed<RenderColorFormat>, Changed<RenderDepthFormat>, Changed<RendererBlend>, Changed<RendererEnable>, Changed<PassTag>)>,
         viewers: Query<(&ModelList, &ForceIncludeModelList)>,
         modelspass: Query<&PassIDs>,
         mut passes: Query<&mut PassPipelineStateDirty>,
@@ -236,11 +236,11 @@ use super::{
                     &DepthState, &StencilState
                 )
             ),
-            Or<(
+            (
                 Changed<PassShader>, Changed<PassPipelineStateDirty>, Changed<PassRendererID>,
                 Changed<ModelBlend>, Changed<PrimitiveState>,
-                Or<(Changed<DepthState>, Changed<StencilState>)>
-            )>
+                (Changed<DepthState>, Changed<StencilState>)
+            )
         >,
         assets: ResMut<ShareAssetMgr<Pipeline3D>>,
         device: Res<PiRenderDevice>,
@@ -298,7 +298,7 @@ use super::{
     pub fn sys_pass_draw_modify_by_model(
         models: Query<
             (&PassIDs), 
-            Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<VertexRenderRange>, Changed<DisposeReady>)>
+            (Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<VertexRenderRange>, Changed<DisposeReady>)
         >,
         mut passes: Query<&mut PassDrawDirty>,
     ) {
@@ -314,7 +314,7 @@ use super::{
     pub fn sys_pass_draw_modify_by_pass(
         models: Query<(&GeometryID, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady)>,
         geometrys: Query<(&RenderGeometryComp, &GeometryResourceHash)>,
-        mut passes: Query<(Entity, &PassModelID, &PassBindGroups, &PassPipeline, &mut PassDraw), Or<(Changed<PassPipeline>, Changed<PassDrawDirty>, Changed<PassBindGroups>, Changed<PassModelID>)>>,
+        mut passes: Query<(Entity, &PassModelID, &PassBindGroups, &PassPipeline, &mut PassDraw), (Changed<PassPipeline>, Changed<PassDrawDirty>, Changed<PassBindGroups>, Changed<PassModelID>)>,
         // mut commands: Commands,
     ) {
         passes.iter_mut().for_each(|(entity, id_model, bindgroups, pipeline, mut old_draw)| {

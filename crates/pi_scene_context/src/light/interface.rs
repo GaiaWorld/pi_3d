@@ -28,7 +28,7 @@ pub trait TLight {
 
 //         self.transform_parent(entity, scene);
 
-//         let cmds = self.world().get_resource_mut::<SingleLightCreateCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightCreateCommands>().unwrap();
 //         cmds.0.push((entity, name));
 
 //         entity
@@ -36,7 +36,7 @@ pub trait TLight {
 
 //     fn light_mode(&self, entity: ObjectID, value: Light) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::LightType(entity, value));
 
 //         self
@@ -44,7 +44,7 @@ pub trait TLight {
 
 //     fn lighting_mode(&self, entity: ObjectID, value: LightingMode) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::LightingType(entity, value));
 
 //         self
@@ -52,7 +52,7 @@ pub trait TLight {
 
 //     fn shadow_enable(&self, entity: ObjectID, value: bool) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::ShadowEnable(entity, value));
 
 //         self
@@ -60,7 +60,7 @@ pub trait TLight {
 
 //     fn shadow_mixz(&self, entity: ObjectID, value: f32) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::ShadowMinz(entity, value));
 
 //         self
@@ -68,7 +68,7 @@ pub trait TLight {
 
 //     fn shadow_maxz(&self, entity: ObjectID, value: f32) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::ShadowMaxz(entity, value));
 
 //         self
@@ -76,7 +76,7 @@ pub trait TLight {
 
 //     fn shadow_frustumsize(&self, entity: ObjectID, value: f32) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::ShadowFrustumSize(entity, value));
 
 //         self
@@ -84,7 +84,7 @@ pub trait TLight {
 
 //     fn shadow_bias(&self, entity: ObjectID, value: f32) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::Bias(entity, value));
 
 //         self
@@ -92,7 +92,7 @@ pub trait TLight {
 
 //     fn shadow_normal_bias(&self, entity: ObjectID, value: f32) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::NormalBias(entity, value));
 
 //         self
@@ -100,7 +100,7 @@ pub trait TLight {
 
 //     fn shadow_depth_scale(&self, entity: ObjectID, value: f32) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::DepthScale(entity, value));
 
 //         self
@@ -108,7 +108,7 @@ pub trait TLight {
 
 //     fn light_direction(&self, entity: ObjectID, value: Vector3) -> &Self {
         
-//         let cmds = self.world().get_resource_mut::<SingleLightModifyCommands>().unwrap();
+//         let cmds = self.world().get_single_res_mut::<SingleLightModifyCommands>().unwrap();
 //         cmds.0.push(ELightModifyCommand::Directional(entity, value));
 
 //         self

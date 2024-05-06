@@ -195,11 +195,11 @@ impl Plugin for PluginBoundingOctTree {
         //     0,
         //     0,
         // );
-        // app.insert_resource(BoundingOctTree(tree));
-        // app.insert_resource(ActionListAddBindingInfo::default());
-        // app.insert_resource(ActionListRemoveBindingInfo::default());
+        // app.world.insert_single_res(BoundingOctTree(tree));
+        // app.world.insert_single_res(ActionListAddBindingInfo::default());
+        // app.world.insert_single_res(ActionListRemoveBindingInfo::default());
 
-        // app.add_systems(
+        // app.add_system(
         // 	Update,
         // 	(
         //     sys_add_binding_info,

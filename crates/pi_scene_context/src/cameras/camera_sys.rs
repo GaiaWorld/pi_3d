@@ -21,7 +21,7 @@ use super::camera::*;
             (
                 &CameraFov, &CameraOrthSize, &mut CameraParam,
             ),
-            Or<(Changed<CameraFov>, Changed<CameraOrthSize>)>
+            (Changed<CameraFov>, Changed<CameraOrthSize>)
         >,
     ) {
         // log::debug!("CameraParam :");

@@ -166,14 +166,14 @@ pub fn sys_state_resource(
 pub struct PluginStateGlobal;
 impl Plugin for PluginStateGlobal {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Performance::default());
-        app.insert_resource(StateResource::default());
-        app.add_systems(
+        app.world.insert_single_res(Performance::default());
+        app.world.insert_single_res(StateResource::default());
+        app.add_system(
             Update,
-            (
+            // (
                 // sys_state_scene,
                 sys_state_resource
-            ).chain().run_if(should_run).in_set(ERunStageChap::StateCheck)
+            // ).chain().run_if(should_run).in_set(ERunStageChap::StateCheck)
         );
 
         // let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
@@ -382,46 +382,86 @@ pub fn sys_info_resource(
 }
 
 pub struct PluginBundleDefault;
-impl PluginGroup for PluginBundleDefault {
-    fn build(self) -> PluginGroupBuilder {
-        let mut group = PluginGroupBuilder::start::<Self>();
-        
-        group = group.add(PluginRunstage);
-        group = group.add(PluginGlobalAnimation);
-        group = group.add(PluginRenderBindGroup);
-        group = group.add(PluginScene);
-        group = group.add(PluginSceneAnimation);
-        group = group.add(PluginFlags);
-        group = group.add(PluginAnimeNodeEnable::new());
-        group = group.add(PluginTypeAnimatorableFloat::new());
-        group = group.add(PluginTypeAnimatorableVec2::new());
-        group = group.add(PluginTypeAnimatorableVec3::new());
-        group = group.add(PluginTypeAnimatorableVec4::new());
-        group = group.add(PluginTypeAnimatorableUint::new());
-        group = group.add(PluginTypeAnimatorableInt::new());
-        group = PluginGroupTransformNode::add(group);
-        group = group.add(PluginCamera)
-            .add(PluginAnimeCameraFOV::new())
-            .add(PluginAnimeCameraSize::new())
-            .add(PluginMesh)
-            // .add(PluginAnimeBoneOffset::new())
-            .add(PluginAnimeRenderIndiceRange::new())
-            .add(PluginGeometry)
-            .add(PluginLighting)
-            .add(PluginLayerMask)
-            .add(PluginViewerBase)
-            .add(PluginCulling);
-        group = PluginGroupMaterial::add(group);
-        group = group.add(PluginRenderer)
-            .add(PluginPassObject)
-            .add(PluginSkeleton)
-            .add(PluginDefaultMaterial)
-            .add(PluginDispose)
-            .add(PluginStateGlobal)
-            ;
+impl Plugin for PluginBundleDefault{
+    fn build(&self, app: &mut App) {
+        // todo!()
+        app.add_plugins(PluginRunstage)
+        .add_plugins(PluginRunstage)
+        .add_plugins(PluginGlobalAnimation)
+        .add_plugins(PluginRenderBindGroup)
+        .add_plugins(PluginScene)
+        .add_plugins(PluginSceneAnimation)
+        .add_plugins(PluginFlags)
+        .add_plugins(PluginAnimeNodeEnable::new())
+ 
+        .add_plugins(PluginTypeAnimatorableFloat::new())
+        .add_plugins(PluginTypeAnimatorableVec2::new())
+        .add_plugins(PluginTypeAnimatorableVec3::new())
+        .add_plugins(PluginTypeAnimatorableVec4::new())
+        .add_plugins(PluginTypeAnimatorableUint::new())
+        .add_plugins(PluginTypeAnimatorableInt::new())
 
-        group
+        .add_plugins(PluginGroupTransformNode)
+        .add_plugins(PluginCamera)
+        .add_plugins(PluginAnimeCameraFOV::new())
+        .add_plugins(PluginAnimeCameraSize::new())
+        .add_plugins(PluginMesh)
+        .add_plugins(PluginAnimeRenderIndiceRange::new())
+        .add_plugins(PluginGeometry)
+        .add_plugins(PluginLighting)
+        .add_plugins(PluginLayerMask)
+        .add_plugins(PluginViewerBase)
+        .add_plugins(PluginCulling)
+        .add_plugins(PluginGroupMaterial)
+        .add_plugins(PluginRenderer)
+        .add_plugins(PluginPassObject)
+        .add_plugins(PluginSkeleton)
+        .add_plugins(PluginDefaultMaterial)
+        .add_plugins(PluginDispose)
+        .add_plugins(PluginStateGlobal)
+        ;
     }
+}
+// impl Plugin for PluginBundleDefault {
+//     fn build(self) -> PluginGroupBuilder {
+//         let mut group = PluginGroupBuilder::start::<Self>();
+        
+//         group = group.add(PluginRunstage);
+//         group = group.add(PluginGlobalAnimation);
+//         group = group.add(PluginRenderBindGroup);
+//         group = group.add(PluginScene);
+//         group = group.add(PluginSceneAnimation);
+//         group = group.add(PluginFlags);
+//         group = group.add(PluginAnimeNodeEnable::new());
+//         group = group.add(PluginTypeAnimatorableFloat::new());
+//         group = group.add(PluginTypeAnimatorableVec2::new());
+//         group = group.add(PluginTypeAnimatorableVec3::new());
+//         group = group.add(PluginTypeAnimatorableVec4::new());
+//         group = group.add(PluginTypeAnimatorableUint::new());
+//         group = group.add(PluginTypeAnimatorableInt::new());
+//         group = PluginGroupTransformNode::add(group);
+//         group = group.add(PluginCamera)
+//             .add(PluginAnimeCameraFOV::new())
+//             .add(PluginAnimeCameraSize::new())
+//             .add(PluginMesh)
+//             // .add(PluginAnimeBoneOffset::new())
+//             .add(PluginAnimeRenderIndiceRange::new())
+//             .add(PluginGeometry)
+//             .add(PluginLighting)
+//             .add(PluginLayerMask)
+//             .add(PluginViewerBase)
+//             .add(PluginCulling);
+//         group = PluginGroupMaterial::add(group);
+//         group = group.add(PluginRenderer)
+//             .add(PluginPassObject)
+//             .add(PluginSkeleton)
+//             .add(PluginDefaultMaterial)
+//             .add(PluginDispose)
+//             .add(PluginStateGlobal)
+//             ;
+
+//         group
+//     }
     // fn init(
     //     &mut self,
     //     engine: &mut pi_scene_shell::engine_shell::EnginShell,
@@ -455,7 +495,7 @@ impl PluginGroup for PluginBundleDefault {
     //     // PluginBallBuilder.init(engine, stages);
     //     Ok(())
     // }
-}
+// }
 
 #[derive(SystemParam)]
 pub struct ActionSets<'w> {

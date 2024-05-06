@@ -1,7 +1,7 @@
 
 use std::sync::Arc;
 
-// use bevy_ecs::component::Component;
+
 use pi_render::renderer::texture::*;
 use wgpu::{TextureView, TextureFormat};
 
@@ -46,7 +46,7 @@ impl TextureKeyList {
     }
 }
 
-// #[derive(Default, Clone, Component)]
+// #[derive(Default, Clone, )]
 // pub struct TextureResList {
 //     pub data: [Option<pi_assets::asset::Handle<crate::prelude::TextureRes>>; TEXTURE_SLOT_COUNT],
 //     pub loaded: Vec<usize>,

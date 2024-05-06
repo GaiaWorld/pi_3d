@@ -3,7 +3,6 @@ use std::ops::{Deref, DerefMut};
 // use bevy_app::{Update, App, Plugin};
 use crate::prelude::*;
 // use bevy_ecs::{
-//     component::Component,
 //     entity::{self, Entity},
 //     query::Changed,
 //     schedule::{IntoSystemConfigs, IntoSystemSetConfig, SystemSet},
@@ -21,7 +20,6 @@ use pi_hash::XHashMap;
 use pi_render::rhi::asset::{ImageTextureDesc, TextureRes};
 use pi_share::Share;
 use pi_world::{filter::Changed, prelude::App, query::Query, schedule::Update, schedule_config::{IntoSystemConfigs, SystemSet}, single_res::{SingleRes, SingleResMut}, world::Entity};
-use pi_world_extend_plugin::plugin::Plugin;
 // use core::ops::Deref;
 use super::{
     environment_texture_loader::EnvironmentTextureTools,
@@ -278,49 +276,49 @@ pub fn sys_image_texture_loaded(
 }
 
 // #[derive(Resource)]
-pub struct ImageTextureViewLoader<K> {
-    pub wait: Share<usize>,
-    // pub success: Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
-    // pub fail: Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
-     _p: PhantomData<K>,
+pub struct ImageTextureViewLoader<K: Send + Sync +'static> {
+    pub wait: Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    pub success: Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
+    pub fail: Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
+    pub _p: PhantomData<K>,
 }
-impl<K> Default for ImageTextureViewLoader<K> {
+impl<K: Send + Sync +'static> Default for ImageTextureViewLoader<K> {
     fn default() -> Self {
         Self {
-            wait: Share::new(0),
-            // success: Share::new(SegQueue::new()),
-            // fail: Share::new(SegQueue::new()),
+            wait: Share::new(SegQueue::new()),
+            success: Share::new(SegQueue::new()),
+            fail: Share::new(SegQueue::new()),
             _p: PhantomData::default(),
         }
     }
 }
 
 pub fn sys_image_texture_view_load_launch<
-    K: std::ops::Deref<Target = u64>,
-    // D: From<ETextureViewUsage> ,
+    K: std::ops::Deref<Target = EKeyTexture> + Send + Sync +'static,
+    D: From<ETextureViewUsage> ,
 >(
     // mut commands: Commands,
-    // mut items: Query<(Entity, &K, &mut D), Changed<K>>,
+    mut items: Query<(Entity, &K, &mut D), Changed<K>>,
     loader: SingleRes<ImageTextureViewLoader<K>>,
-    // imgtex_assets_mgr: SingleRes<ShareAssetMgr<ImageTextureView>>,
-    // texres_assets_mgr: SingleRes<ShareAssetMgr<TextureRes>>,
-    // mut image_loader: SingleResMut<ImageTextureLoader>,
-    // queue: SingleRes<PiRenderQueue>,
-    // device: SingleRes<PiRenderDevice>,
-    // mut state: SingleResMut<StateTextureLoader>,
-    // targets: SingleRes<CustomRenderTargets>,
+    imgtex_assets_mgr: SingleRes<ShareAssetMgr<ImageTextureView>>,
+    texres_assets_mgr: SingleRes<ShareAssetMgr<TextureRes>>,
+    mut image_loader: SingleResMut<ImageTextureLoader>,
+    queue: SingleRes<PiRenderQueue>,
+    device: SingleRes<PiRenderDevice>,
+    mut state: SingleResMut<StateTextureLoader>,
+    targets: SingleRes<CustomRenderTargets>,
 ) {
-    let w = &loader.wait;
-    // items.iter_mut().for_each(|(entity, param, mut cmd)| {
-    //     state.texview_count += 1;
-    //     let param = param.deref();
-    //     match _sys_image_texture_view_load_launch2(entity, 0, param, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader, &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets) {
-    //         Some(data) => { 
-    //             *cmd = D::from(data); 
-    //         },
-    //         None => {}
-    //     }
-    // });
+    // let r = loader.success;
+    items.iter_mut().for_each(|(entity, param, mut cmd)| {
+        state.texview_count += 1;
+        let param = param.deref();
+        match _sys_image_texture_view_load_launch2(entity, 0, param, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader, &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets) {
+            Some(data) => { 
+                *cmd = D::from(data); 
+            },
+            None => {}
+        }
+    });
 }
 
 #[inline(never)]
@@ -409,7 +407,7 @@ fn _sys_image_texture_view_load_launch(
 }
 
 pub fn sys_image_texture_view_loaded_check<
-    K: std::ops::Deref<Target = EKeyTexture> ,
+    K: std::ops::Deref<Target = EKeyTexture> + Send + Sync +'static,
     D: From<ETextureViewUsage> ,
 >(
     // entities: Query<Entity>,
@@ -422,40 +420,40 @@ pub fn sys_image_texture_view_loaded_check<
     mut image_loader: SingleResMut<ImageTextureLoader>,
     mut state: SingleResMut<StateTextureLoader>,
 ) {
-    // _sys_image_texture_view_loaded_check(
-    //     &loader.wait,
-    //     &loader.success,
-    //     &loader.fail,
-    //     &imgtex_assets_mgr,
-    //     &mut image_loader,
-    //     &mut state,
-    // );
+    _sys_image_texture_view_loaded_check(
+        &loader.wait,
+        &loader.success,
+        &loader.fail,
+        &imgtex_assets_mgr,
+        &mut image_loader,
+        &mut state,
+    );
 
-    // let mut item = &loader.success.pop();
-    // while let Some((entity, _key, view, _)) = item {
-    //     item = loader.success.pop();
-    //     // log::error!("Texture Success {:?}", _key);
-    //     if let Ok((_, mut item)) = items.get_mut(entity) {
-    //         // log::error!("Texture Success Component");
-    //         // log::error!("Texture From Success Queue: {:?}", view.asset_u64());
-    //         *item = D::from(view);
-    //         state.texview_success += 1;
-    //     }
-    // }
+    let mut item = loader.success.pop();
+    while let Some((entity, _key, view, _)) = item {
+        item = loader.success.pop();
+        // log::error!("Texture Success {:?}", _key);
+        if let Ok((_, mut item)) = items.get_mut(entity) {
+            // log::error!("Texture Success Component");
+            // log::error!("Texture From Success Queue: {:?}", view.asset_u64());
+            *item = D::from(view);
+            state.texview_success += 1;
+        }
+    }
 
-    // let whitekey = KeyTexture::from(DefaultTexture::WHITE_2D);
-    // // let white = EKeyTexture::Tex(whitekey.clone());
-    // let key_u64 = whitekey.asset_u64();
-    // let view = texres_assets_mgr.get(&key_u64).unwrap();
-    // let mut item = loader.fail.pop();
-    // while let Some((entity, _key, _)) = item {
-    //     item = loader.fail.pop();
-    //     if let Ok((_, mut item)) = items.get_mut(entity) {
-    //         // log::error!("Texture From Fail Queue:");
-    //         *item = D::from(ETextureViewUsage::Tex(view.clone()));
-    //         state.texview_success += 1;
-    //     }
-    // }
+    let whitekey = KeyTexture::from(DefaultTexture::WHITE_2D);
+    // let white = EKeyTexture::Tex(whitekey.clone());
+    let key_u64 = whitekey.asset_u64();
+    let view = texres_assets_mgr.get(&key_u64).unwrap();
+    let mut item = loader.fail.pop();
+    while let Some((entity, _key, _)) = item {
+        item = loader.fail.pop();
+        if let Ok((_, mut item)) = items.get_mut(entity) {
+            // log::error!("Texture From Fail Queue:");
+            *item = D::from(ETextureViewUsage::Tex(view.clone()));
+            state.texview_success += 1;
+        }
+    }
 }
 #[inline(never)]
 fn _sys_image_texture_view_loaded_check(
@@ -537,8 +535,8 @@ impl<
 {
     fn build(&self, app: &mut App) {
         if app.world.get_single_res::<ImageTextureLoader>().is_none() {
-            app.world.register_single_res(ImageTextureLoader::default());
-            app.world.register_single_res(StateTextureLoader::default());
+            app.world.insert_single_res(ImageTextureLoader::default());
+            app.world.insert_single_res(StateTextureLoader::default());
 
             // app.configure_set(Update, StageTextureLoad::TextureRequest);
             // app.configure_set(Update, StageTextureLoad::TextureLoading);
@@ -567,14 +565,14 @@ impl<
                 sys_image_texture_loaded,
             );
         }
-        app.world.register_single_res(ImageTextureViewLoader::<K>::default());
-        // app.add_systems(
+        app.world.insert_single_res(ImageTextureViewLoader::<K>::default());
+        // app.add_system(
         // 	Update,
         //     (
         //         sys_image_texture_view_load_launch::<K, D>,
         //     ).chain().in_set(StageTextureLoad::TextureRequest)
         // );
-        // app.add_systems(
+        // app.add_system(
         // 	Update,
         //     (
         //         sys_image_texture_view_loaded_check::<K, D>,

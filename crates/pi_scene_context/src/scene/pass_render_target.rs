@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use pi_scene_shell::prelude::*;
 
-#[derive(Component)]
+
 pub struct MainCameraOpaqueTarget(pub Option<CustomRenderTarget>);
 impl MainCameraOpaqueTarget {
     pub fn binds(&self) -> Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)> {
@@ -17,7 +17,7 @@ impl MainCameraOpaqueTarget {
     }
 }
 
-#[derive(Component)]
+
 pub struct MainCameraDepthTarget(pub Option<CustomRenderTarget>);
 impl MainCameraDepthTarget {
     pub fn binds(&self) -> Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)> {

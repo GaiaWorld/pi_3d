@@ -194,7 +194,7 @@ pub struct ImageTextureViewLoaderRecord {
     pub fail: Share<SegQueue<(ObjectID, EKeyTexture)>>,
 }
 
-pub fn sys_image_texture_view_load_launch_call<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component>(
+pub fn sys_image_texture_view_load_launch_call<K: std::ops::Deref<Target = EKeyTexture> , D: From<ETextureViewUsage> >(
     entity: Entity, param: &K, cmd: &mut D,
     loader: &ImageTextureViewLoaderRecord,
     image_assets_mgr: &ShareAssetMgr<ImageTexture>,
@@ -284,7 +284,7 @@ pub fn sys_image_texture_view_load_launch_call<K: std::ops::Deref<Target = EKeyT
     }
 }
 
-pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component>(
+pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTexture> , D: From<ETextureViewUsage> >(
     entities: Query<Entity>,
     mut items: Query<(&K, &mut D)>,
     // mut commands: Commands,
@@ -379,17 +379,17 @@ pub struct StateTextureLoader {
     pub texview_waiting: u32,
 }
 
-pub struct PluginImageTextureViewLoad<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component>(PhantomData<(K, D)>);
-impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component> Plugin for PluginImageTextureViewLoad<K, D> {
+pub struct PluginImageTextureViewLoad<K: std::ops::Deref<Target = EKeyTexture> , D: From<ETextureViewUsage> >(PhantomData<(K, D)>);
+impl<K: std::ops::Deref<Target = EKeyTexture> , D: From<ETextureViewUsage> > Plugin for PluginImageTextureViewLoad<K, D> {
     fn build(&self, app: &mut App) {
         if app.world.contains_resource::<ImageTextureLoader>() == false {
-            app.insert_resource(ImageTextureLoader::default());
-            app.insert_resource(StateTextureLoader::default());
+            app.world.insert_single_res(ImageTextureLoader::default());
+            app.world.insert_single_res(StateTextureLoader::default());
 
             app.configure_set(Update, StageTextureLoad::TextureRequest);
             app.configure_set(Update, StageTextureLoad::TextureLoading.after(StageTextureLoad::TextureRequest));
             app.configure_set(Update, StageTextureLoad::TextureLoaded.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
-            app.add_systems(
+            app.add_system(
 				Update,
                 (
                     sys_image_texture_load_launch,
@@ -397,14 +397,14 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
                 ).chain().in_set(StageTextureLoad::TextureLoading)
             );
         }
-        app.insert_resource(ImageTextureViewLoader::<K>::default());
-        app.add_systems(
+        app.world.insert_single_res(ImageTextureViewLoader::<K>::default());
+        app.add_system(
 			Update,
             (
                 sys_image_texture_view_load_launch::<K, D>,
             ).chain().in_set(StageTextureLoad::TextureRequest)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
             (
                 sys_image_texture_view_loaded_check::<K, D>,
@@ -412,7 +412,7 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
         );
     }
 }
-impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component> Default for PluginImageTextureViewLoad<K, D> {
+impl<K: std::ops::Deref<Target = EKeyTexture> , D: From<ETextureViewUsage> > Default for PluginImageTextureViewLoad<K, D> {
     fn default() -> Self {
         Self(PhantomData::<(K, D)>::default())
     }

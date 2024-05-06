@@ -9,7 +9,7 @@ pub use super::command::*;
 pub use super::tree_left_right::*;
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StageTransform {
     TransformCreate,
     _TransformCreate,
@@ -38,7 +38,7 @@ pub struct StateTransform {
     pub max_level: u32,
 }
 
-pub type StateTransformQuery = QueryState<(&'static SceneID, &'static Enable, &'static GlobalEnable)>;
+pub type StateTransformQuery = QueryState<(), (&'static SceneID, &'static Enable, &'static GlobalEnable)>;
 
 pub fn sys_state_transform(
     items: Query<(&SceneID, &Enable, &GlobalEnable)>,

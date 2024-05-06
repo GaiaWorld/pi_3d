@@ -18,7 +18,7 @@ impl TCullingPerformance for StateLight {
 }
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
 pub enum StageLighting {
     LightCreate,
     _LightCreate,
@@ -29,21 +29,21 @@ pub enum StageLighting {
 }
 
 
-#[derive(Component)]
+
 pub struct DirectLight;
 
-#[derive(Component)]
+
 pub struct PointLight;
 
-#[derive(Component)]
+
 pub struct SpotLight;
 
-#[derive(Component)]
+
 pub struct HemisphericLight;
 
 // pub struct 
 
-#[derive(Component)]
+
 pub struct LightParam {
     pub(crate) color: Vector3,
     pub(crate) radius: f32,
@@ -61,7 +61,7 @@ impl Default for LightParam {
     }
 }
 
-#[derive(Component)]
+
 pub struct LightColor(pub Vector3);
 impl Default for LightColor {
     fn default() -> Self {
@@ -69,7 +69,7 @@ impl Default for LightColor {
     }
 }
 
-#[derive(Component)]
+
 pub struct LightRadius(pub f32);
 impl Default for LightRadius {
     fn default() -> Self {
@@ -78,7 +78,7 @@ impl Default for LightRadius {
 }
 
 
-#[derive(Component)]
+
 pub struct LightStrength(pub f32);
 impl Default for LightStrength {
     fn default() -> Self {
@@ -86,7 +86,7 @@ impl Default for LightStrength {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, )]
 pub enum LightingMode {
     Lambert,
     PBR,
@@ -102,7 +102,7 @@ impl LightingMode {
     }
 }
 
-#[derive(Component)]
+
 pub struct LightDirection(pub Vector3);
 impl Default for LightDirection {
     fn default() -> Self {

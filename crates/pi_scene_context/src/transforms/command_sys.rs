@@ -11,16 +11,21 @@ use super::transform_node::*;
 
 pub fn sys_create_transform_node(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
-    mut commands: Commands,
+    // mut commands: Commands,
+    mut alter1: Alter<(), (), (DisposeReady, DisposeCan), ()>,
+    mut alter2: Alter<(),(),(SceneID, ), ()>,
+    mut alter3: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
+    mut alter4: Alter<(), (), ActionTransformNodeBundle>,
+    mut alter5: Alter<(), (), (TransformNode,), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity)| {
-        let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
-            cmd
+        let mut transformnode = if alter1.get(entity).is_ok() {
+            let _ = ActionTransformNode::init(entity, &mut alter1, &mut alter2, &mut alter3, &mut alter4, scene);
+            let _ = alter5.alter(entity, (TransformNode,));
         } else {
             return;
         };
-        ActionTransformNode::init(&mut transformnode, scene);
-        transformnode.insert(TransformNode);
+        // ActionTransformNode::init(&mut transformnode, scene);
     });
 }
 
@@ -96,54 +101,74 @@ pub fn sys_act_local(
         }
     });
 }
+pub type ActionTransformNodeBundle = (
+    TransformNodeDirty,
+    LocalPosition,
+    LocalScaling,
+    LocalRotationQuaternion,
+    LocalEulerAngles,
+    RecordLocalPosition,
+    RecordLocalScaling,
+    RecordLocalRotationQuaternion,
+    RecordLocalEulerAngles,
+    LocalRotation,
+    LocalMatrix,
+    GlobalMatrix,
+    AbsoluteTransform,
+    FlagAnimationStartResetComp,
+    CullingFlag
+);
 
 pub struct ActionTransformNode;
 impl ActionTransformNode {
     pub fn init(
-        transformnode: &mut EntityCommands,
+        // transformnode: &mut EntityCommands,
+        entity: Entity,  
+        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan)>,
+        alter2: &mut Alter<(), (), (SceneID,)>,
+        alter3: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
+        alter4: &mut Alter<(), (), ActionTransformNodeBundle>,
         scene: Entity,
     ) {
-        ActionEntity::init(transformnode);
-        ActionScene::add_to_scene(transformnode, scene);
-        ActionTransformNode::init_for_tree(transformnode);
-        ActionTransformNode::as_transform_node(transformnode);
+        ActionEntity::init(entity, alter1);
+        ActionScene::add_to_scene(entity, alter2, scene);
+        ActionTransformNode::init_for_tree(entity, alter3);
+        ActionTransformNode::as_transform_node(entity, alter4);
     }
     fn as_transform_node(
-        commands: &mut EntityCommands,
+        entity: Entity,
+        commands: &mut Alter<(), (), ActionTransformNodeBundle>,
     ) {
-        commands
-            .insert(TransformNodeDirty)
-            .insert(LocalPosition::default())
-            .insert(LocalScaling::default())
-            .insert(LocalRotationQuaternion::default())
-            .insert(LocalEulerAngles::default())
-            .insert(RecordLocalPosition::default())
-            .insert(RecordLocalScaling::default())
-            .insert(RecordLocalRotationQuaternion::default())
-            .insert(RecordLocalEulerAngles::default())
-            .insert(LocalRotation(Rotation3::identity()))
-            .insert(LocalMatrix::new(Matrix::identity()))
-            .insert(GlobalMatrix::default())
-            .insert(AbsoluteTransform::default())
-            .insert(FlagAnimationStartResetComp)
-            .insert(CullingFlag(true))
-            ;
+        commands.alter(entity,
+           (TransformNodeDirty,
+            LocalPosition::default(),
+            LocalScaling::default(),
+            LocalRotationQuaternion::default(),
+            LocalEulerAngles::default(),
+            RecordLocalPosition::default(),
+            RecordLocalScaling::default(),
+            RecordLocalRotationQuaternion::default(),
+            RecordLocalEulerAngles::default(),
+            LocalRotation(Rotation3::identity()),
+            LocalMatrix::new(Matrix::identity()),
+            GlobalMatrix::default(),
+            AbsoluteTransform::default(),
+            FlagAnimationStartResetComp,
+            CullingFlag(true))
+        );
     }
 
     pub(crate) fn init_for_tree(
-        commands: &mut EntityCommands,
+        entity: Entity,
+        commands: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
     ) {
         // log::debug!("init_for_tree====={:?}", commands.id());
         commands
-            .insert(Down::default())
-            .insert(Up::default())
-            .insert(Layer::default())
+            .alter(entity, (Down::default(), Up::default(), Layer::default(),
             // .insert(NodeChilds::default())
             // .insert(NodeParent(None))
-            .insert(Enable::default())
-            .insert(RecordEnable::default())
-            .insert(GlobalEnable(true))
-            ;
+            Enable::default(), RecordEnable::default(), GlobalEnable(true))
+        );
     }
 
     pub(crate) fn _tree_modify(

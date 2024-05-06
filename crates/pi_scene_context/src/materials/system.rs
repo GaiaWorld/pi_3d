@@ -14,7 +14,7 @@ pub fn sys_material_textures_modify(
             &mut TextureKeyList,
             &mut EffectBindSampler2DList
         ),
-        Or<(Changed<AssetResShaderEffectMeta>, Changed<UniformTextureWithSamplerParamsDirty>)>
+        (Changed<AssetResShaderEffectMeta>, Changed<UniformTextureWithSamplerParamsDirty>)
     >,
     device: Res<PiRenderDevice>,
     asset_samp: Res<ShareAssetMgr<SamplerRes>>,
@@ -187,7 +187,7 @@ pub fn sys_texture_ready07(
             // , (&EffectBindTexture2D08Comp, &EffectBindSampler2D08Comp)
             , &mut EffectTextureSamplersComp
         ),
-        Or<(
+        (
             Changed<EffectBindTexture2DList>, Changed<EffectBindSampler2DList>
             //   Or<(Changed<EffectBindTexture2D01Comp>, Changed<EffectBindSampler2D01Comp>)>
             // , Or<(Changed<EffectBindTexture2D02Comp>, Changed<EffectBindSampler2D02Comp>)>
@@ -197,7 +197,7 @@ pub fn sys_texture_ready07(
             // , Or<(Changed<EffectBindTexture2D06Comp>, Changed<EffectBindSampler2D06Comp>)>
             // , Or<(Changed<EffectBindTexture2D07Comp>, Changed<EffectBindSampler2D07Comp>)>
             // , Or<(Changed<EffectBindTexture2D08Comp>, Changed<EffectBindSampler2D08Comp>)>
-        )>
+        )
     >,
 ) {
     items.iter_mut().for_each(|(

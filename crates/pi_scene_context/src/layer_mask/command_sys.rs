@@ -26,7 +26,7 @@ impl ActionLayerMask {
         entity: Entity,
         val: LayerMask,
     ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListLayerMask>().unwrap();
+        let mut cmds = app.world.get_single_res_mut::<ActionListLayerMask>().unwrap();
         cmds.push(OpsLayerMask(entity, val));
     }
 }

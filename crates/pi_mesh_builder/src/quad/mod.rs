@@ -151,8 +151,8 @@ pub struct SingleQuad(pub Option<Handle<EVertexBufferRange>>, pub Option<Handle<
 pub struct PluginQuadBuilder;
 impl Plugin for PluginQuadBuilder {
     fn build(&self, app: &mut App) {
-        let asset_mgr = app.world.get_resource::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
-        // let mut data_map = app.world.get_resource_mut::<VertexBufferDataMap3D>().unwrap();
+        let asset_mgr = app.world.get_single_res::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
+        // let mut data_map = app.world.get_single_res_mut::<VertexBufferDataMap3D>().unwrap();
         // if !ActionVertexBuffer::check(&asset_mgr, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER)) {
         //     ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER), bytemuck::cast_slice(&QuadBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>());
         // }
@@ -160,9 +160,9 @@ impl Plugin for PluginQuadBuilder {
         //     ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES), bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>());
         // }
 
-        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
-        let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
-        let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        let device = app.world.get_single_res::<PiRenderDevice>().unwrap().0.clone();
+        let queue = app.world.get_single_res::<PiRenderQueue>().unwrap().0.clone();
+        let mut allocator = app.world.get_single_res_mut::<VertexBufferAllocator3D>().unwrap();
         let mut singequad = SingleQuad::default();
         let key = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER);
         if let Some(bufferrange) = allocator.create_not_updatable_buffer(&device, &queue, &bytemuck::cast_slice(&QuadBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>(), None) {
@@ -176,7 +176,7 @@ impl Plugin for PluginQuadBuilder {
                 singequad.1 = Some(range);
             }
         }
-        app.insert_resource(singequad);
+        app.world.insert_single_res(singequad);
         // app.add_startup_system(regist);
     }
 }

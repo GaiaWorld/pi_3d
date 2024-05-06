@@ -50,5 +50,5 @@ pub trait SlotActiveRequire {
     const ASK_SLOT_COUNT: u8;
 }
 
-#[derive(Component)]
+// 
 pub struct TexWithAtlas;

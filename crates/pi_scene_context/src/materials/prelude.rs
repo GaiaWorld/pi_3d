@@ -18,7 +18,7 @@ pub use super::uniforms::{
     // sys_uniform::*,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
 pub enum StageMaterial {
     Create,
     _Init,
@@ -65,7 +65,7 @@ pub struct ActionSetMaterial<'w> {
     // pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 }
 
-pub type StateMaterialQuery = QueryState<(&'static AssetResShaderEffectMeta, &'static EffectTextureSamplersComp)>;
+pub type StateMaterialQuery = QueryState<(), (&'static AssetResShaderEffectMeta, &'static EffectTextureSamplersComp)>;
 
 pub fn sys_state_material(
     mut state: ResMut<StateMaterial>,

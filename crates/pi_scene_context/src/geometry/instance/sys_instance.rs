@@ -43,9 +43,9 @@ impl Ord for TmpInstanceSort {
             (
                 Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable, &mut InstancedMeshTransparentSortCollection
             ),
-            Or<(
+            (
                 Changed<ModelInstanceAttributes>, Changed<InstanceSourceRefs>, Changed<MeshInstanceState>, Changed<DirtyInstanceSourceRefs>
-            )>
+            )
         >,
         dispoeds: Query<&DisposeReady>,
         geometrys: Query<&InstancedInfo>,

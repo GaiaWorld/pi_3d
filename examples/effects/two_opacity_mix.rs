@@ -134,8 +134,8 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     
-    app.add_systems(Startup, sys_setup_ball);
-    app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_system(Startup, sys_setup_ball);
+    app.add_system(Startup, setup.after(base::setup_default_mat));
     
     
     // app.run()

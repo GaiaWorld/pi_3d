@@ -73,7 +73,7 @@ pub trait InterfaceMesh {
 //         self.as_transform_node(entity);
 //         self.transform_parent(entity, scene);
 
-//         let commands = world.get_resource_mut::<SingleInstanceMeshCreateCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleInstanceMeshCreateCommandList>().unwrap();
 //         commands.list.push(EInstanceMeshCreateCommand::CreateInstance(source, entity));
 
 //         entity
@@ -84,7 +84,7 @@ pub trait InterfaceMesh {
 //         instance: ObjectID,
 //         color: Vector4,
 //     ) -> &Self {
-//         let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
+//         let commands = self.world().get_single_res_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
 //         commands.list.push(EInstanceMeshModifyCommand::InstanceColor(instance, color));
 
 //         self
@@ -95,7 +95,7 @@ pub trait InterfaceMesh {
 //         instance: ObjectID,
 //         value: Vector4,
 //     ) -> &Self {
-//         let commands = self.world().get_resource_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
+//         let commands = self.world().get_single_res_mut::<SingleInstanceMeshModifyCommandList>().unwrap();
 //         commands.list.push(EInstanceMeshModifyCommand::InstanceTillOff(instance, value));
 
 //         self
@@ -107,7 +107,7 @@ pub trait InterfaceMesh {
 //     ) -> & Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleMeshCreateCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleMeshCreateCommandList>().unwrap();
 //         commands.list.push(EMeshCreateCommand::Create(object));
 
 //         self.render_sort(object, TransparentSortParam::opaque());

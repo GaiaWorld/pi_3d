@@ -386,7 +386,8 @@ impl GLTFTempLoaded {
     pub fn analy(
         gltf: Handle<GLTFBase>,
         base_url: Atom,
-        commands: &mut Commands,
+        commands: &mut Insert<()>,
+
         vb_assets_mgr: &ShareAssetMgr<AssetVertexBuffer>, 
         vballocator: &mut VertexBufferAllocator3D,
         device: &RenderDevice,
@@ -709,7 +710,7 @@ impl GLTFTempLoaded {
                     let index = node.index();
                     let cfg: IParticleSystemConfig = gltf_format_particle_cfg(cfg);
                     let key_u64 = result.key_particle_calculator(index);
-                    let id = commands.spawn_empty().id();
+                    let id = commands.insert(());
                     particlesys_cmds.calculator.push(OpsCPUParticleCalculator::ops(id, cfg));
                     let res = ParticleSystemCalculatorID(id, 1024, particlesys_res.calculator_queue.queue());
                     if let Ok(res) = particlesys_res.calcultors.insert(key_u64, res) {
@@ -908,7 +909,7 @@ pub fn sys_gltf_base_loaded_check(
 }
 
 pub fn sys_gltf_analy(
-    mut commands: Commands,
+    mut commands: Insert<()>,
     mut loader: ResMut<GLTFResLoader>,
     anime_assets: TypeAnimeAssetMgrs,
     mut vballocator: ResMut<VertexBufferAllocator3D>,

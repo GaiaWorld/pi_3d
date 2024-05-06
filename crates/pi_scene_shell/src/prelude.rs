@@ -75,7 +75,6 @@ pub use pi_hash::{XHashSet, XHashMap, DefaultHasher};
 pub use pi_async_rt::prelude::AsyncRuntime;
 pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 pub use pi_share::{Share, ThreadSync, ShareRefCell};
-use pi_world::world::Entity;
 
 pub use crate::run_stage::ERunStageChap;
 pub use crate::object::ObjectID;
@@ -102,7 +101,11 @@ pub use crate::pipeline::*;
 pub use crate::custom_rendertarget::*;
 pub use crate::object::*;
 pub use crate::batch::*;
-
+pub use pi_world::prelude::*;
+pub use pi_world_macros::{Resource, SystemParam};
+pub use pi_world::prelude::{SingleResMut as ResMut, SingleRes as Res};
+pub use pi_world::query::QueryState;
+pub use pi_world;
 // #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);
 
@@ -111,7 +114,7 @@ pub struct EngineInstant(pub pi_time::Instant);
 pub struct EffectTextureSamplersComp(pub Option<EffectTextureSamplers>);
 
 /////////////////////////////////////// Global Control
-// #[derive(Component)]
+
 pub enum GlobalColorSpace {
     Linear,
     Gamma,
@@ -187,7 +190,7 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
     }
 }
 
-// #[derive(Component)]
+
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts, pub KeyShaderFromAttributes);
 
 ////////////////////////////////////// Shader

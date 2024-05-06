@@ -63,12 +63,12 @@ pub fn sys_vertex_buffer_slots_loaded(
             // , (Option<&AssetDescVBSlot11>, Option<&AssetResVBSlot11>)
             // , (Option<&AssetDescVBSlot12>, Option<&AssetResVBSlot12>)
         ),
-        Or<(
+        (
             Changed<AssetResVBSlot01>, Changed<AssetResVBSlot02>, Changed<AssetResVBSlot03>, Changed<AssetResVBSlot04>,
             Changed<AssetResVBSlot05>, Changed<AssetResVBSlot06>, Changed<AssetResVBSlot07>, Changed<AssetResVBSlot08>,
             // Changed<AssetResVBSlot09>, Changed<AssetResVBSlot10>, Changed<AssetResVBSlot11>, Changed<AssetResVBSlot12>,
             Changed<AssetResBufferIndices>, Changed<IndicesBufferDesc>
-        )>
+        )
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut meshes: Query<&mut RenderGeometryEable>,

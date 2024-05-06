@@ -4,8 +4,7 @@ use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::XHashMap;
 use pi_share::ThreadSync;
 use pi_world::{alter::Alter, filter::Changed, insert::Bundle, prelude::App, query::Query, schedule::Update, single_res::{SingleRes, SingleResMut}};
-use pi_world_extend_plugin::plugin::Plugin;
-
+use pi_world::prelude::Plugin;
 use crate::{run_stage::{TSystemStageInfo}, object::ObjectID};
 
 
@@ -149,9 +148,9 @@ where
     S: TSystemStageInfo + 'static + Send + Sync
 {
     fn build(&self, app: &mut App) {
-        app.world.register_single_res(AssetSyncWaitOption::<K0, K, D, R>(XHashMap::default(), vec![], PhantomData));
+        app.world.insert_single_res(AssetSyncWaitOption::<K0, K, D, R>(XHashMap::default(), vec![], PhantomData));
         if app.world.get_single_res::<ShareAssetMgr::<D>>().is_none() {
-            app.world.register_single_res(ShareAssetMgr::<D>::new(GarbageEmpty(), self.0, self.1, self.2));
+            app.world.insert_single_res(ShareAssetMgr::<D>::new(GarbageEmpty(), self.0, self.1, self.2));
         }
 
         app.add_system(Update, sys_sync_load_option_create::<K0, K, D, R>);

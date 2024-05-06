@@ -1,4 +1,4 @@
 use pi_scene_shell::prelude::*;
 
-#[derive(Component, Clone)]
+#[derive( Clone)]
 pub struct AbstructMesh;

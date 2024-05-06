@@ -71,10 +71,10 @@ impl TMeshStatePass for PassShader                      { const MESH_STATE: u8 =
 impl TMeshStatePass for PassPipeline                    { const MESH_STATE: u8 = 008; fn is_some(&self) -> bool { self.val().is_some() } }
 impl TMeshStatePass for PassDraw                        { const MESH_STATE: u8 = 009; fn is_some(&self) -> bool { self.val().is_some() } }
 
-#[derive(Clone, Default, Component)]
+#[derive(Clone, Default)]
 pub struct MeshStates(pub Vec<EMeshState>);
 
-#[derive(Component)]
+
 pub struct DirtyMeshStates;
 
 #[derive(Resource)]
@@ -82,10 +82,10 @@ pub struct StateRecordCfg {
     pub write_state: bool,
 }
 
-    fn sys_mesh_state_by_pass<T: TMeshStatePass + Component, const P: u16>(
+    fn sys_mesh_state_by_pass<T: TMeshStatePass , const P: u16>(
         mut models: Query<&mut MeshStates>,
         passes: Query<(&PassModelID, &T), Changed<T>>,
-        mut commands: Commands,
+        mut commands: Alter<(),(), (DirtyMeshStates,), ()>,
     ) {
         passes.iter().for_each(|(id_model, val)| {
             if val.is_some() {
@@ -94,38 +94,39 @@ pub struct StateRecordCfg {
                     if !states.0.contains(&state) {
                         states.0.push(state);
                     }
-                    if let Some(mut cmd) = commands.get_entity(id_model.0) {
-                        cmd.insert(DirtyMeshStates);
+                    if commands.get(id_model.0).is_ok() {
+                        commands.alter(id_model.0,(DirtyMeshStates, ));
                     }
                 }
             }
         });
     }
-    fn sys_mesh_state_by_model<T: TMeshState + Component>(
+    fn sys_mesh_state_by_model<T: TMeshState >(
         mut models: Query<(ObjectID, &mut MeshStates), Changed<T>>,
-        mut commands: Commands,
+        mut commands: Alter<(),(), (DirtyMeshStates,), ()>,
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
             let state = EMeshState::val(T::MESH_STATE, PassTag::PASS_TAG_08);
             if !states.0.contains(&state) {
                 states.0.push(state);
             }
-            if let Some(mut cmd) = commands.get_entity(id_model) {
-                cmd.insert(DirtyMeshStates);
+            // if let Some(mut cmd) = commands.get_entity(id_model) {
+            if commands.get(id_model).is_ok() {
+                commands.alter(id_model, (DirtyMeshStates,));
             }
         });
     }
     fn sys_mesh_state_by_geometry(
         mut models: Query<(ObjectID, &mut MeshStates), Changed<RenderGeometryEable>>,
-        mut commands: Commands,
+        mut commands: Alter<(),(), (DirtyMeshStates,), ()>,
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
             let state = EMeshState::val(RenderGeometryComp::MESH_STATE, PassTag::PASS_TAG_08);
             if !states.0.contains(&state) {
                 states.0.push(state);
             }
-            if let Some(mut cmd) = commands.get_entity(id_model) {
-                cmd.insert(DirtyMeshStates);
+            if commands.get(id_model).is_ok() {
+                commands.alter(id_model, (DirtyMeshStates,));
             }
         });
     }
@@ -166,7 +167,7 @@ pub struct PluginStateToFile;
 impl Plugin for PluginStateToFile {
     fn build(&self, app: &mut App) {
 
-        app.insert_resource(StateRecordCfg { write_state: true });
+        app.world.insert_single_res(StateRecordCfg { write_state: true });
         
         let root_dir = std::env::current_dir().unwrap();
         let file_name = FILE_NAME;
@@ -176,119 +177,394 @@ impl Plugin for PluginStateToFile {
             return;
         }
         
-        app.add_systems(
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_01 }>,
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_02 }>,
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_03 }>,
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_04 }>,
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_05 }>,
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_06 }>,
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_07 }>,
+        //         sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_08 }>,
+        //     ).in_set(ERunStageChap::StateCheck)
+        // );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_mesh_state_by_model::<AbstructMesh>,
+        //         sys_mesh_state_by_geometry,
+        //         // sys_check,
+        //         sys_mesh_state_to_file
+        //     ).chain().in_set(ERunStageChap::StateCheck)
+        // );
+
+        app.add_system(
 			Update,
-            (
+            
                 sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_01 }>,
-                sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_02 }>
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_07 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupScene, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
         
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_01 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_07 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupModel, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
                 sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_01 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_02 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_03 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_04 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_05 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_06 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_07 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_07 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_08 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_01 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_02 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_03 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_04 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_05 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_06 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_07 }>,
-                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_07 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassBindGroupTextureSamplers, { PassTag::PASS_08 }>,
+        );
+        app.add_system(
+			Update,
+            
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_01 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_07 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassBindGroups, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_01 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_07 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassShader, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
                 sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_01 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_07 }>,
-                sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
+                sys_mesh_state_by_pass::<PassPipeline, { PassTag::PASS_08 }>
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_01 }>,
-                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_02 }>,
-                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_03 }>,
-                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_04 }>,
-                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_05 }>,
-                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_06 }>,
-                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_07 }>,
-                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_08 }>,
-            ).in_set(ERunStageChap::StateCheck)
         );
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
+                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_02 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_03 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_04 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_05 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_06 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_07 }>,
+        );
+        app.add_system(
+			Update,
+                sys_mesh_state_by_pass::<PassDraw, { PassTag::PASS_08 }>,
+        );
+
+        app.add_system(
+			Update,
+            
                 sys_mesh_state_by_model::<AbstructMesh>,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_by_geometry,
                 // sys_check,
+        );
+        app.add_system(
+			Update,
                 sys_mesh_state_to_file
-            ).chain().in_set(ERunStageChap::StateCheck)
         );
     }
 }

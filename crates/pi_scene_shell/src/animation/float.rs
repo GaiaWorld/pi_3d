@@ -1,4 +1,4 @@
-// use bevy_ecs::component::Component;
+
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::Number;
 

@@ -149,7 +149,7 @@ pub fn main() {
     app.add_plugins(PluginTest);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_system(Startup, setup.after(base::setup_default_mat));
     
     
     app.run()

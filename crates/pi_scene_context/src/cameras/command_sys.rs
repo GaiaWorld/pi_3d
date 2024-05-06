@@ -3,30 +3,105 @@ use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
-    viewer::{prelude::*, command_sys::ActionViewer},
-    transforms::command_sys::ActionTransformNode,
-    layer_mask::prelude::*, prelude::{SceneMainCameraID, SceneID},
+    flags::{CullingFlag, Enable, GlobalEnable, RecordEnable}, layer_mask::prelude::*, prelude::{DirtyViewerRenderersInfo, SceneID, SceneMainCameraID, ViewerRenderersInfo}, transforms::command_sys::ActionTransformNode, viewer::{command_sys::ActionViewer, prelude::*}
 };
 
 use super::{
-    target_camera::*,
-    camera::*,
-    command::*,
+    camera::*, command::*, target_camera::*, AbsoluteTransform, GlobalMatrix, LocalEulerAngles, LocalMatrix, LocalPosition, LocalRotation, LocalRotationQuaternion, LocalScaling, RecordLocalEulerAngles, RecordLocalPosition, RecordLocalRotationQuaternion, RecordLocalScaling, TransformNodeDirty
 };
 
 pub fn sys_create_camera(
     mut cmds: ResMut<ActionListCameraCreate>,
-    mut commands: Commands,
+    
+    mut alter1: Alter<(), (), (DisposeReady, DisposeCan), ()>,
+    mut alter2: Alter<(), (), (SceneID,), ()>,
+    mut alter3: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
+    mut alter4: Alter<
+        (),
+        (),
+        (
+            TransformNodeDirty,
+            LocalPosition,
+            LocalScaling,
+            LocalRotationQuaternion,
+            LocalEulerAngles,
+            RecordLocalPosition,
+            RecordLocalScaling,
+            RecordLocalRotationQuaternion,
+            RecordLocalEulerAngles,
+            LocalRotation,
+            LocalMatrix,
+            GlobalMatrix,
+            AbsoluteTransform,
+            FlagAnimationStartResetComp,
+            CullingFlag
+        ), 
+        ()>,
+    mut commands: Alter<
+        (),
+        (),
+        (
+            Camera,
+            ViewerDistanceCompute,
+            CameraFov,
+            CameraOrthSize,
+            RecordCameraFov,
+            RecordCameraOrthSize,
+            LayerMask,
+            CameraUp,
+            CameraTarget,
+            TargetCameraParam,
+            CameraParam,
+        ), 
+        ()>,
+    mut commands1: Alter<
+        (),
+        (),
+        (
+            Camera,
+            ViewerDistanceCompute,
+            CameraFov,
+            CameraOrthSize,
+            RecordCameraFov,
+            RecordCameraOrthSize,
+            LayerMask,
+            CameraUp,
+            CameraTarget,
+            TargetCameraParam,
+            CameraParam,
+        ), 
+        ()>,
+    mut commands2: Alter<
+        (),
+        (), 
+        (
+            ViewerAspect,
+            ViewerViewMatrix,
+            ViewerProjectionMatrix,
+            ViewerTransformMatrix,
+            ViewerGlobalPosition,
+            ViewerDirection,
+            ModelList,
+            FlagModelList,
+            ModelListAfterCulling,
+            ViewerActive,
+            ViewerRenderersInfo,
+            DirtyViewerRenderersInfo,
+            ForceIncludeModelList,
+            FlagForceIncludeModelList
+        ),
+        ()>,
+    mut commands3: Alter<(),(), (BindViewer, ), ()>,
     mut dynallocator: ResMut<ResBindBufferAllocator>,
     mut errors: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity)| {
-        if let Some(mut commands) = commands.get_entity(entity) {
+        if commands.get(entity).is_ok() {
 
-            ActionCamera::init(&mut commands, scene);
+            ActionCamera::init(entity, &mut alter1, &mut alter2, &mut alter3, &mut alter4, &mut commands, &mut commands1, &mut commands2,  scene);
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
-                commands.insert(bindviewer);
+                commands3.alter(entity,(bindviewer,));
             } else {
                 errors.record(entity, ErrorRecord::ERROR_BIND_VIEWER_CREATE_FAIL);
             }
@@ -140,34 +215,151 @@ pub fn sys_act_camera_aspect(
 pub struct ActionCamera;
 impl ActionCamera {
     pub fn init(
-        commands: &mut EntityCommands,
+        entity: Entity,
+        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan), ()>,
+        alter2: &mut Alter<(), (), (SceneID,), ()>,
+        alter3: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
+        alter4: &mut Alter<
+        (),
+        (),
+        (
+            TransformNodeDirty,
+            LocalPosition,
+            LocalScaling,
+            LocalRotationQuaternion,
+            LocalEulerAngles,
+            RecordLocalPosition,
+            RecordLocalScaling,
+            RecordLocalRotationQuaternion,
+            RecordLocalEulerAngles,
+            LocalRotation,
+            LocalMatrix,
+            GlobalMatrix,
+            AbsoluteTransform,
+            FlagAnimationStartResetComp,
+            CullingFlag
+        ), 
+        ()>,
+        commands: &mut Alter<
+        (),
+        (),
+        (
+            Camera,
+            ViewerDistanceCompute,
+            CameraFov,
+            CameraOrthSize,
+            RecordCameraFov,
+            RecordCameraOrthSize,
+            LayerMask,
+            CameraUp,
+            CameraTarget,
+            TargetCameraParam,
+            CameraParam,
+        ), 
+        ()>,
+        commands1: &mut Alter<
+        (),
+        (),
+        (
+            Camera,
+            ViewerDistanceCompute,
+            CameraFov,
+            CameraOrthSize,
+            RecordCameraFov,
+            RecordCameraOrthSize,
+            LayerMask,
+            CameraUp,
+            CameraTarget,
+            TargetCameraParam,
+            CameraParam,
+        ), 
+        ()>,
+        commands2: &mut Alter<
+        (),
+        (), 
+        (
+            ViewerAspect,
+            ViewerViewMatrix,
+            ViewerProjectionMatrix,
+            ViewerTransformMatrix,
+            ViewerGlobalPosition,
+            ViewerDirection,
+            ModelList,
+            FlagModelList,
+            ModelListAfterCulling,
+            ViewerActive,
+            ViewerRenderersInfo,
+            DirtyViewerRenderersInfo,
+            ForceIncludeModelList,
+            FlagForceIncludeModelList
+        ),
+        ()>,
         scene: Entity,
     ) {
-        ActionTransformNode::init(commands, scene);
-        ActionCamera::as_camera(commands);
+        ActionTransformNode::init(entity, alter1, alter2, alter3, alter4, scene);
+        ActionCamera::as_camera(entity, commands1, commands2);
     }
     pub(crate) fn as_camera(
-        commands: &mut EntityCommands,
+        entity: Entity,
+        commands: &mut Alter<
+        (),
+        (),
+        (
+            Camera,
+            ViewerDistanceCompute,
+            CameraFov,
+            CameraOrthSize,
+            RecordCameraFov,
+            RecordCameraOrthSize,
+            LayerMask,
+            CameraUp,
+            CameraTarget,
+            TargetCameraParam,
+            CameraParam,
+        ), 
+        ()>,
+        commands2: &mut Alter<
+        (),
+        (), 
+        (
+            ViewerAspect,
+            ViewerViewMatrix,
+            ViewerProjectionMatrix,
+            ViewerTransformMatrix,
+            ViewerGlobalPosition,
+            ViewerDirection,
+            ModelList,
+            FlagModelList,
+            ModelListAfterCulling,
+            ViewerActive,
+            ViewerRenderersInfo,
+            DirtyViewerRenderersInfo,
+            ForceIncludeModelList,
+            FlagForceIncludeModelList
+        ),
+        ()>,
     ) {
-        commands.insert(Camera(false))
-            .insert(ViewerDistanceCompute::default())
-            .insert(CameraFov::default())
-            .insert(CameraOrthSize::default())
-            .insert(RecordCameraFov::default())
-            .insert(RecordCameraOrthSize::default()) 
-            .insert(LayerMask::default())
-            .insert(CameraUp(CoordinateSytem3::up()))
-            .insert(CameraTarget(Vector3::new(0., 0., 1.)))
-            .insert(TargetCameraParam::default())
-            .insert(CameraParam::default())
-            ;
+        commands.alter(entity, (
+            Camera(false),
+            ViewerDistanceCompute::default(),
+            CameraFov::default(),
+            CameraOrthSize::default(),
+            RecordCameraFov::default(),
+            RecordCameraOrthSize::default(), 
+            LayerMask::default(),
+            CameraUp(CoordinateSytem3::up()),
+            CameraTarget(Vector3::new(0., 0., 1.)),
+            TargetCameraParam::default(),
+            CameraParam::default()
+        ));
+    
         
-        ActionViewer::as_viewer(commands, false);
+        ActionViewer::as_viewer(entity, commands2, false);
     }
 }
 
     pub fn sys_update_target_camera_modify(
-        mut cameras: Query<(&CameraUp, &CameraTarget, &mut TargetCameraParam), Or<(Changed<CameraUp>, Changed<CameraTarget>)>>,
+        mut cameras: Query<(&CameraUp, &CameraTarget, &mut TargetCameraParam), (Changed<CameraUp>, Changed<CameraTarget>)>,
     ) {
         cameras.iter_mut().for_each(|(up, target, mut param)| {
             *param = TargetCameraParam::create(up.0.clone(), target.0.clone());

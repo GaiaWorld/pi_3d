@@ -3,7 +3,7 @@ use pi_scene_shell::prelude::*;
 
 use crate::{viewer::prelude::TCullingPerformance, layer_mask::prelude::*};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
 pub enum StageShadowGenerator {
     Create,
     _CreateApply,
@@ -13,7 +13,7 @@ pub enum StageShadowGenerator {
     Culling,
 }
 
-#[derive(Deref, Component)]
+#[derive(Deref, )]
 pub struct ShadowLayerMask(pub LayerMask);
 impl TViewerLayerMask for ShadowLayerMask {
     fn include(&self, other: u32) -> bool {
@@ -22,20 +22,20 @@ impl TViewerLayerMask for ShadowLayerMask {
 }
 
 
-#[derive(Deref, Component)]
+#[derive(Deref, )]
 pub struct ShadowCastPassTag(pub PassTag);
 
-#[derive(Deref, Component)]
+#[derive(Deref, )]
 pub struct ShadowLinkedLightID(pub Entity);
 
-#[derive(Deref, Component)]
+#[derive(Deref, )]
 pub struct LightLinkedShadowID(pub Option<Entity>);
 
 
-#[derive(Deref, Component)]
+#[derive(Deref, )]
 pub struct ShadowIndex(pub u32);
 
-#[derive(Component)]
+
 pub struct ShadowParam {
     pub minz: f32,
     pub maxz: f32,
@@ -50,10 +50,10 @@ impl Default for ShadowParam {
     }
 }
 
-#[derive(Deref, Component)]
+#[derive(Deref, )]
 pub struct ShadowGeneratorID(pub ObjectID);
 
-#[derive(Component)]
+
 pub struct ShadowAngle(pub f32);
 impl Default for ShadowAngle {
     fn default() -> Self {

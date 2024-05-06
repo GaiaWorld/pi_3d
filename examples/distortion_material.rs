@@ -78,7 +78,7 @@ pub fn setup(
 pub struct PluginDistortionMaterial;
 impl Plugin for PluginDistortionMaterial {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup.after(pi_pbr::setup));
+        app.add_system(Startup, setup.after(pi_pbr::setup));
     }
 }
 

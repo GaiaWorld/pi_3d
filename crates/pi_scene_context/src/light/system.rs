@@ -12,8 +12,9 @@ use crate::{
 use super::{spot::SpotLightAngle, hemisphere::HemiGrounds, base::*};
 
 pub fn sys_light_index_create(
-    mut commands: Commands,
-    items: Query<(Entity, &SceneID, Option<&DirectLight>, Option<&PointLight>, Option<&SpotLight>, Option<&HemisphericLight>), Or<(Added<DirectLight>, Added<PointLight>, Added<SpotLight>, Added<HemisphericLight>)>>,
+    mut commands: Alter<(), (), (SceneItemIndex,), ()>,
+
+    items: Query<(Entity, &SceneID, Option<&DirectLight>, Option<&PointLight>, Option<&SpotLight>, Option<&HemisphericLight>), (/* Added<DirectLight>, Added<PointLight>, Added<SpotLight>, Added<HemisphericLight> */)>,
     mut scenes: Query<(&mut SceneDirectLightsQueue, &mut ScenePointLightsQueue, &mut SceneSpotLightsQueue, &mut SceneHemiLightsQueue, &mut SceneLightingInfosDirty)>,
 ) {
 
@@ -22,20 +23,23 @@ pub fn sys_light_index_create(
         if let Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi, mut dirty)) = scenes.get_mut(idscene.0) {
 
             if direct.is_some() {
-                commands.entity(entity).insert(queuedirect.0.add(entity));
+                commands.alter(entity, (queuedirect.0.add(entity),));
                 *dirty = SceneLightingInfosDirty;
             }
             if point.is_some() {
                 // log::warn!("Add Point !!");
-                commands.entity(entity).insert(queuepoint.0.add(entity));
+                // commands.entity(entity).insert(queuepoint.0.add(entity));
+                commands.alter(entity, (queuedirect.0.add(entity),));
                 *dirty = SceneLightingInfosDirty;
             }
             if spot.is_some() {
-                commands.entity(entity).insert(queuespot.0.add(entity));
+                // commands.entity(entity).insert(queuespot.0.add(entity));
+                commands.alter(entity, (queuedirect.0.add(entity),));
                 *dirty = SceneLightingInfosDirty;
             }
             if hemi.is_some() {
-                commands.entity(entity).insert(queuehemi.0.add(entity));
+                // commands.entity(entity).insert(queuehemi.0.add(entity));
+                commands.alter(entity, (queuedirect.0.add(entity),));
                 *dirty = SceneLightingInfosDirty;
             }
         }
@@ -45,7 +49,7 @@ pub fn sys_light_index_create(
 pub fn sys_direct_light_update(
     items: Query<
         (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightParam, &LayerMask, &GlobalEnable, &GlobalMatrix),
-        Or<(Changed<LightParam>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalMatrix>)>
+        (Changed<LightParam>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalMatrix>)
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
@@ -62,7 +66,7 @@ pub fn sys_direct_light_update(
 pub fn sys_point_light_update(
     items: Query<
         (&PointLight, &SceneID, &SceneItemIndex, &LightParam, &GlobalMatrix, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
+        (Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
@@ -78,7 +82,7 @@ pub fn sys_point_light_update(
 pub fn sys_spot_light_update(
     items: Query<
         (&SpotLight, &SceneID, &SceneItemIndex, &LightDirection, &LightParam, &SpotLightAngle, &GlobalMatrix, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightDirection>, Changed<LightParam>, Changed<SpotLightAngle>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
+        (Changed<LightDirection>, Changed<LightParam>, Changed<SpotLightAngle>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
@@ -94,7 +98,7 @@ pub fn sys_spot_light_update(
 pub fn sys_hemi_light_update(
     items: Query<
         (&HemiGrounds, &SceneID, &SceneItemIndex, &LightParam, &GlobalMatrix, &LayerMask, &GlobalEnable),
-        Or<(Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
+        (Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {

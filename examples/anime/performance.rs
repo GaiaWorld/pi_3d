@@ -138,10 +138,10 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     
-    app.add_systems(Startup, setup.after(base::setup_default_mat));
+    app.add_system(Startup, setup.after(base::setup_default_mat));
     
 
-    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
+    app.add_system(Update, sys_anime_event.in_set(ERunStageChap::Anime));
     
     // app.run()
     loop { app.update(); }

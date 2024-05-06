@@ -4,34 +4,34 @@ use pi_scene_shell::prelude::*;
 use pi_scene_math::{*, vector::TToolVector3};
 use pi_wy_rng::WyRng;
 
-#[derive(Component)]
+
 pub struct ColorOverTrail(pub Color4Gradient);
 
-#[derive(Component)]
+
 pub struct WidthOverTrail(pub FloatInterpolation);
 
-#[derive(Component)]
+
 pub struct TrailMinimunVertexDistance(pub Number);
 
-#[derive(Component)]
+
 pub struct TrailWorldPlace(pub bool);
 
-#[derive(Component)]
+
 pub struct TrailLinkedTransform(pub Entity);
 
-#[derive(Component)]
+
 pub struct TrailAgeControl(pub u32);
 
-#[derive(Component)]
+
 pub struct TrailColor(pub Vector4);
 
-#[derive(Component)]
+
 pub struct TrailSize(pub f32);
 
-#[derive(Component)]
+
 pub struct TrailRandom(pub WyRng);
 
-#[derive(Component)]
+
 pub struct TrailGeometry(pub Entity);
 
 #[derive(Clone)]
@@ -48,7 +48,7 @@ pub struct KeyPoint {
     pub color: Vector4,
 }
 
-#[derive(Default, Component)]
+#[derive(Default, )]
 pub struct TrailPoints(pub Vec<PathPoint>, pub Vec<Vector4>, pub Vec<Number>, pub bool);
 impl TrailPoints {
     pub fn reset(&mut self) {
@@ -221,7 +221,7 @@ impl TrailPoints {
     }
 }
 
-#[derive(Component)]
+
 pub struct TrailBase {
     /// 启动时间点
     pub starttime: u32,

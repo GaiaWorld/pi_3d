@@ -167,7 +167,7 @@ use super::{skeleton::*, bone::*};
     }
 
     pub fn sys_dispose_about_skeleton(
-        items: Query<(Entity, &DisposeReady, &SkeletonRefs, &Skeleton), Or<(Changed<DisposeReady>, Changed<SkeletonRefs>)>>,
+        items: Query<(Entity, &DisposeReady, &SkeletonRefs, &Skeleton), (Changed<DisposeReady>, Changed<SkeletonRefs>)>,
         mut disposecanlist: ResMut<ActionListDisposeCan>,
     ) {
         items.iter().for_each(|(entity, state, refs, skeleton)| {

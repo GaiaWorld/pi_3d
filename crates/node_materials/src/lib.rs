@@ -83,7 +83,7 @@ impl Plugin for PluginNodeMaterial {
 
         blocks.regist::<BlockPremultiplyResult>();
 
-        app.insert_resource(blocks);
+        app.world.insert_single_res(blocks);
 
 
     }
@@ -133,7 +133,7 @@ impl Plugin for PluginNodeMaterialSimple {
 
         blocks.regist::<BlockPremultiplyResult>();
 
-        app.insert_resource(blocks);
+        app.world.insert_single_res(blocks);
 
 
     }

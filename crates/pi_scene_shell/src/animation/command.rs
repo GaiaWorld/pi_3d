@@ -5,7 +5,6 @@ use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation:
 use pi_curves::{curve::{frame::KeyFrameCurveValue, FramePerSecond}, easing::EEasingMode};
 use pi_world::{single_res::SingleResMut, system_params::SystemParam, world::Entity};
 
-// use bevy_ecs::{prelude::*, system::SystemParam};
 
 use crate::prelude::ActionList;
 
@@ -14,7 +13,6 @@ use super::{base::*, float::AnimatorableFloat, vec2::AnimatorableVec2, vec3::Ani
 #[derive( Deref)]
 pub struct AnimatorableLink(pub(crate) Entity);
 
-// #[derive(Component)]
 pub struct TargetAnimatorableIsRunning;
 
 pub struct OpsAnimatorableFloat(pub(crate) Entity, pub(crate) Entity, pub(crate) AnimatorableFloat, pub(crate) EAnimatorableEntityType);
@@ -186,7 +184,7 @@ impl AnimationGroupParam {
     }
 }
 
-// #[derive(SystemParam)]
+#[derive(SystemParam)]
 pub struct ActionSetAnimationGroup<'w> {
     pub create: SingleResMut<'w, ActionListAnimeGroupCreate>,
     pub add_target_anime: SingleResMut<'w, ActionListAddTargetAnime>,
@@ -198,7 +196,7 @@ pub struct ActionSetAnimationGroup<'w> {
     pub weight: SingleResMut<'w, ActionListAnimationWeight>,
 }
 
-// #[derive(SystemParam)]
+#[derive(SystemParam)]
 pub struct ResourceAnimationGroup<'w> {
     pub global: SingleResMut<'w, GlobalAnimeAbout>,
     pub events: SingleResMut<'w, GlobalAnimeEvents>,

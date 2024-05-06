@@ -79,7 +79,7 @@ pub fn sys_model_point_lighting_modify_by_model(
     enabled: Query<&GlobalEnable, With<PointLight>>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
-    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForcePointLightings), Or<(Changed<LayerMask>, Changed<ModelForcePointLightings>)>>,
+    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForcePointLightings), (Changed<LayerMask>, Changed<ModelForcePointLightings>)>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_point_lighting_modify_by_model"));
@@ -119,7 +119,7 @@ pub fn sys_model_spot_lighting_modify_by_model(
     enabled: Query<&GlobalEnable, With<SpotLight>>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
-    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceSpotLightings), Or<(Changed<LayerMask>, Changed<ModelForceSpotLightings>)>>,
+    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceSpotLightings), (Changed<LayerMask>, Changed<ModelForceSpotLightings>)>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_spot_lighting_modify_by_model"));

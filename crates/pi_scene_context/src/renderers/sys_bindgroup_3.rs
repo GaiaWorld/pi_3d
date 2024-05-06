@@ -8,7 +8,7 @@ use crate::{
 use super::base::create_bind_group;
 
 pub fn sys_set3_modify(
-    mut passes: Query<(&PassModelID, &PassSceneForSet3, &PassEffectReady, &mut PassBindGroupLightingShadow), Or<(Changed<PassSceneForSet3>, Changed<PassEffectReady>)>>,
+    mut passes: Query<(&PassModelID, &PassSceneForSet3, &PassEffectReady, &mut PassBindGroupLightingShadow), (Changed<PassSceneForSet3>, Changed<PassEffectReady>)>,
     scenes: Query<(&SceneLightingInfos, &BRDFTexture, &BRDFSampler, &MainCameraOpaqueTarget, &MainCameraDepthTarget, &SceneShadowRenderTarget, Option<&SceneShadowInfos>, &EnvTexture, &EnvIrradiance, &EnvSampler)>,
     device: Res<PiRenderDevice>,
     targets: Res<CustomRenderTargets>,

@@ -19,8 +19,7 @@ use crate::prelude::FrameDataPrepare;
 //     schedule::{apply_deferred, IntoSystemConfigs, IntoSystemSetConfig, SystemSet},
 // };
 use pi_world::{prelude::App, schedule::Update, world::Entity};
-use pi_world_extend_plugin::plugin::Plugin;
-
+use pi_world::prelude::Plugin;
 pub use base::*;
 pub use command::*;
 pub use command_sys::*;
@@ -63,35 +62,35 @@ pub enum EStageAnimation {
 pub struct PluginGlobalAnimation;
 impl Plugin for PluginGlobalAnimation {
     fn build(&self, app: &mut App) {
-        // app.insert_resource(ActionListAnimeGroupAttach::default());
+        // app.world.insert_single_res(ActionListAnimeGroupAttach::default());
         app.world
-            .register_single_res(ActionListAnimeGroupStartReset::default());
+            .insert_single_res(ActionListAnimeGroupStartReset::default());
         app.world
-            .register_single_res(ActionListAnimatorableFloat::default());
+            .insert_single_res(ActionListAnimatorableFloat::default());
         app.world
-            .register_single_res(ActionListAnimatorableVec2::default());
+            .insert_single_res(ActionListAnimatorableVec2::default());
         app.world
-            .register_single_res(ActionListAnimatorableVec3::default());
+            .insert_single_res(ActionListAnimatorableVec3::default());
         app.world
-            .register_single_res(ActionListAnimatorableVec4::default());
+            .insert_single_res(ActionListAnimatorableVec4::default());
         app.world
-            .register_single_res(ActionListAnimatorableUint::default());
+            .insert_single_res(ActionListAnimatorableUint::default());
         app.world
-            .register_single_res(ActionListAnimatorableSint::default());
+            .insert_single_res(ActionListAnimatorableSint::default());
         app.world
-            .register_single_res(ActionListAddAnimationListen::default());
+            .insert_single_res(ActionListAddAnimationListen::default());
         app.world
-            .register_single_res(ActionListAddAnimationFrameEvent::default());
+            .insert_single_res(ActionListAddAnimationFrameEvent::default());
         app.world
-            .register_single_res(ActionListAnimeGroupCreate::default());
+            .insert_single_res(ActionListAnimeGroupCreate::default());
         app.world
-            .register_single_res(ActionListAnimeGroupDispose::default());
+            .insert_single_res(ActionListAnimeGroupDispose::default());
         app.world
-            .register_single_res(ActionListAnimationGroupAction::default());
+            .insert_single_res(ActionListAnimationGroupAction::default());
         app.world
-            .register_single_res(ActionListAddTargetAnime::default());
+            .insert_single_res(ActionListAddTargetAnime::default());
         app.world
-            .register_single_res(ActionListAnimationWeight::default());
+            .insert_single_res(ActionListAnimationWeight::default());
 
         // app.configure_set(Update, EStageAnimation::Create);
         // app.configure_set(
@@ -141,8 +140,8 @@ impl Plugin for PluginGlobalAnimation {
             dispose_animationgroups: vec![],
             group_records: XHashMap::default(),
         };
-        app.world.register_single_res(globalaboput);
-        app.world.register_single_res(GlobalAnimeEvents::default());
+        app.world.insert_single_res(globalaboput);
+        app.world.insert_single_res(GlobalAnimeEvents::default());
     }
 }
 
@@ -170,7 +169,7 @@ impl<D: TAnimatableComp + 'static, R: TAnimatableCompRecord<D>> Plugin for Plugi
             .query::<D>();
         // 创建 动画曲线 资产表
         app.world
-            .register_single_res(ShareAssetMgr::<TypeFrameCurve<D>>::new(
+            .insert_single_res(ShareAssetMgr::<TypeFrameCurve<D>>::new(
                 GarbageEmpty(),
                 cfg.flag,
                 cfg.max,
@@ -184,7 +183,7 @@ impl<D: TAnimatableComp + 'static, R: TAnimatableCompRecord<D>> Plugin for Plugi
             .runtimeinfos;
 
         let type_ctx = TypeAnimeContext::<D>::new(ty, &mut runtime_info_map);
-        app.world.register_single_res(type_ctx);
+        app.world.insert_single_res(type_ctx);
 
         app.add_system(Update,sys_apply_removed_data::<D>);
         app.add_system(Update,sys_animation_removed_data_clear);

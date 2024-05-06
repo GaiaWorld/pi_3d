@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 
 use super::{vertex_buffer_useinfo::TVertexBufferUseInfo, EVerteicesMemory};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StageGeometry {
     Create,
     _GeoCreate,
@@ -14,7 +14,7 @@ pub enum StageGeometry {
     Upload,
 }
 
-#[derive(Component)]
+
 pub struct RenderGeometryEable(pub bool);
 
 pub trait RenderVerticesFrom {
@@ -44,7 +44,7 @@ impl RenderIndicesFrom for RenderIndices {
     }
 }
 
-#[derive(Default, Clone, Component, Deref, DerefMut)]
+#[derive(Default, Clone,  Deref, DerefMut)]
 pub struct RenderGeometryComp(pub Option<RenderGeometry>);
 
 #[derive(Clone)]

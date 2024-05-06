@@ -62,8 +62,8 @@ pub struct BallParam {
 //             .as_mesh(entity)
 //             .world();
 
-//         let device = world.get_resource::<RenderDevice>().unwrap();
-//         let queue = world.get_resource::<RenderQueue>().unwrap();
+//         let device = world.get_single_res::<RenderDevice>().unwrap();
+//         let queue = world.get_single_res::<RenderQueue>().unwrap();
 //         println!(">>>>>>>>>>>>>>>>>>>> 0");
 
 //         let (positions, normals, indices, uvs) = generate_sphere(sectors, stacks);
@@ -110,11 +110,11 @@ impl Plugin for PluginBallBuilder {
     // }
 
     fn build(&self, app: &mut App) {
-        let asset_mgr = app.world.get_resource::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
+        let asset_mgr = app.world.get_single_res::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
 
-        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
-        let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
-        let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        let device = app.world.get_single_res::<PiRenderDevice>().unwrap().0.clone();
+        let queue = app.world.get_single_res::<PiRenderQueue>().unwrap().0.clone();
+        let mut allocator = app.world.get_single_res_mut::<VertexBufferAllocator3D>().unwrap();
 
         let (positions, normals, indces, uvs) = generate_sphere(&BallParam { sectors: 16, stacks: 16 });
 
@@ -141,7 +141,7 @@ impl Plugin for PluginBallBuilder {
             }
         }
 
-        app.insert_resource(singequad);
+        app.world.insert_single_res(singequad);
     }
 }
 

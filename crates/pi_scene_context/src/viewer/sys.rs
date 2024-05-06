@@ -7,8 +7,8 @@ use crate::transforms::prelude::*;
 use super::base::*;
 
 
-    pub fn sys_calc_view_matrix_by_viewer<T: TViewerViewMatrix + Component>(
-        mut viewers: Query<(ObjectID, &T, &LocalPosition, &mut ViewerViewMatrix, &mut ViewerGlobalPosition), Or<(Changed<T>, Changed<GlobalMatrix>)>>,
+    pub fn sys_calc_view_matrix_by_viewer<T: TViewerViewMatrix + >(
+        mut viewers: Query<(ObjectID, &T, &LocalPosition, &mut ViewerViewMatrix, &mut ViewerGlobalPosition), (Changed<T>, Changed<GlobalMatrix>)>,
         mut transforms: Query<(&GlobalMatrix, &mut AbsoluteTransform)>,
         // childrens: Query<&NodeParent>,
         childrens: Query<&Up>,
@@ -49,8 +49,8 @@ use super::base::*;
     }
 
 
-    pub fn sys_calc_proj_matrix<T: TViewerProjectMatrix + Component>(
-        mut viewers: Query<(&T, &ViewerAspect, &mut ViewerProjectionMatrix), Or<(Changed<T>, Changed<ViewerAspect>)>>,
+    pub fn sys_calc_proj_matrix<T: TViewerProjectMatrix + >(
+        mut viewers: Query<(&T, &ViewerAspect, &mut ViewerProjectionMatrix), (Changed<T>, Changed<ViewerAspect>)>,
     ) {
         //  log::debug!("Projection Matrix Calc:");
         viewers.iter_mut().for_each(|(projectcalc, vieweraspect, mut viewprojection)| {
@@ -60,8 +60,8 @@ use super::base::*;
         });
     }
 
-    pub fn sys_calc_transform_matrix<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
-        mut viewers: Query<(&T, &T2, &ViewerViewMatrix, &ViewerProjectionMatrix, &mut ViewerTransformMatrix), Or<(Changed<ViewerViewMatrix>, Changed<ViewerProjectionMatrix>)>>,
+    pub fn sys_calc_transform_matrix<T: TViewerViewMatrix,  T2: TViewerProjectMatrix, >(
+        mut viewers: Query<(&T, &T2, &ViewerViewMatrix, &ViewerProjectionMatrix, &mut ViewerTransformMatrix), (Changed<ViewerViewMatrix>, Changed<ViewerProjectionMatrix>)>,
     ) {
         viewers.iter_mut().for_each(|(_, _, view_matrix, project_matrix, mut transform)| {
             // log::debug!("SysCamera Transform Matrix: p = {:?}, v = {:?}", project_matrix.0, view_matrix.0);
@@ -71,13 +71,13 @@ use super::base::*;
         });
     }
 
-    pub fn sys_update_viewer_uniform<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+    pub fn sys_update_viewer_uniform<T: TViewerViewMatrix,  T2: TViewerProjectMatrix, >(
         viewers: Query<
             (&BindViewer, &ViewerViewMatrix, &ViewerProjectionMatrix, &ViewerTransformMatrix, &ViewerGlobalPosition, &ViewerDirection),
             (
-                Or<(
+                (
                     Changed<BindViewer>, Changed<ViewerTransformMatrix>, 
-                )>,
+                ),
                 With<T>, With<T2>
             )
         >

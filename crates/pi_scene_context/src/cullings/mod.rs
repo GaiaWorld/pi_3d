@@ -21,13 +21,13 @@ mod ray_test;
 pub mod prelude;
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StageCulling {
     Command,
     CalcBounding,
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct IsCulled;
 
 pub trait TIntersect {
@@ -40,28 +40,44 @@ pub trait TIntersect {
 pub struct PluginCulling;
 impl Plugin for PluginCulling {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListMeshBounding::default());
-        app.insert_resource(ActionListMeshBoundingCullingMode::default());
-        app.insert_resource(ActionListBoundingBoxDisplay::default());
+        app.world.insert_single_res(ActionListMeshBounding::default());
+        app.world.insert_single_res(ActionListMeshBoundingCullingMode::default());
+        app.world.insert_single_res(ActionListBoundingBoxDisplay::default());
 
-        app.configure_set(Update, StageCulling::Command.after(StageScene::_Insert).before(StageMaterial::Command));
-        app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
+        // app.configure_set(Update, StageCulling::Command.after(StageScene::_Insert).before(StageMaterial::Command));
+        // app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
 
-        app.add_systems(Update, (
+        app.add_system(Update, /* ( */
             sys_act_mesh_bounding_culling_display
-        ).in_set(StageCulling::Command));
+        /* ).in_set(StageCulling::Command) */);
 
-        app.add_systems(Update, (
+        app.add_system(Update, /* ( */
             sys_act_mesh_bounding
-        ).in_set(StageModel::AbstructMeshCommand));
+        /* ).in_set(StageModel::AbstructMeshCommand) */);
 
-        app.add_systems(
+        app.add_system(
             Update,
-            (
+            // (
                 sys_update_culling_by_worldmatrix,
+            //     sys_update_culling_by_cullinginfo,
+            //     sys_abstructmesh_culling_flag_reset,
+            // ).chain().in_set(StageCulling::CalcBounding)
+        );
+        app.add_system(
+            Update,
+            // (
+            //     sys_update_culling_by_worldmatrix,
                 sys_update_culling_by_cullinginfo,
+            //     sys_abstructmesh_culling_flag_reset,
+            // ).chain().in_set(StageCulling::CalcBounding)
+        );
+        app.add_system(
+            Update,
+            // (
+            //     sys_update_culling_by_worldmatrix,
+            //     sys_update_culling_by_cullinginfo,
                 sys_abstructmesh_culling_flag_reset,
-            ).chain().in_set(StageCulling::CalcBounding)
+            // ).chain().in_set(StageCulling::CalcBounding)
         );
     }
 }

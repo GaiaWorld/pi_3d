@@ -3,14 +3,14 @@ use std::sync::Arc;
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 
-#[derive(Component)]
+
 pub struct BindEffectReset;
 
 
-#[derive(Component, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct BindEffect(pub Option<BindEffectValues>);
 
-#[derive(Default, Component)]
+#[derive(Default, )]
 pub struct UniformAnimated(pub Vec<Atom>);
 impl UniformAnimated {
     pub fn add(&mut self, key: &Atom) {
@@ -185,7 +185,7 @@ impl BindEffectValues {
         &mut self,
         key: &Atom,
         item: Entity,
-        command: &mut Commands,
+        command: &mut Insert<()>,
         animatorablefloat: &mut ActionListAnimatorableFloat,
         animatorablevec2s: &mut ActionListAnimatorableVec2,
         animatorablevec3s: &mut ActionListAnimatorableVec3,
@@ -197,7 +197,7 @@ impl BindEffectValues {
             Ok(idx) => {
                 let offset = &mut self.offsets.get_mut(idx).unwrap().1;
                 if offset.entity.is_none() {
-                    let entity = command.spawn_empty().id();
+                    let entity = command.insert(());
                     offset.entity = Some(entity);
                     match offset.atype() {
                         EAnimatorableType::Vec4     => {

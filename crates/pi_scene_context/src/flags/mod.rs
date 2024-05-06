@@ -18,16 +18,16 @@ pub struct SceneCameraID04;
 pub struct SceneCameraID05;
 pub struct SceneCameraID06;
 
-#[derive(Component)]
+
 pub struct CullingFlag(pub bool);
 
-#[derive(Clone, Copy, PartialEq, Eq, Component, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq,  Hash)]
 pub struct SceneMainCameraID(pub Option<Entity>);
 
-#[derive(Component)]
+
 pub struct CameraID(pub usize);
 
-#[derive(Component, Default)]
+#[derive( Default)]
 pub struct RecordEnable(pub Enable);
 impl TAnimatableCompRecord<Enable> for RecordEnable {
     fn comp(&self) -> Enable {
@@ -35,7 +35,7 @@ impl TAnimatableCompRecord<Enable> for RecordEnable {
     }
 }
 
-#[derive(Component, Clone)]
+#[derive( Clone)]
 pub struct Enable(pub f32);
 impl Enable {
     pub fn bool(&self) -> bool {
@@ -85,7 +85,7 @@ impl TAnimatableComp for Enable {}
 
 pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, RecordEnable>;
 
-#[derive(Component)]
+
 pub struct GlobalEnable(pub bool);
 
 pub struct OpsNodeEnable(pub(crate) Entity, pub(crate) Enable);
@@ -117,7 +117,7 @@ pub fn sys_act_node_enable(
     });
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StageEnable {
     Command,
 }
@@ -125,10 +125,10 @@ pub enum StageEnable {
 pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListNodeEnable::default());
-        app.configure_set(Update, StageEnable::Command.after(StageScene::Create));
-        app.add_systems(Update, 
-            sys_act_node_enable.in_set(StageEnable::Command)
+        app.world.insert_single_res(ActionListNodeEnable::default());
+        // app.configure_set(Update, StageEnable::Command.after(StageScene::Create));
+        app.add_system(Update, 
+            sys_act_node_enable//.in_set(StageEnable::Command)
         );
     }
 }

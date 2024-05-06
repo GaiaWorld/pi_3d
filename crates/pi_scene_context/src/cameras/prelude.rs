@@ -10,7 +10,7 @@ pub use super::{
     animation::*,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StageCamera {
     CameraCreate,
     _CameraCreate,
@@ -50,8 +50,8 @@ pub struct ActionSetCamera<'w> {
     pub forceinclude: ResMut<'w, ActionListViewerForceInclude>,
 }
 
-pub type StateCameraQuery = QueryState<(&'static Camera, &'static ModelList, &'static ModelListAfterCulling)>;
-
+// pub type StateCameraQuery = QueryState<(&'static Camera, &'static ModelList, &'static ModelListAfterCulling)>;
+pub type StateCameraQuery = QueryState<(), (&'static Camera, &'static ModelList, &'static ModelListAfterCulling)>;
 pub fn sys_state_camera(
     mut state: ResMut<StateCamera>,
     cameras: Query<(&Camera, &ModelList, &ModelListAfterCulling)>,

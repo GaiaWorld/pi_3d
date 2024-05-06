@@ -40,7 +40,7 @@ pub fn sys_modify_pass_effect_by_pass(
 pub fn sys_modify_pass_effect_by_material(
     materials: Query<
         (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp),
-        Or<(Changed<PassTag>, Changed<DirtyMaterialRefs>, Changed<BindEffectReset>, Changed<EffectTextureSamplersComp>)>
+        (Changed<PassTag>, Changed<DirtyMaterialRefs>, Changed<BindEffectReset>, Changed<EffectTextureSamplersComp>)
     >,
     mut passes: Query<(&mut PassEffectReady, &mut PassBindEffectValue, &mut PassBindEffectTextures)>,
 ) {

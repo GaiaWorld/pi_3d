@@ -7,7 +7,26 @@ use super::{command::*, pass_object::*};
 
 pub fn sys_create_pass_object(
     mut cmds: ResMut<ActionListPassObject>,
-    mut commands: Commands,
+    mut commands: Alter<
+    (), 
+    (), 
+    (
+        PassBindEffectValue, 
+        PassBindEffectTextures, 
+        PassBindGroupScene, 
+        PassBindGroupModel, 
+        PassBindGroupTextureSamplers, 
+        PassBindGroupLightingShadow, 
+        PassBindGroups, 
+        PassEffectReady, 
+        PassShader, 
+        PassPipeline, 
+        PassDraw, 
+        PassModelID, 
+        PassMaterialID, 
+        PassReset
+    ), 
+    ()>,
     models: Query<& PassIDs>,
 ) {
     cmds.drain().drain(..).for_each(|OpsPassObject(idmodel, idmaterial, pass)| {
@@ -16,57 +35,99 @@ pub fn sys_create_pass_object(
 
             // log::warn!("sys_create_pass_object ");
 
-            if let Some(mut entitycmds) = commands.get_entity(id_pass) {
-                ActionPassObject::reset(&mut entitycmds, idmodel, idmaterial);
+            if  commands.get(id_pass).is_ok() {
+                ActionPassObject::reset(id_pass, &mut commands, idmodel, idmaterial);
             }
         }
     });
 }
 
+pub type ActionPassObjectInitBundle = (
+    PassModelID,
+    PassSceneID,
+    PassSceneForSet3,
+    PassViewerID,
+    PassMaterialID,
+    PassGeometryID,
+    PassRendererID,
+    PassPipelineStateDirty,
+    PassDrawDirty,
+    PrimitiveState,
+    DepthState,
+    StencilState,
+    ModelBlend
+);
+
+pub type ActionPassObjectResetBundle = (
+    PassBindEffectValue,
+    PassBindEffectTextures,
+    PassBindGroupScene,
+    PassBindGroupModel,
+    PassBindGroupTextureSamplers,
+    PassBindGroupLightingShadow,
+    PassBindGroups,
+    PassEffectReady,
+    PassShader,
+    PassPipeline,
+    PassDraw,
+    PassModelID,
+    PassMaterialID,
+    PassReset
+);
 pub struct ActionPassObject;
 impl ActionPassObject {
     pub fn init(
-        entitycmds: &mut EntityCommands,
+        entity: Entity,
+        entitycmds: &mut Alter<
+        (), 
+        (), 
+        ActionPassObjectInitBundle, 
+        ()>,
         empty: Entity,
         idmodel: Entity,
         idscene: Entity,
     ) {
-        entitycmds
-            .insert(PassModelID(idmodel))
-            .insert(PassSceneID(idscene))
-            .insert(PassSceneForSet3(idscene))
-            .insert(PassViewerID(empty))
-            .insert(PassMaterialID(empty))
-            .insert(PassGeometryID(empty))
-            .insert(PassRendererID(empty))
-            .insert(PassPipelineStateDirty)
-            .insert(PassDrawDirty)
-            .insert(PrimitiveState::default())
-            .insert(DepthState::default())
-            .insert(StencilState::default())
-            .insert(ModelBlend::default())
-        ;
+        entitycmds.alter(entity, (
+            PassModelID(idmodel),
+            PassSceneID(idscene),
+            PassSceneForSet3(idscene),
+            PassViewerID(empty),
+            PassMaterialID(empty),
+            PassGeometryID(empty),
+            PassRendererID(empty),
+            PassPipelineStateDirty,
+            PassDrawDirty,
+            PrimitiveState::default(),
+            DepthState::default(),
+            StencilState::default(),
+            ModelBlend::default()
+        ));
     }
     pub fn reset(
-        entitycmds: &mut EntityCommands,
+        entity: Entity,
+        entitycmds: &mut Alter<
+        (), 
+        (), 
+        ActionPassObjectResetBundle, 
+        ()>,
         idmodel: Entity,
         material: Entity,
     ) {
-        entitycmds
-            .insert(PassBindEffectValue(None))
-            .insert(PassBindEffectTextures(None))
-            .insert(PassBindGroupScene(None))
-            .insert(PassBindGroupModel(None))
-            .insert(PassBindGroupTextureSamplers(None))
-            .insert(PassBindGroupLightingShadow(None))
-            .insert(PassBindGroups(None))
-            .insert(PassEffectReady(None))
-            .insert(PassShader(None))
-            .insert(PassPipeline(None))
-            .insert(PassDraw(None))
-            .insert(PassModelID(idmodel))
-            .insert(PassMaterialID(material))
-            .insert(PassReset)
-        ;
+        entitycmds.alter(entity, 
+            (PassBindEffectValue(None),
+            PassBindEffectTextures(None),
+            PassBindGroupScene(None),
+            PassBindGroupModel(None),
+            PassBindGroupTextureSamplers(None),
+            PassBindGroupLightingShadow(None),
+            PassBindGroups(None),
+            PassEffectReady(None),
+            PassShader(None),
+            PassPipeline(None),
+            PassDraw(None),
+            PassModelID(idmodel),
+            PassMaterialID(material),
+            PassReset)
+        );
     }
 }

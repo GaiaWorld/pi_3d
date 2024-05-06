@@ -38,7 +38,7 @@ pub fn sys_shadow_param_update_while_mat_create(
     >,
     materails: Query<
         Entity,
-        Or<(Changed<BindEffectReset>, Added<BindEffect>)>,
+        (Changed<BindEffectReset>, /* Added<BindEffect> */),
     >,
 ) {
     shadows.iter_mut().for_each(|mut id_mat| {
@@ -51,9 +51,9 @@ pub fn sys_shadow_param_update_while_mat_create(
 pub fn sys_shadow_param_update(
     shadows: Query<
         (&LinkedMaterialID, &ShadowParam),
-        Or<(
+        (
             Changed<LinkedMaterialID>, Changed<ShadowParam>
-        )>
+        )
     >,
     // mut materails: Query<
     //     (&mut BindEffect, &mut BindEffectValueDirty)
@@ -73,7 +73,7 @@ pub fn sys_shadow_param_update(
 pub fn sys_shadow_generator_apply_while_shadow_modify(
     shadows: Query<
         (&LinkedMaterialID, &ModelList, &ForceIncludeModelList, &ShadowCastPassTag),
-        Or<(Changed<LinkedMaterialID>, Changed<FlagModelList>, Changed<ForceIncludeModelList>, Changed<ShadowCastPassTag>)>
+        (Changed<LinkedMaterialID>, Changed<FlagModelList>, Changed<ForceIncludeModelList>, Changed<ShadowCastPassTag>)
     >,
     mut matcmds: ResMut<ActionListMaterialUse>,
     meshes: Query<&MeshCastShadow, With<Mesh>>,
@@ -138,7 +138,7 @@ pub fn sys_shadow_project_modify_by_spot_light(
 }
 
 pub fn sys_calc_view_matrix_by_light(
-    mut lights: Query<(Entity, &LocalPosition, &LightLinkedShadowID, &LightDirection), Or<(Changed<LocalPosition>, Changed<LightLinkedShadowID>, Changed<LightDirection>, Changed<GlobalMatrix>)>>,
+    mut lights: Query<(Entity, &LocalPosition, &LightLinkedShadowID, &LightDirection), (Changed<LocalPosition>, Changed<LightLinkedShadowID>, Changed<LightDirection>, Changed<GlobalMatrix>)>,
     mut transforms: Query<(&GlobalMatrix, &mut AbsoluteTransform)>,
     mut viewers: Query<(&ShadowLinkedLightID, &mut DirectionalShadowDirection, &mut ViewerViewMatrix, &mut ViewerGlobalPosition, &mut ViewerDirection)>,
     // childrens: Query<&NodeParent>,
@@ -217,10 +217,10 @@ pub fn sys_dispose_about_shadowcaster(
 
 }
 
-pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix ,  T2: TViewerProjectMatrix + >(
     mut viewers: Query<
         (Entity, &ViewerActive, &SceneID, &ShadowLayerMask, &mut ModelList, &mut FlagModelList),
-        (Or<(Changed<ShadowLayerMask>, Changed<ViewerActive>)>, With<T>, With<T2>)
+        ((Changed<ShadowLayerMask>, Changed<ViewerActive>), With<T>, With<T2>)
     >,
     items: Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &MeshCastShadow),
@@ -269,14 +269,14 @@ fn _sys_update_shadow_viewer_model_list_by_viewer(
     }
 }
 
-pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix,  T2: TViewerProjectMatrix  >(
     mut viewers: Query<
         (&ViewerActive, &SceneID, &ShadowLayerMask, &mut ModelList, &mut FlagModelList),
         (With<T>, With<T2>)
     >,
     items: Query<
         (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh, &MeshCastShadow),
-        Or<(Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>, Changed<MeshCastShadow>)>,
+        (Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>, Changed<MeshCastShadow>),
     >,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {

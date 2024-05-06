@@ -24,12 +24,12 @@ pub enum EMaxHemisphericLight {
     N512,
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct DirectLights(pub Vec<Entity>);
 
-#[derive(Component, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct SpotLights(pub Vec<Entity>);
 
-#[derive(Component, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct HemisphericLights(pub Vec<Entity>);
 

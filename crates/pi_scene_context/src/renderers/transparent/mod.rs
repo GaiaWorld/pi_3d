@@ -74,7 +74,7 @@ impl InterfaceTransparent for crate::engine::Engine {
         &self,
         entity: ObjectID,
     ) -> &Self {
-        let cmomands = self.world().get_resource_mut::<SingleTransparentCommandList>().unwrap();
+        let cmomands = self.world().get_single_res_mut::<SingleTransparentCommandList>().unwrap();
         cmomands.list.push(TransparentCommand::Apply(entity));
 
         self
@@ -84,7 +84,7 @@ impl InterfaceTransparent for crate::engine::Engine {
         &self,
         entity: ObjectID,
     ) -> &Self {
-        let cmomands = self.world().get_resource_mut::<SingleTransparentCommandList>().unwrap();
+        let cmomands = self.world().get_single_res_mut::<SingleTransparentCommandList>().unwrap();
         cmomands.list.push(TransparentCommand::Undo(entity));
 
         self
@@ -97,7 +97,7 @@ impl crate::Plugin for PluginTransparent {
         engine: &mut crate::engine::Engine,
         stages: &mut crate::run_stage::RunStage,
     ) -> Result<(), crate::plugin::ErrorPlugin> {
-        engine.world_mut().insert_resource(SingleTransparentCommandList::default());
+        engine.world_mut().world.insert_single_res(SingleTransparentCommandList::default());
 
         SysTransparentCommandTick::setup(engine.world_mut(), stages.query_stage::<SysTransparentCommandTick>());
 

@@ -11,8 +11,8 @@ use crate::{
 
 use super::base::*;
 
-struct SceneBoundingFilter<'a, 'w, 's>(pub &'a Query<'w, 's, (&'static GlobalEnable, Option<&'static InstanceSourceRefs>), With<AbstructMesh>>, pub &'a XHashSet<Entity>);
-impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
+struct SceneBoundingFilter<'a, 'w>(pub &'a Query<'w, (&'static GlobalEnable, Option<&'static InstanceSourceRefs>), With<AbstructMesh>>, pub &'a XHashSet<Entity>);
+impl<'a, 'w,> TFilter for SceneBoundingFilter<'a, 'w> {
     fn filter(&self, entity: Entity) -> bool {
         if self.1.contains(&entity) {
             if let Ok((enable, instances)) = self.0.get(entity) {
@@ -42,10 +42,10 @@ pub fn sys_abstructmesh_culling_flag_reset(
     });
 }
 
-pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix,  T2: TViewerProjectMatrix + >(
     mut viewers: Query<
         (Entity, &ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList),
-        (Or<(Changed<LayerMask>, Changed<ViewerActive>)>, With<T>, With<T2>)
+        ((Changed<LayerMask>, Changed<ViewerActive>), With<T>, With<T2>)
     >,
     items: Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs),
@@ -117,13 +117,13 @@ fn _sys_update_viewer_model_list_by_viewer(
     }
 }
 
-pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix ,  T2: TViewerProjectMatrix , >(
     mut viewers: Query<
         (&ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList), (With<T>, With<T2>)
     >,
     items: Query<
         (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh),
-        Or<(Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
+        (Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>),
     >,
 ) {
     // let time1 = pi_time::Instant::now();
@@ -192,7 +192,7 @@ fn _sys_update_viewer_model_list_by_model(
     }
 }
 
-pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, R: TCullingPerformance + Resource>(
+pub fn sys_tick_viewer_culling<T: TViewerViewMatrix,  T2: TViewerProjectMatrix,  R: TCullingPerformance + 'static + Send + Sync>(
     mut viewers: Query<
         (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling),
         (With<T>, With<T2>)

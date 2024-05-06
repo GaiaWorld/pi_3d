@@ -36,14 +36,14 @@ pub fn main() {
         pbr_material::PluginPBRMaterial
     );
 
-    app.add_systems(Update, pi_3d::sys_info_node);
-    app.add_systems(Update, pi_3d::sys_info_resource);
-    app.add_systems(Update, pi_3d::sys_info_draw);
+    app.add_system(Update, pi_3d::sys_info_node);
+    app.add_system(Update, pi_3d::sys_info_resource);
+    app.add_system(Update, pi_3d::sys_info_draw);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_systems(Startup, pbr::setup.after(base::setup_default_mat));
-    app.add_systems(Startup, base::active_lighting_shadow);
-    app.add_systems(Update, display_boundingbox);
+    app.add_system(Startup, pbr::setup.after(base::setup_default_mat));
+    app.add_system(Startup, base::active_lighting_shadow);
+    app.add_system(Update, display_boundingbox);
     
 
     // app.run()

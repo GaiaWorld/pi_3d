@@ -3,7 +3,6 @@ use pi_bevy_ecs_extend::system_param::tree::EntityTreeMut;
 use pi_world::{
     alter::Alter, filter::Changed, insert::Insert, prelude::App, query::Query, schedule::Update, single_res::{SingleRes, SingleResMut}, world::Entity
 };
-use pi_world_extend_plugin::plugin::Plugin;
 
 // use std::mem::replace;
 // use pi_bevy_ecs_extend::prelude::EntityTreeMut;
@@ -17,7 +16,7 @@ use crate::prelude::*;
 pub type ObjectID = Entity;
 
 /// 准备销毁
-// #[derive(Component)]
+
 pub struct DisposeReady(pub bool);
 impl Default for DisposeReady {
     fn default() -> Self {
@@ -26,7 +25,7 @@ impl Default for DisposeReady {
 }
 
 /// 可以销毁
-// #[derive(Component)]
+
 pub struct DisposeCan(pub bool);
 impl Default for DisposeCan {
     fn default() -> Self {
@@ -36,9 +35,9 @@ impl Default for DisposeCan {
 
 pub struct ActionEntity;
 impl ActionEntity {
-    pub fn init(entitycmd: &mut Insert<(DisposeReady, DisposeCan)>) {
-        entitycmd
-            .insert((DisposeReady::default(), DisposeCan::default()));
+    pub fn init(entity: Entity,  alter: &mut Alter<(), (), (DisposeReady, DisposeCan), ()>) {
+        let _ = alter
+            .alter(entity, (DisposeReady::default(), DisposeCan::default()));
     }
 }
 
@@ -125,7 +124,7 @@ pub fn sys_dispose(
             if   commands.get(entity).is_ok() {
                 // log::debug!("despawn====={:?}", commands.id());
                 tree.remove(entity);
-                commands.delete(entity);
+                let _ = commands.destroy(entity);
             }
         }
     });
@@ -154,10 +153,10 @@ pub fn sys_act_scene_dispose(
 pub struct PluginDispose;
 impl Plugin for PluginDispose {
     fn build(&self, app: &mut App) {
-        app.world.register_single_res(ActionListSceneDispose::default());
-        app.world.register_single_res(ActionListDisposeReadyForRef::default());
-        app.world.register_single_res(ActionListDisposeReady::default());
-        app.world.register_single_res(ActionListDisposeCan::default());
+        app.world.insert_single_res(ActionListSceneDispose::default());
+        app.world.insert_single_res(ActionListDisposeReadyForRef::default());
+        app.world.insert_single_res(ActionListDisposeReady::default());
+        app.world.insert_single_res(ActionListDisposeCan::default());
         
         app.add_system(Update, sys_act_scene_dispose);
         app.add_system(Update, sys_dispose_ready);

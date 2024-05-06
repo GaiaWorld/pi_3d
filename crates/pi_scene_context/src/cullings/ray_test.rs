@@ -16,9 +16,9 @@ pub struct RayTestID(Option<Entity>);
 pub struct PluginRayTest;
 impl Plugin for PluginRayTest {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListRayTest::default());
-        app.insert_resource(RayTestID::default());
-        app.add_systems(Update, sys_ray_test);
+        app.world.insert_single_res(ActionListRayTest::default());
+        app.world.insert_single_res(RayTestID::default());
+        app.add_system(Update, sys_ray_test);
     }
 }
 

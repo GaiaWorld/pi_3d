@@ -23,7 +23,7 @@ mod system;
 mod pass_render_target;
 pub mod prelude;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum StageScene {
     Create,
     _Insert,
@@ -35,71 +35,75 @@ pub enum StageScene {
 pub struct PluginScene;
 impl Plugin for PluginScene {
     fn build(&self, app: &mut App) {
-        let id = app.world.spawn_empty().id();
-        app.insert_resource(SingleEmptyEntity::new(id));
+        let i: pi_world::insert::Inserter<()> = app.world.make_inserter();
+        let id = i.insert(());
+        // let id = app.world.spawn_empty().id();
+        app.world.insert_single_res(SingleEmptyEntity::new(id));
 
-        app.insert_resource(ActionListSceneCreate::default());
-        app.insert_resource(ActionListSceneTime::default());
-        app.insert_resource(ActionListSceneAmbientColor::default());
-        app.insert_resource(ActionListSceneFogParam::default());
-        app.insert_resource(ActionListSceneAnimationEnable::default());
-        app.insert_resource(ActionListSceneBRDF::default());
-        app.insert_resource(ActionListSceneOpaqueTexture::default());
-        app.insert_resource(ActionListSceneDepthTexture::default());
-        app.insert_resource(ActionListSceneEnvTexture::default());
-        app.insert_resource(ActionListSceneShadowMap::default());
+        app.world.insert_single_res(ActionListSceneCreate::default());
+        app.world.insert_single_res(ActionListSceneTime::default());
+        app.world.insert_single_res(ActionListSceneAmbientColor::default());
+        app.world.insert_single_res(ActionListSceneFogParam::default());
+        app.world.insert_single_res(ActionListSceneAnimationEnable::default());
+        app.world.insert_single_res(ActionListSceneBRDF::default());
+        app.world.insert_single_res(ActionListSceneOpaqueTexture::default());
+        app.world.insert_single_res(ActionListSceneDepthTexture::default());
+        app.world.insert_single_res(ActionListSceneEnvTexture::default());
+        app.world.insert_single_res(ActionListSceneShadowMap::default());
         
-        app.insert_resource(ImageTextureViewLoader::<BRDFTextureSlot>::default());
-        app.insert_resource(ImageTextureViewLoader::<EnvTextureSlot>::default());
+        app.world.insert_single_res(ImageTextureViewLoader::<BRDFTextureSlot>::default());
+        app.world.insert_single_res(ImageTextureViewLoader::<EnvTextureSlot>::default());
 
-        app.configure_sets(
+        // app.configure_sets(
+        //     Update,
+        //     (
+        //         StageScene::Create.after(ERunStageChap::_InitialApply),
+        //         StageScene::_Insert.before(EStageAnimation::Create),
+        //         StageScene::Command
+        //     ).chain()
+        // );
+
+        // app.configure_set(Update, StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
+        // app.configure_set(Update, StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        // app.add_system(Update, apply_deferred.in_set(StageScene::_Insert));
+
+        app.add_system(
             Update,
-            (
-                StageScene::Create.after(ERunStageChap::_InitialApply),
-                StageScene::_Insert.before(EStageAnimation::Create),
-                StageScene::Command
-            ).chain()
-        );
-
-        app.configure_set(Update, StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
-        app.configure_set(Update, StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageScene::_Insert));
-
-        app.add_systems(
-            Update,
-            (
-                sys_env_texture_load_launch,
                 sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>
-            ).in_set(StageScene::TextureRequest)
         );
-        app.add_systems(
+        app.add_system(
             Update,
-            (
+                sys_env_texture_load_launch
+        );
+        app.add_system(
+            Update,
                 sys_env_texture_loaded_check,
+        );
+        app.add_system(
+            Update,
                 sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture>,
-            ).in_set(StageScene::TextureLoaded)
         );
 
-        app.add_systems(Update, 
-            sys_create_scene.in_set(StageScene::Create)
+        app.add_system(Update, 
+            sys_create_scene
         );
         
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
                 sys_act_scene_ambient,
-                sys_act_scene_render,
-            ).in_set(StageScene::Command)
         );
-
-        app.add_systems(
+        app.add_system(
 			Update,
-            (
-                sys_bind_update_scene_ambient,
-            ).in_set(ERunStageChap::Uniform)
+                sys_act_scene_render,
         );
 
-        app.add_systems(Update, sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_system(
+			Update,
+                sys_bind_update_scene_ambient,
+        );
+
+        app.add_system(Update, sys_dispose_about_scene);
+        app.add_system(Update, sys_dispose_ready);
     }
     
 }

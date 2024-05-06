@@ -5,7 +5,7 @@ use pi_scene_shell::prelude::*;
 
 use super::*;
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct DepthState {
     pub depth_write: bool,
     pub compare: CompareFunction,
@@ -56,7 +56,7 @@ pub fn sys_act_depth_state(
     });
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, )]
 pub struct StencilState {
     pub stencil_front: StencilFaceState,
     pub stencil_back: StencilFaceState,

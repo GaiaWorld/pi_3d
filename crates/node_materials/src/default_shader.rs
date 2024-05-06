@@ -83,7 +83,7 @@ pub struct PluginDefaultMaterial;
 impl Plugin for PluginDefaultMaterial {
     fn build(&self, app: &mut App) {
         
-        let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
+        let asset_mgr = app.world.get_single_res::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
 
     }

@@ -29,7 +29,7 @@
 //         input: &'a Self::Input,
 //         usage: &'a pi_render::graph::node::ParamUsage,
 //     ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
-//         let tex_alloc = context.world.get_resource_mut::<SafeAtlasAllocator>().unwrap();
+//         let tex_alloc = context.world.get_single_res_mut::<SafeAtlasAllocator>().unwrap();
 //         let desc = TextureDescriptor {
 //             mip_level_count: 1,
 //             sample_count: 1,
@@ -93,7 +93,7 @@
 //             world, device, queue, ..
 //         } = context;
 
-//         let surface = world.get_resource::<ScreenTexture>().unwrap();
+//         let surface = world.get_single_res::<ScreenTexture>().unwrap();
 
 //         let ops = wgpu::Operations {
 //             load: wgpu::LoadOp::Clear(wgpu::Color{r: self.color.0, g: self.color.1, b: self.color.2, a: self.color.3}),

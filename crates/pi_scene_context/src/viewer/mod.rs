@@ -14,15 +14,16 @@ pub mod prelude;
 
 ///
 /// * 渲染视口功能
-/// * T - 获取 ViewerViewMatrix 的 Component
+/// * T - 获取 ViewerViewMatrix 的 
 /// * S - 获取 ViewerViewMatrix 需要依赖的 System
-/// * T2 - 获取 ViewerProjectionMatrix 的 Component
+/// * T2 - 获取 ViewerProjectionMatrix 的 
 /// * S2 - 获取 ViewerProjectionMatrix 需要依赖的 System
 pub struct PluginViewerBase;
 impl Plugin for PluginViewerBase {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, StageViewer::ForceInclude.in_set(FrameDataPrepare).before(ERunStageChap::Uniform));
-        app.insert_resource(ActionListViewerForceInclude::default());
-        app.add_systems(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
+        // app.configure_set(Update, StageViewer::ForceInclude.in_set(FrameDataPrepare).before(ERunStageChap::Uniform));
+        app.world.insert_single_res(ActionListViewerForceInclude::default());
+        // app.add_system(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
+        app.add_system(Update, sys_act_viewer_force_include);
     }
 }

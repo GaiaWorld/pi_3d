@@ -1,7 +1,7 @@
 use pi_scene_math::coordiante_system;
 use pi_scene_shell::prelude::*;
 
-#[derive(Deref, DerefMut, Component)]
+#[derive(Deref, DerefMut)]
 pub struct SceneCoordinateSytem3D(pub coordiante_system::CoordinateSytem3);
 impl Default for SceneCoordinateSytem3D {
     fn default() -> Self {
@@ -9,7 +9,7 @@ impl Default for SceneCoordinateSytem3D {
     }
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy)]
 pub enum ESceneCoordinateMode {
     Left,
     Right,

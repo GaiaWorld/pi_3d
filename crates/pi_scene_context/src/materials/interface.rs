@@ -32,10 +32,10 @@ use pi_scene_shell::prelude::*;
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let asset_mgr = world.get_resource::<Share<AssetMgr<ShaderEffectMeta>>>().unwrap();
+//         let asset_mgr = world.get_single_res::<Share<AssetMgr<ShaderEffectMeta>>>().unwrap();
 //         if !asset_mgr.check_asset(&key) {
 //             let meta = asset_mgr.create_asset(key.clone(), meta);
-//             let wait = world.get_resource_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
+//             let wait = world.get_single_res_mut::<AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>().unwrap();
 //             wait.1.push((key.clone(), meta));
 //         }
 
@@ -49,7 +49,7 @@ use pi_scene_shell::prelude::*;
 //         pass: EPassTag,
 //     ) -> &Self {
 //         let world = self.world();
-//         let commands = world.get_resource_mut::<SingleMatCreateCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleMatCreateCommands>().unwrap();
 //         commands.0.push(EMatCreateCommand::Use(entity, shader, pass));
         
 //         self
@@ -127,7 +127,7 @@ pub trait InterfaceMaterial {
 //     ) {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleMaterialIDCommandList>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleMaterialIDCommandList>().unwrap();
 //         commands.list.push(EMaterialIDCommand::Use(object, MaterialID(material)));
 //     }
 
@@ -139,7 +139,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Texture(entity, desc, force_apply));
 
 //         self
@@ -154,7 +154,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Mat4(entity, slot, value, force_apply));
 
 //         self
@@ -169,7 +169,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Mat2(entity, slot, value, force_apply));
 
 //         self
@@ -184,7 +184,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Vec4(entity, slot, value, force_apply));
 
 //         self
@@ -199,7 +199,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Vec2(entity, slot, value, force_apply));
 
 //         self
@@ -214,7 +214,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Float(entity, slot, value, force_apply));
 
 //         self
@@ -229,7 +229,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Int(entity, slot, value, force_apply));
 
 //         self
@@ -244,7 +244,7 @@ pub trait InterfaceMaterial {
 //     ) -> &Self {
 //         let world = self.world();
 
-//         let commands = world.get_resource_mut::<SingleUniformCommands>().unwrap();
+//         let commands = world.get_single_res_mut::<SingleUniformCommands>().unwrap();
 //         commands.0.push(EUniformCommand::Uint(entity, slot, value, force_apply));
 
 //         self

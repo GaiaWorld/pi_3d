@@ -2,11 +2,11 @@
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Component)]
+
 pub struct RenderMode(pub ERenderMode);
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Component)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, )]
 pub enum ERenderMode {
     Opaque = 1,
     Skybox = 2,
@@ -17,9 +17,10 @@ pub enum ERenderMode {
 pub struct ActionRenderMode;
 impl ActionRenderMode {
     pub fn modify(
-        commands: &mut EntityCommands,
+        entity: Entity,
+        commands: &mut Alter<(), (), (ERenderMode,)>,
         val: ERenderMode,
     ) {
-        commands.insert(val);
+        commands.alter(entity, (val,));
     }
 }

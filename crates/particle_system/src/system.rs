@@ -8,7 +8,7 @@ use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, T
 use crate::base::*;
 
 pub fn sys_particle_active(
-    mut items: Query<(&GlobalEnable, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
+    mut items: Query<(&GlobalEnable, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState), (Changed<GlobalEnable>, Changed<ParticleSystemActive>)>,
     performance: Res<ParticleSystemPerformance>,
     mut globalperformance: ResMut<Performance>,
 ) {

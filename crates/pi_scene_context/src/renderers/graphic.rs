@@ -3,8 +3,8 @@ use std::ops::{Deref, DerefMut};
 
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
-use wgpu::StoreOp;
-
+use wgpu::{CommandEncoder, StoreOp};
+use pi_slotmap::Key;
 use crate::pass::PassTagOrders;
 
 use super::renderer::*;
@@ -32,7 +32,7 @@ pub struct RendererGraphicDesc {
 }
 
 #[derive(SystemParam)]
-pub struct QueryParam<'w, 's> (
+pub struct QueryParam<'w> (
     // Res<'w, PiRenderWindow>,
     // Res<'w, PiRenderDevice>,
     // Res<'w, PiRenderQueue>,
@@ -40,7 +40,6 @@ pub struct QueryParam<'w, 's> (
     Res<'w, PiSafeAtlasAllocator>,
     Query<
         'w,
-        's,
         (
             &'static RendererEnable, &'static DisposeReady, &'static Renderer, &'static RenderSize,
             &'static RenderColorFormat, &'static RenderColorClear,
@@ -53,11 +52,10 @@ pub struct QueryParam<'w, 's> (
 );
 
 #[derive(SystemParam)]
-pub struct QueryParam0<'w, 's> (
+pub struct QueryParam0<'w> (
     Res<'w, PiSafeAtlasAllocator>,
     Query<
         'w,
-        's,
         (
             &'static RendererEnable, &'static DisposeReady, &'static Renderer, &'static RenderSize,
             &'static RenderColorFormat, &'static RenderColorClear,
@@ -84,13 +82,13 @@ impl Node for RenderNode {
 
     type Output = SimpleInOut;
 
-    type BuildParam = QueryParam0<'static, 'static>;
-    type RunParam = QueryParam<'static, 'static>;
+    type BuildParam = QueryParam0<'static>;
+    type RunParam = QueryParam<'static>;
 
     fn build<'a>(
         &'a mut self,
-        world: &'a mut World,
-        param: &'a mut SystemState<Self::BuildParam>,
+        // world: &'a mut World,
+        param: &'a mut Self::BuildParam,
         _context: RenderContext,
         input: &'a Self::Input,
         _usage: &'a ParamUsage,
@@ -101,8 +99,8 @@ impl Node for RenderNode {
         
         let mut output = SimpleInOut::default();
 
-        let mut param: QueryParam0 = param.get_mut(world);
-        let (atlas_allocator, mut query) = (param.0, param.1);
+        // let mut param = param;
+        let (atlas_allocator, query) = (&param.0, &mut param.1);
         if let Ok((
             enable, disposed, renderer, rendersize, colorformat, color_clear, depthstencilformat, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, mut to_final_target
         )) = query.get_mut(self.renderer_id) {
@@ -198,12 +196,24 @@ impl Node for RenderNode {
         return Ok(output);
     }
 
+    // fn run<'a>(
+    //     &'a mut self,
+    //     // world: &'a World,
+    //     param: &'a Self::RunParam,
+    //     context: RenderContext,
+    //     commands: ShareRefCell<CommandEncoder>,
+    //     input: &'a Self::Input,
+    //     usage: &'a ParamUsage,
+	// 	id: NodeId,
+	// 	from: &'a [NodeId],
+	// 	to: &'a [NodeId],
+    // ) -> BoxFuture<'a, Result<(), String>>;
     fn run<'a>(
         &'a mut self,
-        world: &'a World,
-        param: &'a mut SystemState<Self::RunParam>,
-        _: RenderContext,
-        mut commands: ShareRefCell<wgpu::CommandEncoder>,
+        // world: &'a World,
+        param: &'a Self::RunParam,
+        context: RenderContext,
+        mut commands: ShareRefCell<CommandEncoder>,
         input: &'a Self::Input,
         _: &'a ParamUsage,
 		_id: NodeId,
@@ -214,8 +224,8 @@ impl Node for RenderNode {
 
         let mut output = SimpleInOut::default();
 
-        let param: QueryParam = param.get(world);
-        let (screen, _atlas_allocator, query) = (param.0, param.1, param.2);
+        let param = param;
+        let (screen, _atlas_allocator, query) = (&param.0, &param.1, &param.2);
         if let Ok((
             enable, disposed, renderer, rendersize, colorformat, color_clear, depthstencilformat, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
         )) = query.get(self.renderer_id) {

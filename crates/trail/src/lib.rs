@@ -40,38 +40,52 @@ pub struct StateTrail {
 pub struct PluginTrail;
 impl Plugin for PluginTrail {
     fn build(&self, app: &mut App) {
-        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<TrailBuffer>();
+        let cfg = app.world.get_single_res_mut::<AssetMgrConfigs>().unwrap().query::<TrailBuffer>();
         let maxcount = cfg.max;
-        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
-        let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
+        let device = app.world.get_single_res::<PiRenderDevice>().unwrap().0.clone();
+        let queue = app.world.get_single_res::<PiRenderQueue>().unwrap().0.clone();
 
-        let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        let mut allocator = app.world.get_single_res_mut::<VertexBufferAllocator3D>().unwrap();
         let trailbuffer = TrailBuffer::new(maxcount as u32, &mut allocator, &device, &queue);
-        app.insert_resource(ResTrailBuffer(trailbuffer));
+        app.world.insert_single_res(ResTrailBuffer(trailbuffer));
 
-        app.insert_resource(ActionListTrail::default());
-        app.insert_resource(ActionListTrailAge::default());
-        app.insert_resource(StateTrail::default());
+        app.world.insert_single_res(ActionListTrail::default());
+        app.world.insert_single_res(ActionListTrailAge::default());
+        app.world.insert_single_res(StateTrail::default());
 
-        app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
-        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand));
-        app.configure_set(Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate));
-        app.configure_set(Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
-        app.add_systems(Update, apply_deferred.in_set(StageTrail::TrailCreate));
+        // app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
+        // app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand));
+        // app.configure_set(Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate));
+        // app.configure_set(Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
+        // app.add_system(Update, apply_deferred.in_set(StageTrail::TrailCreate));
 
-        app.add_systems(Update, sys_create_trail_mesh.in_set(StageTrail::TrailCreate));
-        app.add_systems(Update, (
+        app.add_system(Update, sys_create_trail_mesh/* .in_set(StageTrail::TrailCreate) */);
+        app.add_system(Update, //(
             sys_act_trail_age           // .run_if(should_run)
-        ).in_set(StageTrail::TrailCommand));
-        app.add_systems(Update, (
+        /* ).in_set(StageTrail::TrailCommand) */);
+        app.add_system(Update, // (
             sys_trail_update            // .run_if(should_run)
-        ).in_set(StageTrail::TrailUpdate));
-        app.add_systems(
+        /* ).in_set(StageTrail::TrailUpdate) */);
+        app.add_system(
 			Update,
-            (
+            // (
                 sys_dispose_about_trail_linked,
+            //     sys_dispose_about_trail
+            // ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
+        );
+        app.add_system(
+			Update,
+            // (
+                // sys_dispose_about_trail_linked,
                 sys_dispose_about_trail
-            ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
+            // ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
+        );
+        app.add_system(
+			Update,
+            // (
+            //     sys_dispose_about_trail_linked,
+            //     sys_dispose_about_trail
+            /* ).chain().after( */sys_dispose_ready/* ).in_set(ERunStageChap::StateCheck) */
         );
     }
 }

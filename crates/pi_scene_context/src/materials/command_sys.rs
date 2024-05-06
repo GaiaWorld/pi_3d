@@ -17,20 +17,39 @@ use super::{
     value::*,
     command::*,
 };
+pub type SysCreateMaterialBundle = (
+    TargetAnimatorableIsRunning,
+    UniformAnimated,
+    AssetKeyShaderEffect,
+    MaterialRefs,
+    BindEffectReset,
+    UniformTextureWithSamplerParams,
+    UniformTextureWithSamplerParamsDirty,
+    FlagAnimationStartResetComp,
+    DirtyMaterialRefs,
+    TextureKeyList,
+    EffectBindSampler2DList,
+    EffectBindTexture2DList,
+    EffectTextureSamplersComp
+);
 
 pub fn sys_create_material(
     mut cmds: ResMut<ActionListMaterialCreate>,
     asset_shader: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
-    mut commands: Commands,
+    // mut commands: Commands,
+    mut alter0: Alter<(), (), (DisposeReady, DisposeCan), ()>,
+    mut alter1: Alter<(), (), (BindEffect, AssetResShaderEffectMeta), ()>,
+    mut alter2: Alter<(), (), (TexWithAtlas,), ()>,
+    mut alter3: Alter<(), (), SysCreateMaterialBundle, ()>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
-        if commands.get_entity(entity).is_none() { 
+        if alter0.get(entity).is_err() { 
             // log::error!("Material: Not Found!!");
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
@@ -38,59 +57,60 @@ pub fn sys_create_material(
 
         if let Some(meta) = asset_shader.get(&key_shader) {
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
-            let mut matcmds = commands.entity(entity);
-            matcmds.insert(BindEffect(effect_val_bind));
-            matcmds.insert(AssetResShaderEffectMeta::from(meta));
+            // let mut matcmds = commands.entity(entity);
+            // matcmds.insert(BindEffect(effect_val_bind));
+            // matcmds.insert(AssetResShaderEffectMeta::from(meta));
+            alter1.alter(entity, (BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)));
         } else {
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
         }
 
-        let mut matcmds = commands.entity(entity);
-        ActionEntity::init(&mut matcmds);
+        // let mut matcmds = commands.entity(entity);
+        ActionEntity::init(entity, &mut alter0);
         let keytex = Arc::new(UniformTextureWithSamplerParam::default());
 
-        if texatlas { matcmds.insert(TexWithAtlas); }
+        if texatlas { alter2.alter(entity, (TexWithAtlas, ));};
 
-        matcmds
-            .insert(TargetAnimatorableIsRunning)
-            .insert(UniformAnimated::default())
-            .insert(AssetKeyShaderEffect(key_shader))
-            .insert(MaterialRefs::default())
-            .insert(BindEffectReset)
-            .insert(UniformTextureWithSamplerParams::default())
-            .insert(UniformTextureWithSamplerParamsDirty)
-            .insert(FlagAnimationStartResetComp)
-            .insert(DirtyMaterialRefs::default())
-            .insert(    TextureKeyList::default())
-            .insert(    EffectBindSampler2DList::default())
-            .insert(    EffectBindTexture2DList::default())
-            // .insert(TextureSlot01(keytex.clone()))
-            // .insert(TextureSlot02(keytex.clone()))
-            // .insert(TextureSlot03(keytex.clone()))
-            // .insert(TextureSlot04(keytex.clone()))
-            // .insert(TextureSlot05(keytex.clone()))
-            // .insert(TextureSlot06(keytex.clone()))
-            // .insert(TextureSlot07(keytex.clone()))
-            // .insert(TextureSlot08(keytex.clone()))
-            // .insert(EffectBindTexture2D01Comp::default())
-            // .insert(EffectBindTexture2D02Comp::default())
-            // .insert(EffectBindTexture2D03Comp::default())
-            // .insert(EffectBindTexture2D04Comp::default())
-            // .insert(EffectBindTexture2D05Comp::default())
-            // .insert(EffectBindTexture2D06Comp::default())
-            // .insert(EffectBindTexture2D07Comp::default())
-            // .insert(EffectBindTexture2D08Comp::default())
-            // .insert(EffectBindSampler2D01Comp::default())
-            // .insert(EffectBindSampler2D02Comp::default())
-            // .insert(EffectBindSampler2D03Comp::default())
-            // .insert(EffectBindSampler2D04Comp::default())
-            // .insert(EffectBindSampler2D05Comp::default())
-            // .insert(EffectBindSampler2D06Comp::default())
-            // .insert(EffectBindSampler2D07Comp::default())
-            // .insert(EffectBindSampler2D08Comp::default())
-            // .insert(EffectBindSampler2D08Comp::default())
-            .insert(EffectTextureSamplersComp::default())
-            ;
+            alter3.alter(entity, (
+                TargetAnimatorableIsRunning,
+                UniformAnimated::default(),
+                AssetKeyShaderEffect(key_shader),
+                MaterialRefs::default(),
+                BindEffectReset,
+                UniformTextureWithSamplerParams::default(),
+                UniformTextureWithSamplerParamsDirty,
+                FlagAnimationStartResetComp,
+                DirtyMaterialRefs::default(),
+                TextureKeyList::default(),
+                EffectBindSampler2DList::default(),
+                EffectBindTexture2DList::default(),
+            // TextureSlot01(keytex.clone()))
+            // TextureSlot02(keytex.clone()))
+            // TextureSlot03(keytex.clone()))
+            // TextureSlot04(keytex.clone()))
+            // TextureSlot05(keytex.clone()))
+            // TextureSlot06(keytex.clone()))
+            // TextureSlot07(keytex.clone()))
+            // TextureSlot08(keytex.clone()))
+            // EffectBindTexture2D01Comp::default())
+            // EffectBindTexture2D02Comp::default())
+            // EffectBindTexture2D03Comp::default())
+            // EffectBindTexture2D04Comp::default())
+            // EffectBindTexture2D05Comp::default())
+            // EffectBindTexture2D06Comp::default())
+            // EffectBindTexture2D07Comp::default())
+            // EffectBindTexture2D08Comp::default())
+            // EffectBindSampler2D01Comp::default())
+            // EffectBindSampler2D02Comp::default())
+            // EffectBindSampler2D03Comp::default())
+            // EffectBindSampler2D04Comp::default())
+            // EffectBindSampler2D05Comp::default())
+            // EffectBindSampler2D06Comp::default())
+            // EffectBindSampler2D07Comp::default())
+            // EffectBindSampler2D08Comp::default())
+            // EffectBindSampler2D08Comp::default())
+            EffectTextureSamplersComp::default())
+        );
     });
 }
 
@@ -343,7 +363,7 @@ pub fn sys_act_material_texture_from_target(
 pub fn sys_act_target_animation_uniform(
     mut cmds: ResMut<ActionListTargetAnimationUniform>,
     mut items: Query<(&mut BindEffect, &mut UniformAnimated)>,
-    mut command: Commands,
+    mut command: Insert<()>,
     mut animatorablefloat: ResMut<ActionListAnimatorableFloat>,
     mut animatorablevec2s: ResMut<ActionListAnimatorableVec2>,
     mut animatorablevec3s: ResMut<ActionListAnimatorableVec3>,
@@ -422,7 +442,7 @@ impl ActionMaterial {
         app: &mut App,
         cmd: OpsMaterialUse,
     ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListMaterialUse>().unwrap();
+        let mut cmds = app.world.get_single_res_mut::<ActionListMaterialUse>().unwrap();
         cmds.push(cmd);
     }
 }

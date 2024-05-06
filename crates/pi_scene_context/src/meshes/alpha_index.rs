@@ -1,6 +1,6 @@
 use std::mem::replace;
 
-use pi_ecs::{prelude::{ResMut, Setup, Commands}};
+
 use pi_ecs_macros::setup;
 use pi_scene_shell::run_stage::{TSystemStageInfo, ERunStageChap};
 
@@ -49,7 +49,7 @@ impl InterfaceAlphaIndex for crate::engine::Engine {
         entity: ObjectID,
         alpha_index: usize,
     ) -> &Self {
-        let commands = self.world().get_resource_mut::<SingleAlphaIndexCommandList>().unwrap();
+        let commands = self.world().get_single_res_mut::<SingleAlphaIndexCommandList>().unwrap();
         commands.list.push((entity, RenderQueue(alpha_index)));
 
         self
