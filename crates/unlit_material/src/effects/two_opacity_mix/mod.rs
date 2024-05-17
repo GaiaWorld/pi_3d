@@ -13,7 +13,7 @@ impl TwoOpacityMixShader {
 
     pub fn create(infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.fs_define = String::from("\r\nlayout(location = 0) out vec4 gl_FragColor; \r\n");
+        nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
         nodemat.vs = String::from(include_str!("../base.vert"));
         nodemat.fs = String::from(include_str!("./two_opacity_mix.frag"));
@@ -21,20 +21,20 @@ impl TwoOpacityMixShader {
         nodemat.varyings = Varyings(
             vec![
                 Varying { 
-                    format: Atom::from("vec3"),
-                    name: Atom::from("v_normal"),
+                    format: Atom::from(S_VEC3),
+                    name: Atom::from(S_V_NORMAL),
                 },
                 Varying { 
-                    format: Atom::from("vec3"),
-                    name: Atom::from("v_pos"),
+                    format: Atom::from(S_VEC3),
+                    name: Atom::from(S_V_POS),
                 },
                 Varying {
-                    format: Atom::from("vec2"),
-                    name: Atom::from("v_uv"),
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from(S_V_UV),
                 },
                 Varying { 
-                    format: Atom::from("vec4"),
-                    name: Atom::from("v_color"),
+                    format: Atom::from(S_VEC4),
+                    name: Atom::from(S_V_COLOR),
                 },
             ]
         );

@@ -1,6 +1,7 @@
 use pi_atom::Atom;
 use pi_node_materials::prelude::NodeMaterialBuilder;
 use pi_scene_context::pass::{ShaderEffectMeta, UniformPropertyVec4, Varying, Varyings};
+use pi_scene_shell::prelude::*;
 
 pub struct PlanarShadow;
 impl PlanarShadow {
@@ -9,7 +10,7 @@ impl PlanarShadow {
     pub fn meta() -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.fs_define = String::from("\r\nlayout(location = 0) out vec4 gl_FragColor; \r\n");
+        nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
         nodemat.vs = String::from(include_str!("./planar_shadow.vert"));
         nodemat.fs = String::from(include_str!("./planar_shadow.frag"));
@@ -17,8 +18,8 @@ impl PlanarShadow {
         nodemat.varyings = Varyings(
             vec![
                 Varying { 
-                    format: Atom::from("vec4"),
-                    name: Atom::from("v_color"),
+                    format: Atom::from(S_VEC4),
+                    name: Atom::from(S_V_COLOR),
                 },
             ]
         );

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use pi_render::{
     renderer::{
         bind_buffer::{BindBufferAllocator, BindBufferRange},
-        shader::TShaderBindCode, buildin_var::ShaderVarUniform,
+        shader::TShaderBindCode,
         bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer},
         shader_stage::EShaderStage
     },
@@ -73,17 +73,17 @@ impl ShaderBindModelAboutSkinValue {
             ESkinCode::None => {},
             ESkinCode::UBO(_, bone, cache) => {
                 result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
-                result += " Bone {\r\n";
-                result += ShaderSetBind::code_uniform_array("mat4", ShaderVarUniform::BONE_MATRICES, bone.count() * (*cache as u32)).as_str();
-                result += "};\r\n";
+                result += " Bone {"; result += crate::prelude::S_BREAK;
+                result += ShaderSetBind::code_uniform_array(crate::prelude::S_MAT4, ShaderVarUniform::BONE_MATRICES, bone.count() * (*cache as u32)).as_str();
+                result += "};"; result += crate::prelude::S_BREAK;
 
                 result += skin.define_code().as_str();
             },
             _ => {
                 result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
-                result += " Bone {\r\n";
-                result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::BONE_TEX_SIZE).as_str();
-                result += "};\r\n";
+                result += " Bone {"; result += crate::prelude::S_BREAK;
+                result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::BONE_TEX_SIZE).as_str();
+                result += "};"; result += crate::prelude::S_BREAK;
 
                 result += skin.define_code().as_str();
             },
@@ -139,17 +139,17 @@ impl TShaderBindCode for ShaderBindModelAboutSkinValue {
             ESkinCode::None => {},
             ESkinCode::UBO(_, bone, cache) => {
                 result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-                result += " Bone {\r\n";
-                result += ShaderSetBind::code_uniform_array("mat4", ShaderVarUniform::BONE_MATRICES, bone.count() * (cache as u32)).as_str();
-                result += "};\r\n";
+                result += " Bone {"; result += crate::prelude::S_BREAK;
+                result += ShaderSetBind::code_uniform_array(crate::prelude::S_MAT4, ShaderVarUniform::BONE_MATRICES, bone.count() * (cache as u32)).as_str();
+                result += "};"; result += crate::prelude::S_BREAK;
 
                 result += self.skin.define_code().as_str();
             },
             _ => {
                 result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-                result += " Bone {\r\n";
-                result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::BONE_TEX_SIZE).as_str();
-                result += "};\r\n";
+                result += " Bone {"; result += crate::prelude::S_BREAK;
+                result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::BONE_TEX_SIZE).as_str();
+                result += "};"; result += crate::prelude::S_BREAK;
 
                 result += self.skin.define_code().as_str();
             },

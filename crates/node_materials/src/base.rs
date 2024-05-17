@@ -38,6 +38,7 @@ pub trait TNodeMaterialBlock {
     fn textures() -> Vec<UniformTexture2DDesc> { vec![] }
     fn varyings() -> Vec<Varying> { vec![] }
     fn depends() -> Vec<Atom> { vec![] }
+    #[inline(never)]
     fn info() -> NodeMaterialBlockInfo {
         NodeMaterialBlockInfo {
             fs_define: String::from(Self::FS_DEFINED),

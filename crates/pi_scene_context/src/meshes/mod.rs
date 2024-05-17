@@ -45,21 +45,14 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceMeshCreate::default());
         app.insert_resource(ActionListMeshStateModify::default());
         app.insert_resource(ActionListAbstructMeshValueStateModify::default());
-        // app.insert_resource(ActionListAbstructMeshScalingMode::default());
-        // app.insert_resource(ActionListAbstructMeshVelocity::default());
         app.insert_resource(ActionListInstanceAttr::default());
-        // app.insert_resource(ActionListMeshRenderIndiceRange::default());
-        // app.insert_resource(ActionListMeshRenderVertexRange::default());
-        // app.insert_resource(ActionListBoneOffset::default());
         app.insert_resource(ActionListMeshForceLighting::default());
-        // app.insert_resource(ActionListMeshForceSpotLighting::default());
-        // app.insert_resource(ActionListMeshForceHemiLighting::default());
         app.insert_resource(ActionListTargetAnimationAttribute::default());
 
-        app.configure_set(Update, StageModel::CreateMesh.after(StageMaterial::Create));
-        app.configure_set(Update, StageModel::_InitMesh.after(StageModel::CreateMesh).before(StageLayerMask::Command).before(StageEnable::Command));
-        app.configure_set(Update, StageModel::CreateInstance.after(StageModel::_InitMesh));
-        app.configure_set(Update, StageModel::_InitInstance.after(StageModel::CreateInstance).before(StageEnable::Command).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageModel::MeshCreate.after(StageCamera::_Create));
+        app.configure_set(Update, StageModel::_InitMesh.after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command));
+        app.configure_set(Update, StageModel::InstanceCreate.after(StageModel::_InitMesh));
+        app.configure_set(Update, StageModel::_InitInstance.after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageModel::AbstructMeshCommand.in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create));
         app.configure_set(Update, StageModel::RenderMatrix.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix));
         app.configure_set(Update, StageModel::InstanceEffectMesh.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix));
@@ -69,10 +62,10 @@ impl crate::Plugin for PluginMesh {
         app.add_systems(Update, apply_deferred.in_set(StageModel::_InitInstance));
 
         app.add_systems(Update, 
-            sys_create_mesh.in_set(StageModel::CreateMesh)
+            sys_create_mesh.in_set(StageModel::MeshCreate)
         );
         app.add_systems(Update, 
-            sys_create_instanced_mesh.in_set(StageModel::CreateInstance)
+            sys_create_instanced_mesh.in_set(StageModel::InstanceCreate)
         );
         app.add_systems(
 			Update,

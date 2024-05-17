@@ -18,6 +18,25 @@ use super::{
     command::*,
 };
 
+pub type MaterialBundle = (
+    EntityBundle,
+    (
+        TargetAnimatorableIsRunning,
+        UniformAnimated,
+        AssetKeyShaderEffect,
+        MaterialRefs,
+        BindEffectReset,
+        UniformTextureWithSamplerParams,
+        UniformTextureWithSamplerParamsDirty,
+        FlagAnimationStartResetComp,
+        DirtyMaterialRefs,
+        TextureKeyList,
+        EffectBindSampler2DList,
+        EffectBindTexture2DList,
+        EffectTextureSamplersComp,
+    )
+);
+
 pub fn sys_create_material(
     mut cmds: ResMut<ActionListMaterialCreate>,
     asset_shader: Res<ShareAssetMgr<ShaderEffectMeta>>,
@@ -39,58 +58,37 @@ pub fn sys_create_material(
         if let Some(meta) = asset_shader.get(&key_shader) {
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
             let mut matcmds = commands.entity(entity);
-            matcmds.insert(BindEffect(effect_val_bind));
-            matcmds.insert(AssetResShaderEffectMeta::from(meta));
+            matcmds.insert((BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)));
         } else {
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
+            // log::error!("ERROR_MATERIAL_SHADER_NOTFOUND: {:?}", key_shader);
         }
 
         let mut matcmds = commands.entity(entity);
-        ActionEntity::init(&mut matcmds);
-        let keytex = Arc::new(UniformTextureWithSamplerParam::default());
+        // let keytex = Arc::new(UniformTextureWithSamplerParam::default());
 
         if texatlas { matcmds.insert(TexWithAtlas); }
 
-        matcmds
-            .insert(TargetAnimatorableIsRunning)
-            .insert(UniformAnimated::default())
-            .insert(AssetKeyShaderEffect(key_shader))
-            .insert(MaterialRefs::default())
-            .insert(BindEffectReset)
-            .insert(UniformTextureWithSamplerParams::default())
-            .insert(UniformTextureWithSamplerParamsDirty)
-            .insert(FlagAnimationStartResetComp)
-            .insert(DirtyMaterialRefs::default())
-            .insert(    TextureKeyList::default())
-            .insert(    EffectBindSampler2DList::default())
-            .insert(    EffectBindTexture2DList::default())
-            // .insert(TextureSlot01(keytex.clone()))
-            // .insert(TextureSlot02(keytex.clone()))
-            // .insert(TextureSlot03(keytex.clone()))
-            // .insert(TextureSlot04(keytex.clone()))
-            // .insert(TextureSlot05(keytex.clone()))
-            // .insert(TextureSlot06(keytex.clone()))
-            // .insert(TextureSlot07(keytex.clone()))
-            // .insert(TextureSlot08(keytex.clone()))
-            // .insert(EffectBindTexture2D01Comp::default())
-            // .insert(EffectBindTexture2D02Comp::default())
-            // .insert(EffectBindTexture2D03Comp::default())
-            // .insert(EffectBindTexture2D04Comp::default())
-            // .insert(EffectBindTexture2D05Comp::default())
-            // .insert(EffectBindTexture2D06Comp::default())
-            // .insert(EffectBindTexture2D07Comp::default())
-            // .insert(EffectBindTexture2D08Comp::default())
-            // .insert(EffectBindSampler2D01Comp::default())
-            // .insert(EffectBindSampler2D02Comp::default())
-            // .insert(EffectBindSampler2D03Comp::default())
-            // .insert(EffectBindSampler2D04Comp::default())
-            // .insert(EffectBindSampler2D05Comp::default())
-            // .insert(EffectBindSampler2D06Comp::default())
-            // .insert(EffectBindSampler2D07Comp::default())
-            // .insert(EffectBindSampler2D08Comp::default())
-            // .insert(EffectBindSampler2D08Comp::default())
-            .insert(EffectTextureSamplersComp::default())
-            ;
+        matcmds.insert(
+            (
+                ActionEntity::init(),
+                (
+                    TargetAnimatorableIsRunning,
+                    UniformAnimated::default(),
+                    AssetKeyShaderEffect(key_shader),
+                    MaterialRefs::default(),
+                    BindEffectReset,
+                    UniformTextureWithSamplerParams::default(),
+                    UniformTextureWithSamplerParamsDirty,
+                    FlagAnimationStartResetComp,
+                    DirtyMaterialRefs::default(),
+                    TextureKeyList::default(),
+                    EffectBindSampler2DList::default(),
+                    EffectBindTexture2DList::default(),
+                    EffectTextureSamplersComp::default(),
+                )
+            )
+        );
     });
 }
 
@@ -108,6 +106,7 @@ pub fn sys_act_material_use(
         match cmd {
             OpsMaterialUse::Use(id_mesh, id_mat, pass) => {
                 if let Ok((mut materialrefs, mut flag)) = materials.get_mut(id_mat) {
+                    // ShadowCaster 
                     if let Ok(mut matid) = linkedtargets.get_mut(id_mesh) {
                         let oldmat = matid.0;
                         if matid.0 != id_mat {
@@ -120,6 +119,7 @@ pub fn sys_act_material_use(
                                 if materialrefs.remove(&id_mesh) { *flag = DirtyMaterialRefs::default(); }
                             }
                         }
+                    // Model
                     } else if let Ok(passid) = meshes.get(id_mesh) {
                         let id_pass = passid.0[pass.index()];
 
@@ -295,7 +295,7 @@ pub fn sys_act_material_texture_from_target(
     mut cmds: ResMut<ActionListUniformTextureFromRenderTarget>,
     mut tilloffcmds: ResMut<ActionListUniformVec4>,
     mut textureparams: Query<(
-        &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams,
+        &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty
         // (&mut EffectBindTexture2D01Comp, &mut EffectBindTexture2D02Comp, &mut EffectBindTexture2D03Comp, &mut EffectBindTexture2D04Comp, 
         // &mut EffectBindTexture2D05Comp, &mut EffectBindTexture2D06Comp, &mut EffectBindTexture2D07Comp, &mut EffectBindTexture2D08Comp)
     )>,
@@ -303,7 +303,7 @@ pub fn sys_act_material_texture_from_target(
     mut errors: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformTextureFromRenderTarget(entity, mut param, key, tilloffslot)| {
-        if let Ok((_meta, mut textureparams)) = textureparams.get_mut(entity) {
+        if let Ok((_meta, mut textureparams, mut flag)) = textureparams.get_mut(entity) {
             // log::warn!("EUniformCommand::Texture");
             if let Some(target) = targets.get(key) {
                 let tilloff = target.tilloff((0., 0., 1., 1.));
@@ -331,9 +331,10 @@ pub fn sys_act_material_texture_from_target(
             // } else {
             //     // log::error!("texture_from_target Error No Target");
             }
-            
+            // log::error!("texture_from_target Target {:?}", key);
             param.url = EKeyTexture::SRT(key);
             textureparams.0.insert(param.slotname.clone(), Arc::new(param));
+            *flag = UniformTextureWithSamplerParamsDirty;
         } else {
             // log::error!("texture_from_target Error No Material");
         }

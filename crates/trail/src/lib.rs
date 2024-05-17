@@ -53,11 +53,11 @@ impl Plugin for PluginTrail {
         app.insert_resource(ActionListTrailAge::default());
         app.insert_resource(StateTrail::default());
 
-        app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
-        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::_SkinCreate));
+        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command));
         app.configure_set(Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate));
         app.configure_set(Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
-        app.add_systems(Update, apply_deferred.in_set(StageTrail::TrailCreate));
+        app.add_systems(Update, apply_deferred.in_set(StageTrail::_TrailCreate));
 
         app.add_systems(Update, sys_create_trail_mesh.in_set(StageTrail::TrailCreate));
         app.add_systems(Update, (

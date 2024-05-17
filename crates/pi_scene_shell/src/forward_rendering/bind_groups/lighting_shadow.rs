@@ -4,12 +4,12 @@ use std::{hash::Hash, sync::Arc};
 use pi_render::{
     renderer::{
         shader::{TShaderSetBlock, TShaderBindCode},
-        bind_group::*, bind::TKeyBind, buildin_var::ShaderVarUniform,
+        bind_group::*, bind::TKeyBind,
     },
     asset::TAssetKeyU64
 };
 
-use crate::{forward_rendering::binds::*, prelude::{EqAsResource, HashAsResource}};
+use crate::{forward_rendering::binds::*, prelude::{EqAsResource, HashAsResource}, shader::ShaderVarUniform};
 
 #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct KeyShaderSetExtend {

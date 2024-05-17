@@ -3,11 +3,7 @@ use pi_scene_shell::{prelude::*, engine_shell::asset_capacity};
 
 
 use crate::{
-    bindgroup::*,
-    pass::*,
-    transforms::prelude::*,
-    cameras::prelude::*,
-    object::sys_dispose_can, scene::StageScene,
+    bindgroup::*, cameras::prelude::*, object::sys_dispose_can, pass::*, scene::StageScene, shadow::prelude::StageShadowGenerator, transforms::prelude::*
 };
 
 use self::{
@@ -78,12 +74,6 @@ impl Plugin for PluginRenderer {
             let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<Pipeline3D>();
             app.insert_resource(ShareAssetMgr(AssetMgr::<Pipeline3D>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)));
         }
-        // if app.world.get_resource::<AssetLoaderShader3D>().is_none() {
-        //     app.insert_resource(AssetLoaderShader3D::default());
-        // }
-        // if app.world.get_resource::<AssetLoaderPipeline3D>().is_none() {
-        //     app.insert_resource(AssetLoaderPipeline3D::default());
-        // }
 
         app.insert_resource(CustomRenderTargets::default());
         app.insert_resource(ActionListBlend::default());
@@ -101,7 +91,7 @@ impl Plugin for PluginRenderer {
         app.insert_resource(RendererDrawCallRecord::default());
 
         
-        app.configure_set(Update, StageRenderer::Create.after(StageScene::Create));
+        app.configure_set(Update, StageRenderer::Create.after(StageCamera::_Create).after(StageShadowGenerator::_Create));
         app.configure_set(Update, StageRenderer::_CreateApply.after(StageRenderer::Create));
         app.configure_set(Update, StageRenderer::RenderStateCommand.in_set(FrameDataPrepare).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply));
         app.configure_set(Update, StageRenderer::RendererCommand.in_set(FrameDataPrepare).after(StageRenderer::_CreateApply));
@@ -158,7 +148,7 @@ impl Plugin for PluginRenderer {
                 sys_set0_modify,
                 sys_set1_modify,
                 sys_set2_modify,
-                sys_set3_modify,
+                // sys_set3_modify,
                 sys_bind_group_loaded,
                 sys_pass_bind_groups,
             ).chain().in_set(StageRenderer::PassBindGroups)

@@ -25,28 +25,44 @@ pub fn sys_act_viewer_force_include(
     });
 }
 
+pub type ViewerBundle = (
+    ViewerAspect,
+    ViewerViewMatrix,
+    ViewerProjectionMatrix,
+    ViewerTransformMatrix,
+    ViewerGlobalPosition,
+    ViewerDirection,
+    ModelList,
+    FlagModelList,
+    ModelListAfterCulling,
+    ViewerActive,
+    ViewerRenderersInfo,
+    DirtyViewerRenderersInfo,
+    ForceIncludeModelList,
+    FlagForceIncludeModelList,
+);
+
 pub struct ActionViewer;
 impl ActionViewer {
     pub(crate) fn as_viewer(
-        commands: &mut EntityCommands,
         active: bool,
-    ) {
-        commands
+    ) -> ViewerBundle {
+        (
             // .insert(ViewerSize::default()) // 由具体视口设置 - 相机\阴影生成器
-            .insert(ViewerAspect::default())
-            .insert(ViewerViewMatrix::default())
-            .insert(ViewerProjectionMatrix::default())
-            .insert(ViewerTransformMatrix::default())
-            .insert(ViewerGlobalPosition::default())
-            .insert(ViewerDirection::default())
-            .insert(ModelList::default())
-            .insert(FlagModelList::default())
-            .insert(ModelListAfterCulling::default())
-            .insert(ViewerActive(active))
-            .insert(ViewerRenderersInfo::default())
-            .insert(DirtyViewerRenderersInfo)
-            .insert(ForceIncludeModelList::default())
-            .insert(FlagForceIncludeModelList)
-        ;
+            ViewerAspect::default(),
+            ViewerViewMatrix::default(),
+            ViewerProjectionMatrix::default(),
+            ViewerTransformMatrix::default(),
+            ViewerGlobalPosition::default(),
+            ViewerDirection::default(),
+            ModelList::default(),
+            FlagModelList::default(),
+            ModelListAfterCulling::default(),
+            ViewerActive(active),
+            ViewerRenderersInfo::default(),
+            DirtyViewerRenderersInfo,
+            ForceIncludeModelList::default(),
+            FlagForceIncludeModelList,
+        )
     }
 }

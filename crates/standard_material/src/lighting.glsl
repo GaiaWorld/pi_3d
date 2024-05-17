@@ -154,7 +154,6 @@ void computeLighting(
         computeLightingSpot(angleOffset, glossiness, attenuation, NdotV, N, V, L, D, color, diffuseBase, specularBase);
         totalAttention += attenuation;
 
-
         lightDiffuse    += diffuseBase * shadow;
         lightSpecular   += specularBase * shadow;
     }

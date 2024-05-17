@@ -264,14 +264,17 @@ impl ViewerRenderersInfo {
             },
         }
     }
-    pub fn remove(&mut self, renderer: Entity) {
+    pub fn remove(&mut self, renderer: Entity) -> Result<(), EErorr> {
         // log::error!("Remove Renderer");
         match self.0.binary_search(&renderer) {
             Ok(idx) => {
                 self.0.remove(idx);
                 self.1.remove(idx);
+                Ok(())
             },
-            Err(_) => todo!(),
+            Err(_) => {
+                Err(ErrorRecord::ERROR_RENDERER_NOT_FOUND)
+            },
         }
     }
     pub fn renderers(&self) -> Iter<Entity> {

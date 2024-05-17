@@ -64,13 +64,13 @@ impl ShaderBindModelAboutMatrix {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
         result += " Model {\r\n";
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::_WORLD_MATRIX).as_str();
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::_WORLD_MATRIX_INV).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::_VELOCITY).as_str();
-        result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::_SKIN_BONE_OFFSET0).as_str();
-        result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::_SKIN_BONE_OFFSET1).as_str();
-        result += ShaderSetBind::code_uniform("uint", "placeholder_0").as_str();
-        result += ShaderSetBind::code_uniform("uint", "placeholder_1").as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX_INV).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::_VELOCITY).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET0).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET1).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, "placeholder_0").as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, "placeholder_1").as_str();
         result += "};\r\n";
         result
     }
@@ -99,15 +99,15 @@ impl TShaderBindCode for ShaderBindModelAboutMatrix {
     fn vs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-        result += " Model {\r\n";
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::_WORLD_MATRIX).as_str();
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::_WORLD_MATRIX_INV).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::_VELOCITY).as_str();
-        result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::_SKIN_BONE_OFFSET0).as_str();
-        result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::_SKIN_BONE_OFFSET1).as_str();
-        result += ShaderSetBind::code_uniform("uint", "placeholder_0").as_str();
-        result += ShaderSetBind::code_uniform("uint", "placeholder_1").as_str();
-        result += "};\r\n";
+        result += " Model {"; result += crate::prelude::S_BREAK;
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX_INV).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::_VELOCITY).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET0).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET1).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, "placeholder_0").as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, "placeholder_1").as_str();
+        result += "};"; result += crate::prelude::S_BREAK;
         result
     }
 

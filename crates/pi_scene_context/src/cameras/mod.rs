@@ -2,9 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    viewer::prelude::*,
-    object::sys_dispose_ready,
-    transforms::prelude::*, layer_mask::{prelude::LayerMask, StageLayerMask}, scene::StageScene, cullings::StageCulling, prelude::StageRenderer,
+    cullings::StageCulling, flags::StageEnable, layer_mask::{prelude::LayerMask, StageLayerMask}, object::sys_dispose_ready, prelude::StageRenderer, scene::StageScene, transforms::prelude::*, viewer::prelude::*
 };
 
 use self::{
@@ -40,22 +38,14 @@ impl Plugin for PluginCamera {
         app.insert_resource(ActionListCameraCreate::default());
         app.insert_resource(ActionListCameraModify::default());
         app.insert_resource(ActionListCameraTarget::default());
-        // app.insert_resource(ActionListCameraActive::default());
-        // app.insert_resource(ActionListCameraFixedMode::default());
-        // app.insert_resource(ActionListCameraFov::default());
-        // app.insert_resource(ActionListCameraOrthSize::default());
-        // app.insert_resource(ActionListCameraAspect::default());
-        // app.insert_resource(ActionListCameraPixelSize::default());
-        // app.insert_resource(ActionListCameraNearFar::default());
-        // app.insert_resource(ActionListCameraRenderer::default());
         app.insert_resource(StateCamera::default());
 
-        app.configure_set(Update, StageCamera::CameraCreate.after(StageScene::Create));
-        app.configure_set(Update, StageCamera::_CameraCreate.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand));
-        app.configure_set(Update, StageCamera::CameraCommand.after(StageCamera::_CameraCreate).before(StageRenderer::Create));
+        app.configure_set(Update, StageCamera::CameraCreate.after(StageScene::_Create));
+        app.configure_set(Update, StageCamera::_Create.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command));
+        app.configure_set(Update, StageCamera::CameraCommand.after(StageCamera::_Create).before(StageRenderer::Create));
         app.configure_set(Update, StageCamera::CameraCalcMatrix.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command));
         app.configure_set(Update, StageCamera::CameraCulling.in_set(FrameDataPrepare).after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageCamera::_CameraCreate));
+        app.add_systems(Update, apply_deferred.in_set(StageCamera::_Create));
 
         app.add_systems(
 			Update,

@@ -19,8 +19,10 @@ pub fn sys_create_transform_node(
         } else {
             return;
         };
-        ActionTransformNode::init(&mut transformnode, scene);
-        transformnode.insert(TransformNode);
+        transformnode.insert((
+            TransformNode,
+            ActionTransformNode::init(scene),
+        ));
     });
 }
 
@@ -97,53 +99,65 @@ pub fn sys_act_local(
     });
 }
 
+pub type TreeNodeBundle = (Down, Up, Layer, Enable, RecordEnable, GlobalEnable);
+
+pub type TransformNodeBundle = (
+    (DisposeReady, DisposeCan),
+    SceneID,
+    TreeNodeBundle,
+    (
+        TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
+        RecordLocalPosition, RecordLocalScaling, RecordLocalRotationQuaternion, RecordLocalEulerAngles,
+        LocalRotation, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp, CullingFlag
+    )
+);
+
 pub struct ActionTransformNode;
 impl ActionTransformNode {
-    pub fn init(
-        transformnode: &mut EntityCommands,
-        scene: Entity,
-    ) {
-        ActionEntity::init(transformnode);
-        ActionScene::add_to_scene(transformnode, scene);
-        ActionTransformNode::init_for_tree(transformnode);
-        ActionTransformNode::as_transform_node(transformnode);
+    pub fn init(scene: Entity) -> TransformNodeBundle {
+        (
+            ActionEntity::init(),
+            SceneID(scene),
+            ActionTransformNode::init_for_tree(),
+            ActionTransformNode::as_transform_node(),
+        )
     }
-    fn as_transform_node(
-        commands: &mut EntityCommands,
+    fn as_transform_node() -> (
+        TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
+        RecordLocalPosition, RecordLocalScaling, RecordLocalRotationQuaternion, RecordLocalEulerAngles,
+        LocalRotation, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp, CullingFlag
     ) {
-        commands
-            .insert(TransformNodeDirty)
-            .insert(LocalPosition::default())
-            .insert(LocalScaling::default())
-            .insert(LocalRotationQuaternion::default())
-            .insert(LocalEulerAngles::default())
-            .insert(RecordLocalPosition::default())
-            .insert(RecordLocalScaling::default())
-            .insert(RecordLocalRotationQuaternion::default())
-            .insert(RecordLocalEulerAngles::default())
-            .insert(LocalRotation(Rotation3::identity()))
-            .insert(LocalMatrix::new(Matrix::identity()))
-            .insert(GlobalMatrix::default())
-            .insert(AbsoluteTransform::default())
-            .insert(FlagAnimationStartResetComp)
-            .insert(CullingFlag(true))
-            ;
+        (
+            TransformNodeDirty,
+            LocalPosition::default(),
+            LocalScaling::default(),
+            LocalRotationQuaternion::default(),
+            LocalEulerAngles::default(),
+            RecordLocalPosition::default(),
+            RecordLocalScaling::default(),
+            RecordLocalRotationQuaternion::default(),
+            RecordLocalEulerAngles::default(),
+            LocalRotation(Rotation3::identity()),
+            LocalMatrix::new(Matrix::identity()),
+            GlobalMatrix::default(),
+            AbsoluteTransform::default(),
+            FlagAnimationStartResetComp,
+            CullingFlag(true),
+        )
     }
 
-    pub(crate) fn init_for_tree(
-        commands: &mut EntityCommands,
-    ) {
+    pub(crate) fn init_for_tree() -> TreeNodeBundle {
         // log::debug!("init_for_tree====={:?}", commands.id());
-        commands
-            .insert(Down::default())
-            .insert(Up::default())
-            .insert(Layer::default())
+        (
+            Down::default(),
+            Up::default(),
+            Layer::default(),
+            Enable::default(),
+            RecordEnable::default(),
+            GlobalEnable(false),
             // .insert(NodeChilds::default())
             // .insert(NodeParent(None))
-            .insert(Enable::default())
-            .insert(RecordEnable::default())
-            .insert(GlobalEnable(true))
-            ;
+        )
     }
 
     pub(crate) fn _tree_modify(

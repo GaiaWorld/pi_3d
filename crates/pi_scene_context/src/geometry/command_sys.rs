@@ -187,6 +187,15 @@ impl ActionVertexBuffer {
     }
 }
 
+pub type GeometryBundle = (
+    EntityBundle,
+    (
+        VertexBufferLayoutsComp,
+        MeshID,
+        RenderGeometryComp,
+    )
+);
+
 pub struct ActionGeometry;
 impl ActionGeometry {
     pub fn init(
@@ -196,12 +205,14 @@ impl ActionGeometry {
         id_mesh: Entity,
     ) {
         // log::warn!("{:?}", vertex_desc);
-        ActionEntity::init(cmds);
-        cmds
-            .insert(VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)))
-            .insert(MeshID(id_mesh))
-            .insert(RenderGeometryComp::default())
-            ;
+        cmds.insert(
+            (
+                ActionEntity::init(),
+                VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)),
+                MeshID(id_mesh),
+                RenderGeometryComp::default(),
+            )
+        );
         if let Some(indices_desc) = indices_desc {
             cmds.insert(indices_desc);
         } else {

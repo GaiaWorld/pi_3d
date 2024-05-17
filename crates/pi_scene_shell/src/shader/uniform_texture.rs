@@ -18,7 +18,7 @@ impl UniformSamplerDesc {
     pub fn base(texture: &UniformTexture2DDesc) -> Arc<Self> {
         Arc::new(
             Self {
-                slotname: UniformPropertyName::from(String::from("sampler") + texture.slotname.as_str()),
+                slotname: UniformPropertyName::from(String::from(crate::prelude::S_SAMPLER) + texture.slotname.as_str()),
                 ty: wgpu::SamplerBindingType::Filtering,
                 stage: texture.stage
             }
@@ -26,9 +26,9 @@ impl UniformSamplerDesc {
     }
     fn _ty_code(&self) -> String {
         match self.ty {
-            wgpu::SamplerBindingType::Filtering => String::from(" sampler "),
-            wgpu::SamplerBindingType::NonFiltering => String::from(" sampler "),
-            wgpu::SamplerBindingType::Comparison => String::from(" sampler_comparison "),
+            wgpu::SamplerBindingType::Filtering     => String::from(crate::prelude::S_SPACE) + crate::prelude::S_SAMPLER + crate::prelude::S_SPACE,
+            wgpu::SamplerBindingType::NonFiltering  => String::from(crate::prelude::S_SPACE) + crate::prelude::S_SAMPLER + crate::prelude::S_SPACE,
+            wgpu::SamplerBindingType::Comparison    => String::from(crate::prelude::S_SPACE) + "sampler_comparison" + crate::prelude::S_SPACE,
         }
     }
     fn _code(&self, set: u32, bind: u32) -> String {
@@ -37,7 +37,7 @@ impl UniformSamplerDesc {
         let mut result = ShaderSetBind::code_set_bind_head(set, bind);
         result += self._ty_code().as_str();
         result += self.slotname.as_str();
-        result += ";\r\n";
+        result += ";"; result += crate::prelude::S_BREAK;
 
         result
     }
@@ -237,7 +237,7 @@ impl EffectUniformTexture2DDescs {
                     let param = param.get(index).unwrap();
                     let sampler = Arc::new(
                         UniformSamplerDesc {
-                            slotname: UniformPropertyName::from(String::from("sampler") + slotname.as_str()),
+                            slotname: UniformPropertyName::from(String::from(crate::prelude::S_SAMPLER) + slotname.as_str()),
                             ty: if param.filter { wgpu::SamplerBindingType::Filtering } else { wgpu::SamplerBindingType::NonFiltering },
                             stage: item.stage,
                         }
@@ -284,7 +284,40 @@ pub fn texture_bind_code(tex_sampler_type: &wgpu::TextureSampleType, dimision: w
     let mut result = ShaderSetBind::code_set_bind_head(set, bind);
     result += texture_type_code(tex_sampler_type, dimision).as_str();
     result += name;
-    result += ";\r\n";
+    result += ";"; result += crate::prelude::S_BREAK;
 
     result
+}
+
+pub fn texture_bind_code_mat(tex_sampler_type: &wgpu::TextureSampleType, dimision: wgpu::TextureViewDimension, name: &str, set: u32, bind: u32, idx: u32) -> String {
+
+    // layout(set = 2, binding = 0) uniform texture2D _MainTex;
+    let mut result = ShaderSetBind::code_set_bind_head(set, bind);
+    result += texture_type_code(tex_sampler_type, dimision).as_str();
+    result += name;
+    result += ";"; result += crate::prelude::S_BREAK;
+    result += texture_code(name, idx, tex_sampler_type, dimision).as_str();
+
+    result
+}
+
+fn texture_code(name: &str, idx: u32, tex_sampler_type: &wgpu::TextureSampleType, dimision: wgpu::TextureViewDimension) -> String {
+    let temp = idx.to_string();
+    let idx = temp.as_str();
+    // let uv = String::from("uvAtlas(uv * tilloff.xy + tilloff.zw + os, " + idx + ")");
+    let uv = String::from("uv * tilloff.xy + tilloff.zw + os");
+    let uvatlas = &uv;
+    match tex_sampler_type {
+        wgpu::TextureSampleType::Float { .. } => match dimision {
+            wgpu::TextureViewDimension::D1          => String::from("vec4 Get") + name + "(float uv){ return texture(sampler1D(" + name + ", sampler" + name + "), uv); }\n",
+            wgpu::TextureViewDimension::D2          => String::from("vec4 Get") + name + "(vec2 uv, vec2 os, vec4 tilloff){ return texture(sampler2D(" + name + ", sampler" + name + "), " + uvatlas +"); }\n",
+            wgpu::TextureViewDimension::D2Array     => String::from("vec4 Get") + name + "(vec2 uv, vec2 os, float layer, vec4 tilloff){ return texture(sampler2DArray(" + name + ", sampler" + name + "), vec3(" + uvatlas +", layer)); }\n",
+            wgpu::TextureViewDimension::Cube        => String::from(""),
+            wgpu::TextureViewDimension::CubeArray   => String::from(""),
+            wgpu::TextureViewDimension::D3          => String::from("vec4 Get") + name + "(vec2 uv, vec2 os, float layer, vec4 tilloff){ return texture(sampler3D(" + name + ", sampler" + name + "), vec3(" + uvatlas + ", layer)); }\n",
+        },
+        wgpu::TextureSampleType::Depth => String::from("vec4 Get") + name + "(vec2 uv, vec2 os, vec4 tilloff){ return texture(sampler2D(" + name + ", sampler" + name + "), " + uvatlas +"); }\n",
+        wgpu::TextureSampleType::Sint => String::from("ivec4 Get") + name + "(vec2 uv, vec2 os, vec4 tilloff){ return texture(sampler2D(" + name + ", sampler" + name + "), " + uvatlas +"); }\n",
+        wgpu::TextureSampleType::Uint => String::from("uvec4 Get") + name + "(vec2 uv, vec2 os, vec4 tilloff){ return texture(sampler2D(" + name + ", sampler" + name + "), " + uvatlas +"); }\n",
+    }
 }

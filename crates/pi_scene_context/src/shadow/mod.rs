@@ -33,15 +33,15 @@ impl Plugin for PluginShadowGenerator {
         app.insert_resource(ActionListShadowGeneratorParam::default());
         app.insert_resource(StateShadow::default());
 
-        app.configure_set(Update, StageShadowGenerator::Create.after(StageLighting::_LightCreate).after(StageCamera::CameraCreate));
+        app.configure_set(Update, StageShadowGenerator::Create.after(StageLighting::_LightCreate).after(StageCamera::_Create));
         
         #[cfg(not(target_arch="wasm32"))]
         {
-            app.configure_set(Update, StageShadowGenerator::_CreateApply.after(StageShadowGenerator::Create).before(StageRenderer::Create));
-            app.configure_set(Update, StageShadowGenerator::Command.in_set(FrameDataPrepare).after(StageShadowGenerator::_CreateApply).after(StageLayerMask::Command).before(StageMaterial::Command));
+            app.configure_set(Update, StageShadowGenerator::_Create.after(StageShadowGenerator::Create).before(StageRenderer::Create));
+            app.configure_set(Update, StageShadowGenerator::Command.in_set(FrameDataPrepare).after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command));
             app.configure_set(Update, StageShadowGenerator::CalcMatrix.in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix));
             app.configure_set(Update, StageShadowGenerator::Culling.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform));
-            app.add_systems(Update, apply_deferred.in_set(StageShadowGenerator::_CreateApply));
+            app.add_systems(Update, apply_deferred.in_set(StageShadowGenerator::_Create));
     
             app.add_systems(
             	Update,

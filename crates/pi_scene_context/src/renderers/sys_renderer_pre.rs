@@ -32,12 +32,15 @@ pub fn sys_sets_modify_by_viewer(
     let time1 = pi_time::Instant::now();
 
     viewers.iter().for_each(|(idviewer, id_scene, modellist, forcemodels, viewrenderinfos)| {
-        // log::error!("DDD 0");
+        // log::error!("DDD 0 idviewer: {:?}, rendererCount: {:?}, models: {:?}", idviewer, viewrenderinfos.0.len(), modellist.0.len());
         viewrenderinfos.renderers().for_each(|idrenderer| {
             let idrenderer = *idrenderer;
 
+            // log::error!("DDD 1 idviewer: {:?}, idrenderer: {:?}, models: {:?}", idviewer, idrenderer, modellist.0.len());
             if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
+                // log::error!("DDD 2");
                 if rendererenable.0 == true {
+                    // log::error!("DDD 3 idviewer: {:?}, idrenderer: {:?}, models: {:?}", idviewer, idrenderer, modellist.0.len());
                     _sets_modify_by_viewer(idrenderer, idviewer, &mut passes, id_scene.0, &modelspass, modellist, forcemodels, passtag);
                 }
             //     // log::error!("DDD 1");

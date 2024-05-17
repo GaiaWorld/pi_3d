@@ -9,6 +9,7 @@ fn _strip(val: &ECustomVertexType) -> usize {
         ECustomVertexType::Float    => 1 * 4,
         ECustomVertexType::Uint     => 1 * 4,
         ECustomVertexType::Int      => 1 * 4,
+        ECustomVertexType::UVec4    => 4 * 4,
     }
 }
 fn animatorable_type(val: &ECustomVertexType) -> EAnimatorableType {
@@ -19,6 +20,7 @@ fn animatorable_type(val: &ECustomVertexType) -> EAnimatorableType {
         ECustomVertexType::Float    => EAnimatorableType::Float,
         ECustomVertexType::Uint     => EAnimatorableType::Uint,
         ECustomVertexType::Int      => EAnimatorableType::Int,
+        ECustomVertexType::UVec4    => EAnimatorableType::Vec4,
     }
 }
 

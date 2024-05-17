@@ -20,7 +20,7 @@ impl TShaderAttributesCode for EVertexAttribute {
         result += location.to_string().as_str();
         result += ") in ";
         result += self.kind().as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
 
         match self {
             EVertexAttribute::Buildin(_) => result += "V",
@@ -40,7 +40,7 @@ impl TShaderAttributesCode for EVertexAttribute {
                     EBuildinVertexAtribute::Color4 => {},
                     EBuildinVertexAtribute::UV => {},
                     EBuildinVertexAtribute::Normal => {},
-                    _ => { result += val.kind().as_str(); result += " "; },
+                    _ => { result += val.kind().as_str(); result += crate::prelude::S_SPACE; },
                 }
                 result += val.var_code(); result += " = V"; result += val.var_code(); result += ";\r\n";
 
@@ -60,10 +60,10 @@ impl TShaderAttributesCode for EVertexAttribute {
             EVertexAttribute::Custom(val) => {
                 if let Some(uniform) = val.foruniform() {
                     if meta.uniforms.query_instance(uniform) {
-                        result += val.vs_running_code(); result += "\r\n";
+                        result += val.vs_running_code(); result += crate::prelude::S_BREAK;
                     }
                 } else {
-                    result += val.vs_running_code(); result += "\r\n";
+                    result += val.vs_running_code(); result += crate::prelude::S_BREAK;
                 }
             },
         }

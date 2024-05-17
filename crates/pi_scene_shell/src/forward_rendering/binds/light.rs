@@ -4,9 +4,9 @@ use pi_render::renderer::{
     bind_buffer::{BindBufferRange, BindBufferAllocator},
     bind::{KeyBindLayoutBuffer, KeyBindBuffer, TKeyBind},
     shader_stage::EShaderStage,
-    buildin_var::ShaderVarUniform, shader::TShaderBindCode
+    shader::TShaderBindCode
 };
-use crate::shader::ShaderSetBind;
+use crate::shader::{ShaderSetBind, ShaderVarUniform};
 
 #[derive(Hash, PartialEq, Eq)]
 pub struct ShaderBindSceneLightInfos {
@@ -121,43 +121,43 @@ impl TShaderBindCode for ShaderBindSceneLightInfos {
     fn vs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += ShaderVarUniform::LIGHTING_INFOS;
         result += " {\r\n";
 
-        result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::DIRECT_LIGHT_DIRECTION, self.direct_count).as_str();
-        result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::DIRECT_LIGHT_COLOR, self.direct_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::DIRECT_LIGHT_DIRECTION, self.direct_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::DIRECT_LIGHT_COLOR, self.direct_count).as_str();
 
         if 0 < self.point_count {
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::POINT_LIGHT_POSITION, self.point_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::POINT_LIGHT_COLOR, self.point_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::POINT_LIGHT_DATA, self.point_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::POINT_LIGHT_POSITION, self.point_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::POINT_LIGHT_COLOR, self.point_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::POINT_LIGHT_DATA, self.point_count).as_str();
         }
 
         if 0 < self.spot_count {
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::SPOT_LIGHT_POSITION, self.spot_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::SPOT_LIGHT_COLOR, self.spot_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::SPOT_LIGHT_DATA, self.spot_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::SPOT_LIGHT_DIRECTION, self.spot_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SPOT_LIGHT_POSITION, self.spot_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SPOT_LIGHT_COLOR, self.spot_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SPOT_LIGHT_DATA, self.spot_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SPOT_LIGHT_DIRECTION, self.spot_count).as_str();
         }
 
         if 0 < self.hemi_count {
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_POSITION, self.hemi_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_COLOR, self.hemi_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_DATA, self.hemi_count).as_str();
-            result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_DIRECTION, self.hemi_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_POSITION, self.hemi_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_COLOR, self.hemi_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_DATA, self.hemi_count).as_str();
+            result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_DIRECTION, self.hemi_count).as_str();
         }
 
-        // result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_POSITION, self.spot_count).as_str();
-        // result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_COLOR, self.spot_count).as_str();
-        // result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_DATA, self.spot_count).as_str();
-        // result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::HEMI_LIGHT_DIRECTION, self.spot_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_POSITION, self.spot_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_COLOR, self.spot_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_DATA, self.spot_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::HEMI_LIGHT_DIRECTION, self.spot_count).as_str();
 
         result += "};\r\n";
-        result += "const uint MAX_DIRECT_LIGHT = "; result += self.direct_count.to_string().as_str(); result += ";\r\n";
-        result += "const uint MAX_POINT_LIGHT = "; result += self.point_count.to_string().as_str(); result += ";\r\n";
-        result += "const uint MAX_SPOT_LIGHT = "; result += self.spot_count.to_string().as_str(); result += ";\r\n";
-        result += "const uint MAX_HEMI_LIGHT = "; result += self.hemi_count.to_string().as_str(); result += ";\r\n";
+        result += "const uint MAX_DIRECT_LIGHT = "; result += self.direct_count.to_string().as_str(); result += ";\n";
+        result += "const uint MAX_POINT_LIGHT = "; result += self.point_count.to_string().as_str(); result += ";\n";
+        result += "const uint MAX_SPOT_LIGHT = "; result += self.spot_count.to_string().as_str(); result += ";\n";
+        result += "const uint MAX_HEMI_LIGHT = "; result += self.hemi_count.to_string().as_str(); result += ";\n";
         result
     }
     fn fs_define_code(&self, set: u32, bind: u32) -> String {

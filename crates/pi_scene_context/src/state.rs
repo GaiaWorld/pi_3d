@@ -95,7 +95,7 @@ pub struct StateRecordCfg {
                         states.0.push(state);
                     }
                     if let Some(mut cmd) = commands.get_entity(id_model.0) {
-                        cmd.insert(DirtyMeshStates);
+                        dirty_mesh_state(&mut cmd);
                     }
                 }
             }
@@ -111,7 +111,7 @@ pub struct StateRecordCfg {
                 states.0.push(state);
             }
             if let Some(mut cmd) = commands.get_entity(id_model) {
-                cmd.insert(DirtyMeshStates);
+                dirty_mesh_state(&mut cmd);
             }
         });
     }
@@ -125,7 +125,7 @@ pub struct StateRecordCfg {
                 states.0.push(state);
             }
             if let Some(mut cmd) = commands.get_entity(id_model) {
-                cmd.insert(DirtyMeshStates);
+                dirty_mesh_state(&mut cmd);
             }
         });
     }
@@ -162,6 +162,10 @@ pub struct StateRecordCfg {
         // }
     }
 
+#[inline(never)]
+fn dirty_mesh_state(cmd: &mut EntityCommands) {
+    cmd.insert(DirtyMeshStates);
+}
 pub struct PluginStateToFile;
 impl Plugin for PluginStateToFile {
     fn build(&self, app: &mut App) {

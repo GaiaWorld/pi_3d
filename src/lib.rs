@@ -282,8 +282,8 @@ pub fn sys_info_node(
     _scenes: Query<Entity, With<SceneTime>>,
     _states: Res<StateResource>,
 ) {
-    // scenes.iter().for_each(|entity| {
-    //     if let Some(state) = states.scenes.get(&entity) {
+    // _scenes.iter().for_each(|entity| {
+    //     if let Some(state) = _states.scenes.get(&entity) {
     //         log::warn!(
     //             "Scene: {:?}, Draw: {:?}, Vertex: {:?}, Transform: {:?}, Mesh: {:?}, InstanceMesh: {:?}, Camera: {:?}, Light: {:?}, Skeleton: {:?}, ParticleSys: {:?}, Trail: {:?}, AnimeGroup: {:?}",
     //             entity,
@@ -356,13 +356,13 @@ pub fn sys_info_draw(
         viewer_includes.push(models.0.len() + forcemodels.0.len());
     });
 
-    // log::warn!(
-    //     "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-    //     entitycount,
-    //     count_ready_geo, count_ready_geo_mesh,
-    //     viewer_includes, viewer_cullings, statecamera.culling_time,
-    //     count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
-    // );
+    log::warn!(
+        "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+        entitycount,
+        count_ready_geo, count_ready_geo_mesh,
+        viewer_includes, viewer_cullings, statecamera.culling_time,
+        count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
+    );
 }
 
 pub fn sys_info_resource(

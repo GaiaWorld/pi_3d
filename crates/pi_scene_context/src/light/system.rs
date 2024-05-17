@@ -21,21 +21,22 @@ pub fn sys_light_index_create(
 
         if let Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi, mut dirty)) = scenes.get_mut(idscene.0) {
 
+            let mut cmd = commands.entity(entity);
             if direct.is_some() {
-                commands.entity(entity).insert(queuedirect.0.add(entity));
+                cmd.insert(queuedirect.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
             if point.is_some() {
                 // log::warn!("Add Point !!");
-                commands.entity(entity).insert(queuepoint.0.add(entity));
+                cmd.insert(queuepoint.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
             if spot.is_some() {
-                commands.entity(entity).insert(queuespot.0.add(entity));
+                cmd.insert(queuespot.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
             if hemi.is_some() {
-                commands.entity(entity).insert(queuehemi.0.add(entity));
+                cmd.insert(queuehemi.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
         }

@@ -20,6 +20,6 @@ impl Default for LayerMask {
 }
 impl TViewerLayerMask for LayerMask {
     fn include(&self, other: u32) -> bool {
-        return self.0 & other > 0;
+        return (self.0 & other) > 0;
     }
 }

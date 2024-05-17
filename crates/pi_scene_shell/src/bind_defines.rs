@@ -60,6 +60,7 @@ impl BindDefines {
     }
 
     pub fn need_bind_group_set3(val: u32) -> bool {
-        Self::need_lighting(val) || Self::need_shadowmap(val) || Self::need_screen_opaque(val) || Self::need_screen_depth(val) || Self::need_brdf(val) || Self::need_env(val)
+        false
+        // Self::need_lighting(val) || Self::need_shadowmap(val) || Self::need_screen_opaque(val) || Self::need_screen_depth(val) || Self::need_brdf(val) || Self::need_env(val)
     }
 }

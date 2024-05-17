@@ -32,17 +32,14 @@ pub fn fs_define_sampler(meta: &ShaderEffectMeta, index: usize, set: u32, bind: 
 }
 fn define_sampler(desc: &UniformTexture2DDesc, index: usize, set: u32, bind: u32) -> String {
     let mut result = String::from("");
-    let idx = index.to_string();
-    let slotname = String::from("_Texture") + &idx;
+    // let idx = index.to_string();
+    // let slotname = String::from("_Texture") + &idx;
+    let slotname = desc.slotname.to_string();
     result += sampler_bind_code(slotname.as_str(), desc.sampler_type(), set, bind).as_str();
-    result += "#define sampler";
-    result += desc.slotname.as_str();
-    result += " sampler";
-    result += slotname.as_str();
-    result += "\r\n";
-    result += "vec4 texture2D"; result += &idx; result += "(vec2 uv) {\r\n";
-    // result += "    uv = floor(uv) + fract(uv) * uTexST"; result += &idx; result += ".xy + uTexST"; result += &idx; result += ".zw;\r\n";
-    result += "    return texture(sampler2D(_Texture"; result += &idx; result += ", sampler_Texture"; result += &idx; result += "), uv);\r\n";
-    result += "}\r\n";
+    // result += "#define sampler";
+    // result += desc.slotname.as_str();
+    // result += " sampler";
+    // result += slotname.as_str();
+    // result += crate::prelude::S_BREAK;
     result
 }

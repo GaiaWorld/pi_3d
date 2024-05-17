@@ -48,13 +48,15 @@ pub fn sys_create_trail_mesh(
 
             if let Some(mut cmd) = commands.get_entity(id_mesh) {
                 // log::warn!("Mesh Ok");
-                // meshtopology.push(OpsTopology::ops(id_mesh, PrimitiveTopology::TriangleStrip));
-                // cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
-                // cmd.insert(CCullMode(CullMode::Off));
-                cmd.insert(GeometryID(id_geo));
-                // 显式重置为默认
-                cmd.insert(commonbindmodel.0.clone());
-                cmd.insert(ModelStatic);
+                cmd.insert((
+                    // meshtopology.push(OpsTopology::ops(id_mesh, PrimitiveTopology::TriangleStrip));
+                    // cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
+                    // cmd.insert(CCullMode(CullMode::Off));
+                    GeometryID(id_geo),
+                    // 显式重置为默认
+                    commonbindmodel.0.clone(),
+                    ModelStatic,
+                ));
             }
 
             if let Some(mut cmd) = commands.get_entity(id_geo) {
@@ -70,34 +72,35 @@ pub fn sys_create_trail_mesh(
     
                 let mut hasher = DefaultHasher::default();
                 geo_desc.hash_resource(&mut hasher);
-                cmd.insert(GeometryResourceHash(hasher.finish()));
-
-                cmd
-                    .insert(geo_desc)
-                    .insert(slot)
-                    .insert(buffer)
+                cmd.insert((
+                    GeometryResourceHash(hasher.finish()),
+                    geo_desc,
+                    slot,
+                    buffer,
                     // .insert(verticescode)
+                ))
                     ;
             }
             
             if let Some(mut cmd) = commands.get_entity(entity) {
-                ActionEntity::init(&mut cmd);
                 cmd
-                    .insert(SceneID(id_scene))
-                    .insert(TrailLinkedTransform(id_linked))
+                .insert((
+                    ActionEntity::init(),
                     // .insert(TrailMesh(id_mesh))
-                    .insert(TrailGeometry(id_geo))
-                    .insert(TrailBase::new(u32::MAX))
-                    .insert(TrailWorldPlace(true))
-                    .insert(TrailPoints::default())
-                    .insert(ColorOverTrail(Color4Gradient::default()))
-                    .insert(TrailMinimunVertexDistance(0.01))
-                    .insert(WidthOverTrail(FloatInterpolation::new(1.)))
-                    .insert(TrailAgeControl(200))
-                    .insert(TrailSize(1.))
-                    .insert(TrailColor(Vector4::new(1., 1., 1., 1.)))
-                    .insert(TrailRandom(pi_wy_rng::WyRng::default()))
-                    ;
+                    SceneID(id_scene),
+                    TrailLinkedTransform(id_linked),
+                    TrailGeometry(id_geo),
+                    TrailBase::new(u32::MAX),
+                    TrailWorldPlace(true),
+                    TrailPoints::default(),
+                    ColorOverTrail(Color4Gradient::default()),
+                    TrailMinimunVertexDistance(0.01),
+                    WidthOverTrail(FloatInterpolation::new(1.)),
+                    TrailAgeControl(200),
+                    TrailSize(1.),
+                    TrailColor(Vector4::new(1., 1., 1., 1.)),
+                    TrailRandom(pi_wy_rng::WyRng::default()),
+                ));
             }
         });
     }

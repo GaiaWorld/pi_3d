@@ -264,7 +264,7 @@ use super::{
                     // log::warn!("SysPipeline: 2 Pass {:?}", (geometrys.get(id_geo.0).is_ok(), renderers.get(idrenderer.0).is_ok()));
                     match (geometrys.get(id_geo.0), renderers.get(idrenderer.0)) {
                         (Ok(vb), Ok((colorformat, depthstencilformat, blendenable))) => {
-                            let blend = if blendenable.0 { blend.clone() } else { ModelBlend::default() };
+                            let blend = blend.clone(); // if blendenable.0 { blend.clone() } else { ModelBlend::default() };
                             if let Ok(pipeline) = pipeline(
                                 shader, bindgroups, vb, &colorformat.0, &depthstencilformat.0,
                                 blend, depth_state, stencil_state,
@@ -355,7 +355,9 @@ use super::{
                                 bindgroupshash: BindGroups3DHashResource::from(bindgroups),
                                 vertexentity: id_geo.0.clone(),
                                 vertexhash: geohash.clone(),
-                                instance_memory: rendergeo.instance_memory.clone()
+                                instance_memory: rendergeo.instance_memory.clone(),
+                                indice_range: renderindices.clone(),
+                                vertex_range: rendervertex.clone(),
                             };
 
                             *old_draw = PassDraw(Some(draw));
@@ -363,17 +365,14 @@ use super::{
                             *old_draw = PassDraw(None);
                         }
                         // log::debug!("PassDrawLoaded: 1 Pass");
-                        // commands.entity(id_pass).insert(PassDraw(Some(Arc::new(draw))));
                     } else {
                         // log::warn!("PassDraw None: {:?}", id_pass);
                         *old_draw = PassDraw(None);
-                        // if old_draw.0.is_some() { commands.entity(id_pass).insert(PassDraw(None)); }
                     }
                 }
             } else {
                 // log::warn!("PassDraw None: {:?}", id_pass);
                 *old_draw = PassDraw(None);
-                // if old_draw.0.is_some() { commands.entity(id_pass).insert(PassDraw(None)); }
             }
         });
 
@@ -418,7 +417,7 @@ use super::{
             if let (Ok((list_model, viewposition, viewdirection, disposed, distancecomp)), Ok((batchopaque, batchtransparent))) = (viewers.get(id_viewer.0), scenes.get(idscene.0)) {
                 if disposed.0 { return; }
 
-                    // log::warn!("ModelListAfterCulling: {:?}, ", (list_model.0.len()));
+                    // log::warn!("renderer_draws : ModelListAfterCulling: {:?}, ", (list_model.0.len()));
                     renderer.draws.viewport = viewport.val();
                     list_model.0.iter().for_each(|id_obj| {
                         if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passids)) = models.get(id_obj.clone()) {
@@ -786,6 +785,8 @@ fn collect_draw(
                                 slot: instance_memory.slot,
                                 itemcount: range.end as u32 - range.start as u32
                             }),
+                            vertex_range: draw.vertex_range.clone(),
+                            indice_range: draw.indice_range.clone(),
                         };
                         let index = draws.len();
                         draws.push(tmpdraw);
@@ -839,9 +840,9 @@ fn collect_draw_batch(
             pipeline: pipeline.clone(),
             bindgroups: bindgroups.groups(),
             vertices: geo.vertices(),
-            vertex: geo.vertex_range(),
             instances,
-            indices: geo.indices.clone(),
+            vertex: tempdraw.vertex_range.apply(geo),
+            indices: tempdraw.indice_range.apply(geo),
         };
         draw.insert_vertices(RenderVertices { slot: mem.slot, buffer: data, buffer_range: None, size_per_value: size_per_value as u64 });
         draw.instances = Range { start: 0, end: mem.itemcount };
@@ -855,9 +856,9 @@ fn collect_draw_batch(
             pipeline: pipeline.clone(),
             bindgroups: bindgroups.groups(),
             vertices: geo.vertices(),
-            vertex: geo.vertex_range(),
             instances: geo.instances(),
-            indices: geo.indices.clone(),
+            vertex: tempdraw.vertex_range.apply(geo),
+            indices: tempdraw.indice_range.apply(geo),
         };
         let vertex = if let Some(indices) = &draw.indices {
             indices.value_range().end - indices.value_range().start

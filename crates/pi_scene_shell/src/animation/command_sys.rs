@@ -81,7 +81,7 @@ fn _animetable(
     cmd: &mut EntityCommands,
     etype: EAnimatorableEntityType, 
 ) {
-    if items.contains(entity) == false { ActionEntity::init(cmd); }
+    if items.contains(entity) == false { cmd.insert(ActionEntity::init()); }
     match etype {
         EAnimatorableEntityType::Uniform => cmd.insert(AnimatorableUniform),
         EAnimatorableEntityType::Attribute => cmd.insert(AnimatorableAttribute),

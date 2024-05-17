@@ -4,6 +4,8 @@ use pi_futures::BoxFuture;
 use pi_render::renderer::texture::{ImageTexture, ImageTexture2DDesc, ErrorImageTexture};
 use serde::Deserialize;
 
+use crate::prelude::{EErorr, ErrorRecord};
+
 #[derive(Deserialize)]
 #[allow(dead_code)]
 struct Irradiance {
@@ -64,12 +66,12 @@ impl EnvironmentTextureTools {
     ///   this._activeEffect.setFloat3("vSphericalYZ", polynomials.yz.x, polynomials.yz.y, polynomials.yz.z);
     ///   this._activeEffect.setFloat3("vSphericalZX", polynomials.zx.x, polynomials.zx.y, polynomials.zx.z);
     /// ```
-    pub fn get_env_info(data: &[u8]) -> Result<Self, ()> {
+    pub fn get_env_info(data: &[u8]) -> Result<Self, EErorr> {
         let len = Self::MAGIC_BYTES.len();
         let mut pos = 0;
         for i in 0..len {
             if data[pos] != Self::MAGIC_BYTES[i] {
-                return Err(());
+                return Err(ErrorRecord::ERROR_ENVIRONMENT_INFO_MAGICNUMBER);
             }
             pos += 1;
         }
@@ -125,7 +127,7 @@ impl EnvironmentTextureTools {
                     specular: info.specular,
                 })
             },
-            Err(_err) => { log::error!("{:?}", _err); Err(()) },
+            Err(_err) => { Err(ErrorRecord::ERROR_ENVIRONMENT_INFO_PARSE) },
         }
     }
 
@@ -135,12 +137,12 @@ impl EnvironmentTextureTools {
                 LoadResult::Ok(r) => Ok(r),
                 LoadResult::Wait(f) => match f.await {
                     Ok(result) => Ok(result),
-                    Err(_e) => { log::error!("{:?}", _e); Err(ErrorImageTexture::LoadFail)},
+                    Err(_e) => { Err(ErrorImageTexture::LoadFail)},
                 },
                 LoadResult::Receiver(recv) => {
                     match pi_hal::file::load_from_url( &desc.url.url ).await {
                         Ok(data) => create_environment_texture_from_file(&data, desc, recv).await,
-                        Err(_e) => { log::error!("{:?}", _e);  Err(ErrorImageTexture::LoadFail) },
+                        Err(_e) => { Err(ErrorImageTexture::LoadFail) },
                     }
                 }
             }

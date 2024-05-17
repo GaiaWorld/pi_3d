@@ -18,20 +18,20 @@ impl OpacityClipShader {
         nodemat.varyings = Varyings(
             vec![
                 Varying { 
-                    format: Atom::from("vec3"),
-                    name: Atom::from("v_normal"),
+                    format: Atom::from(pi_scene_shell::prelude::S_VEC3),
+                    name: Atom::from(pi_scene_shell::prelude::S_V_NORMAL),
                 },
                 Varying { 
-                    format: Atom::from("vec3"),
-                    name: Atom::from("v_pos"),
+                    format: Atom::from(pi_scene_shell::prelude::S_VEC3),
+                    name: Atom::from(S_V_POS),
                 },
                 Varying {
-                    format: Atom::from("vec2"),
-                    name: Atom::from("v_uv"),
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from(pi_scene_shell::prelude::S_V_UV),
                 },
                 Varying { 
-                    format: Atom::from("vec4"),
-                    name: Atom::from("v_color"),
+                    format: Atom::from(S_VEC4),
+                    name: Atom::from(pi_scene_shell::prelude::S_V_COLOR),
                 },
             ]
         );

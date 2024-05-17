@@ -24,7 +24,6 @@ pub fn vs_define_texture(meta: &ShaderEffectMeta, index: usize, set: u32, bind: 
     String::from("")
 }
 pub fn fs_define_texture(meta: &ShaderEffectMeta, index: usize, set: u32, bind: u32) -> String {
-
     if let Some(desc) = meta.textures.get(index) {
         if  desc.stage.mode() & wgpu::ShaderStages::FRAGMENT == wgpu::ShaderStages::FRAGMENT {
             return define_texture(desc, index, set, bind);
@@ -36,13 +35,18 @@ pub fn fs_define_texture(meta: &ShaderEffectMeta, index: usize, set: u32, bind: 
 
 fn define_texture(desc: &UniformTexture2DDesc, index: usize, set: u32, bind: u32) -> String {
     let mut result = String::from("");
-    let idx = index.to_string();
-    let slotname = String::from("_Texture") + &idx;
-    result += texture_bind_code(&desc.tex_sampler_type, desc.dimision, &slotname, set, bind).as_str();
-    result += "#define ";
-    result += desc.slotname.as_str();
-    result += " ";
-    result += slotname.as_str();
-    result += "\r\n";
+    // let idx = index.to_string();
+    // let slotname = String::from("_Texture") + &idx;
+    let slotname = desc.slotname.to_string();
+    result += texture_bind_code_mat(&desc.tex_sampler_type, desc.dimision, &slotname, set, bind, index as u32).as_str();
+    // result += "#define ";
+    // result += desc.slotname.as_str();
+    // result += crate::prelude::S_SPACE;
+    // result += slotname.as_str();
+    // result += crate::prelude::S_BREAK;
+    // result += "vec4 texture2D"; result += &idx; result += "(vec2 uv) {\r\n";
+    // // result += "    uv = floor(uv) + fract(uv) * uTexST"; result += &idx; result += ".xy + uTexST"; result += &idx; result += ".zw;\r\n";
+    // result += "    return texture(sampler2D(_Texture"; result += &idx; result += ", sampler_Texture"; result += &idx; result += "), uv);\r\n";
+    // result += "}\r\n";
     result
 }

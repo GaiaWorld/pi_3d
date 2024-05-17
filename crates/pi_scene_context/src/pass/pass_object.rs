@@ -1,7 +1,7 @@
 
 use std::{sync::Arc, ops::{Deref, Range}};
 
-use crate::{bindgroup::*, prelude::{EVerteicesMemory, GeometryDesc, GeometryResourceHash}};
+use crate::{bindgroup::*, prelude::{EVerteicesMemory, GeometryDesc, GeometryResourceHash, IndiceRenderRange, VertexRenderRange}};
 
 pub use pi_scene_shell::prelude::*;
 
@@ -18,6 +18,8 @@ pub struct DrawObjTmp {
     pub vertexentity: Entity,
     pub vertexhash: GeometryResourceHash,
     pub instance_memory: Option<EVerteicesMemory>,
+    pub indice_range: IndiceRenderRange,
+    pub vertex_range: VertexRenderRange,
 }
 impl DrawObjTmp {
     pub fn can_batch_instance_memory(&self, other: &Self, debug: bool, max_combine_bytes: usize) -> bool {
@@ -30,6 +32,8 @@ impl DrawObjTmp {
         //         (self.instance_memory.is_some() , other.instance_memory.is_some())
         //     );
         // }
+        if self.indice_range.0.is_none() || other.indice_range.0.is_none() { return false; }
+        if self.vertex_range.0.is_none() || other.vertex_range.0.is_none() { return false; }
         if self.pipeline == other.pipeline
             && self.vertexhash == other.vertexhash
             && self.bindgroupshash == other.bindgroupshash

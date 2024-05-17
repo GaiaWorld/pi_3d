@@ -56,60 +56,6 @@ pub fn sys_material_textures_modify(
                         samplers.0[index] = Some(samp);
                     }
                 }
-                
-                // if index == 0 {
-                    
-                //     if !slots.0.0.eq(&param) { slots.0.0 = param.clone(); }
-                //     // entitycmd.insert(TextureSlot01(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.0 = EffectBindSampler2D01Comp(Some(samp));
-                //     }
-                // } else if index == 1 {
-                    
-                //     if !slots.1.0.eq(&param) { slots.1.0 = param.clone(); } 
-                //     // entitycmd.insert(TextureSlot02(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.1 = EffectBindSampler2D02Comp(Some(samp));
-                //     }
-                // } else if index == 2 {
-                //     // log::warn!("Texture 2 {:?}", &param.url);
-                //     if !slots.2.0.eq(&param) { slots.2.0 = param.clone(); }
-                //     // entitycmd.insert(TextureSlot03(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.2 = EffectBindSampler2D03Comp(Some(samp));
-                //     }
-                // } else if index == 3 {
-                //     // log::warn!("Texture 3 {:?}", &param.url);
-                //     slots.3.0 = param.clone();
-                //     // entitycmd.insert(TextureSlot04(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.3 = EffectBindSampler2D04Comp(Some(samp));
-                //     }
-                // } else if index == 4 {
-                //     slots.4.0 = param.clone();
-                //     // entitycmd.insert(TextureSlot05(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.4 = EffectBindSampler2D05Comp(Some(samp));
-                //     }
-                // } else if index == 5 {
-                //     slots.5.0 = param.clone();
-                //     // entitycmd.insert(TextureSlot06(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.5 = EffectBindSampler2D06Comp(Some(samp));
-                //     }
-                // } else if index == 6 {
-                //     slots.6.0 = param.clone();
-                //     // entitycmd.insert(TextureSlot07(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.6 = EffectBindSampler2D07Comp(Some(samp));
-                //     }
-                // } else if index == 7 {
-                //     slots.7.0 = param.clone();
-                //     // entitycmd.insert(TextureSlot08(param.clone()));
-                //     if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                //         *samplers.7 = EffectBindSampler2D08Comp(Some(samp));
-                //     }
-                // }
             }
         }
 
@@ -175,86 +121,69 @@ pub fn sys_texture_ready07(
     mut items: Query<
         (
             ObjectID,
-            &AssetResShaderEffectMeta
+            &AssetResShaderEffectMeta, &TextureKeyList
             , &EffectBindTexture2DList, &EffectBindSampler2DList
-            // , (&EffectBindTexture2D01Comp, &EffectBindSampler2D01Comp)
-            // , (&EffectBindTexture2D02Comp, &EffectBindSampler2D02Comp)
-            // , (&EffectBindTexture2D03Comp, &EffectBindSampler2D03Comp)
-            // , (&EffectBindTexture2D04Comp, &EffectBindSampler2D04Comp)
-            // , (&EffectBindTexture2D05Comp, &EffectBindSampler2D05Comp)
-            // , (&EffectBindTexture2D06Comp, &EffectBindSampler2D06Comp)
-            // , (&EffectBindTexture2D07Comp, &EffectBindSampler2D07Comp)
-            // , (&EffectBindTexture2D08Comp, &EffectBindSampler2D08Comp)
             , &mut EffectTextureSamplersComp
         ),
         Or<(
             Changed<EffectBindTexture2DList>, Changed<EffectBindSampler2DList>
-            //   Or<(Changed<EffectBindTexture2D01Comp>, Changed<EffectBindSampler2D01Comp>)>
-            // , Or<(Changed<EffectBindTexture2D02Comp>, Changed<EffectBindSampler2D02Comp>)>
-            // , Or<(Changed<EffectBindTexture2D03Comp>, Changed<EffectBindSampler2D03Comp>)>
-            // , Or<(Changed<EffectBindTexture2D04Comp>, Changed<EffectBindSampler2D04Comp>)>
-            // , Or<(Changed<EffectBindTexture2D05Comp>, Changed<EffectBindSampler2D05Comp>)>
-            // , Or<(Changed<EffectBindTexture2D06Comp>, Changed<EffectBindSampler2D06Comp>)>
-            // , Or<(Changed<EffectBindTexture2D07Comp>, Changed<EffectBindSampler2D07Comp>)>
-            // , Or<(Changed<EffectBindTexture2D08Comp>, Changed<EffectBindSampler2D08Comp>)>
         )>
     >,
 ) {
     items.iter_mut().for_each(|(
-        _entity, binddesc
+        _entity, binddesc, keys
         , textures, samplers
-        // , (tex00, sampl00)
-        // , (tex01, sampl01)
-        // , (tex02, sampl02)
-        // , (tex03, sampl03)
-        // , (tex04, sampl04)
-        // , (tex05, sampl05)
-        // , (tex06, sampl06)
-        // , (tex07, sampl07)
         , mut comp
     )| {
-        let need = binddesc.textures.len() as u32;
+        let need = binddesc.textures.len();
         let mut texsamplerarr =  EffectTextureSamplers::default();
 
-        if let (Some(v1), Some(v2)) = (&textures.data[0], &samplers.0[0]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 1 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
-        
-        if let (Some(v1), Some(v2)) = (&textures.data[1], &samplers.0[1]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 2 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
-        
-        if let (Some(v1), Some(v2)) = (&textures.data[2], &samplers.0[2]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 3 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
+        for idx in 0..TEXTURE_SLOT_COUNT {
+            if let (Some((v1, k1)), Some(v2)) = (&textures.data[idx], &samplers.0[idx]) {
+                texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+                if idx + 1 == need && k1 == &keys.0[idx].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+            } else { comp.0 = None; return; }
+        }
 
-        if let (Some(v1), Some(v2)) = (&textures.data[3], &samplers.0[3]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 4 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[0], &samplers.0[0]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 1 == need && k1 == &keys.0[0].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
         
-        if let (Some(v1), Some(v2)) = (&textures.data[4], &samplers.0[4]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 5 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[1], &samplers.0[1]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 2 == need && k1 == &keys.0[1].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
         
-        if let (Some(v1), Some(v2)) = (&textures.data[5], &samplers.0[5]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 6 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[2], &samplers.0[2]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 3 == need && k1 == &keys.0[2].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
+
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[3], &samplers.0[3]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 4 == need && k1 == &keys.0[3].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
         
-        if let (Some(v1), Some(v2)) = (&textures.data[6], &samplers.0[6]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 7 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[4], &samplers.0[4]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 5 == need && k1 == &keys.0[4].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
         
-        if let (Some(v1), Some(v2)) = (&textures.data[7], &samplers.0[7]) {
-            texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-            if 8 == need { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-        } else { comp.0 = None; return; }
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[5], &samplers.0[5]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 6 == need && k1 == &keys.0[5].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
+        
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[6], &samplers.0[6]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 7 == need && k1 == &keys.0[6].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
+        
+        // if let (Some((v1, k1)), Some(v2)) = (&textures.data[7], &samplers.0[7]) {
+        //     texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
+        //     if 8 == need && k1 == &keys.0[7].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
+        // } else { comp.0 = None; return; }
     });
 }
 

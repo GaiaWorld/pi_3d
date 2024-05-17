@@ -31,6 +31,7 @@ impl TAssetCapacity for GLTFBin {
     }
 }
 impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, Atom, G> for GLTFBin  {
+    #[inline(never)]
 	fn async_load(desc: Atom, result: LoadResult<'a, Self, G>) -> BoxFuture<'a, std::io::Result<Handle<Self>>> {
 		Box::pin(async move { 
 			match result {
@@ -41,7 +42,7 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, Atom, G> for GLTFBin  {
 					let file = match file {
 						Ok(r) => r,
 						Err(_e) =>  {
-							log::warn!("load gltf bin fail: {:?}", desc.as_str());
+							// log::warn!("load gltf bin fail: {:?}", desc.as_str());
 							return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
 						},
 					};
@@ -53,7 +54,8 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, Atom, G> for GLTFBin  {
 	}
 }
 impl GLTFBin {
-    pub async fn load(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>) -> Result<Handle<GLTFBin>, String> {
+    #[inline(never)]
+    pub async fn load(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>) -> Result<Handle<GLTFBin>, EErorr> {
 
         let key = path.asset_u64();
         let result = AssetMgr::load(&bin_assets, &key);
@@ -64,12 +66,13 @@ impl GLTFBin {
             _ => {
                 match GLTFBin::async_load(path.clone(), result).await {
                     Ok(res) => Ok(res),
-                    Err(_) => Err(String::from("Load Fail.")),
+                    Err(_) => Err(ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL),
                 }
             }
         }
     }
-    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Vec<u8>) -> Result<Handle<GLTFBin>, String> {
+    #[inline(never)]
+    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Vec<u8>) -> Result<Handle<GLTFBin>, EErorr> {
 
         let key = path.asset_u64();
         let result = AssetMgr::load(&bin_assets, &key);
@@ -90,7 +93,7 @@ impl GLTFBin {
 
                 match loading {
                     Ok(res) => Ok(res),
-                    Err(_) => Err(String::from("Load Fail.")),
+                    Err(_) => Err(ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL),
                 }
             }
         }
@@ -125,6 +128,8 @@ impl TAssetCapacity for GLTFBase {
     }
 }
 impl GLTFBase {
+    
+    #[inline(never)]
     async fn load_buffers(gltf: &Gltf, base_path: &Atom, bin_assets: ShareAssetMgr<GLTFBin>) -> std::io::Result<Vec<Handle<GLTFBin>>> {
         let mut result = vec![];
         for buffer in gltf.buffers() {
@@ -134,25 +139,24 @@ impl GLTFBase {
                 },
                 pi_gltf::buffer::Source::Uri(path) => {
                     if path.starts_with("data:") {
-                        if let Some(index) = path.find(',') {
-                            
-                            let mut path = String::from(base_path.as_str()) + "#";
-                            path += buffer.index().to_string().as_str();
-                            let path = Atom::from(path);
-                        
-                            let base64_buffer = path.split_at(index + 1).1;
-                            let data = base64::decode(base64_buffer).unwrap();
-                            match GLTFBin::load_with_data(&path, &bin_assets, data).await {
-                                Ok(val) => {
-                                    result.push(val);
-                                },
-                                Err(_e) => {
-                                    return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
-                                },
-                            }
-                        } else {
-                            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Buffer Data Error."));
-                        }
+                        // if let Some(index) = path.find(',') {
+                        //     let mut path = String::from(base_path.as_str()) + "#";
+                        //     path += buffer.index().to_string().as_str();
+                        //     let path = Atom::from(path);
+                        //     let base64_buffer = path.split_at(index + 1).1;
+                        //     let data = base64::decode(base64_buffer).unwrap();
+                        //     match GLTFBin::load_with_data(&path, &bin_assets, data).await {
+                        //         Ok(val) => {
+                        //             result.push(val);
+                        //         },
+                        //         Err(_e) => {
+                        //             return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
+                        //         },
+                        //     }
+                        // } else {
+                        //     return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Buffer Data Error."));
+                        // }
+                        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, ""));
                     } else {
                         let path = relative_path(path, base_path.as_str());
                         let path = Atom::from(path);
@@ -176,6 +180,8 @@ pub struct GLTFBaseDesc {
     bin_assets: ShareAssetMgr<GLTFBin>
 }
 impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase  {
+    
+    #[inline(never)]
 	fn async_load(desc: GLTFBaseDesc, result: LoadResult<'a, Self, G>) -> BoxFuture<'a, std::io::Result<Handle<Self>>> {
 		Box::pin(async move {
             let key_u64 = desc.path.asset_u64();
@@ -238,7 +244,7 @@ pub struct GLTF {
 
     pub particlesys_calculators: XHashMap<usize, Handle<ParticleSystemCalculatorID>>,
     pub output: String,
-    pub errors: Vec<ErrorGLTF>,
+    pub errors: Vec<EErorr>,
     pub animecount: usize,
     pub path: String,
     // pub base: Handle<GLTFBase>,
@@ -347,32 +353,6 @@ pub type BufferID = usize;
 pub type ImageID = usize;
 pub type BufferViewID = usize;
 pub type AccessorID = usize;
-
-#[derive(Clone, Copy)]
-pub enum ErrorGLTF {
-    ErrorBuffer,
-    ErrorAccessor,
-    ErrorImage,
-    ErrorGLTFLoad,
-    ErrorGLTFParse,
-    ErrorGLTFCache,
-    ErrorVertexBuffer,
-    ErrorAnimation,
-}
-impl ToString for ErrorGLTF {
-    fn to_string(&self) -> String {
-        match self {
-            Self::ErrorBuffer => String::from("ErrorBuffer, "),
-            Self::ErrorAccessor => String::from("ErrorAccessor, "),
-            Self::ErrorImage => String::from("ErrorImage, "),
-            Self::ErrorGLTFLoad => String::from("ErrorGLTFLoad, "),
-            Self::ErrorGLTFParse => String::from("ErrorGLTFParse, "),
-            Self::ErrorGLTFCache => String::from("ErrorGLTFCache, "),
-            Self::ErrorVertexBuffer => String::from("ErrorVertexBuffer, "),
-            Self::ErrorAnimation => String::from("ErrorAnimation, "),
-        }
-    }
-}
 
 pub struct GLTFTempLoaded {
     gltf: Handle<GLTFBase>,
@@ -689,13 +669,13 @@ impl GLTFTempLoaded {
                                         },
                                     }
                                 } else {
-                                    result.errors.push(ErrorGLTF::ErrorAnimation);
+                                    result.errors.push(ErrorRecord::ERROR_GLTF_ANIMATION);
                                 }
                             }
                         };
                     }
                 } else {
-                    result.errors.push(ErrorGLTF::ErrorAnimation);
+                    result.errors.push(ErrorRecord::ERROR_GLTF_ANIMATION);
                 }
             }
         
@@ -740,8 +720,8 @@ pub struct GLTFResLoader {
     pub basefail: Share<SegQueue<KeyGLTF>>,
     // pub bufferqueue: Share<SegQueue<GLTFBuffer>>,
     // pub imagequeue: Share<SegQueue<GLTFImage>>,
-    pub errorqueue: Share<SegQueue<(KeyGLTF, ErrorGLTF)>>,
-    pub fail_reason: XHashMap<KeyGLTF, Vec<ErrorGLTF>>,
+    pub errorqueue: Share<SegQueue<(KeyGLTF, EErorr)>>,
+    pub fail_reason: XHashMap<KeyGLTF, Vec<EErorr>>,
     pub successed: XHashMap<QueryKey, Handle<GLTF>>,
     pub successed_temp: Share<SegQueue<Handle<GLTF>>>,
     pub failed: XHashMap<QueryKey, KeyGLTF>,
@@ -783,7 +763,7 @@ impl GLTFResLoader {
                 });
                 Some(str)
             } else {
-                Some(String::from("Unkown."))
+                Some(ErrorRecord::ERROR_UNKOWN.to_string())
             }
         } else {
             None
@@ -879,7 +859,7 @@ pub fn sys_gltf_base_loaded_launch(
                             },
                             Err(_e) => {
                                 // log::warn!("Base: 3");
-                                errorqueue.push((param.clone(), ErrorGLTF::ErrorGLTFParse));
+                                errorqueue.push((param.clone(), ErrorRecord::ERROR_GLTF_GLTF_PARSE));
                             },
                         }
                     }).unwrap();

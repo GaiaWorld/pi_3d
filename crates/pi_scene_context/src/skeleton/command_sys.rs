@@ -28,12 +28,12 @@ pub fn sys_create_skin(
             Some(skeleton) => {
                 bones.iter().for_each(|id_bone| {
                     if let Some(mut cmd) = commands.get_entity(id_bone.clone()) {
-                        ActionBone::modify_skin(&mut cmd, id_skin);
+                        cmd.insert(SkeletonID(id_skin));
                     }
                 });
 
                 if let Some(mut cmd) = commands.get_entity(id_skin) {
-                    ActionSkeleton::init(&mut cmd, skeleton);
+                    cmd.insert(ActionSkeleton::init(skeleton)) ;
                 }
             },
             None => {
@@ -90,7 +90,7 @@ pub fn sys_create_bone(
         } else {
             return;
         };
-        ActionBone::init(&mut bonecmd, &empty, parent, scene);
+        bonecmd.insert(ActionBone::init(&empty, parent, scene));
     });
 }
 
@@ -111,41 +111,55 @@ pub fn sys_act_bone_pose(
     });
 }
 
+pub type SkeletonBundle = (
+    Skeleton,
+    SkeletonInitBaseMatrix,
+    SkeletonBonesDirty,
+    SkeletonRefs,
+    DirtySkeletonRefs,
+);
+
 pub struct ActionSkeleton;
 impl ActionSkeleton {
     pub fn init(
-        commands: &mut EntityCommands,
         skeleton: Skeleton,
-    ) {
-        commands
-            .insert(skeleton)
-            .insert(SkeletonInitBaseMatrix)
-            .insert(SkeletonBonesDirty(true))
-            .insert(SkeletonRefs::default())
-            .insert(DirtySkeletonRefs(false))
-            ;
+    ) -> SkeletonBundle {
+        (
+            skeleton,
+            SkeletonInitBaseMatrix,
+            SkeletonBonesDirty(true),
+            SkeletonRefs::default(),
+            DirtySkeletonRefs(false),
+        )
     }
 }
+
+pub type BoneBoundle = (
+    (
+        BoneParent, BoneAbsolute, BoneAbsoluteInv, BoneDifferenceMatrix, BoneMatrix, BoneBaseMatrix
+    ),
+    TransformNodeBundle
+);
 
 pub struct ActionBone;
 impl ActionBone {
     pub fn init(
-        commands: &mut EntityCommands,
         _empty: &SingleEmptyEntity,
         parent: Entity,
         scene: Entity,
-    ) {
-        ActionTransformNode::init(commands, scene);
-
-        commands
-            .insert(BoneParent(parent))
-            .insert(BoneAbsolute(Matrix::identity()))
-            .insert(BoneAbsoluteInv(Matrix::identity()))
-            .insert(BoneDifferenceMatrix(Matrix::identity()))
-            .insert(BoneMatrix(Matrix::identity()))
-            .insert(BoneBaseMatrix(Matrix::identity()))
-            // .insert(SkeletonID(empty.id()))
-        ;
+    ) -> BoneBoundle {
+        (
+            (
+                BoneParent(parent),
+                BoneAbsolute(Matrix::identity()),
+                BoneAbsoluteInv(Matrix::identity()),
+                BoneDifferenceMatrix(Matrix::identity()),
+                BoneMatrix(Matrix::identity()),
+                BoneBaseMatrix(Matrix::identity()),
+                // .insert(SkeletonID(empty.id()))
+            ),
+            ActionTransformNode::init(scene)
+        )
     }
     // pub(crate) fn modify_pose(
     //     commands: &mut EntityCommands,
@@ -153,10 +167,4 @@ impl ActionBone {
     // ) {
     //     commands.insert(BoneBaseMatrix(pose));
     // }
-    pub(crate) fn modify_skin(
-        commands: &mut EntityCommands,
-        id_skin: Entity,
-    ) {
-        commands.insert(SkeletonID(id_skin));
-    }
 }

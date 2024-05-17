@@ -127,7 +127,7 @@ pub fn gltf_format_particle_cfg(mesh_particle_cfg: &Value) -> IParticleSystemCon
         config.gravity = format_one_param_info(gravity)
     }
 
-    if let Some(emission) = mesh_particle_cfg.get("emission") {
+    if let Some(emission) = mesh_particle_cfg.get(pi_scene_shell::prelude::S_EMISSION) {
         let a = emission[0].as_f64().unwrap() as f32;
         let mut v2 = None;
         if let Some(e2) = emission[1].as_array() {
@@ -488,7 +488,7 @@ fn format_shape(config: &Value) -> IShape {
     };
 
     let mut position = None;
-    if let Some(v) = config.get("position") {
+    if let Some(v) = config.get(pi_scene_shell::prelude::S_POSITION) {
         position = Some([
             v[0].as_f64().unwrap() as f32,
             v[1].as_f64().unwrap() as f32,

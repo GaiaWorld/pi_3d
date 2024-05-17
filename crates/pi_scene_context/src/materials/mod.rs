@@ -2,7 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 
-use crate::{object::sys_dispose_ready, shadow::prelude::*};
+use crate::{object::sys_dispose_ready, prelude::StageModel, shadow::prelude::*};
 
 use self::{
     command::*,
@@ -100,19 +100,17 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
         app.insert_resource(ActionListUniformFloat::default());
-        // app.insert_resource(ActionListUniformInt::default());
         app.insert_resource(ActionListUniformUint::default());
         app.insert_resource(ActionListUniformVec2::default());
         app.insert_resource(ActionListUniformVec3::default());
         app.insert_resource(ActionListUniformVec4::default());
-        // app.insert_resource(ActionListUniformMat2::default());
         app.insert_resource(ActionListUniformMat4::default());
         app.insert_resource(ActionListUniformTexture::default());
         app.insert_resource(ActionListUniformTextureFromRenderTarget::default());
         app.insert_resource(ActionListTargetAnimationUniform::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::Create.after(StageShadowGenerator::Create));
+        app.configure_set(Update, StageMaterial::Create.after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
         app.configure_set(Update, StageMaterial::_Init.after(StageMaterial::Create));
         app.configure_set(Update, StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
         app.configure_set(Update, StageMaterial::Ready.in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));

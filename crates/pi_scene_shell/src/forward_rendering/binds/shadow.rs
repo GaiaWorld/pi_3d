@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use derive_deref::Deref;
 use pi_render::renderer::{
-    texture::BindDataTexture2D, sampler::BindDataSampler, buildin_var::ShaderVarUniform, shader::TShaderBindCode,
+    texture::BindDataTexture2D, sampler::BindDataSampler, shader::TShaderBindCode,
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer},
     shader_stage::EShaderStage, bind_buffer::{BindBufferAllocator, BindBufferRange}
 };
-use crate::shader::{texture_bind_code, sampler_bind_code, ShaderSetBind};
+use crate::shader::{sampler_bind_code, texture_bind_code, ShaderSetBind, ShaderVarUniform};
 
 #[derive(Hash, PartialEq, Eq)]
 pub struct ShaderBindShadowData{
@@ -83,16 +83,20 @@ impl TShaderBindCode for ShaderBindShadowData {
     fn fs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += Self::KEY;
-        result += " {\r\n";
-        result += ShaderSetBind::code_uniform_array("uvec4", ShaderVarUniform::SHADOWMAP_LIGHT_INDEXS, self.max_type_count).as_str();
-        result += ShaderSetBind::code_uniform_array("mat4", ShaderVarUniform::SHADOWMAP_MATRIX, self.shadow_count).as_str();
-        result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::SHADOWMAP_BIAS_ANS_SCALE, self.shadow_count).as_str();
-        result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::SHADOWMAP_DEPTH_VALUES, self.shadow_count).as_str();
-        result += ShaderSetBind::code_uniform_array("vec4", ShaderVarUniform::SHADOWMAP_TILLOFF, self.shadow_count).as_str();
-        result += "};\r\n";
-        result += "const uint MAX_SHADOW = "; result += self.shadow_count.to_string().as_str(); result += ";\r\n";
+        result += crate::prelude::S_SPACE;
+        result += "{";
+        result += crate::prelude::S_BREAK;
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_UVEC4, ShaderVarUniform::SHADOWMAP_LIGHT_INDEXS, self.max_type_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_MAT4, ShaderVarUniform::SHADOWMAP_MATRIX, self.shadow_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_BIAS_ANS_SCALE, self.shadow_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_DEPTH_VALUES, self.shadow_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_TILLOFF, self.shadow_count).as_str();
+        result += "};";
+        result += crate::prelude::S_BREAK;
+        result += "const uint MAX_SHADOW = "; result += self.shadow_count.to_string().as_str(); result += ";";
+        result += crate::prelude::S_BREAK;
         result
     }
 }

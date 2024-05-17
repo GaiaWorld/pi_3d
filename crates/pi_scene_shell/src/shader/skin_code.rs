@@ -1,9 +1,9 @@
 
 use pi_atom::Atom;
 
-use pi_render::renderer::{buildin_var::ShaderVarUniform, buildin_data::EDefaultTexture, shader_stage::EShaderStage};
+use pi_render::renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage};
 
-use super::uniform_texture::{UniformTexture2DDesc, UniformSamplerDesc};
+use super::{uniform_texture::{UniformSamplerDesc, UniformTexture2DDesc}, ShaderVarUniform};
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -21,41 +21,33 @@ impl ESkinBonesPerVertex {
         match self {
             ESkinBonesPerVertex::One =>  {
                 String::from("
-
     mat4 influence = boneMatrices[A_JOINT_INC1 + PI_SkinBoneOffset0];
     PI_ObjectToWorld = PI_ObjectToWorld * influence; 
-
-                ")
+")
             },
             ESkinBonesPerVertex::Two =>  {
                 String::from("
-
     mat4 influence   = boneMatrices[A_JOINT_INC2[0] + PI_SkinBoneOffset0] * A_JOINT_WEG2[0];
     influence       += boneMatrices[A_JOINT_INC2[1] + PI_SkinBoneOffset0] * A_JOINT_WEG2[1];
-    PI_ObjectToWorld = PI_ObjectToWorld * influence; 
-
-                ")
+    PI_ObjectToWorld = PI_ObjectToWorld * influence;
+")
             },
             ESkinBonesPerVertex::Three =>  {
                 String::from("
-
     mat4 influence   = boneMatrices[A_JOINT_INC3[0] + PI_SkinBoneOffset0] * A_JOINT_WEG3[0];
     influence       += boneMatrices[A_JOINT_INC3[0] + PI_SkinBoneOffset0] * A_JOINT_WEG3[1];
     influence       += boneMatrices[A_JOINT_INC3[0] + PI_SkinBoneOffset0] * A_JOINT_WEG3[2];
     PI_ObjectToWorld = PI_ObjectToWorld * influence; 
-
-                ")
+")
             },
             ESkinBonesPerVertex::Four => {
                 String::from("
-
     mat4 influence   = boneMatrices[A_JOINT_INC[0] + PI_SkinBoneOffset0] * A_JOINT_WEG[0];
     influence       += boneMatrices[A_JOINT_INC[1] + PI_SkinBoneOffset0] * A_JOINT_WEG[1];
     influence       += boneMatrices[A_JOINT_INC[2] + PI_SkinBoneOffset0] * A_JOINT_WEG[2];
     influence       += boneMatrices[A_JOINT_INC[3] + PI_SkinBoneOffset0] * A_JOINT_WEG[3];
     PI_ObjectToWorld = PI_ObjectToWorld * influence;
-
-                ")
+")
             },
         }
     }
@@ -70,51 +62,41 @@ mat4 readMatrixFromTex(texture2D tex, sampler samp, float index, float texWidth,
     vec4 m1 = texture(sampler2D(tex, samp), vec2(dx * (offset + 1.5), dy));
     vec4 m2 = texture(sampler2D(tex, samp), vec2(dx * (offset + 2.5), dy));
     vec4 m3 = texture(sampler2D(tex, samp), vec2(dx * (offset + 3.5), dy));
-
     return mat4(m0, m1, m2, m3);
 }
-
-        ")
+")
     }
     pub fn running_code_for_tex(&self) -> String {
         match self {
             ESkinBonesPerVertex::One =>  {
                 String::from("
-
     // mat4 influence = readMatrixFromTex(_boneTex, sampler_boneTex, A_JOINT_INC1 * 1.0, bondTexSize.x, 0., bondTexSize.y);
     // PI_ObjectToWorld = PI_ObjectToWorld * influence; 
-
-                ")
+")
             },
             ESkinBonesPerVertex::Two =>  {
                 String::from("
-
     mat4 influence   = readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC2[0], bondTexSize.x, 0., bondTexSize.y)  * A_JOINT_WEG2[0];
     influence       += readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC2[1], bondTexSize.x, 0., bondTexSize.y) * A_JOINT_WEG2[1];
-    PI_ObjectToWorld = PI_ObjectToWorld * influence; 
-
-                ")
+    PI_ObjectToWorld = PI_ObjectToWorld * influence;
+")
             },
             ESkinBonesPerVertex::Three =>  {
                 String::from("
-
     mat4 influence   = readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC3[0], bondTexSize.x, 0., bondTexSize.y)  * A_JOINT_WEG3[0];
     influence       += readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC3[1], bondTexSize.x, 0., bondTexSize.y) * A_JOINT_WEG3[1];
     influence       += readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC3[2], bondTexSize.x, 0., bondTexSize.y) * A_JOINT_WEG3[2];
     PI_ObjectToWorld = PI_ObjectToWorld * influence; 
-
-                ")
+")
             },
             ESkinBonesPerVertex::Four => {
                 String::from("
-
     mat4 influence   = readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC[0], bondTexSize.x, 0., bondTexSize.y)  * A_JOINT_WEG[0];
     influence       += readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC[1], bondTexSize.x, 0., bondTexSize.y) * A_JOINT_WEG[1];
     influence       += readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC[2], bondTexSize.x, 0., bondTexSize.y) * A_JOINT_WEG[2];
     influence       += readMatrixFromTex(sampler2D(_boneTex, sampler_boneTex), A_JOINT_INC[3], bondTexSize.x, 0., bondTexSize.y) * A_JOINT_WEG[3];
     PI_ObjectToWorld = PI_ObjectToWorld * influence;
-
-                ")
+")
             },
         }
     }

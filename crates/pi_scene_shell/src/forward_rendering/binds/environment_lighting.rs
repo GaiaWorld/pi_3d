@@ -3,11 +3,11 @@ use std::sync::Arc;
 use derive_deref::Deref;
 use pi_assets::asset::Handle;
 use pi_render::renderer::{
-    texture::{BindDataTexture2D, ImageTexture}, sampler::BindDataSampler, buildin_var::ShaderVarUniform, shader::TShaderBindCode,
+    texture::{BindDataTexture2D, ImageTexture}, sampler::BindDataSampler, shader::TShaderBindCode,
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer},
     shader_stage::EShaderStage, bind_buffer::{BindBufferRange, BindBufferAllocator}
 };
-use crate::shader::{texture_bind_code, ShaderSetBind};
+use crate::shader::{texture_bind_code, ShaderSetBind, ShaderVarUniform};
 
 use crate::assets::environment_texture_loader::EnvironmentTextureTools;
 
@@ -43,18 +43,18 @@ impl BindEnvIrradiance {
     pub fn vs_define_code(&self, set: u32, binding: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += Self::KEY;
         result += " {\r\n";
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_X).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_Y).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_Z).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_XX_ZZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_YY_ZZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_ZZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_XY).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_YZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_ZX).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_X).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_Y).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_Z).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_XX_ZZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_YY_ZZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_ZZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_XY).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_YZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_ZX).as_str();
         result += "};\r\n";
         result
     }
@@ -66,19 +66,19 @@ impl TShaderBindCode for BindEnvIrradiance {
     fn vs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += Self::KEY;
-        result += " {\r\n";
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_X).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_Y).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_Z).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_XX_ZZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_YY_ZZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_ZZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_XY).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_YZ).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::IBL_ZX).as_str();
-        result += "};\r\n";
+        result += " {\n";
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_X).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_Y).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_Z).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_XX_ZZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_YY_ZZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_ZZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_XY).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_YZ).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::IBL_ZX).as_str();
+        result += "};\n";
         result
     }
     fn fs_define_code(&self, set: u32, bind: u32) -> String {
@@ -158,7 +158,7 @@ impl ShaderBindEnvSampler {
         // self.vs_define_code(set, binding)
         let mut result = ShaderSetBind::code_set_bind_head(set, binding);
         result += " sampler ";
-        result += "sampler";
+        result += crate::prelude::S_SAMPLER;
         result += ShaderVarUniform::ENVIRONMENT_TEXUTRE;
         result += ";\r\n";
         // sampler_bind_code(ShaderVarUniform::ENVIRONMENT_TEXUTRE, wgpu::SamplerBindingType::Filtering, set, binding)
@@ -173,7 +173,7 @@ impl TShaderBindCode for ShaderBindEnvSampler {
         // self.vs_define_code(set, binding)
         let mut result = ShaderSetBind::code_set_bind_head(set, bind);
         result += " sampler ";
-        result += "sampler";
+        result += crate::prelude::S_SAMPLER;
         result += ShaderVarUniform::ENVIRONMENT_TEXUTRE;
         result += ";\r\n";
         // sampler_bind_code(ShaderVarUniform::ENVIRONMENT_TEXUTRE, wgpu::SamplerBindingType::Filtering, set, binding)

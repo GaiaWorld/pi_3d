@@ -17,6 +17,7 @@ pub mod run_stage;
 pub mod setup;
 pub mod assets;
 pub mod prelude;
+mod static_string;
 mod entity_ref;
 mod animation;
 mod interpolation;

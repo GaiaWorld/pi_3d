@@ -109,30 +109,32 @@ impl TShaderSetBlock for BindGroupTextureSamplers {
         let mut binding = 0;
 
         let mut result = String::from("");
+        let mut sampler = String::from("");
 
         for idx in 0..self.key.count {
             result += vs_define_texture(&self.key.meta, idx, set, binding).as_str(); binding += 1;
         }
         for idx in 0..self.key.count {
-            result += vs_define_sampler(&self.key.meta, idx, set, binding).as_str(); binding += 1;
+            sampler += vs_define_sampler(&self.key.meta, idx, set, binding).as_str(); binding += 1;
         }
 
-        result
+        sampler + result.as_str()
     }
 
     fn fs_define_code(&self, set: u32) -> String {
         let mut binding = 0;
 
         let mut result = String::from("");
+        let mut sampler = String::from("");
 
         for idx in 0..self.key.count {
             result += fs_define_texture(&self.key.meta, idx, set, binding).as_str(); binding += 1;
         }
         for idx in 0..self.key.count {
-            result += fs_define_sampler(&self.key.meta, idx, set, binding).as_str(); binding += 1;
+            sampler += fs_define_sampler(&self.key.meta, idx, set, binding).as_str(); binding += 1;
         }
 
-        result
+        sampler + result.as_str()
     }
 
     // fn vs_running_code(&self) -> String {

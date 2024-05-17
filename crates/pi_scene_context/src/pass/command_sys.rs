@@ -23,29 +23,46 @@ pub fn sys_create_pass_object(
     });
 }
 
+pub type PassObjBundle = (
+    PassModelID,
+    PassSceneID,
+    PassSceneForSet3,
+    PassViewerID,
+    PassMaterialID,
+    PassGeometryID,
+    PassRendererID,
+    PassPipelineStateDirty,
+    PassDrawDirty,
+    PrimitiveState,
+    DepthState,
+    StencilState,
+    ModelBlend,
+    PassReset,
+);
+
 pub struct ActionPassObject;
 impl ActionPassObject {
     pub fn init(
-        entitycmds: &mut EntityCommands,
         empty: Entity,
         idmodel: Entity,
         idscene: Entity,
-    ) {
-        entitycmds
-            .insert(PassModelID(idmodel))
-            .insert(PassSceneID(idscene))
-            .insert(PassSceneForSet3(idscene))
-            .insert(PassViewerID(empty))
-            .insert(PassMaterialID(empty))
-            .insert(PassGeometryID(empty))
-            .insert(PassRendererID(empty))
-            .insert(PassPipelineStateDirty)
-            .insert(PassDrawDirty)
-            .insert(PrimitiveState::default())
-            .insert(DepthState::default())
-            .insert(StencilState::default())
-            .insert(ModelBlend::default())
-        ;
+    ) -> PassObjBundle {
+        (
+            PassModelID(idmodel),
+            PassSceneID(idscene),
+            PassSceneForSet3(idscene),
+            PassViewerID(empty),
+            PassMaterialID(empty),
+            PassGeometryID(empty),
+            PassRendererID(empty),
+            PassPipelineStateDirty,
+            PassDrawDirty,
+            PrimitiveState::default(),
+            DepthState::default(),
+            StencilState::default(),
+            ModelBlend::default(),
+            PassReset,
+        )
     }
     pub fn reset(
         entitycmds: &mut EntityCommands,
@@ -53,20 +70,22 @@ impl ActionPassObject {
         material: Entity,
     ) {
         entitycmds
-            .insert(PassBindEffectValue(None))
-            .insert(PassBindEffectTextures(None))
-            .insert(PassBindGroupScene(None))
-            .insert(PassBindGroupModel(None))
-            .insert(PassBindGroupTextureSamplers(None))
-            .insert(PassBindGroupLightingShadow(None))
-            .insert(PassBindGroups(None))
-            .insert(PassEffectReady(None))
-            .insert(PassShader(None))
-            .insert(PassPipeline(None))
-            .insert(PassDraw(None))
-            .insert(PassModelID(idmodel))
-            .insert(PassMaterialID(material))
-            .insert(PassReset)
+        .insert((
+            PassBindEffectValue(None),
+            PassBindEffectTextures(None),
+            PassBindGroupScene(None),
+            PassBindGroupModel(None),
+            PassBindGroupTextureSamplers(None),
+            PassBindGroupLightingShadow(None),
+            PassBindGroups(None),
+            PassEffectReady(None),
+            PassShader(None),
+            PassPipeline(None),
+            PassDraw(None),
+            PassModelID(idmodel),
+            PassMaterialID(material),
+            PassReset,
+        ))
         ;
     }
 }

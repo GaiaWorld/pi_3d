@@ -25,9 +25,10 @@ pub fn sys_create_renderer(
             match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
                     if let Some(mut cmd) = commands.get_entity(entity) {
-                        cmd.insert(GraphId(nodeid));
-                        cmd.insert(sceneid.clone());
-                        ActionRenderer::init(&mut cmd, id_viewer, passtag, transparent);
+                        cmd.insert((
+                            GraphId(nodeid), sceneid.clone(),
+                            ActionRenderer::init(id_viewer, passtag, transparent)
+                        ));
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
                     }
@@ -206,34 +207,63 @@ pub fn sys_dispose_renderer(
     });
 }
 
+pub type RendererBundle = (
+    EntityBundle,
+    (
+        PassTag,
+        Renderer,
+        RenderViewport,
+        RenderSize,
+        RendererEnable,
+        RenderColorClear,
+        RenderColorFormat,
+        RenderDepthClear,
+        RenderDepthFormat,
+        RenderStencilClear,
+    ),
+    (
+        RenderAutoClearColor,
+        RenderAutoClearDepth,
+        RenderAutoClearStencil,
+        RendererRenderTarget,
+        RendererBlend,
+        ViewerID,
+        Postprocess,
+    )
+);
+
 pub struct ActionRenderer;
 impl ActionRenderer {
     pub(crate) fn init(
-        commands_renderer: &mut EntityCommands,
         id_viewer: Entity,
         passtag: PassTag,
         transparent: bool,
-    ) {
-        ActionEntity::init(commands_renderer);
-        commands_renderer
-            .insert(passtag)
-            .insert(Renderer::new())
-            .insert(RenderViewport::default())
-            .insert(RenderSize::new(100, 100))
-            .insert(RendererEnable(true))
-            .insert(RenderColorClear::default())
-            .insert(RenderColorFormat::default())
-            .insert(RenderDepthClear::default())
-            .insert(RenderDepthFormat::default())
-            .insert(RenderStencilClear::default())
-            .insert(RenderAutoClearColor::default())
-            .insert(RenderAutoClearDepth::default())
-            .insert(RenderAutoClearStencil::default())
-            .insert(RendererRenderTarget::None(None))
-            .insert(RendererBlend(transparent))
-            .insert(ViewerID(id_viewer))
-            .insert(Postprocess::default())
-            ;
+    ) -> RendererBundle {
+        (
+            ActionEntity::init(),
+            (
+                passtag,
+                Renderer::new(),
+                RenderViewport::default(),
+                RenderSize::new(100, 100),
+                RendererEnable(true),
+                RenderColorClear::default(),
+                RenderColorFormat::default(),
+                RenderDepthClear::default(),
+                RenderDepthFormat::default(),
+                RenderStencilClear::default(),
+                
+            ),
+            (
+                RenderAutoClearColor::default(),
+                RenderAutoClearDepth::default(),
+                RenderAutoClearStencil::default(),
+                RendererRenderTarget::None(None),
+                RendererBlend(transparent),
+                ViewerID(id_viewer),
+                Postprocess::default(),
+            )
+        )
     }
     pub fn create_graphic_node(
         commands: &mut Commands,
@@ -257,10 +287,9 @@ impl ActionRenderer {
         entity
     }
     pub fn apply_graph_id(
-        entitycmd: &mut EntityCommands,
         node: NodeId,
-    ) {
-        entitycmd.insert(GraphId(node));
+    ) -> GraphId {
+        GraphId(node)
     }
     pub fn init_graphic_node(
         render_graphic: &mut PiRenderGraph,

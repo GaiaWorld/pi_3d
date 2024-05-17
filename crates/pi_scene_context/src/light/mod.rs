@@ -25,16 +25,11 @@ pub mod prelude;
 pub struct PluginLighting;
 impl Plugin for PluginLighting {
     fn build(&self, app: &mut App) {
-        // app.world.insert_resource(SingleLightCreateCommands::default());
         app.insert_resource(ActionListLightCreate::default());
         app.insert_resource(ActionListLightParam::default());
-        // app.insert_resource(ActionListLightColor::default());
-        // app.insert_resource(ActionListSpotLightAngle::default());
-        // app.insert_resource(ActionListLightStrength::default());
-        // app.insert_resource(ActionListLightRadius::default());
         app.insert_resource(StateLight::default());
         
-        app.configure_set(Update, StageLighting::LightCreate.after(StageScene::Create));
+        app.configure_set(Update, StageLighting::LightCreate.after(StageScene::_Create));
         app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
         app.configure_set(Update, StageLighting::LightingCommand.after(StageLighting::_LightCreate));
         app.configure_set(Update, StageLighting::LightingUniform.run_if(should_run_with_lighting).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));

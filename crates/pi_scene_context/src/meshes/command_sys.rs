@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 use crate::{
     cullings::prelude::*, geometry::{
         instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer}, prelude::*
-    }, layer_mask::prelude::*, object::ActionEntity, pass::*, prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, renderers::prelude::*, skeleton::prelude::*, state::{DirtyMeshStates, MeshStates}, transforms::command_sys::ActionTransformNode
+    }, layer_mask::prelude::*, object::ActionEntity, pass::*, prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, renderers::prelude::*, skeleton::prelude::*, state::{DirtyMeshStates, MeshStates}, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}
 };
 
 use super::{
@@ -24,12 +24,14 @@ pub fn sys_create_mesh(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
+    mut instancecmds: ResMut<ActionListInstanceMeshCreate>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
         if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
+        // instancecmds.push(OpsInstanceMeshCreation::ops(entity, entity));
     });
 }
 
@@ -44,9 +46,12 @@ pub fn sys_create_instanced_mesh(
             let instanceattrs = instanceattrs.clone();
 
             if let Some(mut commands) = commands.get_entity(instance) {
-                commands.insert(instanceattrs);
-                commands.insert(TargetAnimatorableIsRunning).insert(InstanceAttributeAnimated::default());
-                ActionInstanceMesh::init(&mut commands, source, id_scene.0);
+                commands.insert((
+                    instanceattrs,
+                    TargetAnimatorableIsRunning,
+                    InstanceAttributeAnimated::default(),
+                    ActionInstanceMesh::init(source, id_scene.0),
+                ));
     
                 instancelist.insert(instance);
                 *flag = DirtyInstanceSourceRefs;
@@ -246,6 +251,59 @@ pub fn sys_act_instance_attribute(
     });
 }
 
+pub type MeshBundle = (
+    (
+        AbstructMesh,
+        Mesh,
+        GeometryID,
+        RenderGeometryEable,
+        RenderWorldMatrix,
+        RenderWorldMatrixInv,
+        RenderMatrixDirty,
+        MeshCastShadow,
+        MeshReceiveShadow,
+        PassDirtyBindEffectValue,
+        FlagPassDirtyBindEffectValue,
+        PassDirtyBindEffectTextures,
+        FlagPassDirtyBindEffectTextures,
+        LayerMask,
+        AbstructMeshCullingFlag,
+    ),
+    (
+        TransparentSortParam,
+        BindSkinValue,
+        ModelVelocity,
+        RenderAlignment,
+        ScalingMode,
+        IndiceRenderRange,
+        RecordIndiceRenderRange,
+        VertexRenderRange,
+        GeometryBounding,
+        GeometryCullingMode,
+        InstancedMeshTransparentSortCollection,
+    )
+);
+
+pub type InstanceSourceBundle = (
+    InstanceSourceRefs,
+    DirtyInstanceSourceRefs,
+    DirtyInstanceSourceForSingleBuffer,
+);
+
+pub type InstanceBundle = (
+    AbstructMesh,
+    AbstructMeshCullingFlag,
+    InstanceTransparentIndex,
+    InstanceMesh,
+    RenderMatrixDirty,
+    RenderWorldMatrix,
+    RenderWorldMatrixInv,
+    ModelVelocity,
+    ScalingMode,
+    GeometryBounding,
+    GeometryCullingMode,
+);
+
 pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
@@ -254,26 +312,30 @@ impl ActionMesh {
         scene: Entity,
         allocator: &mut ResBindBufferAllocator,
         empty: &SingleEmptyEntity,
-        state: MeshInstanceState,
+        mut state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
     ) -> bool {
+        // state.instance_matrix = true;
+        // state.instances.push(
+        //     CustomVertexAttribute::new(
+        //         Atom::from(EBuildinVertexAtribute::TextureIDs.var_code()),
+        //         Atom::from(String::from(ShaderVarVarying::TEXTURE_IDS) + "=" + EBuildinVertexAtribute::TextureIDs.var_code() + ";\n"),
+        //         ECustomVertexType::UVec4, None
+        //     )
+        // );
+        // state.instances.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::ModelMaterialSkin));
+
         let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
             return false;
         };
-
-        ActionTransformNode::init(&mut entitycmd, scene);
-        ActionMesh::as_mesh(&mut entitycmd, empty.id());
-        ActionMesh::as_instance_source(&mut entitycmd);
-        // ActionMesh::as_instance_source(&mut entitycmd);
-        entitycmd.insert(TargetAnimatorableIsRunning).insert(InstanceAttributeAnimated::default());
+        let modellightidx = ModelLightingIndexs::new(allocator, lightlimit);
 
         if meshinstanceattributes.bytes().len() > 0 {
-            entitycmd.insert(commonbindmodel.0.clone());
-            entitycmd.insert(ModelStatic);
+            entitycmd.insert((commonbindmodel.0.clone(), ModelStatic));
         } else {
             if let Some(bind) = BindModel::new(allocator) {
                 // log::info!("BindModel New");
@@ -281,20 +343,27 @@ impl ActionMesh {
             }
         }
 
-        entitycmd.insert(MeshLightingMode::default());
-        entitycmd.insert(ModelLightingIndexs::new(allocator, lightlimit));
-        entitycmd.insert(ModelForcePointLightings::default());
-        entitycmd.insert(ModelForceSpotLightings::default());
-        entitycmd.insert(ModelForceHemiLightings::default());
+        entitycmd.insert((
+            ActionTransformNode::init(scene),
+            ActionMesh::as_mesh(empty.id()),
+            ActionMesh::as_instance_source(),
+            TargetAnimatorableIsRunning, InstanceAttributeAnimated::default(),
+            (
+                MeshLightingMode::default(),
+                modellightidx,
+                ModelForcePointLightings::default(),
+                ModelForceSpotLightings::default(),
+                ModelForceHemiLightings::default(),
+                MeshStates::default(),
+                DirtyMeshStates,
+                meshinstanceattributes,
+                state,
+            )
+        ));
+
         // entitycmd.insert(ModelPointLightingDirty::default());
         // entitycmd.insert(ModelSpotLightingDirty::default());
         // entitycmd.insert(ModelHemiLightingDirty::default());
-
-        entitycmd.insert(MeshStates::default());
-        entitycmd.insert(DirtyMeshStates);
-
-        entitycmd.insert(meshinstanceattributes);
-        entitycmd.insert(state);
 
         let id01 = commands.spawn_empty().id();
         let id02 = commands.spawn_empty().id();
@@ -316,100 +385,80 @@ impl ActionMesh {
         return true;
     }
     pub(crate) fn as_mesh(
-        commands: &mut EntityCommands,
         geometry: Entity,
-    ) {
+    ) -> MeshBundle {
         // let mut unclipdepth = false;
         // #[cfg(not(target_arch = "wasm32"))]
         // {
         //     unclipdepth = true;
         // }
         let unclipdepth = false;
-
-        commands
-            .insert(AbstructMesh)
-            .insert(Mesh)
-            .insert(GeometryID(geometry))
-            .insert(RenderGeometryEable(false))
-            .insert(RenderWorldMatrix(Matrix::identity()))
-            .insert(RenderWorldMatrixInv(Matrix::identity()))
-            .insert(RenderMatrixDirty(true))
-            .insert(MeshCastShadow(false))
-            .insert(MeshReceiveShadow(false))
-            .insert(PassDirtyBindEffectValue(0))
-            .insert(FlagPassDirtyBindEffectValue)
-            .insert(PassDirtyBindEffectTextures(0))
-            .insert(FlagPassDirtyBindEffectTextures)
-            .insert(LayerMask::default())
-            .insert(AbstructMeshCullingFlag(false))
-            .insert(TransparentSortParam::opaque())
-
-            // .insert(CCullMode(CullMode::Back))
-            // .insert(CFrontFace(FrontFace::Ccw))
-            // .insert(CPolygonMode(PolygonMode::Fill))
-            // .insert(Topology(PrimitiveTopology::TriangleList))
-            // .insert(CUnClipDepth(unclipdepth))
-            // .insert(PrimitiveState { cull: CullMode::Back, frontface: FrontFace::Ccw, polygon: PolygonMode::Fill, topology: PrimitiveTopology::TriangleList, unclip_depth: unclipdepth })
-
-            // .insert(DepthWrite::default())
-            // .insert(DepthCompare::default())
-            // .insert(DepthBias::default())
-            // .insert(StencilFront::default())
-            // .insert(StencilBack::default())
-            // .insert(StencilRead::default())
-            // .insert(StencilWrite::default())
-
-            // .insert(ModelBlend::default())
-
-            .insert(BindSkinValue(None))
-            .insert(ModelVelocity::default())
-            .insert(RenderAlignment::default())
-            .insert(ScalingMode::default())
-            .insert(IndiceRenderRange::default())
-            .insert(RecordIndiceRenderRange::default())
-            .insert(VertexRenderRange::default())
-            .insert(GeometryBounding::default())
-            .insert(GeometryCullingMode::default())
-            .insert(InstancedMeshTransparentSortCollection(vec![]))
-            ;
+        ((
+            AbstructMesh,
+            Mesh,
+            GeometryID(geometry),
+            RenderGeometryEable(false),
+            RenderWorldMatrix(Matrix::identity()),
+            RenderWorldMatrixInv(Matrix::identity()),
+            RenderMatrixDirty(true),
+            MeshCastShadow(false),
+            MeshReceiveShadow(false),
+            PassDirtyBindEffectValue(0),
+            FlagPassDirtyBindEffectValue,
+            PassDirtyBindEffectTextures(0),
+            FlagPassDirtyBindEffectTextures,
+            LayerMask::default(),
+            AbstructMeshCullingFlag(false),
+        ),(
+            TransparentSortParam::opaque(),
+            BindSkinValue(None),
+            ModelVelocity::default(),
+            RenderAlignment::default(),
+            ScalingMode::default(),
+            IndiceRenderRange::default(),
+            RecordIndiceRenderRange::default(),
+            VertexRenderRange::default(),
+            GeometryBounding::default(),
+            GeometryCullingMode::default(),
+            InstancedMeshTransparentSortCollection(vec![]),
+        ))
     }
 
-    pub fn as_instance_source(
-        commands: &mut EntityCommands,
-    ) {
-        commands
-            .insert(InstanceSourceRefs::default())
-            .insert(DirtyInstanceSourceRefs::default())
-            .insert(DirtyInstanceSourceForSingleBuffer::default())
-            ;
+    pub fn as_instance_source() -> InstanceSourceBundle {
+        (
+            InstanceSourceRefs::default(),
+            DirtyInstanceSourceRefs::default(),
+            DirtyInstanceSourceForSingleBuffer::default(),
+        )
     }
 }
 pub struct ActionInstanceMesh;
 impl ActionInstanceMesh {
     pub fn init(
-        commands: &mut EntityCommands,
         source: Entity,
         scene: Entity,
-    ) {
-        ActionTransformNode::init(commands, scene);
-        ActionInstanceMesh::as_instance(commands, source);
+    ) -> (TransformNodeBundle, InstanceBundle) {
+        (
+            ActionTransformNode::init(scene),
+            ActionInstanceMesh::as_instance(source)
+        )
     }
     pub(crate) fn as_instance(
-        commands: &mut EntityCommands,
         source: Entity,
-    ) {
-        commands.insert(AbstructMesh);
-        commands.insert(AbstructMeshCullingFlag(false));
-        commands.insert(InstanceTransparentIndex(0));
-        commands.insert(InstanceMesh(source));
-
-        commands.insert(RenderMatrixDirty(true));
-        commands.insert(RenderWorldMatrix(Matrix::identity()));
-        commands.insert(RenderWorldMatrixInv(Matrix::identity()));
-        commands.insert(ModelVelocity::default());
-        commands.insert(ScalingMode::default());
-        commands.insert(GeometryBounding::default());
-        commands.insert(GeometryCullingMode::default());
+    ) -> InstanceBundle {
+        (
+            AbstructMesh,
+            AbstructMeshCullingFlag(false),
+            InstanceTransparentIndex(0),
+            InstanceMesh(source),
+            RenderMatrixDirty(true),
+            RenderWorldMatrix(Matrix::identity()),
+            RenderWorldMatrixInv(Matrix::identity()),
+            ModelVelocity::default(),
+            ScalingMode::default(),
+            GeometryBounding::default(),
+            GeometryCullingMode::default(),
+        )
     }
 }
 
@@ -422,6 +471,9 @@ fn create_passobj(
     tag: PassTag,
 ) {
     let mut entitycmd = commands.entity(id);
-    ActionEntity::init(&mut entitycmd); ActionPassObject::init(&mut entitycmd, empty, idmodel, scene);
-    entitycmd.insert(tag);
+    entitycmd.insert((
+        ActionEntity::init(),
+        ActionPassObject::init(empty, idmodel, scene),
+        tag
+    ));
 }

@@ -25,14 +25,12 @@ pub fn sys_create_light(
             return;
         };
 
-        ActionTransformNode::init(&mut lightcmd, scene);
         match ltype {
-            ELightType::Direct => ActionLight::as_direct_light(&mut lightcmd),
-            ELightType::Spot => ActionLight::as_spot_light(&mut lightcmd),
-            ELightType::Point => ActionLight::as_point_light(&mut lightcmd),
-            ELightType::Hemispheric => ActionLight::as_hemi_light(&mut lightcmd),
-        }
-
+            ELightType::Direct =>       lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_direct_light())),
+            ELightType::Spot =>         lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_spot_light())),
+            ELightType::Point =>        lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_point_light())),
+            ELightType::Hemispheric =>  lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_hemi_light())),
+        };
     });
 }
 
@@ -67,55 +65,90 @@ pub fn sys_act_light_param(
     });
 }
 
+pub type LightBaseBundle = (
+    LightParam,
+    LightLinkedShadowID,
+);
+
+pub type DirectLightBundle = (
+    LightBaseBundle,
+    DirectLight,
+    LayerMask,
+    ViewerDistanceCompute,
+    LightDirection,
+);
+
+pub type PointLightBundle = (
+    LightBaseBundle,
+    PointLight,
+    LayerMask,
+    ViewerDistanceCompute,
+);
+
+pub type SpotLightBundle = (
+    LightBaseBundle,
+    SpotLight,
+    LayerMask,
+    LightDirection,
+    SpotLightAngle,
+    ViewerDistanceCompute,
+);
+
+pub type HemiLightBundle = (
+    LightBaseBundle,
+    HemisphericLight,
+    LayerMask,
+    HemiGrounds,
+    ViewerDistanceCompute,
+);
+
 pub struct ActionLight;
 impl ActionLight {
-    pub(crate) fn as_light(
-        commands: &mut EntityCommands,
-    ) {
+    pub(crate) fn as_light() -> LightBaseBundle {
         // log::warn!("CreateLight {:?}", commands.id());
-        commands
-            .insert(LightParam::default())
-            .insert(LightLinkedShadowID(None))
-            ;
+        (
+            LightParam::default(),
+            LightLinkedShadowID(None),
+        )
     }
-    pub(crate) fn as_direct_light(
-        commands: &mut EntityCommands,
-    ) {
-        Self::as_light(commands);
-        commands.insert(DirectLight);
-        commands.insert(LayerMask::default());
-        commands.insert(ViewerDistanceCompute::Direction);
-        commands.insert(LightDirection::default());
+    pub(crate) fn as_direct_light() -> DirectLightBundle {
+        (
+            Self::as_light(),
+            DirectLight,
+            LayerMask::default(),
+            ViewerDistanceCompute::Direction,
+            LightDirection::default(),
+        )
     }
-    pub(crate) fn as_spot_light(
-        commands: &mut EntityCommands,
-    ) {
-        Self::as_light(commands);
+    pub(crate) fn as_spot_light() -> SpotLightBundle {
+        (
+            Self::as_light(),
         // Self::as_shadow_light(commands);
-        commands.insert(SpotLight);
-        commands.insert(LayerMask::default());
-        commands.insert(LightDirection::default());
-        commands.insert(SpotLightAngle{ in_value: 0.2, out_value: 0.3 });
-        commands.insert(ViewerDistanceCompute::Base);
+            SpotLight,
+            LayerMask::default(),
+            LightDirection::default(),
+            SpotLightAngle{ in_value: 0.2, out_value: 0.3 },
+            ViewerDistanceCompute::Base,
+        )
     }
-    pub(crate) fn as_point_light(
-        commands: &mut EntityCommands,
-    ) {
-        Self::as_light(commands);
+    pub(crate) fn as_point_light() -> PointLightBundle {
+        (
+            Self::as_light(),
         // Self::as_shadow_light(commands);
-        commands.insert(PointLight);
-        commands.insert(LayerMask::default());
-        commands.insert(ViewerDistanceCompute::Base);
+            PointLight,
+            LayerMask::default(),
+            ViewerDistanceCompute::Base,
+        )
     }
-    pub(crate) fn as_hemi_light(
-        commands: &mut EntityCommands,
-    ) {
-        Self::as_light(commands);
+    pub(crate) fn as_hemi_light() -> HemiLightBundle {
+        (
+            Self::as_light(),
         // Self::as_shadow_light(commands);
-        commands.insert(HemisphericLight);
-        commands.insert(LayerMask::default());
-        commands.insert(HemiGrounds::default());
-        commands.insert(ViewerDistanceCompute::Base);
+            HemisphericLight,
+            LayerMask::default(),
+            HemiGrounds::default(),
+            ViewerDistanceCompute::Base,
+        )
     }
 }
 

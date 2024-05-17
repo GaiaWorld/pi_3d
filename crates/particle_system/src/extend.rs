@@ -40,37 +40,31 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
     let mut interpolation = FloatInterpolation::new(0.);
     parse_float_interpolation(&mut interpolation, &Some(config.lifetime.clone()), TParamType::TParamStartLifetime, 1.0,);
     let startlifetime = ParticleCalculatorStartLifetime(interpolation);
-    // cmds.insert(ParticleCalculatorStartLifetime(interpolation));
 
     // startSpeed
     let mut interpolation = FloatInterpolation::new(0.);
     parse_float_interpolation(&mut interpolation, &Some(config.start_speed.clone()), TParamType::TParamStartSpeed, 1.,);
     let startspeed = ParticleCalculatorStartSpeed(interpolation);
-    // cmds.insert(ParticleCalculatorStartSpeed(interpolation));
     
     // startSize
     let mut interpolation = StartSize::default();
     StartSize::format(&config.start_size, &mut interpolation);
     let startsize = ParticleCalculatorStartSize(interpolation);
-    // cmds.insert(ParticleCalculatorStartSize(interpolation));
 
     // startRotation
     let mut interpolation = StartRotation::default();
     StartRotation::format(&config.start_rotation, &mut interpolation);
     let startrotation = ParticleCalculatorStartRotation(interpolation);
-    // cmds.insert(ParticleCalculatorStartRotation(interpolation));
 
     // startColor
     let mut interpolation = StartColor::default();
     StartColor::format(&config.start_color, &mut interpolation);
     let startcolor = ParticleCalculatorStartColor(interpolation);
-    // cmds.insert(ParticleCalculatorStartColor(interpolation));
 
     // gravity
     let mut interpolation = FloatInterpolation::new(0.);
     parse_float_interpolation(&mut interpolation, &Some(config.gravity.clone()), TParamType::TParamGravity, 1.0, );
     let gravity = ParticleCalculatorGravity(Gravity { interpolation }, Vector3::new(0., -9.8, 0.));
-    // cmds.insert(ParticleCalculatorGravity(Gravity { interpolation }, Vector3::new(0., -9.8, 0.)));
     
     cmds.insert(ParticleCalculatorStartModifiers {
         emission,
@@ -97,19 +91,16 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         TranslationInterpolate::format(orbtial_velocity, &mut interpolation);
     }
     let orbitvelocity = ParticleCalculatorOrbitVelocity(interpolation);
-    // cmds.insert(ParticleCalculatorOrbitVelocity(interpolation));
     let mut interpolation = TranslationInterpolate::default();
     if let Some(orbital_offset) = &config.orbital_offset {
         TranslationInterpolate::format(orbital_offset, &mut interpolation);
     }
     let orbitoffset = ParticleCalculatorOrbitOffset(interpolation);
-    // cmds.insert(ParticleCalculatorOrbitOffset(interpolation));
     let mut interpolation = FloatInterpolation::new(0.);
     if config.orbital_radial.is_some() {
         parse_float_interpolation(&mut interpolation, &config.orbital_radial, TParamType::TParamStartSpeed, 1.0);
     }
     let orbitradial = ParticleCalculatorOrbitRadial(interpolation);
-    // cmds.insert(ParticleCalculatorOrbitRadial(interpolation));
 
     let mut speed = None;
     if config.speed_modifier.is_some() {
@@ -124,7 +115,6 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         interpolation.is_local_space = if let Some(force_space_is_local) = config.force_space_is_local { force_space_is_local != 0 } else { false };
     }
     let force = ParticleCalculatorForceOverLifetime(interpolation);
-    // cmds.insert(ParticleCalculatorForceOverLifetime(interpolation));
 
     // limitVelocityOverLifetime
     let mut limitvelocity = None;
@@ -141,7 +131,6 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         let mut interpolation = SizeOverLifetime::default();
         ScalingInterpolate::format(size_over_lifetime, &mut interpolation.scaling_interpolate);
         size = Some(ParticleCalculatorSizeOverLifetime(interpolation));
-        // cmds.insert(ParticleCalculatorSizeOverLifetime(interpolation));
     }
     // SizeBySpeed
     let mut sizebyspeed = None;

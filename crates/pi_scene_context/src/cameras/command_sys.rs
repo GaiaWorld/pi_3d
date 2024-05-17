@@ -3,9 +3,7 @@ use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
-    viewer::{prelude::*, command_sys::ActionViewer},
-    transforms::command_sys::ActionTransformNode,
-    layer_mask::prelude::*, prelude::{SceneMainCameraID, SceneID},
+    layer_mask::prelude::*, prelude::{SceneID, SceneMainCameraID}, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}, viewer::{command_sys::ActionViewer, prelude::*}
 };
 
 use super::{
@@ -23,10 +21,8 @@ pub fn sys_create_camera(
     cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity)| {
         if let Some(mut commands) = commands.get_entity(entity) {
 
-            ActionCamera::init(&mut commands, scene);
-
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
-                commands.insert(bindviewer);
+                commands.insert((bindviewer, ActionCamera::init(scene)));
             } else {
                 errors.record(entity, ErrorRecord::ERROR_BIND_VIEWER_CREATE_FAIL);
             }
@@ -119,33 +115,51 @@ pub fn sys_act_camera_aspect(
     });
 }
 
+pub type CameraBaseBundle = (
+    Camera,
+    ViewerDistanceCompute,
+    CameraFov,
+    CameraOrthSize,
+    RecordCameraFov,
+    RecordCameraOrthSize,
+    LayerMask,
+    CameraUp,
+    CameraTarget,
+    TargetCameraParam,
+    CameraParam,
+);
+
+pub type CameraBundle = (
+    TransformNodeBundle,
+    CameraBaseBundle,
+    ViewerBundle
+);
 
 pub struct ActionCamera;
 impl ActionCamera {
     pub fn init(
-        commands: &mut EntityCommands,
         scene: Entity,
-    ) {
-        ActionTransformNode::init(commands, scene);
-        ActionCamera::as_camera(commands);
+    ) -> CameraBundle {
+        (
+            ActionTransformNode::init(scene),
+            ActionCamera::as_camera(),
+            ActionViewer::as_viewer(false),
+        )
     }
-    pub(crate) fn as_camera(
-        commands: &mut EntityCommands,
-    ) {
-        commands.insert(Camera(false))
-            .insert(ViewerDistanceCompute::default())
-            .insert(CameraFov::default())
-            .insert(CameraOrthSize::default())
-            .insert(RecordCameraFov::default())
-            .insert(RecordCameraOrthSize::default()) 
-            .insert(LayerMask::default())
-            .insert(CameraUp(CoordinateSytem3::up()))
-            .insert(CameraTarget(Vector3::new(0., 0., 1.)))
-            .insert(TargetCameraParam::default())
-            .insert(CameraParam::default())
-            ;
-        
-        ActionViewer::as_viewer(commands, false);
+    pub(crate) fn as_camera() -> CameraBaseBundle {
+        (
+            Camera(false),
+            ViewerDistanceCompute::default(),
+            CameraFov::default(),
+            CameraOrthSize::default(),
+            RecordCameraFov::default(),
+            RecordCameraOrthSize::default(),
+            LayerMask::default(),
+            CameraUp(CoordinateSytem3::up()),
+            CameraTarget(Vector3::new(0., 0., 1.)),
+            TargetCameraParam::default(),
+            CameraParam::default(),
+        )
     }
 }
 

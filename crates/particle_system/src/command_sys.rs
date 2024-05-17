@@ -57,37 +57,42 @@ pub fn sys_create_cpu_partilce_system(
                 meshes.push(OpsMeshStateModify::ops(entity, EMeshStateModify::Alignment(val)));
             }
 
-            entitycmd
-                .insert(attributes)
-                .insert(ParticleSystemActive(true))
-                .insert(ParticleSystemRunningState(false))
-                .insert(ParticleSystemModifyState)
-                .insert(ParticleRandom::new(0))
-                .insert(ParticleSystemTime::new(performance.frame_time_ms))
-                .insert(ParticleSystemEmission::new())
-                .insert(ParticleIDs::new(calculator, maxcount))
-                .insert(ParticleBaseRandom::new(maxcount))
-                .insert(ParticleAgeLifetime::new(maxcount))
-                .insert(ParticleDieWaitTime::new(maxcount))
-                .insert(ParticleStartColor::new(maxcount))
-                .insert(ParticleStartScaling::new(maxcount))
-                .insert(ParticleLocalPosition::new(maxcount))
-                .insert(ParticleLocalRotation::new(maxcount))
-                .insert(ParticleLocalScaling::new(maxcount))
-                .insert(ParticleColorAndUV::new(maxcount))
-                .insert(ParticleEmitMatrix::new(maxcount, &base.scaling_space, &base.simulation_space))
-                .insert(ParticleGravityFactor::new(maxcount, &startmodifiers.gravity, &base.simulation_space))
-                .insert(ParticleForce::new(maxcount, overlifetime.force.0.is_local_space, overlifetime.force.0.translation_interpolate.constant()))
-                .insert(ParticleVelocity::new(maxcount))
-                .insert(ParticleSpeedFactor::new(maxcount))
-                .insert(ParticleOrbitVelocity::new(maxcount, &overlifetime.orbitvelocity))
-                .insert(ParticleOrbitOffset::new(maxcount, &overlifetime.orbitoffset))
-                .insert(ParticleOrbitRadial::new(maxcount, &overlifetime.orbitradial))
-                .insert(ParticleLimitVelocityScalar::new(maxcount))
-                .insert(ParticleDirection::new(maxcount))
-                .insert(ParticleCustomV4::new(maxcount))
-                .insert(ParticleTrailMesh::new(trailmesh, trailgeo))
-                ;
+            entitycmd.insert((
+                    (
+                        attributes,
+                        ParticleSystemActive(true),
+                        ParticleSystemRunningState(false),
+                        ParticleSystemModifyState,
+                        ParticleRandom::new(0),
+                        ParticleSystemTime::new(performance.frame_time_ms),
+                        ParticleSystemEmission::new(),
+                        ParticleIDs::new(calculator, maxcount),
+                        ParticleBaseRandom::new(maxcount),
+                        ParticleAgeLifetime::new(maxcount),
+                        ParticleDieWaitTime::new(maxcount),
+                        ParticleStartColor::new(maxcount),
+                        ParticleStartScaling::new(maxcount),
+                        ParticleLocalPosition::new(maxcount),
+                        ParticleLocalRotation::new(maxcount),
+                    ),
+                    (
+                    
+                    ParticleLocalScaling::new(maxcount),
+                    ParticleColorAndUV::new(maxcount),
+                    ParticleEmitMatrix::new(maxcount, &base.scaling_space, &base.simulation_space),
+                    ParticleGravityFactor::new(maxcount, &startmodifiers.gravity, &base.simulation_space),
+                    ParticleForce::new(maxcount, overlifetime.force.0.is_local_space, overlifetime.force.0.translation_interpolate.constant()),
+                    ParticleVelocity::new(maxcount),
+                    ParticleSpeedFactor::new(maxcount),
+                    ParticleOrbitVelocity::new(maxcount, &overlifetime.orbitvelocity),
+                    ParticleOrbitOffset::new(maxcount, &overlifetime.orbitoffset),
+                    ParticleOrbitRadial::new(maxcount, &overlifetime.orbitradial),
+                    ParticleLimitVelocityScalar::new(maxcount),
+                    ParticleDirection::new(maxcount),
+                    ParticleCustomV4::new(maxcount),
+                    ParticleTrailMesh::new(trailmesh, trailgeo),
+                )
+            ));
             if let (Ok(_), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
                 // log::warn!("Trail Init: ");
                 // if trails.contains(entity) == false {
@@ -116,10 +121,12 @@ pub fn sys_create_cpu_partilce_system(
                         // meshtopology.push(OpsTopology::ops(id_mesh, PrimitiveTopology::TriangleStrip));
                         // cmd.insert(Topology(PrimitiveTopology::TriangleStrip));
                         // cmd.insert(CCullMode(CullMode::Off));
-                        cmd.insert(GeometryID(id_geo));
-                        cmd.insert(ModelStatic);
-                        // 显式重置为默认
-                        cmd.insert(commonbindmodel.0.clone());
+                        cmd.insert((
+                            GeometryID(id_geo),
+                            ModelStatic,
+                            // 显式重置为默认
+                           commonbindmodel.0.clone(),
+                        ));
                     }
                     if let Some(mut cmd) = commands.get_entity(id_geo) {
                         // log::warn!("Geometry Ok");
@@ -134,13 +141,14 @@ pub fn sys_create_cpu_partilce_system(
                         
                         let mut hasher = DefaultHasher::default();
                         geo_desc.hash_resource(&mut hasher);
-                        cmd.insert(GeometryResourceHash(hasher.finish()));
-
                         cmd
-                            .insert(geo_desc)
-                            .insert(slot)
-                            .insert(buffer)
+                            .insert((
+                                GeometryResourceHash(hasher.finish()),
+                                geo_desc,
+                                slot,
+                                buffer,
                             // .insert(verticescode)
+                            ))
                             ;
                     }
                 // }

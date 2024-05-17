@@ -4,10 +4,9 @@ use pi_render::renderer::{
     bind_buffer::{BindBufferAllocator, BindBufferRange},
     bind::{KeyBindLayoutBuffer, KeyBindBuffer, TKeyBind},
     shader_stage::EShaderStage,
-    buildin_var::ShaderVarUniform,
     shader::TShaderBindCode
 };
-use crate::shader::ShaderSetBind;
+use crate::shader::{ShaderSetBind, ShaderVarUniform};
 
 
 ////////////////////////////////// Lighting LightIndex
@@ -120,31 +119,31 @@ impl TShaderBindCode for BindModelLightIndexs {
     fn fs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += Self::KEY;
-        result += " {\r\n";
-        // result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::MODEL_DIRECTLIGHT_COUNT).as_str();
-        // result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::MODEL_POINTLIGHT_COUNT).as_str();
-        // result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::MODEL_SPOTLIGHT_COUNT).as_str();
-        // result += ShaderSetBind::code_uniform("uint", ShaderVarUniform::MODEL_HEMILIGHT_COUNT).as_str();
-        // result += ShaderSetBind::code_uniform_array("uint", ShaderVarUniform::MODEL_LIGHTS_COUNT, 4).as_str();
-        result += ShaderSetBind::code_uniform("uvec4", ShaderVarUniform::MODEL_LIGHTS_COUNT).as_str();
+        result += " {"; result += crate::prelude::S_BREAK;
+        // result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::MODEL_DIRECTLIGHT_COUNT).as_str();
+        // result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::MODEL_POINTLIGHT_COUNT).as_str();
+        // result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::MODEL_SPOTLIGHT_COUNT).as_str();
+        // result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::MODEL_HEMILIGHT_COUNT).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_UINT, ShaderVarUniform::MODEL_LIGHTS_COUNT, 4).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UVEC4, ShaderVarUniform::MODEL_LIGHTS_COUNT).as_str();
         if 0 < self.max_type_count {
-        result += ShaderSetBind::code_uniform_array("uvec4", ShaderVarUniform::MODEL_LIGHTS_INDEXS, self.max_type_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_UVEC4, ShaderVarUniform::MODEL_LIGHTS_INDEXS, self.max_type_count).as_str();
         }
         // if 0 < self.direct_count {
-        // result += ShaderSetBind::code_uniform_array("uint", ShaderVarUniform::DIRECT_LIGHT_INDEXS, self.direct_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_UINT, ShaderVarUniform::DIRECT_LIGHT_INDEXS, self.direct_count).as_str();
         // }
         // if 0 < self.point_count {
-        // result += ShaderSetBind::code_uniform_array("uint", ShaderVarUniform::POINT_LIGHT_INDEXS, self.point_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_UINT, ShaderVarUniform::POINT_LIGHT_INDEXS, self.point_count).as_str();
         // }
         // if 0 < self.spot_count {
-        // result += ShaderSetBind::code_uniform_array("uint", ShaderVarUniform::SPOT_LIGHT_INDEXS, self.spot_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_UINT, ShaderVarUniform::SPOT_LIGHT_INDEXS, self.spot_count).as_str();
         // }
         // if 0 < self.hemi_count {
-        // result += ShaderSetBind::code_uniform_array("uint", ShaderVarUniform::HEMI_LIGHT_INDEXS, self.hemi_count).as_str();
+        // result += ShaderSetBind::code_uniform_array(crate::prelude::S_UINT, ShaderVarUniform::HEMI_LIGHT_INDEXS, self.hemi_count).as_str();
         // }
-        result += "};\r\n";
+        result += "};"; result += crate::prelude::S_BREAK;
         result
     }
 }

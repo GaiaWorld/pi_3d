@@ -27,15 +27,8 @@ use system::*;
 pub struct PluginParticleSystem;
 impl Plugin for PluginParticleSystem {
     fn build(&self, app: &mut App) {
-        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ParticleSystemCalculatorID>();
-        app.insert_resource(ShareAssetMgr::<ParticleSystemCalculatorID>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
-        app.insert_resource(ResParticleCalculatorUninstallQueue::default());
-        app.insert_resource(ActionListCPUParticleCalculator::default());
-        app.insert_resource(ActionListCPUParticleSystem::default());
-        app.insert_resource(ActionListCPUParticleSystemState::default());
-        app.insert_resource(ActionListCPUParticleSystemTrailMaterial::default());
+        let cfgparticlecalc = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ParticleSystemCalculatorID>();
         let mut temp = ParticleSystemPerformance::default(); temp.frame_time_ms = 16; temp.update_frame_time_ms = 50;
-        app.insert_resource(temp);
 
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleTrailBuffer>();
         // let cfg2 = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleCommonBuffer>();
@@ -45,10 +38,18 @@ impl Plugin for PluginParticleSystem {
         let trailbuffer = TrailBuffer::new(cfg.max as u32, &mut allocator, &device, &queue);
         // let particlecommonbuffer= ResParticleCommonBuffer::new(cfg2.max as u32, &mut allocator, &device, &queue);
         // app.insert_resource(particlecommonbuffer);
+        
+        app.insert_resource(ShareAssetMgr::<ParticleSystemCalculatorID>::new(GarbageEmpty(), cfgparticlecalc.flag, cfgparticlecalc.min, cfgparticlecalc.timeout));
+        app.insert_resource(ResParticleCalculatorUninstallQueue::default());
+        app.insert_resource(ActionListCPUParticleCalculator::default());
+        app.insert_resource(ActionListCPUParticleSystem::default());
+        app.insert_resource(ActionListCPUParticleSystemState::default());
+        app.insert_resource(ActionListCPUParticleSystemTrailMaterial::default());
+        app.insert_resource(temp);
         app.insert_resource(ResParticleTrailBuffer(trailbuffer));
 
-        app.configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::TrailCreate));
-        app.configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::_TrailCreate));
+        app.configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command));
         app.configure_set(Update, StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate));
         app.configure_set(Update, StageParticleSystem::ParticleSysEmission.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand));
         app.configure_set(Update, StageParticleSystem::ParticleSysParamStart.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission));

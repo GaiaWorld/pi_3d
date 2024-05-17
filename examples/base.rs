@@ -262,8 +262,8 @@ pub fn test_plugins() -> App {
     
     app.add_plugins((
         PluginNodeMaterial,
-        // PluginShadowGenerator,
-        // PluginShadowMapping,
+        PluginShadowGenerator,
+        PluginShadowMapping,
     ));
     app.add_plugins(
         (

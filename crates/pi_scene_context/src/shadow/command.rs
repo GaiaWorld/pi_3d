@@ -24,21 +24,32 @@ pub enum OpsShadowGeneratorParam {
 }
 pub type ActionListShadowGeneratorParam = ActionList<OpsShadowGeneratorParam>;
 
+pub type ShadowGeneratorBundle = (
+    (
+        ShadowParam,
+        ShadowAngle,
+        SceneID
+    ),
+    EntityBundle,
+    ViewerBundle,
+);
+
 pub struct ActionShadow;
 impl ActionShadow {
     pub(crate) fn as_shadow_generator(
-        commands: &mut EntityCommands,
         scene: Entity,
         active: bool,
-    ) {
-        commands
-            .insert(ShadowParam::default())
-            .insert(ShadowAngle::default())
-            ;
+    ) -> ShadowGeneratorBundle {
+        (
+            (
+                ShadowParam::default(),
+                ShadowAngle::default(),
+                SceneID(scene)
+            ),
+            ActionEntity::init(),
+            ActionViewer::as_viewer(active),
+        )
 
-        ActionEntity::init(commands);
-        ActionScene::add_to_scene(commands, scene);
-        ActionViewer::as_viewer(commands, active);
     }
 }
 

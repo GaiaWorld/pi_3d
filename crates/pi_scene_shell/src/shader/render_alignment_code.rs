@@ -77,25 +77,15 @@ const int ALIGNMENT_VIEW = 0;
 const int ALIGNMENT_FACING = 3;
 const int ALIGNMENT_STRETCHED = 5;
 const int ALIGNMENT_VERTICAL = 7;
-
 mat4 rotMatrixFromForward(mat4 m, mat4 vr, vec3 position, vec3 viewpos) {
     vec3 forward = normalize(position - viewpos);
-
     vec3 up = normalize(vec3(vr * vec4(0., 1., 0., 1.)));
-
     vec3 left = cross(up, forward);
-
     up = cross(forward, left);
-
     return m * mat4(vec4(left, 0.), vec4(up, 0.), vec4(forward, 0.), vec4(0., 0.,0., 1.));
 }
 mat4 axisMatrix(vec3 xAxis, vec3 yAxis, vec3 zAxis) {
-    return mat4(
-        vec4(xAxis, 0.),
-        vec4(yAxis, 0.),
-        vec4(zAxis, 0.),
-        vec4(0., 0., 0., 1.)
-    );
+    return mat4(vec4(xAxis, 0.),vec4(yAxis, 0.),vec4(zAxis, 0.),vec4(0., 0., 0., 1.));
 }
 mat4 lookat(vec3 eye, vec3 target, vec3 up) {
     target = target - eye;
@@ -107,9 +97,7 @@ mat4 lookat(vec3 eye, vec3 target, vec3 up) {
     } else {
         xAxis = normalize(xAxis);
     }
-
     vec3 yAxis = normalize(cross(zAxis, xAxis));
-
     return axisMatrix(xAxis, yAxis, zAxis);
 }
 mat4 rotMatrixStretched(mat4 m, vec3 viewDirection) {
@@ -119,7 +107,6 @@ mat4 rotMatrixStretched(mat4 m, vec3 viewDirection) {
     vec3 yAxis = normalize(cross(zAxis, xAxis));
     zAxis = normalize(cross(xAxis, yAxis));
     mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-
     return m * lm;
 }
 mat4 matrixVertical(mat4 m, vec3 viewDirection) {
@@ -129,7 +116,6 @@ mat4 matrixVertical(mat4 m, vec3 viewDirection) {
     vec3 xAxis = normalize(cross(yAxis, zAxis));
     zAxis = normalize(cross(xAxis, yAxis));
     mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-
     return m * lm;
 }
         ");
@@ -188,13 +174,9 @@ PI_ObjectToWorld = rotMatrixFromForward(PI_ObjectToWorld, PI_MATRIX_V_R_INV, (PI
 "
 mat4 rotMatrixFromForward(mat4 m, mat4 vr, vec3 position, vec3 viewpos) {
     vec3 forward = normalize(position - viewpos);
-
     vec3 up = normalize(vec3(vr * vec4(0., 1., 0., 1.)));
-
     vec3 left = cross(up, forward);
-
     up = cross(forward, left);
-
     return m * mat4(vec4(left, 0.), vec4(up, 0.), vec4(forward, 0.), vec4(0., 0.,0., 1.));
 }
 "            
@@ -229,12 +211,7 @@ PI_ObjectToWorld = rotMatrixStretched(
         String::from(
 "
 mat4 axisMatrix(vec3 xAxis, vec3 yAxis, vec3 zAxis) {
-    return mat4(
-        vec4(xAxis, 0.),
-        vec4(yAxis, 0.),
-        vec4(zAxis, 0.),
-        vec4(0., 0., 0., 1.)
-    );
+    return mat4(vec4(xAxis, 0.),vec4(yAxis, 0.),vec4(zAxis, 0.),vec4(0., 0., 0., 1.));
 }
 mat4 lookat(vec3 eye, vec3 target, vec3 up) {
     target = target - eye;
@@ -246,9 +223,7 @@ mat4 lookat(vec3 eye, vec3 target, vec3 up) {
     } else {
         xAxis = normalize(xAxis);
     }
-
     vec3 yAxis = normalize(cross(zAxis, xAxis));
-
     return axisMatrix(xAxis, yAxis, zAxis);
 }
 mat4 rotMatrixStretched(mat4 m, vec3 viewDirection) {
@@ -258,7 +233,6 @@ mat4 rotMatrixStretched(mat4 m, vec3 viewDirection) {
     vec3 yAxis = normalize(cross(zAxis, xAxis));
     zAxis = normalize(cross(xAxis, yAxis));
     mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-
     return m * lm;
 }
 "            
@@ -278,12 +252,7 @@ PI_ObjectToWorld = matrixVertical(
         String::from(
 "
 mat4 axisMatrix(vec3 xAxis, vec3 yAxis, vec3 zAxis) {
-    return mat4(
-        vec4(xAxis, 0.),
-        vec4(yAxis, 0.),
-        vec4(zAxis, 0.),
-        vec4(0., 0., 0., 1.)
-    );
+    return mat4(vec4(xAxis, 0.),vec4(yAxis, 0.),vec4(zAxis, 0.),vec4(0., 0., 0., 1.));
 }
 mat4 matrixVertical(mat4 m, vec3 viewDirection) {
     mat4 invm = inverse(m);
@@ -292,7 +261,6 @@ mat4 matrixVertical(mat4 m, vec3 viewDirection) {
     vec3 xAxis = normalize(cross(yAxis, zAxis));
     zAxis = normalize(cross(xAxis, yAxis));
     mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-
     return m * lm;
 }
 "            

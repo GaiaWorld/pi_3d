@@ -37,21 +37,22 @@ impl ErrorRecord {
         self.record(node, error);
     }
         
-    pub const ERROR_VERTEX_BUFFER_CREATE_FAIL: EErorr       = 00001;
-    pub const ERROR_BIND_BUFFER_CREATE_FAIL: EErorr         = 00002;
-    pub const ERROR_BIND_GROUP_CREATE_FAIL: EErorr          = 00003;
-    pub const ERROR_SHADER_CREATE_FAIL: EErorr              = 00004;
-    pub const ERROR_PIPELINE_CREATE_FAIL: EErorr            = 00005;
-    pub const ERROR_TEXTURE_CREATE_FAIL: EErorr             = 00006;
-    pub const ERROR_TEXTURE_VIEW_CREATE_FAIL: EErorr        = 00007;
-    pub const ERROR_SAMPER_CREATE_FAIL: EErorr              = 00008;
-    pub const ERROR_BIND_VIEWER_CREATE_FAIL: EErorr         = 00009;
+    pub const ERROR_UNKOWN: EErorr                          = 00001;
+    pub const ERROR_VERTEX_BUFFER_CREATE_FAIL: EErorr       = 00002;
+    pub const ERROR_BIND_BUFFER_CREATE_FAIL: EErorr         = 00003;
+    pub const ERROR_BIND_GROUP_CREATE_FAIL: EErorr          = 00004;
+    pub const ERROR_SHADER_CREATE_FAIL: EErorr              = 00005;
+    pub const ERROR_PIPELINE_CREATE_FAIL: EErorr            = 00006;
+    pub const ERROR_TEXTURE_CREATE_FAIL: EErorr             = 00007;
+    pub const ERROR_TEXTURE_VIEW_CREATE_FAIL: EErorr        = 00008;
+    pub const ERROR_SAMPER_CREATE_FAIL: EErorr              = 00009;
+    pub const ERROR_BIND_VIEWER_CREATE_FAIL: EErorr         = 00010;
 
-    pub const ERROR_BIND_EFFECT_CREATE_FAIL: EErorr         = 00010;
-    pub const ERROR_MODIFY_ERROR_MATERIAL_TEXTURE: EErorr   = 00011;
-    pub const ERROR_MATERIAL_SHADER_NOTFOUND: EErorr        = 00012;
-    pub const ERROR_USE_MATERIAL_NULL_MAT: EErorr           = 00013;
-    pub const ERROR_USE_MATERIAL_NULL_TARGET: EErorr        = 00013;
+    pub const ERROR_BIND_EFFECT_CREATE_FAIL: EErorr         = 00011;
+    pub const ERROR_MODIFY_ERROR_MATERIAL_TEXTURE: EErorr   = 00012;
+    pub const ERROR_MATERIAL_SHADER_NOTFOUND: EErorr        = 00013;
+    pub const ERROR_USE_MATERIAL_NULL_MAT: EErorr           = 00014;
+    pub const ERROR_USE_MATERIAL_NULL_TARGET: EErorr        = 00015;
     
     pub const ERROR_ANIMATION_START_FAIL: EErorr            = 00100;
     pub const ERROR_ANIMATION_PAUSE_FAIL: EErorr            = 00101;
@@ -69,12 +70,27 @@ impl ErrorRecord {
     pub const ERROR_GRAPHIC_CUSTOM_RUN_ERR: EErorr          = 00108;
     pub const ERROR_GRAPHIC_WRONG_NODE_TYPE: EErorr         = 00109;
     pub const ERROR_GRAPHIC_MISMATCH_PARAM: EErorr          = 00110;
+    
+    pub const ERROR_GLTF_BIN_LOAD_FAIL: EErorr              = 00200;
+    pub const ERROR_GLTF_BUFFER: EErorr                     = 00201;
+    pub const ERROR_GLTF_ACCESSOR: EErorr                   = 00202;
+    pub const ERROR_GLTF_IMAGE: EErorr                      = 00203;
+    pub const ERROR_GLTF_GLTF_LOAD: EErorr                  = 00204;
+    pub const ERROR_GLTF_GLTF_PARSE: EErorr                 = 00205;
+    pub const ERROR_GLTF_GLTF_CACHE: EErorr                 = 00207;
+    pub const ERROR_GLTF_VERTEX_BUFFER: EErorr              = 00208;
+    pub const ERROR_GLTF_ANIMATION: EErorr                  = 00209;
 
     pub const ERROR_ENTITY_NONE: EErorr                     = 10001;
     pub const ERROR_ENTITY_DISPOSED: EErorr                 = 10002;
 
     pub const ERROR_SCENE_NONE: EErorr                      = 20001;
     pub const ERROR_SCENE_BIND_FAIL: EErorr                 = 20002;
+    pub const ERROR_ENVIRONMENT_INFO_PARSE: EErorr          = 20003;
+    pub const ERROR_ENVIRONMENT_INFO_MAGICNUMBER: EErorr    = 20004;
+    
+    
+    pub const ERROR_RENDERER_NOT_FOUND: EErorr              = 20100;
 
     pub const ERROR_PASS_BIND_SCENE_NONE: EErorr            = 50000;
     pub const ERROR_PASS_BIND_VIEWER_NONE: EErorr           = 50001;

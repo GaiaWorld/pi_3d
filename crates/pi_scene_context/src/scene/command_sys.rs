@@ -53,9 +53,11 @@ pub fn sys_create_scene(
             geocreate.push(OpsGeomeryCreate::ops(bounding, boundinggeo, pi_mesh_builder::cube::CubeBuilder::attrs_meta(), Some(pi_mesh_builder::cube::CubeBuilder::indices_meta())));
 
             ActionScene::init(&mut entitycmds, id_left, id_right, lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp);
-            entitycmds.insert(pool);
-            entitycmds.insert(SceneAnimationContext::new());
-            entitycmds.insert(BoundingBoxDisplay { mesh: bounding, display: false });
+            entitycmds.insert((
+                pool,
+                SceneAnimationContext::new(),
+                BoundingBoxDisplay { mesh: bounding, display: false },
+            ));
         } else {
             commands.entity(id_left).despawn();
             commands.entity(id_right).despawn();
@@ -161,34 +163,6 @@ impl ActionScene {
         device: &PiRenderDevice,
         asset_samp: &ShareAssetMgr<SamplerRes>, 
     ) {
-        ActionTransformNode::init_for_tree(entitycmds);
-        ActionEntity::init(entitycmds);
-
-        entitycmds
-            .insert(Scene)
-            .insert(SceneCoordinateSytem3D::default())
-            .insert(SceneTime::new())
-            .insert(SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. })
-            .insert(AmbientColor(1., 1., 1., 1.))
-            .insert(TreeLeftRoot::new(id_left))
-            .insert(TreeRightRoot::new(id_right))
-            // .insert(AnimationGroups::default())
-            .insert(SceneMainCameraID(None))
-            .insert(SceneAnimationEnable::default())
-            .insert(SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count)))
-            .insert(ScenePointLightsQueue(SceneItemsQueue::new(lightlimit.max_point_light_count)))
-            .insert(SceneSpotLightsQueue(SceneItemsQueue::new(lightlimit.max_spot_light_count)))
-            .insert(SceneHemiLightsQueue(SceneItemsQueue::new(lightlimit.max_hemi_light_count)))
-            .insert(SceneLightingInfosDirty)
-            .insert(SceneShadowInfosDirty)
-            .insert(SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count)))
-            .insert(MainCameraOpaqueTarget(None))
-            .insert(MainCameraDepthTarget(None))
-            .insert(BatchParamOpaque::default())
-            .insert(BatchParamTransparent::default())
-            ;
-
-        entitycmds.insert(SceneShadowRenderTarget(None));
 
         if let Some(bindeffect) = BindSceneEffect::new(dynbuffer) {
             entitycmds.insert(bindeffect);
@@ -199,27 +173,47 @@ impl ActionScene {
         if let Some(bindeffect) = SceneShadowInfos::new(dynbuffer, lightlimit, shadowlimit) {
             entitycmds.insert(bindeffect);
         }
-        
-
         let brdfsampler = BRDFSampler::new(device, asset_samp);
-        entitycmds.insert(brdfsampler);
-
         let slot = BRDFTextureSlot(EKeyTexture::Tex(KeyTexture::from( DefaultTexture::WHITE_2D )));
-        entitycmds.insert(slot);
-        entitycmds.insert(BRDFTexture::default());
 
-        entitycmds.insert(EnvTextureSlot::default());
-        entitycmds.insert(EnvIrradiance::default());
-        entitycmds.insert(EnvTexture::default());
-        entitycmds.insert(EnvSampler::new(device, asset_samp));
-    }
-
-    pub(crate) fn add_to_scene(
-        commands: &mut EntityCommands,
-        scene: Entity,
-    ) {
-        // tree.push(OpsTransformNodeParent::ops(commands.id(), scene));
-        commands
-            .insert(SceneID(scene));
+        entitycmds
+        .insert((
+            ActionTransformNode::init_for_tree(),
+            ActionEntity::init(),
+            (
+                Scene,
+                SceneCoordinateSytem3D::default(),
+                SceneTime::new(),
+                SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. },
+                AmbientColor(1., 1., 1., 1.),
+                TreeLeftRoot::new(id_left),
+                TreeRightRoot::new(id_right),
+            )
+            , (
+                // .insert(AnimationGroups::default())
+                SceneMainCameraID(None),
+                SceneAnimationEnable::default(),
+                SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count)),
+                ScenePointLightsQueue(SceneItemsQueue::new(lightlimit.max_point_light_count)),
+                SceneSpotLightsQueue(SceneItemsQueue::new(lightlimit.max_spot_light_count)),
+                SceneHemiLightsQueue(SceneItemsQueue::new(lightlimit.max_hemi_light_count)),
+                SceneLightingInfosDirty,
+                SceneShadowInfosDirty,
+                SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count)),
+                MainCameraOpaqueTarget(None),
+                MainCameraDepthTarget(None),
+                BatchParamOpaque::default(),
+                BatchParamTransparent::default(),
+                SceneShadowRenderTarget(None),
+            ),(
+                brdfsampler,
+                slot,
+                BRDFTexture::default(),
+                EnvTextureSlot::default(),
+                EnvIrradiance::default(),
+                EnvTexture::default(),
+                EnvSampler::new(device, asset_samp),
+            )
+        ));
     }
 }

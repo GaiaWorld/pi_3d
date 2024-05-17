@@ -3,7 +3,6 @@ use std::sync::Arc;
 use pi_render::renderer::{
     bind_buffer::{BindBufferAllocator, BindBufferRange},
     shader::TShaderBindCode,
-    buildin_var::ShaderVarUniform,
     bind::{TKeyBind, KeyBindBuffer, KeyBindLayoutBuffer},
     shader_stage::EShaderStage
 };
@@ -54,13 +53,15 @@ impl TShaderBindCode for ShaderBindSceneAboutEffect {
     fn vs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-        result += " SceneEffect {\r\n";
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::TIME).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::DELTA_TIME).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::FOG_INFO).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::FOG_PARAM).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::AMBIENT_PARAM).as_str();
-        result += "};\r\n";
+        result += " SceneEffect {";
+        result += crate::prelude::S_BREAK;
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::TIME).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::DELTA_TIME).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::FOG_INFO).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::FOG_PARAM).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::AMBIENT_PARAM).as_str();
+        result += "};";
+        result += crate::prelude::S_BREAK;
         result
     }
     fn fs_define_code(&self, set: u32, bind: u32) -> String {

@@ -33,7 +33,7 @@ impl Plugin for PluginTransformNode {
             .insert_resource(TransformDirtyRoots::default())
             ;
 
-        app.configure_set(Update, StageTransform::TransformCreate.after(StageScene::Create));
+        app.configure_set(Update, StageTransform::TransformCreate.after(StageScene::_Create));
         app.configure_set(Update, StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command));
         app.configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create));
         // app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));

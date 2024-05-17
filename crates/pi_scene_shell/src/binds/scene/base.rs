@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_render::renderer::{
     bind_buffer::{BindBufferAllocator, BindBufferRange},
-    shader::TShaderBindCode, buildin_var::ShaderVarUniform,
+    shader::TShaderBindCode,
     bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer},
     shader_stage::EShaderStage
 };
@@ -52,14 +52,16 @@ impl TShaderBindCode for ShaderBindViewer {
     fn vs_define_code(&self, set: u32, bind: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
-        result += " Camera {\r\n";
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::VIEW_MATRIX).as_str();
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::PROJECT_MATRIX).as_str();
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::VIEW_PROJECT_MATRIX).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::CAMERA_POSITION).as_str();
-        result += ShaderSetBind::code_uniform("vec4", ShaderVarUniform::CAMERA_DIRECTION).as_str();
-        result += ShaderSetBind::code_uniform("mat4", ShaderVarUniform::VIEW_ROTATION_MATRIX_INV).as_str();
-        result += "};\r\n";
+        result += " Camera {";
+        result += crate::prelude::S_BREAK;
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::VIEW_MATRIX).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::PROJECT_MATRIX).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::VIEW_PROJECT_MATRIX).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::CAMERA_POSITION).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::CAMERA_DIRECTION).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::VIEW_ROTATION_MATRIX_INV).as_str();
+        result += "};";
+        result += crate::prelude::S_BREAK;
         result
     }
     fn fs_define_code(&self, set: u32, bind: u32) -> String {

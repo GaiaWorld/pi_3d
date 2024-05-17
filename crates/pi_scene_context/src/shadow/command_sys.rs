@@ -39,28 +39,36 @@ pub fn sys_create_shadow_generator(
 
                 matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
                 matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
-    
-                ActionShadow::as_shadow_generator(&mut shadowcommands, idscene.0, enabled.0);
+
                 shadowcommands
-                    .insert(LinkedMaterialID(empty.id()))
-                    .insert(RendererID(entity))
-                    .insert(ShadowLayerMask(layermask.clone()))
-                    .insert(queueshadow.0.add(entity))
-                    .insert(ShadowCastPassTag(passtag))
-                    .insert(viewerdistance.clone())
-                    ;
+                .insert(
+                    (
+                        ActionShadow::as_shadow_generator(idscene.0, enabled.0),
+                        LinkedMaterialID(empty.id()),
+                        RendererID(entity),
+                        ShadowLayerMask(layermask.clone()),
+                        queueshadow.0.add(entity),
+                        ShadowCastPassTag(passtag),
+                        viewerdistance.clone(),
+                    )
+                );
                 
                 if isdirect.is_some() {
                     linkedshadow.0 = Some(entity);
-                    shadowcommands.insert(ShadowLinkedLightID(light));
-                    shadowcommands.insert(DirectionalShadowDirection::default());
-                    shadowcommands.insert(DirectionalShadowProjection::default());
+                    
+                    shadowcommands.insert((
+                        ShadowLinkedLightID(light),
+                        DirectionalShadowDirection::default(),
+                        DirectionalShadowProjection::default(),
+                    ));
                 }
                 if issopt.is_some() {
                     linkedshadow.0 = Some(entity);
-                    shadowcommands.insert(ShadowLinkedLightID(light));
-                    shadowcommands.insert(DirectionalShadowDirection::default());
-                    shadowcommands.insert(SpotShadowProjection::default());
+                    shadowcommands.insert((
+                        ShadowLinkedLightID(light),
+                        DirectionalShadowDirection::default(),
+                        SpotShadowProjection::default(),
+                    ));
                 }
     
                 if let Some(bindviewer) = BindViewer::new(&mut dynallocator) { shadowcommands.insert(bindviewer); }

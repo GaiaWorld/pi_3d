@@ -30,7 +30,7 @@ impl Varying {
         result += index.to_string().as_str();
         result += ") out ";
         result += self.format.as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += self.name.as_str();
         result += ";\r\n";
 
@@ -42,7 +42,7 @@ impl Varying {
         result += index.to_string().as_str();
         result += ") in ";
         result += self.format.as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += self.name.as_str();
         result += ";\r\n";
 
@@ -114,12 +114,12 @@ mod test {
     fn varying_code() {
         let attrs = Varyings(vec![
             Varying { 
-                format: Atom::from("vec3"),
-                name: Atom::from("v_normal"),
+                format: Atom::from(crate::static_string::S_VEC3),
+                name: Atom::from(crate::static_string::S_V_POSITION),
             },
             Varying { 
-                format: Atom::from("vec3"),
-                name: Atom::from("v_pos"),
+                format: Atom::from(crate::static_string::S_VEC3),
+                name: Atom::from(crate::static_string::S_V_NORMAL),
             },
         ]);
 

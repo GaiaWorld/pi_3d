@@ -10,7 +10,7 @@ use pi_render::{
         shader::*,
         buildin_data::EDefaultTexture,
         shader_stage::EShaderStage,
-        attributes::*, buildin_var::*
+        attributes::*,
     },
     rhi::device::RenderDevice
 };
@@ -22,6 +22,7 @@ use super::{
     uniform_value::{MaterialValueBindDesc, UniformPropertyVec4, UniformPropertyVec2, UniformPropertyFloat,  UniformPropertyUint}, 
     uniform_texture::{UniformTexture2DDesc, EffectUniformTexture2DDescs},
     shader::*, Varying, TUnifromShaderProperty,
+    buildin_var::*
 };
 
 pub type BindDefine = u32;
@@ -214,11 +215,12 @@ impl ShaderEffectMeta {
 
         uniforms.sort();
 
-        uniforms.vec4_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("vec4"), name: item.tag().clone() }) } });
-        uniforms.vec3_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("vec3"), name: item.tag().clone() }) } });
-        uniforms.vec2_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("vec2"), name: item.tag().clone() }) } });
-        uniforms.float_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("float"), name: item.tag().clone() }) } });
-        uniforms.uint_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from("uint"), name: item.tag().clone() }) } });
+        // varyings.0.push(Varying { format: Atom::from(EBuildinVertexAtribute::TextureIDs.kind()), name: Atom::from(ShaderVarVarying::TEXTURE_IDS) });
+        uniforms.vec4_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC4), name: item.tag().clone() }) } });
+        uniforms.vec3_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC3), name: item.tag().clone() }) } });
+        uniforms.vec2_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC2), name: item.tag().clone() }) } });
+        uniforms.float_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_FLOAT), name: item.tag().clone() }) } });
+        uniforms.uint_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: item.tag().clone() }) } });
 
         let size = varyings.size() + vs.size() + fs.size();
 
@@ -265,7 +267,7 @@ impl ShaderEffectMeta {
         // TODO
 
         // Shader Name
-        code += "#define SHADER_NAME vertex:"; code += name; code += "\r\n";
+        code += "#define SHADER_NAME vertex:"; code += name; code += crate::prelude::S_BREAK;
 
         // Shader 定义 Varying 代码
         code += &VaryingCode::vs_code(&self.varyings);
@@ -279,12 +281,12 @@ impl ShaderEffectMeta {
         code += self.vs.define.as_str();
 
         // Running Start
-        code += "void main() {\r\n";
+        code += "void main() {";    code += crate::prelude::S_BREAK;
 
         // 预制内容
-        code += EVertexDataKind::Color4.kind();     code += " "; code += ShaderVarVertices::COLOR4 ;    code += " = vec4(1., 1., 1., 1.);\r\n";
-        code += EVertexDataKind::Normal.kind();     code += " "; code += ShaderVarVertices::NORMAL ;    code += " = vec3(0., 1., 0.);\r\n";
-        code += EVertexDataKind::UV.kind();         code += " "; code += ShaderVarVertices::UV ;        code += " = vec2(0., 0.);\r\n";
+        code += EVertexDataKind::Color4.kind();     code += crate::prelude::S_SPACE; code += ShaderVarVertices::COLOR4 ;    code += " = vec4(1., 1., 1., 1.);"; code += crate::prelude::S_BREAK;
+        code += EVertexDataKind::Normal.kind();     code += crate::prelude::S_SPACE; code += ShaderVarVertices::NORMAL ;    code += " = vec3(0., 1., 0.);";     code += crate::prelude::S_BREAK;
+        code += EVertexDataKind::UV.kind();         code += crate::prelude::S_SPACE; code += ShaderVarVertices::UV ;        code += " = vec2(0., 0.);";         code += crate::prelude::S_BREAK;
 
         code += self.material_instance_code.as_str();
         
@@ -306,7 +308,7 @@ impl ShaderEffectMeta {
             code += val;
         });
 
-        code += "}\r\n";
+        code += "}"; code += crate::prelude::S_BREAK;
 
         return code;
     }
@@ -318,13 +320,13 @@ impl ShaderEffectMeta {
         running_after_effect_snippets: &[String],
     ) -> String {
         // Start
-        let mut code = String::from("#version 450\r\n");
+        let mut code = String::from("#version 450"); code += crate::prelude::S_BREAK;
 
         // DEFINES
         // TODO
 
         // Shader Name
-        code += "#define SHADER_NAME fragment:"; code += name; code += "\r\n";
+        code += "#define SHADER_NAME fragment:"; code += name; code += crate::prelude::S_BREAK;
 
         // Shader 定义 Varying 代码
         code += &VaryingCode::fs_code(&self.varyings);
@@ -338,7 +340,7 @@ impl ShaderEffectMeta {
         code += self.fs.define.as_str();
 
         // Running Start
-        code += "void main() {\r\n";
+        code += "void main() {"; code += crate::prelude::S_BREAK;
 
         // 功能块的 运行代码
         running_before_effect_snippets.iter().for_each(|val| {
@@ -353,7 +355,7 @@ impl ShaderEffectMeta {
             code += val;
         });
         
-        code += "}\r\n";
+        code += "}"; code += crate::prelude::S_BREAK;
 
         return code;
     }
@@ -436,12 +438,12 @@ impl ShaderEffectMeta {
     }
 
     pub fn lighting_about(mut result: String) -> String {
-        result += "vec3 "; result += ShaderVarSurface::POSITION; result += " = "; result += ShaderVarVarying::POSITION;  result += ";\r\n";
-        result += "vec3 "; result += ShaderVarSurface::NORMAL; result += " = "; result += ShaderVarVarying::NORMAL;  result += ";\r\n";
-        result += "vec3 "; result += ShaderVarSurface::VIEW; result += " = WorldSpaceViewDir("; result += ShaderVarSurface::POSITION;  result += ");\r\n";
-        result += "float "; result += ShaderVarSurface::N_DOT_V; result += " = dot("; result += ShaderVarSurface::NORMAL; result += ", "; result += ShaderVarSurface::VIEW; result += ");\r\n";
-        result += "float "; result += ShaderVarSurface::GLOSSINESS; result += " = 1.0;\r\n";
-        result += "vec3 "; result += ShaderVarSurface::LIGHTMAP; result += " = vec3(1., 1., 1.);\r\n";
+        result += crate::prelude::S_VEC3;  result += crate::prelude::S_SPACE; result += ShaderVarSurface::POSITION;   result += " = "; result += ShaderVarVarying::POSITION;  result += ";";    result += crate::prelude::S_BREAK;
+        result += crate::prelude::S_VEC3;  result += crate::prelude::S_SPACE; result += ShaderVarSurface::NORMAL;     result += " = "; result += ShaderVarVarying::NORMAL;  result += ";";    result += crate::prelude::S_BREAK;
+        result += crate::prelude::S_VEC3;  result += crate::prelude::S_SPACE; result += ShaderVarSurface::VIEW;       result += " = WorldSpaceViewDir("; result += ShaderVarSurface::POSITION;  result += ");"; result += crate::prelude::S_BREAK;
+        result += crate::prelude::S_FLOAT; result += crate::prelude::S_SPACE; result += ShaderVarSurface::N_DOT_V;    result += " = dot("; result += ShaderVarSurface::NORMAL; result += ", "; result += ShaderVarSurface::VIEW; result += ");"; result += crate::prelude::S_BREAK;
+        result += crate::prelude::S_FLOAT; result += crate::prelude::S_SPACE; result += ShaderVarSurface::GLOSSINESS; result += " = 1.0;";    result += crate::prelude::S_BREAK;
+        result += crate::prelude::S_VEC3;  result += crate::prelude::S_SPACE; result += ShaderVarSurface::LIGHTMAP;   result += " = vec3(1., 1., 1.);"; result += crate::prelude::S_BREAK;
         result
     }
 }

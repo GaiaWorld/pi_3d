@@ -27,8 +27,8 @@ impl SkyboxShader {
             vec![],
             Varyings(
                 vec![
-                    Varying { format: Atom::from("vec3"), name: Atom::from("v_normal") },
-                    Varying { format: Atom::from("float"), name: Atom::from("v_dist") },
+                    Varying { format: Atom::from(pi_scene_shell::prelude::S_VEC3), name: Atom::from(pi_scene_shell::prelude::S_V_NORMAL) },
+                    Varying { format: Atom::from(pi_scene_shell::prelude::S_FLOAT), name: Atom::from("v_dist") },
                 ]
             ),
             String::from(""),

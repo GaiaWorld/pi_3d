@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use derive_deref::Deref;
 use pi_render::renderer::{
-    texture::BindDataTexture2D, sampler::BindDataSampler, buildin_var::ShaderVarUniform, shader::TShaderBindCode,
+    texture::BindDataTexture2D, sampler::BindDataSampler, shader::TShaderBindCode,
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler},
     shader_stage::EShaderStage
 };
-use crate::shader::{texture_bind_code, sampler_bind_code};
+use crate::shader::{sampler_bind_code, texture_bind_code, ShaderVarUniform};
 
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq)]

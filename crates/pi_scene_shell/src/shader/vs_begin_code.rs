@@ -15,13 +15,13 @@ impl AttributeRefCode {
         let mut result = String::from("");
 
         result += self.format.as_str();
-        result += " ";
+        result += crate::prelude::S_SPACE;
         result += self.name.as_str();
         if let Some(kind) = &self.kind {
-            result += " = ";
+            result += crate::prelude::S_EQUAL;
             result += kind.var_code();
         }
-        result += ";\r\n";
+        result += ";"; result += crate::prelude::S_BREAK;
 
         result
     }
@@ -68,13 +68,13 @@ mod test {
     fn vs_begin_code() {
         let attrs = AttributesRef(vec![
             AttributeRefCode { 
-                format: String::from("vec3"),
-                name: String::from("position"),
+                format: String::from(crate::static_string::S_VEC3),
+                name: String::from(crate::static_string::S_POSITION),
                 kind: Some(EVertexDataKind::Position),
             },
             AttributeRefCode { 
-                format: String::from("vec3"),
-                name: String::from("normal"),
+                format: String::from(crate::static_string::S_VEC3),
+                name: String::from(crate::static_string::S_NORMAL),
                 kind: Some(EVertexDataKind::Normal),
             },
         ]);

@@ -8,9 +8,9 @@ use crate::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageModel {
-    CreateMesh,
+    MeshCreate,
     _InitMesh,
-    CreateInstance,
+    InstanceCreate,
     _InitInstance,
     AbstructMeshCommand,
     InstanceEffectMesh,

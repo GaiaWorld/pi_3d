@@ -35,7 +35,7 @@ impl BRDFShader {
             ],
             Varyings(
                 vec![
-                    Varying{ format: Atom::from("vec2"), name: Atom::from("v_UV") }, 
+                    Varying{ format: Atom::from(pi_scene_shell::prelude::S_VEC2), name: Atom::from("v_UV") }, 
                 ]
             ),
             String::from(""),

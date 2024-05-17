@@ -27,10 +27,12 @@ impl Default for DisposeCan {
     }
 }
 
+pub type EntityBundle = (DisposeReady, DisposeCan);
+
 pub struct ActionEntity;
 impl ActionEntity {
-    pub fn init(entitycmd: &mut EntityCommands) {
-        entitycmd.insert(DisposeReady::default()).insert(DisposeCan::default());
+    pub fn init() -> EntityBundle {
+        (DisposeReady::default(), DisposeCan::default())
     }
 }
 
@@ -147,7 +149,7 @@ impl Plugin for PluginDispose {
                 sys_dispose_ready,
                 sys_dispose_can,
                 sys_dispose
-            ).in_set(ERunStageChap::Dispose)
+            ).chain().in_set(ERunStageChap::Dispose)
         );
     }
 }

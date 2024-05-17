@@ -15,7 +15,9 @@ mod uniform_texture;
 mod uniform_value;
 mod shader;
 mod shader_effect_meta;
+mod buildin_var;
 
+pub use buildin_var::*;
 pub use block_code::*;
 pub use skin_code::*;
 pub use varying_code::*;
@@ -53,10 +55,10 @@ impl ShaderSetBind {
     pub const SET_OTHER: u32 = 3;
     // pub const 
     pub fn code_uniform(kind: &str, name: &str) -> String {
-        String::from(kind) + " " + name + ";\r\n"
+        String::from(kind) + crate::prelude::S_SPACE + name + ";" + crate::prelude::S_BREAK
     }
     pub fn code_uniform_array(kind: &str, name: &str, num: u32) -> String {
-        String::from(kind) + " " + name + "[" + num.to_string().as_str() + "]" + ";\r\n"
+        String::from(kind) + crate::prelude::S_SPACE + name + "[" + num.to_string().as_str() + "]" + ";" + crate::prelude::S_BREAK
     }
     pub fn code_set_bind_head(set: u32, bind: u32) -> String {
         let mut result = String::from("layout(set = ");
@@ -77,10 +79,10 @@ impl ShaderSetBind {
         result
     }
     pub fn code_set_bind_texture2d(set: u32, bind: u32, name: &str) -> String {
-        Self::code_set_bind_head(set, bind) + Self::code_uniform("texture2D", name).as_str()
+        Self::code_set_bind_head(set, bind) + Self::code_uniform(crate::prelude::S_TEXTURE2D, name).as_str()
     }
     pub fn code_set_bind_sampler(set: u32, bind: u32, tex_name: &str) -> String {
-        let name = String::from("sampler") + tex_name;
-        Self::code_set_bind_head(set, bind) + Self::code_uniform("sampler", &name).as_str()
+        let name = String::from(crate::prelude::S_SAMPLER) + tex_name;
+        Self::code_set_bind_head(set, bind) + Self::code_uniform(crate::prelude::S_SAMPLER, &name).as_str()
     }
 }

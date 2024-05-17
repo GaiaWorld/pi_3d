@@ -66,7 +66,7 @@ pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, 
 
 #[inline(never)]
 fn _sys_update_viewer_model_list_by_viewer(
-    vieweractive: &ViewerActive, scene: &SceneID, layer: &LayerMask, mut list_model: &mut ModelList, mut flag_list_model: &mut FlagModelList,
+    vieweractive: &ViewerActive, scene: &SceneID, layer: &LayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
     items: &Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs),
     >,
@@ -131,8 +131,9 @@ fn _sys_update_viewer_model_list_by_model(
         if iscene == scene && disposestate.0 == false {
             // log::error!("CameraModelListByModel : 2");
             if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
+                // log::error!("CameraModelListByModel : 3 {:?}", (layer.0, ilayer.0) );
                 if layer.include(ilayer.0) {
-                    // log::error!("CameraModelListByModel : 3");
+                    // log::error!("CameraModelListByModel : 4 {:?}", (list_model.0.len()));
                     list_model.0.insert(id_obj);
                     *flag_list_model = FlagModelList::default();
                     instances.iter().for_each(|instance| {

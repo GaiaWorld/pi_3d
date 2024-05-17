@@ -26,7 +26,7 @@ pub mod prelude;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageScene {
     Create,
-    _Insert,
+    _Create,
     Command,
     TextureRequest,
     TextureLoaded,
@@ -56,14 +56,14 @@ impl Plugin for PluginScene {
             Update,
             (
                 StageScene::Create.after(ERunStageChap::_InitialApply),
-                StageScene::_Insert.before(EStageAnimation::Create),
+                StageScene::_Create.before(EStageAnimation::Create),
                 StageScene::Command
             ).chain()
         );
 
         app.configure_set(Update, StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
         app.configure_set(Update, StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageScene::_Insert));
+        app.add_systems(Update, apply_deferred.in_set(StageScene::_Create));
 
         app.add_systems(
             Update,

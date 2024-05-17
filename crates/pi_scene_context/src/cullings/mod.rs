@@ -43,7 +43,7 @@ impl Plugin for PluginCulling {
         app.insert_resource(ActionListMeshBounding::default());
         app.insert_resource(ActionListBoundingBoxDisplay::default());
 
-        app.configure_set(Update, StageCulling::Command.after(StageScene::_Insert).before(StageMaterial::Command));
+        app.configure_set(Update, StageCulling::Command.after(StageScene::_Create).before(StageMaterial::Command));
         app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
 
         app.add_systems(Update, (

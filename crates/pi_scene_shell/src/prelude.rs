@@ -53,7 +53,6 @@ pub use pi_render::{
         draw_obj_list::*,
         pipeline::*,
         buildin_data::*,
-        buildin_var::*,
         vertex_format::TVertexFormatByteSize
     },
     rhi::{
@@ -101,6 +100,7 @@ pub use crate::pipeline::*;
 pub use crate::custom_rendertarget::*;
 pub use crate::object::*;
 pub use crate::batch::*;
+pub use crate::static_string::*;
 
 #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);

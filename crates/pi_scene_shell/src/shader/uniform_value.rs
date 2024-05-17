@@ -5,35 +5,35 @@ use pi_atom::Atom;
 use super::{TUnifromShaderProperty, UniformPropertyName, TBindDescToShaderCode};
 
 
-pub enum UniformValueKind {
-    Mat4,
-    Mat2,
-    Vec4,
-    Vec2,
-    Float,
-    Int,
-    Uint,
-    TextureD1,
-    TextureD2,
-    TextureD3,
-}
+// pub enum UniformValueKind {
+//     Mat4,
+//     Mat2,
+//     Vec4,
+//     Vec2,
+//     Float,
+//     Int,
+//     Uint,
+//     TextureD1,
+//     TextureD2,
+//     TextureD3,
+// }
 
-impl UniformValueKind {
-    pub fn code(&self) -> String {
-        match self {
-            UniformValueKind::Mat4              => String::from("mat4"),
-            UniformValueKind::Mat2              => String::from("mat2"),
-            UniformValueKind::Vec4              => String::from("vec4"),
-            UniformValueKind::Vec2              => String::from("vec2"),
-            UniformValueKind::Float             => String::from("float"),
-            UniformValueKind::Int               => String::from("int"),
-            UniformValueKind::Uint              => String::from("uint"),
-            UniformValueKind::TextureD1         => String::from("texture2D"),
-            UniformValueKind::TextureD2         => String::from("texture2D"),
-            UniformValueKind::TextureD3         => String::from("textureCube"),
-        }
-    }
-}
+// impl UniformValueKind {
+//     pub fn code(&self) -> String {
+//         match self {
+//             UniformValueKind::Mat4              => String::from(crate::prelude::S_MAT4),
+//             UniformValueKind::Mat2              => String::from("mat2"),
+//             UniformValueKind::Vec4              => String::from(crate::prelude::S_VEC4),
+//             UniformValueKind::Vec2              => String::from(crate::prelude::S_VEC2),
+//             UniformValueKind::Float             => String::from(crate::prelude::S_FLOAT),
+//             UniformValueKind::Int               => String::from(crate::prelude::S_INT),
+//             UniformValueKind::Uint              => String::from(crate::prelude::S_UINT),
+//             UniformValueKind::TextureD1         => String::from(crate::prelude::S_TEXTURE2D),
+//             UniformValueKind::TextureD2         => String::from(crate::prelude::S_TEXTURE2D),
+//             UniformValueKind::TextureD3         => String::from("textureCube"),
+//         }
+//     }
+// }
 
 #[derive(Clone)]
 pub struct UniformPropertyMat4(pub UniformPropertyName, pub [f32;16], pub bool);
@@ -457,12 +457,12 @@ impl MaterialValueBindDesc {
             result += set.to_string().as_str();
             result += ", binding = ";
             result += index.to_string().as_str();
-            result += ") uniform MatParam {\r\n";
+            result += ") uniform MatParam {"; result += crate::prelude::S_BREAK;
     
             self.mat4_list.iter().for_each(|name| {
-                result += "mat4 ";
+                result += crate::prelude::S_MAT4; result += crate::prelude::S_SPACE;
                 result += &name.0;
-                result += ";\r\n";
+                result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.mat4_list.len();
             
@@ -474,38 +474,38 @@ impl MaterialValueBindDesc {
             // total_num += self.mat2_list.len();
             
             self.vec4_list.iter().for_each(|name| {
-                result += "vec4 ";
+                result += crate::prelude::S_VEC4; result += crate::prelude::S_SPACE;
                 result += &name.0;
                 if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
-                result += ";\r\n";
+                result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.vec4_list.len();
 
             self.vec3_list.iter().for_each(|name| {
-                result += "vec4 ";
+                result += crate::prelude::S_VEC4; result += crate::prelude::S_SPACE;
                 result += &name.0;
                 if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
-                result += ";\r\n";
+                result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.vec3_list.len();
             
             self.vec2_list.iter().for_each(|name| {
-                result += "vec2 ";
+                result += crate::prelude::S_VEC2; result += crate::prelude::S_SPACE;
                 result += &name.0;
                 if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
-                result += ";\r\n";
+                result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.vec2_list.len();
             let fill_vec2_count    = self.vec2_list.len() % 2;
             if fill_vec2_count > 0 {
-                result += "vec2 _placeholder_vec2_0;\r\n";
+                result += "vec2 _placeholder_vec2_0;"; result += crate::prelude::S_BREAK;
             }
             
             self.float_list.iter().for_each(|name| {
-                result += "float ";
+                result += crate::prelude::S_FLOAT; result += crate::prelude::S_SPACE;
                 result += &name.0;
                 if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
-                result += ";\r\n";
+                result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.float_list.len();
             
@@ -517,10 +517,10 @@ impl MaterialValueBindDesc {
             // total_num += self.int_list.len();
             
             self.uint_list.iter().for_each(|name| {
-                result += "uint ";
+                result += crate::prelude::S_UINT; result += crate::prelude::S_SPACE;
                 result += &name.0;
                 if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
-                result += ";\r\n";
+                result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.uint_list.len();
             let fill_int_count    = (self.float_list.len() /* + self.int_list.len()*/ + self.uint_list.len()) % 4;
@@ -528,7 +528,7 @@ impl MaterialValueBindDesc {
                 for i in fill_int_count..4 {
                     result += "uint _placeholder_int_";
                     result += &i.to_string();
-                    result += ";\r\n";
+                    result += ";"; result += crate::prelude::S_BREAK;
                 }
             // } else {
             //     // 4 个 占位u32; 对应 ShaderBindEffectValue 中也有处理
@@ -541,7 +541,7 @@ impl MaterialValueBindDesc {
             //     }
             }
     
-            result += "};\r\n";
+            result += "};"; result += crate::prelude::S_BREAK;
             // log::info!("Uniform Count: {}", total_num);
     
         }
@@ -552,27 +552,27 @@ impl MaterialValueBindDesc {
         let mut result = String::from("");
         self.vec4_list.iter().for_each(|name| {
             if name.2 { 
-                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
             }
         });
         self.vec3_list.iter().for_each(|name| {
             if name.2 { 
-                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ".xyz;\r\n";
+                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ".xyz;"; result += crate::prelude::S_BREAK;
             }
         });
         self.vec2_list.iter().for_each(|name| {
             if name.2 { 
-                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
             }
         });
         self.float_list.iter().for_each(|name| {
             if name.2 { 
-                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
             }
         });
         self.uint_list.iter().for_each(|name| {
             if name.2 { 
-                result += &name.0; result += " = "; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";\r\n";
+                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
             }
         });
 
