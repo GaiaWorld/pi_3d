@@ -1,4 +1,4 @@
-// use bevy_ecs::prelude::Resource;
+
 use pi_bevy_render_plugin::constant::texture_sampler::{ColorFormat, DepthStencilFormat};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]

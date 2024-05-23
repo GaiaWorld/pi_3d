@@ -1,6 +1,6 @@
 
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
     pass::*, 
@@ -71,10 +71,10 @@ impl TMeshStatePass for PassShader                      { const MESH_STATE: u8 =
 impl TMeshStatePass for PassPipeline                    { const MESH_STATE: u8 = 008; fn is_some(&self) -> bool { self.val().is_some() } }
 impl TMeshStatePass for PassDraw                        { const MESH_STATE: u8 = 009; fn is_some(&self) -> bool { self.val().is_some() } }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Component)]
 pub struct MeshStates(pub Vec<EMeshState>);
 
-
+#[derive(Debug, Component, Default)]
 pub struct DirtyMeshStates;
 
 #[derive(Resource)]
@@ -85,7 +85,7 @@ pub struct StateRecordCfg {
     fn sys_mesh_state_by_pass<T: TMeshStatePass , const P: u16>(
         mut models: Query<&mut MeshStates>,
         passes: Query<(&PassModelID, &T), Changed<T>>,
-        mut commands: Alter<(),(), (DirtyMeshStates,), ()>,
+        mut editor: EntityEditor,
     ) {
         passes.iter().for_each(|(id_model, val)| {
             if val.is_some() {
@@ -94,8 +94,9 @@ pub struct StateRecordCfg {
                     if !states.0.contains(&state) {
                         states.0.push(state);
                     }
-                    if commands.get(id_model.0).is_ok() {
-                        commands.alter(id_model.0,(DirtyMeshStates, ));
+                    if editor.contains_entity(id_model.0) {
+                        add_component(&mut editor, id_model.0, DirtyMeshStates);
+                        // commands.alter(id_model.0,(DirtyMeshStates, ));
                     }
                 }
             }
@@ -103,7 +104,7 @@ pub struct StateRecordCfg {
     }
     fn sys_mesh_state_by_model<T: TMeshState >(
         mut models: Query<(ObjectID, &mut MeshStates), Changed<T>>,
-        mut commands: Alter<(),(), (DirtyMeshStates,), ()>,
+        mut editor: EntityEditor,
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
             let state = EMeshState::val(T::MESH_STATE, PassTag::PASS_TAG_08);
@@ -111,22 +112,24 @@ pub struct StateRecordCfg {
                 states.0.push(state);
             }
             // if let Some(mut cmd) = commands.get_entity(id_model) {
-            if commands.get(id_model).is_ok() {
-                commands.alter(id_model, (DirtyMeshStates,));
+            if editor.contains_entity(id_model) {
+                add_component(&mut editor, id_model, DirtyMeshStates);
+                // commands.alter(id_model, (DirtyMeshStates,));
             }
         });
     }
     fn sys_mesh_state_by_geometry(
         mut models: Query<(ObjectID, &mut MeshStates), Changed<RenderGeometryEable>>,
-        mut commands: Alter<(),(), (DirtyMeshStates,), ()>,
+        mut editor: EntityEditor,
     ) {
         models.iter_mut().for_each(|(id_model, mut states)| {
             let state = EMeshState::val(RenderGeometryComp::MESH_STATE, PassTag::PASS_TAG_08);
             if !states.0.contains(&state) {
                 states.0.push(state);
             }
-            if commands.get(id_model).is_ok() {
-                commands.alter(id_model, (DirtyMeshStates,));
+            if editor.contains_entity(id_model) {
+                add_component(&mut editor, id_model, DirtyMeshStates);
+                // commands.alter(id_model, (DirtyMeshStates,));
             }
         });
     }

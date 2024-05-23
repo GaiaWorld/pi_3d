@@ -1,5 +1,6 @@
 
-use pi_scene_shell::prelude::*;
+use pi_render::components;
+use pi_scene_shell::{add_component, add_components, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
     flags::{CullingFlag, Enable, GlobalEnable, RecordEnable}, layer_mask::prelude::*, shadow::prelude::LightLinkedShadowID, transforms::command_sys::*, viewer::prelude::ViewerDistanceCompute
@@ -22,54 +23,22 @@ use super::{
 
 pub fn sys_create_light(
     mut cmds: ResMut<ActionListLightCreate>,
-    // mut commands: Commands,
-    mut alter1:  Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter2:  Alter<(),(),(SceneID, ), ()>,
-    mut alter3:  Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
-    mut alter4:  Alter<
-    (),
-    (),
-    (
-        TransformNodeDirty,
-        LocalPosition,
-        LocalScaling,
-        LocalRotationQuaternion,
-        LocalEulerAngles,
-        RecordLocalPosition,
-        RecordLocalScaling,
-        RecordLocalRotationQuaternion,
-        RecordLocalEulerAngles,
-        LocalRotation,
-        LocalMatrix,
-        GlobalMatrix,
-        AbsoluteTransform,
-        FlagAnimationStartResetComp,
-        CullingFlag
-    ), 
-    ()>,
-    mut alter5: Alter<(), (), (LightParam, LightLinkedShadowID), ()>,
-    mut alter6: Alter<(), (), (DirectLight, LayerMask, ViewerDistanceCompute, LightDirection), ()>,
-    mut alter7: Alter<(), (), (LightParam, LightLinkedShadowID), ()>, 
-    mut alter8: Alter<(), (), (SpotLight, LayerMask, LightDirection, SpotLightAngle, ViewerDistanceCompute), ()>,
-    mut alter9:  Alter<(), (), (LightParam, LightLinkedShadowID), ()>, 
-    mut alter10: Alter<(), (), (PointLight, LayerMask, ViewerDistanceCompute), ()>,
-    mut alter11: Alter<(), (), (LightParam, LightLinkedShadowID), ()>, 
-    mut alter12: Alter<(), (), (HemisphericLight, LayerMask, HemiGrounds, ViewerDistanceCompute), ()>,
+    mut editor: EntityEditor,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity, ltype)| {
-        if !alter1.get(entity).is_ok() {
+        if !editor.contains_entity(entity) {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
         };
 
-        ActionTransformNode::init(entity, &mut alter1, &mut alter2, &mut alter3, &mut alter4, scene);
+        ActionTransformNode::init(entity, &mut editor, scene);
         match ltype {
-            ELightType::Direct => ActionLight::as_direct_light(entity, &mut alter5, &mut alter6),
-            ELightType::Spot => ActionLight::as_spot_light(entity, &mut alter7, &mut alter8),
-            ELightType::Point => ActionLight::as_point_light(entity, &mut alter9, &mut alter10),
-            ELightType::Hemispheric => ActionLight::as_hemi_light(entity, &mut alter11, &mut alter12),
+            ELightType::Direct => ActionLight::as_direct_light(entity, &mut editor, ),
+            ELightType::Spot => ActionLight::as_spot_light(entity, &mut editor,),
+            ELightType::Point => ActionLight::as_point_light(entity, &mut editor,),
+            ELightType::Hemispheric => ActionLight::as_hemi_light(entity, &mut editor,),
         }
 
     });
@@ -130,46 +99,80 @@ pub struct ActionLight;
 impl ActionLight {
     pub(crate) fn as_light(
         entity: Entity,  
-        alter1: &mut Alter<(), (), (LightParam, LightLinkedShadowID), ()>,
+        editor: &mut EntityEditor,
     ) {
         // log::warn!("CreateLight {:?}", commands.id());
-        alter1.alter(entity, (LightParam::default(), LightLinkedShadowID(None)));
+        let components = [editor.init_component::<LightParam>(), editor.init_component::<LightLinkedShadowID>()];
+        editor.add_components(entity, &components);
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = LightParam::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LightLinkedShadowID(None);
+
+        // add_components(editor, entity, vec![LightParam::default(), LightLinkedShadowID(None)]);
+        // editor.alter(entity, (LightParam::default(), LightLinkedShadowID(None)));
     }
     pub(crate) fn as_direct_light(
         entity: Entity,  
-        alter0: &mut Alter<(), (), (LightParam, LightLinkedShadowID), ()>,
-        alter1: &mut Alter<(), (), (DirectLight, LayerMask, ViewerDistanceCompute, LightDirection), ()>,
+        editor: &mut EntityEditor,
     ) {
-        Self::as_light(entity, alter0);
+        Self::as_light(entity, editor);
 
-        alter1.alter(entity, (DirectLight, LayerMask::default(), ViewerDistanceCompute::Direction, LightDirection::default()));
+        let components = [editor.init_component::<DirectLight>(), editor.init_component::<LayerMask>(), editor.init_component::<ViewerDistanceCompute>(), editor.init_component::<LightDirection>()];
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = DirectLight;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = ViewerDistanceCompute::Direction;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LightDirection::default();
+
+
+        // editor.alter(entity, (DirectLight, LayerMask::default(), ViewerDistanceCompute::Direction, LightDirection::default()));
     }
     pub(crate) fn as_spot_light(
         entity: Entity,  
-        alter0: &mut Alter<(), (), (LightParam, LightLinkedShadowID), ()>,
-        alter1: &mut Alter<(), (), (SpotLight, LayerMask, LightDirection, SpotLightAngle, ViewerDistanceCompute), ()>,
+        editor: &mut EntityEditor,
     ) {
-        Self::as_light(entity, alter0);
+        Self::as_light(entity, editor);
         // Self::as_shadow_light(commands);
-        alter1.alter(entity, (SpotLight, LayerMask::default(), LightDirection::default(), SpotLightAngle{ in_value: 0.2, out_value: 0.3 }, ViewerDistanceCompute::Base));
+        let components = [editor.init_component::<SpotLight>(), editor.init_component::<LayerMask>(), editor.init_component::<LightDirection>(), editor.init_component::<SpotLightAngle>(), editor.init_component::<ViewerDistanceCompute>()];
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = SpotLight;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = LightDirection::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SpotLightAngle{ in_value: 0.2, out_value: 0.3 };
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) = ViewerDistanceCompute::Base;
+
+        // editor.alter(entity, (SpotLight, LayerMask::default(), LightDirection::default(), SpotLightAngle{ in_value: 0.2, out_value: 0.3 }, ViewerDistanceCompute::Base));
     }
     pub(crate) fn as_point_light(
         entity: Entity,  
-        alter0: &mut Alter<(), (), (LightParam, LightLinkedShadowID), ()>,
-        alter1: &mut Alter<(), (), (PointLight, LayerMask, ViewerDistanceCompute), ()>,
+        editor: &mut EntityEditor,
     ) {
-        Self::as_light(entity, alter0);
+        Self::as_light(entity, editor);
         // Self::as_shadow_light(commands);
-        alter1.alter(entity, (PointLight, LayerMask::default(), ViewerDistanceCompute::Base));
+        let components = [editor.init_component::<PointLight>(), editor.init_component::<LayerMask>(), editor.init_component::<ViewerDistanceCompute>()];
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = PointLight;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = ViewerDistanceCompute::Base;
+
+        // editor.alter(entity, (PointLight, LayerMask::default(), ViewerDistanceCompute::Base));
     }
     pub(crate) fn as_hemi_light(
         entity: Entity,  
-        alter0: &mut Alter<(), (), (LightParam, LightLinkedShadowID), ()>,
-        alter1: &mut Alter<(), (), (HemisphericLight, LayerMask, HemiGrounds, ViewerDistanceCompute), ()>,
+        editor: &mut EntityEditor,
     ) {
-        Self::as_light(entity, alter0);
-        // Self::as_shadow_light(commands);
-        alter1.alter(entity, (HemisphericLight, LayerMask::default(), HemiGrounds::default(), ViewerDistanceCompute::Base));
+        Self::as_light(entity, editor);
+        let components = [editor.init_component::<HemisphericLight>(), editor.init_component::<LayerMask>(), editor.init_component::<HemiGrounds>(), editor.init_component::<ViewerDistanceCompute>()];
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = PointLight;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = HemiGrounds::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = ViewerDistanceCompute::Base;
+
+        // editor.alter(entity, (HemisphericLight, LayerMask::default(), HemiGrounds::default(), ViewerDistanceCompute::Base));
     }
 }
 

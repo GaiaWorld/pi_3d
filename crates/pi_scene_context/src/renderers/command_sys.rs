@@ -1,4 +1,4 @@
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
     viewer::prelude::*,
@@ -14,9 +14,7 @@ use super::{
 
 pub fn sys_create_renderer(
     // mut commands: Commands,
-    mut alter1: Alter<(), (), (DisposeReady, DisposeCan)>,
-    mut alter2: Alter<(), (), ActionRendererBundle>,
-    mut alter3: Alter<(), (), (GraphId, SceneID)>,
+    mut editor: EntityEditor,
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
@@ -27,9 +25,14 @@ pub fn sys_create_renderer(
             let render_node = RenderNode::new(entity);
             match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
-                    if alter1.get(entity).is_ok() {
-                        alter3.alter(entity, (GraphId(nodeid), sceneid.clone()));
-                        ActionRenderer::init(entity, &mut alter1, &mut alter2, id_viewer, passtag, transparent);
+                    if editor.contains_entity(entity) {
+                        let components = [editor.init_component::<GraphId>(), editor.init_component::<SceneID>()];
+                        editor.add_components(entity, &components);
+                        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =GraphId(nodeid);
+                        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =sceneid.clone();
+            
+                        // editor.add_components(entity, (GraphId(nodeid), sceneid.clone()));
+                        ActionRenderer::init(entity, &mut editor, id_viewer, passtag, transparent);
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
                     }
@@ -231,48 +234,65 @@ impl ActionRenderer {
     pub(crate) fn init(
         // commands_renderer: &mut EntityCommands,
         entity: Entity,  
-        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan)>,
-        alter2: &mut Alter<(), (), ActionRendererBundle>,
+        editor: &mut EntityEditor,
         id_viewer: Entity,
         passtag: PassTag,
         transparent: bool,
     ) {
-        ActionEntity::init(entity, alter1);
-        alter2.alter(entity, 
-          (
-            passtag,
-            Renderer::new(),
-            RenderViewport::default(),
-            RenderSize::new(100, 100),
-            RendererEnable(true),
-            RenderColorClear::default(),
-            RenderColorFormat::default(),
-            RenderDepthClear::default(),
-            RenderDepthFormat::default(),
-            RenderStencilClear::default(),
-            RenderAutoClearColor::default(),
-            RenderAutoClearDepth::default(),
-            RenderAutoClearStencil::default(),
-            RendererRenderTarget::None(None),
-            RendererBlend(transparent),
-            ViewerID(id_viewer),
-            Postprocess::default()
-        ));
+        ActionEntity::init(entity, editor);
+        let components = [
+            editor.init_component::<PassTag>(),
+            editor.init_component::<Renderer>(),
+            editor.init_component::<RenderViewport>(),
+            editor.init_component::<RenderSize>(),
+            editor.init_component::<RendererEnable>(),
+            editor.init_component::<RenderColorClear>(),
+            editor.init_component::<RenderColorFormat>(),
+            editor.init_component::<RenderDepthClear>(),
+            editor.init_component::<RenderDepthFormat>(),
+            editor.init_component::<RenderStencilClear>(),
+            editor.init_component::<RenderAutoClearColor>(),
+            editor.init_component::<RenderAutoClearDepth>(),
+            editor.init_component::<RenderAutoClearStencil>(),
+            editor.init_component::<RendererRenderTarget>(),
+            editor.init_component::<RendererBlend>(),
+            editor.init_component::<ViewerID>(),
+            editor.init_component::<Postprocess>(),
+        ];
+        editor.add_components(entity, &components);
+       
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = passtag;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =Renderer::new();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =RenderViewport::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =RenderSize::new(100, 100);
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =RendererEnable(true);
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =RenderColorClear::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =RenderColorFormat::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[7]) =RenderDepthClear::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[8]) =RenderDepthFormat::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[9]) =RenderStencilClear::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[10]) =RenderAutoClearColor::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[11]) =RenderAutoClearDepth::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[12]) =RenderAutoClearStencil::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[13]) =RendererRenderTarget::None(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[14]) =RendererBlend(transparent);
+        *editor.get_component_unchecked_mut_by_id(entity, components[15]) =ViewerID(id_viewer);
+        *editor.get_component_unchecked_mut_by_id(entity, components[16]) =Postprocess::default();
+
     }
     pub fn create_graphic_node(
         // commands: &mut Commands,
-        insert1: &mut Insert<()>,
-        alter1: &mut Alter<(), (), (GraphId,)>,
+        editor: &mut EntityEditor,
         render_graphic: &mut PiRenderGraph,
         error: &mut ErrorRecord,
         name: String,
     ) -> Entity {
-        let entity = insert1.insert(());
+        let entity = editor.alloc_entity();
         let render_node = RenderNode::new(entity);
         match render_graphic.add_node(name, render_node, NodeId::null()) {
             Ok(nodeid) => {
-                if alter1.get(entity).is_ok() {
-                    alter1.alter(entity, (GraphId(nodeid),));
+                if editor.contains_entity(entity) {
+                    add_component(editor, entity,GraphId(nodeid));
                 }
             },
             Err(err) => {
@@ -285,10 +305,11 @@ impl ActionRenderer {
     pub fn apply_graph_id(
         // entitycmd: &mut EntityCommands,
         entity: Entity,  
-        alter1: &mut Alter<(), (), (GraphId,)>,
+        editor: &mut EntityEditor,
         node: NodeId,
     ) {
-        alter1.alter(entity, (GraphId(node),));
+        add_component(editor, entity, GraphId(node));
+        // alter1.alter(entity, (GraphId(node),));
     }
     pub fn init_graphic_node(
         render_graphic: &mut PiRenderGraph,

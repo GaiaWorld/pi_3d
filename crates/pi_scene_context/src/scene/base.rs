@@ -5,10 +5,10 @@ use pi_scene_shell::prelude::Deref;
 use pi_scene_shell::prelude::*;
 // use 
 
-
+#[derive(Debug, Component)]
 pub struct Scene;
 
-#[derive( Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut)]
 pub struct SceneAnimationEnable(pub bool);
 impl Default for SceneAnimationEnable {
     fn default() -> Self {
@@ -17,10 +17,10 @@ impl Default for SceneAnimationEnable {
 }
 
 
-
+#[derive(Component)]
 pub struct SceneLightingInfosDirty;
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct SceneLightingInfos(pub Arc<ShaderBindSceneLightInfos>);
 impl SceneLightingInfos {
     pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo) -> Option<Self> {
@@ -32,7 +32,7 @@ impl SceneLightingInfos {
     }
 }
 
-#[derive( Deref, Clone, Copy)]
+#[derive(Component, Deref, Clone, Copy)]
 pub struct SceneItemIndex(u32);
 impl SceneItemIndex {
     pub fn val(&self) -> u32 {
@@ -76,26 +76,26 @@ impl SceneItemsQueue {
     }
 }
 
-
+#[derive(Component)]
 pub struct SceneDirectLightsQueue(pub SceneItemsQueue);
-
+#[derive(Component)]
 pub struct ScenePointLightsQueue(pub SceneItemsQueue);
-
+#[derive(Component)]
 pub struct SceneSpotLightsQueue(pub SceneItemsQueue);
-
+#[derive(Component)]
 pub struct SceneHemiLightsQueue(pub SceneItemsQueue);
 
-
+#[derive(Component)]
 pub struct SceneShadowQueue(pub SceneItemsQueue);
 
-
+#[derive(Component)]
 pub struct SceneShadowInfosDirty;
 
 
-
+#[derive(Component)]
 pub struct SceneShadowRenderTarget(pub Option<KeyRenderTarget>);
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct SceneShadowInfos(pub Arc<ShaderBindShadowData>, pub Option<ShareTargetView>, pub Option<BindDataTexture2D>, pub Option<BindDataSampler>);
 impl SceneShadowInfos {
     pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo, shadowlimit: ShadowLimitInfo) -> Option<Self> {

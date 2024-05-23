@@ -1,5 +1,5 @@
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
     cullings::prelude::*, flags::*, geometry::prelude::*, meshes::prelude::*, pass::*, renderers::prelude::*, transforms::{command_sys::ActionTransformNode, prelude::*}
@@ -10,14 +10,7 @@ use super::{prelude::*, environment::{brdf::*, environment_texture::{EnvIrradian
 pub fn sys_create_scene(
     mut cmds: ResMut<ActionListSceneCreate>,
     // mut commands: Commands,
-    mut alter1: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-    mut alter2: Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter3: Alter<(), (), ActionSceneBundle, ()>,
-    mut alter4: Alter<(), (), (BindSceneEffect,), ()>,
-    mut alter5: Alter<(), (), (SceneLightingInfos,), ()>,
-    mut alter6: Alter<(), (), (SceneShadowInfos, ), ()>,
-    mut alter7: Alter<(), (), (SceneBoundingPool, SceneAnimationContext, BoundingBoxDisplay), ()>,
-    mut insert: Insert<()>,
+    mut editor: EntityEditor,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
     lightlimit: Res<SceneLightLimit>,
     shadowlimit: Res<SceneShadowLimit>,
@@ -38,12 +31,12 @@ pub fn sys_create_scene(
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool)| {
 
-        let id_left = insert.insert(());
-        let id_right = insert.insert(());
-        let bounding = insert.insert(());
-        let boundinggeo = insert.insert(());
+        let id_left = editor.alloc_entity();
+        let id_right = editor.alloc_entity();
+        let bounding = editor.alloc_entity();
+        let boundinggeo = editor.alloc_entity();
 
-        if alter1.get(entity).is_ok() {
+        if editor.contains_entity(entity) {
             meshcreate.push(OpsMeshCreation::ops(entity, bounding, BoundingBoxDisplay::mesh_state()));
             meshboundingmode.push(OpsMeshBoundingCullingMode::ops(bounding, ECullingStrategy::None));
 
@@ -60,13 +53,18 @@ pub fn sys_create_scene(
             meshrenderqueue.push(OpsRenderQueue::ops(bounding, i32::MAX, i32::MAX));
             geocreate.push(OpsGeomeryCreate::ops(bounding, boundinggeo, pi_mesh_builder::cube::CubeBuilder::attrs_meta(), Some(pi_mesh_builder::cube::CubeBuilder::indices_meta())));
 
-            ActionScene::init(entity, &mut alter1, &mut alter2, &mut alter3, &mut alter4, &mut alter5, &mut alter6, id_left, id_right, lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp);
-            alter7.alter(entity, (pool, SceneAnimationContext::new(), BoundingBoxDisplay { mesh: bounding, display: false }));
+            ActionScene::init(entity, &mut editor, id_left, id_right, lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp);
+            let components = [editor.init_component::<SceneBoundingPool>(), editor.init_component::<SceneAnimationContext>(),editor.init_component::<BoundingBoxDisplay>(),];
+
+            editor.add_components(entity, &components);
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = pool; 
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SceneAnimationContext::new(); 
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = BoundingBoxDisplay { mesh: bounding, display: false };
         } else {
-            alter1.destroy(id_left);
-            alter1.destroy(id_right);
-            alter1.destroy(bounding);
-            alter1.destroy(boundinggeo);
+            editor.destroy(id_left);
+            editor.destroy(id_right);
+            editor.destroy(bounding);
+            editor.destroy(boundinggeo);
             // commands.entity(id_left).despawn();
             // commands.entity(id_right).despawn();
             // commands.entity(bounding).despawn();
@@ -194,12 +192,7 @@ pub struct ActionScene;
 impl ActionScene {
     pub fn init(
         entity: Entity,
-        alter1: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-        alter2: &mut Alter<(), (), (DisposeReady, DisposeCan), ()>,
-        alter3: &mut Alter<(), (), ActionSceneBundle, ()>,
-        alter4: &mut Alter<(), (), (BindSceneEffect,), ()>,
-        alter5: &mut Alter<(), (), (SceneLightingInfos,), ()>,
-        alter6: &mut Alter<(), (), (SceneShadowInfos, ), ()>,
+        editor: &mut EntityEditor,
         
         // entitycmds: &mut EntityCommands,
 
@@ -211,62 +204,100 @@ impl ActionScene {
         device: &PiRenderDevice,
         asset_samp: &ShareAssetMgr<SamplerRes>, 
     ) {
-        ActionTransformNode::init_for_tree(entity, alter1);
-        ActionEntity::init(entity, alter2);
+        ActionTransformNode::init_for_tree(entity, editor);
+        ActionEntity::init(entity, editor);
 
         let brdfsampler = BRDFSampler::new(device, asset_samp);
         let slot = BRDFTextureSlot(EKeyTexture::Tex(KeyTexture::from( DefaultTexture::WHITE_2D )));
 
-        alter3.alter(entity, (
-            Scene,
-            SceneCoordinateSytem3D::default(),
-            SceneTime::new(),
-            SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. },
-            AmbientColor(1., 1., 1., 1.),
-            TreeLeftRoot::new(id_left),
-            TreeRightRoot::new(id_right),
+        let components = [
+            editor.init_component::<Scene>(),
+            editor.init_component::<SceneCoordinateSytem3D>(),
+            editor.init_component::<SceneTime>(),
+            editor.init_component::<SceneFog>(),
+            editor.init_component::<AmbientColor>(),
+            editor.init_component::<TreeLeftRoot>(),
+            editor.init_component::<TreeRightRoot>(),
             // AnimationGroups::default(),
-            SceneMainCameraID(None),
-            SceneAnimationEnable::default(),
-            SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count)),
-            ScenePointLightsQueue(SceneItemsQueue::new(lightlimit.max_point_light_count)),
-            SceneSpotLightsQueue(SceneItemsQueue::new(lightlimit.max_spot_light_count)),
-            SceneHemiLightsQueue(SceneItemsQueue::new(lightlimit.max_hemi_light_count)),
-            SceneLightingInfosDirty,
-            SceneShadowInfosDirty,
-            SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count)),
-            MainCameraOpaqueTarget(None),
-            MainCameraDepthTarget(None),
-            BatchParamOpaque::default(),
-            BatchParamTransparent::default(),
-            SceneShadowRenderTarget(None),
-            brdfsampler,
-            slot,
-            BRDFTexture::default(),
-            EnvTextureSlot::default(),
-            EnvIrradiance::default(),
-            EnvTexture::default(),
-            EnvSampler::new(device, asset_samp),
-        ));
+            editor.init_component::<SceneMainCameraID>(),
+            editor.init_component::<SceneAnimationEnable>(),
+            editor.init_component::<SceneDirectLightsQueue>(),
+            editor.init_component::<ScenePointLightsQueue>(),
+            editor.init_component::<SceneSpotLightsQueue>(),
+            editor.init_component::<SceneHemiLightsQueue>(),
+            editor.init_component::<SceneLightingInfosDirty>(),
+            editor.init_component::<SceneShadowInfosDirty>(),
+            editor.init_component::<SceneShadowQueue>(),
+            editor.init_component::<MainCameraOpaqueTarget>(),
+            editor.init_component::<MainCameraDepthTarget>(),
+            editor.init_component::<BatchParamOpaque>(),
+            editor.init_component::<BatchParamTransparent>(),
+            editor.init_component::<SceneShadowRenderTarget>(),
+            editor.init_component::<BRDFSampler>(),
+            editor.init_component::<BRDFTextureSlot>(),
+            editor.init_component::<BRDFTexture>(),
+            editor.init_component::<EnvTextureSlot>(),
+            editor.init_component::<EnvIrradiance>(),
+            editor.init_component::<EnvTexture>(),
+            editor.init_component::<EnvSampler>(),
+        ];
+
+            editor.add_components(entity, &components);
+
+        
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = Scene;
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SceneCoordinateSytem3D::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SceneTime::new();
+            *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. };
+            *editor.get_component_unchecked_mut_by_id(entity, components[4]) = AmbientColor(1., 1., 1., 1.);
+            *editor.get_component_unchecked_mut_by_id(entity, components[5]) = TreeLeftRoot::new(id_left);
+            *editor.get_component_unchecked_mut_by_id(entity, components[6]) = TreeRightRoot::new(id_right);
+            // AnimationGroups::default(),
+            *editor.get_component_unchecked_mut_by_id(entity, components[7]) = SceneMainCameraID(None);
+            *editor.get_component_unchecked_mut_by_id(entity, components[8]) = SceneAnimationEnable::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[9]) = SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count));
+            *editor.get_component_unchecked_mut_by_id(entity, components[10])= ScenePointLightsQueue(SceneItemsQueue::new(lightlimit.max_point_light_count));
+            *editor.get_component_unchecked_mut_by_id(entity, components[11])=SceneSpotLightsQueue(SceneItemsQueue::new(lightlimit.max_spot_light_count));
+            *editor.get_component_unchecked_mut_by_id(entity, components[12])=SceneHemiLightsQueue(SceneItemsQueue::new(lightlimit.max_hemi_light_count));
+            *editor.get_component_unchecked_mut_by_id(entity, components[13])=SceneLightingInfosDirty;
+            *editor.get_component_unchecked_mut_by_id(entity, components[14])=SceneShadowInfosDirty;
+            *editor.get_component_unchecked_mut_by_id(entity, components[15])=SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count));
+            *editor.get_component_unchecked_mut_by_id(entity, components[16])=MainCameraOpaqueTarget(None);
+            *editor.get_component_unchecked_mut_by_id(entity, components[17])=MainCameraDepthTarget(None);
+            *editor.get_component_unchecked_mut_by_id(entity, components[18])=BatchParamOpaque::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[19])=BatchParamTransparent::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[20])=SceneShadowRenderTarget(None);
+            *editor.get_component_unchecked_mut_by_id(entity, components[21])=brdfsampler;
+            *editor.get_component_unchecked_mut_by_id(entity, components[22])=slot;
+            *editor.get_component_unchecked_mut_by_id(entity, components[23])=BRDFTexture::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[24])=EnvTextureSlot::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[25])=EnvIrradiance::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[26])=EnvTexture::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[27])=EnvSampler::new(device, asset_samp);
+  
 
         if let Some(bindeffect) = BindSceneEffect::new(dynbuffer) {
-            alter4.alter(entity, (bindeffect,));
+            // alter4.alter(entity, (bindeffect,));
+            add_component(editor, entity, bindeffect);
         }
         if let Some(bindeffect) = SceneLightingInfos::new(dynbuffer, lightlimit) {
-            alter5.alter(entity, (bindeffect,));
+            // alter5.alter(entity, (bindeffect,));
+            add_component(editor, entity, bindeffect);
         }
         if let Some(bindeffect) = SceneShadowInfos::new(dynbuffer, lightlimit, shadowlimit) {
-            alter6.alter(entity, (bindeffect,));
+            // alter6.alter(entity, (bindeffect,));
+            add_component(editor, entity, bindeffect);
         }
     }
 
     pub(crate) fn add_to_scene(
         entity: Entity,
-        commands: &mut Alter<(),(),(SceneID, ), ()>,
+        editor: &mut EntityEditor,
         scene: Entity,
     ) {
         // tree.push(OpsTransformNodeParent::ops(commands.id(), scene));
-        commands
-            .alter(entity, (SceneID(scene),));
+        let index = editor.init_component::<SceneID>();
+        let _ = editor.add_components(entity, &[index]);
+        *editor.get_component_unchecked_mut_by_id(entity, index) = SceneID(scene)
     }
 }

@@ -29,21 +29,21 @@ pub enum StageLighting {
 }
 
 
-
+#[derive(Component)]
 pub struct DirectLight;
 
-
+#[derive(Component)]
 pub struct PointLight;
 
-
+#[derive(Component)]
 pub struct SpotLight;
 
-
+#[derive(Component)]
 pub struct HemisphericLight;
 
 // pub struct 
 
-
+#[derive(Component)]
 pub struct LightParam {
     pub(crate) color: Vector3,
     pub(crate) radius: f32,
@@ -102,7 +102,7 @@ impl LightingMode {
     }
 }
 
-
+#[derive(Component)]
 pub struct LightDirection(pub Vector3);
 impl Default for LightDirection {
     fn default() -> Self {

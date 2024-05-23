@@ -4,6 +4,10 @@ use std::sync::Arc;
 
 
 use pi_share::ShareMutex;
+use pi_world::{editor::EntityEditor, query::QueryError, world::Entity};
+use pi_world_macros::ComponentEXT;
+use crate::prelude::pi_world::utils::ComponentEXT;
+use crate::prelude::Bundle;
 
 mod effect_sampler2d;
 mod effect_texture2d;
@@ -140,4 +144,32 @@ pub fn vec_u8_to_u32(val: &Vec<u8>) -> u32 {
     } else {
         0
     }
+}
+
+pub fn add_component<B: Bundle + 'static>(editor: &mut EntityEditor, e: Entity, component: B)-> Result<(), QueryError>{
+    let index = editor.init_component::<B>();
+    editor.alter_components(e, &[(index, true)])?;
+    *editor.get_component_unchecked_mut_by_id::<B>(e, index) = component;
+    Ok(())
+}
+
+
+pub fn add_components<B: Bundle + ComponentEXT + 'static>(editor: &mut EntityEditor, e: Entity, components: Vec<B>)-> Result<(), QueryError>{
+
+    let mut indexs = Vec::with_capacity(components.len());
+
+    for component in &components{
+        indexs.push((component.component_index(editor), true))
+    }
+
+    let index = editor.init_component::<B>();
+    editor.alter_components(e, &[(index, true)])?;
+
+    let mut i = 0;      
+    for component in  components {
+        *editor.get_component_unchecked_mut_by_id::<B>(e, indexs[i].0) = component;
+        i+=1;
+    }
+    
+    Ok(())
 }

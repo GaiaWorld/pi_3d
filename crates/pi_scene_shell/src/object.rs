@@ -1,14 +1,14 @@
 use pi_bevy_ecs_extend::system_param::tree::EntityTreeMut;
-// use bevy_ecs::system::Insert;
+
 use pi_world::{
-    alter::Alter, filter::Changed, insert::Insert, prelude::App, query::Query, schedule::Update, single_res::{SingleRes, SingleResMut}, world::Entity
+    editor::EntityEditor, filter::Changed, prelude::App, query::Query, schedule::Update, single_res::{SingleRes, SingleResMut}, world::Entity
 };
 
 // use std::mem::replace;
 // use pi_bevy_ecs_extend::prelude::EntityTreeMut;
 use crate::prelude::*;
-// use bevy_app::{App, Plugin, Update};
-// use bevy_ecs::{prelude::*, system::EntityCommands};
+
+
 
 // #[derive(Debug, Clone, Copy, Default)]
 // pub struct GameObject;
@@ -16,7 +16,7 @@ use crate::prelude::*;
 pub type ObjectID = Entity;
 
 /// 准备销毁
-
+#[derive(Debug, Component)]
 pub struct DisposeReady(pub bool);
 impl Default for DisposeReady {
     fn default() -> Self {
@@ -25,7 +25,7 @@ impl Default for DisposeReady {
 }
 
 /// 可以销毁
-
+#[derive(Debug, Component)]
 pub struct DisposeCan(pub bool);
 impl Default for DisposeCan {
     fn default() -> Self {
@@ -35,9 +35,9 @@ impl Default for DisposeCan {
 
 pub struct ActionEntity;
 impl ActionEntity {
-    pub fn init(entity: Entity,  alter: &mut Alter<(), (), (DisposeReady, DisposeCan), ()>) {
-        let _ = alter
-            .alter(entity, (DisposeReady::default(), DisposeCan::default()));
+    pub fn init(entity: Entity, editor: &mut EntityEditor) {
+        let _ = editor
+            .add_components(entity, &[editor.init_component::<DisposeReady>(), editor.init_component::<DisposeCan>()]);
     }
 }
 
@@ -115,16 +115,16 @@ pub fn sys_dispose_can(
 }
 
 pub fn sys_dispose(
-    mut commands: Alter<(),(),(),()>,
+    mut editor: EntityEditor,
     items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
     mut tree: EntityTreeMut,
 ) {
     items.iter().for_each(|(entity, state)| {
         if state.0 == true {
-            if   commands.get(entity).is_ok() {
+            if   editor.contains_entity(entity) {
                 // log::debug!("despawn====={:?}", commands.id());
                 tree.remove(entity);
-                let _ = commands.destroy(entity);
+                let _ = editor.destroy(entity);
             }
         }
     });

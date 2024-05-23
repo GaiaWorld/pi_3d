@@ -1,5 +1,5 @@
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::prelude::{pi_world::editor::EntityEditor, *};
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
@@ -12,96 +12,19 @@ use super::{
 
 pub fn sys_create_camera(
     mut cmds: ResMut<ActionListCameraCreate>,
-    
-    mut alter1: Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter2: Alter<(), (), (SceneID,), ()>,
-    mut alter3: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
-    mut alter4: Alter<
-        (),
-        (),
-        (
-            TransformNodeDirty,
-            LocalPosition,
-            LocalScaling,
-            LocalRotationQuaternion,
-            LocalEulerAngles,
-            RecordLocalPosition,
-            RecordLocalScaling,
-            RecordLocalRotationQuaternion,
-            RecordLocalEulerAngles,
-            LocalRotation,
-            LocalMatrix,
-            GlobalMatrix,
-            AbsoluteTransform,
-            FlagAnimationStartResetComp,
-            CullingFlag
-        ), 
-        ()>,
-    mut commands: Alter<
-        (),
-        (),
-        (
-            Camera,
-            ViewerDistanceCompute,
-            CameraFov,
-            CameraOrthSize,
-            RecordCameraFov,
-            RecordCameraOrthSize,
-            LayerMask,
-            CameraUp,
-            CameraTarget,
-            TargetCameraParam,
-            CameraParam,
-        ), 
-        ()>,
-    mut commands1: Alter<
-        (),
-        (),
-        (
-            Camera,
-            ViewerDistanceCompute,
-            CameraFov,
-            CameraOrthSize,
-            RecordCameraFov,
-            RecordCameraOrthSize,
-            LayerMask,
-            CameraUp,
-            CameraTarget,
-            TargetCameraParam,
-            CameraParam,
-        ), 
-        ()>,
-    mut commands2: Alter<
-        (),
-        (), 
-        (
-            ViewerAspect,
-            ViewerViewMatrix,
-            ViewerProjectionMatrix,
-            ViewerTransformMatrix,
-            ViewerGlobalPosition,
-            ViewerDirection,
-            ModelList,
-            FlagModelList,
-            ModelListAfterCulling,
-            ViewerActive,
-            ViewerRenderersInfo,
-            DirtyViewerRenderersInfo,
-            ForceIncludeModelList,
-            FlagForceIncludeModelList
-        ),
-        ()>,
-    mut commands3: Alter<(),(), (BindViewer, ), ()>,
+    mut editor: EntityEditor,
     mut dynallocator: ResMut<ResBindBufferAllocator>,
     mut errors: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity)| {
-        if commands.get(entity).is_ok() {
+        if editor.contains_entity(entity) {
 
-            ActionCamera::init(entity, &mut alter1, &mut alter2, &mut alter3, &mut alter4, &mut commands, &mut commands1, &mut commands2,  scene);
+            ActionCamera::init(entity, &mut editor,  scene);
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
-                commands3.alter(entity,(bindviewer,));
+                let index = editor.init_component::<BindViewer>();
+                editor.add_components(entity, &[index]);
+                *editor.get_component_unchecked_mut_by_id(entity, index) = bindviewer;
             } else {
                 errors.record(entity, ErrorRecord::ERROR_BIND_VIEWER_CREATE_FAIL);
             }
@@ -216,145 +139,47 @@ pub struct ActionCamera;
 impl ActionCamera {
     pub fn init(
         entity: Entity,
-        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan), ()>,
-        alter2: &mut Alter<(), (), (SceneID,), ()>,
-        alter3: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
-        alter4: &mut Alter<
-        (),
-        (),
-        (
-            TransformNodeDirty,
-            LocalPosition,
-            LocalScaling,
-            LocalRotationQuaternion,
-            LocalEulerAngles,
-            RecordLocalPosition,
-            RecordLocalScaling,
-            RecordLocalRotationQuaternion,
-            RecordLocalEulerAngles,
-            LocalRotation,
-            LocalMatrix,
-            GlobalMatrix,
-            AbsoluteTransform,
-            FlagAnimationStartResetComp,
-            CullingFlag
-        ), 
-        ()>,
-        commands: &mut Alter<
-        (),
-        (),
-        (
-            Camera,
-            ViewerDistanceCompute,
-            CameraFov,
-            CameraOrthSize,
-            RecordCameraFov,
-            RecordCameraOrthSize,
-            LayerMask,
-            CameraUp,
-            CameraTarget,
-            TargetCameraParam,
-            CameraParam,
-        ), 
-        ()>,
-        commands1: &mut Alter<
-        (),
-        (),
-        (
-            Camera,
-            ViewerDistanceCompute,
-            CameraFov,
-            CameraOrthSize,
-            RecordCameraFov,
-            RecordCameraOrthSize,
-            LayerMask,
-            CameraUp,
-            CameraTarget,
-            TargetCameraParam,
-            CameraParam,
-        ), 
-        ()>,
-        commands2: &mut Alter<
-        (),
-        (), 
-        (
-            ViewerAspect,
-            ViewerViewMatrix,
-            ViewerProjectionMatrix,
-            ViewerTransformMatrix,
-            ViewerGlobalPosition,
-            ViewerDirection,
-            ModelList,
-            FlagModelList,
-            ModelListAfterCulling,
-            ViewerActive,
-            ViewerRenderersInfo,
-            DirtyViewerRenderersInfo,
-            ForceIncludeModelList,
-            FlagForceIncludeModelList
-        ),
-        ()>,
+        editor: &mut EntityEditor,
         scene: Entity,
     ) {
-        ActionTransformNode::init(entity, alter1, alter2, alter3, alter4, scene);
-        ActionCamera::as_camera(entity, commands1, commands2);
+        ActionTransformNode::init(entity, editor, scene);
+        ActionCamera::as_camera(entity, editor);
     }
     pub(crate) fn as_camera(
         entity: Entity,
-        commands: &mut Alter<
-        (),
-        (),
-        (
-            Camera,
-            ViewerDistanceCompute,
-            CameraFov,
-            CameraOrthSize,
-            RecordCameraFov,
-            RecordCameraOrthSize,
-            LayerMask,
-            CameraUp,
-            CameraTarget,
-            TargetCameraParam,
-            CameraParam,
-        ), 
-        ()>,
-        commands2: &mut Alter<
-        (),
-        (), 
-        (
-            ViewerAspect,
-            ViewerViewMatrix,
-            ViewerProjectionMatrix,
-            ViewerTransformMatrix,
-            ViewerGlobalPosition,
-            ViewerDirection,
-            ModelList,
-            FlagModelList,
-            ModelListAfterCulling,
-            ViewerActive,
-            ViewerRenderersInfo,
-            DirtyViewerRenderersInfo,
-            ForceIncludeModelList,
-            FlagForceIncludeModelList
-        ),
-        ()>,
+        editor: &mut EntityEditor,
     ) {
-        commands.alter(entity, (
-            Camera(false),
-            ViewerDistanceCompute::default(),
-            CameraFov::default(),
-            CameraOrthSize::default(),
-            RecordCameraFov::default(),
-            RecordCameraOrthSize::default(), 
-            LayerMask::default(),
-            CameraUp(CoordinateSytem3::up()),
-            CameraTarget(Vector3::new(0., 0., 1.)),
-            TargetCameraParam::default(),
-            CameraParam::default()
-        ));
+        let components = [
+            editor.init_component::<Camera>(),
+            editor.init_component::<ViewerDistanceCompute>(),
+            editor.init_component::<CameraFov>(),
+            editor.init_component::<CameraOrthSize>(),
+            editor.init_component::<RecordCameraFov>(),
+            editor.init_component::<RecordCameraOrthSize>(),
+            editor.init_component::<LayerMask>(),
+            editor.init_component::<CameraUp>(),
+            editor.init_component::<CameraTarget>(),
+            editor.init_component::<TargetCameraParam>(),
+            editor.init_component::<CameraParam>(),
+        ];
+        editor.add_components(entity, &components);
+
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =   Camera(false);
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =    ViewerDistanceCompute::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =    CameraFov::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =    CameraOrthSize::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =    RecordCameraFov::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =    RecordCameraOrthSize::default(); 
+        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =    LayerMask::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[7]) =    CameraUp(CoordinateSytem3::up());
+        *editor.get_component_unchecked_mut_by_id(entity, components[8]) =    CameraTarget(Vector3::new(0., 0., 1.));
+        *editor.get_component_unchecked_mut_by_id(entity, components[9]) =    TargetCameraParam::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[10]) =   CameraParam::default();
+   
     
         
-        ActionViewer::as_viewer(entity, commands2, false);
+        ActionViewer::as_viewer(entity, editor, false);
     }
 }
 

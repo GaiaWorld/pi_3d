@@ -7,7 +7,7 @@ use crate::{
     transforms::prelude::*,
 };
 
-
+#[derive(Debug, Component)]
 pub struct DirectionalShadowDirection(pub Vector3);
 impl Default for DirectionalShadowDirection {
     fn default() -> Self {
@@ -78,7 +78,7 @@ impl TViewerViewMatrix for DirectionalShadowDirection {
 }
 
 
-
+#[derive(Debug, Component)]
 pub struct DirectionalShadowProjection {
     pub minz: f32,
     pub maxz: f32,
@@ -97,7 +97,7 @@ impl TViewerProjectMatrix for DirectionalShadowProjection {
     }
 }
 
-
+#[derive(Debug, Component)]
 pub struct SpotShadowProjection {
     pub minz: f32,
     pub maxz: f32,

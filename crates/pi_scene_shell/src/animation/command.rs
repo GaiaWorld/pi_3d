@@ -4,15 +4,16 @@ use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation:
 
 use pi_curves::{curve::{frame::KeyFrameCurveValue, FramePerSecond}, easing::EEasingMode};
 use pi_world::{single_res::SingleResMut, system_params::SystemParam, world::Entity};
+use pi_world_macros::Component;
 
 
 use crate::prelude::ActionList;
 
 use super::{base::*, float::AnimatorableFloat, vec2::AnimatorableVec2, vec3::AnimatorableVec3, vec4::AnimatorableVec4, uint::AnimatorableUint, int::AnimatorableSint};
 
-#[derive( Deref)]
+#[derive( Deref, Component, Default)]
 pub struct AnimatorableLink(pub(crate) Entity);
-
+#[derive(Component, Default)]
 pub struct TargetAnimatorableIsRunning;
 
 pub struct OpsAnimatorableFloat(pub(crate) Entity, pub(crate) Entity, pub(crate) AnimatorableFloat, pub(crate) EAnimatorableEntityType);

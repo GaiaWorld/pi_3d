@@ -3,5 +3,5 @@ use crate::{
     object::{ObjectID},
 };
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component, Default)]
 pub struct RendererID(pub ObjectID);

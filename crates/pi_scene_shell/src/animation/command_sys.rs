@@ -2,10 +2,9 @@
 
 use std::ops::Deref;
 
-// use bevy_ecs::system::Commands;
-// use bevy_ecs::prelude::*;
-// use bevy_ecs::system::EntityCommands;
-use pi_world::alter::Alter;
+
+
+use pi_world::editor::EntityEditor;
 use pi_world::filter::Changed;
 use pi_world::filter::With;
 // use pi_world::insert::Insert;
@@ -45,40 +44,56 @@ pub fn sys_create_animatorable_entity(
     // mut cmds_mat4: ResMut<ActionListAnimatorableMat4>,
     mut cmds_uint: SingleResMut<ActionListAnimatorableUint>,
     mut cmds_int: SingleResMut<ActionListAnimatorableSint>,
-    mut commands: Alter<(), (), (AnimatorableFloat, AnimatorableLink, RecordAnimatorableFloat), ()>,
-    mut commands1: Alter<(), (), (AnimatorableVec2, AnimatorableLink, RecordAnimatorableVec2), ()>,
-    mut commands2: Alter<(), (), (AnimatorableVec3, AnimatorableLink, RecordAnimatorableVec3), ()>,
-    mut commands3: Alter<(), (), (AnimatorableVec4, AnimatorableLink, RecordAnimatorableVec4), ()>,
-    mut commands4: Alter<(), (), (AnimatorableUint, AnimatorableLink, RecordAnimatorableUint), ()>,
-    mut commands5: Alter<(), (), (AnimatorableSint, AnimatorableLink, RecordAnimatorableInt), ()>,
-    mut alter1: Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter2: Alter<(), (), (AnimatorableUniform,), ()>,
-    mut alter3: Alter<(), (), (AnimatorableAttribute, ), ()>,
+    mut editor: EntityEditor,
     items: Query<(), (With<DisposeReady>, With<DisposeCan>)>
 ) {
    
     cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, linked, value, etype)| {
-        if commands.get(entity).is_ok() {
-            let _ = commands.alter(entity, (value.clone(),AnimatorableLink(linked), RecordAnimatorableFloat(value.clone())));//.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableFloat(value.clone()));
-            _animetable(&items, entity,  &mut alter1, &mut alter2, &mut alter3, etype);
+        if editor.contains_entity(entity) {
+             //.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableFloat(value.clone()));
+            let components = [editor.init_component::<AnimatorableFloat>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableFloat>()];
+            editor.add_components(entity, &components);
+            
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RecordAnimatorableFloat(value.clone());
+           
+            _animetable(&items, entity,  &mut editor,  etype);
         }
     });
     cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, linked, value, etype)| {
-        if commands1.get(entity).is_ok() {
-            let _ = commands1.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableVec2(value.clone())));
-            _animetable(&items, entity,  &mut alter1, &mut alter2, &mut alter3, etype);
+        if editor.contains_entity(entity) {
+            let components = [editor.init_component::<AnimatorableVec2>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableVec2>()];
+            editor.add_components(entity, &components);
+            
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RecordAnimatorableVec2(value.clone());
+            _animetable(&items, entity, &mut editor, etype);
         }
     });
     cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, linked, value, etype)| {
-        if commands2.get(entity).is_ok() {
-            let _ = commands2.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableVec3(value.clone()) ));
-            _animetable(&items, entity,  &mut alter1, &mut alter2, &mut alter3, etype);
+        if editor.contains_entity(entity){
+            let components = [editor.init_component::<AnimatorableVec3>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableVec3>()];
+            editor.add_components(entity, &components);
+            
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RecordAnimatorableVec3(value.clone());
+            _animetable(&items, entity,  &mut editor,  etype);
         }
     });
     cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, linked, value, etype)| {
-        if commands3.get(entity).is_ok() {
-            let _ = commands3.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableVec4(value.clone()) ));
-            _animetable(&items, entity,  &mut alter1, &mut alter2, &mut alter3, etype);
+        if editor.contains_entity(entity) {
+            // let _ = commands3.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableVec4(value.clone()) ));
+            let components = [editor.init_component::<AnimatorableVec4>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableVec4>()];
+            editor.add_components(entity, &components);
+            
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RecordAnimatorableVec4(value.clone());
+
+            _animetable(&items, entity,  &mut editor, etype);
         }
     });
     // cmds_mat4.drain().drain(..).for_each(|OpsAnimatorableMat4(entity, linked, value)| {
@@ -87,44 +102,62 @@ pub fn sys_create_animatorable_entity(
     //     }
     // });
     cmds_uint.drain().drain(..).for_each(|OpsAnimatorableUint(entity, linked, value, etype)| {
-        if  commands4.get(entity).is_ok() {
-            let _ = commands4.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableUint(value.clone())));
-            _animetable(&items, entity,  &mut alter1, &mut alter2, &mut alter3, etype);
+        if  editor.contains_entity(entity) {
+            // let _ = commands4.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableUint(value.clone())));
+            let components = [editor.init_component::<AnimatorableUint>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableUint>()];
+            editor.add_components(entity, &components);
+            
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RecordAnimatorableUint(value.clone());
+
+            _animetable(&items, entity,  &mut editor, etype);
         }
     });
     cmds_int.drain().drain(..).for_each(|OpsAnimatorableSint(entity, linked, value, etype)| {
-        if commands5.get(entity).is_ok() {
-            let _ = commands5.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableInt(value.clone())));
-            _animetable(&items, entity,  &mut alter1, &mut alter2, &mut alter3, etype);
+        if editor.contains_entity(entity) {
+            // let _ = commands5.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableInt(value.clone())));
+            let components = [editor.init_component::<AnimatorableSint>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableInt>()];
+            editor.add_components(entity, &components);
+            
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RecordAnimatorableInt(value.clone());
+            _animetable(&items, entity,  &mut editor, etype);
         }
     });
 }
 fn _animetable(
     items: &Query<(), (With<DisposeReady>, With<DisposeCan>)>,
     entity: Entity,
-    alter1: &mut Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    alter2:  &mut Alter<(), (), (AnimatorableUniform,), ()>,
-    alter3:  &mut Alter<(), (), (AnimatorableAttribute, ), ()>,
+    editor: &mut EntityEditor,
     etype: EAnimatorableEntityType, 
 ) {
-    if items.contains(entity) == false { ActionEntity::init(entity, alter1); }
+    if items.contains(entity) == false { ActionEntity::init(entity, editor); }
     let _ = match etype {
-        EAnimatorableEntityType::Uniform => alter2.alter(entity, (AnimatorableUniform,)),
-        EAnimatorableEntityType::Attribute => alter3.alter(entity, (AnimatorableAttribute, )),
+        EAnimatorableEntityType::Uniform => editor.add_components(entity, &[editor.init_component::<AnimatorableUniform>()]),
+        EAnimatorableEntityType::Attribute => editor.add_components(entity, &[editor.init_component::<AnimatorableAttribute>()]),
     };
 }
 
 pub fn sys_create_animation_group(
     mut cmds: SingleResMut<ActionListAnimeGroupCreate>,
-    mut commands: Alter<(), (), (AnimationGroupKey, AnimationGroupScene), ()>,
+    mut editor: EntityEditor,
     mut scenes: Query<&mut SceneAnimationContext>,
     mut globals: SingleResMut<GlobalAnimeAbout>,
 ) {
     cmds.drain().drain(..).for_each(|OpsAnimationGroupCreation(scene, entity)| {
         if let Ok(mut ctx) = scenes.get_mut(scene) {
-            if let Ok(_) = commands.get(entity) {
+            if editor.contains_entity(entity) {
                 let id_group = ctx.0.create_animation_group();
-                let _ = commands.alter(entity, (AnimationGroupKey(id_group),AnimationGroupScene(scene)));
+                let components = [
+                    editor.init_component::<AnimationGroupKey>(),
+                    editor.init_component::<AnimationGroupScene>()
+                ];
+
+                let _ = editor.add_components(entity, &components);
+                *editor.get_component_unchecked_mut_by_id(entity, components[0]) = AnimationGroupKey(id_group);
+                *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimationGroupScene(scene);
                 globals.record_group(id_group, entity);
             }
         }

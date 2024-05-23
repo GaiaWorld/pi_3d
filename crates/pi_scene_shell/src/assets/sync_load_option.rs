@@ -3,7 +3,7 @@ use pi_assets::{asset::{Handle, Asset, GarbageEmpty}, mgr::{AssetMgr, LoadResult
 use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::XHashMap;
 use pi_share::ThreadSync;
-use pi_world::{alter::Alter, filter::Changed, insert::Bundle, prelude::App, query::Query, schedule::Update, single_res::{SingleRes, SingleResMut}};
+use pi_world::{editor::EntityEditor, filter::Changed, insert::Bundle, prelude::App, query::Query, schedule::Update, single_res::{SingleRes, SingleResMut}};
 use pi_world::prelude::Plugin;
 use crate::{run_stage::{TSystemStageInfo}, object::ObjectID};
 
@@ -39,7 +39,7 @@ impl<
         R: From<Handle<D>> + Bundle<Item = R>
     >(
         query: Query<(ObjectID, &K), Changed<K>>,
-        mut data_cmd: Alter<(), (), R, ()>,
+        mut editor: EntityEditor,
         assets_mgr: SingleRes<ShareAssetMgr<D>>,
         mut list_await: SingleResMut<AssetSyncWaitOption<K0, K, D, R>>,
     ) {
@@ -52,7 +52,7 @@ impl<
                 match result {
                     LoadResult::Ok(r) => {
                         // log::debug!("AssetSyncLoad: Loaded {:?}", key.deref());
-                        if  data_cmd.get(entity).is_ok() {
+                        if  editor.contains_entity(entity) {
                             // data_cmd.alter(entity, <R::from<R> as Bundle>::Item);
                         }
                     },
@@ -78,7 +78,7 @@ impl<
     >(
         mut list_await: SingleResMut<AssetSyncWaitOption<K0, K, D, R>>,
         query: Query<&K>,
-        mut data_cmd: Alter<(), (), R, ()>,
+        mut editor: EntityEditor,
     ) {
         // log::debug!("check_await: ");
         // let mut data_list = std::mem::replace(&mut list_await.1, vec![]);
@@ -117,19 +117,19 @@ impl<
 /// S: 资产Key 的更新System
 pub struct PluginAssetSyncLoadOption<
     // T: Send + Sync +'static,
-    K0: Clone + Hash + PartialEq + Eq + 'static + ThreadSync,
-    K: Deref<Target = Option<K0>>  + 'static + ThreadSync,
-    D: Asset<Key = K0>  + 'static + ThreadSync,
-    R: From<Handle<D>>  + 'static + ThreadSync + Bundle<Item = R>,
-    S: TSystemStageInfo + 'static + ThreadSync
+    K0: Clone + Hash + PartialEq + Eq + 'static + Send + Sync,
+    K: Deref<Target = Option<K0>>  + 'static + Send + Sync,
+    D: Asset<Key = K0>  + 'static + Send + Sync,
+    R: From<Handle<D>>  + 'static + Send + Sync + Bundle<Item = R>,
+    S: TSystemStageInfo + 'static + Send + Sync
 >(bool, usize, usize, PhantomData<(K, D, R, S)>);
 
 impl<K0, K, D, R, S> PluginAssetSyncLoadOption<K0, K, D, R, S>
 where
-    K0: Clone + Hash + PartialEq + Eq + 'static + ThreadSync,
-    K: Deref<Target = Option<K0>> + 'static + ThreadSync,
-    D: Asset<Key = K0> + 'static + ThreadSync,
-    R: From<Handle<D>> + 'static + ThreadSync + Bundle<Item = R>,
+    K0: Clone + Hash + PartialEq + Eq + 'static + Send + Sync,
+    K: Deref<Target = Option<K0>> + 'static + Send + Sync,
+    D: Asset<Key = K0> + 'static + Send + Sync,
+    R: From<Handle<D>> + 'static + Send + Sync + Bundle<Item = R>,
     S: TSystemStageInfo + 'static + Send + Sync
 {
     ///
@@ -141,10 +141,10 @@ where
 
 impl<K0, K, D, R, S> Plugin for PluginAssetSyncLoadOption<K0, K, D, R, S>
 where
-    K0: Clone + Hash + PartialEq + Eq + 'static + ThreadSync,
-    K: Deref<Target = Option<K0>>+ 'static + ThreadSync+ ,
-    D: Asset<Key = K0> + 'static + ThreadSync,
-    R: From<Handle<D>> + 'static + ThreadSync + Bundle<Item = R>,
+    K0: Clone + Hash + PartialEq + Eq + 'static + Send + Sync,
+    K: Deref<Target = Option<K0>>+ 'static + Send + Sync,
+    D: Asset<Key = K0> + 'static + Send + Sync,
+    R: From<Handle<D>> + 'static + Send + Sync + Bundle<Item = R>,
     S: TSystemStageInfo + 'static + Send + Sync
 {
     fn build(&self, app: &mut App) {

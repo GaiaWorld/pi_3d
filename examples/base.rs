@@ -1,9 +1,9 @@
-use bevy_a11y::AccessibilityPlugin;
+// use bevy_a11y::AccessibilityPlugin;
 #[allow(dead_code)]
 #[allow(unused_imports)]
 
 use pi_3d::*;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
+// use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
@@ -11,6 +11,7 @@ use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer
 use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator, scene::StageScene};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_standard_material::PluginStandardMaterial;
+use pi_winit::{event_loop::EventLoop, window::Window};
 use unlit_material::*;
 use wgpu::Backends;
 
@@ -94,88 +95,90 @@ impl DemoScene {
     pub const PASS_HIGHLIGHT: PassTag       = PassTag::PASS_TAG_04;
     pub const PASS_SKY_WATER: PassTag       = PassTag::PASS_TAG_06;
     pub const PASS_TRANSPARENT: PassTag     = PassTag::PASS_TAG_07;
-    pub fn new(
-        commands: &mut Commands,
-        actions: &mut pi_3d::ActionSets,
-        animegroupres: &mut ResourceAnimationGroup,
-        targets: &mut CustomRenderTargets,
-        device: &RenderDevice,
-        asset_samp: &ShareAssetMgr<SamplerRes>,
-        atlas_allocator: &PiSafeAtlasAllocator,
-        camera_size: f32,
-        camera_fov: f32,
-        camera_position: (f32, f32, f32),
-        orthographic_camera: bool
-    ) -> Self {
+    // pub fn new(
+    //     // commands: &mut Commands,
+    //     insert: &Insert<()>,
+    //     actions: &mut pi_3d::ActionSets,
+    //     animegroupres: &mut ResourceAnimationGroup,
+    //     targets: &mut CustomRenderTargets,
+    //     device: &RenderDevice,
+    //     asset_samp: &ShareAssetMgr<SamplerRes>,
+    //     atlas_allocator: &PiSafeAtlasAllocator,
+    //     camera_size: f32,
+    //     camera_fov: f32,
+    //     camera_position: (f32, f32, f32),
+    //     orthographic_camera: bool
+    // ) -> Self {
         
-        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
-            Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
-            None => None,
-        };
+    //     let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
+    //         Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
+    //         None => None,
+    //     };
         
-        let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
+    //     let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
 
-        let scene = commands.spawn_empty().id();
-        // animegroupres.scene_ctxs.init_scene(scene);
-        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
+    //     let scene = insert.insert(());
+    //     // animegroupres.scene_ctxs.init_scene(scene);
+    //     actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
-        let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
-        actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
-        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
-        actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
-        actions.camera.active.push(OpsCameraActive::ops(camera, true));
-        actions.camera.size.push(OpsCameraOrthSize::ops(camera, camera_size));
-        actions.camera.fov.push(OpsCameraFov::ops(camera, camera_fov));
-        actions.camera.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
-        actions.camera.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
-        actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
+    //     let camera = insert.insert(()); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
+    //     actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
+    //     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
+    //     actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
+    //     actions.camera.active.push(OpsCameraActive::ops(camera, true));
+    //     actions.camera.size.push(OpsCameraOrthSize::ops(camera, camera_size));
+    //     actions.camera.fov.push(OpsCameraFov::ops(camera, camera_fov));
+    //     actions.camera.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
+    //     actions.camera.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
+    //     actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
 
-        let opaque_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
-        actions.renderer.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
-        actions.renderer.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
-        actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
-        // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+    //     let opaque_renderer = insert.insert(()); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
+    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
+    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
+    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
+    //     actions.renderer.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
+    //     actions.renderer.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
+    //     actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
+    //     // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
-        let transparent_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
-        actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
-        actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
-        // actions.camera.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+    //     let transparent_renderer = insert.insert(()); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
+    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
+    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
+    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
+    //     actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
+    //     actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
+    //     // actions.camera.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
-        Self { scene, camera, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
-    }
+    //     Self { scene, camera, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
+    // }
 
-    pub fn mesh(
-        commands: &mut Commands,
-        scene: Entity,
-        parent: Entity,
-        actions: &mut pi_3d::ActionSets,
-        vertices: Vec<VertexBufferDesc>,
-        indices: Option<IndicesBufferDesc>,
-        state: MeshInstanceState,
-    ) -> Entity {
-        let id_geo = commands.spawn_empty().id();
-        let mesh = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
-        actions.mesh.create.push(OpsMeshCreation::ops(scene, mesh, state));
-        actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
+//     pub fn mesh(
+//         // commands: &mut Commands,
+//         insert: &Insert<()>,
+//         scene: Entity,
+//         parent: Entity,
+//         actions: &mut pi_3d::ActionSets,
+//         vertices: Vec<VertexBufferDesc>,
+//         indices: Option<IndicesBufferDesc>,
+//         state: MeshInstanceState,
+//     ) -> Entity {
+//         let id_geo = insert.insert(());
+//         let mesh = insert.insert(()); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
+//         actions.mesh.create.push(OpsMeshCreation::ops(scene, mesh, state));
+//         actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
 
-        // actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::LessEqual)));
+//         // actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::LessEqual)));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::LessEqual)));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::LessEqual)));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::LessEqual)));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::LessEqual)));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::LessEqual)));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::LessEqual)));
+//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::LessEqual)));
 
-        mesh
-    }
+//         mesh
+//     }
 }
 
 pub fn sys_scene_time_from_frame(
@@ -192,116 +195,131 @@ pub fn sys_scene_time_from_frame(
 pub struct PluginSceneTimeFromPluginFrame;
 impl Plugin for PluginSceneTimeFromPluginFrame {
     fn build(&self, app: &mut App) {
-        app.add_system(
-            Update,
-            sys_scene_time_from_frame.after(pi_scene_shell::frame_time::sys_frame_time).in_set(StageScene::Create)
-        );
+        // app.add_system(
+        //     Update,
+        //     sys_scene_time_from_frame.after(pi_scene_shell::frame_time::sys_frame_time).in_set(StageScene::Create)
+        // );
+        app.add_system(Update, sys_scene_time_from_frame);
+        app.add_system(Update, pi_scene_shell::frame_time::sys_frame_time);
     }
 }
 
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
+// pub trait AddEvent {
+// 	// 添加事件， 该实现每帧清理一次
+// 	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
+// }
 
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_system(Update, Events::<T>::update_system);
-		}
-		self
-	}
-}
+// impl AddEvent for App {
+// 	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
+// 		if !self.world.contains_resource::<Events<T>>() {
+// 			self.init_resource::<Events<T>>()
+// 				.add_system(Update, Events::<T>::update_system);
+// 		}
+// 		self
+// 	}
+// }
 
-pub fn test_plugins() -> App {
+pub fn test_plugins() -> (App, Arc<Window>,EventLoop<()>) {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
-    let mut app = App::default();
+    let mut app = App::new();
 
     let width = 800;
     let height = 600;
 
     let mut opt = PiRenderOptions::default();
     // opt.backends = wgpu::Backends::VULKAN;
-    app.insert_resource(opt);
+    app.world.insert_single_res(opt);
 
-	let mut window_plugin = bevy_window::WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(width, height);
-    }
+	// let mut window_plugin = bevy_window::WindowPlugin::default();
+    // if let Some(primary_window) = &mut window_plugin.primary_window {
+    //     primary_window.resolution.set_physical_resolution(width, height);
+    // }
 	let (w, eventloop) = {
 		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
 		let event_loop = pi_winit::event_loop::EventLoopBuilder::new().with_any_thread(true).build();
 		let window = pi_winit::window::Window::new(&event_loop).unwrap();
-		(window, event_loop)
+		(Arc::new (window), event_loop)
 	};
 
-    app.insert_resource(AssetMgrConfigs::default());
-    app.add_plugins(
-        (
-            InputPlugin::default(),
-            window_plugin,
-        )
-    );
-    app.add_plugins(
-        (
-            AccessibilityPlugin,
-            pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
-            pi_bevy_asset::PiAssetPlugin::default(),
-            PiRenderPlugin::default(),
-            PluginLocalLoad,
-            PluginFrameTime,
-        )
-    );
+    app.world.insert_single_res(AssetMgrConfigs::default());
+    // app.add_plugins(
+    //     (
+    //         InputPlugin::default(),
+    //         window_plugin,
+    //     )
+    // );
+    // TODO
+    // app.add_plugins(window_plugin);
+    // app.add_plugins(
+    //     (
+    //         AccessibilityPlugin,
+    //         pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
+    //         pi_bevy_asset::PiAssetPlugin::default(),
+    //         PiRenderPlugin::default(),
+    //         PluginLocalLoad,
+    //         PluginFrameTime,
+    //     )
+    // );
+    // app.add_plugins(AccessibilityPlugin);
+    app.add_plugins(pi_bevy_winit_window::WinitPlugin::new(w.clone()).with_size(width, height));
+    app.add_plugins(pi_bevy_asset::PiAssetPlugin::default());
+    app.add_plugins(PiRenderPlugin::default());
+    app.add_plugins(PluginLocalLoad);
+    app.add_plugins(PluginFrameTime);
             
     app.add_plugins(PluginBundleDefault);
     
-    app.add_plugins((
-        PluginNodeMaterial,
-        // PluginShadowGenerator,
-        // PluginShadowMapping,
-    ));
-    app.add_plugins(
-        (
-            PluginCubeBuilder,
-            PluginQuadBuilder,
-            PluginBallBuilder,
-            PluginStateToFile,
-            PluginUnlitMaterial,
-            PluginStandardMaterial,
-        )
-    );
-    app.add_plugins(
-        PluginSceneTimeFromPluginFrame
-    );
-    app.add_plugins(
-        (
-            PluginParticleSystem,
-            pi_gltf2_load::PluginGLTF2Res,
-            pi_trail_renderer::PluginTrail
-        )
-    );
-    app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
-    app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
-    app.insert_resource(SceneShadowLimit(
+    app.add_plugins(PluginNodeMaterial);
+    // app.add_plugins(
+    //     (
+    //         PluginCubeBuilder,
+    //         PluginQuadBuilder,
+    //         PluginBallBuilder,
+    //         PluginStateToFile,
+    //         PluginUnlitMaterial,
+    //         PluginStandardMaterial,
+    //     )
+    // );
+    app.add_plugins(PluginCubeBuilder);
+    app.add_plugins(PluginQuadBuilder);
+    app.add_plugins(PluginBallBuilder);
+    app.add_plugins(PluginStateToFile);
+    app.add_plugins(PluginUnlitMaterial);
+    app.add_plugins(PluginStandardMaterial);
+
+    app.add_plugins(PluginSceneTimeFromPluginFrame);
+    // app.add_plugins(
+    //     (
+    //         PluginParticleSystem,
+    //         pi_gltf2_load::PluginGLTF2Res,
+    //         pi_trail_renderer::PluginTrail
+    //     )
+    // );
+    app.add_plugins(PluginParticleSystem);
+    app.add_plugins(pi_gltf2_load::PluginGLTF2Res);
+    app.add_plugins(pi_trail_renderer::PluginTrail);
+
+    app.world.insert_single_res(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
+    app.world.insert_single_res(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
+    app.world.insert_single_res(SceneShadowLimit(
         ShadowLimitInfo { max_count: 1, max_width: 2048, max_height: 2048, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
     ));
 
     app.add_plugins(copy::PluginImageCopy);
-    app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
+    // // app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
-    app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
+    // // app.world.get_single_res_mut::<StateResource>().unwrap().debug = true;
     
-    app.add_system(Startup, setup_default_mat);
+    // // app.add_startup_system(Update, setup_default_mat);
     
-    app
+    (app, w, eventloop)
 }
 
 pub fn test_plugins_with_gltf() -> App {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
-    let mut app = App::default();
+    let mut app = App::new();
     let width = 800;
     let height = 600;
 
@@ -309,10 +327,10 @@ pub fn test_plugins_with_gltf() -> App {
     // opt.backends = Backends::VULKAN;
     // app.insert_resource(opt);
 
-	let mut window_plugin = bevy_window::WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(width, height);
-    }
+	// let mut window_plugin = bevy_window::WindowPlugin::default();
+    // if let Some(primary_window) = &mut window_plugin.primary_window {
+    //     primary_window.resolution.set_physical_resolution(width, height);
+    // }
     
 	let w = {
 		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
@@ -323,63 +341,79 @@ pub fn test_plugins_with_gltf() -> App {
 
     let mut cfg = AssetMgrConfigs::default();
     cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 100  });
-    app.insert_resource(cfg);
-    app.add_plugins(
-        (
-            InputPlugin::default(),
-            window_plugin,
-        )
-    );
-    app.add_plugins(
-        (
-            AccessibilityPlugin,
-            pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
-            pi_bevy_asset::PiAssetPlugin::default(),
-            PiRenderPlugin::default(),
-            PluginLocalLoad,
-            PluginFrameTime,
-        )
-    );
+    app.world.insert_single_res(cfg);
+    // app.add_plugins(
+        // (
+            // InputPlugin::default(),
+            // window_plugin,
+        // )
+    // );
+    // app.add_plugins(
+    //     (
+    //         // AccessibilityPlugin,
+    //         pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
+    //         pi_bevy_asset::PiAssetPlugin::default(),
+    //         PiRenderPlugin::default(),
+    //         PluginLocalLoad,
+    //         PluginFrameTime,
+    //     )
+    // );
+    app.add_plugins(pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height));
+    app.add_plugins(pi_bevy_asset::PiAssetPlugin::default());
+    app.add_plugins(PiRenderPlugin::default());
+    app.add_plugins(PluginLocalLoad);
+    app.add_plugins(PluginFrameTime);
             
     app.add_plugins(PluginBundleDefault);
-    app.add_plugins((
-        PluginNodeMaterial,
-        PluginShadowGenerator,
-        PluginShadowMapping,
-    ));
-    app.add_plugins(
-        (
-            PluginCubeBuilder,
-            PluginQuadBuilder,
-            PluginBallBuilder,
-            PluginStateToFile,
-            PluginUnlitMaterial,
-            PluginStandardMaterial,
-        )
-    );
-    app.add_plugins(
-        PluginSceneTimeFromPluginFrame
-    );
-    app.add_plugins(
-        (
-            PluginParticleSystem,
-            pi_gltf2_load::PluginGLTF2Res,
-            pi_trail_renderer::PluginTrail
-        )
-    );
+    // app.add_plugins((
+    //     PluginNodeMaterial,
+    //     PluginShadowGenerator,
+    //     PluginShadowMapping,
+    // ));
+    app.add_plugins(PluginNodeMaterial);
+    app.add_plugins(PluginShadowGenerator);
+    app.add_plugins(PluginShadowMapping);
+    // app.add_plugins(
+    //     (
+    //         PluginCubeBuilder,
+    //         PluginQuadBuilder,
+    //         PluginBallBuilder,
+    //         PluginStateToFile,
+    //         PluginUnlitMaterial,
+    //         PluginStandardMaterial,
+    //     )
+    // );
+    app.add_plugins(PluginCubeBuilder);
+    app.add_plugins(PluginQuadBuilder);
+    app.add_plugins(PluginBallBuilder);
+    app.add_plugins(PluginStateToFile);
+    app.add_plugins(PluginUnlitMaterial);
+    app.add_plugins(PluginStandardMaterial);
+
+    app.add_plugins(PluginSceneTimeFromPluginFrame);
+    // app.add_plugins(
+    //     (
+    //         PluginParticleSystem,
+    //         pi_gltf2_load::PluginGLTF2Res,
+    //         pi_trail_renderer::PluginTrail
+    //     )
+    // );
+    app.add_plugins(PluginParticleSystem);
+    app.add_plugins(pi_gltf2_load::PluginGLTF2Res);
+    app.add_plugins(pi_trail_renderer::PluginTrail);
     
-    app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
-    app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
-    app.insert_resource(SceneShadowLimit(
+    app.world.insert_single_res(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
+    app.world.insert_single_res(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
+    app.world.insert_single_res(SceneShadowLimit(
         ShadowLimitInfo { max_count: 1, max_width: 2048, max_height: 2048, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
     ));
 
     app.add_plugins(copy::PluginImageCopy);
-    app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
+    // app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
-    app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
+    app.world.get_single_res_mut::<StateResource>().unwrap().debug = true;
 
-    app.add_system(Startup, setup_default_mat);
+    app.add_startup_system(Update, setup_default_mat);
     
     app
 }

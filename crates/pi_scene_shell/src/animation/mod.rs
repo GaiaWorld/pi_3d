@@ -11,13 +11,9 @@ mod vec4;
 
 use std::marker::PhantomData;
 
-// use bevy_app::{App, Plugin, Update};
+
 use crate::prelude::FrameDataPrepare;
-// use bevy_ecs::schedule::apply_deferred;
-// use bevy_ecs::{
-//     entity::Entity,
-//     schedule::{apply_deferred, IntoSystemConfigs, IntoSystemSetConfig, SystemSet},
-// };
+
 use pi_world::{prelude::App, schedule::Update, world::Entity};
 use pi_world::prelude::Plugin;
 pub use base::*;

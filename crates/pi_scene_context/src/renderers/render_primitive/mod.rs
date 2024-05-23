@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 
 use super::*;
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct PrimitiveState {
     pub cull: CullMode,
     pub polygon: PolygonMode,

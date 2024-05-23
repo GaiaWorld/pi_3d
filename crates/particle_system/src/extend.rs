@@ -1,4 +1,6 @@
-use pi_scene_shell::prelude::*;
+use pi_render::components;
+use pi_scene_context::pass::pi_world::editor::EntityEditor;
+use pi_scene_shell::{add_component, prelude::*};
 
 use crate::{
     emitter::*,
@@ -11,13 +13,12 @@ use crate::{
 
 pub fn format(
     entity: Entity, 
+    // world: &World,
     // cmds: &mut EntityCommands, 
-    alter1: &mut Alter<(), (), (ParticleCalculatorBase,)>,
-    alter2: &mut Alter<(), (), (ParticleCalculatorStartModifiers,)>,
-    alter3: &mut Alter<(), (), (ParticleCalculatorOverLifetime,)>,
-    alter4: &mut Alter<(), (), (ParticleCalculatorCustomV4,)>,
-    alter5: &mut Alter<(), (), (ParticleCalculatorTrail,)>,
+    editor: &mut EntityEditor,
     config: &IParticleSystemConfig) {
+
+    // let mut components_index = vec![];
     let mut base = ParticleCalculatorBase {
         looping: config.looping == 1,
         prewarm: config.prewarm,
@@ -39,7 +40,9 @@ pub fn format(
     if let Some(render_pivot) = config.render_pivot {
         base.pivot = Vector3::new(render_pivot[0], render_pivot[1], render_pivot[2]);
     }
-    alter1.alter(entity, (base,));
+    // components_index.push((world.init_component()));
+    // alter1.alter(entity, (base,));
+    add_component(editor, entity, base);
 
     let shapeemitter = format_shape(Some(&config.shape));
     let emission = format_emission(config);
@@ -79,8 +82,18 @@ pub fn format(
     parse_float_interpolation(&mut interpolation, &Some(config.gravity.clone()), TParamType::TParamGravity, 1.0, );
     let gravity = ParticleCalculatorGravity(Gravity { interpolation }, Vector3::new(0., -9.8, 0.));
     // cmds.insert(ParticleCalculatorGravity(Gravity { interpolation }, Vector3::new(0., -9.8, 0.)));
-    alter2.alter(entity, /* (base,)); */
-    /* cmds.insert( */(ParticleCalculatorStartModifiers {
+    // alter2.alter(entity, /* (base,)); */
+    // /* cmds.insert( */(ParticleCalculatorStartModifiers {
+    //     emission,
+    //     shapeemitter,
+    //     startcolor,
+    //     startlifetime,
+    //     startrotation,
+    //     startsize,
+    //     startspeed,
+    //     gravity,
+    // },));
+    add_component(editor, entity, ParticleCalculatorStartModifiers {
         emission,
         shapeemitter,
         startcolor,
@@ -89,8 +102,7 @@ pub fn format(
         startsize,
         startspeed,
         gravity,
-    },));
-
+    }).unwrap();
     // VelocityOverLifetime
     let mut velocity = None;
     if let Some(velocity_over_lifetime) = &config.velocity_over_lifetime {
@@ -213,8 +225,24 @@ pub fn format(
         t_sheet.time_mode = texture_sheet.time_mode.clone();
         texturesheet = Some(ParticleCalculatorTextureSheet(t_sheet));
     }
-    alter3.alter(entity, /* components) */
-    /* cmds.insert */(ParticleCalculatorOverLifetime {
+    // alter3.alter(entity, /* components) */
+    // /* cmds.insert */(ParticleCalculatorOverLifetime {
+    //     orbitoffset,
+    //     orbitradial,
+    //     orbitvelocity,
+    //     force,
+    //     size,
+    //     sizebyspeed,
+    //     velocity,
+    //     color,
+    //     colorbyspeed,
+    //     rotation,
+    //     rotationbyspeed,
+    //     speed,
+    //     limitvelocity,
+    //     texturesheet
+    // },));
+    add_component(editor, entity, ParticleCalculatorOverLifetime {
         orbitoffset,
         orbitradial,
         orbitvelocity,
@@ -229,7 +257,7 @@ pub fn format(
         speed,
         limitvelocity,
         texturesheet
-    },));
+    }).unwrap();
     
     // Custom Data V4
     if let Some(custom1) = &(config.custom1) {
@@ -243,7 +271,8 @@ pub fn format(
         parse_float_interpolation(&mut w, &Some(custom1[3].clone()), TParamType::TParamStartLifetime, 1.0);
 
         // cmds.insert(ParticleCalculatorCustomV4 { x, y, z, w });
-        alter4.alter(entity, (ParticleCalculatorCustomV4 { x, y, z, w },));
+        // alter4.alter(entity, (ParticleCalculatorCustomV4 { x, y, z, w },));
+        add_component(editor, entity, ParticleCalculatorCustomV4 { x, y, z, w }).unwrap();
     }
     // Trail
     if let Some(trail) = &(config.trail) {
@@ -282,7 +311,8 @@ pub fn format(
             Some(&trail.color_over_trail),
             TParamType::None,
         );
-        alter5.alter(entity, (ParticleCalculatorTrail (ps_trail),));
+        // alter5.alter(entity, (ParticleCalculatorTrail (ps_trail),));
+        add_component(editor, entity, ParticleCalculatorTrail (ps_trail)).unwrap();
         // cmds.insert(ParticleCalculatorTrail(ps_trail));
     }
 }

@@ -10,13 +10,13 @@ use super::base::DrawList3D;
 #[derive(Clone, Default, Resource)]
 pub struct RendererHasher(pub DefaultHasher);
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component, Default)]
 pub struct RendererEnable(pub bool);
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component, Default)]
 pub struct RendererBlend(pub bool);
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderViewport(pub f32, pub f32, pub f32, pub f32, pub f32, pub f32);
 impl Default for RenderViewport {
     fn default() -> Self {
@@ -29,7 +29,7 @@ impl RenderViewport {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component, Default)]
 pub struct RenderSize(pub(crate) u32, pub(crate) u32);
 impl RenderSize {
     pub fn new(width: u32, height: u32) -> Self {
@@ -39,7 +39,7 @@ impl RenderSize {
     pub fn height(&self) -> u32 { self.1 }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderColorFormat(pub ColorFormat);
 impl Default for RenderColorFormat {
     fn default() -> Self {
@@ -64,7 +64,7 @@ impl RenderColorFormat {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderColorClear(pub u8, pub u8, pub u8, pub u8);
 impl Default for RenderColorClear {
     fn default() -> Self {
@@ -77,7 +77,7 @@ impl RenderColorClear {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderDepthFormat(pub DepthStencilFormat);
 impl Default for RenderDepthFormat {
     fn default() -> Self {
@@ -117,7 +117,7 @@ impl RenderDepthFormat {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderDepthClear(pub f32);
 impl Default for RenderDepthClear {
     fn default() -> Self {
@@ -125,7 +125,7 @@ impl Default for RenderDepthClear {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderStencilClear(pub u32);
 impl Default for RenderStencilClear {
     fn default() -> Self {
@@ -133,7 +133,7 @@ impl Default for RenderStencilClear {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderAutoClearColor(pub bool);
 impl Default for RenderAutoClearColor {
     fn default() -> Self {
@@ -141,7 +141,7 @@ impl Default for RenderAutoClearColor {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderAutoClearDepth(pub bool);
 impl Default for RenderAutoClearDepth {
     fn default() -> Self {
@@ -149,7 +149,7 @@ impl Default for RenderAutoClearDepth {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct RenderAutoClearStencil(pub bool);
 impl Default for RenderAutoClearStencil {
     fn default() -> Self {
@@ -157,7 +157,7 @@ impl Default for RenderAutoClearStencil {
     }
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub enum RenderTargetMode {
     Auto,
     Window,
@@ -169,7 +169,7 @@ impl Default for RenderTargetMode {
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub enum RendererRenderTarget {
     None(Option<Arc<SafeTargetView>>),
     FinalRender,
@@ -224,7 +224,7 @@ impl RendererRenderTarget {
     }
 }
 
-
+#[derive(Component, Default)]
 pub struct Renderer {
     pub ready: bool,
     pub draws: DrawList3D,
@@ -249,7 +249,7 @@ impl Renderer {
     }
 }
 
-#[derive(Clone, Default, )]
+#[derive(Clone, Default, Component)]
 pub struct ViewerRenderersInfo(pub Vec<Entity>, pub Vec<PassTag>);
 impl ViewerRenderersInfo {
     pub fn add(&mut self, renderer: Entity, pass: PassTag) {
@@ -288,7 +288,7 @@ impl ViewerRenderersInfo {
     }
 }
 
-
+#[derive(Debug, Component, Default)]
 pub struct DirtyViewerRenderersInfo;
 
 #[derive(Default, Resource)]

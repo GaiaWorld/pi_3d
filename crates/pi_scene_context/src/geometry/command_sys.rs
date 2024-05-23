@@ -1,6 +1,7 @@
 use std::{hash::{Hash, Hasher}, sync::Arc};
 
-use pi_scene_shell::prelude::*;
+use pi_render::components;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::{self, EntityEditor}, *}};
 
 use crate::{prelude::{RenderGeometryComp, ActionListDisposeCan, ActionListDisposeReadyForRef, OpsDisposeCan, MeshInstanceState}, object::ActionEntity};
 
@@ -32,35 +33,7 @@ pub type SysCreateGeometryBunble = (
 );
 
 pub fn sys_create_geometry(
-    // mut commands: Commands,
-    mut alter0:  Alter<(), (), (GeometryResourceHash, GeometryDesc), SysCreateGeometryBunble>,
-    // mut alter1: Alter<(), (), (GeometryResourceHash,), ()>,
-    mut alter2: Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter3: Alter<(), (), (VertexBufferLayoutsComp, MeshID, RenderGeometryComp), ()>,
-    mut alter4: Alter<(), (), (IndicesBufferDesc,), ()>,
-    mut alter5: Alter<(), (), (), (IndicesBufferDesc,)>,
-    mut alter6: Alter<(), (), (InstancedInfo,), ()>,
-    // mut alter7: Alter<(), (), (GeometryDesc,), ()>,
-    mut alter8: Alter<(), (), (AssetResBufferIndices,), ()>,
-    mut alter9: Alter<(), (), (), (AssetResBufferIndices,)>,
-    
-    mut geocommands0: Alter<(), (), (AssetResVBSlot01, ), ()>,
-    mut geocommands1: Alter<(), (), (AssetDescVBSlot01, ), ()>,
-    mut geocommands2: Alter<(), (), (AssetResVBSlot02, ), ()>,
-    mut geocommands3: Alter<(), (), (AssetDescVBSlot02, ), ()>,
-    mut geocommands4: Alter<(), (), (AssetResVBSlot03, ), ()>,
-    mut geocommands5: Alter<(), (), (AssetDescVBSlot03, ), ()>,
-    mut geocommands6: Alter<(), (), (AssetResVBSlot04, ), ()>,
-    mut geocommands7: Alter<(), (), (AssetDescVBSlot04, ), ()>,
-    mut geocommands8: Alter<(), (), (AssetResVBSlot05, ), ()>,
-    mut geocommands9: Alter<(), (), (AssetDescVBSlot05, ), ()>,
-    mut geocommands10: Alter<(), (), (AssetResVBSlot06, ), ()>,
-    mut geocommands11: Alter<(), (), (AssetDescVBSlot06, ), ()>,
-    mut geocommands12: Alter<(), (), (AssetResVBSlot07, ), ()>,
-    mut geocommands13: Alter<(), (), (AssetDescVBSlot07, ), ()>,
-    mut geocommands14: Alter<(), (), (AssetResVBSlot08, ), ()>,
-    mut geocommands15: Alter<(), (), (AssetDescVBSlot08, ), ()>,
-
+    mut editor: EntityEditor,
     mut meshes: Query<(&mut GeometryID, &MeshInstanceState)>,
     mut cmds: ResMut<ActionListGeometryCreate>,
     mut geoloader: ResMut<GeometryVBLoader>,
@@ -76,7 +49,7 @@ pub fn sys_create_geometry(
             *mesh = GeometryID(entity); insstate
         } else { disposecanlist.push(OpsDisposeCan::ops(entity)); return; };
 
-        if !alter0.get(entity).is_ok() {
+        if !editor.contains_entity(entity) {
             return;
         };
 
@@ -99,7 +72,7 @@ pub fn sys_create_geometry(
         //     vertex_desc.push(VertexBufferDesc::new(KeyVertexBuffer::from(""), VertexBufferDescRange::default(), attrs, true));
         // }
 
-        ActionGeometry::init(entity, &mut alter2,&mut alter3, &mut alter4, &mut alter5, &vertex_desc, indices_desc.clone(), id_mesh);
+        ActionGeometry::init(entity, &mut editor, &vertex_desc, indices_desc.clone(), id_mesh);
 
         let geo_desc = GeometryDesc { list: vertex_desc };
         let mut hasher = DefaultHasher::default();
@@ -136,52 +109,86 @@ pub fn sys_create_geometry(
         //     .remove::<AssetResVBSlot08>()
         //     ;
 
+        let mut index = editor.init_component::<AssetResVBSlot01>();
         let loader = &mut geoloader.loader_01;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot01::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { 
-                geocommands0.alter(entity, (AssetResVBSlot01::from(buff),)); 
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot01::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff {
+                // let index = editor.init_component::<AssetResVBSlot01>();
+                editor.add_components(entity, &[index]);
+                *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot01::from(buff); 
             } else { 
                 loader.request(entity, &desc.key, None, &mut vb_data_map); 
             }
+            index = editor.init_component::<AssetDescVBSlot01>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot01::from(desc); 
 
-            geocommands1.alter(entity,(AssetDescVBSlot01::from(desc),));
+            // editor.add_components(entity,(AssetDescVBSlot01::from(desc),));
         }
         let loader = &mut geoloader.loader_02;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot02::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands2.alter(entity,(AssetResVBSlot02::from(buff),)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands3.alter(entity,(AssetDescVBSlot02::from(desc),));
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot02::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff { index = editor.init_component::<AssetResVBSlot02>(); editor.add_components(entity, &[index]); *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot02::from(buff); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
+            
+            index = editor.init_component::<AssetDescVBSlot02>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot02::from(desc); 
+
+            // editor.add_components(entity,(AssetDescVBSlot02::from(desc),));
         }
         let loader = &mut geoloader.loader_03;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot03::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands4.alter(entity,(AssetResVBSlot03::from(buff),)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands5.alter(entity,(AssetDescVBSlot03::from(desc),));
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot03::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff { index = editor.init_component::<AssetDescVBSlot03>(); editor.add_components(entity, &[index]); *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot03::from(buff); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
+            // editor.add_components(entity,(AssetDescVBSlot03::from(desc),));
+            index = editor.init_component::<AssetDescVBSlot03>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot03::from(desc); 
         }
         let loader = &mut geoloader.loader_04;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot04::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands6.alter(entity,(AssetResVBSlot04::from(buff),)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands7.alter(entity,(AssetDescVBSlot04::from(desc),));
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot04::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff { index = editor.init_component::<AssetDescVBSlot03>(); editor.add_components(entity, &[index]); *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot04::from(buff); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
+            // editor.add_components(entity,(AssetDescVBSlot04::from(desc),));
+            index = editor.init_component::<AssetDescVBSlot04>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot04::from(desc); 
         }
         let loader = &mut geoloader.loader_05;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot05::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands8.alter(entity,(AssetResVBSlot05::from(buff),)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands9.alter(entity,(AssetDescVBSlot05::from(desc),));
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot05::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff { index = editor.init_component::<AssetDescVBSlot03>(); editor.add_components(entity, &[index]); *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot05::from(buff); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
+            index = editor.init_component::<AssetDescVBSlot05>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot05::from(desc); 
+            // editor.add_components(entity,(AssetDescVBSlot05::from(desc),));
         }
         let loader = &mut geoloader.loader_06;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot06::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands10.alter(entity,(AssetResVBSlot06::from(buff),)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands11.alter(entity,(AssetDescVBSlot06::from(desc),));
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot06::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff { index = editor.init_component::<AssetDescVBSlot03>(); editor.add_components(entity, &[index]); *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot06::from(buff); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
+            index = editor.init_component::<AssetDescVBSlot06>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot06::from(desc); 
+            // editor.add_components(entity,(AssetDescVBSlot06::from(desc),));
         }
         let loader = &mut geoloader.loader_07;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot07::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands12.alter(entity,(AssetResVBSlot07::from(buff),)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands13.alter(entity,(AssetDescVBSlot07::from(desc),));
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot07::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff { index = editor.init_component::<AssetDescVBSlot03>(); editor.add_components(entity, &[index]); *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot07::from(buff); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
+            // editor.add_components(entity,(AssetDescVBSlot07::from(desc),));
+            index = editor.init_component::<AssetDescVBSlot07>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot07::from(desc); 
         }
         let loader = &mut geoloader.loader_08;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut alter6,  &mut instanceallocator, AssetDescVBSlot08::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands14.alter(entity,(AssetResVBSlot08::from(buff),)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands15.alter(entity,(AssetDescVBSlot08::from(desc),));
+        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, entity, &mut editor,  &mut instanceallocator, AssetDescVBSlot08::ASK_SLOT_COUNT as usize - 1) {
+            if let Some(buff) = buff { index = editor.init_component::<AssetDescVBSlot03>(); editor.add_components(entity, &[index]); *editor.get_component_unchecked_mut_by_id(entity, index) = AssetResVBSlot08::from(buff); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
+            // editor.add_components(entity,(AssetDescVBSlot08::from(desc),));
+            index = editor.init_component::<AssetDescVBSlot08>();
+            editor.add_components(entity, &[index]);
+            *editor.get_component_unchecked_mut_by_id(entity, index) = AssetDescVBSlot08::from(desc); 
         }
-        alter0.alter(entity, (GeometryResourceHash(hasher.finish()), geo_desc));
+        // editor.add_components(entity, (GeometryResourceHash(hasher.finish()), geo_desc));
+
+        let indexs = [editor.init_component::<GeometryResourceHash>(), editor.init_component::<GeometryDesc>()];
+        editor.add_components(entity, &indexs);
+        *editor.get_component_unchecked_mut_by_id(entity, indexs[0]) = GeometryResourceHash(hasher.finish()); 
+        *editor.get_component_unchecked_mut_by_id(entity, indexs[1]) = geo_desc; 
         // init_slot::<AssetDescVBSlot01, AssetResVBSlot01>(entity, &geo_desc, &mut geoloader.loader_01,  &mut vb_data_map, &asset_mgr, &mut geocommands,   &mut instanceallocator);
         // init_slot::<AssetDescVBSlot02, AssetResVBSlot02>(entity, &geo_desc, &mut geoloader.loader_02,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
         // init_slot::<AssetDescVBSlot03, AssetResVBSlot03>(entity, &geo_desc, &mut geoloader.loader_03,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
@@ -204,12 +211,12 @@ pub fn sys_create_geometry(
         if let Some(indices_desc) = indices_desc {
             if let Some(data) = asset_mgr.get(&indices_desc.buffer.asset_u64()) {
                 // log::warn!("Indice Buffer Ok!");
-                alter8.alter(entity,(AssetResBufferIndices::from(EVerticesBufferUsage::Other(data)),));
+                add_component(&mut editor, entity,AssetResBufferIndices::from(EVerticesBufferUsage::Other(data)));
             } else {
                 geoloader.loader_indices.request(entity, &indices_desc.buffer, None, &mut vb_data_map);
             }
         } else {
-            alter9.alter(entity, ());
+            editor.destroy(entity);
         }
     });
 }
@@ -242,27 +249,31 @@ pub struct ActionGeometry;
 impl ActionGeometry {
     pub fn init(
         entity: Entity,  
-        alter0: &mut Alter<(), (), (DisposeReady, DisposeCan)>,
-        alter1: &mut Alter<(), (), (VertexBufferLayoutsComp, MeshID, RenderGeometryComp)>,
-        alter2: &mut Alter<(), (), (IndicesBufferDesc,)>,
-        alter3: &mut Alter<(), (), (), (IndicesBufferDesc,)>,
-        // cmds: &mut EntityCommands,
+        editor: &mut EntityEditor,
         vertex_desc: &Vec<VertexBufferDesc>,
         indices_desc: Option<IndicesBufferDesc>,
         id_mesh: Entity,
     ) {
         // log::warn!("{:?}", vertex_desc);
-        ActionEntity::init(entity, alter0);
-        let _ = alter1.alter(entity, 
-            (
-                VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)),
-                MeshID(id_mesh),
-                RenderGeometryComp::default()
-            ));
+        ActionEntity::init(entity, editor);
+        let mut components = vec![
+            editor.init_component::<VertexBufferLayoutsComp>(),
+            editor.init_component::<MeshID>(),
+            editor.init_component::<RenderGeometryComp>(),
+        ];
+        let _ = editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc));
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = MeshID(id_mesh);
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RenderGeometryComp::default();
+   
+        let index = editor.init_component::<IndicesBufferDesc>();
         if let Some(indices_desc) = indices_desc {
-            alter2.alter(entity, (indices_desc,));
+            // let _ = editor.add_components(entity, &[index]);
+            add_component(editor, entity, indices_desc).unwrap();
+            // *editor.get_component_unchecked_mut_by_id(entity, index) = indices_desc;
         } else {
-            alter3.alter(entity, ());
+            editor.remove_components(entity, &[index]);
         }
     }
 }
@@ -279,7 +290,7 @@ fn init_slot
     vb_data_map: &mut SingleVertexBufferDataMap,
     asset_mgr: &ShareAssetMgr<EVertexBufferRange>,
     entity: Entity,  
-    alter0: &mut Alter<(), (), (InstancedInfo, )>,
+    editor: &mut EntityEditor,
     // commands: &mut EntityCommands,
     instanceallocator: &mut InstanceBufferAllocator,
     // instancestate: u32,
@@ -303,7 +314,7 @@ fn init_slot
             let data = instanceallocator.instance_initial_buffer();
             buffer = Some(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2))));
             // commands.insert(D1::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))));
-            alter0.alter(entity, (info,));
+            add_component(editor, entity, info).unwrap();
         }
         // commands.insert(D::from(desc));
         Some((desc, buffer))

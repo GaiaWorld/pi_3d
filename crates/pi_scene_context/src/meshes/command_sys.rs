@@ -1,5 +1,6 @@
 
-use pi_scene_shell::prelude::*;
+use pi_render::components;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::{self, EntityEditor}, *}};
 
 use crate::{
     cullings::prelude::*, flags::Enable, geometry::{
@@ -18,21 +19,7 @@ use crate::prelude::*;
 pub fn sys_create_mesh(
     mut cmds: ResMut<ActionListMeshCreate>,
     // mut commands: Commands,
-    mut insert: Insert<()>,
-    mut alter1: Alter<(), (), (DisposeReady, DisposeCan),>,
-    mut alter2: Alter<(), (), (SceneID,)>,
-    mut alter3: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-    mut alter4: Alter<(), (), ActionTransformNodeBundle>,
-    mut alter6: Alter<(), (), (InstanceSourceRefs, DirtyInstanceSourceRefs, DirtyInstanceSourceForSingleBuffer)>,
-    mut alter7: Alter<(), (), (TargetAnimatorableIsRunning, InstanceAttributeAnimated)>,
-    mut alter8: Alter<(), (), (BindModel, ModelStatic)>,
-    mut alter9: Alter<(), (), (BindModel,)>,
-    mut alter10: Alter<(), (), ActionMeshInitBundle>,
-    mut alter11: Alter<(), (), (DisposeReady, DisposeCan)>,
-    mut alter12: Alter<(), (), ActionPassObjectInitBundle>, 
-    mut alter13: Alter<(), (), (PassTag,), ()>,
-    mut alter14: Alter<(), (), ActionMeshBundle>,
-    mut alter15: Alter<(), (), (PassIDs,), ()>,
+    mut editor: EntityEditor,
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
@@ -42,7 +29,7 @@ pub fn sys_create_mesh(
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
-        if ActionMesh::init(&mut insert, &mut alter1, &mut alter2, &mut alter3, &mut alter4, &mut alter6, &mut alter7, &mut alter8, &mut alter9, &mut alter10, &mut alter11, &mut alter12, &mut alter13, &mut alter14, &mut alter15, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
+        if ActionMesh::init(&mut editor, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
     });
@@ -50,12 +37,7 @@ pub fn sys_create_mesh(
 
 pub fn sys_create_instanced_mesh(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
-    mut commands: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated), ()>,
-    mut alter1: Alter<(), (), (DisposeReady, DisposeCan)>,
-    mut alter2: Alter<(), (), (SceneID, )>,
-    mut alter3: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-    mut alter4: Alter<(), (), ActionTransformNodeBundle>,
-    mut alter5: Alter<(), (), ActionInstanceMeshBundle>,
+    mut editor: EntityEditor,
     mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &ModelInstanceAttributes)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, count)| {
@@ -63,10 +45,15 @@ pub fn sys_create_instanced_mesh(
 
             let instanceattrs = instanceattrs.clone();
 
-            if  commands.get(instance).is_ok() {
-                let _ = commands.alter(instance, (instanceattrs, TargetAnimatorableIsRunning, InstanceAttributeAnimated::default()));
+            if  editor.contains_entity(instance) {
+                let components: [pi_world::world::ComponentIndex; 3] = [editor.init_component::<ModelInstanceAttributes>(), editor.init_component::<TargetAnimatorableIsRunning>(), editor.init_component::<InstanceAttributeAnimated>(),];
+                editor.add_components(instance, &components);
+                *editor.get_component_unchecked_mut_by_id(instance, components[0]) = instanceattrs;
+                *editor.get_component_unchecked_mut_by_id(instance, components[1]) = TargetAnimatorableIsRunning;
+                *editor.get_component_unchecked_mut_by_id(instance, components[2]) = InstanceAttributeAnimated::default();
+                // let _ = editor.alter(instance, (instanceattrs, TargetAnimatorableIsRunning, InstanceAttributeAnimated::default()));
                 // commands.insert(TargetAnimatorableIsRunning).insert(InstanceAttributeAnimated::default());
-                ActionInstanceMesh::init(instance, &mut alter1, &mut alter2, &mut alter3, &mut alter4, &mut alter5, source, id_scene.0);
+                ActionInstanceMesh::init(instance, &mut editor, source, id_scene.0);
     
                 instancelist.insert(instance);
                 *flag = DirtyInstanceSourceRefs;
@@ -327,22 +314,7 @@ pub type ActionMeshBundle = (
 pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
-        // commands: &mut Commands,
-        insert: &mut Insert<()>,
-        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan),>,
-        alter2: &mut Alter<(), (), (SceneID,)>,
-        alter3: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-        alter4: &mut Alter<(), (), ActionTransformNodeBundle>,
-        alter6: &mut Alter<(), (), (InstanceSourceRefs, DirtyInstanceSourceRefs, DirtyInstanceSourceForSingleBuffer)>,
-        alter7: &mut Alter<(), (), (TargetAnimatorableIsRunning, InstanceAttributeAnimated)>,
-        alter8: &mut Alter<(), (), (BindModel, ModelStatic)>,
-        alter9: &mut Alter<(), (), (BindModel,)>,
-        alter10: &mut Alter<(), (), ActionMeshInitBundle>,
-        alter11: &mut Alter<(), (), (DisposeReady, DisposeCan)>,
-        alter12: &mut Alter<(), (), ActionPassObjectInitBundle>, 
-        alter13: &mut Alter<(), (), (PassTag,), ()>,
-        alter14: &mut Alter<(), (), ActionMeshBundle>,
-        alter15: &mut Alter<(), (), (PassIDs,), ()>,
+        editor: &mut EntityEditor,
         entity: Entity,
         scene: Entity,
         allocator: &mut ResBindBufferAllocator,
@@ -352,7 +324,7 @@ impl ActionMesh {
         commonbindmodel: &CommonBindModel,
     ) -> bool {
         let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
-        if alter1.get(entity).is_err() 
+        if !editor.contains_entity(entity) 
         //  {
         //     cmd
         // } else 
@@ -360,62 +332,87 @@ impl ActionMesh {
             return false;
         };
 
-        ActionTransformNode::init(entity, alter1, alter2, alter3, alter4, scene);
-        ActionMesh::as_mesh(entity, alter14, empty.id());
-        ActionMesh::as_instance_source(entity, alter6);
+        ActionTransformNode::init(entity, editor, scene);
+        ActionMesh::as_mesh(entity, editor, empty.id());
+        ActionMesh::as_instance_source(entity, editor);
         // ActionMesh::as_instance_source(&mut entitycmd);
-        alter7.alter(entity, (TargetAnimatorableIsRunning, InstanceAttributeAnimated::default()));
+        let components = [editor.init_component::<TargetAnimatorableIsRunning>(), editor.init_component::<InstanceAttributeAnimated>()];
+        editor.add_components(entity, &components);
+        // editor.get_component_unchecked_mut_by_id(entity, components[0]) = TargetAnimatorableIsRunning;
+        // editor.add_components(entity, (TargetAnimatorableIsRunning, InstanceAttributeAnimated::default()));
 
         if meshinstanceattributes.bytes().len() > 0 {
-            alter8.alter(entity, (commonbindmodel.0.clone(), ModelStatic));
+            let components = [editor.init_component::<BindModel>(), editor.init_component::<ModelStatic>()];
+            editor.add_components(entity, &components);
+
+            // editor.add_components(entity, (commonbindmodel.0.clone(), ModelStatic));
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = commonbindmodel.0.clone();
             // entitycmd.insert(ModelStatic);
         } else {
             if let Some(bind) = BindModel::new(allocator) {
                 // log::info!("BindModel New");
-                alter9.alter(entity, (bind,));
+                add_component(editor, entity, bind);
+                // editor.add_components(entity, (bind,));
             }
         }
-        let _ = alter10.alter(
-            entity, 
-        (
-            MeshLightingMode::default(),
-            ModelLightingIndexs::new(allocator, lightlimit),
-            ModelForcePointLightings::default(),
-            ModelForceSpotLightings::default(),
-            ModelForceHemiLightings::default(),
+        let components = [
+            editor.init_component::<MeshLightingMode>(),
+            editor.init_component::<ModelLightingIndexs>(),
+            editor.init_component::<ModelForcePointLightings>(),
+            editor.init_component::<ModelForceSpotLightings>(),
+            editor.init_component::<ModelForceHemiLightings>(),
             // ModelPointLightingDirty::default());
             // ModelSpotLightingDirty::default());
             // ModelHemiLightingDirty::default());
 
-            MeshStates::default(),
-            DirtyMeshStates,
+            editor.init_component::<MeshStates>(),
+            editor.init_component::<DirtyMeshStates>(),
 
-            meshinstanceattributes,
-            state
-        ));
+            editor.init_component::<ModelInstanceAttributes>(),
+            editor.init_component::<MeshInstanceState>(),
+        ];
+        let _ = editor.add_components(
+            entity, &components); 
+        // (
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =   MeshLightingMode::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =  ModelLightingIndexs::new(allocator, lightlimit);
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =ModelForcePointLightings::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =ModelForceSpotLightings::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =ModelForceHemiLightings::default();
+            // ModelPointLightingDirty::default());
+            // ModelSpotLightingDirty::default());
+            // ModelHemiLightingDirty::default());
 
-        let id01 = insert.insert(());
-        let id02 = insert.insert(());
-        let id03 = insert.insert(());
-        let id04 = insert.insert(());
-        let id05 = insert.insert(());
-        let id06 = insert.insert(());
-        let id07 = insert.insert(());
-        let id08 = insert.insert(());
-        let _ = alter15.alter(entity, (PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]),));
-        create_passobj(alter11, alter12, alter13, id01, entity, scene, empty.id(), PassTag::PASS_TAG_01);
-        create_passobj(alter11, alter12, alter13, id02, entity, scene, empty.id(), PassTag::PASS_TAG_02);
-        create_passobj(alter11, alter12, alter13, id03, entity, scene, empty.id(), PassTag::PASS_TAG_03);
-        create_passobj(alter11, alter12, alter13, id04, entity, scene, empty.id(), PassTag::PASS_TAG_04);
-        create_passobj(alter11, alter12, alter13, id05, entity, scene, empty.id(), PassTag::PASS_TAG_05);
-        create_passobj(alter11, alter12, alter13, id06, entity, scene, empty.id(), PassTag::PASS_TAG_06);
-        create_passobj(alter11, alter12, alter13, id07, entity, scene, empty.id(), PassTag::PASS_TAG_07);
-        create_passobj(alter11, alter12, alter13, id08, entity, scene, empty.id(), PassTag::PASS_TAG_08);
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =   MeshStates::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =   DirtyMeshStates;
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[7]) =  meshinstanceattributes;
+        *editor.get_component_unchecked_mut_by_id(entity, components[8]) =   state;
+
+
+        let id01 = editor.alloc_entity();
+        let id02 = editor.alloc_entity();
+        let id03 = editor.alloc_entity();
+        let id04 = editor.alloc_entity();
+        let id05 = editor.alloc_entity();
+        let id06 = editor.alloc_entity();
+        let id07 = editor.alloc_entity();
+        let id08 = editor.alloc_entity();
+        add_component(editor, entity, PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]));
+        // let _ = editor.alter(entity, (PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]),));
+        create_passobj(editor, id01, entity, scene, empty.id(), PassTag::PASS_TAG_01);
+        create_passobj(editor, id02, entity, scene, empty.id(), PassTag::PASS_TAG_02);
+        create_passobj(editor, id03, entity, scene, empty.id(), PassTag::PASS_TAG_03);
+        create_passobj(editor, id04, entity, scene, empty.id(), PassTag::PASS_TAG_04);
+        create_passobj(editor, id05, entity, scene, empty.id(), PassTag::PASS_TAG_05);
+        create_passobj(editor, id06, entity, scene, empty.id(), PassTag::PASS_TAG_06);
+        create_passobj(editor, id07, entity, scene, empty.id(), PassTag::PASS_TAG_07);
+        create_passobj(editor, id08, entity, scene, empty.id(), PassTag::PASS_TAG_08);
         return true;
     }
     pub(crate) fn as_mesh(
         entity: Entity,
-        commands: &mut Alter<(), (), ActionMeshBundle>,
+        editor: &mut EntityEditor,
         geometry: Entity,
     ) {
         // let mut unclipdepth = false;
@@ -425,23 +422,70 @@ impl ActionMesh {
         // }
         let unclipdepth = false;
 
-        commands.alter(entity, 
-            (AbstructMesh,
-            Mesh,
-            GeometryID(geometry),
-            RenderGeometryEable(false),
-            RenderWorldMatrix(Matrix::identity()),
-            RenderWorldMatrixInv(Matrix::identity()),
-            RenderMatrixDirty(true),
-            MeshCastShadow(false),
-            MeshReceiveShadow(false),
-            PassDirtyBindEffectValue(0),
-            FlagPassDirtyBindEffectValue,
-            PassDirtyBindEffectTextures(0),
-            FlagPassDirtyBindEffectTextures,
-            LayerMask::default(),
-            AbstructMeshCullingFlag(false),
-            TransparentSortParam::opaque(),
+        let components = [
+            editor.init_component::<AbstructMesh>(),
+            editor.init_component::<    Mesh>(),
+            editor.init_component::<    GeometryID>(),
+            editor.init_component::<    RenderGeometryEable>(),
+            editor.init_component::<    RenderWorldMatrix>(),
+            editor.init_component::<    RenderWorldMatrixInv>(),
+            editor.init_component::<    RenderMatrixDirty>(),
+            editor.init_component::<    MeshCastShadow>(),
+            editor.init_component::<    MeshReceiveShadow>(),
+            editor.init_component::<    PassDirtyBindEffectValue>(),
+            editor.init_component::<    FlagPassDirtyBindEffectValue>(),
+            editor.init_component::<    PassDirtyBindEffectTextures>(),
+            editor.init_component::<    FlagPassDirtyBindEffectTextures>(),
+            editor.init_component::<    LayerMask>(),
+            editor.init_component::<    AbstructMeshCullingFlag>(),
+            editor.init_component::<    TransparentSortParam>(),
+    
+                // CCullMode(CullMode::Back))
+                // CFrontFace(FrontFace::Ccw))
+                // CPolygonMode(PolygonMode::Fill))
+                // Topology(PrimitiveTopology::TriangleList))
+                // CUnClipDepth(unclipdepth))
+                // PrimitiveState { cull: CullMode::Back, frontface: FrontFace::Ccw, polygon: PolygonMode::Fill, topology: PrimitiveTopology::TriangleList, unclip_depth: unclipdepth })
+    
+                // DepthWrite::default())
+                // DepthCompare::default())
+                // DepthBias::default())
+                // StencilFront::default())
+                // StencilBack::default())
+                // StencilRead::default())
+                // StencilWrite::default())
+    
+                // ModelBlend::default())
+    
+            editor.init_component::<    BindSkinValue>(),
+            editor.init_component::<    ModelVelocity>(),
+            editor.init_component::<    RenderAlignment>(),
+            editor.init_component::<    ScalingMode>(),
+            editor.init_component::<    IndiceRenderRange>(),
+            editor.init_component::<    RecordIndiceRenderRange>(),
+            editor.init_component::<    VertexRenderRange>(),
+            editor.init_component::<    GeometryBounding>(),
+            editor.init_component::<    GeometryCullingMode>(),
+            editor.init_component::<    InstancedMeshTransparentSortCollection>(),
+        ];
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =    AbstructMesh;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =     Mesh;
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =    GeometryID(geometry);
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =    RenderGeometryEable(false);
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =    RenderWorldMatrix(Matrix::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =    RenderWorldMatrixInv(Matrix::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =    RenderMatrixDirty(true);
+        *editor.get_component_unchecked_mut_by_id(entity, components[7]) =    MeshCastShadow(false);
+        *editor.get_component_unchecked_mut_by_id(entity, components[8]) =    MeshReceiveShadow(false);
+        *editor.get_component_unchecked_mut_by_id(entity, components[9]) =    PassDirtyBindEffectValue(0);
+        *editor.get_component_unchecked_mut_by_id(entity, components[10]) =    FlagPassDirtyBindEffectValue;
+        *editor.get_component_unchecked_mut_by_id(entity, components[11]) =    PassDirtyBindEffectTextures(0);
+        *editor.get_component_unchecked_mut_by_id(entity, components[12]) =    FlagPassDirtyBindEffectTextures;
+        *editor.get_component_unchecked_mut_by_id(entity, components[13]) =    LayerMask::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[14]) =    AbstructMeshCullingFlag(false);
+        *editor.get_component_unchecked_mut_by_id(entity, components[15]) =    TransparentSortParam::opaque();
 
             // CCullMode(CullMode::Back))
             // CFrontFace(FrontFace::Ccw))
@@ -460,17 +504,17 @@ impl ActionMesh {
 
             // ModelBlend::default())
 
-            BindSkinValue(None),
-            ModelVelocity::default(),
-            RenderAlignment::default(),
-            ScalingMode::default(),
-            IndiceRenderRange::default(),
-            RecordIndiceRenderRange::default(),
-            VertexRenderRange::default(),
-            GeometryBounding::default(),
-            GeometryCullingMode::default(),
-            InstancedMeshTransparentSortCollection(vec![]))
-            );
+           *editor.get_component_unchecked_mut_by_id(entity, components[16]) =    BindSkinValue(None);
+           *editor.get_component_unchecked_mut_by_id(entity, components[17]) =    ModelVelocity::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[18]) =    RenderAlignment::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[19]) =    ScalingMode::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[20]) =    IndiceRenderRange::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[21]) =    RecordIndiceRenderRange::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[22]) =    VertexRenderRange::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[23]) =    GeometryBounding::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[24]) =    GeometryCullingMode::default();
+           *editor.get_component_unchecked_mut_by_id(entity, components[25]) =    InstancedMeshTransparentSortCollection(vec![]);
+
     }
 
     pub fn modify(
@@ -483,13 +527,19 @@ impl ActionMesh {
 
     pub fn as_instance_source(
         entity: Entity,
-        commands: &mut Alter<(), (), (InstanceSourceRefs, DirtyInstanceSourceRefs, DirtyInstanceSourceForSingleBuffer), ()>,
+        editor: &mut EntityEditor,
     ) {
-        commands.alter(entity, 
-           (InstanceSourceRefs::default(),
-            DirtyInstanceSourceRefs::default(),
-            DirtyInstanceSourceForSingleBuffer::default())
-        );
+        let components = [
+            editor.init_component::<InstanceSourceRefs>(),
+            editor.init_component::<DirtyInstanceSourceRefs>(),
+            editor.init_component::<DirtyInstanceSourceForSingleBuffer>(),];
+
+        editor.add_components(entity, &components);
+        // (
+        //     InstanceSourceRefs::default(),
+        //     DirtyInstanceSourceRefs::default(),
+        //     DirtyInstanceSourceForSingleBuffer::default())
+        // );
     }
 }
 
@@ -511,44 +561,55 @@ impl ActionInstanceMesh {
     pub fn init(
         // commands: &mut EntityCommands,
         entity: Entity,  
-        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan)>,
-        alter2: &mut Alter<(), (), (SceneID, )>,
-        alter3: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-        alter4: &mut Alter<(), (), ActionTransformNodeBundle>,
-        alter5: &mut Alter<(), (), ActionInstanceMeshBundle>,
+        editor: &mut EntityEditor,
         source: Entity,
         scene: Entity,
     ) {
-        ActionTransformNode::init(entity, alter1, alter2, alter3, alter4, scene);
-        ActionInstanceMesh::as_instance(entity, alter5, source);
+        ActionTransformNode::init(entity, editor, scene);
+        ActionInstanceMesh::as_instance(entity, editor, source);
     }
     pub(crate) fn as_instance(
         entity: Entity,
-        commands: &mut Alter<(), (), ActionInstanceMeshBundle, ()>,
+        editor: &mut EntityEditor,
         source: Entity,
     ) {
-        let _ = commands.alter(entity, 
-        (
-            AbstructMesh,
-            AbstructMeshCullingFlag(false),
-            InstanceTransparentIndex(0),
-            InstanceMesh(source),
+        let components = [
 
-            RenderMatrixDirty(true),
-            RenderWorldMatrix(Matrix::identity()),
-            RenderWorldMatrixInv(Matrix::identity()),
-            ModelVelocity::default(),
-            ScalingMode::default(),
-            GeometryBounding::default(),
-            GeometryCullingMode::default() )
-        );
+            editor.init_component::<AbstructMesh>(),
+            editor.init_component::<AbstructMeshCullingFlag>(),
+            editor.init_component::<InstanceTransparentIndex>(),
+            editor.init_component::<InstanceMesh>(),
+
+            editor.init_component::<RenderMatrixDirty>(),
+            editor.init_component::<RenderWorldMatrix>(),
+            editor.init_component::<RenderWorldMatrixInv>(),
+            editor.init_component::<ModelVelocity>(),
+            editor.init_component::<ScalingMode>(),
+            editor.init_component::<GeometryBounding>(),
+            editor.init_component::<GeometryCullingMode>(),
+            ];
+        
+        let _ = editor.add_components(entity, &components);
+        
+        
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = AbstructMesh;
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = AbstructMeshCullingFlag(false);
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = InstanceTransparentIndex(0);
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = InstanceMesh(source);
+
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = RenderMatrixDirty(true);
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = RenderWorldMatrix(Matrix::identity());
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = RenderWorldMatrixInv(Matrix::identity());
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ModelVelocity::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ScalingMode::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = GeometryBounding::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = GeometryCullingMode::default() ;
+        
     }
 }
 
 fn create_passobj(
-    alter0: &mut Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    alter1: &mut Alter<(), (), ActionPassObjectInitBundle, ()>, 
-    alter2: &mut Alter<(), (), (PassTag,), ()>,
+    editor: &mut EntityEditor,
     id: Entity,
     idmodel: Entity,
     scene: Entity,
@@ -556,6 +617,6 @@ fn create_passobj(
     tag: PassTag,
 ) {
     // let mut entitycmd = commands.entity(id);
-    ActionEntity::init(id,  alter0); ActionPassObject::init(id, alter1, empty, idmodel, scene);
-    alter2.alter(id, (tag,));
+    ActionEntity::init(id,  editor); ActionPassObject::init(id, editor, empty, idmodel, scene);
+    add_component(editor, id, tag);
 }

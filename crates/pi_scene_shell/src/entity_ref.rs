@@ -3,13 +3,14 @@ use std::{marker::PhantomData, collections::hash_set::Iter};
 
 use pi_hash::XHashSet;
 use pi_world::world::Entity;
+use pi_world_macros::Component;
 
 pub trait TEntityRef {
     fn id(&self) -> Entity;
 }
 
-
-pub struct EntityRefInfo<F: Default + Clone > {
+#[derive(Debug, Component)]
+pub struct EntityRefInfo<F: Default + Clone + 'static > {
     refs: XHashSet<Entity>,
     pub dirty: bool,
     pub request_dispose: bool,

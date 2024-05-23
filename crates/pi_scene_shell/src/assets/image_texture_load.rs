@@ -1,13 +1,8 @@
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
-// use bevy_app::{Update, App, Plugin};
+
 use crate::prelude::*;
-// use bevy_ecs::{
-//     entity::{self, Entity},
-//     query::Changed,
-//     schedule::{IntoSystemConfigs, IntoSystemSetConfig, SystemSet},
-//     system::{Query, Res, ResMut, Resource},
-// };
+
 use crossbeam::queue::SegQueue;
 use pi_assets::{
     asset::Handle,

@@ -6,24 +6,24 @@ use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera
 use crate::viewer::prelude::*;
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component)]
 pub struct Camera(pub bool);
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default, Component)]
 pub enum EFixedMode {
     #[default]
     VerticalFixed,
     HorizontalFixed,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default, Component)]
 pub enum EFreeCameraMode {
     #[default]
     Perspective,
     Orthograhic,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component)]
 pub struct CameraNearFar(pub Number, pub Number);
 impl Default for CameraNearFar {
     fn default() -> Self {
@@ -31,7 +31,7 @@ impl Default for CameraNearFar {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component)]
 pub struct CameraOrthograhicParam {
     pub left: Number,
     pub right: Number,
@@ -44,7 +44,7 @@ impl Default for CameraOrthograhicParam {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Component)]
 pub struct RecordCameraFov(pub CameraFov);
 impl TAnimatableCompRecord<CameraFov> for RecordCameraFov {
     fn comp(&self) -> CameraFov {
@@ -52,7 +52,7 @@ impl TAnimatableCompRecord<CameraFov> for RecordCameraFov {
     }
 }
 
-#[derive(Clone, Copy, Deref, DerefMut)]
+#[derive(Clone, Copy, Deref, DerefMut, Component)]
 pub struct CameraFov(pub Number);
 impl pi_curves::curve::frame::FrameDataValue for CameraFov {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -96,7 +96,7 @@ impl TAssetCapacity for CameraFov {
 impl TAnimatableComp for CameraFov {}
 
 
-#[derive(Clone, Copy,  Default)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct RecordCameraOrthSize(pub CameraOrthSize);
 impl TAnimatableCompRecord<CameraOrthSize> for RecordCameraOrthSize {
     fn comp(&self) -> CameraOrthSize {
@@ -104,7 +104,7 @@ impl TAnimatableCompRecord<CameraOrthSize> for RecordCameraOrthSize {
     }
 }
 
-#[derive(Clone, Copy,  Deref, DerefMut)]
+#[derive(Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraOrthSize(pub Number);
 impl pi_curves::curve::frame::FrameDataValue for CameraOrthSize {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -147,7 +147,7 @@ impl TAssetCapacity for CameraOrthSize {
 }
 impl TAnimatableComp for CameraOrthSize {}
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct CameraParam {
     pub up: Vector3,
     pub nearfar: CameraNearFar,

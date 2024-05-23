@@ -1,7 +1,6 @@
 
 
-// use bevy_ecs::prelude::*;
-// use bevy_app::prelude::{Plugin, Update};
+
 use pi_bevy_render_plugin::{PiRenderSystemSet, FrameState, should_run};
 use pi_world::schedule::Update;
 use pi_world::schedule_config::{IntoSystemConfigs, SystemSet};

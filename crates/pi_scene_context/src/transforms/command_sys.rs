@@ -1,5 +1,7 @@
 // use std::f32::consts::E;
 
+use pi_scene_shell::add_component;
+use pi_scene_shell::prelude::pi_world::editor::EntityEditor;
 use pi_scene_shell::prelude::*;
 
 use crate::flags::*;
@@ -11,17 +13,14 @@ use super::transform_node::*;
 
 pub fn sys_create_transform_node(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
-    // mut commands: Commands,
-    mut alter1: Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter2: Alter<(),(),(SceneID, ), ()>,
-    mut alter3: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
-    mut alter4: Alter<(), (), ActionTransformNodeBundle>,
-    mut alter5: Alter<(), (), (TransformNode,), ()>,
+    mut editor: EntityEditor,
+   
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity)| {
-        let mut transformnode = if alter1.get(entity).is_ok() {
-            let _ = ActionTransformNode::init(entity, &mut alter1, &mut alter2, &mut alter3, &mut alter4, scene);
-            let _ = alter5.alter(entity, (TransformNode,));
+        let mut transformnode = if editor.contains_entity(entity) {
+            let _ = ActionTransformNode::init(entity, &mut editor, scene);
+            add_component(&mut editor, entity, TransformNode).unwrap();
+            // let _ = alter5.alter(entity, (TransformNode,));
         } else {
             return;
         };
@@ -122,53 +121,84 @@ pub type ActionTransformNodeBundle = (
 pub struct ActionTransformNode;
 impl ActionTransformNode {
     pub fn init(
-        // transformnode: &mut EntityCommands,
-        entity: Entity,  
-        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan)>,
-        alter2: &mut Alter<(), (), (SceneID,)>,
-        alter3: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-        alter4: &mut Alter<(), (), ActionTransformNodeBundle>,
+        entity: Entity, 
+        editor: &mut EntityEditor,
         scene: Entity,
     ) {
-        ActionEntity::init(entity, alter1);
-        ActionScene::add_to_scene(entity, alter2, scene);
-        ActionTransformNode::init_for_tree(entity, alter3);
-        ActionTransformNode::as_transform_node(entity, alter4);
+        ActionEntity::init(entity, editor);
+        ActionScene::add_to_scene(entity, editor, scene);
+        ActionTransformNode::init_for_tree(entity, editor);
+        ActionTransformNode::as_transform_node(entity, editor);
     }
     fn as_transform_node(
         entity: Entity,
-        commands: &mut Alter<(), (), ActionTransformNodeBundle>,
+        editor: &mut EntityEditor,
     ) {
-        commands.alter(entity,
-           (TransformNodeDirty,
-            LocalPosition::default(),
-            LocalScaling::default(),
-            LocalRotationQuaternion::default(),
-            LocalEulerAngles::default(),
-            RecordLocalPosition::default(),
-            RecordLocalScaling::default(),
-            RecordLocalRotationQuaternion::default(),
-            RecordLocalEulerAngles::default(),
-            LocalRotation(Rotation3::identity()),
-            LocalMatrix::new(Matrix::identity()),
-            GlobalMatrix::default(),
-            AbsoluteTransform::default(),
-            FlagAnimationStartResetComp,
-            CullingFlag(true))
-        );
+        let components = [
+            editor.init_component::<TransformNodeDirty>(),
+            editor.init_component::<LocalPosition>(),
+            editor.init_component::<LocalScaling>(),
+            editor.init_component::<LocalRotationQuaternion>(),
+            editor.init_component::<LocalEulerAngles>(),
+            editor.init_component::<RecordLocalPosition>(),
+            editor.init_component::<RecordLocalScaling>(),
+            editor.init_component::<RecordLocalRotationQuaternion>(),
+            editor.init_component::<RecordLocalEulerAngles>(),
+            editor.init_component::<LocalRotation>(),
+            editor.init_component::<LocalMatrix>(),
+            editor.init_component::<GlobalMatrix>(),
+            editor.init_component::<AbsoluteTransform>(),
+            editor.init_component::<FlagAnimationStartResetComp>(),
+            editor.init_component::<CullingFlag>(),
+        ];
+        editor.add_components(entity, &components).unwrap();
+        // commands.alter(entity,
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) =TransformNodeDirty;
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) =LocalPosition::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) =LocalScaling::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[3]) =LocalRotationQuaternion::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[4]) =LocalEulerAngles::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[5]) =RecordLocalPosition::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[6]) =RecordLocalScaling::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[7]) =RecordLocalRotationQuaternion::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[8]) =RecordLocalEulerAngles::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[9]) =LocalRotation(Rotation3::identity());
+            *editor.get_component_unchecked_mut_by_id(entity, components[10]) =LocalMatrix::new(Matrix::identity());
+            *editor.get_component_unchecked_mut_by_id(entity, components[11]) =GlobalMatrix::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[12]) =AbsoluteTransform::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[13]) =FlagAnimationStartResetComp;
+            *editor.get_component_unchecked_mut_by_id(entity, components[14]) =CullingFlag(true);
+        // )
     }
 
     pub(crate) fn init_for_tree(
         entity: Entity,
-        commands: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable), ()>,
+        editor: &mut EntityEditor,
     ) {
         // log::debug!("init_for_tree====={:?}", commands.id());
-        commands
-            .alter(entity, (Down::default(), Up::default(), Layer::default(),
-            // .insert(NodeChilds::default())
-            // .insert(NodeParent(None))
-            Enable::default(), RecordEnable::default(), GlobalEnable(true))
-        );
+        let components = [
+            editor.init_component::<Down>(),
+            editor.init_component::<Up>(),
+            editor.init_component::<Layer>(),
+            editor.init_component::<Enable>(),
+            editor.init_component::<RecordEnable>(),
+            editor.init_component::<GlobalEnable>(),
+        ];
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =Down::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = Up::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = Layer::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = Enable::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) = RecordEnable::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) = GlobalEnable(true);
+
+        // commands
+        //     .alter(entity, (Down::default(), Up::default(), Layer::default(),
+        //     // .insert(NodeChilds::default())
+        //     // .insert(NodeParent(None))
+        //     Enable::default(), RecordEnable::default(), GlobalEnable(true))
+        // );
     }
 
     pub(crate) fn _tree_modify(

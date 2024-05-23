@@ -18,16 +18,16 @@ pub struct SceneCameraID04;
 pub struct SceneCameraID05;
 pub struct SceneCameraID06;
 
-
+#[derive(Debug, Component)]
 pub struct CullingFlag(pub bool);
 
-#[derive(Clone, Copy, PartialEq, Eq,  Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Component, Hash)]
 pub struct SceneMainCameraID(pub Option<Entity>);
 
 
 pub struct CameraID(pub usize);
 
-#[derive( Default)]
+#[derive(Component, Default)]
 pub struct RecordEnable(pub Enable);
 impl TAnimatableCompRecord<Enable> for RecordEnable {
     fn comp(&self) -> Enable {
@@ -35,7 +35,7 @@ impl TAnimatableCompRecord<Enable> for RecordEnable {
     }
 }
 
-#[derive( Clone)]
+#[derive(Component, Clone)]
 pub struct Enable(pub f32);
 impl Enable {
     pub fn bool(&self) -> bool {
@@ -85,7 +85,7 @@ impl TAnimatableComp for Enable {}
 
 pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, RecordEnable>;
 
-
+#[derive(Debug, Component)]
 pub struct GlobalEnable(pub bool);
 
 pub struct OpsNodeEnable(pub(crate) Entity, pub(crate) Enable);

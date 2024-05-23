@@ -68,7 +68,7 @@ pub enum ECullingStrategy {
     STANDARD,
 }
 
-
+#[derive(Component)]
 pub struct GeometryBounding {
     pub minimum: Vector3,
     pub maximum: Vector3,
@@ -97,11 +97,11 @@ pub trait TFilter {
 }
 
 
-#[derive( Default)]
+#[derive(Component, Default)]
 pub struct GeometryCullingMode(pub ECullingStrategy);
 
 
-
+#[derive(Component)]
 pub enum SceneBoundingPool {
     List(VecBoundingInfoCalc),
     QuadTree(),
@@ -210,7 +210,7 @@ impl SceneBoundingPool {
     }
 }
 
-
+#[derive(Debug, Component)]
 pub struct BoundingBoxDisplay {
     pub mesh: Entity,
     pub display: bool,

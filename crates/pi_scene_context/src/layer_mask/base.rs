@@ -11,7 +11,7 @@ pub trait TViewerLayerMask {
     }
 }
 
-#[derive(Debug, Clone, Copy,  PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LayerMask(pub u32);
 impl Default for LayerMask {
     fn default() -> Self {

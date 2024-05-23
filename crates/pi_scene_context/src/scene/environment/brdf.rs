@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Clone, Hash, )]
+#[derive(Clone, Hash, Component)]
 pub struct BRDFTextureSlot(pub EKeyTexture);
 impl BRDFTextureSlot {
     pub fn key(&self) -> &EKeyTexture {
@@ -17,7 +17,7 @@ impl std::ops::Deref for BRDFTextureSlot {
     }
 }
 
-#[derive(Default, Clone, Deref, Hash, PartialEq, Eq, )]
+#[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
 pub struct BRDFTexture(pub Option<Arc<ShaderBindBRDFTexture>>);
 impl From<ETextureViewUsage> for BRDFTexture {
     fn from(value: ETextureViewUsage) -> Self { Self( Some(Arc::new(ShaderBindBRDFTexture(BindDataTexture2D(value)))) ) }
@@ -26,7 +26,7 @@ impl From<Handle<ImageTextureView>> for BRDFTexture {
     fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(Arc::new(ShaderBindBRDFTexture(BindDataTexture2D(ETextureViewUsage::Image(value))))) ) }
 }
 
-// 
+#[derive(Component)]
 pub struct BRDFSampler(pub Option<Arc<ShaderBindBRDFSampler>>);
 impl BRDFSampler {
     pub fn new(device: &RenderDevice, asset: &Share<AssetMgr<SamplerRes>>) -> Self {

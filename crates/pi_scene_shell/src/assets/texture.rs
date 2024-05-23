@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 
 use pi_render::renderer::texture::*;
+use pi_world_macros::Component;
 use wgpu::{TextureView, TextureFormat};
 
 use crate::shader::UniformTextureWithSamplerParam;
@@ -21,7 +22,7 @@ pub enum ETextureSlot {
     Tex08,
 }
 
-#[derive(Clone, Hash)]
+#[derive(Clone, Hash, Component)]
 pub struct TextureKeyList (pub [crate::Arc<UniformTextureWithSamplerParam>; TEXTURE_SLOT_COUNT]);
 impl Default for TextureKeyList {
     fn default() -> Self {

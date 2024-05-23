@@ -3,7 +3,7 @@
 use pi_scene_shell::prelude::*;
 use super::*;
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct ModelBlend {
     pub enable: bool,
     pub src_color: BlendFactor,

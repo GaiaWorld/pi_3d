@@ -14,7 +14,7 @@ pub enum StageGeometry {
     Upload,
 }
 
-
+#[derive(Component)]
 pub struct RenderGeometryEable(pub bool);
 
 pub trait RenderVerticesFrom {
@@ -44,7 +44,7 @@ impl RenderIndicesFrom for RenderIndices {
     }
 }
 
-#[derive(Default, Clone,  Deref, DerefMut)]
+#[derive(Default, Clone, Component, Deref, DerefMut)]
 pub struct RenderGeometryComp(pub Option<RenderGeometry>);
 
 #[derive(Clone)]

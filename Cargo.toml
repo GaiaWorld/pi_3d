@@ -49,8 +49,7 @@ pi_wy_rng               = "0.1"
 pi_share                = "0.4"
 
 wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
-bevy_ecs            = "0.11"
-# bevy_mod_debugdump  = { version = "0.8" }
+
 
 log                 = "0.4"
 
@@ -59,7 +58,7 @@ crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
 ahash               = "=0.8.7"
-
+pi_slotmap = "0.1"
 [patch.yn]
 # pi_gltf                 = { path = "../pi_gltf", features = ["extras"] }
 # pi_render               = { path = "../pi_render" }
@@ -89,33 +88,33 @@ pi_world_macros = {path = "../pi_world/macros"}
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
-bevy_a11y       = "0.11"
-bevy_app        = "0.11"
-bevy_window     = "0.11"
+# bevy_a11y       = "0.11"
+# bevy_app        = "0.11"
+# bevy_window     = "0.11"
 pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
 env_logger          = "0.9"
 # pi_wgpu         = { version = "*", features = ["single_thread", "use_wgpu"] }
 
 
-[[example]]
-name = "cube"
-path = "examples/cube/cube.rs"
+# [[example]]
+# name = "cube"
+# path = "examples/cube/cube.rs"
 
-[[example]]
-name = "unlit_cube"
-path = "examples/cube/unlit_cube.rs"
+# [[example]]
+# name = "unlit_cube"
+# path = "examples/cube/unlit_cube.rs"
 # 
 # [[example]]
 # name = "simple"
 # path = "examples/simple/simple.rs"
 
-[[example]]
-name = "dispose"
-path = "examples/simple/dispose.rs"
+# [[example]]
+# name = "dispose"
+# path = "examples/simple/dispose.rs"
 
-[[example]]
-name = "instance_enable"
-path = "examples/simple/instance_enable.rs"
+# [[example]]
+# name = "instance_enable"
+# path = "examples/simple/instance_enable.rs"
 
 # 
 # [[example]]
@@ -174,56 +173,56 @@ path = "examples/simple/instance_enable.rs"
 # name = "axis"
 # path = "examples/axis/axis.rs"
 
-[[example]]
-name = "culling_box"
-path = "examples/oct_tree/culling_box.rs"
+# [[example]]
+# name = "culling_box"
+# path = "examples/oct_tree/culling_box.rs"
 
-[[example]]
-name = "skin_simple"
-path = "examples/skeleton/simple.rs"
+# [[example]]
+# name = "skin_simple"
+# path = "examples/skeleton/simple.rs"
 
-[[example]]
-name = "anime_01"
-path = "examples/anime/01.rs"
+# [[example]]
+# name = "anime_01"
+# path = "examples/anime/01.rs"
 
-[[example]]
-name = "anime_rotation"
-path = "examples/anime/02.rs"
-[[example]]
-name = "anime_color"
-path = "examples/anime/color.rs"
+# [[example]]
+# name = "anime_rotation"
+# path = "examples/anime/02.rs"
+# [[example]]
+# name = "anime_color"
+# path = "examples/anime/color.rs"
 
 [[example]]
 name = "anime_camera"
 path = "examples/anime/camera.rs"
 
-[[example]]
-name = "anime_rotation_quaternion"
-path = "examples/anime/rotation_quaternion.rs"
+# [[example]]
+# name = "anime_rotation_quaternion"
+# path = "examples/anime/rotation_quaternion.rs"
 
-[[example]]
-name = "anime_performance"
-path = "examples/anime/performance.rs"
+# [[example]]
+# name = "anime_performance"
+# path = "examples/anime/performance.rs"
 
-[[example]]
-name = "lighting_01"
-path = "examples/lighting/01.rs"
+# [[example]]
+# name = "lighting_01"
+# path = "examples/lighting/01.rs"
 
-[[example]]
-name = "lighting_points"
-path = "examples/lighting/points.rs"
+# [[example]]
+# name = "lighting_points"
+# path = "examples/lighting/points.rs"
 
-[[example]]
-name = "lighting_spots"
-path = "examples/lighting/spots.rs"
+# [[example]]
+# name = "lighting_spots"
+# path = "examples/lighting/spots.rs"
 
 # 
 # [[example]]
 # name = "particle01"
 # path = "examples/particles/01.rs"
-[[example]]
-name = "particle00"
-path = "examples/particles/00.rs"
+# [[example]]
+# name = "particle00"
+# path = "examples/particles/00.rs"
 # 
 # [[example]]
 # name = "particle01"
@@ -237,98 +236,98 @@ path = "examples/particles/00.rs"
 # name = "particle03"
 # path = "examples/particles/03.rs"
 
-[[example]]
-name = "main_opacity"
-path = "examples/effects/main_opacity.rs"
+# [[example]]
+# name = "main_opacity"
+# path = "examples/effects/main_opacity.rs"
 
-[[example]]
-name = "opacity_clip"
-path = "examples/effects/opacity_clip.rs"
+# [[example]]
+# name = "opacity_clip"
+# path = "examples/effects/opacity_clip.rs"
 
-[[example]]
-name = "change_texture"
-path = "examples/anime/change_texture.rs"
+# [[example]]
+# name = "change_texture"
+# path = "examples/anime/change_texture.rs"
 
-[[example]]
-name = "emissive_fresnel"
-path = "examples/effects/emissive_fresnel.rs"
+# [[example]]
+# name = "emissive_fresnel"
+# path = "examples/effects/emissive_fresnel.rs"
 
-[[example]]
-name = "main_opacity_fresnel"
-path = "examples/effects/main_opacity_fresnel.rs"
+# [[example]]
+# name = "main_opacity_fresnel"
+# path = "examples/effects/main_opacity_fresnel.rs"
 
-[[example]]
-name = "two_opacity_mix"
-path = "examples/effects/two_opacity_mix.rs"
+# [[example]]
+# name = "two_opacity_mix"
+# path = "examples/effects/two_opacity_mix.rs"
 
-[[example]]
-name = "stripes_virtual"
-path = "examples/effects/stripes_virtual.rs"
+# [[example]]
+# name = "stripes_virtual"
+# path = "examples/effects/stripes_virtual.rs"
 
-[[example]]
-name = "distortion_uv"
-path = "examples/effects/distortion_uv.rs"
+# [[example]]
+# name = "distortion_uv"
+# path = "examples/effects/distortion_uv.rs"
 
-[[example]]
-name = "anime_opacity_clip"
-path = "examples/anime/opacity_clip.rs"
+# [[example]]
+# name = "anime_opacity_clip"
+# path = "examples/anime/opacity_clip.rs"
 
-[[example]]
-name = "anime_main_opacity"
-path = "examples/anime/main_opacity.rs"
+# [[example]]
+# name = "anime_main_opacity"
+# path = "examples/anime/main_opacity.rs"
 
-[[example]]
-name = "gltf_load"
-path = "examples/gltf/gltfload.rs"
+# [[example]]
+# name = "gltf_load"
+# path = "examples/gltf/gltfload.rs"
 
-[[example]]
-name = "image_load"
-path = "examples/gltf/img_texture_load.rs"
+# [[example]]
+# name = "image_load"
+# path = "examples/gltf/img_texture_load.rs"
 
-[[example]]
-name = "particle_system01"
-path = "examples/particles/particle_system01.rs"
-[[example]]
-name = "particle_system_render_velocity"
-path = "examples/particles/render_velocity.rs"
-[[example]]
-name = "particle_system_shape"
-path = "examples/particles/render_shape.rs"
-[[example]]
-name = "particle_system_stretched"
-path = "examples/particles/render_stretched.rs"
-[[example]]
-name = "particle_system_vertical_billboard"
-path = "examples/particles/render_vertical_billboard.rs"
+# [[example]]
+# name = "particle_system01"
+# path = "examples/particles/particle_system01.rs"
+# [[example]]
+# name = "particle_system_render_velocity"
+# path = "examples/particles/render_velocity.rs"
+# [[example]]
+# name = "particle_system_shape"
+# path = "examples/particles/render_shape.rs"
+# [[example]]
+# name = "particle_system_stretched"
+# path = "examples/particles/render_stretched.rs"
+# [[example]]
+# name = "particle_system_vertical_billboard"
+# path = "examples/particles/render_vertical_billboard.rs"
 
-[[example]]
-name = "trial01"
-path = "examples/trial/01.rs"
+# [[example]]
+# name = "trial01"
+# path = "examples/trial/01.rs"
 
 
-[[example]]
-name = "ray_test"
-path = "examples/oct_tree/ray_test.rs"
+# [[example]]
+# name = "ray_test"
+# path = "examples/oct_tree/ray_test.rs"
 
-[[example]]
-name = "pbr_01"
-path = "examples/pbr/01.rs"
+# [[example]]
+# name = "pbr_01"
+# path = "examples/pbr/01.rs"
 
-[[example]]
-name = "pbr_env"
-path = "examples/pbr/env_01.rs"
+# [[example]]
+# name = "pbr_env"
+# path = "examples/pbr/env_01.rs"
 
-[[example]]
-name = "pbr_env_image"
-path = "examples/pbr/env_02.rs"
+# [[example]]
+# name = "pbr_env_image"
+# path = "examples/pbr/env_02.rs"
 
-[[example]]
-name = "camera_opaque_texture"
-path = "examples/postprocess/camera_opaque_texture.rs"
-[[example]]
-name = "camera_depth_texture"
-path = "examples/postprocess/camera_depth_texture.rs"
+# [[example]]
+# name = "camera_opaque_texture"
+# path = "examples/postprocess/camera_opaque_texture.rs"
+# [[example]]
+# name = "camera_depth_texture"
+# path = "examples/postprocess/camera_depth_texture.rs"
 
-[[example]]
-name = "planar_shadow"
-path = "examples/lighting/planar_shadow.rs"
+# [[example]]
+# name = "planar_shadow"
+# path = "examples/lighting/planar_shadow.rs"

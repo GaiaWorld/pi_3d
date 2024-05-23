@@ -1,3 +1,5 @@
+use std::default;
+
 // use pi_scene_math::Vector3;
 use pi_scene_shell::prelude::*;
 
@@ -8,13 +10,15 @@ use pi_scene_shell::prelude::*;
 
 use super::color_over_lifetime::ColorOverLifetime;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum ETrailMode {
+    #[default]
     Particles = 0,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum ETrailTextureMode {
+    #[default]
     Stretch = 0,
     Tiled = 1,
     DistributePerSegment = 2,
@@ -32,7 +36,7 @@ impl From<u8> for ETrailTextureMode {
         }
     }
 }
-
+#[derive(Default)]
 pub struct TrailModifier {
     pub mode: ETrailMode,
 

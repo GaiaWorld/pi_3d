@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pi_scene_shell::{assets::texture::TextureKeyList, prelude::*};
+use pi_scene_shell::{add_component, assets::texture::TextureKeyList, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
     pass::*,
@@ -39,17 +39,14 @@ pub fn sys_create_material(
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
     // mut commands: Commands,
-    mut alter0: Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter1: Alter<(), (), (BindEffect, AssetResShaderEffectMeta), ()>,
-    mut alter2: Alter<(), (), (TexWithAtlas,), ()>,
-    mut alter3: Alter<(), (), SysCreateMaterialBundle, ()>,
+    mut editor: EntityEditor,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
-        if alter0.get(entity).is_err() { 
+        if !editor.contains_entity(entity) { 
             // log::error!("Material: Not Found!!");
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
@@ -60,30 +57,51 @@ pub fn sys_create_material(
             // let mut matcmds = commands.entity(entity);
             // matcmds.insert(BindEffect(effect_val_bind));
             // matcmds.insert(AssetResShaderEffectMeta::from(meta));
-            alter1.alter(entity, (BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)));
+            let components = [editor.init_component::<BindEffect>(), editor.init_component::<AssetResShaderEffectMeta>()];
+            editor.add_components(entity, &components);
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) =BindEffect(effect_val_bind);
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) =AssetResShaderEffectMeta::from(meta);
+
+            // editor.alter(entity, (BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)));
         } else {
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
         }
 
         // let mut matcmds = commands.entity(entity);
-        ActionEntity::init(entity, &mut alter0);
+        ActionEntity::init(entity, &mut editor);
         let keytex = Arc::new(UniformTextureWithSamplerParam::default());
 
-        if texatlas { alter2.alter(entity, (TexWithAtlas, ));};
+        if texatlas { add_component(&mut editor, entity, TexWithAtlas).unwrap(); /* editor.alter(entity, (TexWithAtlas, )); */};
 
-            alter3.alter(entity, (
-                TargetAnimatorableIsRunning,
-                UniformAnimated::default(),
-                AssetKeyShaderEffect(key_shader),
-                MaterialRefs::default(),
-                BindEffectReset,
-                UniformTextureWithSamplerParams::default(),
-                UniformTextureWithSamplerParamsDirty,
-                FlagAnimationStartResetComp,
-                DirtyMaterialRefs::default(),
-                TextureKeyList::default(),
-                EffectBindSampler2DList::default(),
-                EffectBindTexture2DList::default(),
+        let components = [ 
+            editor.init_component::<TargetAnimatorableIsRunning>(),
+            editor.init_component::<UniformAnimated>(),
+            editor.init_component::<AssetKeyShaderEffect>(),
+            editor.init_component::<MaterialRefs>(),
+            editor.init_component::<BindEffectReset>(),
+            editor.init_component::<UniformTextureWithSamplerParams>(),
+            editor.init_component::<UniformTextureWithSamplerParamsDirty>(),
+            editor.init_component::<FlagAnimationStartResetComp>(),
+            editor.init_component::<DirtyMaterialRefs>(),
+            editor.init_component::<TextureKeyList>(),
+            editor.init_component::<EffectBindSampler2DList>(),
+            editor.init_component::<EffectBindTexture2DList>(),
+            editor.init_component::<EffectTextureSamplersComp>()
+        ];       
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =       TargetAnimatorableIsRunning;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = UniformAnimated::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = AssetKeyShaderEffect(key_shader);
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = MaterialRefs::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) = BindEffectReset;
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) = UniformTextureWithSamplerParams::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[6]) = UniformTextureWithSamplerParamsDirty;
+        *editor.get_component_unchecked_mut_by_id(entity, components[7]) = FlagAnimationStartResetComp;
+        *editor.get_component_unchecked_mut_by_id(entity, components[8]) = DirtyMaterialRefs::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[9]) = TextureKeyList::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[10]) = EffectBindSampler2DList::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[11]) = EffectBindTexture2DList::default();
             // TextureSlot01(keytex.clone()))
             // TextureSlot02(keytex.clone()))
             // TextureSlot03(keytex.clone()))
@@ -109,8 +127,8 @@ pub fn sys_create_material(
             // EffectBindSampler2D07Comp::default())
             // EffectBindSampler2D08Comp::default())
             // EffectBindSampler2D08Comp::default())
-            EffectTextureSamplersComp::default())
-        );
+        *editor.get_component_unchecked_mut_by_id(entity, components[12]) =    EffectTextureSamplersComp::default();
+        
     });
 }
 

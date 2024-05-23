@@ -1,4 +1,4 @@
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
     light::prelude::{DirectLight, SpotLight},
@@ -19,15 +19,7 @@ use super::{
 
 pub fn sys_create_shadow_generator(
     // mut commands: Commands,
-    mut insert: Insert<()>,
-    mut alter1: Alter<(), (), (ShadowParam, ShadowAngle), ()>,
-    mut alter2: Alter<(), (), (DisposeReady, DisposeCan), ()>,
-    mut alter3: Alter<(),(),(SceneID, ), ()>,
-    mut alter4: Alter<(), (), ActionViewerBundle>,
-    mut alter5: Alter<(), (), (LinkedMaterialID, RendererID, ShadowLayerMask, SceneItemIndex, ShadowCastPassTag, ViewerDistanceCompute)>,
-    mut alter6: Alter<(), (), (ShadowLinkedLightID, DirectionalShadowDirection, DirectionalShadowProjection)>,
-    mut alter7: Alter<(), (), (ShadowLinkedLightID, DirectionalShadowDirection, SpotShadowProjection)>,
-    mut alter8: Alter<(), (), (BindViewer,)>,
+    mut editor: EntityEditor,
     mut cmds: ResMut<ActionListShadowGenerator>,
     mut direct_lights: Query<(&SceneID, &GlobalEnable, &mut LightLinkedShadowID, Option<&DirectLight>, Option<&SpotLight>, &LayerMask, &ViewerDistanceCompute), Or<(With<DirectLight>, With<SpotLight>)>>,
     mut scene_shadow: Query<&mut SceneShadowQueue>,
@@ -40,46 +32,66 @@ pub fn sys_create_shadow_generator(
 ) {
     cmds.drain().drain(..).for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
         if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, isdirect, issopt, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), direct_lights.get_mut(light)) {
-            let mat = insert.insert(());
+            let mat = editor.alloc_entity();
 
-            let mut shadowcommands = if alter1.get(entity).is_err() {
-                disposereadylist.push(OpsDisposeReadyForRef::ops(entity)); alter1.destroy(mat); return;
+            let mut shadowcommands = if !editor.contains_entity(entity) {
+                disposereadylist.push(OpsDisposeReadyForRef::ops(entity)); editor.destroy(mat); return;
             };
 
                 matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
                 matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
     
-                ActionShadow::as_shadow_generator(entity, &mut alter1, &mut alter2,&mut alter3, &mut alter4,idscene.0, enabled.0);
-                alter5.alter(entity, (
-                    LinkedMaterialID(empty.id()),
-                    RendererID(entity),
-                    ShadowLayerMask(layermask.clone()),
-                    queueshadow.0.add(entity),
-                    ShadowCastPassTag(passtag),
-                    viewerdistance.clone())
-                );
+                ActionShadow::as_shadow_generator(entity, &mut editor, idscene.0, enabled.0);
+                let components  = [
+                    editor.init_component::<LinkedMaterialID>(),
+                    editor.init_component::<RendererID>(),
+                    editor.init_component::<ShadowLayerMask>(),
+                    editor.init_component::<SceneItemIndex>(),
+                    editor.init_component::<ShadowCastPassTag>(),
+                    editor.init_component::<ViewerDistanceCompute>(),
+                ];
+                editor.add_components(entity, &components);
+               
+       
+                     *editor.get_component_unchecked_mut_by_id(entity, components[0]) = LinkedMaterialID(empty.id());
+                     *editor.get_component_unchecked_mut_by_id(entity, components[1]) = RendererID(entity);
+                     *editor.get_component_unchecked_mut_by_id(entity, components[2]) = ShadowLayerMask(layermask.clone());
+                     *editor.get_component_unchecked_mut_by_id(entity, components[3]) = queueshadow.0.add(entity);
+                     *editor.get_component_unchecked_mut_by_id(entity, components[4]) = ShadowCastPassTag(passtag);
+                     *editor.get_component_unchecked_mut_by_id(entity, components[4]) = viewerdistance.clone();
+             
      
                 if isdirect.is_some() {
                     linkedshadow.0 = Some(entity);
-                    alter6.alter(entity, 
-                    (
-                        ShadowLinkedLightID(light),
-                        DirectionalShadowDirection::default(),
-                        DirectionalShadowProjection::default(),
-                    ));
-                    
+                    let components  = [
+                        editor.init_component::<ShadowLinkedLightID>(),
+                        editor.init_component::<DirectionalShadowDirection>(),
+                        editor.init_component::<DirectionalShadowProjection>(),
+                    ];
+                    editor.add_components(entity, &components);
+
+                   
+                    *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ShadowLinkedLightID(light);
+                    *editor.get_component_unchecked_mut_by_id(entity, components[1]) = DirectionalShadowDirection::default();
+                    *editor.get_component_unchecked_mut_by_id(entity, components[2]) = DirectionalShadowProjection::default();
+                  
                 }
                 if issopt.is_some() {
                     linkedshadow.0 = Some(entity);
-                    alter7.alter(entity, 
-                        (
-                        ShadowLinkedLightID(light),
-                        DirectionalShadowDirection::default(),
-                        SpotShadowProjection::default(),
-                    ));
+                    let components  = [
+                        editor.init_component::<ShadowLinkedLightID>(),
+                        editor.init_component::<DirectionalShadowDirection>(),
+                        editor.init_component::<DirectionalShadowProjection>(),
+                    ];
+                    editor.add_components(entity, &components);
+
+                    *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ShadowLinkedLightID(light);
+                    *editor.get_component_unchecked_mut_by_id(entity, components[1]) = DirectionalShadowDirection::default();
+                    *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SpotShadowProjection::default();
+                    
                 }
     
-                if let Some(bindviewer) = BindViewer::new(&mut dynallocator) { alter8.alter(entity, (bindviewer,)); }
+                if let Some(bindviewer) = BindViewer::new(&mut dynallocator) { add_component(&mut editor, entity, bindviewer); /* alter8.alter(entity, (bindviewer,)); */ }
             }
     });
 }

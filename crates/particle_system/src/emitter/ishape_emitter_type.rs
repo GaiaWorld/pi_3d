@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::{iparticle_system_config::{
     TSHAPE_ARC_MODE_BURST_SPREAD, TSHAPE_ARC_MODE_LOOP, TSHAPE_ARC_MODE_PING_PONG,
     TSHAPE_ARC_MODE_RANDOM,
@@ -18,6 +20,7 @@ pub trait IShapeEmitterTypeValue {
     const RANDOMIZE_POSITION: f32;
 }
 
+#[derive(Default)]
 pub struct ShapeEmitter {
     pub(crate) position: Vector3,
     pub(crate) rotation: Vector3,
@@ -43,6 +46,7 @@ impl ShapeEmitter {
     }
 }
 
+
 pub struct TypeShapeEmitter {
     pub(crate) box_mode: EBoxShapeMode,
     pub(crate) spawn_point_only: bool,
@@ -52,6 +56,12 @@ pub struct TypeShapeEmitter {
     pub(crate) fn_direction: fn(&TypeShapeEmitter, &mut Vector3, &Vector3, &mut Random),
     pub(crate) fn_position: fn(&TypeShapeEmitter, &mut Vector3, f32, f32, f32, f32, &mut Random),
     pub(crate) fn_orbit_center: fn(&Vector3, &Vector3, &mut Vector3),
+}
+
+impl Default for TypeShapeEmitter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 impl TypeShapeEmitter {
     pub fn new() -> Self {
@@ -189,8 +199,9 @@ pub enum EShapeEmitterDirectionMode {
     Unity = 0,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum EBoxShapeMode {
+    #[default]
     Volume = 0,
     Shell = 1,
     Edge = 2,

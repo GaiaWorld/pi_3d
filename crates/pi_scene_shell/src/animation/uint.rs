@@ -1,10 +1,11 @@
 
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::Number;
+use pi_world_macros::Component;
 
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component)]
 pub struct AnimatorableUint(pub u32);
 impl Default for AnimatorableUint {
     fn default() -> Self {
@@ -42,7 +43,7 @@ impl TAssetCapacity for AnimatorableUint {
 impl TAnimatableComp for AnimatorableUint {}
 
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Component)]
 pub struct RecordAnimatorableUint(pub AnimatorableUint);
 impl TAnimatableCompRecord<AnimatorableUint> for RecordAnimatorableUint {
     fn comp(&self) -> AnimatorableUint {

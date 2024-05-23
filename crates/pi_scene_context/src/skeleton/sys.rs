@@ -126,7 +126,7 @@ use super::{skeleton::*, bone::*};
                         // }
                         match tree.get_down(p_id) {
                             Some(node_children_head) => {
-                                let node_children_head = node_children_head.head.0;
+                                let node_children_head = node_children_head.head;
                                 tree.iter(node_children_head).for_each(|entity| {
                                     calc_bone_one(
                                         bones,

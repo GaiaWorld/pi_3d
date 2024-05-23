@@ -14,19 +14,19 @@ pub struct NodeBrothers {
     pub next: Option<Entity>,
 }
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct TransformNode;
 
-#[derive(Clone, Copy, )]
+#[derive(Clone, Copy, Component)]
 pub struct TransformNodeDirty;
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalDirtyRotation;
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalDirtyScaling;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Component)]
 pub struct RecordLocalPosition(pub LocalPosition);
 impl TAnimatableCompRecord<LocalPosition> for RecordLocalPosition {
     fn comp(&self) -> LocalPosition {
@@ -34,7 +34,7 @@ impl TAnimatableCompRecord<LocalPosition> for RecordLocalPosition {
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalPosition(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalPosition {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -79,7 +79,7 @@ impl TAnimatableComp for LocalPosition {
 
 }
 
-#[derive(Clone,  Default)]
+#[derive(Clone, Component, Default)]
 pub struct RecordLocalEulerAngles(pub LocalEulerAngles);
 impl TAnimatableCompRecord<LocalEulerAngles> for RecordLocalEulerAngles {
     fn comp(&self) -> LocalEulerAngles {
@@ -87,7 +87,7 @@ impl TAnimatableCompRecord<LocalEulerAngles> for RecordLocalEulerAngles {
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalEulerAngles(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -132,7 +132,7 @@ impl TAnimatableComp for LocalEulerAngles {
 
 }
 
-#[derive(Clone,  Default)]
+#[derive(Clone, Component, Default)]
 pub struct RecordLocalRotationQuaternion(pub LocalRotationQuaternion);
 impl TAnimatableCompRecord<LocalRotationQuaternion> for RecordLocalRotationQuaternion {
     fn comp(&self) -> LocalRotationQuaternion {
@@ -140,7 +140,7 @@ impl TAnimatableCompRecord<LocalRotationQuaternion> for RecordLocalRotationQuate
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalRotationQuaternion(pub SQuaternion<Number>);
 impl LocalRotationQuaternion {
     pub fn create(x: Number, y: Number, z: Number, w: Number) -> Self {
@@ -230,13 +230,13 @@ impl TAnimatableComp for LocalRotationQuaternion {
 
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalRoationWithQuaternion(pub bool);
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalRotation(pub Rotation3);
 
-#[derive(Clone,  Default)]
+#[derive(Clone, Component, Default)]
 pub struct RecordLocalScaling(pub LocalScaling);
 impl TAnimatableCompRecord<LocalScaling> for RecordLocalScaling {
     fn comp(&self) -> LocalScaling {
@@ -244,7 +244,7 @@ impl TAnimatableCompRecord<LocalScaling> for RecordLocalScaling {
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalScaling(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -290,7 +290,7 @@ impl TAnimatableComp for LocalScaling {
 }
 
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct LocalMatrix(pub Matrix);
 impl LocalMatrix {
     pub fn new(m: Matrix) -> Self {
@@ -327,7 +327,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct GlobalMatrix {
     pub matrix: Matrix,
     pub matrix_inv: Matrix,
@@ -373,7 +373,7 @@ impl GlobalMatrix {
     }
 }
 
-#[derive(Default, )]
+#[derive(Default, Component)]
 pub struct AbsoluteTransform {
     scaling: Option<Vector3>,
     rotation: Option<Rotation3>,

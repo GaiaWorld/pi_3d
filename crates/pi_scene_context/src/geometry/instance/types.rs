@@ -22,7 +22,7 @@ fn animatorable_type(val: &ECustomVertexType) -> EAnimatorableType {
     }
 }
 
-#[derive(Default, )]
+#[derive(Default, Component)]
 pub struct InstanceAttributeAnimated(pub Vec<Atom>);
 impl InstanceAttributeAnimated {
     pub fn add(&mut self, key: &Atom) {
@@ -53,7 +53,7 @@ impl InstanceAttributeOffset {
     pub fn entity(&self) -> Option<Entity> { self.entity }
 }
 
-
+#[derive(Component)]
 pub struct ModelInstanceAttributes {
     bytes: Vec<u8>,
     attributes: Vec<(Atom, InstanceAttributeOffset)>,

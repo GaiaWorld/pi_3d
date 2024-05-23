@@ -3,10 +3,11 @@
 use pi_assets::asset::Handle;
 
 use pi_render::renderer::texture::*;
+use pi_world_macros::Component;
 
 use crate::assets::texture::TEXTURE_SLOT_COUNT;
 
-#[derive(Default, Clone, Hash, PartialEq, Eq)]
+#[derive(Default, Clone, Hash, PartialEq, Eq, Component)]
 pub struct EffectBindTexture2DList {
     pub data: [Option<ETextureViewUsage>; TEXTURE_SLOT_COUNT],
     pub loaded: Vec<usize>,

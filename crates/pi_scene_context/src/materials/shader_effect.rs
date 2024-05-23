@@ -4,10 +4,10 @@ use pi_scene_shell::prelude::*;
 
 pub type ShaderEffectValueUniformDesc = MaterialValueBindDesc;
 
-#[derive(Debug, Deref, DerefMut, Clone, Hash, )]
+#[derive(Debug, Deref, DerefMut, Clone, Hash, Component)]
 pub struct AssetKeyShaderEffect(pub KeyShaderMeta);
 
-#[derive(Deref, DerefMut, )]
+#[derive(Deref, DerefMut, Component)]
 pub struct AssetResShaderEffectMeta(pub Handle<ShaderEffectMeta>);
 impl From<Handle<ShaderEffectMeta>> for AssetResShaderEffectMeta {
     fn from(value: Handle<ShaderEffectMeta>) -> Self {

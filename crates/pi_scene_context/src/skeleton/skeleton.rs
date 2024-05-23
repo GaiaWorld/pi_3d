@@ -10,10 +10,10 @@ pub enum StageSkeleton {
     Calc,
 }
 
-
+#[derive(Debug, Component)]
 pub struct SkeletonInitBaseMatrix;
 
-
+#[derive(Component)]
 pub struct Skeleton {
     pub root: ObjectID,
     pub bones: Vec<ObjectID>,
@@ -44,11 +44,11 @@ impl Skeleton {
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone, Component)]
 pub struct BindSkinValue(pub Option<Arc<ShaderBindModelAboutSkinValue>>);
 
 
-
+#[derive(Component)]
 pub struct SkeletonID(pub ObjectID);
 impl TEntityRef for SkeletonID {
     fn id(&self) -> Entity {
@@ -56,10 +56,10 @@ impl TEntityRef for SkeletonID {
     }
 }
 
-#[derive(Default, Clone, )]
+#[derive(Default, Clone, Component)]
 pub struct DirtySkeletonRefs(pub bool);
 
 pub type SkeletonRefs = EntityRefInfo<DirtySkeletonRefs>;
 
-
+#[derive(Debug, Component)]
 pub struct SkeletonBonesDirty(pub bool);

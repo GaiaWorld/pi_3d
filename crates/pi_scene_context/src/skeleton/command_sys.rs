@@ -1,6 +1,6 @@
 
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::{self, EntityEditor}, *}};
 use pi_scene_math::Matrix;
 
 use crate::{flags::{CullingFlag, Enable, GlobalEnable, RecordEnable}, prelude::{AbsoluteTransform, GlobalMatrix, LocalEulerAngles, LocalMatrix, LocalPosition, LocalRotation, LocalRotationQuaternion, LocalScaling, RecordLocalEulerAngles, RecordLocalPosition, RecordLocalRotationQuaternion, RecordLocalScaling, TransformNodeDirty}, transforms::command_sys::*};
@@ -13,18 +13,7 @@ use super::{
 
 pub fn sys_create_skin(
     mut cmds: ResMut<ActionListSkinCreate>,
-    mut commands: Alter<(), (), (SkeletonID,), ()>,
-    mut commands1: Alter<
-        (), 
-        (), 
-        (
-            Skeleton,
-            SkeletonInitBaseMatrix,
-            SkeletonBonesDirty,
-            SkeletonRefs,
-            DirtySkeletonRefs
-        ), 
-        ()>,
+    mut editor: EntityEditor,
     device: Res<PiRenderDevice>,
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
@@ -38,13 +27,13 @@ pub fn sys_create_skin(
         match Skeleton::new(root, bones.clone(), mode, &device, &mut dynbuffer, cachedata) {
             Some(skeleton) => {
                 bones.iter().for_each(|id_bone| {
-                    if commands.get(id_bone.clone()).is_ok() {
-                        ActionBone::modify_skin(*id_bone, &mut commands, id_skin);
+                    if editor.contains_entity(id_bone.clone()) {
+                        ActionBone::modify_skin(*id_bone, &mut editor, id_skin);
                     }
                 });
 
-                if commands1.get(id_skin).is_ok() {
-                    ActionSkeleton::init(id_skin, &mut commands1, skeleton);
+                if editor.contains_entity(id_skin) {
+                    ActionSkeleton::init(id_skin, &mut editor, skeleton);
                 }
             },
             None => {
@@ -61,15 +50,15 @@ pub fn sys_act_skin_use(
     mut cmds: ResMut<ActionListSkinUse>,
     mut skins: Query<(&mut Skeleton, &mut SkeletonRefs, &mut DirtySkeletonRefs)>,
     mut meshes: Query<&mut BindSkinValue>,
-    mut commands: Alter<(), (), (SkeletonID, )>,
+    mut editor: EntityEditor,
 ) {
     cmds.drain().drain(..).for_each(|ops| {
         match ops {
             OpsSkinUse::Use(entity, skin) => {
                 if let (Ok(mut bind), Ok((skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
                     *bind = BindSkinValue(Some(skeleton.bind.clone()));
-                    commands.alter(entity,(SkeletonID(skin),));
-                    
+                    // commands.alter(entity,(SkeletonID(skin),));
+                    add_component(&mut editor, entity, SkeletonID(skin)).unwrap();
                     // log::warn!("Skinn OKKKKKKKKKKKK");
                     if skeletonrefs.insert(entity) {
                         *flag = DirtySkeletonRefs::default();
@@ -94,18 +83,15 @@ pub fn sys_act_skin_use(
 pub fn sys_create_bone(
     mut cmds: ResMut<ActionListBoneCreate>,
     // mut commands: Commands,
-    mut alter1: Alter<(), (), (DisposeReady, DisposeCan)>,
-    mut alter2: Alter<(), (), (SceneID,)>,
-    mut alter3: Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-    mut alter4: Alter<(), (), ActionTransformNodeBundle>,
-    mut alter5: Alter<(), (), ActionBoneBundle>,
+    mut editor: EntityEditor,
+
     empty: Res<SingleEmptyEntity>,
 ) {
     cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene)| {
-        let mut bonecmd = if alter1.get(bone).is_err() {
+        let mut bonecmd = if !editor.contains_entity(bone) {
             return;
         };
-        ActionBone::init(bone,  &mut alter1, &mut alter2, &mut alter3, &mut alter4, &mut alter5,  &empty, parent, scene);
+        ActionBone::init(bone,  &mut editor, &empty, parent, scene);
     });
 }
 
@@ -130,28 +116,32 @@ pub struct ActionSkeleton;
 impl ActionSkeleton {
     pub fn init(
         entity: Entity,
-        commands: &mut Alter<
-        (), 
-        (), 
-        (
-            Skeleton,
-            SkeletonInitBaseMatrix,
-            SkeletonBonesDirty,
-            SkeletonRefs,
-            DirtySkeletonRefs
-        ), 
-        ()>,
+        editor: &mut EntityEditor,
         skeleton: Skeleton,
     ) {
-        commands.alter(entity, 
-            (
-                skeleton,
-                SkeletonInitBaseMatrix,
-                SkeletonBonesDirty(true),
-                SkeletonRefs::default(),
-                DirtySkeletonRefs(false)
-            )
-        );
+        let components = [
+            editor.init_component::<Skeleton>(),
+            editor.init_component::<SkeletonInitBaseMatrix>(),
+            editor.init_component::<SkeletonBonesDirty>(),
+            editor.init_component::<SkeletonRefs>(),
+            editor.init_component::<DirtySkeletonRefs>(),
+        ];
+        editor.add_components(entity, &components);
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =skeleton;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SkeletonInitBaseMatrix;
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SkeletonBonesDirty(true);
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SkeletonRefs::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) = DirtySkeletonRefs(false);
+        // commands.alter(entity, 
+        //     (
+        //         skeleton,
+        //         SkeletonInitBaseMatrix,
+        //         SkeletonBonesDirty(true),
+        //         SkeletonRefs::default(),
+        //         DirtySkeletonRefs(false)
+        //     )
+        // );
     }
 }
 
@@ -167,26 +157,30 @@ pub struct ActionBone;
 impl ActionBone {
     pub fn init(
         entity: Entity,
-        alter1: &mut Alter<(), (), (DisposeReady, DisposeCan)>,
-        alter2: &mut Alter<(), (), (SceneID,)>,
-        alter3: &mut Alter<(), (), (Down, Up, Layer, Enable, RecordEnable, GlobalEnable)>,
-        alter4: &mut Alter<(), (), ActionTransformNodeBundle>,
-        alter5: &mut Alter<(), (), ActionBoneBundle>,
+        editor: &mut EntityEditor,
         _empty: &SingleEmptyEntity,
         parent: Entity,
         scene: Entity,
     ) {
-        ActionTransformNode::init(entity, alter1, alter2, alter3, alter4, scene);
+        ActionTransformNode::init(entity, editor, scene);
+        let components = [
+            editor.init_component::<BoneParent>(),
+            editor.init_component::<BoneAbsolute>(),
+            editor.init_component::<BoneAbsoluteInv>(),
+            editor.init_component::<BoneDifferenceMatrix>(),
+            editor.init_component::<BoneMatrix>(),
+            editor.init_component::<BoneBaseMatrix>(),
+        ];
+        editor.add_components(entity, &components);
 
-        alter5.alter(entity, 
-            (BoneParent(parent),
-            BoneAbsolute(Matrix::identity()),
-            BoneAbsoluteInv(Matrix::identity()),
-            BoneDifferenceMatrix(Matrix::identity()),
-            BoneMatrix(Matrix::identity()),
-            BoneBaseMatrix(Matrix::identity()))
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = BoneParent(parent);
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = BoneAbsolute(Matrix::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = BoneAbsoluteInv(Matrix::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = BoneDifferenceMatrix(Matrix::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) = BoneMatrix(Matrix::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) = BoneBaseMatrix(Matrix::identity());
             // .insert(SkeletonID(empty.id()))
-        );
+     
     }
     // pub(crate) fn modify_pose(
     //     commands: &mut EntityCommands,
@@ -196,9 +190,10 @@ impl ActionBone {
     // }
     pub(crate) fn modify_skin(
         entity: Entity,
-        commands: &mut Alter<(), (), (SkeletonID,), ()>,
+        editor: &mut EntityEditor,
         id_skin: Entity,
     ) {
-        commands.alter(entity, (SkeletonID(id_skin),));
+        add_component(editor, entity, SkeletonID(id_skin)).unwrap();
+        // commands.alter(entity, (SkeletonID(id_skin),));
     }
 }

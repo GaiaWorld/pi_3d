@@ -1,10 +1,11 @@
 
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::{Vector4, Number};
+use pi_world_macros::Component;
 
 use super::{TAnimatableComp, TAnimatableCompRecord};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component)]
 pub struct AnimatorableVec4(pub Vector4);
 impl From<&[Number]> for AnimatorableVec4 {
     fn from(v: &[Number]) -> Self {
@@ -41,7 +42,7 @@ impl TAssetCapacity for AnimatorableVec4 {
 }
 impl TAnimatableComp for AnimatorableVec4 {}
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Component)]
 pub struct RecordAnimatorableVec4(pub AnimatorableVec4);
 impl TAnimatableCompRecord<AnimatorableVec4> for RecordAnimatorableVec4 {
     fn comp(&self) -> AnimatorableVec4 {

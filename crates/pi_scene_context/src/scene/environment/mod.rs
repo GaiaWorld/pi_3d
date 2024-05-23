@@ -8,7 +8,7 @@ pub mod sys;
 pub mod brdf;
 pub mod environment_texture;
 
-// 
+#[derive(Component)]
 pub struct BindSceneEffect(pub Arc<ShaderBindSceneAboutEffect>);
 impl BindSceneEffect {
     pub fn new(

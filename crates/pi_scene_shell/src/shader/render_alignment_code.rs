@@ -11,14 +11,17 @@ pub enum EParticleScalingMode {
     Shape,
 }
 
+#[derive(Default)]
 pub enum EParticleSimulationSpace {
+    #[default]
     Local,
     World,
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Default)]
 pub enum ERenderAlignmentForShader {
     None(bool),
+    #[default]
     View,
     Facing,
     StretchedBillboard,

@@ -1,6 +1,6 @@
 
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, )]
 pub enum ERenderSortParam {
@@ -21,7 +21,7 @@ impl Eq for OpaqueSortParam {
     fn assert_receiver_is_total_eq(&self) {}
 }
 
-#[derive(Debug, Clone, Copy, )]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct TransparentSortParam {
     /// 同 渲染类型 中的 渲染分组
     pub group: i32,
@@ -91,10 +91,11 @@ pub struct ActionRenderSort;
 impl ActionRenderSort {
     pub fn modify(
         entity: Entity,
-        commands: &mut Alter<(), (), (TransparentSortParam,)>,
+        editor: &mut EntityEditor,
         val: TransparentSortParam,
     ) {
-        commands.alter(entity, (val,));
+        add_component(editor, entity, val);
+        // commands.alter(entity, (val,));
     }
 }
 

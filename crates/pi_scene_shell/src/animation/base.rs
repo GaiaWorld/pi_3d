@@ -14,10 +14,10 @@ use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFra
 use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
 use pi_world::{insert::Bundle, query::Query, world::Entity};
+use pi_world_macros::Component;
 
-// use bevy_ecs::prelude::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component, Default)]
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
 pub struct FlagAnimationStartResetComp;
 
@@ -25,7 +25,7 @@ pub type KeyAnimeCurve = String;
 
 pub type IDAssetTypeFrameCurve = u64;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Component, Default)]
 pub struct SceneID(pub Entity);
 
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
@@ -84,10 +84,10 @@ impl TagGroupListen {
 
 pub type AnimeFrameEventData = u32;
 
-
+#[derive(Debug, Component)]
 pub struct AnimationGroupKey(pub DefaultKey);
 
-
+#[derive(Debug, Component)]
 pub struct AnimationGroupScene(pub Entity);
 
 // #[d]
@@ -96,9 +96,10 @@ pub enum EAnimatorableEntityType {
     Attribute,
 }
 
-
+#[derive(Debug, Component, Default)]
 pub struct AnimatorableUniform;
 
+#[derive(Debug, Component, Default)]
 pub struct AnimatorableAttribute;
 
 pub struct GlobalAnimeAbout {
@@ -145,7 +146,7 @@ impl GlobalAnimeAbout {
 #[derive( Deref, DerefMut, Default)]
 pub struct GlobalAnimeEvents(pub Vec<(Entity, Entity, u8, u32)>);
 
-
+#[derive(Component)]
 pub struct SceneAnimationContext(pub AnimationContextAmount<Entity, AnimationGroupManagerDefault<Entity>>);
 impl SceneAnimationContext {
     pub fn new() -> Self {

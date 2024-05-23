@@ -219,7 +219,7 @@ fn setup(
     // mp
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Particle(MeshParticleSystem);
 
 fn sys_demo_particle(

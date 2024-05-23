@@ -1,12 +1,6 @@
 use std::{hash::Hash, mem::replace, ops::Range};
 
-// pub use bevy_ecs::{prelude::*, system::{CommandQueue, EntityCommands, SystemState, SystemParam}};
-// pub use bevy_app::{prelude::*, PluginGroupBuilder};
-// pub use bevy_hierarchy::prelude::*;
-// pub use bevy_input::{prelude::*, InputPlugin};
-// pub use bevy_log::prelude::*;
-// pub use bevy_math::prelude::*;
-// pub use bevy_time::prelude::*;
+
 pub use parry3d::{
     bounding_volume::Aabb,
     na::{Isometry3 as NAIsometry3, Point3},
@@ -110,7 +104,7 @@ pub use pi_world;
 pub struct EngineInstant(pub pi_time::Instant);
 
 ///
-#[derive(Default, Clone, Hash, PartialEq, Eq)]
+#[derive(Default, Clone, Hash, PartialEq, Eq, Component)]
 pub struct EffectTextureSamplersComp(pub Option<EffectTextureSamplers>);
 
 /////////////////////////////////////// Global Control
@@ -134,7 +128,7 @@ pub struct VBLoaderSlot<T: Clone + core::hash::Hash + PartialEq + Eq, D: From<EV
 #[derive( DerefMut, Deref)]
 pub struct VertexBufferDataMap3D(pub SingleVertexBufferDataMap);
 
-#[derive( Clone)]
+#[derive(Component, Clone)]
 pub struct IndicesBufferDesc {
     pub format: wgpu::IndexFormat,
     /// bytes 范围
@@ -177,7 +171,7 @@ impl HashAsResource for VertexBufferDesc {
     }
 }
 
-#[derive(Deref, )]
+#[derive(Deref, Component)]
 pub struct AssetResBufferIndices(pub EVerticesBufferUsage);
 
 // TODO Send问题， 临时解决
@@ -190,7 +184,7 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
     }
 }
 
-
+#[derive(Component)]
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts, pub KeyShaderFromAttributes);
 
 ////////////////////////////////////// Shader

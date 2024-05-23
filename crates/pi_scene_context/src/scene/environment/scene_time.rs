@@ -5,7 +5,7 @@ use crate::bytes_write_to_memory;
 
 use super::BindSceneEffect;
 
-
+#[derive(Debug, Component)]
 pub struct SceneTime {
     pub last_time_ms: u64,
     pub time_ms: u64,

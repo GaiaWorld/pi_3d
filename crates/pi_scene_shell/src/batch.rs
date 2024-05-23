@@ -1,3 +1,5 @@
+use pi_world_macros::Component;
+
 
 
 
@@ -15,8 +17,8 @@ impl Default for BatchParam {
     }
 }
 
-#[derive( Default)]
+#[derive(Component, Default)]
 pub struct BatchParamOpaque(pub BatchParam);
 
-#[derive( Default)]
+#[derive(Component, Default)]
 pub struct BatchParamTransparent(pub BatchParam);

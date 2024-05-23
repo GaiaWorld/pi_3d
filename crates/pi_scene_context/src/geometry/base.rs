@@ -2,7 +2,7 @@ use pi_scene_shell::prelude::*;
 
 use super::vertex_buffer_useinfo::*;
 
-
+#[derive(Component)]
 pub struct GeometryDesc {
     pub list: Vec<VertexBufferDesc>,
 }
@@ -22,10 +22,10 @@ impl HashAsResource for GeometryDesc {
     }
 }
 
-#[derive( Clone, Copy, PartialEq, Eq)]
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
 pub struct GeometryResourceHash(pub u64);
 
-#[derive( PartialEq, Eq)]
+#[derive(Component, PartialEq, Eq)]
 pub struct GeometryLayoutHash(pub u64);
 
 #[derive(Resource)]
