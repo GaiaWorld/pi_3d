@@ -11,7 +11,7 @@ pub mod instance_vec4;
 pub mod instance_vec3;
 pub mod sys_instance;
 use pi_slotmap::Key;
-#[derive(Debug, Clone, Component)]
+#[derive(Debug, Clone, Component, Default)]
 pub struct InstanceMesh(pub Entity);
 impl InstanceMesh {
     pub fn id(&self) -> String {

@@ -233,7 +233,7 @@ impl PassPipeline {
         }
     }
 }
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct PassDraw(pub Option<DrawObjTmp>);
 impl PassDraw {
     pub fn new(val: Option<DrawObjTmp>) -> Self { Self(val) }

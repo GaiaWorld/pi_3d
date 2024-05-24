@@ -27,12 +27,12 @@ pub fn sys_set0_modify(
             if let Some((_, meta)) = &meta.0 {
                 // log::warn!("Set0 Modify 3");
                 let bind_base_effect = if BindDefines::need_scene_effect(meta.binddefines) {
-                    Some(bind_base_effect.0.clone())
+                    Some(bind_base_effect.0.as_ref().unwrap().clone())
                 } else { None };
 
                 let bind_viewer = match (BindDefines::need_viewer(meta.binddefines), bind_viewer) {
                     (true, Some(bindviewer)) => {
-                        Some(bindviewer.0.clone())
+                        bindviewer.0.clone()
                     },
                     (false, _) => {
                         None

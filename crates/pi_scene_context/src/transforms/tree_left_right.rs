@@ -1,7 +1,7 @@
 use pi_scene_shell::prelude::*;
 
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Default)]
 pub struct TreeLeftRoot(pub ObjectID, pub usize);
 impl TreeLeftRoot {
     pub fn new(id: ObjectID) -> Self {
@@ -9,7 +9,7 @@ impl TreeLeftRoot {
     }
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Default)]
 pub struct TreeRightRoot(pub ObjectID, pub usize);
 impl TreeRightRoot {
     pub fn new(id: ObjectID) -> Self {
@@ -20,5 +20,5 @@ impl TreeRightRoot {
 #[derive(Component, Deref, DerefMut, Default)]
 pub struct NodeChilds(pub(crate) XHashSet<Entity>);
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Default)]
 pub struct NodeParent(pub(crate) Option<Entity>);

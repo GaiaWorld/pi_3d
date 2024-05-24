@@ -689,7 +689,7 @@ impl ParticleIDs {
         self.actives.len()
     }
 }
-#[derive(Component)]
+#[derive(Component, Default)]
 /// 粒子系统
 pub struct ParticleSystemTime {
     /// 运行速度
@@ -773,7 +773,7 @@ impl ParticleSystemTime {
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Default)]
 pub struct ParticleRandom(pub(crate) Random);
 impl ParticleRandom {
     pub fn new(seed: u64) -> Self {
@@ -781,7 +781,7 @@ impl ParticleRandom {
     }
 }
 
-#[derive(Component, Deref)]
+#[derive(Component, Deref, Default)]
 pub struct ParticleBaseRandom(pub(crate) Vec<BaseRandom>);
 impl ParticleBaseRandom {
     pub fn new(maxcount: usize) -> Self {
@@ -813,7 +813,7 @@ impl ParticleBaseRandom {
 }
 
 /// 新生粒子ID列表
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ParticleSystemEmission {
     /// 距离上次发射的时间
     pub(crate) last_rate_time: u32,
@@ -968,7 +968,7 @@ impl ParticleStartColor {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ParticleStartScaling(pub(crate) Vec<Vector3>);
 impl ParticleStartScaling {
     pub fn new(maxcount: usize) -> Self {
@@ -1045,7 +1045,7 @@ impl ParticleLocalPosition {
     // }
 }
 
-#[derive(Component, Deref)]
+#[derive(Component, Deref, Default)]
 pub struct ParticleLocalRotation(pub(crate) Vec<Vector3>);
 impl ParticleLocalRotation {
     pub fn new(maxcount: usize) -> Self {
@@ -1103,7 +1103,7 @@ impl ParticleLocalRotation {
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Default)]
 pub struct ParticleLocalScaling(pub(crate) Vec<Vector3>);
 impl ParticleLocalScaling {
     pub fn new(maxcount: usize) -> Self {
@@ -1153,6 +1153,11 @@ pub struct ParticleEmitMatrix {
     scaling_mode: fn(& Isometry3, & Vector3, & Vector3, & Matrix, & Matrix, & mut Vector3, & mut Matrix, & mut Matrix),
     simulation: fn(& mut Vec<EmitMatrix>, & Vec<usize>, & Vec<usize>, & Vector3, & Rotation3, & Matrix, & Matrix),
     idx: fn(usize) -> usize,
+}
+impl Default for ParticleEmitMatrix{
+    fn default() -> Self {
+        Self { emits: Default::default(), scaling_mode: ParticleEmitMatrix::scaling_mode_hierarchy, simulation: ParticleEmitMatrix::simulation_local,  idx: _idx_constant }
+    }
 }
 impl ParticleEmitMatrix {
     pub fn new(maxcount: usize, scalingmode: &EScalingMode, simulation_mode: &EParticleSimulationSpace) -> Self {
@@ -1260,11 +1265,17 @@ impl ParticleEmitMatrix {
 }
 
 /// 粒子局部重力影响
-#[derive(Component)]
+#[derive(Component,)]
 pub struct ParticleGravityFactor {
     pub(crate) values: Vec<GravityFactor>,
     pub(crate) _runcall: fn(&mut Vec<GravityFactor>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &ParticleEmitMatrix, &Vec<BaseRandom>, &ParticleSystemTime, &ParticleCalculatorGravity),
     pub(crate) _idxcall: fn(usize) -> usize,
+}
+
+impl Default for ParticleGravityFactor{
+    fn default() -> Self {
+        Self { values: Default::default(), _runcall:  Self::_run_constant, _idxcall: _idx_constant }
+    }
 }
 impl ParticleGravityFactor {
     pub fn new(maxcount: usize, calculator: &ParticleCalculatorGravity, simulation_mode: &EParticleSimulationSpace) -> Self {
@@ -1379,6 +1390,11 @@ pub struct ParticleForce {
     pub(crate) _runcall: fn(&mut Vec<Force>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &ParticleEmitMatrix, &Vec<BaseRandom>, &ParticleSystemTime, &ForceOverLifetime),
     pub(crate) _idxcall: fn(usize) -> usize,
 }
+impl Default for ParticleForce{
+    fn default() -> Self {
+        Self { values: Default::default(), _runcall:  Self::_run_local_constant, _idxcall: _idx_constant }
+    }
+}
 impl ParticleForce {
     pub fn new(maxcount: usize, is_local_space: bool, constant: bool) -> Self {
         match (is_local_space, constant) {
@@ -1481,7 +1497,7 @@ impl ParticleForce {
 }
 
 /// 粒子局部速度向量
-#[derive(Component, Deref)]
+#[derive(Component, Deref, Default)]
 pub struct ParticleVelocity(pub(crate) Vec<Velocity>);
 impl ParticleVelocity {
     pub fn new(maxcount: usize) -> Self {
@@ -1511,7 +1527,7 @@ impl ParticleVelocity {
 }
 
 /// 粒子局部速度因子
-#[derive(Component, Deref)]
+#[derive(Component, Deref, Default)]
 pub struct ParticleSpeedFactor(pub(crate) Vec<SpeedFactor>);
 impl ParticleSpeedFactor {
     pub fn new(maxcount: usize) -> Self {
@@ -1544,6 +1560,11 @@ pub struct ParticleOrbitVelocity {
     pub(crate) values: Vec<(Vector3, Number)>,
     pub(crate) _runcall: fn(&mut Vec<(Vector3, Number)>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &Vec<BaseRandom>, &ParticleCalculatorOrbitVelocity),
     pub(crate) _idxcall: fn(usize) -> usize,
+}
+impl Default for ParticleOrbitVelocity {
+    fn default() -> Self {
+        Self { values: Default::default(), _runcall: Self::_run, _idxcall: _idx }
+    }
 }
 impl ParticleOrbitVelocity {
     pub fn new(maxcount: usize, velocity: & ParticleCalculatorOrbitVelocity) -> Self {
@@ -1629,6 +1650,11 @@ pub struct ParticleOrbitOffset {
     pub(crate) _runcall: fn(&mut Vec<Vector3>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &Vec<BaseRandom>, &ParticleCalculatorOrbitOffset),
     pub(crate) _idxcall: fn(usize) -> usize,
 }
+impl Default for ParticleOrbitOffset {
+    fn default() -> Self {
+        Self { values: Default::default(), _runcall: Self::_run, _idxcall: _idx }
+    }
+}
 impl ParticleOrbitOffset {
     pub fn new(maxcount: usize, offset: & ParticleCalculatorOrbitOffset) -> Self {
         match offset.0.constant() {
@@ -1694,6 +1720,11 @@ pub struct ParticleOrbitRadial {
     pub(crate) _runcall: fn(&mut Vec<Number>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &Vec<BaseRandom>, &ParticleCalculatorOrbitRadial),
     pub(crate) _idxcall: fn(usize) -> usize,
 }
+impl Default for ParticleOrbitRadial {
+    fn default() -> Self {
+        Self { values: Default::default(), _runcall: Self::_run, _idxcall: _idx }
+    }
+}
 impl ParticleOrbitRadial {
     pub fn new(maxcount: usize, offset: & ParticleCalculatorOrbitRadial) -> Self {
         match offset.0.mode {
@@ -1752,7 +1783,7 @@ impl ParticleOrbitRadial {
     }
 }
 
-#[derive(Component, Deref)]
+#[derive(Component, Deref, Default)]
 pub struct ParticleLimitVelocityScalar(pub(crate) Vec<LimitVelocityScalar>);
 impl ParticleLimitVelocityScalar {
     pub fn new(maxcount: usize) -> Self {
@@ -1782,7 +1813,7 @@ impl ParticleLimitVelocityScalar {
 }
 
 /// 粒子局部步进向量
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Default)]
 pub struct ParticleDirection(pub(crate) Vec<Direction>);
 impl ParticleDirection {
     pub fn new(maxcount: usize) -> Self {
@@ -1878,7 +1909,7 @@ impl ParticleDirection {
 }
 
 /// 粒子实时颜色
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ParticleColorAndUV {
     pub(crate) color: ParticleColor,
     pub(crate) uv: ParticleUV,
@@ -1890,6 +1921,7 @@ impl ParticleColorAndUV {
 }
 
 /// 粒子实时颜色
+#[derive(Default)]
 pub struct ParticleColor(pub(crate) Vec<Vector4>);
 impl ParticleColor {
     pub fn new(maxcount: usize) -> Self {
@@ -1933,7 +1965,7 @@ impl ParticleColor {
     }
 }
 
-
+#[derive(Default)]
 pub struct ParticleUV(pub(crate) Vec<TextureUV>);
 impl ParticleUV {
     pub fn new(maxcount: usize) -> Self {
@@ -1971,7 +2003,7 @@ impl ParticleUV {
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Default)]
 pub struct ParticleCustomV4(pub(crate) Vec<Vector4>);
 impl ParticleCustomV4 {
     pub fn new(maxcount: usize) -> Self {

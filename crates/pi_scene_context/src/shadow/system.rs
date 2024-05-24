@@ -181,7 +181,7 @@ pub fn sys_shadow_bind_modify(
 ) {
     // record.0.push(String::from("sys_shadow_bind_modify"));
     scenes.iter().for_each(|(_entity, shadowdata, queueshadow)| {
-        shadowdata.0.reset();
+        shadowdata.0.as_ref().unwrap().reset();
         queueshadow.0.items().for_each(|v| {
             if let (Ok(indexshadow), Ok((light, matrix, shadow))) = (indexs.get(*v), shadows.get(*v)) {
                 let uscale = 1.;
@@ -189,7 +189,7 @@ pub fn sys_shadow_bind_modify(
                 let uoff = 0.;
                 let voff = 0.;
                 if let Ok(indexlight) = indexs.get(light.0) {
-                    shadowdata.0.direct_shadow_data(indexlight.val(), indexshadow.val(), matrix.0.as_slice(), shadow.bias, shadow.normalbias, shadow.depthscale, 0., uscale, vscale, uoff, voff)
+                    shadowdata.0.as_ref().unwrap().direct_shadow_data(indexlight.val(), indexshadow.val(), matrix.0.as_slice(), shadow.bias, shadow.normalbias, shadow.depthscale, 0., uscale, vscale, uoff, voff)
                 }
             }
         });

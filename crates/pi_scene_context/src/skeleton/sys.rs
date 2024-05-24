@@ -68,7 +68,7 @@ use super::{skeleton::*, bone::*};
                                 }
                             });
                             // log::warn!("skin_buffer_update");
-                            skel.bind.data().write_data(0, bytemuck::cast_slice(&data));
+                            skel.bind.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&data));
                         }
                     },
                     ESkinCode::RowTexture(_) => {

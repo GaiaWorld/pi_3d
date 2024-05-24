@@ -107,6 +107,11 @@ pub enum SceneBoundingPool {
     QuadTree(),
     OctTree(BoundingOctTree),
 }
+impl Default for SceneBoundingPool{
+    fn default() -> Self {
+        Self::List(Default::default())
+    }
+}
 impl SceneBoundingPool {
     pub const MODE_LIST: u8 = 0;
     pub const MODE_QUAD_TREE: u8 = 1;
@@ -210,7 +215,7 @@ impl SceneBoundingPool {
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct BoundingBoxDisplay {
     pub mesh: Entity,
     pub display: bool,

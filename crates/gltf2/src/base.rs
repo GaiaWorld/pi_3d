@@ -6,8 +6,9 @@ use pi_gltf::animation::Interpolation;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum EAnimePropertyType {
+    #[default]
     LocalPosition       =  0,
     LocalRotation       =  1,
     LocalScaling        =  2, 

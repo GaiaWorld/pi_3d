@@ -84,10 +84,10 @@ impl TagGroupListen {
 
 pub type AnimeFrameEventData = u32;
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct AnimationGroupKey(pub DefaultKey);
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct AnimationGroupScene(pub Entity);
 
 // #[d]
@@ -155,6 +155,12 @@ impl SceneAnimationContext {
                 AnimationGroupManagerDefault::<Entity>::default()
             )
         )
+    }
+}
+
+impl Default for SceneAnimationContext{
+    fn default() -> Self {
+        Self::new()
     }
 }
 

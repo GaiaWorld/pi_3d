@@ -61,7 +61,7 @@ pub fn sys_direct_light_update(
             let mut gdirection = Vector3::zeros();
             CoordinateSytem3::transform_normal(&direction.0, &wm.matrix, &mut gdirection);
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
-            info.0.direct_light_data(lidx.val(), enabled.0, layer.0 as f32, gdirection.x, gdirection.y, gdirection.z, r, g, b)
+            info.0.as_ref().unwrap().direct_light_data(lidx.val(), enabled.0, layer.0 as f32, gdirection.x, gdirection.y, gdirection.z, r, g, b)
         }
     });
 }
@@ -77,7 +77,7 @@ pub fn sys_point_light_update(
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
-            info.0.point_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius))
+            info.0.as_ref().unwrap().point_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius))
         }
     });
 }
@@ -93,7 +93,7 @@ pub fn sys_spot_light_update(
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
-            info.0.spot_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius), angle.in_value, angle.out_value, d.0.x, d.0.y, d.0.z);
+            info.0.as_ref().unwrap().spot_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius), angle.in_value, angle.out_value, d.0.x, d.0.y, d.0.z);
         }
     });
 }
@@ -108,7 +108,7 @@ pub fn sys_hemi_light_update(
     items.iter().for_each(|(_hemi, idscene, lidx, color, transform, layer, enabled)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
-            info.0.hemi_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, color.color.x, color.color.y, color.color.z, 1., 1., 0., 0., 0., 0.);
+            info.0.as_ref().unwrap().hemi_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, color.color.x, color.color.y, color.color.z, 1., 1., 0., 0., 0., 0.);
         }
     });
 }

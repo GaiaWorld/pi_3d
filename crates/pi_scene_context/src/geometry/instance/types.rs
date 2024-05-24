@@ -53,7 +53,7 @@ impl InstanceAttributeOffset {
     pub fn entity(&self) -> Option<Entity> { self.entity }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ModelInstanceAttributes {
     bytes: Vec<u8>,
     attributes: Vec<(Atom, InstanceAttributeOffset)>,

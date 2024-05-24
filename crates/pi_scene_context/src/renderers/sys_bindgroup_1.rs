@@ -39,7 +39,7 @@ pub fn sys_set1_modify(
                 if let Ok( ( bind_model, bind_skl, id_skl, lightingidxs) ) = models.get(idmodel.0) {
                     match (BindDefines::need_model(meta.binddefines), bind_model) {
                         (true, Some(bind)) => {
-                            bind_matrix = Some(bind.0.clone());
+                            bind_matrix = Some(bind.0.as_ref().unwrap().clone());
                             match (&bind_skl.0, id_skl) {
                                 (Some(bind), Some(_)) => { bind_skin = Some(bind.clone()); },
                                 (None, None) => { },

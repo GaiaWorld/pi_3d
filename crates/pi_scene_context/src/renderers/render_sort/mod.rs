@@ -21,7 +21,7 @@ impl Eq for OpaqueSortParam {
     fn assert_receiver_is_total_eq(&self) {}
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Default)]
 pub struct TransparentSortParam {
     /// 同 渲染类型 中的 渲染分组
     pub group: i32,

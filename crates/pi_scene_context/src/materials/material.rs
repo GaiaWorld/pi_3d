@@ -13,7 +13,7 @@ pub trait TMaterial {
 /// 材质单独与 GameObject 关联
 /// Mesh 使用
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Component)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Component, Default)]
 pub struct LinkedMaterialID (pub Entity);
 impl TEntityRef for LinkedMaterialID {
     fn id(&self) -> Entity {

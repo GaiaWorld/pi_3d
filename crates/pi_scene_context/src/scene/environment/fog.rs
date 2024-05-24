@@ -1,5 +1,7 @@
 
 
+use std::default;
+
 use pi_scene_shell::prelude::*;
 
 
@@ -43,8 +45,9 @@ impl Default for FogAltitudeBaseParam {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum FogParam {
+    #[default]
     None,
     Linear(FogLinearParam),
     Exp(FogExpParam),
@@ -69,7 +72,7 @@ impl FogParam {
 }
 
 // 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneFog {
     pub param: FogParam,
     pub r: Number,
@@ -78,6 +81,6 @@ pub struct SceneFog {
 }
 
 pub fn update_scenefog_uniform(fog: &SceneFog, bind: &mut BindSceneEffect) {
-    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_INFO as usize, bytemuck::cast_slice(&[fog.r, fog.g, fog.b]));
-    bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_PARAM as usize, bytemuck::cast_slice(&fog.param.as_array()));
+    bind.0.as_ref().unwrap().data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_INFO as usize, bytemuck::cast_slice(&[fog.r, fog.g, fog.b]));
+    bind.0.as_ref().unwrap().data().write_data(ShaderBindSceneAboutEffect::OFFSET_FOG_PARAM as usize, bytemuck::cast_slice(&fog.param.as_array()));
 }

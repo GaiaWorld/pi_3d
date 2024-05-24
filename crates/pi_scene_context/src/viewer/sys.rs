@@ -88,12 +88,12 @@ use super::base::*;
                 viewmatrix, projmatrix, transmatrix, position, direction
             )| {
                 // log::debug!("SysViewerUpdated: {:?}, {:?}", bind.0.data().offset(), bind.0.data().size());
-
-                viewmatrix.update(bind.0.data());
-                projmatrix.update(bind.0.data());
-                transmatrix.update(bind.0.data());
-                position.update(bind.0.data());
-                direction.update(bind.0.data());
+                if let Some(bind) = &bind.0{
+                viewmatrix.update(bind.data());
+                projmatrix.update(bind.data());
+                transmatrix.update(bind.data());
+                position.update(bind.data());
+                direction.update(bind.data());}
             }
         );
     }

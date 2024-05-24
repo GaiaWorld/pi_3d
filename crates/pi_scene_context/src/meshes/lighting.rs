@@ -1,9 +1,9 @@
 use pi_scene_shell::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct MeshCastShadow(pub bool);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct MeshReceiveShadow(pub bool);
 
 #[derive(Component, Default)]

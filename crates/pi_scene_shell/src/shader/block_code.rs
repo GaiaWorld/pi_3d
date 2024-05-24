@@ -25,7 +25,7 @@ impl TToBlockCodeAtom for pi_render::rhi::shader::BlockCodeAtom {
 }
 
 /// 代码片段
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct BlockCodeAtom {
     /// 声明代码
     pub define: Atom,

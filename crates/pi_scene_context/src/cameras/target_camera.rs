@@ -7,10 +7,10 @@ use crate::{
     transforms::prelude::*,
 };
 
-#[derive(Deref, DerefMut, Component)]
+#[derive(Deref, DerefMut, Component, Default)]
 pub struct CameraUp(pub Vector3);
 
-#[derive(Deref, DerefMut, Component)]
+#[derive(Deref, DerefMut, Component, Default)]
 pub struct CameraTarget(pub Vector3);
 
 /// 通过 设置 target 目标点 调整相机

@@ -76,11 +76,14 @@ pub fn sys_state_material(
 
     materials.iter().for_each(|(meta, texs)| {
         state.count += 1;
+        if meta.0.is_none(){
+            
+        } else
         if let Some(texs) = &texs.0 {
-            if texs.textures.len() == meta.textures.len() {
+            if texs.textures.len() == meta.as_ref().unwrap().textures.len() {
                 state.count_ready += 1;
             }
-        } else if meta.textures.len() == 0 {
+        } else if meta.as_ref().unwrap().textures.len() == 0 {
             state.count_ready += 1;
         }
     });

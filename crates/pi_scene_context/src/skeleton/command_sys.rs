@@ -56,7 +56,7 @@ pub fn sys_act_skin_use(
         match ops {
             OpsSkinUse::Use(entity, skin) => {
                 if let (Ok(mut bind), Ok((skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
-                    *bind = BindSkinValue(Some(skeleton.bind.clone()));
+                    *bind = BindSkinValue(Some(skeleton.bind.as_ref().unwrap().clone()));
                     // commands.alter(entity,(SkeletonID(skin),));
                     add_component(&mut editor, entity, SkeletonID(skin)).unwrap();
                     // log::warn!("Skinn OKKKKKKKKKKKK");

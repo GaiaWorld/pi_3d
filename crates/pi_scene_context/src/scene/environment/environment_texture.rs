@@ -35,7 +35,7 @@ impl EnvTexture {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct EnvSampler(pub Option<Arc<ShaderBindEnvSampler>>);
 impl EnvSampler {
     pub fn new(device: &RenderDevice, asset: &Share<AssetMgr<SamplerRes>>) -> Self {

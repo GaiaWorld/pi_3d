@@ -14,16 +14,16 @@ pub struct NodeBrothers {
     pub next: Option<Entity>,
 }
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct TransformNode;
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct TransformNodeDirty;
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalDirtyRotation;
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalDirtyScaling;
 
 #[derive(Clone, Default, Component)]
@@ -230,10 +230,10 @@ impl TAnimatableComp for LocalRotationQuaternion {
 
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalRoationWithQuaternion(pub bool);
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalRotation(pub Rotation3);
 
 #[derive(Clone, Component, Default)]
@@ -290,7 +290,7 @@ impl TAnimatableComp for LocalScaling {
 }
 
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalMatrix(pub Matrix);
 impl LocalMatrix {
     pub fn new(m: Matrix) -> Self {

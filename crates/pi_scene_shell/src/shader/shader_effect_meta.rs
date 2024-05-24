@@ -57,7 +57,7 @@ pub type BindDefine = u32;
 ///     * FS Before Effect Snippets
 ///     * Effect VS Running Code
 ///     * FS After Effect Snippets
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ShaderEffectMeta {
     pub uniforms: Arc<MaterialValueBindDesc>,
     pub textures: Arc<EffectUniformTexture2DDescs>,

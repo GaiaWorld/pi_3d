@@ -6,7 +6,7 @@ use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera
 use crate::viewer::prelude::*;
 
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct Camera(pub bool);
 
 #[derive(Clone, Copy, PartialEq, Eq, Default, Component)]

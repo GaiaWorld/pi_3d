@@ -81,15 +81,15 @@ impl Default for ModelVelocity {
 #[derive(Component, Clone, Default)]
 pub struct ModelStatic;
 
-#[derive(Component, Clone)]
-pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
+#[derive(Component, Clone, Default)]
+pub struct BindModel(pub Option<Arc<ShaderBindModelAboutMatrix>>);
 impl BindModel {
     pub fn new(
         allocator: &mut BindBufferAllocator,
     ) -> Option<Self> {
 
         if let Some(bind) = ShaderBindModelAboutMatrix::new(allocator) {
-            Some(Self(Arc::new(bind)))
+            Some(Self(Some(Arc::new(bind))))
         } else {
             None
         }
@@ -203,7 +203,7 @@ impl Default for VertexRenderRange {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct RenderMatrixDirty(pub bool);
 impl TInstanceFlag for RenderMatrixDirty {
     fn dirty(&self) -> bool {
@@ -215,7 +215,7 @@ impl TInstanceFlag for RenderMatrixDirty {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrix(pub Matrix);
 impl RenderWorldMatrix {
     pub fn new(m: Matrix) -> Self {
@@ -252,7 +252,7 @@ impl TInstanceData for RenderWorldMatrix {
     // }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrixInv(pub Matrix);
 impl RenderWorldMatrixInv {
     pub fn new(m: Matrix) -> Self {
@@ -286,7 +286,7 @@ pub struct ModelForceSpotLightings(pub Vec<Entity>);
 #[derive(Component, Default)]
 pub struct ModelForceHemiLightings(pub Vec<Entity>);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ModelLightingIndexs {
     pub bind: Option<Arc<BindModelLightIndexs>>,
     pub count: u32,

@@ -24,7 +24,7 @@ pub fn sys_set3_modify(
                 shadowtarget, scene_shadow,
                 env_texture, env_irradiance, env_sampler
             )) = scenes.get(idscene.0) {
-                let bind_lighting = Some(scene_lighting.0.clone());
+                let bind_lighting = Some(scene_lighting.0.as_ref().unwrap().clone());
                 let bind_shadow = match (BindDefines::need_shadowmap(meta.binddefines), &shadowtarget.0, scene_shadow) {
                     (true, Some(shadowtarget), Some(scene_shadow)) => {
                         if let Some(shadowtarget) = targets.get(shadowtarget.clone()) {

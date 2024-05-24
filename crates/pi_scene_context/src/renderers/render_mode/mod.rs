@@ -1,13 +1,16 @@
 
 
+use std::default;
+
 use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 
 pub struct RenderMode(pub ERenderMode);
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Component)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Component, Default)]
 pub enum ERenderMode {
+    #[default]
     Opaque = 1,
     Skybox = 2,
     AlphaTest = 3,

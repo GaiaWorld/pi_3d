@@ -1,6 +1,6 @@
 
 use pi_render::components;
-use pi_scene_shell::{add_component, add_components, prelude::{pi_world::editor::EntityEditor, *}};
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
     flags::{CullingFlag, Enable, GlobalEnable, RecordEnable}, layer_mask::prelude::*, shadow::prelude::LightLinkedShadowID, transforms::command_sys::*, viewer::prelude::ViewerDistanceCompute

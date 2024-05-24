@@ -213,7 +213,7 @@ pub struct EffectUniformTextureWithSamplerUseinfo(pub Vec<(Arc<UniformTextureWit
 /// * 能通过 纹理属性名称 获取 纹理槽位序号
 /// * 能通过 纹理的使用信息 生成 纹理的Uniform描述数组(数组序号对应纹理槽位序号)
 /// * 如果某个槽位没有设置 则 根据 shader 描述中对应声明使用默认纹理设置
-#[derive(Clone, Deref)]
+#[derive(Clone, Deref, Default)]
 pub struct EffectUniformTexture2DDescs(pub Vec<Arc<UniformTexture2DDesc>>);
 impl From<Vec<Arc<UniformTexture2DDesc>>> for EffectUniformTexture2DDescs {
     fn from(mut value: Vec<Arc<UniformTexture2DDesc>>) -> Self {

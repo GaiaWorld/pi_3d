@@ -14,7 +14,7 @@ pub enum StageGeometry {
     Upload,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct RenderGeometryEable(pub bool);
 
 pub trait RenderVerticesFrom {
@@ -37,7 +37,7 @@ pub trait RenderIndicesFrom {
 impl RenderIndicesFrom for RenderIndices {
     fn create(item: (&IndicesBufferDesc, &AssetResBufferIndices)) -> Self {
         Self {
-            buffer: item.1.0.clone(),
+            buffer: item.1.0.as_ref().unwrap().clone(),
             buffer_range: item.0.buffer_range.clone(),
             format: item.0.format,
         }

@@ -25,11 +25,11 @@ pub fn sys_material_textures_modify(
         mut slots,
         mut samplers
     )| {
-        if effect.textures.len() == 0 {
+        if effect.as_ref().unwrap().textures.len() == 0 {
             //
         } else {
-            for index in 0..effect.textures.len() {
-                let item = effect.textures.get(index).unwrap();
+            for index in 0..effect.as_ref().unwrap().textures.len() {
+                let item = effect.as_ref().unwrap().textures.get(index).unwrap();
                 let param = if let Some(param) = texparams.0.get(&item.slotname) {
                     param
                 } else {
@@ -213,7 +213,7 @@ pub fn sys_texture_ready07(
         // , (tex07, sampl07)
         , mut comp
     )| {
-        let need = binddesc.textures.len() as u32;
+        let need = binddesc.as_ref().unwrap().textures.len() as u32;
         let mut texsamplerarr =  EffectTextureSamplers::default();
 
         if let (Some(v1), Some(v2)) = (&textures.data[0], &samplers.0[0]) {

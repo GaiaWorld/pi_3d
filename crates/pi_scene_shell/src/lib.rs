@@ -5,8 +5,8 @@ use std::sync::Arc;
 
 use pi_share::ShareMutex;
 use pi_world::{editor::EntityEditor, query::QueryError, world::Entity};
-use pi_world_macros::ComponentEXT;
-use crate::prelude::pi_world::utils::ComponentEXT;
+// use pi_world_macros::ComponentEXT;
+// use crate::prelude::pi_world::utils::ComponentEXT;
 use crate::prelude::Bundle;
 
 mod effect_sampler2d;
@@ -154,22 +154,22 @@ pub fn add_component<B: Bundle + 'static>(editor: &mut EntityEditor, e: Entity, 
 }
 
 
-pub fn add_components<B: Bundle + ComponentEXT + 'static>(editor: &mut EntityEditor, e: Entity, components: Vec<B>)-> Result<(), QueryError>{
+// pub fn add_components<B: Bundle + ComponentEXT + 'static>(editor: &mut EntityEditor, e: Entity, components: Vec<B>)-> Result<(), QueryError>{
 
-    let mut indexs = Vec::with_capacity(components.len());
+//     let mut indexs = Vec::with_capacity(components.len());
 
-    for component in &components{
-        indexs.push((component.component_index(editor), true))
-    }
+//     for component in &components{
+//         indexs.push((component.component_index(editor), true))
+//     }
 
-    let index = editor.init_component::<B>();
-    editor.alter_components(e, &[(index, true)])?;
+//     let index = editor.init_component::<B>();
+//     editor.alter_components(e, &[(index, true)])?;
 
-    let mut i = 0;      
-    for component in  components {
-        *editor.get_component_unchecked_mut_by_id::<B>(e, indexs[i].0) = component;
-        i+=1;
-    }
+//     let mut i = 0;      
+//     for component in  components {
+//         *editor.get_component_unchecked_mut_by_id::<B>(e, indexs[i].0) = component;
+//         i+=1;
+//     }
     
-    Ok(())
-}
+//     Ok(())
+// }

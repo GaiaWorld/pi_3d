@@ -8,7 +8,7 @@ use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
 use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer, ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
-use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator, scene::StageScene};
+use pi_scene_context::{pass::pi_world::editor::{self, EntityEditor}, prelude::*, scene::StageScene, shadow::PluginShadowGenerator};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_standard_material::PluginStandardMaterial;
 use pi_winit::{event_loop::EventLoop, window::Window};
@@ -95,90 +95,90 @@ impl DemoScene {
     pub const PASS_HIGHLIGHT: PassTag       = PassTag::PASS_TAG_04;
     pub const PASS_SKY_WATER: PassTag       = PassTag::PASS_TAG_06;
     pub const PASS_TRANSPARENT: PassTag     = PassTag::PASS_TAG_07;
-    // pub fn new(
-    //     // commands: &mut Commands,
-    //     insert: &Insert<()>,
-    //     actions: &mut pi_3d::ActionSets,
-    //     animegroupres: &mut ResourceAnimationGroup,
-    //     targets: &mut CustomRenderTargets,
-    //     device: &RenderDevice,
-    //     asset_samp: &ShareAssetMgr<SamplerRes>,
-    //     atlas_allocator: &PiSafeAtlasAllocator,
-    //     camera_size: f32,
-    //     camera_fov: f32,
-    //     camera_position: (f32, f32, f32),
-    //     orthographic_camera: bool
-    // ) -> Self {
+    pub fn new(
+        // commands: &mut Commands,
+        editor: &mut EntityEditor,
+        actions: &mut pi_3d::ActionSets,
+        animegroupres: &mut ResourceAnimationGroup,
+        targets: &mut CustomRenderTargets,
+        device: &RenderDevice,
+        asset_samp: &ShareAssetMgr<SamplerRes>,
+        atlas_allocator: &PiSafeAtlasAllocator,
+        camera_size: f32,
+        camera_fov: f32,
+        camera_position: (f32, f32, f32),
+        orthographic_camera: bool
+    ) -> Self {
         
-    //     let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
-    //         Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
-    //         None => None,
-    //     };
+        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
+            Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
+            None => None,
+        };
         
-    //     let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
+        let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
 
-    //     let scene = insert.insert(());
-    //     // animegroupres.scene_ctxs.init_scene(scene);
-    //     actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
+        let scene = editor.alloc_entity();
+        // animegroupres.scene_ctxs.init_scene(scene);
+        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
-    //     let camera = insert.insert(()); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
-    //     actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
-    //     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
-    //     actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
-    //     actions.camera.active.push(OpsCameraActive::ops(camera, true));
-    //     actions.camera.size.push(OpsCameraOrthSize::ops(camera, camera_size));
-    //     actions.camera.fov.push(OpsCameraFov::ops(camera, camera_fov));
-    //     actions.camera.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
-    //     actions.camera.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
-    //     actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
+        let camera =  editor.alloc_entity(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
+        actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
+        actions.camera.mode.push(OpsCameraMode::ops(camera, orthographic_camera));
+        actions.camera.active.push(OpsCameraActive::ops(camera, true));
+        actions.camera.size.push(OpsCameraOrthSize::ops(camera, camera_size));
+        actions.camera.fov.push(OpsCameraFov::ops(camera, camera_fov));
+        actions.camera.aspect.push(OpsCameraAspect::ops(camera, 800. / 600.) );
+        actions.camera.nearfar.push(OpsCameraNearFar::ops(camera, 0.1, 100.));
+        actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
 
-    //     let opaque_renderer = insert.insert(()); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
-    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
-    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
-    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
-    //     actions.renderer.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
-    //     actions.renderer.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
-    //     actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
-    //     // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+        let opaque_renderer = editor.alloc_entity(); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
+        actions.renderer.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
+        actions.renderer.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
+        actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
+        // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
-    //     let transparent_renderer = insert.insert(()); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
-    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
-    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
-    //     actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
-    //     actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
-    //     actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
-    //     // actions.camera.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+        let transparent_renderer =  editor.alloc_entity(); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
+        actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
+        actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
+        // actions.camera.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
-    //     Self { scene, camera, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
-    // }
+        Self { scene, camera, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
+    }
 
-//     pub fn mesh(
-//         // commands: &mut Commands,
-//         insert: &Insert<()>,
-//         scene: Entity,
-//         parent: Entity,
-//         actions: &mut pi_3d::ActionSets,
-//         vertices: Vec<VertexBufferDesc>,
-//         indices: Option<IndicesBufferDesc>,
-//         state: MeshInstanceState,
-//     ) -> Entity {
-//         let id_geo = insert.insert(());
-//         let mesh = insert.insert(()); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
-//         actions.mesh.create.push(OpsMeshCreation::ops(scene, mesh, state));
-//         actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
+    pub fn mesh(
+        // commands: &mut Commands,
+        editor: &mut EntityEditor,
+        scene: Entity,
+        parent: Entity,
+        actions: &mut pi_3d::ActionSets,
+        vertices: Vec<VertexBufferDesc>,
+        indices: Option<IndicesBufferDesc>,
+        state: MeshInstanceState,
+    ) -> Entity {
+        let id_geo = editor.alloc_entity();
+        let mesh = editor.alloc_entity(); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
+        actions.mesh.create.push(OpsMeshCreation::ops(scene, mesh, state));
+        actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
 
-//         // actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::LessEqual)));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::LessEqual)));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::LessEqual)));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::LessEqual)));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::LessEqual)));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::LessEqual)));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::LessEqual)));
-//         actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::LessEqual)));
+        // actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::LessEqual)));
 
-//         mesh
-//     }
+        mesh
+    }
 }
 
 pub fn sys_scene_time_from_frame(

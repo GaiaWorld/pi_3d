@@ -20,7 +20,7 @@ pub struct FlagModelList(pub bool);
 #[derive(Default, Component)]
 pub struct ModelListAdd(pub XHashSet<Entity>);
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct FlagModelListAdd(pub bool);
 
 #[derive(Default, Component)]
@@ -33,7 +33,7 @@ pub struct FlagModelListDel(pub bool);
 pub struct ModelListAfterCulling(pub Vec<Entity>);
 
 /// 视口ID - 可能是 相机、灯光
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct ViewerID(pub Entity);
 
 /// 视口状态
@@ -171,12 +171,12 @@ impl ViewerDistanceCompute {
     }
 }
 
-#[derive(Clone, Component)]
-pub struct BindViewer(pub Arc<ShaderBindViewer>);
+#[derive(Clone, Component, Default)]
+pub struct BindViewer(pub Option<Arc<ShaderBindViewer>>);
 impl BindViewer {
     pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {
         if let Some(data) = ShaderBindViewer::new(allocator) {
-            Some(Self ( Arc::new(data) ))
+            Some(Self ( Some(Arc::new(data))))
         } else {
             None
         }

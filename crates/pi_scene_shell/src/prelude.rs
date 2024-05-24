@@ -128,7 +128,7 @@ pub struct VBLoaderSlot<T: Clone + core::hash::Hash + PartialEq + Eq, D: From<EV
 #[derive( DerefMut, Deref)]
 pub struct VertexBufferDataMap3D(pub SingleVertexBufferDataMap);
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Default)]
 pub struct IndicesBufferDesc {
     pub format: wgpu::IndexFormat,
     /// bytes 范围
@@ -171,8 +171,8 @@ impl HashAsResource for VertexBufferDesc {
     }
 }
 
-#[derive(Deref, Component)]
-pub struct AssetResBufferIndices(pub EVerticesBufferUsage);
+#[derive(Deref, Component,Default)]
+pub struct AssetResBufferIndices(pub Option<EVerticesBufferUsage>);
 
 // TODO Send问题， 临时解决
 unsafe impl Send for AssetResBufferIndices {}
@@ -180,11 +180,11 @@ unsafe impl Sync for AssetResBufferIndices {}
 
 impl From<EVerticesBufferUsage> for AssetResBufferIndices {
     fn from(value: EVerticesBufferUsage) -> Self {
-        Self(value)
+        Self(Some(value))
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts, pub KeyShaderFromAttributes);
 
 ////////////////////////////////////// Shader
@@ -239,7 +239,7 @@ impl SingleEmptyEntity {
 }
 
 
-#[derive( Default)]
+#[derive(Default)]
 pub struct Performance {
     pub worldmatrix: u32,
     pub culling: u32,

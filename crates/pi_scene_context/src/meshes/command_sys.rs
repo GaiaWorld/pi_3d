@@ -266,7 +266,7 @@ pub fn sys_act_instance_attribute(
     });
     skinoff_cmds.drain().drain(..).for_each(|OpsBoneOffset(entity, offset)| {
         if let Ok(bind) = skinoff_items.get(entity) {
-            bind.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[offset]));
+            bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[offset]));
         }
     });
 }

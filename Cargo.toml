@@ -61,11 +61,11 @@ ahash               = "=0.8.7"
 pi_slotmap = "0.1"
 [patch.yn]
 # pi_gltf                 = { path = "../pi_gltf", features = ["extras"] }
-# pi_render               = { path = "../pi_render" }
-# render_utils            = { path = "../pi_render/crates/render_utils" }
-# render_core             = { path = "../pi_render/crates/render_core" }
-# render_derive           = { path = "../pi_render/crates/render_derive" }
-# render_compile          = { path = "../pi_render/crates/render_compile" }
+pi_render               = { path = "../pi_render" }
+render_utils            = { path = "../pi_render/crates/render_utils" }
+render_core             = { path = "../pi_render/crates/render_core" }
+render_derive           = { path = "../pi_render/crates/render_derive" }
+render_compile          = { path = "../pi_render/crates/render_compile" }
 pi_bevy_render_plugin   = { path = "../pi_bevy/crates/render" }
 pi_bevy_winit_window    = { path = "../pi_bevy/crates/winit_window" }
 pi_bevy_ecs_extend      = { path = "../pi_bevy/crates/ecs_extend" }

@@ -14,15 +14,15 @@ pub fn sys_modify_pass_effect_by_pass(
         
         if let Ok((effect_key, meta, bind, _list, textures)) = materials.get(idmat.0) {
 
-            let (bindvalue, bindtextures, effect) = match (0 < meta.textures.len(), &textures.0) {
+            let (bindvalue, bindtextures, effect) = match (0 < meta.as_ref().unwrap().textures.len(), &textures.0) {
                 (true, Some(textures)) => {
-                    if textures.textures.len() == meta.textures.len() {
-                        (bind.0.as_ref(), Some(textures.clone()), Some((effect_key.0.clone(), meta.0.clone())))
+                    if textures.textures.len() == meta.as_ref().unwrap().textures.len() {
+                        (bind.0.as_ref(), Some(textures.clone()), Some((effect_key.0.clone(), meta.0.as_ref().unwrap().clone())))
                     } else {
                         (None, None, None)
                     }
                 },
-                (false, _) => (bind.0.as_ref(), None, Some((effect_key.0.clone(), meta.0.clone()))),
+                (false, _) => (bind.0.as_ref(), None, Some((effect_key.0.clone(), meta.0.as_ref().unwrap().clone()))),
                 _ => { (None, None, None) }
             };
 
@@ -46,16 +46,16 @@ pub fn sys_modify_pass_effect_by_material(
 ) {
     // log::error!("MaterialBind : ");
     materials.iter().for_each(|(effect_key, meta, bind, list, textures)| {
-        let (bindvalue, bindtextures, effect) = match (0 < meta.textures.len(), &textures.0) {
+        let (bindvalue, bindtextures, effect) = match (0 < meta.as_ref().unwrap().textures.len(), &textures.0) {
             (true, Some(textures)) => {
-                if textures.textures.len() == meta.textures.len() {
-                    (bind.0.as_ref(), Some(textures.clone()), Some((effect_key.0.clone(), meta.0.clone())))
+                if textures.textures.len() == meta.as_ref().unwrap().textures.len() {
+                    (bind.0.as_ref(), Some(textures.clone()), Some((effect_key.0.clone(), meta.0.as_ref().unwrap().clone())))
                 } else {
                     // log::error!("MaterialBind : Error 3");
                     (None, None, None)
                 }
             },
-            (false, _) => (bind.0.as_ref(), None, Some((effect_key.0.clone(), meta.0.clone()))),
+            (false, _) => (bind.0.as_ref(), None, Some((effect_key.0.clone(), meta.0.as_ref().unwrap().clone()))),
             _ => {
                 // log::error!("MaterialBind : Error 2");
                 (None, None, None)
