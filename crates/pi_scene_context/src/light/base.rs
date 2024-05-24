@@ -18,7 +18,7 @@ impl TCullingPerformance for StateLight {
 }
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord, SystemSet)]
 pub enum StageLighting {
     LightCreate,
     _LightCreate,

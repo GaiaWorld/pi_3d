@@ -5,7 +5,7 @@ use pi_scene_shell::prelude::*;
 
 use crate::{viewer::prelude::TCullingPerformance, layer_mask::prelude::*};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Component, PartialOrd, Ord, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Component, PartialOrd, Ord, Default, SystemSet)]
 pub enum StageShadowGenerator {
     #[default]
     Create,

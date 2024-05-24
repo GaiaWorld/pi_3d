@@ -122,66 +122,60 @@ pub fn sys_act_target_animation_attribute(
 }
 
 pub fn sys_act_mesh_modify(
-    mut cmds: ResMut<ActionListMeshShadow>,
+    mut cmds: ResMut<ActionListMeshStateModify>,
+    mut value_cmds: ResMut<ActionListAbstructMeshValueStateModify>,
     mut castshadows: Query<&mut MeshCastShadow>,
     mut receiveshadows: Query<&mut MeshReceiveShadow>,
-    mut align_cmds: ResMut<ActionListMeshRenderAlignment>,
     mut align_items: Query<&mut RenderAlignment>,
-    mut scalingmode_cmds: ResMut<ActionListAbstructMeshScalingMode>,
     mut scalingode_items: Query<&mut ScalingMode>,
-    mut velocity_cmds: ResMut<ActionListAbstructMeshVelocity>,
     mut velocity_items: Query<&mut ModelVelocity>,
-    mut indices_cmds: ResMut<ActionListMeshRenderIndiceRange>,
     mut indices_items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
-    mut vertexrange_cmds: ResMut<ActionListMeshRenderVertexRange>,
     mut vertexrange_items: Query<&mut VertexRenderRange>,
+    mut culling_items: Query<&mut GeometryCullingMode>,
+    skinoff_items: Query<&BindModel>,
 ) {
-    cmds.drain().drain(..).for_each(|cmd| {
+    cmds.drain().drain(..).for_each(|OpsMeshStateModify(entity, cmd)| {
         match cmd {
-            OpsMeshShadow::CastShadow(entity, val) => {
-                if let Ok(mut castshadow) = castshadows.get_mut(entity) {
-                    if val != castshadow.0 {
-                        *castshadow = MeshCastShadow(val);
-                    }
+            EMeshStateModify::Alignment(val) => if let Ok(mut item) = align_items.get_mut(entity) {
+                // log::warn!("RenderAlignment: {:?}", (val));
+                *item = RenderAlignment(val);
+            },
+            EMeshStateModify::ScalingMode(val) => if let Ok(mut item) = scalingode_items.get_mut(entity) {
+                *item = ScalingMode(val);
+            },
+            EMeshStateModify::CastShadow(val) => if let Ok(mut castshadow) = castshadows.get_mut(entity) {
+                if val != castshadow.0 {
+                    *castshadow = MeshCastShadow(val);
                 }
             },
-            OpsMeshShadow::ReceiveShadow(entity, val) => {
-                if let Ok(mut receiveshadow) = receiveshadows.get_mut(entity) {
-                    if val != receiveshadow.0 {
-                        *receiveshadow = MeshReceiveShadow(val);
-                    }
+            EMeshStateModify::ReceiveShadow(val) => if let Ok(mut receiveshadow) = receiveshadows.get_mut(entity) {
+                if val != receiveshadow.0 {
+                    *receiveshadow = MeshReceiveShadow(val);
+                }
+            },
+            EMeshStateModify::BoundingCullingMode(val) => if let Ok(mut cullingmode) = culling_items.get_mut(entity) {
+                if val != cullingmode.0 {
+                    cullingmode.0 = val;
                 }
             },
         }
     });
-    align_cmds.drain().drain(..).for_each(|OpsMeshRenderAlignment(entity, val)| {
-        if let Ok(mut item) = align_items.get_mut(entity) {
-            // log::warn!("RenderAlignment: {:?}", (val));
-            *item = val;
-        }
-    });
-    scalingmode_cmds.drain().drain(..).for_each(|OpsAbstructMeshScalingMode(entity, val)| {
-        if let Ok(mut item) = scalingode_items.get_mut(entity) {
-            *item = val;
-        }
-    });
-    velocity_cmds.drain().drain(..).for_each(|OpsAbstructMeshVelocity(entity, val)| {
-        if let Ok(mut item) = velocity_items.get_mut(entity) {
-            *item = val;
-        }
-    });
-    indices_cmds.drain().drain(..).for_each(|OpsMeshRenderIndiceRange(entity, val)| {
-        // log::warn!("Range: {:?}", val);
-        if let Ok((mut item, mut record)) = indices_items.get_mut(entity) {
-            *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-            *item = IndiceRenderRange(val);
-        }
-    });
-    vertexrange_cmds.drain().drain(..).for_each(|OpsMeshRenderVertexRange(entity, val)| {
-        // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = vertexrange_items.get_mut(entity) {
-            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-            *item = VertexRenderRange(val);
+    value_cmds.drain().drain(..).for_each(|OpsAbstructMeshValueStateModify(entity, val)| {
+        match val {
+            EMeshValueStateModify::BoneOffset(val) => if let Ok(bind) = skinoff_items.get(entity) {
+                bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[val]));
+            },
+            EMeshValueStateModify::IndiceRange(val) => if let Ok((mut item, mut record)) = indices_items.get_mut(entity) {
+                *record = RecordIndiceRenderRange(IndiceRenderRange::new(val.clone()));
+                *item = IndiceRenderRange::new(val);
+            },
+            EMeshValueStateModify::VertexRange(val) => if let Ok(mut item) = vertexrange_items.get_mut(entity) {
+                // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+                *item = VertexRenderRange(val);
+            },
+            EMeshValueStateModify::Velocity(x, y, z) => if let Ok(mut item) = velocity_items.get_mut(entity) {
+                *item = ModelVelocity(Vector3::new(x, y, z));
+            },
         }
     });
 }
@@ -197,14 +191,10 @@ pub fn sys_act_instance_attribute(
     mut animator_uint: ResMut<ActionListAnimatorableUint>,
     mut animator_sint: ResMut<ActionListAnimatorableSint>,
 
-    mut pointlight_cmds: ResMut<ActionListMeshForcePointLighting>,
+    mut forcelight_cmds: ResMut<ActionListMeshForceLighting>,
     mut pointlight_items: Query<&mut ModelForcePointLightings>,
-    mut spotlight_cmds: ResMut<ActionListMeshForceSpotLighting>,
     mut spotlight_items: Query<&mut ModelForceSpotLightings>,
-    mut hemilight_cmds: ResMut<ActionListMeshForceHemiLighting>,
     mut hemilight_items: Query<&mut ModelForceHemiLightings>,
-    mut skinoff_cmds: ResMut<ActionListBoneOffset>,
-    skinoff_items: Query<&BindModel>,
 ) {
 
     cmdsfloat.drain().drain(..).for_each(|OpsInstanceAttr(instance, val, attr)| {
@@ -234,83 +224,35 @@ pub fn sys_act_instance_attribute(
             }
         }
     });
-    pointlight_cmds.drain().drain(..).for_each(|OpsMeshForcePointLighting(entity, light, isadd)| {
+
+    forcelight_cmds.drain().drain(..).for_each(|OpsMeshForceLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = pointlight_items.get_mut(entity) {
-            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-            match item.0.binary_search(&light) {
-                Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
-                Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
-            }
-        }
-    });
-    spotlight_cmds.drain().drain(..).for_each(|OpsMeshForceSpotLighting(entity, light, isadd)| {
-        // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = spotlight_items.get_mut(entity) {
-            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-            match item.0.binary_search(&light) {
-                Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
-                Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
-            }
-        }
-    });
-    hemilight_cmds.drain().drain(..).for_each(|OpsMeshForceHemiLighting(entity, light, isadd)| {
-        // log::warn!("Range: {:?}", val);
-        if let Ok(mut item) = hemilight_items.get_mut(entity) {
-            // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-            match item.0.binary_search(&light) {
-                Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
-                Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
-            }
-        }
-    });
-    skinoff_cmds.drain().drain(..).for_each(|OpsBoneOffset(entity, offset)| {
-        if let Ok(bind) = skinoff_items.get(entity) {
-            bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[offset]));
+        match isadd {
+            EMeshForceLighting::ForcePointLighting(isadd) => if let Ok(mut item) = pointlight_items.get_mut(entity) {
+                // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+                match item.0.binary_search(&light) {
+                    Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
+                    Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+                }
+            },
+            EMeshForceLighting::ForceSpotLighting(isadd) => if let Ok(mut item) = spotlight_items.get_mut(entity) {
+                // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+                match item.0.binary_search(&light) {
+                    Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
+                    Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+                }
+            },
+            EMeshForceLighting::ForceHemiLighting(isadd) => if let Ok(mut item) = hemilight_items.get_mut(entity) {
+                // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
+                match item.0.binary_search(&light) {
+                    Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
+                    Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+                }
+            },
         }
     });
 }
 
-pub type ActionMeshInitBundle = (
-    MeshLightingMode,
-    ModelLightingIndexs,
-    ModelForcePointLightings,
-    ModelForceSpotLightings,
-    ModelForceHemiLightings,
-    MeshStates,
-    DirtyMeshStates,
-    ModelInstanceAttributes,
-    MeshInstanceState,
-);
-
-pub type ActionMeshBundle = (
-    AbstructMesh, 
-    Mesh, 
-    GeometryID, 
-    RenderGeometryEable, 
-    RenderWorldMatrix, 
-    RenderWorldMatrixInv,
-    RenderMatrixDirty,
-    MeshCastShadow,
-    MeshReceiveShadow,
-    PassDirtyBindEffectValue,
-    FlagPassDirtyBindEffectValue,
-    PassDirtyBindEffectTextures,
-    FlagPassDirtyBindEffectTextures,
-    LayerMask,
-    AbstructMeshCullingFlag,
-    TransparentSortParam,
-    BindSkinValue,
-    ModelVelocity,
-    RenderAlignment,
-    ScalingMode,
-    IndiceRenderRange,
-    RecordIndiceRenderRange,
-    VertexRenderRange,
-    GeometryBounding,
-    GeometryCullingMode,
-    InstancedMeshTransparentSortCollection
-);
 pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
@@ -517,13 +459,6 @@ impl ActionMesh {
 
     }
 
-    pub fn modify(
-        app: &mut App,
-        cmd: OpsMeshShadow,
-    ) {
-        let mut cmds = app.world.get_single_res_mut::<ActionListMeshShadow>().unwrap();
-        cmds.push(cmd);
-    }
 
     pub fn as_instance_source(
         entity: Entity,

@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 
 use super::{vertex_buffer_useinfo::TVertexBufferUseInfo, EVerteicesMemory};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SystemSet)]
 pub enum StageGeometry {
     Create,
     _GeoCreate,

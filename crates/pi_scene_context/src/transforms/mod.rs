@@ -33,25 +33,25 @@ impl Plugin for PluginTransformNode {
         app.world.insert_single_res(TransformDirtyRoots::default());
 
 
-        // app.configure_set(Update, StageTransform::TransformCreate.after(StageScene::Create));
-        // app.configure_set(Update, StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command));
-        // app.configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create));
-        // // app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
-        // app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageTransform::TransformCreate.after(StageScene::Create));
+        app.configure_set(Update, StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command));
+        app.configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create));
+        // app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
+        app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
         // app.add_system(Update, apply_deferred.in_set(StageTransform::_TransformCreate));
 
-        // app.add_system(Update, 
-        //     sys_create_transform_node.in_set(StageTransform::TransformCreate),
-        // );
-        // app.add_system(Update, 
-        //     sys_act_transform_parent.in_set(StageTransform::TransformCommand),
-        // );
-        // app.add_system(
-		// 	Update,
-        //     (
-        //         sys_act_local,
-        //     ).in_set(StageTransform::TransformCommand)
-        // );
+        app.add_system(Update, 
+            sys_create_transform_node.in_set(StageTransform::TransformCreate),
+        );
+        app.add_system(Update, 
+            sys_act_transform_parent.in_set(StageTransform::TransformCommand),
+        );
+        app.add_system(
+			Update,
+            
+                sys_act_local
+            .in_set(StageTransform::TransformCommand)
+        );
         // app.add_system(
 		// 	Update,
         //     (
@@ -62,27 +62,20 @@ impl Plugin for PluginTransformNode {
         //         sys_tree_layer_changed,
         //         sys_world_matrix_calc,
         //         sys_world_matrix_calc2,
-        //     ).chain().in_set(StageTransform::TransformCalcMatrix)
-        // );
+        //     ).chain().in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_local_euler_calc_rotation.in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_act_local_rotation.in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_local_quaternion_calc_rotation.in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_local_matrix_calc.in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_tree_layer_changed.in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_world_matrix_calc.in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_world_matrix_calc2.in_set(StageTransform::TransformCalcMatrix));
 
-        // app.add_system(
-		// 	Update,
-        //     sys_dispose_about_transform_node.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
-        // );
+        app.add_system(
+			Update,
+            sys_dispose_about_transform_node.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+        );
         
-
-        app.add_system(Update, sys_create_transform_node);
-        app.add_system(Update, sys_act_transform_parent);
-        app.add_system(Update,sys_act_local);
-        app.add_system(Update,sys_local_euler_calc_rotation,);
-        app.add_system(Update, sys_act_local_rotation,);
-        app.add_system(Update,sys_local_quaternion_calc_rotation,);
-        app.add_system(Update,sys_local_matrix_calc);
-        app.add_system(Update,sys_tree_layer_changed,);
-        app.add_system(Update,sys_world_matrix_calc,);
-        app.add_system(Update,sys_world_matrix_calc2,);
-
-        app.add_system(Update,sys_dispose_about_transform_node);
     }
 }
 

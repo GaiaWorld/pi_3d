@@ -117,7 +117,7 @@ pub fn sys_act_node_enable(
     });
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SystemSet)]
 pub enum StageEnable {
     Command,
 }
@@ -126,9 +126,9 @@ pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
         app.world.insert_single_res(ActionListNodeEnable::default());
-        // app.configure_set(Update, StageEnable::Command.after(StageScene::Create));
+        app.configure_set(Update, StageEnable::Command.after(StageScene::Create));
         app.add_system(Update, 
-            sys_act_node_enable//.in_set(StageEnable::Command)
+            sys_act_node_enable.in_set(StageEnable::Command)
         );
     }
 }

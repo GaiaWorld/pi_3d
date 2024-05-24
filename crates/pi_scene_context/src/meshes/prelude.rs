@@ -25,7 +25,7 @@ pub use super::{
 #[derive(SystemParam)]
 pub struct ActionSetMesh<'w> {
     pub create: ResMut<'w, ActionListMeshCreate>,
-    pub shadow: ResMut<'w, ActionListMeshShadow>,
+    pub state: ResMut<'w, ActionListMeshStateModify>,
     pub blend: ResMut<'w, ActionListBlend>,
     
     pub primitive_state: ResMut<'w, ActionListPrimitiveState>,
@@ -46,13 +46,13 @@ pub struct ActionSetMesh<'w> {
     // pub stencil_write: ResMut<'w, ActionListStencilWrite>,
 
     pub render_queue: ResMut<'w, ActionListRenderQueue>,
-    pub render_alignment: ResMut<'w, ActionListMeshRenderAlignment>,
-    pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
-    pub vertexrange: ResMut<'w, ActionListMeshRenderVertexRange>,
+    pub value_state: ResMut<'w, ActionListAbstructMeshValueStateModify>,
+    // pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
+    // pub vertexrange: ResMut<'w, ActionListMeshRenderVertexRange>,
     pub bounding: ResMut<'w, ActionListMeshBounding>,
-    pub boundingculling: ResMut<'w, ActionListMeshBoundingCullingMode>,
     pub layermask: ResMut<'w, ActionListLayerMask>,
-    pub boneoffset: ResMut<'w, ActionListBoneOffset>,
+    pub forcelighting: ResMut<'w, ActionListMeshForceLighting>,
+    // pub boneoffset: ResMut<'w, ActionListBoneOffset>,
 }
 
 #[derive(SystemParam)]
@@ -61,15 +61,13 @@ pub struct ActionSetInstanceMesh<'w> {
     pub attr: ResMut<'w, ActionListInstanceAttr>,
 }
 
-#[derive(SystemParam)]
-pub struct ActionSetAbstructMesh<'w> {
-    pub scaling_mode: ResMut<'w, ActionListAbstructMeshScalingMode>,
-    pub velocity: ResMut<'w, ActionListAbstructMeshVelocity>,
-    pub force_point_light: ResMut<'w, ActionListMeshForcePointLighting>,
-    pub force_spot_light: ResMut<'w, ActionListMeshForceSpotLighting>,
-    pub force_hemi_light: ResMut<'w, ActionListMeshForceHemiLighting>,
-    // pub targetanime: ResMut<'w, ActionListTargetAnimationAttribute>,
-}
+// #[derive(SystemParam)]
+// pub struct ActionSetAbstructMesh<'w> {
+//     pub force_point_light: ResMut<'w, ActionListMeshForcePointLighting>,
+//     pub force_spot_light: ResMut<'w, ActionListMeshForceSpotLighting>,
+//     pub force_hemi_light: ResMut<'w, ActionListMeshForceHemiLighting>,
+//     // pub targetanime: ResMut<'w, ActionListTargetAnimationAttribute>,
+// }
 
 #[derive(Resource, Default)]
 pub struct StateMesh {

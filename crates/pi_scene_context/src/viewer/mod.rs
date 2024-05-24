@@ -21,9 +21,8 @@ pub mod prelude;
 pub struct PluginViewerBase;
 impl Plugin for PluginViewerBase {
     fn build(&self, app: &mut App) {
-        // app.configure_set(Update, StageViewer::ForceInclude.in_set(FrameDataPrepare).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageViewer::ForceInclude.in_set(FrameDataPrepare).before(ERunStageChap::Uniform));
         app.world.insert_single_res(ActionListViewerForceInclude::default());
-        // app.add_system(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
-        app.add_system(Update, sys_act_viewer_force_include);
+        app.add_system(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
     }
 }

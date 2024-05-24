@@ -21,7 +21,7 @@ mod ray_test;
 pub mod prelude;
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SystemSet)]
 pub enum StageCulling {
     Command,
     CalcBounding,
@@ -44,41 +44,34 @@ impl Plugin for PluginCulling {
         app.world.insert_single_res(ActionListMeshBoundingCullingMode::default());
         app.world.insert_single_res(ActionListBoundingBoxDisplay::default());
 
-        // app.configure_set(Update, StageCulling::Command.after(StageScene::_Insert).before(StageMaterial::Command));
-        // app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
+        app.configure_set(Update, StageCulling::Command.after(StageScene::_Insert).before(StageMaterial::Command));
+        app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
 
-        app.add_system(Update, /* ( */
+        app.add_system(Update, (
             sys_act_mesh_bounding_culling_display
-        /* ).in_set(StageCulling::Command) */);
+        ).in_set(StageCulling::Command));
 
-        app.add_system(Update, /* ( */
+        app.add_system(Update, (
             sys_act_mesh_bounding
-        /* ).in_set(StageModel::AbstructMeshCommand) */);
+        ).in_set(StageModel::AbstructMeshCommand));
 
-        app.add_system(
-            Update,
-            // (
-                sys_update_culling_by_worldmatrix,
-            //     sys_update_culling_by_cullinginfo,
-            //     sys_abstructmesh_culling_flag_reset,
-            // ).chain().in_set(StageCulling::CalcBounding)
-        );
-        app.add_system(
-            Update,
-            // (
-            //     sys_update_culling_by_worldmatrix,
-                sys_update_culling_by_cullinginfo,
-            //     sys_abstructmesh_culling_flag_reset,
-            // ).chain().in_set(StageCulling::CalcBounding)
-        );
-        app.add_system(
-            Update,
-            // (
-            //     sys_update_culling_by_worldmatrix,
-            //     sys_update_culling_by_cullinginfo,
-                sys_abstructmesh_culling_flag_reset,
-            // ).chain().in_set(StageCulling::CalcBounding)
-        );
+        // app.add_system(
+        //     Update,
+        //     (
+        //         sys_update_culling_by_worldmatrix,
+        //         sys_update_culling_by_cullinginfo,
+        //         sys_abstructmesh_culling_flag_reset,
+        //     ).chain().in_set(StageCulling::CalcBounding)
+        // );
+        app.add_system(Update, (
+            sys_update_culling_by_worldmatrix
+        ).in_set(StageCulling::CalcBounding));
+        app.add_system(Update, (
+            sys_update_culling_by_cullinginfo
+        ).in_set(StageCulling::CalcBounding));
+        app.add_system(Update, (
+            sys_abstructmesh_culling_flag_reset
+        ).in_set(StageCulling::CalcBounding));
     }
 }
 

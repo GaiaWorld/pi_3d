@@ -1,6 +1,6 @@
 
 use crate::run_stage::ERunStageChap;
-use pi_world::prelude::Plugin;
+use pi_world::{prelude::Plugin, schedule_config::IntoSystemConfigs};
 use crate::engine_shell::EnginShell;
 use pi_world::{prelude::{App, SingleResMut}, schedule::Update};
 
@@ -91,6 +91,6 @@ impl Plugin for PluginFrameTime {
         app.world.insert_single_res(SingleFrameTimeCommand::default());
 
         #[cfg(not(target_arch = "wasm32"))]
-        app.add_system(Update, sys_frame_time);
+        app.add_system(Update, sys_frame_time.in_set(ERunStageChap::Initial));
     }
 }

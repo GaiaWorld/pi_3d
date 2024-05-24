@@ -57,7 +57,7 @@ impl Null for BoundingKey {
 
 /// 检测级别
 /// *
-#[derive(Default)]
+#[derive(Default, PartialEq, Eq)]
 pub enum ECullingStrategy {
     /// 不用检测直接通过检测
     None,

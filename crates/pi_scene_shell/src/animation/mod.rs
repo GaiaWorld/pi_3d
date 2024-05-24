@@ -16,6 +16,7 @@ use crate::prelude::FrameDataPrepare;
 
 use pi_world::{prelude::App, schedule::Update, world::Entity};
 use pi_world::prelude::Plugin;
+use pi_world::prelude::IntoSystemSetConfigs;
 pub use base::*;
 pub use command::*;
 pub use command_sys::*;
@@ -26,6 +27,8 @@ use pi_bevy_asset::{AssetMgrConfigs, ShareAssetMgr};
 use pi_bevy_render_plugin::should_run;
 use pi_curves::curve::frame::KeyFrameDataTypeAllocator;
 use pi_hash::XHashMap;
+use pi_world::prelude::IntoSystemConfigs;
+use pi_world_macros::SystemSet;
 pub use uint::*;
 pub use vec2::*;
 pub use vec3::*;
@@ -44,7 +47,7 @@ pub enum EAnimatorableType {
     Int,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SystemSet)]
 pub enum EStageAnimation {
     Create,
     _CreateApply,
@@ -88,47 +91,43 @@ impl Plugin for PluginGlobalAnimation {
         app.world
             .insert_single_res(ActionListAnimationWeight::default());
 
-        // app.configure_set(Update, EStageAnimation::Create);
-        // app.configure_set(
-        //     Update,
-        //     EStageAnimation::_CreateApply.after(EStageAnimation::Create),
-        // );
-        // app.configure_set(
-        //     Update,
-        //     EStageAnimation::Command.after(EStageAnimation::_CreateApply),
-        // );
-        // app.configure_set(
-        //     Update,
-        //     EStageAnimation::Running
-        //         .in_set(FrameDataPrepare)
-        //         .after(EStageAnimation::Command)
-        //         .before(ERunStageChap::Anime),
-        // );
-        // app.configure_set(
-        //     Update,
-        //     EStageAnimation::Dispose
-        //         .after(EStageAnimation::Running)
-        //         .after(ERunStageChap::Dispose),
-        // );
-        // app.add_system(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
-
-        app.add_system(
-            Update,
-            sys_create_animation_group
-        );
-        app.add_system(
-            Update,
-            sys_create_animatorable_entity
-        );
-
-        app.add_system(
-            Update,
-            sys_act_reset_while_animationgroup_start
-        );
-        app.add_system(Update, sys_act_animation_group_action);
-        app.add_system(Update,sys_act_dispose_animation_group);
-        app.add_system(Update,sys_animation_removed_data_clear);
-        app.add_system(Update,sys_reset_anime_performance);
+            app.configure_set(Update, EStageAnimation::Create);
+            app.configure_set(Update, EStageAnimation::_CreateApply.after(EStageAnimation::Create));
+            app.configure_set(Update, EStageAnimation::Command.after(EStageAnimation::_CreateApply));
+            app.configure_set(Update, EStageAnimation::Running.in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
+            app.configure_set(Update, EStageAnimation::Dispose.after(EStageAnimation::Running).after(ERunStageChap::Dispose));
+            // app.add_system(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
+            
+            // app.add_system(
+            //     Update,
+            //     (
+            //         sys_create_animation_group,
+            //         sys_create_animatorable_entity
+            //     ).in_set(EStageAnimation::Create)
+            // );
+            app.add_system(Update,sys_create_animation_group.in_set(EStageAnimation::Create));
+            app.add_system(Update,sys_create_animatorable_entity.in_set(EStageAnimation::Create));
+    
+            // app.add_system(
+            //     Update,
+            //     (
+            //         sys_act_reset_while_animationgroup_start    , // .run_if(should_run),
+            //         sys_act_animation_group_action              , // .run_if(should_run),
+            //         sys_act_dispose_animation_group             , // .run_if(should_run),
+            //     ).chain().in_set(EStageAnimation::Command)
+            // );
+            app.add_system(Update,sys_act_reset_while_animationgroup_start.in_set(EStageAnimation::Command));
+            app.add_system(Update,sys_act_animation_group_action.in_set(EStageAnimation::Command));
+            app.add_system(Update,sys_act_dispose_animation_group.in_set(EStageAnimation::Command));
+            
+            // app.add_system(Update, 
+            //     (
+            //         sys_animation_removed_data_clear,
+            //         sys_reset_anime_performance
+            //     ).in_set(EStageAnimation::Dispose)
+            // );
+            app.add_system(Update,sys_animation_removed_data_clear.in_set(EStageAnimation::Dispose));
+            app.add_system(Update,sys_reset_anime_performance.in_set(EStageAnimation::Dispose));
 
         let globalaboput = GlobalAnimeAbout {
             ty_alloc: KeyFrameDataTypeAllocator::default(),

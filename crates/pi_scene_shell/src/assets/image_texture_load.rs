@@ -533,32 +533,11 @@ impl<
             app.world.insert_single_res(ImageTextureLoader::default());
             app.world.insert_single_res(StateTextureLoader::default());
 
-            // app.configure_set(Update, StageTextureLoad::TextureRequest);
-            // app.configure_set(Update, StageTextureLoad::TextureLoading);
-            // app.configure_set(Update, StageTextureLoad::TextureLoaded);
-            // app.configure_set(Update, ERunStageChap::Uniform);
-            // app.configure_set(Update, StageTextureLoad::TextureLoading);
-            // app.configure_set(
-            //     Update,
-            //     StageTextureLoad::TextureLoaded
-            //         .after(StageTextureLoad::TextureLoading)
-            //         .before(ERunStageChap::Uniform),
-            // );
-
-            // app.configure_set(
-            //     Update,
-            //     StageTextureLoad::TextureLoaded
-            //         .after(StageTextureLoad::TextureLoading)
-            //         .before(ERunStageChap::Uniform),
-            // );
-            app.add_system(
-                Update,
-                sys_image_texture_load_launch,
-            );
-            app.add_system(
-                Update,
-                sys_image_texture_loaded,
-            );
+            app.configure_set(Update, StageTextureLoad::TextureRequest);
+            app.configure_set(Update, StageTextureLoad::TextureLoading.after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.add_system(Update, sys_image_texture_load_launch.in_set(StageTextureLoad::TextureLoading));
+            app.add_system(Update,sys_image_texture_loaded.in_set(StageTextureLoad::TextureLoading));
         }
         app.world.insert_single_res(ImageTextureViewLoader::<K>::default());
         // app.add_system(

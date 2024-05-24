@@ -9,7 +9,7 @@ pub use super::command::*;
 pub use super::tree_left_right::*;
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SystemSet)]
 pub enum StageTransform {
     TransformCreate,
     _TransformCreate,

@@ -29,12 +29,12 @@ impl Plugin for PluginGLTF2Res {
         //         sys_gltf_base_loaded_launch,
         //         sys_gltf_base_loaded_check,
         //         sys_gltf_analy
-        //     ).chain().in_set(StageScene::Create)
+        //     ).in_set(StageScene::Create)
         // );
-        app.add_system(Update, sys_load_gltf_launch);
-        app.add_system(Update, sys_gltf_base_loaded_launch);
-        app.add_system(Update, sys_gltf_base_loaded_check);
-        app.add_system(Update, sys_gltf_analy);
+        app.add_system(Update, sys_load_gltf_launch.in_set(StageScene::Create));
+        app.add_system(Update, sys_gltf_base_loaded_launch.in_set(StageScene::Create));
+        app.add_system(Update, sys_gltf_base_loaded_check.in_set(StageScene::Create));
+        app.add_system(Update, sys_gltf_analy.in_set(StageScene::Create));
     }
 }
 

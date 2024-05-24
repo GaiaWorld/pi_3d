@@ -10,7 +10,7 @@ pub use super::{
     animation::*,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageCamera {
     CameraCreate,
     _CameraCreate,
@@ -37,15 +37,15 @@ impl TCullingPerformance for StateCamera {
 #[derive(SystemParam)]
 pub struct ActionSetCamera<'w> {
     pub create: ResMut<'w, ActionListCameraCreate>,
-    pub mode: ResMut<'w, ActionListCameraMode>,
+    pub param: ResMut<'w, ActionListCameraModify>,
     pub target: ResMut<'w, ActionListCameraTarget>,
-    pub active: ResMut<'w, ActionListCameraActive>,
-    pub fixmode: ResMut<'w, ActionListCameraFixedMode>,
-    pub fov: ResMut<'w, ActionListCameraFov>,
-    pub size: ResMut<'w, ActionListCameraOrthSize>,
-    pub nearfar: ResMut<'w, ActionListCameraNearFar>,
+    // pub active: ResMut<'w, ActionListCameraActive>,
+    // pub fixmode: ResMut<'w, ActionListCameraFixedMode>,
+    // pub fov: ResMut<'w, ActionListCameraFov>,
+    // pub size: ResMut<'w, ActionListCameraOrthSize>,
+    // pub nearfar: ResMut<'w, ActionListCameraNearFar>,
     // pub render: ResMut<'w, ActionListCameraRenderer>,
-    pub aspect: ResMut<'w, ActionListCameraAspect>,
+    // pub aspect: ResMut<'w, ActionListCameraAspect>,
     // pub pixelsize: ResMut<'w, ActionListCameraPixelSize>,
     pub forceinclude: ResMut<'w, ActionListViewerForceInclude>,
 }

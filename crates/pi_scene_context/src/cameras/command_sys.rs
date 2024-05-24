@@ -3,11 +3,15 @@ use pi_scene_shell::prelude::{pi_world::editor::EntityEditor, *};
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
-    flags::{CullingFlag, Enable, GlobalEnable, RecordEnable}, layer_mask::prelude::*, prelude::{DirtyViewerRenderersInfo, SceneID, SceneMainCameraID, ViewerRenderersInfo}, transforms::command_sys::ActionTransformNode, viewer::{command_sys::ActionViewer, prelude::*}
+    viewer::{prelude::*, command_sys::ActionViewer},
+    transforms::command_sys::ActionTransformNode,
+    layer_mask::prelude::*, prelude::{SceneMainCameraID, SceneID},
 };
 
 use super::{
-    camera::*, command::*, target_camera::*, AbsoluteTransform, GlobalMatrix, LocalEulerAngles, LocalMatrix, LocalPosition, LocalRotation, LocalRotationQuaternion, LocalScaling, RecordLocalEulerAngles, RecordLocalPosition, RecordLocalRotationQuaternion, RecordLocalScaling, TransformNodeDirty
+    target_camera::*,
+    camera::*,
+    command::*,
 };
 
 pub fn sys_create_camera(
@@ -34,97 +38,80 @@ pub fn sys_create_camera(
 
 
 pub fn sys_act_camera_mode(
-    mut mode_cmds: ResMut<ActionListCameraMode>,
-    mut active_cmds: ResMut<ActionListCameraActive>,
+    mut cmds: ResMut<ActionListCameraModify>,
     mut active_cameras: Query<(&SceneID, &mut Camera, &mut ViewerActive)>,
     mut scenes: Query<&mut SceneMainCameraID>,
-    mut fix_cmds: ResMut<ActionListCameraFixedMode>,
-    mut nearfar_cmds: ResMut<ActionListCameraNearFar>,
     mut cameras: Query<(&mut CameraParam, &mut ViewerDistanceCompute)>,
+    mut fov_cameras: Query<(&mut CameraFov, &mut RecordCameraFov)>,
+    mut orth_cameras: Query<(&mut CameraOrthSize, &mut RecordCameraOrthSize)>,
+    mut aspect_cameras: Query<&mut ViewerAspect>,
 ) {
-    mode_cmds.drain().drain(..).for_each(|OpsCameraMode(entity, mode)| {
-        if let Ok((mut camera, mut distance)) = cameras.get_mut(entity) {
-            if camera.mode != mode {
-                camera.mode = mode;
-            }
-            match mode {
-                EFreeCameraMode::Perspective => *distance = ViewerDistanceCompute::Base,
-                EFreeCameraMode::Orthograhic => *distance = ViewerDistanceCompute::Direction,
-            }
-        } else {
-            mode_cmds.push(OpsCameraMode(entity, mode))
-        }
-    });
-    active_cmds.drain().drain(..).for_each(|OpsCameraActive(entity, mode)| {
-        // log::warn!("CameraActive ");
-        if let Ok((idscene, mut camera, mut viewer)) = active_cameras.get_mut(entity) {
-            // log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
-            if camera.0 != mode {
-                *camera = Camera(mode);
-                *viewer = ViewerActive(mode);
-                // log::warn!("CameraActive Ok");
-            }
-            if mode {
-                if let Ok(mut maincamera) = scenes.get_mut(idscene.0) {
-                    *maincamera = SceneMainCameraID(Some(entity));
+    cmds.drain().drain(..).for_each(|OpsCameraModify(entity, mode)| {
+        match mode {
+            ECameraModify::FreeMode(val) => if let Ok((mut camera, mut distance)) = cameras.get_mut(entity) {
+                if camera.mode != val {
+                    camera.mode = val;
                 }
-            }
-        } else {
-            active_cmds.push(OpsCameraActive(entity, mode))
-        }
-    });
-    fix_cmds.drain().drain(..).for_each(|OpsCameraFixedMode(entity, mode)| {
-        if let Ok((mut camera, _)) = cameras.get_mut(entity) {
-            if camera.fixed_mode != mode {
-                camera.fixed_mode = mode;
-            }
-        } else {
-            fix_cmds.push(OpsCameraFixedMode(entity, mode))
-        }
-    });
-    nearfar_cmds.drain().drain(..).for_each(|OpsCameraNearFar(entity, mode)| {
-        if let Ok((mut camera, _)) = cameras.get_mut(entity) {
-            camera.nearfar = mode;
-        } else {
-            nearfar_cmds.push(OpsCameraNearFar(entity, mode))
+                match val {
+                    EFreeCameraMode::Perspective => *distance = ViewerDistanceCompute::Base,
+                    EFreeCameraMode::Orthograhic => *distance = ViewerDistanceCompute::Direction,
+                }
+            } else {
+                cmds.push(OpsCameraModify(entity, ECameraModify::FreeMode(val)));
+            },
+            ECameraModify::Active(val) => if let Ok((idscene, mut camera, mut viewer)) = active_cameras.get_mut(entity) {
+                // log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
+                if camera.0 != val {
+                    *camera = Camera(val);
+                    *viewer = ViewerActive(val);
+                    // log::warn!("CameraActive Ok");
+                }
+                if val {
+                    if let Ok(mut maincamera) = scenes.get_mut(idscene.0) {
+                        *maincamera = SceneMainCameraID(Some(entity));
+                    }
+                }
+            } else {
+                cmds.push(OpsCameraModify(entity, ECameraModify::Active(val)));
+            },
+            ECameraModify::FixMode(val) => if let Ok((mut camera, _)) = cameras.get_mut(entity) {
+                if camera.fixed_mode != val {
+                    camera.fixed_mode = val;
+                }
+            } else {
+                cmds.push(OpsCameraModify(entity, ECameraModify::FixMode(val)));
+            },
+            ECameraModify::Fov(val) => if let Ok((mut camera, mut record)) = fov_cameras.get_mut(entity) {
+                record.0 = CameraFov(val);
+                *camera = CameraFov(val);
+            } else {
+                cmds.push(OpsCameraModify(entity, ECameraModify::Fov(val)));
+            },
+            ECameraModify::OrthSize(val) => if let Ok((mut camera, mut record)) = orth_cameras.get_mut(entity) {
+                record.0 = CameraOrthSize(val);
+                *camera = CameraOrthSize(val);
+            } else {
+                cmds.push(OpsCameraModify(entity, ECameraModify::OrthSize(val)));
+            },
+            ECameraModify::Aspect(val) => if let Ok(mut camera) = aspect_cameras.get_mut(entity) {
+                camera.0 = val;
+            } else {
+                cmds.push(OpsCameraModify(entity, ECameraModify::Aspect(val)));
+            },
+            ECameraModify::NearFar(near, far) => if let Ok((mut camera, _)) = cameras.get_mut(entity) {
+                camera.nearfar = CameraNearFar(near, far);
+            } else {
+                cmds.push(OpsCameraModify(entity, ECameraModify::NearFar(near, far)));
+            },
         }
     });
 }
 
 
 pub fn sys_act_camera_aspect(
-    mut fov_cmds: ResMut<ActionListCameraFov>,
-    mut fov_cameras: Query<(&mut CameraFov, &mut RecordCameraFov)>,
-    mut orth_cmds: ResMut<ActionListCameraOrthSize>,
-    mut orth_cameras: Query<(&mut CameraOrthSize, &mut RecordCameraOrthSize)>,
-    mut aspect_cmds: ResMut<ActionListCameraAspect>,
-    mut aspect_cameras: Query<&mut ViewerAspect>,
     mut target_cameras: Query<&mut CameraTarget>,
     mut target_cmds: ResMut<ActionListCameraTarget>,
 ) {
-    fov_cmds.drain().drain(..).for_each(|OpsCameraFov(entity, mode)| {
-        if let Ok((mut camera, mut record)) = fov_cameras.get_mut(entity) {
-            record.0 = mode.clone();
-            *camera = mode;
-        } else {
-            fov_cmds.push(OpsCameraFov(entity, mode))
-        }
-    });
-    orth_cmds.drain().drain(..).for_each(|OpsCameraOrthSize(entity, mode)| {
-        if let Ok((mut camera, mut record)) = orth_cameras.get_mut(entity) {
-            record.0 = mode.clone();
-            *camera = mode;
-        } else {
-            orth_cmds.push(OpsCameraOrthSize(entity, mode))
-        }
-    });
-    aspect_cmds.drain().drain(..).for_each(|OpsCameraAspect(entity, val)| {
-        if let Ok(mut camera) = aspect_cameras.get_mut(entity) {
-            camera.0 = val;
-        } else {
-            aspect_cmds.push(OpsCameraAspect(entity, val))
-        }
-    });
     target_cmds.drain().drain(..).for_each(|OpsCameraTarget(entity, target)| {
         if let Ok(mut camera) = target_cameras.get_mut(entity) {
             *camera = CameraTarget(target);

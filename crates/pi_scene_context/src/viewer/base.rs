@@ -191,7 +191,7 @@ pub trait TViewerProjectMatrix {
     fn project_matrix(&self, ratio: f32) -> ViewerProjectionMatrix;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SystemSet)]
 pub enum StageViewer {
     ForceInclude,
 }

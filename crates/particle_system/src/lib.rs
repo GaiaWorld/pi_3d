@@ -47,112 +47,66 @@ impl Plugin for PluginParticleSystem {
         // app.world.insert_single_res(particlecommonbuffer);
         app.world.insert_single_res(ResParticleTrailBuffer(trailbuffer));
 
-        // app.configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::TrailCreate));
-        // app.configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysEmission.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysParamStart.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysParamOverLifetime.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysDirection.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamOverLifetime));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysParamBySpeed.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysDirection));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysMatrix.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamBySpeed).after(StageTransform::TransformCalcMatrix));
-        // app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::TrailCreate));
+        app.configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate));
+        app.configure_set(Update, StageParticleSystem::ParticleSysEmission.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand));
+        app.configure_set(Update, StageParticleSystem::ParticleSysParamStart.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission));
+        app.configure_set(Update, StageParticleSystem::ParticleSysParamOverLifetime.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart));
+        app.configure_set(Update, StageParticleSystem::ParticleSysDirection.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamOverLifetime));
+        app.configure_set(Update, StageParticleSystem::ParticleSysParamBySpeed.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysDirection));
+        app.configure_set(Update, StageParticleSystem::ParticleSysMatrix.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamBySpeed).after(StageTransform::TransformCalcMatrix));
+        app.configure_set(Update, StageParticleSystem::ParticleSysUpdate.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform));
 
         // app.add_system(Update, apply_deferred.in_set(StageParticleSystem::_ParticleSysCreate));
 
-        app.add_system(Update, 
-            sys_create_particle_calculator/* .in_set(StageScene::Create) */,
-        );
-        // app.add_system(Update, 
-        //     sys_create_cpu_partilce_system/* .in_set(StageParticleSystem::ParticleSysCreate) */,
-        // );
-        app.add_system(
-			Update,
-            // (
-                sys_act_particle_system_trail_material,
-            //     sys_act_partilce_system_state,
-            // ).chain().in_set(StageParticleSystem::ParticleSysCommand),
-        );
-        app.add_system(
-			Update,
-            // (
-            //     sys_act_particle_system_trail_material,
-                sys_act_partilce_system_state,
-            // ).chain().in_set(StageParticleSystem::ParticleSysCommand),
-        );
-        app.add_system(
-			Update,
-            // (
-                sys_ids                 , //.run_if(should_run),
-            //     sys_emission            , //.run_if(should_run),
-            // ).chain().in_set(StageParticleSystem::ParticleSysEmission),
-        );
-        app.add_system(
-			Update,
-            // (
-            //     sys_ids                 , //.run_if(should_run),
-                sys_emission            , //.run_if(should_run),
-            // ).chain().in_set(StageParticleSystem::ParticleSysEmission),
-        );
-        // app.add_system(
-		// 	Update,
-        //     (
-        //         sys_emitter             , // .run_if(should_run),
-        //         sys_start_lifetime      , // .run_if(should_run),
-        //         sys_start_size          , // .run_if(should_run),
-        //         sys_start_rotation      , // .run_if(should_run),
-        //         sys_start_color         , // .run_if(should_run),
-        //         sys_start_texture_sheet , // .run_if(should_run),
-        //     ).after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart),
-        // );
-        app.add_system(Update,sys_emitter);
-        app.add_system(Update,sys_start_lifetime);
-        app.add_system(Update,sys_start_size,);
-        app.add_system(Update,sys_start_rotation);
-        app.add_system(Update,sys_start_color);
-        app.add_system(Update,sys_start_texture_sheet);
-        app.add_system(Update,sys_emission);
-        // app.add_system(
-		// 	Update,
-        //     (
-        //         sys_gravity                         , // .run_if(should_run),
-        //         sys_size_over_life_time             , // .run_if(should_run),
-        //         sys_color_over_life_time            , // .run_if(should_run),
-        //         sys_rotation_over_life_time         , // .run_if(should_run),
-        //         sys_force_over_life_time            , // .run_if(should_run),
-        //         sys_velocity_over_life_time         , // .run_if(should_run),
-        //         sys_orbit_over_life_time            , // .run_if(should_run),
-        //         sys_speed_modifier_over_life_time   , // .run_if(should_run),
-        //         sys_limit_velocity_over_life_time   , // .run_if(should_run),
-        //         sys_texturesheet                    , // .run_if(should_run),
-        //     ).in_set(StageParticleSystem::ParticleSysParamOverLifetime),
-        // );
-        app.add_system(Update,sys_gravity);
-        app.add_system(Update,sys_size_over_life_time);
-        app.add_system(Update,sys_color_over_life_time);
-        app.add_system(Update,sys_force_over_life_time);
-        app.add_system(Update,sys_velocity_over_life_time);
-        app.add_system(Update,sys_orbit_over_life_time);
-        app.add_system(Update,sys_rotation_over_life_time);
-        app.add_system(Update,sys_speed_modifier_over_life_time);
-        app.add_system(Update,sys_limit_velocity_over_life_time);
-        app.add_system(Update,sys_texturesheet);
+        app.add_system(Update, sys_create_particle_calculator.in_set(StageScene::Create));
+        app.add_system(Update, sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate));
+        app.add_system(Update, sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand));
 
+        app.add_system(Update,sys_ids.in_set(StageParticleSystem::ParticleSysEmission));
+        app.add_system(Update, sys_emission.in_set(StageParticleSystem::ParticleSysEmission),);
+        app.add_system(
+			Update,
+            (
+                sys_start
+                // sys_emitter             , // .run_if(should_run),
+                // sys_start_lifetime      , // .run_if(should_run),
+                // sys_start_size          , // .run_if(should_run),
+                // sys_start_rotation      , // .run_if(should_run),
+                // sys_start_color         , // .run_if(should_run),
+                // sys_start_texture_sheet , // .run_if(should_run),
+            ).after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart),
+        );
+        app.add_system(
+			Update,
+            
+                sys_over_lifetime
+                // sys_gravity                         , // .run_if(should_run),
+                // sys_size_over_life_time             , // .run_if(should_run),
+                // sys_color_over_life_time            , // .run_if(should_run),
+                // sys_rotation_over_life_time         , // .run_if(should_run),
+                // sys_force_over_life_time            , // .run_if(should_run),
+                // sys_velocity_over_life_time         , // .run_if(should_run),
+                // sys_orbit_over_life_time            , // .run_if(should_run),
+                // sys_speed_modifier_over_life_time   , // .run_if(should_run),
+                // sys_limit_velocity_over_life_time   , // .run_if(should_run),
+                // sys_texturesheet                    , // .run_if(should_run),
+            .in_set(StageParticleSystem::ParticleSysParamOverLifetime),
+        );
         app.add_system(Update, 
             sys_direction                   //.run_if(should_run)
-            // .in_set(StageParticleSystem::ParticleSysDirection),
+            .in_set(StageParticleSystem::ParticleSysDirection),
         );
-        // app.add_system(
-		// 	Update,
-        //     (
-        //         sys_color_by_speed              , // .run_if(should_run),
-        //         sys_size_by_speed               , // .run_if(should_run),
-        //         sys_rotation_by_speed           , // .run_if(should_run),
-        //     ).in_set(StageParticleSystem::ParticleSysParamBySpeed),
-        // );
-        app.add_system(Update,sys_color_by_speed);
-        app.add_system(Update,sys_size_by_speed);
-        app.add_system(Update,sys_rotation_by_speed);
+        app.add_system(
+			Update,
+            
+                sys_by_speed
+                // sys_color_by_speed              , // .run_if(should_run),
+                // sys_size_by_speed               , // .run_if(should_run),
+                // sys_rotation_by_speed           , // .run_if(should_run),
+            .in_set(StageParticleSystem::ParticleSysParamBySpeed),
+        );
         // app.add_system(Update,
         //     (
         //         sys_particle_active , //.run_if(should_run),
@@ -160,9 +114,9 @@ impl Plugin for PluginParticleSystem {
         //         sys_prewarm         , //.run_if(should_run),
         //     ).chain().in_set(StageParticleSystem::ParticleSysMatrix),
         // );
-        app.add_system(Update,sys_particle_active);
-        app.add_system(Update,sys_emitmatrix);
-        app.add_system(Update,sys_prewarm);
+        app.add_system(Update, sys_particle_active.in_set(StageParticleSystem::ParticleSysMatrix));
+        app.add_system(Update, sys_emitmatrix.in_set(StageParticleSystem::ParticleSysMatrix));
+        app.add_system(Update, sys_prewarm.in_set(StageParticleSystem::ParticleSysMatrix));
 
         // app.add_system(Update, 
         //     (
@@ -170,19 +124,16 @@ impl Plugin for PluginParticleSystem {
         //         sys_update_buffer_trail     , //.run_if(should_run),
         //     ).chain().in_set(StageParticleSystem::ParticleSysUpdate),
         // );
+        app.add_system(Update, sys_update_buffer.in_set(StageParticleSystem::ParticleSysUpdate));
+        app.add_system(Update, sys_update_buffer_trail.in_set(StageParticleSystem::ParticleSysUpdate));
+        
 
-        app.add_system(Update,sys_update_buffer);
-        app.add_system(Update,sys_update_buffer_trail);
-        // app.add_system(Update,sys_prewarm);
-
-        // app.add_system(
-		// 	Update, 
-        //     sys_dispose_about_particle_system    // .run_if(should_run)
-        //         .after(sys_dispose_ready)
-        //         .in_set(ERunStageChap::StateCheck),
-        // );
-        app.add_system(Update, sys_dispose_about_particle_system);
-        app.add_system(Update, sys_dispose_ready);
+        app.add_system(
+			Update, 
+            sys_dispose_about_particle_system    // .run_if(should_run)
+                .after(sys_dispose_ready)
+                .in_set(ERunStageChap::StateCheck),
+        );
     }
 }
 

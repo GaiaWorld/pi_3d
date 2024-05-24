@@ -105,7 +105,7 @@ impl Ord for TmpSortDrawTransparent {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord, SystemSet)]
 pub enum StageRenderer {
     Create,
     _CreateApply,

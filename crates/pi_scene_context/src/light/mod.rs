@@ -25,7 +25,6 @@ pub mod prelude;
 pub struct PluginLighting;
 impl Plugin for PluginLighting {
     fn build(&self, app: &mut App) {
-        // app.world.world.insert_single_res(SingleLightCreateCommands::default());
         app.world.insert_single_res(ActionListLightCreate::default());
         app.world.insert_single_res(ActionListLightParam::default());
         app.world.insert_single_res(ActionListLightColor::default());
@@ -34,10 +33,10 @@ impl Plugin for PluginLighting {
         app.world.insert_single_res(ActionListLightRadius::default());
         app.world.insert_single_res(StateLight::default());
         
-        // app.configure_set(Update, StageLighting::LightCreate.after(StageScene::Create));
-        // app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
-        // app.configure_set(Update, StageLighting::LightingCommand.after(StageLighting::_LightCreate));
-        // app.configure_set(Update, StageLighting::LightingUniform.run_if(should_run_with_lighting).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageLighting::LightCreate.after(StageScene::Create));
+        app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageLighting::LightingCommand.after(StageLighting::_LightCreate));
+        app.configure_set(Update, StageLighting::LightingUniform/* .run_if(should_run_with_lighting) */.in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
         // app.add_system(Update, apply_deferred.in_set(StageLighting::_LightCreate));
 
 
@@ -50,65 +49,37 @@ impl Plugin for PluginLighting {
 
         app.add_system(
 			Update,
-            // (
-                sys_create_light,
-            // ).in_set(StageLighting::LightCreate)
+            
+                sys_create_light
+            .in_set(StageLighting::LightCreate)
         );
-        app.add_system(
-			Update,
-            // (
-                sys_light_index_create,
-                // sys_act_light_param,
-            // ).chain().in_set(StageLighting::LightingCommand)
-        );
-        app.add_system(
-			Update,
-            // (
-                // sys_light_index_create,
-                sys_act_light_param,
-            // ).chain().in_set(StageLighting::LightingCommand)
-        );
-        app.add_system(
-			Update,
-            // (
-                sys_direct_light_update,
-            //     sys_spot_light_update,
-            //     sys_point_light_update,
-            //     sys_hemi_light_update,
-            // ).chain().in_set(StageLighting::LightingUniform)
-        );
-        app.add_system(
-			Update,
-            // (
-            //     sys_direct_light_update,
-                sys_spot_light_update,
-            //     sys_point_light_update,
-            //     sys_hemi_light_update,
-            // ).chain().in_set(StageLighting::LightingUniform)
-        );
-        app.add_system(
-			Update,
-            // (
-            //     sys_direct_light_update,
-            //     sys_spot_light_update,
-                sys_point_light_update,
-            //     sys_hemi_light_update,
-            // ).chain().in_set(StageLighting::LightingUniform)
-        );
-        app.add_system(
-			Update,
-            // (
-            //     sys_direct_light_update,
-            //     sys_spot_light_update,
-            //     sys_point_light_update,
-                sys_hemi_light_update,
-            // ).chain().in_set(StageLighting::LightingUniform)
-        );
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_light_index_create,
+        //         sys_act_light_param,
+        //     ).chain().in_set(StageLighting::LightingCommand)
+        // );
+        app.add_system(Update,sys_light_index_create.in_set(StageLighting::LightingCommand));
+        app.add_system(Update,sys_act_light_param.in_set(StageLighting::LightingCommand));
+
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_direct_light_update,
+        //         sys_spot_light_update,
+        //         sys_point_light_update,
+        //         sys_hemi_light_update,
+        //     ).chain().in_set(StageLighting::LightingUniform)
+        // );
+        app.add_system(Update,sys_direct_light_update.in_set(StageLighting::LightingUniform));
+        app.add_system(Update,sys_spot_light_update.in_set(StageLighting::LightingUniform));
+        app.add_system(Update,sys_point_light_update.in_set(StageLighting::LightingUniform));
+        app.add_system(Update,sys_hemi_light_update.in_set(StageLighting::LightingUniform));
         
 
-        app.add_system(Update, sys_dispose_about_light/* .after(sys_dispose_ready).in_set(ERunStageChap::Dispose) */);
-        app.add_system(Update, /* sys_dispose_about_light.after( */sys_dispose_ready/* ).in_set(ERunStageChap::Dispose) */);
+        app.add_system(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
 
-        // app.add_systems(Startup, setup);
+        // app.add_system(Startup, setup);
     }
 }

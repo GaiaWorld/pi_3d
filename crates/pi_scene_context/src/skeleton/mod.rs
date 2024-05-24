@@ -24,10 +24,10 @@ impl Plugin for PluginSkeleton {
         app.world.insert_single_res(ActionListBoneCreate::default());
         app.world.insert_single_res(ActionListBonePose::default());
 
-        // app.configure_set(Update, StageSkeleton::SkinCreate.after(StageModel::CreateMesh));
-        // app.configure_set(Update, StageSkeleton::_SkinCreate.after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand));
-        // app.configure_set(Update, StageSkeleton::Command.in_set(FrameDataPrepare).after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform));
-        // app.configure_set(Update, StageSkeleton::Calc.in_set(FrameDataPrepare).after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageSkeleton::SkinCreate.after(StageModel::CreateMesh));
+        app.configure_set(Update, StageSkeleton::_SkinCreate.after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageSkeleton::Command.in_set(FrameDataPrepare).after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageSkeleton::Calc.in_set(FrameDataPrepare).after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
         // app.add_system(Update, apply_deferred.in_set(StageSkeleton::_SkinCreate));
 
         // app.add_system(
@@ -37,6 +37,9 @@ impl Plugin for PluginSkeleton {
         //         sys_create_bone,
         //     ).chain().in_set(StageSkeleton::SkinCreate)
         // );
+        app.add_system(Update,sys_create_skin.after(sys_create_mesh).in_set(StageSkeleton::SkinCreate));
+        app.add_system(Update,sys_create_bone.in_set(StageSkeleton::SkinCreate));
+
         // app.add_system(
 		// 	Update,
         //     (
@@ -45,6 +48,9 @@ impl Plugin for PluginSkeleton {
         //         sys_bones_initial
         //     ).chain().in_set(StageSkeleton::Command)
         // );
+        app.add_system(Update,sys_act_skin_use.in_set(StageSkeleton::Command));
+        app.add_system(Update,sys_act_bone_pose.in_set(StageSkeleton::Command));
+        app.add_system(Update,sys_bones_initial.in_set(StageSkeleton::Command));
 
         // app.add_system(
 		// 	Update,
@@ -53,16 +59,9 @@ impl Plugin for PluginSkeleton {
         //         sys_skin_buffer_update,
         //     ).chain().in_set(StageSkeleton::Calc)
         // );
-        // app.add_system(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
+        app.add_system(Update,sys_skin_dirty_by_bone.in_set(StageSkeleton::Calc));
+        app.add_system(Update,sys_skin_buffer_update.in_set(StageSkeleton::Calc));
 
-        app.add_system(Update,sys_create_skin);
-        app.add_system(Update,sys_create_bone);
-        app.add_system(Update,sys_act_skin_use);
-        app.add_system(Update,sys_act_bone_pose);
-        app.add_system(Update,sys_bones_initial);
-
-        app.add_system(Update,sys_skin_dirty_by_bone,);
-        app.add_system(Update,sys_skin_buffer_update,);
-        app.add_system(Update, sys_dispose_about_skeleton);
+        app.add_system(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

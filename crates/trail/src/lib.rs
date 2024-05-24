@@ -53,39 +53,27 @@ impl Plugin for PluginTrail {
         app.world.insert_single_res(ActionListTrailAge::default());
         app.world.insert_single_res(StateTrail::default());
 
-        // app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
-        // app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand));
-        // app.configure_set(Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate));
-        // app.configure_set(Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
+        app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::SkinCreate));
+        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate));
+        app.configure_set(Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
         // app.add_system(Update, apply_deferred.in_set(StageTrail::TrailCreate));
 
-        app.add_system(Update, sys_create_trail_mesh/* .in_set(StageTrail::TrailCreate) */);
-        app.add_system(Update, //(
+        app.add_system(Update, sys_create_trail_mesh.in_set(StageTrail::TrailCreate));
+        app.add_system(Update, (
             sys_act_trail_age           // .run_if(should_run)
-        /* ).in_set(StageTrail::TrailCommand) */);
-        app.add_system(Update, // (
+        ).in_set(StageTrail::TrailCommand));
+        app.add_system(Update, (
             sys_trail_update            // .run_if(should_run)
-        /* ).in_set(StageTrail::TrailUpdate) */);
-        app.add_system(
-			Update,
-            // (
-                sys_dispose_about_trail_linked,
-            //     sys_dispose_about_trail
-            // ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
-        );
-        app.add_system(
-			Update,
-            // (
-                // sys_dispose_about_trail_linked,
-                sys_dispose_about_trail
-            // ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
-        );
-        app.add_system(
-			Update,
-            // (
-            //     sys_dispose_about_trail_linked,
-            //     sys_dispose_about_trail
-            /* ).chain().after( */sys_dispose_ready/* ).in_set(ERunStageChap::StateCheck) */
-        );
+        ).in_set(StageTrail::TrailUpdate));
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_dispose_about_trail_linked,
+        //         sys_dispose_about_trail
+        //     ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
+        // );
+        app.add_system(Update, sys_dispose_about_trail_linked.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck));
+        app.add_system(Update, sys_dispose_about_trail.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck));
     }
 }

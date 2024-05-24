@@ -129,7 +129,7 @@ pub fn main() {
     
     app.add_system(Update, pi_3d::sys_info_node);
     app.add_system(Update, pi_3d::sys_info_resource);
-    app.add_startup_system(Update, setup);
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
     
     // app.run()

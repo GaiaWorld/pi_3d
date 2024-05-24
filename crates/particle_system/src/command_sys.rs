@@ -62,7 +62,7 @@ pub fn sys_create_cpu_partilce_system(
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
     mut disposeready: ResMut<ActionListDisposeReadyForRef>,
-    mut meshes: ResMut<ActionListMeshRenderAlignment>,
+    mut meshes: ResMut<ActionListMeshStateModify>,
     mut performance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
@@ -88,7 +88,7 @@ pub fn sys_create_cpu_partilce_system(
             performance.maxparticles = (performance.maxparticles.max(maxcount as u32) / 64 + 1) * 64;
 
             if let Some(val) = base.render_align() {
-                meshes.push(OpsMeshRenderAlignment::ops(entity, val));
+                meshes.push(OpsMeshStateModify::ops(entity, EMeshStateModify::Alignment(val)));
             }
 
             let components = [

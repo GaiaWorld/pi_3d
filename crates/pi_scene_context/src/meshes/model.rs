@@ -6,7 +6,7 @@ use pi_scene_math::{Matrix, Vector3};
 
 use crate::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SystemSet)]
 pub enum StageModel {
     CreateMesh,
     _InitMesh,
@@ -110,6 +110,13 @@ impl TAnimatableCompRecord<IndiceRenderRange> for RecordIndiceRenderRange {
 #[derive(Component, Clone)]
 pub struct IndiceRenderRange(pub Option<Range<u32>>);
 impl IndiceRenderRange {
+    pub fn new(val: Option<(u32, u32)>) -> Self {
+        if let Some((start, end)) = val {
+            Self(Some(Range { start, end }))
+        } else {
+            Self(None)
+        }
+    }
     pub fn apply(&self, geo: &RenderGeometry) -> Option<RenderIndices> {
         if let Some(mut indices) = geo.indices.clone() {
             if let Some(renderrange) = &self.0 {

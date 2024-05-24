@@ -18,7 +18,7 @@ pub use super::uniforms::{
     // sys_uniform::*,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord, SystemSet)]
 pub enum StageMaterial {
     Create,
     _Init,

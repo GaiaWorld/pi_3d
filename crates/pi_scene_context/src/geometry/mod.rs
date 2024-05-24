@@ -53,24 +53,46 @@ impl Plugin for PluginGeometry {
         app.world.insert_single_res(ShareAssetMgr::<EVertexBufferRange>::create(GarbageEmpty(), cfg.flag, &cfg));
         app.world.insert_single_res(GeometryVBLoader::default());
 
-        // app.configure_set(Update, StageGeometry::Create.after(StageModel::_InitMesh));
-        // app.configure_set(Update, StageGeometry::_GeoCreate.after(StageGeometry::Create));
-        // app.configure_set(Update, StageGeometry::VertexBufferLoaded.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate));
-        // app.configure_set(Update, StageGeometry::_VertexBufferLoadedApply.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded));
-        // app.configure_set(Update, StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform));
-        // app.configure_set(Update, StageGeometry::Upload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList));
+        app.configure_set(Update, StageGeometry::Create.after(StageModel::_InitMesh));
+        app.configure_set(Update, StageGeometry::_GeoCreate.after(StageGeometry::Create));
+        app.configure_set(Update, StageGeometry::VertexBufferLoaded.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate));
+        app.configure_set(Update, StageGeometry::_VertexBufferLoadedApply.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded));
+        app.configure_set(Update, StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageGeometry::Upload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList));
         // app.add_system(Update, apply_deferred.in_set(StageGeometry::_GeoCreate) );
         // app.add_system(Update, apply_deferred.in_set(StageGeometry::_VertexBufferLoadedApply) );
 
-        app.add_system(Update, sys_create_geometry);
-        app.add_system(Update, sys_vertex_buffer_loaded);
-        app.add_system(Update, sys_vertex_buffer_slots_loaded);
-        app.add_system(Update, sys_geometry_enable);
+        // app.add_system(
+		// 	Update,
+        //     (
+        //         sys_create_geometry.in_set(StageGeometry::Create),
+        //         sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded),
+        //     )
+        // );
+        app.add_system(Update,  sys_create_geometry.in_set(StageGeometry::Create));
+        app.add_system(Update,  sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded));
 
-        app.add_system(Update, sys_instanced_buffer_upload);
+        // app.add_system(Update, 
+        //     (
+        //         sys_vertex_buffer_slots_loaded,
+        //         sys_geometry_enable
+        //     ).chain().in_set(StageGeometry::GeometryLoaded)
+        // );
+        app.add_system(Update,  sys_vertex_buffer_slots_loaded.in_set(StageGeometry::GeometryLoaded));
+        app.add_system(Update,  sys_geometry_enable.in_set(StageGeometry::GeometryLoaded));
 
-        app.add_system(Update, sys_dispose_about_geometry);
-        app.add_system(Update, sys_dispose_ready);
+        app.add_system(Update, 
+            sys_instanced_buffer_upload.in_set(StageGeometry::Upload)
+        );
+
+        app.add_system(Update, 
+            (
+                sys_dispose_about_geometry  // .run_if(should_run)
+                .after(sys_dispose_ready)
+            ).in_set(ERunStageChap::Dispose)
+        );
+
+
     }
 }
 

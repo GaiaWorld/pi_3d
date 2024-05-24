@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord, SystemSet)]
 pub enum StageSkeleton {
     SkinCreate,
     _SkinCreate,

@@ -8,7 +8,7 @@ use pi_world::single_res::{SingleRes, SingleResMut};
 use pi_world::prelude::Plugin;
 use crate::prelude::{EngineInstant, ErrorRecord};
 use crate::prelude::FrameDataPrepare;
-
+use pi_world::prelude::IntoSystemSetConfigs;
 // pub struct RunStage {
 //     list: Vec<StageBuilder>,
 // }
@@ -112,13 +112,14 @@ pub trait TSystemStageInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
+
 ///
 /// * 在运行阶段之上封装了 章节管理
 /// * 每章节可以有多个阶段,章节内部的阶段间有顺序
 /// * 每章节间有顺序
 /// * 一个章节内阶段结束才能进入下个章节
 /// * 当 一个System需要等待多个System的结束, 且编码时无法确定依赖的System时, 应该将该System放入下一章节
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum ERunStageChap {
     New,
     // 场景中的 节点, Mesh, Light, Camera [一级实体]
@@ -135,15 +136,15 @@ pub enum ERunStageChap {
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
     fn build(&self, app: &mut pi_world::prelude::App) {
-        // app.configure_set(Update, ERunStageChap::New);
-        // app.configure_set(Update, ERunStageChap::Initial);
-        // app.configure_set(Update, ERunStageChap::_InitialApply);
-        // app.configure_set(Update, ERunStageChap::AnimeAmount.in_set(FrameDataPrepare).after(ERunStageChap::_InitialApply));
-        // app.configure_set(Update, ERunStageChap::Anime.in_set(FrameDataPrepare).after(ERunStageChap::AnimeAmount));
-        // app.configure_set(Update, ERunStageChap::Uniform.in_set(FrameDataPrepare).after(ERunStageChap::Anime));
-        // app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::Uniform));
-        // app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
-        // app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
+        app.configure_set(Update, ERunStageChap::New);
+        app.configure_set(Update, ERunStageChap::Initial);
+        app.configure_set(Update, ERunStageChap::_InitialApply);
+        app.configure_set(Update, ERunStageChap::AnimeAmount.in_set(FrameDataPrepare).after(ERunStageChap::_InitialApply));
+        app.configure_set(Update, ERunStageChap::Anime.in_set(FrameDataPrepare).after(ERunStageChap::AnimeAmount));
+        app.configure_set(Update, ERunStageChap::Uniform.in_set(FrameDataPrepare).after(ERunStageChap::Anime));
+        app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::Uniform));
+        app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
+        app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
 
         app.world.insert_single_res(ErrorRecord(vec![], false));
 
@@ -153,7 +154,7 @@ impl Plugin for PluginRunstage {
         // app.add_system(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
 
         app.world.insert_single_res(RunSystemRecord::default());
-        app.add_system(Update, sys_reset_system_record);
+        app.add_system(Update, sys_reset_system_record.in_set(ERunStageChap::StateCheck));
 
         app.world.insert_single_res(EngineInstant(pi_time::Instant::now()));
     }

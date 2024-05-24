@@ -16,7 +16,7 @@ mod command;
 mod interface;
 pub mod prelude;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,  PartialOrd, Ord, SystemSet)]
 pub enum StageLayerMask {
     Command
 }
@@ -25,12 +25,12 @@ pub struct PluginLayerMask;
 impl Plugin for PluginLayerMask {
     fn build(&self, app: &mut pi_scene_shell::prelude::App) {
         app.world.insert_single_res(ActionListLayerMask::default());
-        // app.configure_set(Update, StageLayerMask::Command);
+        app.configure_set(Update, StageLayerMask::Command);
         app.add_system(
             Update,
-            // (
+            
                 sys_act_layer_mask      // .run_if(should_run)
-            // )
-            /* .in_set(StageLayerMask::Command) */);
+            
+            .in_set(StageLayerMask::Command));
     }
 }
