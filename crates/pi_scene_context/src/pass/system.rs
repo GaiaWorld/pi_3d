@@ -26,7 +26,7 @@ pub fn sys_modify_pass_effect_by_pass(
                 _ => { (None, None, None) }
             };
 
-            // log::error!("MaterialBind : 3 {:?}", effect.is_some());
+            log::error!("MaterialBind : 3 {:?}", (&effect_key.0, effect.is_some()));
             passready.0 = effect.clone();
             passtextures.0 = bindtextures.clone();
             match bindvalue {
@@ -62,11 +62,11 @@ pub fn sys_modify_pass_effect_by_material(
             }
         };
 
-        // log::error!("MaterialBind : 1  - {:?}", (bindvalue.is_some(), bindtextures.is_some(), effect.is_some()));
+        log::error!("MaterialBind : 1  - {:?}", (bindvalue.is_some(), bindtextures.is_some(), effect.is_some()));
         list.iter().for_each(|target| {
             // log::error!("MaterialBind : 2");
             if let Ok((mut passready, mut passbind, mut passtextures)) = passes.get_mut(*target) {
-                // log::error!("MaterialBind : 3 {:?}", effect.is_some());
+                log::error!("MaterialBind : 3 {:?}", (&effect_key.0, effect.is_some()));
                 if let (Some(old), Some(new)) = (&passready.0, &effect) {
                     if old.0 != new.0 { passready.0 = effect.clone(); }
                 } else {

@@ -310,11 +310,11 @@ pub fn test_plugins() -> (App, Arc<Window>,EventLoop<()>) {
     ));
 
     app.add_plugins(copy::PluginImageCopy);
-    // // app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
+    // app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
-    // // app.world.get_single_res_mut::<StateResource>().unwrap().debug = true;
+    app.world.get_single_res_mut::<StateResource>().unwrap().debug = true;
     
-    // // app.add_startup_system(Update, setup_default_mat);
+    app.add_startup_system(Update, setup_default_mat);
     
     (app, w, eventloop)
 }

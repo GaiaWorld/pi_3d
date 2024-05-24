@@ -181,9 +181,9 @@ env_logger          = "0.9"
 # name = "skin_simple"
 # path = "examples/skeleton/simple.rs"
 
-# [[example]]
-# name = "anime_01"
-# path = "examples/anime/01.rs"
+[[example]]
+name = "anime_01"
+path = "examples/anime/01.rs"
 
 # [[example]]
 # name = "anime_rotation"

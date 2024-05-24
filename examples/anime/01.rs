@@ -17,7 +17,7 @@ mod base;
 mod copy;
 
 fn setup(
-    mut commands: Commands,
+    mut editor: EntityEditor,
     mut actions: pi_3d::ActionSets,
     mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
@@ -29,13 +29,13 @@ fn setup(
     let tes_size = 10;
     fps.frame_ms = 16;
 
-    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
+    let demopass = DemoScene::new(&mut editor, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         1., 0.7, (0., 10., -40.), true
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut editor, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
     actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
@@ -44,13 +44,13 @@ fn setup(
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
     let state = base::instance_attr(true, false, false);
-    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    let source = base::DemoScene::mesh(&mut editor, scene, scene, &mut actions,  vertices, indices, state);
 
     let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = editor.alloc_entity();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -60,7 +60,7 @@ fn setup(
         for j in 0..tes_size {
             for _k in 0..1 {
                 
-                let cube: Entity = commands.spawn_empty().id();
+                let cube: Entity = editor.alloc_entity();
                 actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                 actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
@@ -110,7 +110,7 @@ impl Plugin for PluginTest {
 pub fn main() {
     let mut app = base::test_plugins();
     
-    app.add_plugins(PluginTest);
+    app.add_plugin(PluginTest);
     
     app.add_system(Update, pi_3d::sys_info_node);
     app.add_system(Update, pi_3d::sys_info_resource);

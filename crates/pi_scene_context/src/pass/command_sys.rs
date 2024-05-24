@@ -78,6 +78,8 @@ impl ActionPassObject {
              editor.init_component::<DepthState>(),
              editor.init_component::<StencilState>(),
              editor.init_component::<ModelBlend>(),
+             editor.init_component::<PassEffectReady>(),
+             editor.init_component::<PassBindGroupScene>(),
         ];
 
         editor.add_components(entity, &components); 
@@ -95,6 +97,8 @@ impl ActionPassObject {
         *editor.get_component_unchecked_mut_by_id(entity, components[10])   = DepthState::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[11])   = StencilState::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[12])   = ModelBlend::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[13])   = PassEffectReady::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[14])   = PassBindGroupScene::default();
 
     }
     pub fn reset(

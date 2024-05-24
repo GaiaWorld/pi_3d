@@ -47,10 +47,11 @@ pub fn sys_create_material(
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
         if !editor.contains_entity(entity) { 
-            // log::error!("Material: Not Found!!");
+            log::error!("Material: Not Found!!");
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
         };
+        log::error!("Material: Create!!");
 
         if let Some(meta) = asset_shader.get(&key_shader) {
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
@@ -63,7 +64,9 @@ pub fn sys_create_material(
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) =AssetResShaderEffectMeta::from(meta);
 
             // editor.alter(entity, (BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)));
+            log::error!("Shader Found: {:?}", key_shader);
         } else {
+            log::error!("Shader Not Found: {:?}", key_shader);
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
         }
 
@@ -146,6 +149,8 @@ pub fn sys_act_material_use(
         match cmd {
             OpsMaterialUse::Use(id_mesh, id_mat, pass) => {
                 if let Ok((mut materialrefs, mut flag)) = materials.get_mut(id_mat) {
+                    
+            log::error!("Materail Use Cmd:");
                     if let Ok(mut matid) = linkedtargets.get_mut(id_mesh) {
                         let oldmat = matid.0;
                         if matid.0 != id_mat {
@@ -177,11 +182,14 @@ pub fn sys_act_material_use(
                                 }
 
                                 renderobjectcmds.push(OpsPassObject::ops(id_mesh, id_mat, pass));
+                                log::error!("Materail Use Cmd: Success");
                             }
                         } else {
+                            log::error!("Materail Use Cmd: Fail");
                             errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);
                         }
                     } else {
+                        log::error!("Materail Use Cmd: Fail 2");
                         errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);
                     }
                 } else {
@@ -441,11 +449,11 @@ impl ActionMaterial {
         key: KeyShaderMeta,
         meta: ShaderEffectMeta,
     ) {
-        // log::warn!("Regist ShaderName: {:?}", key);
+        log::warn!("Regist ShaderName: {:?}", key);
         if !asset_mgr.contains_key(&key) {
             if let Ok(_meta) = asset_mgr.insert(key.clone(), meta) {
                 // wait_list.1.push((key.clone(), meta));
-                // log::warn!("Regist ShaderName Success: {:?}", key);
+                log::warn!("Regist ShaderName Success: {:?}", key);
             } else {
                 // log::warn!("Regist ShaderName Insert Fail: {:?}", key);
             }

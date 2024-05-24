@@ -21,7 +21,7 @@ pub fn sys_set0_modify(
     let time1 = pi_time::Instant::now();
 
     items.iter_mut().for_each(|(idmodel, idscene, idviewer, meta, mut set0)| {
-        // log::warn!("Set0 Modify 1, {:?}", (scenes.get(idscene.0).is_ok(), viewers.get(idviewer.0).is_ok()));
+        log::warn!("Set0 Modify 1, {:?}", (scenes.get(idscene.0).is_ok(), viewers.get(idviewer.0).is_ok()));
         if let (Ok(bind_base_effect), Ok(bind_viewer)) = (scenes.get(idscene.0), viewers.get(idviewer.0)) {
             // log::warn!("Set0 Modify 2");
             if let Some((_, meta)) = &meta.0 {
