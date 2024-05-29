@@ -128,10 +128,10 @@ pub fn sys_create_cpu_partilce_system(
          
             *editor.get_component_unchecked_mut_by_id(entity, components[0])  =    ParticleSystemActive(true);
             *editor.get_component_unchecked_mut_by_id(entity, components[1])  =    ParticleSystemRunningState(false);
-            *editor.get_component_unchecked_mut_by_id(entity, components[2])  =    ParticleSystemModifyState;
+            // *editor.get_component_unchecked_mut_by_id(entity, components[2])  =    ParticleSystemModifyState;
             *editor.get_component_unchecked_mut_by_id(entity, components[3])  =    ParticleRandom::new(0);
             *editor.get_component_unchecked_mut_by_id(entity, components[4])  =    ParticleSystemTime::new(performance.frame_time_ms);
-            *editor.get_component_unchecked_mut_by_id(entity, components[5])  =    ParticleSystemEmission::new();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[5])  =    ParticleSystemEmission::new();
             *editor.get_component_unchecked_mut_by_id(entity, components[6]) =    ParticleIDs::new(calculator, maxcount);
             *editor.get_component_unchecked_mut_by_id(entity, components[7]) =    ParticleBaseRandom::new(maxcount);
             *editor.get_component_unchecked_mut_by_id(entity, components[8]) =    ParticleAgeLifetime::new(maxcount);

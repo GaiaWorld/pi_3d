@@ -99,12 +99,6 @@ pub fn sys_create_trail_mesh(
                 geo_desc.hash_resource(&mut hasher);
                 // cmd.insert(GeometryResourceHash(hasher.finish()));
 
-                // cmd
-                //     .insert(geo_desc)
-                //     .insert(slot)
-                //     .insert(buffer)
-                //     // .insert(verticescode)
-                //     ;
                 let components = [
                     editor.init_component::<GeometryResourceHash>(),
                     editor.init_component::<GeometryDesc>(),
@@ -117,7 +111,6 @@ pub fn sys_create_trail_mesh(
                 *editor.get_component_unchecked_mut_by_id(entity, components[1]) = geo_desc;
                 *editor.get_component_unchecked_mut_by_id(entity, components[2]) = slot;
                 *editor.get_component_unchecked_mut_by_id(entity, components[3]) = buffer;
-                    // alter21.alter(id_geo, (GeometryResourceHash(hasher.finish()), geo_desc, slot, buffer));
             }
             
             if editor.contains_entity(entity) {
@@ -140,22 +133,21 @@ pub fn sys_create_trail_mesh(
                 ];
                 editor.add_components(entity, &components).unwrap();
 
-                // alter23.alter(entity, 
-                    *editor.get_component_unchecked_mut_by_id(entity, components[0]) =SceneID(id_scene);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[1]) =TrailLinkedTransform(id_linked);
-                    // *editor.get_component_unchecked_mut_by_id(entity, components[2]) =TrailMesh(id_mesh),
-                    *editor.get_component_unchecked_mut_by_id(entity, components[2]) =TrailGeometry(id_geo);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[3]) =TrailBase::new(u32::MAX);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[4]) =TrailWorldPlace(true);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[5]) =TrailPoints::default();
-                    *editor.get_component_unchecked_mut_by_id(entity, components[6]) =ColorOverTrail(Color4Gradient::default());
-                    *editor.get_component_unchecked_mut_by_id(entity, components[7]) =TrailMinimunVertexDistance(0.01);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[8]) =WidthOverTrail(FloatInterpolation::new(1.));
-                    *editor.get_component_unchecked_mut_by_id(entity, components[9]) =TrailAgeControl(200);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[10]) =TrailSize(1.);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[11]) =TrailColor(Vector4::new(1., 1., 1., 1.));
-                    *editor.get_component_unchecked_mut_by_id(entity, components[12]) =TrailRandom(pi_wy_rng::WyRng::default());
-                // ));
+                *editor.get_component_unchecked_mut_by_id(entity, components[0]) =SceneID(id_scene);
+                *editor.get_component_unchecked_mut_by_id(entity, components[1]) =TrailLinkedTransform(id_linked);
+                // *editor.get_component_unchecked_mut_by_id(entity, components[2]) =TrailMesh(id_mesh),
+                *editor.get_component_unchecked_mut_by_id(entity, components[2]) =TrailGeometry(id_geo);
+                *editor.get_component_unchecked_mut_by_id(entity, components[3]) =TrailBase::new(u32::MAX);
+                *editor.get_component_unchecked_mut_by_id(entity, components[4]) =TrailWorldPlace(true);
+                // *editor.get_component_unchecked_mut_by_id(entity, components[5]) =TrailPoints::default();
+                // *editor.get_component_unchecked_mut_by_id(entity, components[6]) =ColorOverTrail(Color4Gradient::default());
+                *editor.get_component_unchecked_mut_by_id(entity, components[7]) =TrailMinimunVertexDistance(0.01);
+                *editor.get_component_unchecked_mut_by_id(entity, components[8]) =WidthOverTrail(FloatInterpolation::new(1.));
+                *editor.get_component_unchecked_mut_by_id(entity, components[9]) =TrailAgeControl(200);
+                *editor.get_component_unchecked_mut_by_id(entity, components[10]) =TrailSize(1.);
+                *editor.get_component_unchecked_mut_by_id(entity, components[11]) =TrailColor(Vector4::new(1., 1., 1., 1.));
+                // *editor.get_component_unchecked_mut_by_id(entity, components[12]) =TrailRandom(pi_wy_rng::WyRng::default());
+
             }
         });
     }

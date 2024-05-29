@@ -265,7 +265,7 @@ impl ActionGeometry {
 
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc));
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = MeshID(id_mesh);
-        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RenderGeometryComp::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[2]) = RenderGeometryComp::default();
    
         let index = editor.init_component::<IndicesBufferDesc>();
         if let Some(indices_desc) = indices_desc {

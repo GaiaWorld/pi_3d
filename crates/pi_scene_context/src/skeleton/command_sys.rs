@@ -131,7 +131,7 @@ impl ActionSkeleton {
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = skeleton;
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SkeletonInitBaseMatrix;
         *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SkeletonBonesDirty(true);
-        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SkeletonRefs::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SkeletonRefs::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[4]) = DirtySkeletonRefs(false);
         // commands.alter(entity, 
         //     (

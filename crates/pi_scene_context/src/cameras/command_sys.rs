@@ -153,16 +153,16 @@ impl ActionCamera {
 
 
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) =   Camera(false);
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =    ViewerDistanceCompute::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =    CameraFov::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =    CameraOrthSize::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =    RecordCameraFov::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =    RecordCameraOrthSize::default(); 
-        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =    LayerMask::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[1]) =    ViewerDistanceCompute::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[2]) =    CameraFov::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[3]) =    CameraOrthSize::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[4]) =    RecordCameraFov::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[5]) =    RecordCameraOrthSize::default(); 
+        // *editor.get_component_unchecked_mut_by_id(entity, components[6]) =    LayerMask::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[7]) =    CameraUp(CoordinateSytem3::up());
         *editor.get_component_unchecked_mut_by_id(entity, components[8]) =    CameraTarget(Vector3::new(0., 0., 1.));
-        *editor.get_component_unchecked_mut_by_id(entity, components[9]) =    TargetCameraParam::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[10]) =   CameraParam::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[9]) =    TargetCameraParam::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[10]) =   CameraParam::default();
    
     
         

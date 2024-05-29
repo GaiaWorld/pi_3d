@@ -74,8 +74,8 @@ pub fn sys_create_shadow_generator(
 
                    
                     *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ShadowLinkedLightID(light);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[1]) = DirectionalShadowDirection::default();
-                    *editor.get_component_unchecked_mut_by_id(entity, components[2]) = DirectionalShadowProjection::default();
+                    // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = DirectionalShadowDirection::default();
+                    // *editor.get_component_unchecked_mut_by_id(entity, components[2]) = DirectionalShadowProjection::default();
                   
                 }
                 if issopt.is_some() {
@@ -89,8 +89,8 @@ pub fn sys_create_shadow_generator(
                     editor.add_components(entity, &components).unwrap();
 
                     *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ShadowLinkedLightID(light);
-                    *editor.get_component_unchecked_mut_by_id(entity, components[1]) = DirectionalShadowDirection::default();
-                    *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SpotShadowProjection::default();
+                    // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = DirectionalShadowDirection::default();
+                    // *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SpotShadowProjection::default();
                     
                 }
     

@@ -53,8 +53,8 @@ pub fn sys_create_instanced_mesh(
                     
                 editor.add_components(instance, &components).unwrap();
                 *editor.get_component_unchecked_mut_by_id(instance, components[0]) = instanceattrs;
-                *editor.get_component_unchecked_mut_by_id(instance, components[1]) = TargetAnimatorableIsRunning::default();
-                *editor.get_component_unchecked_mut_by_id(instance, components[2]) = InstanceAttributeAnimated::default();
+                // *editor.get_component_unchecked_mut_by_id(instance, components[1]) = TargetAnimatorableIsRunning::default();
+                // *editor.get_component_unchecked_mut_by_id(instance, components[2]) = InstanceAttributeAnimated::default();
                 
                 ActionInstanceMesh::init(instance, &mut editor, source, id_scene.0);
     
@@ -318,16 +318,16 @@ impl ActionMesh {
         let _ = editor.add_components(
             entity, &components); 
         // (
-        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =   MeshLightingMode::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[0]) =   MeshLightingMode::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) =  ModelLightingIndexs::new(allocator, lightlimit);
-        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =ModelForcePointLightings::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =ModelForceSpotLightings::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =ModelForceHemiLightings::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[2]) =ModelForcePointLightings::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[3]) =ModelForceSpotLightings::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[4]) =ModelForceHemiLightings::default();
             // ModelPointLightingDirty::default());
             // ModelSpotLightingDirty::default());
             // ModelHemiLightingDirty::default());
 
-        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =   MeshStates::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[5]) =   MeshStates::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[6]) =   DirtyMeshStates;
 
         *editor.get_component_unchecked_mut_by_id(entity, components[7]) =  meshinstanceattributes;
@@ -427,7 +427,7 @@ impl ActionMesh {
         *editor.get_component_unchecked_mut_by_id(entity, components[10]) =    FlagPassDirtyBindEffectValue;
         *editor.get_component_unchecked_mut_by_id(entity, components[11]) =    PassDirtyBindEffectTextures(0);
         *editor.get_component_unchecked_mut_by_id(entity, components[12]) =    FlagPassDirtyBindEffectTextures;
-        *editor.get_component_unchecked_mut_by_id(entity, components[13]) =    LayerMask::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[13]) =    LayerMask::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[14]) =    AbstructMeshCullingFlag(false);
         *editor.get_component_unchecked_mut_by_id(entity, components[15]) =    TransparentSortParam::opaque();
 
@@ -449,15 +449,15 @@ impl ActionMesh {
             // ModelBlend::default())
 
            *editor.get_component_unchecked_mut_by_id(entity, components[16]) =    BindSkinValue(None);
-           *editor.get_component_unchecked_mut_by_id(entity, components[17]) =    ModelVelocity::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[18]) =    RenderAlignment::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[19]) =    ScalingMode::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[20]) =    IndiceRenderRange::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[21]) =    RecordIndiceRenderRange::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[22]) =    VertexRenderRange::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[23]) =    GeometryBounding::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[24]) =    GeometryCullingMode::default();
-           *editor.get_component_unchecked_mut_by_id(entity, components[25]) =    InstancedMeshTransparentSortCollection(vec![]);
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[17]) =    ModelVelocity::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[18]) =    RenderAlignment::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[19]) =    ScalingMode::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[20]) =    IndiceRenderRange::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[21]) =    RecordIndiceRenderRange::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[22]) =    VertexRenderRange::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[23]) =    GeometryBounding::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[24]) =    GeometryCullingMode::default();
+        //    *editor.get_component_unchecked_mut_by_id(entity, components[25]) =    InstancedMeshTransparentSortCollection(vec![]);
 
     }
 
@@ -537,10 +537,10 @@ impl ActionInstanceMesh {
             *editor.get_component_unchecked_mut_by_id(entity, components[4]) = RenderMatrixDirty(true);
             *editor.get_component_unchecked_mut_by_id(entity, components[5]) = RenderWorldMatrix(Matrix::identity());
             *editor.get_component_unchecked_mut_by_id(entity, components[6]) = RenderWorldMatrixInv(Matrix::identity());
-            *editor.get_component_unchecked_mut_by_id(entity, components[7]) = ModelVelocity::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[8]) = ScalingMode::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[9]) = GeometryBounding::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[10]) = GeometryCullingMode::default() ;
+            // *editor.get_component_unchecked_mut_by_id(entity, components[7]) = ModelVelocity::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[8]) = ScalingMode::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[9]) = GeometryBounding::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[10]) = GeometryCullingMode::default() ;
         
     }
 }

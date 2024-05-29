@@ -105,7 +105,7 @@ impl ActionLight {
         log::warn!("CreateLight {:?}", entity);
         let components = [editor.init_component::<LightParam>(), editor.init_component::<LightLinkedShadowID>()];
         editor.add_components(entity, &components).unwrap();
-        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = LightParam::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[0]) = LightParam::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LightLinkedShadowID(None);
 
     }
@@ -119,9 +119,9 @@ impl ActionLight {
         editor.add_components(entity, &components).unwrap();
         log::warn!("as_direct_light 1 {:?}", entity);
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = DirectLight;
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[2]) = ViewerDistanceCompute::Direction;
-        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = LightDirection::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[3]) = LightDirection::default();
     }
     pub(crate) fn as_spot_light(
         entity: Entity,  
@@ -130,11 +130,11 @@ impl ActionLight {
         Self::as_light(entity, editor);
         // Self::as_shadow_light(commands);
         let components = [editor.init_component::<SpotLight>(), editor.init_component::<LayerMask>(), editor.init_component::<LightDirection>(), editor.init_component::<SpotLightAngle>(), editor.init_component::<ViewerDistanceCompute>()];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
         log::warn!("as_spot_light 1 {:?}", entity);
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = SpotLight;
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = LightDirection::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[2]) = LightDirection::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SpotLightAngle{ in_value: 0.2, out_value: 0.3 };
         *editor.get_component_unchecked_mut_by_id(entity, components[4]) = ViewerDistanceCompute::Base;
     }
@@ -145,10 +145,10 @@ impl ActionLight {
         Self::as_light(entity, editor);
         // Self::as_shadow_light(commands);
         let components = [editor.init_component::<PointLight>(), editor.init_component::<LayerMask>(), editor.init_component::<ViewerDistanceCompute>()];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
 
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = PointLight;
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[2]) = ViewerDistanceCompute::Base;
 
         // editor.alter(entity, (PointLight, LayerMask::default(), ViewerDistanceCompute::Base));
@@ -159,11 +159,11 @@ impl ActionLight {
     ) {
         Self::as_light(entity, editor);
         let components = [editor.init_component::<HemisphericLight>(), editor.init_component::<LayerMask>(), editor.init_component::<HemiGrounds>(), editor.init_component::<ViewerDistanceCompute>()];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
 
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = PointLight;
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = HemiGrounds::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[2]) = HemiGrounds::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[3]) = ViewerDistanceCompute::Base;
 
         // editor.alter(entity, (HemisphericLight, LayerMask::default(), HemiGrounds::default(), ViewerDistanceCompute::Base));

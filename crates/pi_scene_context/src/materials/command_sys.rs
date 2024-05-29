@@ -93,18 +93,18 @@ pub fn sys_create_material(
         ];       
         editor.add_components(entity, &components).unwrap();
 
-        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =  TargetAnimatorableIsRunning::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = UniformAnimated::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[0]) =  TargetAnimatorableIsRunning::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = UniformAnimated::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[2]) = AssetKeyShaderEffect(key_shader);
-        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = MaterialRefs::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[3]) = MaterialRefs::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[4]) = BindEffectReset;
-        *editor.get_component_unchecked_mut_by_id(entity, components[5]) = UniformTextureWithSamplerParams::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[5]) = UniformTextureWithSamplerParams::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[6]) = UniformTextureWithSamplerParamsDirty;
         *editor.get_component_unchecked_mut_by_id(entity, components[7]) = FlagAnimationStartResetComp;
-        *editor.get_component_unchecked_mut_by_id(entity, components[8]) = DirtyMaterialRefs::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[9]) = TextureKeyList::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[10]) = EffectBindSampler2DList::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[11]) = EffectBindTexture2DList::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[8]) = DirtyMaterialRefs::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[9]) = TextureKeyList::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[10]) = EffectBindSampler2DList::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[11]) = EffectBindTexture2DList::default();
             // TextureSlot01(keytex.clone()))
             // TextureSlot02(keytex.clone()))
             // TextureSlot03(keytex.clone()))
@@ -130,7 +130,7 @@ pub fn sys_create_material(
             // EffectBindSampler2D07Comp::default())
             // EffectBindSampler2D08Comp::default())
             // EffectBindSampler2D08Comp::default())
-        *editor.get_component_unchecked_mut_by_id(entity, components[12]) =    EffectTextureSamplersComp::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[12]) =    EffectTextureSamplersComp::default();
         
     });
 }

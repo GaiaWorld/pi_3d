@@ -246,7 +246,7 @@ impl ActionScene {
 
         
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = Scene;
-            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SceneCoordinateSytem3D::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SceneCoordinateSytem3D::default();
             *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SceneTime::new();
             *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. };
             *editor.get_component_unchecked_mut_by_id(entity, components[4]) = AmbientColor(1., 1., 1., 1.);
@@ -254,7 +254,7 @@ impl ActionScene {
             *editor.get_component_unchecked_mut_by_id(entity, components[6]) = TreeRightRoot::new(id_right);
             // AnimationGroups::default(),
             *editor.get_component_unchecked_mut_by_id(entity, components[7]) = SceneMainCameraID(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[8]) = SceneAnimationEnable::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[8]) = SceneAnimationEnable::default();
             *editor.get_component_unchecked_mut_by_id(entity, components[9]) = SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count));
             *editor.get_component_unchecked_mut_by_id(entity, components[10])= ScenePointLightsQueue(SceneItemsQueue::new(lightlimit.max_point_light_count));
             *editor.get_component_unchecked_mut_by_id(entity, components[11])=SceneSpotLightsQueue(SceneItemsQueue::new(lightlimit.max_spot_light_count));
@@ -262,17 +262,17 @@ impl ActionScene {
             *editor.get_component_unchecked_mut_by_id(entity, components[13])=SceneLightingInfosDirty;
             *editor.get_component_unchecked_mut_by_id(entity, components[14])=SceneShadowInfosDirty;
             *editor.get_component_unchecked_mut_by_id(entity, components[15])=SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count));
-            *editor.get_component_unchecked_mut_by_id(entity, components[16])=MainCameraOpaqueTarget(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[17])=MainCameraDepthTarget(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[18])=BatchParamOpaque::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[19])=BatchParamTransparent::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[20])=SceneShadowRenderTarget(None);
+            // *editor.get_component_unchecked_mut_by_id(entity, components[16])=MainCameraOpaqueTarget(None);
+            // *editor.get_component_unchecked_mut_by_id(entity, components[17])=MainCameraDepthTarget(None);
+            // *editor.get_component_unchecked_mut_by_id(entity, components[18])=BatchParamOpaque::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[19])=BatchParamTransparent::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[20])=SceneShadowRenderTarget(None);
             *editor.get_component_unchecked_mut_by_id(entity, components[21])=brdfsampler;
             *editor.get_component_unchecked_mut_by_id(entity, components[22])=slot;
-            *editor.get_component_unchecked_mut_by_id(entity, components[23])=BRDFTexture::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[24])=EnvTextureSlot::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[25])=EnvIrradiance::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[26])=EnvTexture::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[23])=BRDFTexture::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[24])=EnvTextureSlot::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[25])=EnvIrradiance::default();
+            // *editor.get_component_unchecked_mut_by_id(entity, components[26])=EnvTexture::default();
             *editor.get_component_unchecked_mut_by_id(entity, components[27])=EnvSampler::new(device, asset_samp);
   
 

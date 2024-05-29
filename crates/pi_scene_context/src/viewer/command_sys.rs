@@ -68,19 +68,19 @@ impl ActionViewer {
         editor.add_components(entity, &components).unwrap();
             // .insert(ViewerSize::default()) // 由具体视口设置 - 相机\阴影生成器
           
-        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =  ViewerAspect::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =   ViewerViewMatrix::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =   ViewerProjectionMatrix::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =   ViewerTransformMatrix::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =   ViewerGlobalPosition::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =   ViewerDirection::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =   ModelList::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[7]) =   FlagModelList::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[8]) =   ModelListAfterCulling::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[0]) =  ViewerAspect::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[1]) =   ViewerViewMatrix::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[2]) =   ViewerProjectionMatrix::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[3]) =   ViewerTransformMatrix::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[4]) =   ViewerGlobalPosition::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[5]) =   ViewerDirection::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[6]) =   ModelList::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[7]) =   FlagModelList::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[8]) =   ModelListAfterCulling::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[9]) =   ViewerActive(active);
-        *editor.get_component_unchecked_mut_by_id(entity, components[10]) =   ViewerRenderersInfo::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[10]) =   ViewerRenderersInfo::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[11]) =   DirtyViewerRenderersInfo;
-        *editor.get_component_unchecked_mut_by_id(entity, components[12]) =   ForceIncludeModelList::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[12]) =   ForceIncludeModelList::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[13]) =   FlagForceIncludeModelList;
       
     }

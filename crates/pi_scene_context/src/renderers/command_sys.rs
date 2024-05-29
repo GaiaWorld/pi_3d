@@ -247,23 +247,21 @@ impl ActionRenderer {
        
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = passtag;
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) =Renderer::new();
-        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =RenderViewport::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[2]) =RenderViewport::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[3]) =RenderSize::new(100, 100);
         *editor.get_component_unchecked_mut_by_id(entity, components[4]) =RendererEnable(true);
-        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =RenderColorClear::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =RenderColorFormat::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[7]) =RenderDepthClear::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[8]) =RenderDepthFormat::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[9]) =RenderStencilClear::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[10]) =RenderAutoClearColor::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[11]) =RenderAutoClearDepth::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[12]) =RenderAutoClearStencil::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[5]) =RenderColorClear::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[6]) =RenderColorFormat::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[7]) =RenderDepthClear::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[8]) =RenderDepthFormat::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[9]) =RenderStencilClear::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[10]) =RenderAutoClearColor::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[11]) =RenderAutoClearDepth::default();
+        // *editor.get_component_unchecked_mut_by_id(entity, components[12]) =RenderAutoClearStencil::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[13]) =RendererRenderTarget::None(None);
         *editor.get_component_unchecked_mut_by_id(entity, components[14]) =RendererBlend(transparent);
         *editor.get_component_unchecked_mut_by_id(entity, components[15]) =ViewerID(id_viewer);
-        *editor.get_component_unchecked_mut_by_id(entity, components[16]) =Postprocess::default();
-        let r = editor.get_component_unchecked_mut_by_id::<PassTag>(entity, components[0]);
-        println!("============= passtag: {:?}, entity: {:?}", r.deref(), entity);
+        // *editor.get_component_unchecked_mut_by_id(entity, components[16]) =Postprocess::default();
 
     }
     pub fn create_graphic_node(
