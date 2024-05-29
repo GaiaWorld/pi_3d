@@ -108,13 +108,13 @@ path = "examples/cube/unlit_cube.rs"
 # name = "simple"
 # path = "examples/simple/simple.rs"
 
-# [[example]]
-# name = "dispose"
-# path = "examples/simple/dispose.rs"
+[[example]]
+name = "dispose"
+path = "examples/simple/dispose.rs"
 
-# [[example]]
-# name = "instance_enable"
-# path = "examples/simple/instance_enable.rs"
+[[example]]
+name = "instance_enable"
+path = "examples/simple/instance_enable.rs"
 
 # 
 # [[example]]
@@ -177,9 +177,9 @@ path = "examples/cube/unlit_cube.rs"
 name = "culling_box"
 path = "examples/oct_tree/culling_box.rs"
 
-# [[example]]
-# name = "skin_simple"
-# path = "examples/skeleton/simple.rs"
+[[example]]
+name = "skin_simple"
+path = "examples/skeleton/simple.rs"
 
 # [[example]]
 # name = "anime_01"
@@ -313,9 +313,9 @@ path = "examples/oct_tree/ray_test.rs"
 # name = "pbr_01"
 # path = "examples/pbr/01.rs"
 
-# [[example]]
-# name = "pbr_env"
-# path = "examples/pbr/env_01.rs"
+[[example]]
+name = "pbr_env"
+path = "examples/pbr/env_01.rs"
 
 # [[example]]
 # name = "pbr_env_image"
@@ -324,9 +324,9 @@ path = "examples/oct_tree/ray_test.rs"
 [[example]]
 name = "camera_opaque_texture"
 path = "examples/postprocess/camera_opaque_texture.rs"
-# [[example]]
-# name = "camera_depth_texture"
-# path = "examples/postprocess/camera_depth_texture.rs"
+[[example]]
+name = "camera_depth_texture"
+path = "examples/postprocess/camera_depth_texture.rs"
 
 # [[example]]
 # name = "planar_shadow"
