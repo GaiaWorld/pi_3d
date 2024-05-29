@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
 use crate::prelude::*;
 
@@ -18,7 +18,7 @@ use pi_world::{filter::Changed, prelude::App, query::Query, schedule::Update, sc
 // use core::ops::Deref;
 use super::{
     environment_texture_loader::EnvironmentTextureTools,
-    texture::{ETextureSlot, TextureKeyList},
+    texture::TextureKeyList,
 };
 
 pub type IDImageTextureLoad = u64;
@@ -537,7 +537,7 @@ impl<
             app.configure_set(Update, StageTextureLoad::TextureLoading.after(StageTextureLoad::TextureRequest));
             app.configure_set(Update, StageTextureLoad::TextureLoaded.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
             app.add_system(Update, sys_image_texture_load_launch.in_set(StageTextureLoad::TextureLoading));
-            app.add_system(Update,sys_image_texture_loaded.in_set(StageTextureLoad::TextureLoading));
+            app.add_system(Update,sys_image_texture_loaded.after(sys_image_texture_load_launch).in_set(StageTextureLoad::TextureLoading));
         }
         app.world.insert_single_res(ImageTextureViewLoader::<K>::default());
         // app.add_system(

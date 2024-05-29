@@ -326,7 +326,7 @@ impl Default for MaterialValueBindDesc {
     }
 }
 impl MaterialValueBindDesc {
-    pub const PRE_KEY_FOR_INSTANCE_UNIFORM: &str = "_I";
+    pub const PRE_KEY_FOR_INSTANCE_UNIFORM: &'static str = "_I";
     pub fn none(stage: wgpu::ShaderStages) -> Self {
         Self { stage, 
             mat4_list: vec![],

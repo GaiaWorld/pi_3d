@@ -231,7 +231,7 @@ impl Node for RenderNode {
         )) = query.get(self.renderer_id) {
             // query.
     
-            // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
+            // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear.0, auto_clear_depth.0));
             if !enable.0 || disposed.0 {
                 return Box::pin(
                     async move {
@@ -350,7 +350,7 @@ impl Node for RenderNode {
                 },
             };
 
-            // log::warn!("Graphic: {:?}", (can_render, renderer.draws.list.len()));
+            // log::warn!("Graphic: {:?}", (self.renderer_id, can_render, renderer.draws.list.len()));
             if can_render {
                 clear_color_attachments = [
                     Some( wgpu::RenderPassColorAttachment { view: render_color_view, resolve_target: None, ops: clear_color_ops, } )

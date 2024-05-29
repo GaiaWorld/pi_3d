@@ -45,20 +45,22 @@ pub fn sys_create_instanced_mesh(
 
             let instanceattrs = instanceattrs.clone();
 
-            if  editor.contains_entity(instance) {
-                let components: [pi_world::world::ComponentIndex; 3] = [editor.init_component::<ModelInstanceAttributes>(), editor.init_component::<TargetAnimatorableIsRunning>(), editor.init_component::<InstanceAttributeAnimated>(),];
-                editor.add_components(instance, &components);
+            if editor.contains_entity(instance) {
+                let components: [pi_world::world::ComponentIndex; 3] = [
+                    editor.init_component::<ModelInstanceAttributes>(), 
+                    editor.init_component::<TargetAnimatorableIsRunning>(), 
+                    editor.init_component::<InstanceAttributeAnimated>()];
+                    
+                editor.add_components(instance, &components).unwrap();
                 *editor.get_component_unchecked_mut_by_id(instance, components[0]) = instanceattrs;
-                *editor.get_component_unchecked_mut_by_id(instance, components[1]) = TargetAnimatorableIsRunning;
+                *editor.get_component_unchecked_mut_by_id(instance, components[1]) = TargetAnimatorableIsRunning::default();
                 *editor.get_component_unchecked_mut_by_id(instance, components[2]) = InstanceAttributeAnimated::default();
-                // let _ = editor.alter(instance, (instanceattrs, TargetAnimatorableIsRunning, InstanceAttributeAnimated::default()));
-                // commands.insert(TargetAnimatorableIsRunning).insert(InstanceAttributeAnimated::default());
+                
                 ActionInstanceMesh::init(instance, &mut editor, source, id_scene.0);
     
                 instancelist.insert(instance);
                 *flag = DirtyInstanceSourceRefs;
             }
-            // 
         } else {
             if count < 2 {
                 cmds.push(OpsInstanceMeshCreation(source, instance, count + 1))
@@ -279,13 +281,13 @@ impl ActionMesh {
         ActionMesh::as_instance_source(entity, editor);
         // ActionMesh::as_instance_source(&mut entitycmd);
         let components = [editor.init_component::<TargetAnimatorableIsRunning>(), editor.init_component::<InstanceAttributeAnimated>()];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
         // editor.get_component_unchecked_mut_by_id(entity, components[0]) = TargetAnimatorableIsRunning;
         // editor.add_components(entity, (TargetAnimatorableIsRunning, InstanceAttributeAnimated::default()));
 
         if meshinstanceattributes.bytes().len() > 0 {
             let components = [editor.init_component::<BindModel>(), editor.init_component::<ModelStatic>()];
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
 
             // editor.add_components(entity, (commonbindmodel.0.clone(), ModelStatic));
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = commonbindmodel.0.clone();
@@ -293,7 +295,7 @@ impl ActionMesh {
         } else {
             if let Some(bind) = BindModel::new(allocator) {
                 // log::info!("BindModel New");
-                add_component(editor, entity, bind);
+                add_component(editor, entity, bind).unwrap();
                 // editor.add_components(entity, (bind,));
             }
         }
@@ -340,7 +342,7 @@ impl ActionMesh {
         let id06 = editor.alloc_entity();
         let id07 = editor.alloc_entity();
         let id08 = editor.alloc_entity();
-        add_component(editor, entity, PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]));
+        add_component(editor, entity, PassIDs([id01, id02, id03, id04, id05, id06, id07, id08])).unwrap();
         // let _ = editor.alter(entity, (PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]),));
         create_passobj(editor, id01, entity, scene, empty.id(), PassTag::PASS_TAG_01);
         create_passobj(editor, id02, entity, scene, empty.id(), PassTag::PASS_TAG_02);
@@ -366,21 +368,21 @@ impl ActionMesh {
 
         let components = [
             editor.init_component::<AbstructMesh>(),
-            editor.init_component::<    Mesh>(),
-            editor.init_component::<    GeometryID>(),
-            editor.init_component::<    RenderGeometryEable>(),
-            editor.init_component::<    RenderWorldMatrix>(),
-            editor.init_component::<    RenderWorldMatrixInv>(),
-            editor.init_component::<    RenderMatrixDirty>(),
-            editor.init_component::<    MeshCastShadow>(),
-            editor.init_component::<    MeshReceiveShadow>(),
-            editor.init_component::<    PassDirtyBindEffectValue>(),
-            editor.init_component::<    FlagPassDirtyBindEffectValue>(),
-            editor.init_component::<    PassDirtyBindEffectTextures>(),
-            editor.init_component::<    FlagPassDirtyBindEffectTextures>(),
-            editor.init_component::<    LayerMask>(),
-            editor.init_component::<    AbstructMeshCullingFlag>(),
-            editor.init_component::<    TransparentSortParam>(),
+            editor.init_component::<Mesh>(),
+            editor.init_component::<GeometryID>(),
+            editor.init_component::<RenderGeometryEable>(),
+            editor.init_component::<RenderWorldMatrix>(),
+            editor.init_component::<RenderWorldMatrixInv>(),
+            editor.init_component::<RenderMatrixDirty>(),
+            editor.init_component::<MeshCastShadow>(),
+            editor.init_component::<MeshReceiveShadow>(),
+            editor.init_component::<PassDirtyBindEffectValue>(),
+            editor.init_component::<FlagPassDirtyBindEffectValue>(),
+            editor.init_component::<PassDirtyBindEffectTextures>(),
+            editor.init_component::<FlagPassDirtyBindEffectTextures>(),
+            editor.init_component::<LayerMask>(),
+            editor.init_component::<AbstructMeshCullingFlag>(),
+            editor.init_component::<TransparentSortParam>(),
     
                 // CCullMode(CullMode::Back))
                 // CFrontFace(FrontFace::Ccw))
@@ -528,17 +530,17 @@ impl ActionInstanceMesh {
         
         
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = AbstructMesh;
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = AbstructMeshCullingFlag(false);
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = InstanceTransparentIndex(0);
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = InstanceMesh(source);
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AbstructMeshCullingFlag(false);
+            *editor.get_component_unchecked_mut_by_id(entity, components[2]) = InstanceTransparentIndex(0);
+            *editor.get_component_unchecked_mut_by_id(entity, components[3]) = InstanceMesh(source);
 
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = RenderMatrixDirty(true);
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = RenderWorldMatrix(Matrix::identity());
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = RenderWorldMatrixInv(Matrix::identity());
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ModelVelocity::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ScalingMode::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = GeometryBounding::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = GeometryCullingMode::default() ;
+            *editor.get_component_unchecked_mut_by_id(entity, components[4]) = RenderMatrixDirty(true);
+            *editor.get_component_unchecked_mut_by_id(entity, components[5]) = RenderWorldMatrix(Matrix::identity());
+            *editor.get_component_unchecked_mut_by_id(entity, components[6]) = RenderWorldMatrixInv(Matrix::identity());
+            *editor.get_component_unchecked_mut_by_id(entity, components[7]) = ModelVelocity::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[8]) = ScalingMode::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[9]) = GeometryBounding::default();
+            *editor.get_component_unchecked_mut_by_id(entity, components[10]) = GeometryCullingMode::default() ;
         
     }
 }

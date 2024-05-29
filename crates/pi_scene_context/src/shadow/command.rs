@@ -36,7 +36,7 @@ impl ActionShadow {
                         editor.init_component::<ShadowParam>(),
                         editor.init_component::<ShadowAngle>(),
                     ];
-        editor.add_components(entity, &components);
+        let _ = editor.add_components(entity, &components).unwrap();
         // alter1.alter(entity, ( ShadowParam::default(), ShadowAngle::default()));
         ActionEntity::init(entity, editor);
         ActionScene::add_to_scene(entity, editor, scene);
@@ -44,20 +44,20 @@ impl ActionShadow {
     }
 }
 
-pub struct BundleShadowCaster(
-    RendererID,
-    ShadowParam,
-    ShadowAngle,
-);
+// pub struct BundleShadowCaster(
+//     RendererID,
+//     ShadowParam,
+//     ShadowAngle,
+// );
 
-pub struct BundleShadowCasterDirect(
-    ShadowLinkedLightID,
-    DirectionalShadowDirection,
-    DirectionalShadowProjection,
-);
+// pub struct BundleShadowCasterDirect(
+//     ShadowLinkedLightID,
+//     DirectionalShadowDirection,
+//     DirectionalShadowProjection,
+// );
 
-pub struct BundleShadowCasterSpot(
-    ShadowLinkedLightID,
-    DirectionalShadowDirection,
-    SpotShadowProjection,
-);
+// pub struct BundleShadowCasterSpot(
+//     ShadowLinkedLightID,
+//     DirectionalShadowDirection,
+//     SpotShadowProjection,
+// );

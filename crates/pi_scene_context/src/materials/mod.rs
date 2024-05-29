@@ -39,7 +39,7 @@ impl Plugin for PluginMaterial {
             app.configure_set(Update, StageTextureLoad::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
             
             app.add_system(Update,sys_image_texture_load_launch.in_set(StageTextureLoad::TextureLoading));
-            app.add_system(Update,sys_image_texture_loaded.in_set(StageTextureLoad::TextureLoading));
+            app.add_system(Update,sys_image_texture_loaded.after(sys_image_texture_load_launch).in_set(StageTextureLoad::TextureLoading));
             
             app.world.insert_single_res(ImageTextureViewLoader2::default());
             app.add_system(
@@ -97,6 +97,7 @@ impl Plugin for PluginMaterial {
         app.world.insert_single_res(ShareAssetMgr::<ShaderEffectMeta>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
 
         app.world.insert_single_res(ActionListMaterialCreate::default());
+        println!("ActionListMaterialUse init");
         app.world.insert_single_res(ActionListMaterialUse::default());
         app.world.insert_single_res(ActionListUniformFloat::default());
         // app.insert_resource(ActionListUniformInt::default());
@@ -140,7 +141,7 @@ impl Plugin for PluginMaterial {
         // );
 
         app.add_system(Update,sys_act_material_use.in_set(StageMaterial::Command));
-        app.add_system(Update,sys_material_textures_modify.in_set(StageMaterial::Command));
+        app.add_system(Update,sys_material_textures_modify.after(sys_act_material_use).in_set(StageMaterial::Command));
 
         // app.add_system(
 		// 	Update,

@@ -42,7 +42,7 @@ pub fn sys_abstructmesh_culling_flag_reset(
     });
 }
 
-pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix,  T2: TViewerProjectMatrix + >(
+pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix,  T2: TViewerProjectMatrix>(
     mut viewers: Query<
         (Entity, &ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList),
         ((Changed<LayerMask>, Changed<ViewerActive>), With<T>, With<T2>)
@@ -87,7 +87,7 @@ pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix,  T2: TViewer
     // log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
 }
 fn _sys_update_viewer_model_list_by_viewer(
-    vieweractive: &ViewerActive, scene: &SceneID, layer: &LayerMask, mut list_model: &mut ModelList, mut flag_list_model: &mut FlagModelList,
+    vieweractive: &ViewerActive, scene: &SceneID, layer: &LayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
     items: &Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs),
     >,
@@ -194,7 +194,7 @@ fn _sys_update_viewer_model_list_by_model(
 
 pub fn sys_tick_viewer_culling<T: TViewerViewMatrix,  T2: TViewerProjectMatrix,  R: TCullingPerformance + 'static + Send + Sync>(
     mut viewers: Query<
-        (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling),
+        (Entity, &SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling),
         (With<T>, With<T2>)
     >,
     items: Query<
@@ -209,8 +209,8 @@ pub fn sys_tick_viewer_culling<T: TViewerViewMatrix,  T2: TViewerProjectMatrix, 
 ) {
     let time1 = pi_time::Instant::now();
     // log::warn!("SysModelListAfterCullinUpdateByCamera: ");
-    viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
-        // log::warn!("SysViewerCulling: {:?}", vieweractive);
+    viewers.iter_mut().for_each(|(idviewer, idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
+        // log::warn!("SysViewerCulling: {:?}", (idviewer, vieweractive.0));
         _sys_tick_viewer_culling(
             idscene, vieweractive, list_model, transform, forceincludes, &mut cullings,
             &scenes, &mut flags, &items

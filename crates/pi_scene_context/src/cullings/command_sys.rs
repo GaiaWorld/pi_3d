@@ -38,6 +38,7 @@ pub fn sys_act_mesh_bounding_culling_display(
         if let Ok(mut item) = display_scenes.get_mut(entity) {
             item.display = mode;
             if mode {
+                println!("sys_act_mesh_bounding_culling_display ============ {:?}", (entity, mode, pass));
                 display_matuse.push(OpsMaterialUse::ops(item.mesh, deafultmat.0, pass));
             }
         }

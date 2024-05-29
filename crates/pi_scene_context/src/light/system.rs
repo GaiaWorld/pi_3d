@@ -13,36 +13,36 @@ use super::{spot::SpotLightAngle, hemisphere::HemiGrounds, base::*};
 
 pub fn sys_light_index_create(
     mut editor: EntityEditor,
-    items: Query<(Entity, &SceneID, Option<&DirectLight>, Option<&PointLight>, Option<&SpotLight>, Option<&HemisphericLight>), (/* Added<DirectLight>, Added<PointLight>, Added<SpotLight>, Added<HemisphericLight> */)>,
+    items: Query<(Entity, &SceneID, Option<&DirectLight>, Option<&PointLight>, Option<&SpotLight>, Option<&HemisphericLight>), (Changed<DirectLight>, Changed<PointLight>, Changed<SpotLight>, Changed<HemisphericLight>)>,
     mut scenes: Query<(&mut SceneDirectLightsQueue, &mut ScenePointLightsQueue, &mut SceneSpotLightsQueue, &mut SceneHemiLightsQueue, &mut SceneLightingInfosDirty)>,
 ) {
 
     items.iter().for_each(|(entity, idscene, direct, point, spot, hemi)| {
-
+        log::warn!("sys_light_index_create 2");
         if let Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi, mut dirty)) = scenes.get_mut(idscene.0) {
 
             if direct.is_some() {
                 // editor.alter(entity, (queuedirect.0.add(entity),));
-                add_component(&mut editor, entity, queuedirect.0.add(entity));
+                let _ = add_component(&mut editor, entity, queuedirect.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
             if point.is_some() {
                 // log::warn!("Add Point !!");
                 // commands.entity(entity).insert(queuepoint.0.add(entity));
                 // editor.alter(entity, (queuedirect.0.add(entity),));
-                add_component(&mut editor, entity, queuedirect.0.add(entity));
+                let _ = add_component(&mut editor, entity, queuepoint.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
             if spot.is_some() {
                 // commands.entity(entity).insert(queuespot.0.add(entity));
                 // editor.alter(entity, (queuedirect.0.add(entity),));
-                add_component(&mut editor, entity, queuedirect.0.add(entity));
+                let _ = add_component(&mut editor, entity, queuespot.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
             if hemi.is_some() {
                 // commands.entity(entity).insert(queuehemi.0.add(entity));
                 // editor.alter(entity, (queuedirect.0.add(entity),));
-                add_component(&mut editor, entity, queuedirect.0.add(entity));
+                let _ = add_component(&mut editor, entity, queuehemi.0.add(entity));
                 *dirty = SceneLightingInfosDirty;
             }
         }

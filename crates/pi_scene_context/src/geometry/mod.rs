@@ -79,7 +79,7 @@ impl Plugin for PluginGeometry {
         //     ).chain().in_set(StageGeometry::GeometryLoaded)
         // );
         app.add_system(Update,  sys_vertex_buffer_slots_loaded.in_set(StageGeometry::GeometryLoaded));
-        app.add_system(Update,  sys_geometry_enable.in_set(StageGeometry::GeometryLoaded));
+        app.add_system(Update,  sys_geometry_enable.after(sys_vertex_buffer_slots_loaded).in_set(StageGeometry::GeometryLoaded));
 
         app.add_system(Update, 
             sys_instanced_buffer_upload.in_set(StageGeometry::Upload)

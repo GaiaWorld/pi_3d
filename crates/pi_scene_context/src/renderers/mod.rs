@@ -140,7 +140,7 @@ impl Plugin for PluginRenderer {
         app.add_system(Update, sys_act_stencil_state.in_set(StageRenderer::RenderStateCommand));
         app.add_system(Update, sys_act_render_queue.in_set(StageRenderer::RenderStateCommand));
         app.add_system(Update, sys_act_renderer_connect.in_set(StageRenderer::RenderStateCommand));
-        app.add_system(Update, sys_act_renderer_target.in_set(StageRenderer::RenderStateCommand));
+        app.add_system(Update, sys_act_renderer_target.after(sys_act_renderer_connect).in_set(StageRenderer::RenderStateCommand));
 
         app.add_system(Update, 
             sys_renderer_modify.in_set(StageRenderer::RendererCommand)
@@ -160,9 +160,9 @@ impl Plugin for PluginRenderer {
         //     ).chain().in_set(StageRenderer::PassBindGroup)
         // );
         app.add_system(Update, sys_sets_modify_by_viewer.in_set(StageRenderer::PassBindGroup));
-        app.add_system(Update, sys_sets_modify_by_model.in_set(StageRenderer::PassBindGroup));
-        app.add_system(Update, sys_passrendererid_pass_reset.in_set(StageRenderer::PassBindGroup));
-        app.add_system(Update, sys_sets_modify_by_scene_extend.in_set(StageRenderer::PassBindGroup));
+        app.add_system(Update, sys_sets_modify_by_model.after(sys_sets_modify_by_viewer).in_set(StageRenderer::PassBindGroup));
+        app.add_system(Update, sys_passrendererid_pass_reset.after(sys_sets_modify_by_model).in_set(StageRenderer::PassBindGroup));
+        app.add_system(Update, sys_sets_modify_by_scene_extend.after(sys_passrendererid_pass_reset).in_set(StageRenderer::PassBindGroup));
 
         // app.add_system(
 		// 	Update,
@@ -176,11 +176,11 @@ impl Plugin for PluginRenderer {
         //     ).chain().in_set(StageRenderer::PassBindGroups)
         // );
         app.add_system(Update, sys_set0_modify.in_set(StageRenderer::PassBindGroups));
-        app.add_system(Update, sys_set1_modify.in_set(StageRenderer::PassBindGroups));
-        app.add_system(Update, sys_set2_modify.in_set(StageRenderer::PassBindGroups));
-        app.add_system(Update, sys_set3_modify.in_set(StageRenderer::PassBindGroups));
-        app.add_system(Update, sys_bind_group_loaded.in_set(StageRenderer::PassBindGroups));
-        app.add_system(Update, sys_pass_bind_groups.in_set(StageRenderer::PassBindGroups));
+        app.add_system(Update, sys_set1_modify.after(sys_set0_modify).in_set(StageRenderer::PassBindGroups));
+        app.add_system(Update, sys_set2_modify.after(sys_set1_modify).in_set(StageRenderer::PassBindGroups));
+        app.add_system(Update, sys_set3_modify.after(sys_set2_modify).in_set(StageRenderer::PassBindGroups));
+        app.add_system(Update, sys_bind_group_loaded.after(sys_set3_modify).in_set(StageRenderer::PassBindGroups));
+        app.add_system(Update, sys_pass_bind_groups.after(sys_bind_group_loaded).in_set(StageRenderer::PassBindGroups));
 
         // app.add_system(
 		// 	Update,
@@ -192,8 +192,8 @@ impl Plugin for PluginRenderer {
         //         sys_pass_shader
         //     ).chain().in_set(StageRenderer::PassShader)
         // );
-        app.add_system(Update, sys_pass_shader_request_by_model.in_set(StageRenderer::PassShader));
-        app.add_system(Update, sys_pass_shader_request_by_geometry.in_set(StageRenderer::PassShader));
+        app.add_system(Update, sys_pass_shader_request_by_model.before(sys_pass_shader).in_set(StageRenderer::PassShader));
+        app.add_system(Update, sys_pass_shader_request_by_geometry.before(sys_pass_shader).in_set(StageRenderer::PassShader));
         app.add_system(Update, sys_pass_shader.in_set(StageRenderer::PassShader));
 
         // app.add_system(
@@ -206,8 +206,8 @@ impl Plugin for PluginRenderer {
         //         sys_pass_pipeline
         //     ).chain().in_set(StageRenderer::PassPipeline)
         // );
-        app.add_system(Update, sys_pass_pipeline_request_by_model.in_set(StageRenderer::PassPipeline));
-        app.add_system(Update, sys_pass_pipeline_request_by_renderer.in_set(StageRenderer::PassPipeline));
+        app.add_system(Update, sys_pass_pipeline_request_by_model.before(sys_pass_pipeline).in_set(StageRenderer::PassPipeline));
+        app.add_system(Update, sys_pass_pipeline_request_by_renderer.before(sys_pass_pipeline).in_set(StageRenderer::PassPipeline));
         app.add_system(Update, sys_pass_pipeline.in_set(StageRenderer::PassPipeline));
 
         // app.add_system(
@@ -218,7 +218,7 @@ impl Plugin for PluginRenderer {
         //     ).chain().in_set(StageRenderer::PassDraw)
         // );
         app.add_system(Update, sys_pass_draw_modify_by_model.in_set(StageRenderer::PassDraw));
-        app.add_system(Update, sys_pass_draw_modify_by_pass.in_set(StageRenderer::PassDraw));
+        app.add_system(Update, sys_pass_draw_modify_by_pass.after(sys_pass_draw_modify_by_model).in_set(StageRenderer::PassDraw));
 
         app.add_system(
             Update,

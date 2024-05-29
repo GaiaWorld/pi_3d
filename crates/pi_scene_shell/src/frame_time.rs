@@ -44,7 +44,7 @@ impl InterfaceFrameTime for EnginShell {
         &mut self,
         ms: u64,
     ) -> &Self {
-        let mut frame = self.world.get_single_res_mut::<SingleFrameTimeCommand>().unwrap();
+        let frame = self.world.get_single_res_mut::<SingleFrameTimeCommand>().unwrap();
         frame.frame_ms = ms;
 
         self

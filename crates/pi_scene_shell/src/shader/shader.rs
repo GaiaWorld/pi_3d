@@ -7,7 +7,7 @@ use pi_render::{renderer::{
     }, asset::ASSET_SIZE_FOR_UNKOWN};
 use crate::bind_groups::*;
 
-use super::{BindDefine, ERenderAlignment, ERenderAlignmentForShader, ShaderEffectMeta};
+use super::{BindDefine, ERenderAlignmentForShader, ShaderEffectMeta};
 
 pub trait TShaderAttributesCode {
     fn define_code(&self, location: u32) -> String;

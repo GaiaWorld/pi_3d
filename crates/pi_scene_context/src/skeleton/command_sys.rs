@@ -1,9 +1,9 @@
 
 
-use pi_scene_shell::{add_component, prelude::{pi_world::editor::{self, EntityEditor}, *}};
+use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 use pi_scene_math::Matrix;
 
-use crate::{flags::{CullingFlag, Enable, GlobalEnable, RecordEnable}, prelude::{AbsoluteTransform, GlobalMatrix, LocalEulerAngles, LocalMatrix, LocalPosition, LocalRotation, LocalRotationQuaternion, LocalScaling, RecordLocalEulerAngles, RecordLocalPosition, RecordLocalRotationQuaternion, RecordLocalScaling, TransformNodeDirty}, transforms::command_sys::*};
+use crate::transforms::command_sys::*;
 
 use super::{
     command::*,
@@ -88,7 +88,7 @@ pub fn sys_create_bone(
     empty: Res<SingleEmptyEntity>,
 ) {
     cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene)| {
-        let mut bonecmd = if !editor.contains_entity(bone) {
+        if !editor.contains_entity(bone) {
             return;
         };
         ActionBone::init(bone,  &mut editor, &empty, parent, scene);
@@ -126,9 +126,9 @@ impl ActionSkeleton {
             editor.init_component::<SkeletonRefs>(),
             editor.init_component::<DirtySkeletonRefs>(),
         ];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
 
-        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =skeleton;
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) = skeleton;
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SkeletonInitBaseMatrix;
         *editor.get_component_unchecked_mut_by_id(entity, components[2]) = SkeletonBonesDirty(true);
         *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SkeletonRefs::default();
@@ -171,7 +171,7 @@ impl ActionBone {
             editor.init_component::<BoneMatrix>(),
             editor.init_component::<BoneBaseMatrix>(),
         ];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
 
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = BoneParent(parent);
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = BoneAbsolute(Matrix::identity());

@@ -65,7 +65,7 @@ impl Plugin for PluginParticleSystem {
         app.add_system(Update, sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand));
 
         app.add_system(Update,sys_ids.in_set(StageParticleSystem::ParticleSysEmission));
-        app.add_system(Update, sys_emission.in_set(StageParticleSystem::ParticleSysEmission),);
+        app.add_system(Update, sys_emission.after(sys_ids).in_set(StageParticleSystem::ParticleSysEmission),);
         app.add_system(
 			Update,
             (
@@ -115,8 +115,8 @@ impl Plugin for PluginParticleSystem {
         //     ).chain().in_set(StageParticleSystem::ParticleSysMatrix),
         // );
         app.add_system(Update, sys_particle_active.in_set(StageParticleSystem::ParticleSysMatrix));
-        app.add_system(Update, sys_emitmatrix.in_set(StageParticleSystem::ParticleSysMatrix));
-        app.add_system(Update, sys_prewarm.in_set(StageParticleSystem::ParticleSysMatrix));
+        app.add_system(Update, sys_emitmatrix.after(sys_particle_active).in_set(StageParticleSystem::ParticleSysMatrix));
+        app.add_system(Update, sys_prewarm.after(sys_emitmatrix).in_set(StageParticleSystem::ParticleSysMatrix));
 
         // app.add_system(Update, 
         //     (
@@ -125,7 +125,7 @@ impl Plugin for PluginParticleSystem {
         //     ).chain().in_set(StageParticleSystem::ParticleSysUpdate),
         // );
         app.add_system(Update, sys_update_buffer.in_set(StageParticleSystem::ParticleSysUpdate));
-        app.add_system(Update, sys_update_buffer_trail.in_set(StageParticleSystem::ParticleSysUpdate));
+        app.add_system(Update, sys_update_buffer_trail.after(sys_update_buffer).in_set(StageParticleSystem::ParticleSysUpdate));
         
 
         app.add_system(

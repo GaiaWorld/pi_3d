@@ -90,8 +90,8 @@ impl Plugin for PluginCamera {
         //     ).chain().in_set(StageCamera::CameraCalcMatrix)
         // );
         app.add_system(Update, sys_calc_view_matrix_by_viewer::<TargetCameraParam>.in_set(StageCamera::CameraCalcMatrix));
-        app.add_system(Update, sys_calc_proj_matrix::<CameraParam>.in_set(StageCamera::CameraCalcMatrix));
-        app.add_system(Update, sys_calc_transform_matrix::<TargetCameraParam, CameraParam>.in_set(StageCamera::CameraCalcMatrix));
+        app.add_system(Update, sys_calc_proj_matrix::<CameraParam>.after(sys_calc_view_matrix_by_viewer::<TargetCameraParam>).in_set(StageCamera::CameraCalcMatrix));
+        app.add_system(Update, sys_calc_transform_matrix::<TargetCameraParam, CameraParam>.after(sys_calc_proj_matrix::<CameraParam>).in_set(StageCamera::CameraCalcMatrix));
 
         // app.add_system(
 		// 	Update,
@@ -101,11 +101,10 @@ impl Plugin for PluginCamera {
         //     ).chain().in_set(StageCamera::CameraCalcMatrix)
         // );
         app.add_system(Update, sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>.in_set(StageCamera::CameraCalcMatrix));
-        app.add_system(Update, sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>.in_set(StageCamera::CameraCalcMatrix));
+        app.add_system(Update, sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>.after(sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>).in_set(StageCamera::CameraCalcMatrix));
 
         app.add_system(
 			Update,
-            
                 sys_tick_viewer_culling::<TargetCameraParam, CameraParam, StateCamera>       // .run_if(should_run)
             .in_set(StageCamera::CameraCulling)
         );

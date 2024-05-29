@@ -34,11 +34,12 @@ pub fn sys_create_shadow_generator(
         if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, isdirect, issopt, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), direct_lights.get_mut(light)) {
             let mat = editor.alloc_entity();
 
-            let mut shadowcommands = if !editor.contains_entity(entity) {
-                disposereadylist.push(OpsDisposeReadyForRef::ops(entity)); editor.destroy(mat); return;
+            if !editor.contains_entity(entity) {
+                disposereadylist.push(OpsDisposeReadyForRef::ops(entity)); let _ = editor.destroy(mat); return;
             };
 
                 matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
+                // println!("sys_create_shadow_generator: {:?}", (entity, passtag));
                 matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
     
                 ActionShadow::as_shadow_generator(entity, &mut editor, idscene.0, enabled.0);
@@ -50,25 +51,26 @@ pub fn sys_create_shadow_generator(
                     editor.init_component::<ShadowCastPassTag>(),
                     editor.init_component::<ViewerDistanceCompute>(),
                 ];
-                editor.add_components(entity, &components);
+                editor.add_components(entity, &components).unwrap();
                
        
-                     *editor.get_component_unchecked_mut_by_id(entity, components[0]) = LinkedMaterialID(empty.id());
-                     *editor.get_component_unchecked_mut_by_id(entity, components[1]) = RendererID(entity);
-                     *editor.get_component_unchecked_mut_by_id(entity, components[2]) = ShadowLayerMask(layermask.clone());
-                     *editor.get_component_unchecked_mut_by_id(entity, components[3]) = queueshadow.0.add(entity);
-                     *editor.get_component_unchecked_mut_by_id(entity, components[4]) = ShadowCastPassTag(passtag);
-                     *editor.get_component_unchecked_mut_by_id(entity, components[4]) = viewerdistance.clone();
+                *editor.get_component_unchecked_mut_by_id(entity, components[0]) = LinkedMaterialID(empty.id());
+                *editor.get_component_unchecked_mut_by_id(entity, components[1]) = RendererID(entity);
+                *editor.get_component_unchecked_mut_by_id(entity, components[2]) = ShadowLayerMask(layermask.clone());
+                *editor.get_component_unchecked_mut_by_id(entity, components[3]) = queueshadow.0.add(entity);
+                *editor.get_component_unchecked_mut_by_id(entity, components[4]) = ShadowCastPassTag(passtag);
+                *editor.get_component_unchecked_mut_by_id(entity, components[5]) = viewerdistance.clone();
              
      
                 if isdirect.is_some() {
                     linkedshadow.0 = Some(entity);
+                    log::warn!("sys_create_shadow_generator 2");
                     let components  = [
                         editor.init_component::<ShadowLinkedLightID>(),
                         editor.init_component::<DirectionalShadowDirection>(),
                         editor.init_component::<DirectionalShadowProjection>(),
                     ];
-                    editor.add_components(entity, &components);
+                    editor.add_components(entity, &components).unwrap();
 
                    
                     *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ShadowLinkedLightID(light);
@@ -77,13 +79,14 @@ pub fn sys_create_shadow_generator(
                   
                 }
                 if issopt.is_some() {
+                    log::warn!("sys_create_shadow_generator 3");
                     linkedshadow.0 = Some(entity);
                     let components  = [
                         editor.init_component::<ShadowLinkedLightID>(),
                         editor.init_component::<DirectionalShadowDirection>(),
                         editor.init_component::<DirectionalShadowProjection>(),
                     ];
-                    editor.add_components(entity, &components);
+                    editor.add_components(entity, &components).unwrap();
 
                     *editor.get_component_unchecked_mut_by_id(entity, components[0]) = ShadowLinkedLightID(light);
                     *editor.get_component_unchecked_mut_by_id(entity, components[1]) = DirectionalShadowDirection::default();
@@ -91,7 +94,7 @@ pub fn sys_create_shadow_generator(
                     
                 }
     
-                if let Some(bindviewer) = BindViewer::new(&mut dynallocator) { add_component(&mut editor, entity, bindviewer); /* alter8.alter(entity, (bindviewer,)); */ }
+                if let Some(bindviewer) = BindViewer::new(&mut dynallocator) { add_component(&mut editor, entity, bindviewer).unwrap(); /* alter8.alter(entity, (bindviewer,)); */ }
             }
     });
 }

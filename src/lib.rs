@@ -356,13 +356,13 @@ pub fn sys_info_draw(
         viewer_includes.push(models.0.len() + forcemodels.0.len());
     });
 
-    log::warn!(
-        "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-        entitycount,
-        count_ready_geo, count_ready_geo_mesh,
-        viewer_includes, viewer_cullings, statecamera.culling_time,
-        count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
-    );
+    // log::warn!(
+    //     "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+    //     entitycount,
+    //     count_ready_geo, count_ready_geo_mesh,
+    //     viewer_includes, viewer_cullings, statecamera.culling_time,
+    //     count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
+    // );
 }
 
 pub fn sys_info_resource(
@@ -370,15 +370,15 @@ pub fn sys_info_resource(
     psperformance: Res<ParticleSystemPerformance>,
     performance: Res<Performance>,
 ) {
-    log::warn!(
-        "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
-        states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
-    );
-    log::warn!(
-        "PSCount: {:?}, PSPerformance: {:?}, sys_emitmatrix: {:?}, sys_direction: {:?}, sys_update_buffer: {:?}, sys_update_buffer_trail: {:?}, sys_emission: {:?}, sys_emitter: {:?}, sys_force_over_life_time: {:?}, sys_gravity: {:?}",
-        psperformance.particles, performance.particlesystem, psperformance.sys_emitmatrix, psperformance.sys_direction, psperformance.sys_update_buffer, psperformance.sys_update_buffer_trail
-        , psperformance.sys_emission, psperformance.sys_emitter, psperformance.sys_force_over_life_time, psperformance.sys_gravity
-    );
+    // log::warn!(
+    //     "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
+    //     states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
+    // );
+    // log::warn!(
+    //     "PSCount: {:?}, PSPerformance: {:?}, sys_emitmatrix: {:?}, sys_direction: {:?}, sys_update_buffer: {:?}, sys_update_buffer_trail: {:?}, sys_emission: {:?}, sys_emitter: {:?}, sys_force_over_life_time: {:?}, sys_gravity: {:?}",
+    //     psperformance.particles, performance.particlesystem, psperformance.sys_emitmatrix, psperformance.sys_direction, psperformance.sys_update_buffer, psperformance.sys_update_buffer_trail
+    //     , psperformance.sys_emission, psperformance.sys_emitter, psperformance.sys_force_over_life_time, psperformance.sys_gravity
+    // );
 }
 
 pub struct PluginBundleDefault;
@@ -504,7 +504,7 @@ pub struct ActionSets<'w> {
     pub obj_dispose: ResMut<'w, ActionListDispose>,
     pub camera: ActionSetCamera<'w>,
     pub light: ActionSetLighting<'w>,
-    // pub shadow: ActionSetShadow<'w>,
+    pub shadow: ActionSetShadow<'w>,
     pub transform: ActionSetTransform<'w>,
     pub mesh: ActionSetMesh<'w>,
     pub skin: ActionSetSkeleton<'w>,

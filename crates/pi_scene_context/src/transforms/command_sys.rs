@@ -17,14 +17,12 @@ pub fn sys_create_transform_node(
    
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity)| {
-        let mut transformnode = if editor.contains_entity(entity) {
-            let _ = ActionTransformNode::init(entity, &mut editor, scene);
-            add_component(&mut editor, entity, TransformNode).unwrap();
-            // let _ = alter5.alter(entity, (TransformNode,));
-        } else {
+        if !editor.contains_entity(entity) {
             return;
-        };
-        // ActionTransformNode::init(&mut transformnode, scene);
+        }
+
+        let _ = ActionTransformNode::init(entity, &mut editor, scene);
+        add_component(&mut editor, entity, TransformNode).unwrap();
     });
 }
 
@@ -152,23 +150,23 @@ impl ActionTransformNode {
             editor.init_component::<CullingFlag>(),
         ];
         editor.add_components(entity, &components).unwrap();
-        // commands.alter(entity,
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) =TransformNodeDirty;
-            *editor.get_component_unchecked_mut_by_id(entity, components[1]) =LocalPosition::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[2]) =LocalScaling::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[3]) =LocalRotationQuaternion::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[4]) =LocalEulerAngles::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[5]) =RecordLocalPosition::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[6]) =RecordLocalScaling::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[7]) =RecordLocalRotationQuaternion::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[8]) =RecordLocalEulerAngles::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[9]) =LocalRotation(Rotation3::identity());
-            *editor.get_component_unchecked_mut_by_id(entity, components[10]) =LocalMatrix::new(Matrix::identity());
-            *editor.get_component_unchecked_mut_by_id(entity, components[11]) =GlobalMatrix::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[12]) =AbsoluteTransform::default();
-            *editor.get_component_unchecked_mut_by_id(entity, components[13]) =FlagAnimationStartResetComp;
-            *editor.get_component_unchecked_mut_by_id(entity, components[14]) =CullingFlag(true);
-        // )
+
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =TransformNodeDirty;
+        *editor.get_component_unchecked_mut_by_id(entity, components[1]) =LocalPosition::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) =LocalScaling::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) =LocalRotationQuaternion::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[4]) =LocalEulerAngles::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[5]) =RecordLocalPosition::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[6]) =RecordLocalScaling::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[7]) =RecordLocalRotationQuaternion::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[8]) =RecordLocalEulerAngles::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[9]) =LocalRotation(Rotation3::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[10]) =LocalMatrix::new(Matrix::identity());
+        *editor.get_component_unchecked_mut_by_id(entity, components[11]) =GlobalMatrix::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[12]) =AbsoluteTransform::default();
+        *editor.get_component_unchecked_mut_by_id(entity, components[13]) =FlagAnimationStartResetComp;
+        *editor.get_component_unchecked_mut_by_id(entity, components[14]) =CullingFlag(true);
+
     }
 
     pub(crate) fn init_for_tree(
@@ -184,7 +182,7 @@ impl ActionTransformNode {
             editor.init_component::<RecordEnable>(),
             editor.init_component::<GlobalEnable>(),
         ];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
 
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) =Down::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = Up::default();

@@ -56,15 +56,15 @@ pub fn sys_create_scene(
             ActionScene::init(entity, &mut editor, id_left, id_right, lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp);
             let components = [editor.init_component::<SceneBoundingPool>(), editor.init_component::<SceneAnimationContext>(),editor.init_component::<BoundingBoxDisplay>(),];
 
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = pool; 
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) = SceneAnimationContext::new(); 
             *editor.get_component_unchecked_mut_by_id(entity, components[2]) = BoundingBoxDisplay { mesh: bounding, display: false };
         } else {
-            editor.destroy(id_left);
-            editor.destroy(id_right);
-            editor.destroy(bounding);
-            editor.destroy(boundinggeo);
+            editor.destroy(id_left).unwrap();
+            editor.destroy(id_right).unwrap();
+            editor.destroy(bounding).unwrap();
+            editor.destroy(boundinggeo).unwrap();
             // commands.entity(id_left).despawn();
             // commands.entity(id_right).despawn();
             // commands.entity(bounding).despawn();

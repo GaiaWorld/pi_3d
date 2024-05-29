@@ -97,7 +97,7 @@ impl crate::Plugin for PluginMesh {
         //     ).chain().in_set(StageModel::RenderMatrix)
         // );
         app.add_system(Update,sys_calc_render_matrix.in_set(StageModel::RenderMatrix));
-        app.add_system(Update,sys_calc_render_matrix_instance.in_set(StageModel::RenderMatrix));
+        app.add_system(Update,sys_calc_render_matrix_instance.after(sys_calc_render_matrix).in_set(StageModel::RenderMatrix));
 
         // app.add_system(
 	// 		Update,
@@ -119,9 +119,9 @@ impl crate::Plugin for PluginMesh {
         //     ).chain().in_set(StageModel::InstanceEffectGeometry)
         // );
         app.add_system(Update,sys_animator_update_instance_attribute.in_set(StageModel::InstanceEffectGeometry));
-        app.add_system(Update,sys_tick_instanced_buffer_update.in_set(StageModel::InstanceEffectGeometry));
-        app.add_system(Update,sys_tick_instanced_buffer_update_single.in_set(StageModel::InstanceEffectGeometry));
-        app.add_system(Update,sys_tick_culling_box.in_set(StageModel::InstanceEffectGeometry));
+        app.add_system(Update,sys_tick_instanced_buffer_update.after(sys_animator_update_instance_attribute).in_set(StageModel::InstanceEffectGeometry));
+        app.add_system(Update,sys_tick_instanced_buffer_update_single.after(sys_tick_instanced_buffer_update).in_set(StageModel::InstanceEffectGeometry));
+        app.add_system(Update,sys_tick_culling_box.after(sys_tick_instanced_buffer_update_single).in_set(StageModel::InstanceEffectGeometry));
 
 
         // app.add_system(
@@ -134,9 +134,9 @@ impl crate::Plugin for PluginMesh {
         //     ).chain().in_set(StageModel::LightingCollect)
         // );
         app.add_system(Update,sys_model_direct_lighting_modify_by_light.in_set(StageModel::LightingCollect));
-        app.add_system(Update,sys_model_direct_lighting_modify_by_model.in_set(StageModel::LightingCollect));
-        app.add_system(Update,sys_model_point_lighting_modify_by_model.in_set(StageModel::LightingCollect));
-        app.add_system(Update,sys_model_spot_lighting_modify_by_model.in_set(StageModel::LightingCollect));
+        app.add_system(Update,sys_model_direct_lighting_modify_by_model.after(sys_model_direct_lighting_modify_by_light).in_set(StageModel::LightingCollect));
+        app.add_system(Update,sys_model_point_lighting_modify_by_model.after(sys_model_direct_lighting_modify_by_model).in_set(StageModel::LightingCollect));
+        app.add_system(Update,sys_model_spot_lighting_modify_by_model.after(sys_model_point_lighting_modify_by_model).in_set(StageModel::LightingCollect));
 
 
         // app.add_system(

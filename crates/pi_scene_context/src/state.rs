@@ -95,7 +95,7 @@ pub struct StateRecordCfg {
                         states.0.push(state);
                     }
                     if editor.contains_entity(id_model.0) {
-                        add_component(&mut editor, id_model.0, DirtyMeshStates);
+                        add_component(&mut editor, id_model.0, DirtyMeshStates).unwrap();
                         // commands.alter(id_model.0,(DirtyMeshStates, ));
                     }
                 }
@@ -113,7 +113,7 @@ pub struct StateRecordCfg {
             }
             // if let Some(mut cmd) = commands.get_entity(id_model) {
             if editor.contains_entity(id_model) {
-                add_component(&mut editor, id_model, DirtyMeshStates);
+                add_component(&mut editor, id_model, DirtyMeshStates).unwrap();
                 // commands.alter(id_model, (DirtyMeshStates,));
             }
         });
@@ -128,7 +128,7 @@ pub struct StateRecordCfg {
                 states.0.push(state);
             }
             if editor.contains_entity(id_model) {
-                add_component(&mut editor, id_model, DirtyMeshStates);
+                add_component(&mut editor, id_model, DirtyMeshStates).unwrap();
                 // commands.alter(id_model, (DirtyMeshStates,));
             }
         });
@@ -366,7 +366,7 @@ impl Plugin for PluginStateToFile {
         //     ).chain().in_set(ERunStageChap::StateCheck)
         // );
         app.add_system(Update,sys_mesh_state_by_model::<AbstructMesh>.in_set(ERunStageChap::StateCheck));
-        app.add_system(Update,sys_mesh_state_by_geometry.in_set(ERunStageChap::StateCheck));
-        app.add_system(Update,sys_mesh_state_to_file.in_set(ERunStageChap::StateCheck));
+        app.add_system(Update,sys_mesh_state_by_geometry.after(sys_mesh_state_by_model::<AbstructMesh>).in_set(ERunStageChap::StateCheck));
+        app.add_system(Update,sys_mesh_state_to_file.after(sys_mesh_state_by_geometry).in_set(ERunStageChap::StateCheck));
     }
 }

@@ -14,7 +14,7 @@ use super::{base::*, float::AnimatorableFloat, vec2::AnimatorableVec2, vec3::Ani
 #[derive( Deref, Component, Default)]
 pub struct AnimatorableLink(pub(crate) Entity);
 #[derive(Component, Default)]
-pub struct TargetAnimatorableIsRunning;
+pub struct TargetAnimatorableIsRunning(i32);
 
 pub struct OpsAnimatorableFloat(pub(crate) Entity, pub(crate) Entity, pub(crate) AnimatorableFloat, pub(crate) EAnimatorableEntityType);
 impl OpsAnimatorableFloat {

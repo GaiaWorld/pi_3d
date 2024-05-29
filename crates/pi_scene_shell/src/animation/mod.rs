@@ -117,8 +117,8 @@ impl Plugin for PluginGlobalAnimation {
             //     ).chain().in_set(EStageAnimation::Command)
             // );
             app.add_system(Update,sys_act_reset_while_animationgroup_start.in_set(EStageAnimation::Command));
-            app.add_system(Update,sys_act_animation_group_action.in_set(EStageAnimation::Command));
-            app.add_system(Update,sys_act_dispose_animation_group.in_set(EStageAnimation::Command));
+            app.add_system(Update,sys_act_animation_group_action.after(sys_act_reset_while_animationgroup_start).in_set(EStageAnimation::Command));
+            app.add_system(Update,sys_act_dispose_animation_group.after(sys_act_animation_group_action).in_set(EStageAnimation::Command));
             
             // app.add_system(Update, 
             //     (
@@ -180,10 +180,10 @@ impl<D: TAnimatableComp + 'static, R: TAnimatableCompRecord<D>> Plugin for Plugi
         let type_ctx = TypeAnimeContext::<D>::new(ty, &mut runtime_info_map);
         app.world.insert_single_res(type_ctx);
 
-        app.add_system(Update,sys_apply_removed_data::<D>);
-        app.add_system(Update,sys_animation_removed_data_clear);
-        app.add_system(Update,sys_calc_reset_animatablecomp::<D, R>);
-        app.add_system(Update, sys_calc_type_anime::<D>);
+        app.add_system(Update, sys_apply_removed_data::<D>.before(sys_animation_removed_data_clear).in_set(EStageAnimation::Dispose));
+        
+        app.add_system(Update,sys_calc_reset_animatablecomp::<D, R>.in_set(EStageAnimation::Running));
+        app.add_system(Update, sys_calc_type_anime::<D>.after(sys_calc_reset_animatablecomp::<D, R>).in_set(EStageAnimation::Running));
     }
 }
 

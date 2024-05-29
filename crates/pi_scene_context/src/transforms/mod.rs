@@ -64,12 +64,12 @@ impl Plugin for PluginTransformNode {
         //         sys_world_matrix_calc2,
         //     ).chain().in_set(StageTransform::TransformCalcMatrix));
         app.add_system(Update,sys_local_euler_calc_rotation.in_set(StageTransform::TransformCalcMatrix));
-        app.add_system(Update,sys_act_local_rotation.in_set(StageTransform::TransformCalcMatrix));
-        app.add_system(Update,sys_local_quaternion_calc_rotation.in_set(StageTransform::TransformCalcMatrix));
-        app.add_system(Update,sys_local_matrix_calc.in_set(StageTransform::TransformCalcMatrix));
-        app.add_system(Update,sys_tree_layer_changed.in_set(StageTransform::TransformCalcMatrix));
-        app.add_system(Update,sys_world_matrix_calc.in_set(StageTransform::TransformCalcMatrix));
-        app.add_system(Update,sys_world_matrix_calc2.in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_act_local_rotation.after(sys_local_euler_calc_rotation).in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_local_quaternion_calc_rotation.after(sys_act_local_rotation).in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_local_matrix_calc.after(sys_local_quaternion_calc_rotation).in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_tree_layer_changed.after(sys_local_matrix_calc).in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_world_matrix_calc.after(sys_tree_layer_changed).in_set(StageTransform::TransformCalcMatrix));
+        app.add_system(Update,sys_world_matrix_calc2.after(sys_world_matrix_calc).in_set(StageTransform::TransformCalcMatrix));
 
         app.add_system(
 			Update,

@@ -61,7 +61,7 @@ impl Plugin for PluginLighting {
         //     ).chain().in_set(StageLighting::LightingCommand)
         // );
         app.add_system(Update,sys_light_index_create.in_set(StageLighting::LightingCommand));
-        app.add_system(Update,sys_act_light_param.in_set(StageLighting::LightingCommand));
+        app.add_system(Update,sys_act_light_param.after(sys_light_index_create).in_set(StageLighting::LightingCommand));
 
         // app.add_system(
 		// 	Update,
@@ -73,9 +73,9 @@ impl Plugin for PluginLighting {
         //     ).chain().in_set(StageLighting::LightingUniform)
         // );
         app.add_system(Update,sys_direct_light_update.in_set(StageLighting::LightingUniform));
-        app.add_system(Update,sys_spot_light_update.in_set(StageLighting::LightingUniform));
-        app.add_system(Update,sys_point_light_update.in_set(StageLighting::LightingUniform));
-        app.add_system(Update,sys_hemi_light_update.in_set(StageLighting::LightingUniform));
+        app.add_system(Update,sys_spot_light_update.after(sys_direct_light_update).in_set(StageLighting::LightingUniform));
+        app.add_system(Update,sys_point_light_update.after(sys_spot_light_update).in_set(StageLighting::LightingUniform));
+        app.add_system(Update,sys_hemi_light_update.after(sys_point_light_update).in_set(StageLighting::LightingUniform));
         
 
         app.add_system(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));

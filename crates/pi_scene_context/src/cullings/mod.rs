@@ -63,15 +63,9 @@ impl Plugin for PluginCulling {
         //         sys_abstructmesh_culling_flag_reset,
         //     ).chain().in_set(StageCulling::CalcBounding)
         // );
-        app.add_system(Update, (
-            sys_update_culling_by_worldmatrix
-        ).in_set(StageCulling::CalcBounding));
-        app.add_system(Update, (
-            sys_update_culling_by_cullinginfo
-        ).in_set(StageCulling::CalcBounding));
-        app.add_system(Update, (
-            sys_abstructmesh_culling_flag_reset
-        ).in_set(StageCulling::CalcBounding));
+        app.add_system(Update, sys_update_culling_by_worldmatrix.in_set(StageCulling::CalcBounding));
+        app.add_system(Update, sys_update_culling_by_cullinginfo.after(sys_update_culling_by_worldmatrix).in_set(StageCulling::CalcBounding));
+        app.add_system(Update, sys_abstructmesh_culling_flag_reset.after(sys_update_culling_by_cullinginfo).in_set(StageCulling::CalcBounding));
     }
 }
 

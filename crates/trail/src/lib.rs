@@ -74,6 +74,6 @@ impl Plugin for PluginTrail {
         //     ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
         // );
         app.add_system(Update, sys_dispose_about_trail_linked.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck));
-        app.add_system(Update, sys_dispose_about_trail.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck));
+        app.add_system(Update, sys_dispose_about_trail.after(sys_dispose_about_trail_linked).after(sys_dispose_ready).in_set(ERunStageChap::StateCheck));
     }
 }

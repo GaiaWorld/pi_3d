@@ -162,7 +162,7 @@ pub fn sys_sets_modify_by_model(
             Entity, &PassIDs
         ),
         (
-            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, /* Added<ModelLightingIndexs> */
+            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, /* Changed<ModelLightingIndexs> */ /* Added<ModelLightingIndexs> */
         ),
     >,
     mut passes: Query<&mut PassModelID>,

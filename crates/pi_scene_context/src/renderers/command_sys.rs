@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use pi_scene_shell::{add_component, prelude::{pi_world::editor::EntityEditor, *}};
 
 use crate::{
@@ -27,7 +29,7 @@ pub fn sys_create_renderer(
                 Ok(nodeid) => {
                     if editor.contains_entity(entity) {
                         let components = [editor.init_component::<GraphId>(), editor.init_component::<SceneID>()];
-                        editor.add_components(entity, &components);
+                        editor.add_components(entity, &components).unwrap();
                         *editor.get_component_unchecked_mut_by_id(entity, components[0]) =GraphId(nodeid);
                         *editor.get_component_unchecked_mut_by_id(entity, components[1]) =sceneid.clone();
             
@@ -38,12 +40,12 @@ pub fn sys_create_renderer(
                     }
                 },
                 Err(err) => {
-                    // log::error!("CreateRenderer Fail Graphic Error");
+                    log::error!("CreateRenderer Fail Graphic Error");
                     error.graphic(entity, err);
                 },
             }
         } else {
-            // log::error!("CreateRenderer Fail Not Found Viewer");
+            log::error!("CreateRenderer Fail Not Found Viewer");
         }
     });
 }
@@ -210,25 +212,7 @@ pub fn sys_dispose_renderer(
         }
     });
 }
-type ActionRendererBundle = (
-    PassTag,
-    Renderer,
-    RenderViewport,
-    RenderSize,
-    RendererEnable,
-    RenderColorClear,
-    RenderColorFormat,
-    RenderDepthClear,
-    RenderDepthFormat,
-    RenderStencilClear,
-    RenderAutoClearColor,
-    RenderAutoClearDepth,
-    RenderAutoClearStencil,
-    RendererRenderTarget,
-    RendererBlend,
-    ViewerID,
-    Postprocess
-);
+
 pub struct ActionRenderer;
 impl ActionRenderer {
     pub(crate) fn init(
@@ -278,6 +262,8 @@ impl ActionRenderer {
         *editor.get_component_unchecked_mut_by_id(entity, components[14]) =RendererBlend(transparent);
         *editor.get_component_unchecked_mut_by_id(entity, components[15]) =ViewerID(id_viewer);
         *editor.get_component_unchecked_mut_by_id(entity, components[16]) =Postprocess::default();
+        let r = editor.get_component_unchecked_mut_by_id::<PassTag>(entity, components[0]);
+        println!("============= passtag: {:?}, entity: {:?}", r.deref(), entity);
 
     }
     pub fn create_graphic_node(

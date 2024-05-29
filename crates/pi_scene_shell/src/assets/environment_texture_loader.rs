@@ -83,6 +83,7 @@ impl EnvironmentTextureTools {
                 if check_char_code == 0x00 {
                     break;
                 }
+                // println!("manifest_string: {}, char: {}", manifest_string, char);
                 manifest_string += char.to_string().as_str();
             } else {
                 break;

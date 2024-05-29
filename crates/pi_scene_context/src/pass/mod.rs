@@ -66,7 +66,7 @@ impl Plugin for PluginPassObject {
             sys_modify_pass_effect_by_material.in_set(StagePassObject::EffectModify)
         );
         app.add_system(Update, 
-            sys_modify_pass_effect_by_pass.in_set(StagePassObject::EffectModify)
+            sys_modify_pass_effect_by_pass.after(sys_modify_pass_effect_by_material).in_set(StagePassObject::EffectModify)
         );
     }
 }

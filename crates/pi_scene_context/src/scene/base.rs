@@ -32,7 +32,7 @@ impl SceneLightingInfos {
     }
 }
 
-#[derive(Component, Deref, Clone, Copy, Default)]
+#[derive(Component, Deref, Clone, Copy, Default, Debug)]
 pub struct SceneItemIndex(u32);
 impl SceneItemIndex {
     pub fn val(&self) -> u32 {

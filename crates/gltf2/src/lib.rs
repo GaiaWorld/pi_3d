@@ -32,9 +32,9 @@ impl Plugin for PluginGLTF2Res {
         //     ).in_set(StageScene::Create)
         // );
         app.add_system(Update, sys_load_gltf_launch.in_set(StageScene::Create));
-        app.add_system(Update, sys_gltf_base_loaded_launch.in_set(StageScene::Create));
-        app.add_system(Update, sys_gltf_base_loaded_check.in_set(StageScene::Create));
-        app.add_system(Update, sys_gltf_analy.in_set(StageScene::Create));
+        app.add_system(Update, sys_gltf_base_loaded_launch.after(sys_load_gltf_launch).in_set(StageScene::Create));
+        app.add_system(Update, sys_gltf_base_loaded_check.after(sys_gltf_base_loaded_launch).in_set(StageScene::Create));
+        app.add_system(Update, sys_gltf_analy.after(sys_gltf_base_loaded_check).in_set(StageScene::Create));
     }
 }
 

@@ -13,7 +13,7 @@ use pi_bevy_asset::TAssetCapacity;
 use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFrameCurveValue}, frame_curve::FrameCurve, FrameIndex};
 use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
-use pi_world::{insert::Bundle, query::Query, world::Entity};
+use pi_world::{ query::Query, world::Entity};
 use pi_world_macros::Component;
 
 

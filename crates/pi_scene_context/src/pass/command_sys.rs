@@ -124,20 +124,21 @@ impl ActionPassObject {
             editor.init_component::<PassReset>(),
         ];
         editor.add_components(entity, &components);
-            *editor.get_component_unchecked_mut_by_id(entity, components[0])   = PassBindEffectValue(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[1])   = PassBindEffectTextures(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[2])   = PassBindGroupScene(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[3])   = PassBindGroupModel(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[4])   = PassBindGroupTextureSamplers(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[5])   = PassBindGroupLightingShadow(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[6])   = PassBindGroups(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[7])   = PassEffectReady(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[8])   = PassShader(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[9])   = PassPipeline(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[10])   = PassDraw(None);
-            *editor.get_component_unchecked_mut_by_id(entity, components[11])   = PassModelID(idmodel);
-            *editor.get_component_unchecked_mut_by_id(entity, components[12])   = PassMaterialID(material);
-            *editor.get_component_unchecked_mut_by_id(entity, components[13])   = PassReset;
+        
+        *editor.get_component_unchecked_mut_by_id(entity, components[0])   = PassBindEffectValue(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[1])   = PassBindEffectTextures(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[2])   = PassBindGroupScene(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[3])   = PassBindGroupModel(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[4])   = PassBindGroupTextureSamplers(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[5])   = PassBindGroupLightingShadow(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[6])   = PassBindGroups(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[7])   = PassEffectReady(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[8])   = PassShader(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[9])   = PassPipeline(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[10])   = PassDraw(None);
+        *editor.get_component_unchecked_mut_by_id(entity, components[11])   = PassModelID(idmodel);
+        *editor.get_component_unchecked_mut_by_id(entity, components[12])   = PassMaterialID(material);
+        *editor.get_component_unchecked_mut_by_id(entity, components[13])   = PassReset;
         
     }
 }

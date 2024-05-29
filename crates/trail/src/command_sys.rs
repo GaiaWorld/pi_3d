@@ -138,7 +138,7 @@ pub fn sys_create_trail_mesh(
                      editor.init_component::<TrailColor>(),
                      editor.init_component::<TrailRandom>(),
                 ];
-                editor.add_components(entity, &components);
+                editor.add_components(entity, &components).unwrap();
 
                 // alter23.alter(entity, 
                     *editor.get_component_unchecked_mut_by_id(entity, components[0]) =SceneID(id_scene);

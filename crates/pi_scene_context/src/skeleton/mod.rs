@@ -1,4 +1,5 @@
 
+use pi_bevy_render_plugin::param::Assign;
 use pi_scene_shell::prelude::*;
 
 use crate::{object::sys_dispose_ready, prelude::{StageTransform, sys_create_mesh, StageModel}};
@@ -38,7 +39,7 @@ impl Plugin for PluginSkeleton {
         //     ).chain().in_set(StageSkeleton::SkinCreate)
         // );
         app.add_system(Update,sys_create_skin.after(sys_create_mesh).in_set(StageSkeleton::SkinCreate));
-        app.add_system(Update,sys_create_bone.in_set(StageSkeleton::SkinCreate));
+        app.add_system(Update,sys_create_bone.after(sys_create_skin).in_set(StageSkeleton::SkinCreate));
 
         // app.add_system(
 		// 	Update,
@@ -49,8 +50,8 @@ impl Plugin for PluginSkeleton {
         //     ).chain().in_set(StageSkeleton::Command)
         // );
         app.add_system(Update,sys_act_skin_use.in_set(StageSkeleton::Command));
-        app.add_system(Update,sys_act_bone_pose.in_set(StageSkeleton::Command));
-        app.add_system(Update,sys_bones_initial.in_set(StageSkeleton::Command));
+        app.add_system(Update,sys_act_bone_pose.after(sys_act_skin_use).in_set(StageSkeleton::Command));
+        app.add_system(Update,sys_bones_initial.after(sys_act_bone_pose).in_set(StageSkeleton::Command));
 
         // app.add_system(
 		// 	Update,
@@ -60,7 +61,7 @@ impl Plugin for PluginSkeleton {
         //     ).chain().in_set(StageSkeleton::Calc)
         // );
         app.add_system(Update,sys_skin_dirty_by_bone.in_set(StageSkeleton::Calc));
-        app.add_system(Update,sys_skin_buffer_update.in_set(StageSkeleton::Calc));
+        app.add_system(Update,sys_skin_buffer_update.after(sys_skin_dirty_by_bone).in_set(StageSkeleton::Calc));
 
         app.add_system(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }

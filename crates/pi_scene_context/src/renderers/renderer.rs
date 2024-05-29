@@ -117,7 +117,7 @@ impl RenderDepthFormat {
     }
 }
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Debug)]
 pub struct RenderDepthClear(pub f32);
 impl Default for RenderDepthClear {
     fn default() -> Self {
@@ -141,7 +141,7 @@ impl Default for RenderAutoClearColor {
     }
 }
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Debug)]
 pub struct RenderAutoClearDepth(pub bool);
 impl Default for RenderAutoClearDepth {
     fn default() -> Self {

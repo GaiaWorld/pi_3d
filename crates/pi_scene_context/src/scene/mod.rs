@@ -63,8 +63,8 @@ impl Plugin for PluginScene {
         //     ).chain()
         // );
         app.configure_set(Update, StageScene::Create.after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, StageScene::_Insert.before(EStageAnimation::Create));
-        app.configure_set(Update, StageScene::Command);
+        app.configure_set(Update, StageScene::_Insert.before(EStageAnimation::Create).after(StageScene::Create));
+        app.configure_set(Update, StageScene::Command.after(StageScene::_Insert));
 
         app.configure_set(Update, StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
         app.configure_set(Update, StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));

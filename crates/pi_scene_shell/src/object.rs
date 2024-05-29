@@ -115,13 +115,13 @@ pub fn sys_dispose_can(
 }
 
 pub fn sys_dispose(
-    mut editor: EntityEditor,
+    editor: EntityEditor,
     items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
     mut tree: EntityTreeMut,
 ) {
     items.iter().for_each(|(entity, state)| {
         if state.0 == true {
-            if   editor.contains_entity(entity) {
+            if editor.contains_entity(entity) {
                 // log::debug!("despawn====={:?}", commands.id());
                 tree.remove(entity);
                 let _ = editor.destroy(entity);

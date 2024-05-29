@@ -7,6 +7,7 @@ use std::ops::Deref;
 use pi_world::editor::EntityEditor;
 use pi_world::filter::Changed;
 use pi_world::filter::With;
+// use pi_world::filter::With;
 // use pi_world::insert::Insert;
 use pi_world::query::Query;
 use pi_world::single_res::SingleRes;
@@ -52,7 +53,7 @@ pub fn sys_create_animatorable_entity(
         if editor.contains_entity(entity) {
              //.insert(value.clone()).insert(AnimatorableLink(linked)).insert(RecordAnimatorableFloat(value.clone()));
             let components = [editor.init_component::<AnimatorableFloat>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableFloat>()];
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
             
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
@@ -64,7 +65,7 @@ pub fn sys_create_animatorable_entity(
     cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, linked, value, etype)| {
         if editor.contains_entity(entity) {
             let components = [editor.init_component::<AnimatorableVec2>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableVec2>()];
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
             
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
@@ -75,7 +76,7 @@ pub fn sys_create_animatorable_entity(
     cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, linked, value, etype)| {
         if editor.contains_entity(entity){
             let components = [editor.init_component::<AnimatorableVec3>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableVec3>()];
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
             
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
@@ -87,7 +88,7 @@ pub fn sys_create_animatorable_entity(
         if editor.contains_entity(entity) {
             // let _ = commands3.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableVec4(value.clone()) ));
             let components = [editor.init_component::<AnimatorableVec4>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableVec4>()];
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
             
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
@@ -105,7 +106,7 @@ pub fn sys_create_animatorable_entity(
         if  editor.contains_entity(entity) {
             // let _ = commands4.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableUint(value.clone())));
             let components = [editor.init_component::<AnimatorableUint>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableUint>()];
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
             
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
@@ -118,7 +119,7 @@ pub fn sys_create_animatorable_entity(
         if editor.contains_entity(entity) {
             // let _ = commands5.alter(entity, (value.clone(), AnimatorableLink(linked), RecordAnimatorableInt(value.clone())));
             let components = [editor.init_component::<AnimatorableSint>(), editor.init_component::<AnimatorableLink>(), editor.init_component::<RecordAnimatorableInt>()];
-            editor.add_components(entity, &components);
+            editor.add_components(entity, &components).unwrap();
             
             *editor.get_component_unchecked_mut_by_id(entity, components[0]) = value.clone();
             *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AnimatorableLink(linked);
@@ -279,7 +280,7 @@ pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecor
         }
         if let Some(linked) = linked {
             if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
-                *item = TargetAnimatorableIsRunning;
+                *item = TargetAnimatorableIsRunning::default();
             }
         }
     });
@@ -321,7 +322,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
                     *item = last_value;
                     if let Some(linked) = linked {
                         if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
-                            *item = TargetAnimatorableIsRunning;
+                            *item = TargetAnimatorableIsRunning::default();
                         }
                     }
                 }

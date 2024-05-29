@@ -273,7 +273,7 @@ fn _calc_world_one(
 
             let dirty = tmp.dirty || lmatrix.is_changed();
     
-            // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
+            // log::warn!(">>>>> calc_world_one {:?}", lmatrix.0);
             if dirty {
                 let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, &lmatrix);
                 resultenable = resultenable && flag;
@@ -342,7 +342,7 @@ fn calc_world_one_bytree(
             let dirty = tmp.dirty || lmatrix.is_changed();
     
     // let r = lmatrix.deref();
-            // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
+            // log::warn!(">>>>> calc_world_one 2 {:?}", lmatrix.0);
             if dirty {
                 let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, lmatrix.deref());
                 resultenable = resultenable && flag;
@@ -375,7 +375,7 @@ fn calc_world_root_bytree(
             let dirty = lmatrix.is_changed();
 
             if dirty {
-                // log::debug!(">>>>> GlobalTransform 0");
+                // log::debug!(">>>>> calc_world_one 4");
                 let (transform, flag) = GlobalMatrix::calc(p_m, &lmatrix);
                 resultenable = resultenable && flag;
                 *gtransform = transform;

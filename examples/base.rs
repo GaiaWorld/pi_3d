@@ -11,7 +11,7 @@ use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer
 use pi_scene_context::{pass::pi_world::editor::{self, EntityEditor}, prelude::*, scene::StageScene, shadow::PluginShadowGenerator};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_standard_material::PluginStandardMaterial;
-use pi_winit::{event_loop::EventLoop, window::Window};
+use pi_winit::{dpi::PhysicalSize, event_loop::EventLoop, window::Window};
 use unlit_material::*;
 use wgpu::Backends;
 
@@ -290,7 +290,7 @@ pub fn test_plugins() -> (App, Arc<Window>,EventLoop<()>) {
     app.add_plugins(PluginStateToFile);
     app.add_plugins(PluginUnlitMaterial);
     app.add_plugins(PluginStandardMaterial);
-
+    app.add_plugins(PluginShadowGenerator);
     app.add_plugins(PluginSceneTimeFromPluginFrame);
     // app.add_plugins(
     //     (
@@ -319,7 +319,7 @@ pub fn test_plugins() -> (App, Arc<Window>,EventLoop<()>) {
     (app, w, eventloop)
 }
 
-pub fn test_plugins_with_gltf() -> App {
+pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
     let mut app = App::new();
@@ -335,11 +335,12 @@ pub fn test_plugins_with_gltf() -> App {
     //     primary_window.resolution.set_physical_resolution(width, height);
     // }
     
-	let w = {
+	let (window, event_loop) = {
 		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
 		let event_loop = pi_winit::event_loop::EventLoopBuilder::new().with_any_thread(true).build();
 		let window = pi_winit::window::Window::new(&event_loop).unwrap();
-		window
+        // window.set_inner_size(PhysicalSize::new(width, height));
+		(Arc::new(window), event_loop)
 	};
 
     let mut cfg = AssetMgrConfigs::default();
@@ -353,7 +354,7 @@ pub fn test_plugins_with_gltf() -> App {
     // );
     // app.add_plugins(
     //     (
-    //         // AccessibilityPlugin,
+    //         AccessibilityPlugin,
     //         pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
     //         pi_bevy_asset::PiAssetPlugin::default(),
     //         PiRenderPlugin::default(),
@@ -361,7 +362,8 @@ pub fn test_plugins_with_gltf() -> App {
     //         PluginFrameTime,
     //     )
     // );
-    app.add_plugins(pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height));
+    // app.add_plugins(AccessibilityPlugin);
+    app.add_plugins(pi_bevy_winit_window::WinitPlugin::new(window.clone()).with_size(width, height));
     app.add_plugins(pi_bevy_asset::PiAssetPlugin::default());
     app.add_plugins(PiRenderPlugin::default());
     app.add_plugins(PluginLocalLoad);
@@ -418,7 +420,7 @@ pub fn test_plugins_with_gltf() -> App {
 
     app.add_startup_system(Update, setup_default_mat);
     
-    app
+    (app, window, event_loop)
 }
 
 pub fn setup_default_mat(

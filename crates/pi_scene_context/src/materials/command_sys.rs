@@ -59,9 +59,9 @@ pub fn sys_create_material(
             // matcmds.insert(BindEffect(effect_val_bind));
             // matcmds.insert(AssetResShaderEffectMeta::from(meta));
             let components = [editor.init_component::<BindEffect>(), editor.init_component::<AssetResShaderEffectMeta>()];
-            editor.add_components(entity, &components);
-            *editor.get_component_unchecked_mut_by_id(entity, components[0]) =BindEffect(effect_val_bind);
-            *editor.get_component_unchecked_mut_by_id(entity, components[1]) =AssetResShaderEffectMeta::from(meta);
+            editor.add_components(entity, &components).unwrap();
+            *editor.get_component_unchecked_mut_by_id(entity, components[0]) = BindEffect(effect_val_bind);
+            *editor.get_component_unchecked_mut_by_id(entity, components[1]) = AssetResShaderEffectMeta::from(meta);
 
             // editor.alter(entity, (BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)));
             log::error!("Shader Found: {:?}", key_shader);
@@ -91,9 +91,9 @@ pub fn sys_create_material(
             editor.init_component::<EffectBindTexture2DList>(),
             editor.init_component::<EffectTextureSamplersComp>()
         ];       
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
 
-        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =       TargetAnimatorableIsRunning;
+        *editor.get_component_unchecked_mut_by_id(entity, components[0]) =  TargetAnimatorableIsRunning::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = UniformAnimated::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[2]) = AssetKeyShaderEffect(key_shader);
         *editor.get_component_unchecked_mut_by_id(entity, components[3]) = MaterialRefs::default();
@@ -139,7 +139,7 @@ pub fn sys_act_material_use(
     mut cmds: ResMut<ActionListMaterialUse>,
     mut renderobjectcmds: ResMut<ActionListPassObject>,
     mut materials: Query<(&mut MaterialRefs, &mut DirtyMaterialRefs)>,
-    meshes: Query<& PassIDs>,
+    meshes: Query<&PassIDs>,
     mut linkedtargets: Query<&mut LinkedMaterialID>,
     passes: Query<&PassMaterialID>,
     empty: Res<SingleEmptyEntity>,
@@ -150,7 +150,7 @@ pub fn sys_act_material_use(
             OpsMaterialUse::Use(id_mesh, id_mat, pass) => {
                 if let Ok((mut materialrefs, mut flag)) = materials.get_mut(id_mat) {
                     
-            log::error!("Materail Use Cmd:");
+                    // log::error!("Materail Use Cmd:{:?}", id_mesh);
                     if let Ok(mut matid) = linkedtargets.get_mut(id_mesh) {
                         let oldmat = matid.0;
                         if matid.0 != id_mat {
@@ -164,6 +164,7 @@ pub fn sys_act_material_use(
                             }
                         }
                     } else if let Ok(passid) = meshes.get(id_mesh) {
+                        // println!("pass: {:?}", pass);
                         let id_pass = passid.0[pass.index()];
 
                         if let Ok(matid) = passes.get(id_pass) {
@@ -451,6 +452,7 @@ impl ActionMaterial {
     ) {
         log::warn!("Regist ShaderName: {:?}", key);
         if !asset_mgr.contains_key(&key) {
+            log::warn!("Regist ShaderName: {:?}", key);
             if let Ok(_meta) = asset_mgr.insert(key.clone(), meta) {
                 // wait_list.1.push((key.clone(), meta));
                 log::warn!("Regist ShaderName Success: {:?}", key);
@@ -468,6 +470,7 @@ impl ActionMaterial {
         app: &mut App,
         cmd: OpsMaterialUse,
     ) {
+        println!("use_material: {:?} ", cmd);
         let mut cmds = app.world.get_single_res_mut::<ActionListMaterialUse>().unwrap();
         cmds.push(cmd);
     }

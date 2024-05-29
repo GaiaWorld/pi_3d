@@ -72,6 +72,7 @@ pub fn sys_act_light_param(
             },
             ELightModifyCommand::Directional(entity, val) => {
                 if let Ok(mut item) = directlights.get_mut(entity) {
+                    log::warn!("sys_act_light_param 1");
                     *item = LightDirection(val);
                 }
             },
@@ -101,14 +102,12 @@ impl ActionLight {
         entity: Entity,  
         editor: &mut EntityEditor,
     ) {
-        // log::warn!("CreateLight {:?}", commands.id());
+        log::warn!("CreateLight {:?}", entity);
         let components = [editor.init_component::<LightParam>(), editor.init_component::<LightLinkedShadowID>()];
-        editor.add_components(entity, &components);
+        editor.add_components(entity, &components).unwrap();
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = LightParam::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LightLinkedShadowID(None);
 
-        // add_components(editor, entity, vec![LightParam::default(), LightLinkedShadowID(None)]);
-        // editor.alter(entity, (LightParam::default(), LightLinkedShadowID(None)));
     }
     pub(crate) fn as_direct_light(
         entity: Entity,  
@@ -117,15 +116,12 @@ impl ActionLight {
         Self::as_light(entity, editor);
 
         let components = [editor.init_component::<DirectLight>(), editor.init_component::<LayerMask>(), editor.init_component::<ViewerDistanceCompute>(), editor.init_component::<LightDirection>()];
-        editor.add_components(entity, &components);
-
+        editor.add_components(entity, &components).unwrap();
+        log::warn!("as_direct_light 1 {:?}", entity);
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = DirectLight;
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = ViewerDistanceCompute::Direction;
-        *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LightDirection::default();
-
-
-        // editor.alter(entity, (DirectLight, LayerMask::default(), ViewerDistanceCompute::Direction, LightDirection::default()));
+        *editor.get_component_unchecked_mut_by_id(entity, components[2]) = ViewerDistanceCompute::Direction;
+        *editor.get_component_unchecked_mut_by_id(entity, components[3]) = LightDirection::default();
     }
     pub(crate) fn as_spot_light(
         entity: Entity,  
@@ -135,14 +131,12 @@ impl ActionLight {
         // Self::as_shadow_light(commands);
         let components = [editor.init_component::<SpotLight>(), editor.init_component::<LayerMask>(), editor.init_component::<LightDirection>(), editor.init_component::<SpotLightAngle>(), editor.init_component::<ViewerDistanceCompute>()];
         editor.add_components(entity, &components);
-
+        log::warn!("as_spot_light 1 {:?}", entity);
         *editor.get_component_unchecked_mut_by_id(entity, components[0]) = SpotLight;
         *editor.get_component_unchecked_mut_by_id(entity, components[1]) = LayerMask::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[2]) = LightDirection::default();
         *editor.get_component_unchecked_mut_by_id(entity, components[3]) = SpotLightAngle{ in_value: 0.2, out_value: 0.3 };
         *editor.get_component_unchecked_mut_by_id(entity, components[4]) = ViewerDistanceCompute::Base;
-
-        // editor.alter(entity, (SpotLight, LayerMask::default(), LightDirection::default(), SpotLightAngle{ in_value: 0.2, out_value: 0.3 }, ViewerDistanceCompute::Base));
     }
     pub(crate) fn as_point_light(
         entity: Entity,  

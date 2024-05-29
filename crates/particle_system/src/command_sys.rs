@@ -259,16 +259,16 @@ pub fn sys_act_partilce_system_state(
     });
 }
 
-pub fn sys_act_particle_system_trail_material(
-    mut cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
-    items: Query<&ParticleTrailMesh>,
-    mut actions: ResMut<ActionListMaterialUse>,
-) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count)| {
-        if let Ok(trail) = items.get(entity) {
-            actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
-        } else if count < 8 {
-            cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
-        }
-    });
-}
+// pub fn sys_act_particle_system_trail_material(
+//     mut cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
+//     items: Query<&ParticleTrailMesh>,
+//     mut actions: ResMut<ActionListMaterialUse>,
+// ) {
+//     cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count)| {
+//         if let Ok(trail) = items.get(entity) {
+//             actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
+//         } else if count < 8 {
+//             cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
+//         }
+//     });
+// }
