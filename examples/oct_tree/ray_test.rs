@@ -6,7 +6,8 @@ use pi_scene_shell::{frame_time::SingleFrameTimeCommand, prelude::*};
 use pi_mesh_builder::cube::*;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
-
+use pi_winit::event::{Event, WindowEvent};
+use pi_world::editor::EntityEditor;
 use crate::base::DemoScene;
 
 #[path = "../base.rs"]
@@ -15,7 +16,7 @@ mod base;
 mod copy;
 
 fn setup(
-    mut commands: Commands,
+    mut editor: EntityEditor,
     mut actions: pi_3d::ActionSets,
     mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
@@ -31,7 +32,7 @@ fn setup(
     
 
     let demopass = DemoScene::new(
-        &mut commands,
+        &mut editor,
         &mut actions,
         &mut animegroupres,
         &mut assets.0, &assets.1, &assets.2, &assets.3,
@@ -45,7 +46,7 @@ fn setup(
         .target
         .push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
-    let source = commands.spawn_empty().id();
+    let source = editor.alloc_entity();
     actions.transform
         .tree
         .push(OpsTransformNodeParent::ops(source, scene));
@@ -59,7 +60,7 @@ fn setup(
     ));
     // actions.mesh.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
 
-    let id_geo = commands.spawn_empty().id();
+    let id_geo = editor.alloc_entity();
     let attrs = CubeBuilder::attrs_meta();
     actions.geometry.create.push(OpsGeomeryCreate::ops(
         source,
@@ -72,7 +73,7 @@ fn setup(
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = editor.alloc_entity();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -83,7 +84,7 @@ fn setup(
     for i in 0..tes_size {
         for j in 0..tes_size {
             for _k in 0..1 {
-                let cube: Entity = commands.spawn_empty().id();
+                let cube: Entity = editor.alloc_entity();
                 actions.instance
                     .create
                     .push(OpsInstanceMeshCreation::ops(source, cube));
@@ -153,7 +154,7 @@ impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.add_plugins(PluginRayTest);
 
-        app.insert_resource(ActionListTestData::default());
+        app.world.insert_single_res(ActionListTestData::default());
     }
 }
 
@@ -168,24 +169,36 @@ pub fn sys_test(
     // println!("res: {:?}", res.as_ref());
 }
 pub fn main() {
-    let mut app = base::test_plugins();
+    let  (mut app, window, event_loop)  = base::test_plugins();
 
     app.add_plugins(PluginTest);
 
     app.add_system(Update, pi_3d::sys_info_node);
     app.add_system(Update, pi_3d::sys_info_resource);
     app.add_system(Update, pi_3d::sys_info_draw);
-    app.add_system(Startup, setup.after(base::setup_default_mat));
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     app.add_system(Update, sys_test);
-    app.world
-        .get_resource_mut::<StateRecordCfg>()
-        .unwrap()
-        .write_state = false;
+    app.world.get_single_res_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     
 
-    // app.run()
-    loop {
-        app.update();
-    }
+        event_loop.run(move |event, _, control_flow| {
+            match event {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::CloseRequested => {
+                        control_flow.set_exit();
+                    }
+                    
+                    _ => (),
+                },
+                Event::MainEventsCleared => {
+                    window.request_redraw();
+                }
+                Event::RedrawRequested(_window_id) => {
+                    app.run();
+                }
+                
+                _ => (),
+            }
+        });
 }

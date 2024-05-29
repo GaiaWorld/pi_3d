@@ -96,14 +96,14 @@ env_logger          = "0.9"
 # pi_wgpu         = { version = "*", features = ["single_thread", "use_wgpu"] }
 
 
-# [[example]]
-# name = "cube"
-# path = "examples/cube/cube.rs"
+[[example]]
+name = "cube"
+path = "examples/cube/cube.rs"
 
-# [[example]]
-# name = "unlit_cube"
-# path = "examples/cube/unlit_cube.rs"
-# 
+[[example]]
+name = "unlit_cube"
+path = "examples/cube/unlit_cube.rs"
+
 # [[example]]
 # name = "simple"
 # path = "examples/simple/simple.rs"
@@ -173,9 +173,9 @@ env_logger          = "0.9"
 # name = "axis"
 # path = "examples/axis/axis.rs"
 
-# [[example]]
-# name = "culling_box"
-# path = "examples/oct_tree/culling_box.rs"
+[[example]]
+name = "culling_box"
+path = "examples/oct_tree/culling_box.rs"
 
 # [[example]]
 # name = "skin_simple"
@@ -204,17 +204,17 @@ path = "examples/anime/camera.rs"
 # name = "anime_performance"
 # path = "examples/anime/performance.rs"
 
-# [[example]]
-# name = "lighting_01"
-# path = "examples/lighting/01.rs"
+[[example]]
+name = "lighting_01"
+path = "examples/lighting/01.rs"
 
-# [[example]]
-# name = "lighting_points"
-# path = "examples/lighting/points.rs"
+[[example]]
+name = "lighting_points"
+path = "examples/lighting/points.rs"
 
-# [[example]]
-# name = "lighting_spots"
-# path = "examples/lighting/spots.rs"
+[[example]]
+name = "lighting_spots"
+path = "examples/lighting/spots.rs"
 
 # 
 # [[example]]
@@ -248,9 +248,9 @@ path = "examples/anime/camera.rs"
 # name = "change_texture"
 # path = "examples/anime/change_texture.rs"
 
-# [[example]]
-# name = "emissive_fresnel"
-# path = "examples/effects/emissive_fresnel.rs"
+[[example]]
+name = "emissive_fresnel"
+path = "examples/effects/emissive_fresnel.rs"
 
 # [[example]]
 # name = "main_opacity_fresnel"
@@ -264,9 +264,9 @@ path = "examples/anime/camera.rs"
 # name = "stripes_virtual"
 # path = "examples/effects/stripes_virtual.rs"
 
-# [[example]]
-# name = "distortion_uv"
-# path = "examples/effects/distortion_uv.rs"
+[[example]]
+name = "distortion_uv"
+path = "examples/effects/distortion_uv.rs"
 
 # [[example]]
 # name = "anime_opacity_clip"
@@ -284,9 +284,9 @@ path = "examples/anime/camera.rs"
 # name = "image_load"
 # path = "examples/gltf/img_texture_load.rs"
 
-# [[example]]
-# name = "particle_system01"
-# path = "examples/particles/particle_system01.rs"
+[[example]]
+name = "particle_system01"
+path = "examples/particles/particle_system01.rs"
 # [[example]]
 # name = "particle_system_render_velocity"
 # path = "examples/particles/render_velocity.rs"
@@ -305,9 +305,9 @@ path = "examples/anime/camera.rs"
 # path = "examples/trial/01.rs"
 
 
-# [[example]]
-# name = "ray_test"
-# path = "examples/oct_tree/ray_test.rs"
+[[example]]
+name = "ray_test"
+path = "examples/oct_tree/ray_test.rs"
 
 # [[example]]
 # name = "pbr_01"

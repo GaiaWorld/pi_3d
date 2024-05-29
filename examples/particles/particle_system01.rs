@@ -11,7 +11,8 @@ use pi_mesh_builder::cube::*;
 use rand::Rng;
 use unlit_material::*;
 use pi_particle_system::prelude::*;
-
+use pi_winit::event::{Event, WindowEvent};
+use pi_world::editor::EntityEditor;
 
 #[path = "../base.rs"]
 mod base;
@@ -19,7 +20,7 @@ mod base;
 mod copy;
 
 fn setup(
-    mut commands: Commands,
+    mut editor: EntityEditor,
     mut actions: pi_3d::ActionSets,
     mut particlesys_res: ResourceParticleSystem,
     mut animegroupres: ResourceAnimationGroup,
@@ -30,23 +31,23 @@ fn setup(
     let tes_size = 20;
     // frame.frame_ms = 200;
 
-    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
+    let demopass = base::DemoScene::new(&mut editor, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         tes_size as f32, 0.7, (0., 0., -50.), true
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut editor, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
     actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
-    actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32));
+    actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
-    let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
+    let node = editor.alloc_entity(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
 
     let mut mats = vec![];
     {
-        let idmattrail = commands.spawn_empty().id();
+        let idmattrail = editor.alloc_entity();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
         actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -58,7 +59,7 @@ fn setup(
     }
 
     {
-        let idmattrail = commands.spawn_empty().id();
+        let idmattrail = editor.alloc_entity();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
         actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -81,7 +82,7 @@ fn setup(
                     let vertices = CubeBuilder::attrs_meta();
                     let indices = Some(CubeBuilder::indices_meta());
                     let state = base::particelsystem_mesh_state();
-                    let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
+                    let source = base::DemoScene::mesh(&mut editor, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
                     actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
@@ -90,12 +91,12 @@ fn setup(
                     //
                     let syskey = String::from("Test");
                     let syscfg = demo_cfg(40., 20.);
-                    let calculator = commands.spawn_empty().id();
+                    let calculator = editor.alloc_entity();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
                     let calculator = particlesys_res.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
-                    let trailmesh = commands.spawn_empty().id();
-                    let trailgeo = commands.spawn_empty().id();
+                    let trailmesh = editor.alloc_entity();
+                    let trailgeo = editor.alloc_entity();
                     actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator, base::particelsystem_attrs()));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_start(source));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
@@ -123,7 +124,7 @@ fn setup(
 
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = editor.alloc_entity();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -192,27 +193,44 @@ pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ActionListTestData::default());
+        app.world.insert_single_res(ActionListTestData::default());
     }
 }
 
 
 pub fn main() {
-    let mut app = base::test_plugins_with_gltf();
+    let  (mut app, window, event_loop) = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
-    app.add_system(Update, pi_3d::sys_info_node.run_if(should_run).in_set(StageScene::Create));
-    app.add_system(Update, pi_3d::sys_info_draw.run_if(should_run).in_set(StageScene::Create));
-    app.add_system(Update, pi_3d::sys_info_resource.run_if(should_run).in_set(StageScene::Create));
+    app.add_system(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
+    app.add_system(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
+    app.add_system(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
 
-    app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
+    app.world.get_single_res_mut::<StateRecordCfg>().unwrap().write_state = false;
     
-    app.world.get_resource_mut::<StateResource>().unwrap().debug = false;
+    app.world.get_single_res_mut::<StateResource>().unwrap().debug = false;
 
-    app.add_system(Startup, setup.after(base::setup_default_mat));
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
     
-    // app.run()
-    loop { app.update(); }
+    event_loop.run(move |event, _, control_flow| {
+        match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::CloseRequested => {
+                    control_flow.set_exit();
+                }
+                
+                _ => (),
+            },
+            Event::MainEventsCleared => {
+                window.request_redraw();
+            }
+            Event::RedrawRequested(_window_id) => {
+                app.run();
+            }
+            
+            _ => (),
+        }
+    });
 
 }

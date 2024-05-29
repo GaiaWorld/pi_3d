@@ -11,6 +11,8 @@ use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
 use pi_standard_material::shader::StandardShader;
 use unlit_material::*;
+use pi_winit::event::{Event, WindowEvent};
+use pi_world::editor::EntityEditor;
 
 #[path = "../base.rs"]
 mod base;
@@ -32,7 +34,7 @@ impl Plugin for PluginTest {
 }
 
     fn setup(
-        mut commands: Commands,
+        mut editor: EntityEditor,
         mut actions: pi_3d::ActionSets,
         defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut animegroupres: ResourceAnimationGroup,
@@ -49,34 +51,34 @@ impl Plugin for PluginTest {
 
 
         // Test Code
-        let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
+        let demopass = base::DemoScene::new(&mut editor, &mut actions, &mut animegroupres, 
             &mut assets.0, &assets.1, &assets.2, &assets.3,
             tes_size as f32, 0.7, (10., 10., -40.), false
         );
         let (scene, camera01) = (demopass.scene, demopass.camera);
 
-        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
+        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut editor, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
         actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
     
-        actions.camera.size.push(OpsCameraOrthSize::ops(camera01, tes_size as f32 * 0.7));
+        actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 0.7 )));
         actions.camera.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
         actions.renderer.modify.push(OpsRendererCommand::DepthClear(demopass.opaque_renderer, RenderDepthClear(1.)));
 
-        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        let cameraroot = editor.alloc_entity(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
-        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        let lightroot = editor.alloc_entity(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
         let mut lights: Vec<Entity> = vec![];
 
         actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
         {
-            let light = light::DemoLight::directlight(&mut commands, scene, lightroot, &mut actions,);
+            let light = light::DemoLight::directlight(&mut editor, scene, lightroot, &mut actions,);
 
             let position = (0., 5., 0.);
             let direction =  (0., -5., 0.);
             let color = (1., 0.2, 0.2);
-            let light = light::DemoLight::spotlight(&mut commands, scene, scene, &mut actions, position, direction, color, 0xFFFFFFFF);
+            let light = light::DemoLight::spotlight(&mut editor, scene, scene, &mut actions, position, direction, color, 0xFFFFFFFF);
             lights.push(light);
 
             {
@@ -84,7 +86,7 @@ impl Plugin for PluginTest {
                 let pre_renderer = None;
                 let next_renderer = demopass.opaque_renderer;
                 let rendertarget = demopass.shadowtarget;
-                let shadow = shadow::DemoShadow::init(&mut commands, scene, light, pass, pre_renderer, next_renderer, rendertarget, &mut actions);
+                let shadow = shadow::DemoShadow::init(&mut editor, scene, light, pass, pre_renderer, next_renderer, rendertarget, &mut actions);
                 actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMinz(shadow, 0.0));
             }
         }
@@ -128,30 +130,30 @@ impl Plugin for PluginTest {
             let position = (pos[0], pos[1], pos[2]);
             let direction =  (0. - pos[0], 0. - pos[1], 0. - pos[2]);
             let color = (color[0], color[1], color[2]);
-            let light = light::DemoLight::spotlight(&mut commands, scene, scene, &mut actions, position, direction, color, 0xFFFFFFFF);
+            let light = light::DemoLight::spotlight(&mut editor, scene, scene, &mut actions, position, direction, color, 0xFFFFFFFF);
             lights.push(light);
         }
 
 
     let lightingmat = {
-        let idmat = commands.spawn_empty().id();
+        let idmat = editor.alloc_entity();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY));
         idmat
     };
 
     let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
     let state: MeshInstanceState = base::instance_attr(true, false, false);
-    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    let source = base::DemoScene::mesh(&mut editor, scene, scene, &mut actions,  vertices, indices, state);
 
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(0., -1., 0.)));
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
-    actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, true));
+    actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
     lights.iter().for_each(|light| {
-        actions.abstructmesh.force_spot_light.push(OpsMeshForceSpotLighting::ops(source, *light, true));
+        actions.mesh.forcelighting.push(OpsMeshForceLighting::ops(source, *light, EMeshForceLighting::ForcePointLighting(true)));
     });
     
     
-    let ins = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(ins, scene));
+    let ins = editor.alloc_entity(); actions.transform.tree.push(OpsTransformNodeParent::ops(ins, scene));
     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, ins));
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(ins, ETransformSRT::Scaling(100., 1., 100.)));
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(ins, ETransformSRT::Translation(0., -1., 0.)));
@@ -163,7 +165,7 @@ impl Plugin for PluginTest {
         for i in 0..(tes_size * ttt) {
             for j in 0..(tes_size * ttt) {
                 for k in 0..(tes_size * ttt) {
-                    let cube = commands.spawn_empty().id();
+                    let cube = editor.alloc_entity();
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i as f32 - half) / tttf, (k as f32 - half * 0.5) / tttf + 5., (j as f32 - half) / tttf)));
@@ -172,7 +174,7 @@ impl Plugin for PluginTest {
             }
         }
 
-        let id_group = commands.spawn_empty().id();
+        let id_group = editor.alloc_entity();
         // animegroupres.scene_ctxs.create_group(scene).unwrap();
         // animegroupres.global.record_group(source, id_group);
         actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -214,18 +216,35 @@ impl Plugin for PluginTest {
 
 
 pub fn main() {
-    let mut app = base::test_plugins_with_gltf();
+    let  (mut app, window, event_loop) = base::test_plugins();
 
     app.add_system(Update, pi_3d::sys_info_node);
     app.add_system(Update, pi_3d::sys_info_resource);
     app.add_system(Update, pi_3d::sys_info_draw);
-    app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
+    app.world.get_single_res_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    app.add_system(Startup, setup.after(base::setup_default_mat));
-    app.add_system(Startup, base::active_lighting_shadow);
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
+    app.add_startup_system(Update, base::active_lighting_shadow);
     
     
-    // app.run()
-    loop { app.update(); }
+    event_loop.run(move |event, _, control_flow| {
+        match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::CloseRequested => {
+                    control_flow.set_exit();
+                }
+                
+                _ => (),
+            },
+            Event::MainEventsCleared => {
+                window.request_redraw();
+            }
+            Event::RedrawRequested(_window_id) => {
+                app.run();
+            }
+            
+            _ => (),
+        }
+    });
 
 }
