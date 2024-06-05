@@ -3,10 +3,10 @@ use std::ops::Mul;
 use pi_scene_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BoneParent(pub ObjectID);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BoneAbsolute(pub Matrix);
 impl BoneAbsolute {
     pub fn update(&mut self, rootmatrix: &Matrix) {
@@ -14,7 +14,7 @@ impl BoneAbsolute {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BoneAbsoluteInv(pub Matrix);
 impl BoneAbsoluteInv {
     pub fn update(&mut self, abs: &BoneAbsolute) {
@@ -25,10 +25,10 @@ impl BoneAbsoluteInv {
 }
 
 /// * Gets the base matrix (initial matrix which remains unchanged)
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BoneBaseMatrix(pub Matrix);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BoneDifferenceMatrix(pub Matrix);
 impl BoneDifferenceMatrix {
     pub fn update(&mut self, rootmatrix: &Matrix) {
@@ -36,5 +36,5 @@ impl BoneDifferenceMatrix {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BoneMatrix(pub Matrix);

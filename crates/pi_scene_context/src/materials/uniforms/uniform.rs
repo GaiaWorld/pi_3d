@@ -3,14 +3,14 @@ use std::sync::Arc;
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BindEffectReset;
 
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Default, Deref, DerefMut)]
 pub struct BindEffect(pub Option<BindEffectValues>);
 
-#[derive(Default, Component)]
+#[derive(Component, Default)]
 pub struct UniformAnimated(pub Vec<Atom>);
 impl UniformAnimated {
     pub fn add(&mut self, key: &Atom) {

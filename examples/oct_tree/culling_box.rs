@@ -28,7 +28,7 @@ pub fn display_boundingbox(
 }
 
 pub fn main() {
-    let mut app = base::test_plugins_with_gltf();
+    let (mut app, window, event_loop) = base::test_plugins_with_gltf();
     app.add_plugins(
         pi_pbr::PluginPBR
     );
@@ -41,9 +41,18 @@ pub fn main() {
     app.add_systems(Update, pi_3d::sys_info_draw);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, pbr::setup.after(base::setup_default_mat));
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, pbr::setup.after(base::setup_default_mat));
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, base::active_lighting_shadow);
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, base::active_lighting_shadow);
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Update, display_boundingbox);
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, display_boundingbox);
     
 
     // app.run()

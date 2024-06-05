@@ -384,14 +384,17 @@ impl Plugin for PluginTest {
 }
 
 pub fn main() {
-    let mut app = base::test_plugins_with_gltf();
+    let (mut app, window, event_loop) = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     app.add_systems(Update, sys_demo_particle.in_set(StageModel::RenderMatrix));
 
+        #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
 
     app.run()

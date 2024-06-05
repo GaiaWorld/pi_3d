@@ -86,7 +86,10 @@ pub fn setup(
 pub struct PluginShaderWater;
 impl Plugin for PluginShaderWater {
     fn build(&self, app: &mut App) {
+        #[cfg(feature = "use_bevy")]
         app.add_systems(Startup, setup.after(pi_pbr::setup));
+        #[cfg(not(feature = "use_bevy"))]
+        app.add_startup_system(Update, setup.after(pi_pbr::setup));
     }
 }
 

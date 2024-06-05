@@ -20,6 +20,7 @@ fn setup(
 pub struct PluginStandardMaterial;
 impl Plugin for PluginStandardMaterial {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        // app.add_systems(Startup, setup);
+        app.add_startup_system(Update, setup);
     }
 }

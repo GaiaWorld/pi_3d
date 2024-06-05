@@ -17,11 +17,14 @@ pi_assets       = "0.13"
 pi_time         = "0.3"
 pi_atom         = { version = "0.5", features = ["serde"] }
 
+
+bevy_ecs        = "0.11"
+pi_world        = { version = "0.1" }
+# bevy_ecs        = "0.11"
+
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
 naga            = { version = "0.19", features = [ "glsl-in", ] }
-bevy_ecs        = "0.11"
 bytemuck        = { version = "1.4", features = ["derive"] }
-
 log             = "0.4"
 
 smallvec        = "1.9"

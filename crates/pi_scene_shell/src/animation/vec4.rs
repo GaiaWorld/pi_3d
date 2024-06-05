@@ -1,4 +1,5 @@
-use bevy_ecs::component::Component;
+use crate::ecs::*;
+
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::{Vector4, Number};
 

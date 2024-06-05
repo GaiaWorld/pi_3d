@@ -4,4 +4,7 @@ pub enum ErrorPlugin {
     ResourceError(&'static str),
 }
 
+#[cfg(feature = "use_bevy")]
 pub use bevy_app::prelude::Plugin;
+#[cfg(not(feature = "use_bevy"))]
+pub use pi_world::prelude::Plugin;

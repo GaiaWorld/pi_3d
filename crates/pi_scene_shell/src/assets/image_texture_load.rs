@@ -1,8 +1,9 @@
+use crate::ecs::*;
+
+// use bevy_app::{Update, App, Plugin};
+// use bevy_ecs::{component::Component, entity::{self, Entity}, query::Changed, schedule::{IntoSystemConfigs, IntoSystemSetConfig, SystemSet}, system::{Query, Res, ResMut, Resource}};
 
 use std::{marker::PhantomData, ops::Deref};
-
-use bevy_app::{Update, App, Plugin};
-use bevy_ecs::{component::Component, entity::{self, Entity}, query::Changed, schedule::{IntoSystemConfigs, IntoSystemSetConfig, SystemSet}, system::{Query, Res, ResMut, Resource}};
 use crossbeam::queue::SegQueue;
 use pi_assets::{
     asset::Handle,
@@ -370,13 +371,23 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
             app.configure_set(Update, StageTextureLoad::TextureRequest);
             app.configure_set(Update, StageTextureLoad::TextureLoading.after(StageTextureLoad::TextureRequest));
             app.configure_set(Update, StageTextureLoad::TextureLoaded.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
-            app.add_systems(
-				Update,
-                (
-                    sys_image_texture_load_launch,
-                    sys_image_texture_loaded
-                ).chain().in_set(StageTextureLoad::TextureLoading)
-            );
+
+#[cfg(feature="use_pi_ecs")]
+{
+    app.add_systems(
+    	Update,
+        (
+            sys_image_texture_load_launch,
+            sys_image_texture_loaded
+        ).chain().in_set(StageTextureLoad::TextureLoading)
+    );
+}
+            
+#[cfg(not(feature="use_pi_ecs"))]
+            {
+                app.add_systems(Update, sys_image_texture_load_launch                                                    .in_set(StageTextureLoad::TextureLoading));
+                app.add_systems(Update, sys_image_texture_loaded     .after(sys_image_texture_load_launch)       .in_set(StageTextureLoad::TextureLoading));
+            }
         }
         app.insert_resource(ImageTextureViewLoader::<K>::default());
         // app.add_systems(

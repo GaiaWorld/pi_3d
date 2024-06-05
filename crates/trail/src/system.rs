@@ -14,10 +14,8 @@ pub fn sys_trail_update(
     mut geometries: Query<&mut RenderGeometryComp>,
     mut items: Query<
         (
-            &SceneID, &TrailLinkedTransform, &TrailGeometry,
+            &SceneID, &TrailParam, &TrailGeometry,
             &mut TrailBase, &mut TrailPoints,
-            &TrailWorldPlace, &TrailMinimunVertexDistance,
-            &TrailColor, &ColorOverTrail, &TrailSize, &WidthOverTrail, &TrailAgeControl,
             &mut TrailRandom
         )
     >,
@@ -28,11 +26,11 @@ pub fn sys_trail_update(
     let time1 = pi_time::Instant::now();
     if let Some(trailbuffer) = &mut buffer.0 {
         items.iter_mut().for_each(|(
-            idscene, idlinked, idgeo, mut base, mut points,
-            worldspace, minimumdistance, colorcontrol, colorinterpolator, sizecontrol, widthinterpolator, agecontrol, mut random
+            idscene, param, idgeo, mut base, mut points,
+            mut random
         )| {
             // log::warn!("Trail Update");
-            if let (Ok(scenetime), Ok((worldmatrix, localmatrix))) = (scenes.get(idscene.0), transforms.get(idlinked.0)) {
+            if let (Ok(scenetime), Ok((worldmatrix, localmatrix))) = (scenes.get(idscene.0), transforms.get(param.linked)) {
                 base.update(scenetime.delta_ms() as u32);
 
                 let parentmatrix = if let Some(local) = localmatrix.0.try_inverse() {
@@ -43,11 +41,11 @@ pub fn sys_trail_update(
                 let randoms = BaseRandom { seed: random.0.gen_range(0..u64::MAX), base: random.0.gen_range(0.0..1.0), x: random.0.gen_range(0.0..1.0), y: random.0.gen_range(0.0..1.0), z: random.0.gen_range(0.0..1.0), w: random.0.gen_range(0.0..1.0) };
                 points.run(
                     worldmatrix, &localmatrix.0,
-                    &colorcontrol.0, &colorinterpolator.0, &colorinterpolator.0,
-                    sizecontrol.0, &widthinterpolator.0,
-                    agecontrol.0, &base,
-                    &randoms, 1000., minimumdistance.0,
-                    worldspace.0
+                    &param.color, &param.color_over_trail, &param.color_over_trail,
+                    param.size, &param.wildth_over_trail,
+                    param.age_control, &base,
+                    &randoms, 1000., param.minimun_vertex_distance,
+                    param.world_place
                 );
     
                 // let time2 = pi_time::Instant::now();
@@ -58,7 +56,7 @@ pub fn sys_trail_update(
                 if points.3 {
                     if let Ok(mut geometry) = geometries.get_mut(idgeo.0) {
                         if let Some(geometry) = &mut geometry.0 {
-                            let (start, end) = trailbuffer.collect(&points, worldspace.0, &parentmatrix);
+                            let (start, end) = trailbuffer.collect(&points, param.world_place, &parentmatrix);
                             // *geometry = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end))));
                             if let Some(vertices) = geometry.vertices.get_mut(0) {
                                 // log::warn!("Trail Update Geometry: {:?}", (start, end));
@@ -82,12 +80,12 @@ pub fn sys_trail_update(
 
 pub fn sys_dispose_about_trail_linked(
     transforms: Query<&DisposeReady, Changed<DisposeReady>>,
-    trails: Query<(Entity, &TrailLinkedTransform, &TrailGeometry)>,
+    trails: Query<(Entity, &TrailParam, &TrailGeometry)>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     trails.iter().for_each(|(entity, idlinked, _)| {
-        if let Ok(state) = transforms.get(idlinked.0) {
+        if let Ok(state) = transforms.get(idlinked.linked) {
             if state.0 == false { return; }
 
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
@@ -96,7 +94,7 @@ pub fn sys_dispose_about_trail_linked(
 }
 
 pub fn sys_dispose_about_trail(
-    trails: Query<(Entity, &DisposeReady, &TrailLinkedTransform), Changed<DisposeReady>>,
+    trails: Query<(Entity, &DisposeReady, &TrailParam), Changed<DisposeReady>>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
 

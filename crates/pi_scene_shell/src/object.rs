@@ -1,8 +1,6 @@
-// use std::mem::replace;
-// use pi_bevy_ecs_extend::prelude::EntityTreeMut;
+use crate::ecs::*;
+
 use crate::prelude::*;
-use bevy_app::{App, Plugin, Update};
-use bevy_ecs::{prelude::*, system::EntityCommands};
 
 // #[derive(Debug, Clone, Copy, Default)]
 // pub struct GameObject;
@@ -27,11 +25,11 @@ impl Default for DisposeCan {
     }
 }
 
-pub type EntityBundle = (DisposeReady, DisposeCan);
+pub type BundleEntity = (DisposeReady, DisposeCan);
 
 pub struct ActionEntity;
 impl ActionEntity {
-    pub fn init() -> EntityBundle {
+    pub fn init() -> BundleEntity {
         (DisposeReady::default(), DisposeCan::default())
     }
 }
@@ -143,13 +141,27 @@ impl Plugin for PluginDispose {
         app.insert_resource(ActionListDisposeReadyForRef::default());
         app.insert_resource(ActionListDisposeReady::default());
         app.insert_resource(ActionListDisposeCan::default());
-        app.add_systems(Update,
-            (
-                sys_act_scene_dispose,
-                sys_dispose_ready,
-                sys_dispose_can,
-                sys_dispose
-            ).chain().in_set(ERunStageChap::Dispose)
-        );
+
+#[cfg(feature = "use_bevy")]
+{
+    app.add_systems(Update,
+        (
+            sys_act_scene_dispose,
+            sys_dispose_ready,
+            sys_dispose_can,
+            sys_dispose
+        ).chain().in_set(ERunStageChap::Dispose)
+    );
+}
+
+#[cfg(not(feature = "use_bevy"))]
+{
+    app
+    .add_systems(Update, sys_act_scene_dispose                                            .in_set(ERunStageChap::Dispose))
+    .add_systems(Update, sys_dispose_ready    .after(sys_act_scene_dispose)       .in_set(ERunStageChap::Dispose))
+    .add_systems(Update, sys_dispose_can      .after(sys_dispose_ready)           .in_set(ERunStageChap::Dispose))
+    .add_systems(Update, sys_dispose          .after(sys_dispose_can)             .in_set(ERunStageChap::Dispose))
+    ;
+}
     }
 }

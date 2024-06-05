@@ -10,10 +10,12 @@ pub enum StageShadowGenerator {
     Command,
     Renderer,
     CalcMatrix,
+    ViewerUpdate,
+    BindUpdate,
     Culling,
 }
 
-#[derive(Deref, Component)]
+#[derive(Deref, Component, Default)]
 pub struct ShadowLayerMask(pub LayerMask);
 impl TViewerLayerMask for ShadowLayerMask {
     fn include(&self, other: u32) -> bool {
@@ -22,17 +24,17 @@ impl TViewerLayerMask for ShadowLayerMask {
 }
 
 
-#[derive(Deref, Component)]
+#[derive(Deref, Component, Default)]
 pub struct ShadowCastPassTag(pub PassTag);
 
-#[derive(Deref, Component)]
+#[derive(Deref, Component, Default)]
 pub struct ShadowLinkedLightID(pub Entity);
 
-#[derive(Deref, Component)]
+#[derive(Deref, Component, Default)]
 pub struct LightLinkedShadowID(pub Option<Entity>);
 
 
-#[derive(Deref, Component)]
+#[derive(Deref, Component, Default)]
 pub struct ShadowIndex(pub u32);
 
 #[derive(Component)]
@@ -50,7 +52,7 @@ impl Default for ShadowParam {
     }
 }
 
-#[derive(Deref, Component)]
+#[derive(Deref, Component, Default)]
 pub struct ShadowGeneratorID(pub ObjectID);
 
 #[derive(Component)]

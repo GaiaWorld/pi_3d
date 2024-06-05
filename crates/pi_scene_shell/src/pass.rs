@@ -1,10 +1,10 @@
-use std::ops::Deref;
+use crate::ecs::*;
 
-use bevy_ecs::prelude::Component;
+use std::ops::Deref;
 
 pub type PassTagValue = u16;
 
-#[derive(Debug, Clone, Copy, Component, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Component, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PassTag(PassTagValue);
 impl Deref for PassTag {
     type Target = PassTagValue;
@@ -80,7 +80,7 @@ impl PassTag {
 // ///   * 每个材质 只对应 一个Pass
 // ///   * example: ShadowCast, DepthPrePass, Opaque, Skybox, Transparent,
 
-// #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
+// #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component, Default)]
 // pub enum EPassTag {
 //     ShadowCast      = 1,
 //     DepthPrePass    ,

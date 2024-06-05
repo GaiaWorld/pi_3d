@@ -1,4 +1,6 @@
 
+use std::default;
+
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
 
@@ -23,19 +25,34 @@ pub trait TBoundingInfoCalc {
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BoundingKey(pub Entity);
 impl Default for BoundingKey {
+    #[cfg(feature = "use_bevy")]
     fn default() -> Self {
         Self(Entity::from_bits(0))
     }
+    #[cfg(not(feature = "use_bevy"))]
+    fn default() -> Self {
+        Self(Entity::default())
+    }
 }
 impl From<pi_slotmap::KeyData> for BoundingKey {
+    #[cfg(feature = "use_bevy")]
     fn from(value: pi_slotmap::KeyData) -> Self {
         let bits = value.as_ffi();
         Self(Entity::from_bits(bits))
     }
+    #[cfg(not(feature = "use_bevy"))]
+    fn from(value: pi_slotmap::KeyData) -> Self {
+        Self(Entity::from(value))
+    }
 }
 impl pi_slotmap::Key for BoundingKey {
+    #[cfg(feature = "use_bevy")]
     fn data(&self) -> pi_slotmap::KeyData {
         pi_slotmap::KeyData::from_ffi(self.0.to_bits())
+    }
+    #[cfg(not(feature = "use_bevy"))]
+    fn data(&self) -> pi_slotmap::KeyData {
+        self.0.data()
     }
 
 	fn index(&self) -> usize {
@@ -48,9 +65,15 @@ impl pi_slotmap::Key for BoundingKey {
 }
 
 impl Null for BoundingKey {
+    #[cfg(feature = "use_bevy")]
 	fn null() -> Self { Self(Entity::from_bits(u64::null())) }
+    #[cfg(not(feature = "use_bevy"))]
+	fn null() -> Self { Self(Entity::null()) }
 
+    #[cfg(feature = "use_bevy")]
     fn is_null(&self) -> bool { self.0.to_bits().is_null() }
+    #[cfg(not(feature = "use_bevy"))]
+    fn is_null(&self) -> bool { self.0.is_null() }
 }
 
 
@@ -105,6 +128,11 @@ pub enum SceneBoundingPool {
     List(VecBoundingInfoCalc),
     QuadTree(),
     OctTree(BoundingOctTree),
+}
+impl Default for SceneBoundingPool {
+    fn default() -> Self {
+        Self::List(VecBoundingInfoCalc::default())
+    }
 }
 impl SceneBoundingPool {
     pub const MODE_LIST: u8 = 0;
@@ -209,7 +237,7 @@ impl SceneBoundingPool {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct BoundingBoxDisplay {
     pub mesh: Entity,
     pub display: bool,

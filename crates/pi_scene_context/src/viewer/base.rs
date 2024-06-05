@@ -5,39 +5,39 @@ use pi_scene_shell::prelude::*;
 use crate::transforms::prelude::*;
 
 
-#[derive(Default, Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct ForceIncludeModelList(pub XHashSet<Entity>);
 
-#[derive(Default, Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct FlagForceIncludeModelList;
 
-#[derive(Default, Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct ModelList(pub XHashSet<Entity>);
 
-#[derive(Default, Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct FlagModelList(pub bool);
 
-#[derive(Default, Component)]
+#[derive(Component, Default)]
 pub struct ModelListAdd(pub XHashSet<Entity>);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct FlagModelListAdd(pub bool);
 
-#[derive(Default, Component)]
+#[derive(Component, Default)]
 pub struct ModelListDel(pub XHashSet<Entity>);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct FlagModelListDel(pub bool);
 
-#[derive(Default, Component)]
+#[derive(Component, Default)]
 pub struct ModelListAfterCulling(pub Vec<Entity>);
 
 /// 视口ID - 可能是 相机、灯光
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ViewerID(pub Entity);
 
 /// 视口状态
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct ViewerActive(pub bool);
 
 /// 视口尺寸
@@ -73,6 +73,11 @@ impl ViewerCullFilter {
 pub struct ViewerRenderTargetFormatOption {
     pub color: wgpu::TextureFormat,
     pub depth_stencil: wgpu::TextureFormat,
+}
+impl Default for ViewerRenderTargetFormatOption {
+    fn default() -> Self {
+        Self { color: wgpu::TextureFormat::Rgba8Unorm, depth_stencil: wgpu::TextureFormat::Depth24PlusStencil8 }
+    }
 }
 
 #[derive(Clone, Component)]
@@ -171,12 +176,12 @@ impl ViewerDistanceCompute {
     }
 }
 
-#[derive(Clone, Component)]
-pub struct BindViewer(pub Arc<ShaderBindViewer>);
+#[derive(Clone, Component, Default)]
+pub struct BindViewer(pub Option<Arc<ShaderBindViewer>>);
 impl BindViewer {
     pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {
         if let Some(data) = ShaderBindViewer::new(allocator) {
-            Some(Self ( Arc::new(data) ))
+            Some(Self ( Some(Arc::new(data)) ))
         } else {
             None
         }

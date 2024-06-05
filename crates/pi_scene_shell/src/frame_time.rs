@@ -1,9 +1,7 @@
+use crate::ecs::*;
 
 use crate::run_stage::ERunStageChap;
-
 use crate::engine_shell::EnginShell;
-use bevy_app::{Plugin, Update};
-use bevy_ecs::{prelude::{Resource, ResMut}, schedule::IntoSystemConfigs};
 
 #[derive(Resource)]
 pub struct SingleFrameTimeCommand {
@@ -86,7 +84,7 @@ pub fn sys_frame_time(
 pub struct PluginFrameTime;
 impl Plugin for PluginFrameTime {
 
-    fn build(&self, app: &mut bevy_app::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.world.insert_resource(SingleFrameTimeCommand::default());
 
         #[cfg(not(target_arch = "wasm32"))]

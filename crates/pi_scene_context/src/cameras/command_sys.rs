@@ -17,12 +17,15 @@ pub fn sys_create_camera(
     mut commands: Commands,
     mut dynallocator: ResMut<ResBindBufferAllocator>,
     mut errors: ResMut<ErrorRecord>,
+    // mut alter: Alter<(), (), (BindViewer, CameraBundle), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsCameraCreation(scene, entity)| {
         if let Some(mut commands) = commands.get_entity(entity) {
 
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
-                commands.insert((bindviewer, ActionCamera::init(scene)));
+                let bundle = (bindviewer, ActionCamera::init(scene));
+                commands.insert(bundle);
+                // alter.alter(entity, bundle);
             } else {
                 errors.record(entity, ErrorRecord::ERROR_BIND_VIEWER_CREATE_FAIL);
             }

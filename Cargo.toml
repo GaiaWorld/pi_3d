@@ -7,28 +7,14 @@ description = "3D Framework for Scene."
 repository = "https://github.com/GaiaWorld/pi_3d"
 license = "MIT OR Apache-2.0"
 keywords = ["3d scene"]
-crate-type = ["dylib"]
 
 [workspace]
 members = ["crates/*"]
 
-[profile.release]
-debug = false
-# strip = true
-# lto = true #这为LLVM提供了更多内联和修剪功能的机会。它不仅使.wasm尺寸更小，而且在运行时也更快！缺点是编译将花费更长的时间
-opt-level = 'z'  # 默认情况下，对LLVM的优化通道进行了调整，以提高速度，而不是大小。我们可以通过修改以下
-# opt-level = "z" # 了更积极地优化尺寸，以进一步的潜在速度成本
-# 请注意，令人惊讶的是，opt-level = "s"有时二进制文件的大小可能小于opt-level = "z"。总是测量！
-panic = 'abort'
-codegen-units = 1
-# dwarf-debug-info = true
-# split-debuginfo = '...'  # Platform-specific.
-# strip = "none"
-debug-assertions = false
-overflow-checks = false
-lto = true
-incremental = false
-rpath = false
+[features]
+default_features = ["use_bevy"]
+use_bevy = []
+use_pi_ecs = []
 
 [dependencies]
 pi_scene_context        = { version = "0.0.*", registry = "yn", path = "crates/pi_scene_context" }
@@ -69,18 +55,18 @@ pi_share                = "0.4"
 
 wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
 bevy_ecs            = "0.11"
-# bevy_mod_debugdump  = { version = "0.8" }
+pi_world            = { version = "0.1" }
 
 log                 = "0.4"
-
 smallvec            = "1.9"
 crossbeam           = "0.8"
 futures             = "0.3"
 bytemuck            = { version = "1.4", features = ["derive"] }
-ahash               = "=0.8.6"
+ahash               = "=0.8.7"
+pi_slotmap          = "0.1"
 
 [patch.yn]
-pi_gltf                 = { path = "../pi_gltf", features = ["extras"] }
+# pi_gltf                 = { path = "../pi_gltf", features = ["extras"] }
 pi_render               = { path = "../pi_render" }
 render_utils            = { path = "../pi_render/crates/render_utils" }
 render_core             = { path = "../pi_render/crates/render_core" }
@@ -91,22 +77,29 @@ pi_bevy_winit_window    = { path = "../pi_bevy/crates/winit_window" }
 pi_bevy_ecs_extend      = { path = "../pi_bevy/crates/ecs_extend" }
 pi_bevy_asset           = { path = "../pi_bevy/crates/asset" }
 pi_bevy_log             = { path = "../pi_bevy/crates/log" }
+pi_bevy_post_process    = { path = "../pi_bevy/crates/post_process" }
+# pi_animation            = { path = "../pi_animation" }
 
-pi_animation            = { path = "../pi_animation" }
-
-pi_wgpu                 = { path = "../pi_wgpu" }
-pi_egl                  = { path = "../pi_egl" }
+# pi_wgpu                 = { path = "../pi_wgpu" }
+# pi_egl                  = { path = "../pi_egl" }
 # winit                   = { path = "../winit" }
 # pi_hal                  = { path = "../pi_hal" }
 # pi_postprocess          = { path = "../pi_post_process"}
+
+[patch.crates-io]
+pi_world                = { path = "../pi_world", features = ["single_thread"] }
+pi_world_macros         = { path = "../pi_world/macros" }
 
 [dev-dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
+
 bevy_a11y       = "0.11"
 bevy_app        = "0.11"
 bevy_window     = "0.11"
+bevy_input      = "0.11"
+
 pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
 env_logger          = "0.9"
 # pi_wgpu         = { version = "*", features = ["single_thread", "use_wgpu"] }

@@ -9,10 +9,12 @@ mod uint;
 mod int;
 mod mat4;
 
+use crate::ecs::*;
+// use bevy_app::{App, Plugin, Update};
+// use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
+
 use std::marker::PhantomData;
 
-use bevy_app::{App, Plugin, Update};
-use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
 use crate::prelude::FrameDataPrepare;
 
 pub use base::*;
@@ -78,31 +80,39 @@ impl Plugin for PluginGlobalAnimation {
         app.configure_set(Update, EStageAnimation::Command.after(EStageAnimation::_CreateApply));
         app.configure_set(Update, EStageAnimation::Running.in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
         app.configure_set(Update, EStageAnimation::Dispose.after(EStageAnimation::Running).after(ERunStageChap::Dispose));
-        app.add_systems(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
         
-        app.add_systems(
-			Update,
-            (
-                sys_create_animation_group,
-                sys_create_animatorable_entity
-            ).in_set(EStageAnimation::Create)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_act_reset_while_animationgroup_start    , // .run_if(should_run),
-                sys_act_animation_group_action              , // .run_if(should_run),
-                sys_act_dispose_animation_group             , // .run_if(should_run),
-            ).chain().in_set(EStageAnimation::Command)
-        );
-        
-        app.add_systems(Update, 
-            (
-                sys_animation_removed_data_clear,
-                sys_reset_anime_performance
-            ).in_set(EStageAnimation::Dispose)
-        );
+#[cfg(feature="use_bevy")]
+{
+    app.add_systems(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
+    app.add_systems(
+        Update,
+        (
+            sys_create_animation_group,
+            sys_create_animatorable_entity
+        ).in_set(EStageAnimation::Create),
+        (
+            sys_act_reset_while_animationgroup_start    , // .run_if(should_run),
+            sys_act_animation_group_action              , // .run_if(should_run),
+            sys_act_dispose_animation_group             , // .run_if(should_run),
+        ).chain().in_set(EStageAnimation::Command),
+        (
+            sys_animation_removed_data_clear,
+            sys_reset_anime_performance
+        ).in_set(EStageAnimation::Dispose)
+    );
+}
+#[cfg(not(feature = "use_bevy"))]
+{
+    app
+        .add_systems(Update, sys_create_animation_group                              .in_set(EStageAnimation::Create))
+        .add_systems(Update, sys_create_animatorable_entity                          .in_set(EStageAnimation::Create))
+        .add_systems(Update, sys_act_reset_while_animationgroup_start                                                            .in_set(EStageAnimation::Command))
+        .add_systems(Update, sys_act_animation_group_action          .after(sys_act_reset_while_animationgroup_start)    .in_set(EStageAnimation::Command))
+        .add_systems(Update, sys_act_dispose_animation_group         .after(sys_act_animation_group_action)              .in_set(EStageAnimation::Command))
+        .add_systems(Update, sys_animation_removed_data_clear                                                            .in_set(EStageAnimation::Dispose))
+        .add_systems(Update, sys_reset_anime_performance             .after(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Dispose))
+        ;
+}
 
         let globalaboput = GlobalAnimeAbout {
             ty_alloc: KeyFrameDataTypeAllocator::default(),
@@ -136,19 +146,31 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
         let type_ctx = TypeAnimeContext::<D>::new(ty, &mut runtime_info_map);
         app.insert_resource(type_ctx);
 
-        app.add_systems(Update, 
-            (
-                sys_apply_removed_data::<D>     // .run_if(should_run)
-                .before(sys_animation_removed_data_clear)
-            ).in_set(EStageAnimation::Dispose)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_calc_reset_animatablecomp::<D, R>   , //.run_if(should_run),
-                sys_calc_type_anime::<D>                , // .run_if(should_run_with_animation)
-            ).chain().in_set(EStageAnimation::Running)
-        );
+#[cfg(feature="use_bevy")]
+{
+    app.add_systems(Update, 
+        (
+            sys_apply_removed_data::<D>     // .run_if(should_run)
+            .before(sys_animation_removed_data_clear)
+        ).in_set(EStageAnimation::Dispose)
+    );
+    app.add_systems(
+        Update,
+        (
+            sys_calc_reset_animatablecomp::<D, R>   , //.run_if(should_run),
+            sys_calc_type_anime::<D>                , // .run_if(should_run_with_animation)
+        ).chain().in_set(EStageAnimation::Running)
+    );
+}
+#[cfg(not(feature = "use_bevy"))]
+{
+    
+    app
+        .add_systems(Update, sys_apply_removed_data::<D>     .before(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Dispose))
+        .add_systems(Update, sys_calc_reset_animatablecomp::<D, R>                                               .in_set(EStageAnimation::Running))
+        .add_systems(Update, sys_calc_type_anime::<D>    .after(sys_calc_reset_animatablecomp::<D, R>)   .in_set(EStageAnimation::Running))
+        ;
+}
     }
 }
 

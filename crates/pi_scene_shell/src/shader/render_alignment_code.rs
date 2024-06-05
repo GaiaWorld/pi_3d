@@ -1,7 +1,9 @@
 
+#[derive(Default)]
 pub enum EParticleScalingMode {
     /// * 粒子： 节点树上的缩放信息被保留应用
     /// * 发射器: 节点树上的缩放信息被保留应用
+    #[default]
     Hierarchy,
     /// * 粒子： 节点树上的缩放信息 只保留了LocalScaling
     /// * 发射器: 节点树上的缩放信息 只保留了LocalScaling
@@ -10,8 +12,9 @@ pub enum EParticleScalingMode {
     /// * 发射器: 节点树上的缩放信息被保留应用
     Shape,
 }
-
+#[derive(Default)]
 pub enum EParticleSimulationSpace {
+    #[default]
     Local,
     World,
 }

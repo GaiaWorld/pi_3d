@@ -53,39 +53,58 @@ impl Plugin for PluginGeometry {
         app.insert_resource(ShareAssetMgr::<EVertexBufferRange>::create(GarbageEmpty(), cfg.flag, &cfg));
         app.insert_resource(GeometryVBLoader::default());
 
-        app.configure_set(Update, StageGeometry::Create.after(StageModel::_InitMesh));
-        app.configure_set(Update, StageGeometry::_GeoCreate.after(StageGeometry::Create));
-        app.configure_set(Update, StageGeometry::VertexBufferLoaded.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate));
-        app.configure_set(Update, StageGeometry::_VertexBufferLoadedApply.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded));
-        app.configure_set(Update, StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageGeometry::Upload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList));
-        app.add_systems(Update, apply_deferred.in_set(StageGeometry::_GeoCreate) );
-        app.add_systems(Update, apply_deferred.in_set(StageGeometry::_VertexBufferLoadedApply) );
-
-        app.add_systems(
-			Update,
+#[cfg(feature = "use_bevy")]
+        app.configure_sets(
+            Update, 
             (
-                sys_create_geometry.in_set(StageGeometry::Create),
-                sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded),
+                StageGeometry::Create.after(StageModel::_InitMesh),
+                StageGeometry::_GeoCreate.after(StageGeometry::Create),
+                StageGeometry::VertexBufferLoaded.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate),
+                StageGeometry::_VertexBufferLoadedApply.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded),
+                StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform),
+                StageGeometry::Upload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList),
             )
         );
-        app.add_systems(Update, 
+
+#[cfg(feature = "use_bevy")]
+        app.add_systems(
+            Update, 
             (
-                sys_vertex_buffer_slots_loaded,
-                sys_geometry_enable
-            ).chain().in_set(StageGeometry::GeometryLoaded)
+                apply_deferred.in_set(StageGeometry::_GeoCreate),
+                apply_deferred.in_set(StageGeometry::_VertexBufferLoadedApply),
+                sys_create_geometry.in_set(StageGeometry::Create),
+                sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded),
+                (
+                    sys_vertex_buffer_slots_loaded,
+                    sys_geometry_enable
+                ).chain().in_set(StageGeometry::GeometryLoaded),
+                sys_instanced_buffer_upload.in_set(StageGeometry::Upload),
+                (
+                    sys_dispose_about_geometry  // .run_if(should_run)
+                    .after(sys_dispose_ready)
+                ).in_set(ERunStageChap::Dispose)
+            )
         );
 
-        app.add_systems(Update, 
-            sys_instanced_buffer_upload.in_set(StageGeometry::Upload)
-        );
+#[cfg(not(feature = "use_bevy"))]
+        app
+        .configure_set(Update, StageGeometry::Create.after(StageModel::_InitMesh))
+        .configure_set(Update, StageGeometry::_GeoCreate.after(StageGeometry::Create))
+        .configure_set(Update, StageGeometry::VertexBufferLoaded.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate))
+        .configure_set(Update, StageGeometry::_VertexBufferLoadedApply.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded))
+        .configure_set(Update, StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageGeometry::Upload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList))
+        ;
 
-        app.add_systems(Update, 
-            (
-                sys_dispose_about_geometry  // .run_if(should_run)
-                .after(sys_dispose_ready)
-            ).in_set(ERunStageChap::Dispose)
-        );
+#[cfg(not(feature = "use_bevy"))]
+        app
+        .add_systems(Update, sys_create_geometry         .in_set(StageGeometry::Create))
+        .add_systems(Update, sys_vertex_buffer_loaded    .in_set(StageGeometry::VertexBufferLoaded))
+        .add_systems(Update, sys_vertex_buffer_slots_loaded      .in_set(StageGeometry::GeometryLoaded))
+        .add_systems(Update, sys_geometry_enable                 .after(sys_vertex_buffer_slots_loaded).in_set(StageGeometry::GeometryLoaded))
+        .add_systems(Update, sys_instanced_buffer_upload     .in_set(StageGeometry::Upload))
+        .add_systems(Update, sys_dispose_about_geometry      .after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
+        ;
     }
 }
 

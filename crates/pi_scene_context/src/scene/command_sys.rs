@@ -2,7 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    cullings::prelude::*, flags::*, geometry::prelude::*, meshes::prelude::*, pass::*, renderers::prelude::*, transforms::{command_sys::ActionTransformNode, prelude::*}
+    cullings::prelude::*, flags::*, geometry::prelude::*, meshes::prelude::*, pass::*, renderers::prelude::*, transforms::{command_sys::{ActionTransformNode, BundleTreeNode}, prelude::*}
 };
 
 use super::{prelude::*, environment::{brdf::*, environment_texture::{EnvIrradiance, EnvTexture, EnvSampler, EnvTextureSlot}}, pass_render_target::*};
@@ -27,6 +27,7 @@ pub fn sys_create_scene(
     mut meshrenderqueue: ResMut<ActionListRenderQueue>,
     mut geocreate: ResMut<ActionListGeometryCreate>,
     mut meshstate: ResMut<ActionListMeshStateModify>,
+    // mut alter: Alter<(), (), (BundleScene, SceneBoundingPool, SceneAnimationContext, BoundingBoxDisplay), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool)| {
 
@@ -52,12 +53,16 @@ pub fn sys_create_scene(
             meshrenderqueue.push(OpsRenderQueue::ops(bounding, i32::MAX, i32::MAX));
             geocreate.push(OpsGeomeryCreate::ops(bounding, boundinggeo, pi_mesh_builder::cube::CubeBuilder::attrs_meta(), Some(pi_mesh_builder::cube::CubeBuilder::indices_meta())));
 
-            ActionScene::init(&mut entitycmds, id_left, id_right, lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp);
-            entitycmds.insert((
-                pool,
-                SceneAnimationContext::new(),
-                BoundingBoxDisplay { mesh: bounding, display: false },
-            ));
+            if let Some(bundle) = ActionScene::init(lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp) {
+                let bundle = (
+                    bundle,
+                    pool,
+                    SceneAnimationContext::new(),
+                    BoundingBoxDisplay { mesh: bounding, display: false }
+                );
+                entitycmds.insert(bundle);
+                // alter.alter(entity, bundle);
+            }
         } else {
             commands.entity(id_left).despawn();
             commands.entity(id_right).despawn();
@@ -151,33 +156,70 @@ pub fn sys_act_scene_render(
     });
 }
 
+
+pub type BundleScene = (
+    BundleTreeNode,
+    BundleEntity,
+    (
+        Scene,
+        SceneCoordinateSytem3D,
+        SceneTime,
+        SceneFog,
+        AmbientColor,
+        SceneMainCameraID,
+        SceneAnimationEnable,
+    ),
+    (
+        SceneDirectLightsQueue,
+        ScenePointLightsQueue,
+        SceneSpotLightsQueue,
+        SceneHemiLightsQueue,
+        SceneLightingInfosDirty,
+        SceneShadowInfosDirty,
+        SceneShadowQueue,
+    ),
+    (
+        MainCameraOpaqueTarget,
+        MainCameraDepthTarget,
+        BatchParamOpaque,
+        BatchParamTransparent,
+        SceneShadowRenderTarget,
+        BindSceneEffect,
+        SceneLightingInfos,
+        SceneShadowInfos,
+    ),
+    (
+        BRDFSampler,
+        BRDFTextureSlot,
+        BRDFTexture,
+        EnvTextureSlot,
+        EnvIrradiance,
+        EnvTexture,
+        EnvSampler,
+    )
+);
+
 pub struct ActionScene;
 impl ActionScene {
     pub fn init(
-        entitycmds: &mut EntityCommands,
-        id_left: Entity,
-        id_right: Entity,
         lightlimit: LightLimitInfo,
         shadowlimit: ShadowLimitInfo,
         dynbuffer: &mut BindBufferAllocator,
         device: &PiRenderDevice,
         asset_samp: &ShareAssetMgr<SamplerRes>, 
-    ) {
+    ) -> Option<BundleScene> {
 
-        if let Some(bindeffect) = BindSceneEffect::new(dynbuffer) {
-            entitycmds.insert(bindeffect);
-        }
-        if let Some(bindeffect) = SceneLightingInfos::new(dynbuffer, lightlimit) {
-            entitycmds.insert(bindeffect);
-        }
-        if let Some(bindeffect) = SceneShadowInfos::new(dynbuffer, lightlimit, shadowlimit) {
-            entitycmds.insert(bindeffect);
-        }
+        let (bindeffect0, bindeffect1, bindeffect2) = match (BindSceneEffect::new(dynbuffer), SceneLightingInfos::new(dynbuffer, lightlimit), SceneShadowInfos::new(dynbuffer, lightlimit, shadowlimit)) {
+            (Some(bindeffect0), Some(bindeffect1), Some(bindeffect2)) => {
+                (bindeffect0, bindeffect1, bindeffect2)
+            },
+            _ => {
+                return None;
+            }
+        };
         let brdfsampler = BRDFSampler::new(device, asset_samp);
         let slot = BRDFTextureSlot(EKeyTexture::Tex(KeyTexture::from( DefaultTexture::WHITE_2D )));
-
-        entitycmds
-        .insert((
+        Some((
             ActionTransformNode::init_for_tree(),
             ActionEntity::init(),
             (
@@ -186,13 +228,11 @@ impl ActionScene {
                 SceneTime::new(),
                 SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. },
                 AmbientColor(1., 1., 1., 1.),
-                TreeLeftRoot::new(id_left),
-                TreeRightRoot::new(id_right),
-            )
-            , (
-                // .insert(AnimationGroups::default())
                 SceneMainCameraID(None),
                 SceneAnimationEnable::default(),
+            ),
+            (
+                // .insert(AnimationGroups::default())
                 SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count)),
                 ScenePointLightsQueue(SceneItemsQueue::new(lightlimit.max_point_light_count)),
                 SceneSpotLightsQueue(SceneItemsQueue::new(lightlimit.max_spot_light_count)),
@@ -200,12 +240,18 @@ impl ActionScene {
                 SceneLightingInfosDirty,
                 SceneShadowInfosDirty,
                 SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count)),
+            ),
+            (
                 MainCameraOpaqueTarget(None),
                 MainCameraDepthTarget(None),
                 BatchParamOpaque::default(),
                 BatchParamTransparent::default(),
                 SceneShadowRenderTarget(None),
-            ),(
+                bindeffect0,
+                bindeffect1,
+                bindeffect2
+            ),
+            (
                 brdfsampler,
                 slot,
                 BRDFTexture::default(),
@@ -214,6 +260,7 @@ impl ActionScene {
                 EnvTexture::default(),
                 EnvSampler::new(device, asset_samp),
             )
-        ));
+        ))
     }
 }
+

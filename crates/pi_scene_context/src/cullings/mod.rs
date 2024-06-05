@@ -27,7 +27,7 @@ pub enum StageCulling {
     CalcBounding,
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct IsCulled;
 
 pub trait TIntersect {
@@ -43,25 +43,42 @@ impl Plugin for PluginCulling {
         app.insert_resource(ActionListMeshBounding::default());
         app.insert_resource(ActionListBoundingBoxDisplay::default());
 
-        app.configure_set(Update, StageCulling::Command.after(StageScene::_Create).before(StageMaterial::Command));
-        app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
-
-        app.add_systems(Update, (
-            sys_act_mesh_bounding_culling_display
-        ).in_set(StageCulling::Command));
-
-        app.add_systems(Update, (
-            sys_act_mesh_bounding
-        ).in_set(StageModel::AbstructMeshCommand));
-
-        app.add_systems(
-            Update,
+#[cfg(feature = "use_bevy")]
+        app.configure_sets(Update, 
             (
-                sys_update_culling_by_worldmatrix,
-                sys_update_culling_by_cullinginfo,
-                sys_abstructmesh_culling_flag_reset,
-            ).chain().in_set(StageCulling::CalcBounding)
+                StageCulling::Command.after(StageScene::_Create).before(StageMaterial::Command),
+                StageCulling::CalcBounding.after(StageModel::RenderMatrix),
+            )
         );
+
+#[cfg(feature = "use_bevy")]
+        app.add_systems(
+            Update, 
+            (
+                sys_act_mesh_bounding_culling_display.in_set(StageCulling::Command),
+                sys_act_mesh_bounding.in_set(StageModel::AbstructMeshCommand),
+                (
+                    sys_update_culling_by_worldmatrix,
+                    sys_update_culling_by_cullinginfo,
+                    sys_abstructmesh_culling_flag_reset,
+                ).chain().in_set(StageCulling::CalcBounding)
+            )
+        );
+
+#[cfg(not(feature = "use_bevy"))]
+        app
+        .configure_set(Update, StageCulling::Command.after(StageScene::_Create).before(StageMaterial::Command))
+        .configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix))
+        ;
+
+#[cfg(not(feature = "use_bevy"))]
+        app
+        .add_systems(Update, sys_act_mesh_bounding_culling_display   .in_set(StageCulling::Command))
+        .add_systems(Update, sys_act_mesh_bounding                   .in_set(StageModel::AbstructMeshCommand))
+        .add_systems(Update, sys_update_culling_by_worldmatrix                                                              .in_set(StageCulling::CalcBounding))
+        .add_systems(Update, sys_update_culling_by_cullinginfo           .after(sys_update_culling_by_worldmatrix)  .in_set(StageCulling::CalcBounding))
+        .add_systems(Update, sys_abstructmesh_culling_flag_reset         .after(sys_update_culling_by_cullinginfo)  .in_set(StageCulling::CalcBounding))
+        ;
     }
 }
 

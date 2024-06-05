@@ -9,6 +9,7 @@ use pi_node_materials::prelude::{BlockMainTexture, BlockEmissiveTexture, BlockMa
 use pi_scene_context::{prelude::*, light::PluginLighting};
 use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::BallBuilder};
+use pi_slotmap::Key;
 
 #[path = "../base.rs"]
 mod base;
@@ -228,7 +229,7 @@ impl Plugin for PluginTest {
             let (targets, device, asset_samp, atlas_allocator) = (&mut assets.0, &assets.1, &assets.2, &assets.3);
             let depthtarget = targets.create(device, KeySampler::linear_repeat(), asset_samp, atlas_allocator, ColorFormat::R16Float, DepthStencilFormat::Depth32Float, 256, 256 );
 
-            let depth_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.to_bits().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false));
+            let depth_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.index().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(depth_renderer, true));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(depth_renderer, true));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(depth_renderer, true));
@@ -269,22 +270,28 @@ impl Plugin for PluginTest {
 
 
 pub fn main() {
-    let mut app = base::test_plugins_with_gltf();
-    app.add_plugins(
-        pi_pbr::PluginPBR
-    );
-    app.add_plugins(
-        (pbr_material::PluginPBRMaterial, distortion_material::PluginDistortionMaterial, predepth::PluginShaderPreDepth, water::PluginShaderWater)
-    );
+    let (mut app, window, event_loop) = base::test_plugins_with_gltf();
+    app
+    .add_plugins(pi_pbr::PluginPBR)
+    .add_plugins(pbr_material::PluginPBRMaterial)
+    .add_plugins(distortion_material::PluginDistortionMaterial)
+    .add_plugins(predepth::PluginShaderPreDepth)
+    .add_plugins(water::PluginShaderWater)
+    ;
 
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
+        #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, base::active_lighting_shadow);
-    
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, base::active_lighting_shadow);
     
     // app.run()
     loop { app.update(); }

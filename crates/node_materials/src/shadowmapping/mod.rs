@@ -54,11 +54,11 @@ pub struct PluginShadowMapping;
 impl Plugin for PluginShadowMapping {
     fn build(&self, app: &mut App) {
         
-        #[cfg(not(target_arch="wasm32"))]
-        {
+        // #[cfg(not(target_arch="wasm32"))]
+        // {
             let mut nodematblocks = app.world.get_resource_mut::<NodeMaterialBlocks>().unwrap();
             nodematblocks.regist::<BlockShadowMapping>();
-        }
+        // }
 
         // app.add_systems(Startup, setup);
     }

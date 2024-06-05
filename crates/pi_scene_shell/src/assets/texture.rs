@@ -1,7 +1,6 @@
+use crate::ecs::*;
 
 use std::sync::Arc;
-
-use bevy_ecs::component::Component;
 use pi_render::renderer::texture::*;
 use wgpu::{TextureView, TextureFormat};
 

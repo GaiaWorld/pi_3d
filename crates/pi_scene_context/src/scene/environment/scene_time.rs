@@ -5,7 +5,7 @@ use crate::bytes_write_to_memory;
 
 use super::BindSceneEffect;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneTime {
     pub last_time_ms: u64,
     pub time_ms: u64,
@@ -63,7 +63,7 @@ impl SceneTime {
             time_ms, time_ms, time_ms.sin(), time_ms.cos(),
             delta_ms, 1. / delta_ms, delta_ms.sin(), delta_ms.cos()
         ];
-        bind.0.data().write_data(ShaderBindSceneAboutEffect::OFFSET_TIME as usize, bytemuck::cast_slice(&values));
+        bind.0.as_ref().unwrap().data().write_data(ShaderBindSceneAboutEffect::OFFSET_TIME as usize, bytemuck::cast_slice(&values));
     }
 }
 impl WriteBuffer for SceneTime {

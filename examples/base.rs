@@ -1,9 +1,12 @@
+#[cfg(feature = "use_bevy")]
 use bevy_a11y::AccessibilityPlugin;
+#[cfg(feature = "use_bevy")]
+use bevy_input::*;
 #[allow(dead_code)]
 #[allow(unused_imports)]
 
 use pi_3d::*;
-use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
+// use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
@@ -13,6 +16,7 @@ use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::Plu
 use pi_standard_material::PluginStandardMaterial;
 use unlit_material::*;
 use wgpu::Backends;
+use pi_winit::{window::Window, event_loop::EventLoop};
 
 use std::sync::Arc;
 use pi_async_rt::rt::AsyncRuntime;
@@ -202,25 +206,25 @@ impl Plugin for PluginSceneTimeFromPluginFrame {
     }
 }
 
-pub trait AddEvent {
-	// 添加事件， 该实现每帧清理一次
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-}
+// pub trait AddEvent {
+// 	// 添加事件， 该实现每帧清理一次
+// 	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
+// }
 
-impl AddEvent for App {
-	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-		if !self.world.contains_resource::<Events<T>>() {
-			self.init_resource::<Events<T>>()
-				.add_systems(Update, Events::<T>::update_system);
-		}
-		self
-	}
-}
+// impl AddEvent for App {
+// 	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
+// 		if !self.world.contains_resource::<Events<T>>() {
+// 			self.init_resource::<Events<T>>()
+// 				.add_systems(Update, Events::<T>::update_system);
+// 		}
+// 		self
+// 	}
+// }
 
-pub fn test_plugins() -> App {
+pub fn test_plugins() -> (App, Arc<pi_winit::window::Window>,EventLoop<()>) {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
-    let mut app = App::default();
+    let mut app = App::new();
 
     let width = 800;
     let height = 600;
@@ -229,62 +233,57 @@ pub fn test_plugins() -> App {
     // opt.backends = wgpu::Backends::VULKAN;
     app.insert_resource(opt);
 
-	let mut window_plugin = bevy_window::WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(width, height);
-    }
 	let (w, eventloop) = {
 		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
 		let event_loop = pi_winit::event_loop::EventLoopBuilder::new().with_any_thread(true).build();
 		let window = pi_winit::window::Window::new(&event_loop).unwrap();
-		(window, event_loop)
+		(Arc::new(window), event_loop)
 	};
-
     app.insert_resource(AssetMgrConfigs::default());
-    app.add_plugins(
-        (
-            InputPlugin::default(),
-            window_plugin,
-        )
-    );
-    app.add_plugins(
-        (
-            AccessibilityPlugin,
-            pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
-            pi_bevy_asset::PiAssetPlugin::default(),
-            PiRenderPlugin::default(),
-            PluginLocalLoad,
-            PluginFrameTime,
-        )
-    );
+
+    #[cfg(feature = "use_bevy")]
+    {
+        let mut window_plugin = bevy_window::WindowPlugin::default();
+        if let Some(primary_window) = &mut window_plugin.primary_window {
+            primary_window.resolution.set_physical_resolution(width, height);
+        }
+        app.add_plugins(
+            (
+                InputPlugin::default(),
+                window_plugin,
+            )
+        );
+        app.add_plugins(AccessibilityPlugin);
+    }
+
+
+    app.add_plugins(pi_bevy_winit_window::WinitPlugin::new(w.clone()).with_size(width, height));
+    app.add_plugins(pi_bevy_asset::PiAssetPlugin::default());
+    app.add_plugins(PiRenderPlugin::default());
+    app.add_plugins(PluginLocalLoad);
+    app.add_plugins(PluginFrameTime);
             
-    app.add_plugins(PluginBundleDefault);
+    PluginBundleDefault::add(&mut app);
     
-    app.add_plugins((
-        PluginNodeMaterial,
-        PluginShadowGenerator,
-        PluginShadowMapping,
-    ));
-    app.add_plugins(
-        (
-            PluginCubeBuilder,
-            PluginQuadBuilder,
-            PluginBallBuilder,
-            PluginStateToFile,
-            PluginUnlitMaterial,
-            PluginStandardMaterial,
-        )
-    );
+    app.add_plugins(PluginNodeMaterial);
+    app.add_plugins(PluginShadowGenerator);
+    app.add_plugins(PluginShadowMapping);
+        
+    app.add_plugins(PluginCubeBuilder);
+    app.add_plugins(PluginQuadBuilder);
+    app.add_plugins(PluginBallBuilder);
+    app.add_plugins(PluginStateToFile);
+    app.add_plugins(PluginUnlitMaterial);
+    app.add_plugins(PluginStandardMaterial);
+    
     app.add_plugins(
         PluginSceneTimeFromPluginFrame
     );
-    app.add_plugins(
-        (
-            PluginParticleSystem,
-            pi_gltf2_load::PluginGLTF2Res,
-            pi_trail_renderer::PluginTrail
-        )
-    );
+    
+    app.add_plugins(PluginParticleSystem);
+    app.add_plugins(pi_gltf2_load::PluginGLTF2Res);
+    app.add_plugins(pi_trail_renderer::PluginTrail);
+    
     app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
     app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
     app.insert_resource(SceneShadowLimit(
@@ -292,84 +291,81 @@ pub fn test_plugins() -> App {
     ));
 
     app.add_plugins(copy::PluginImageCopy);
-    app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
+    // app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
     app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
-    
+
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup_default_mat);
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, setup_default_mat);
     
-    app
+    (app, w, eventloop)
 }
 
-pub fn test_plugins_with_gltf() -> App {
+pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
-    let mut app = App::default();
+    let mut app = App::new();
     let width = 800;
     let height = 600;
 
     // let mut opt = PiRenderOptions::default();
     // opt.backends = Backends::VULKAN;
     // app.insert_resource(opt);
-
-	let mut window_plugin = bevy_window::WindowPlugin::default();
-    if let Some(primary_window) = &mut window_plugin.primary_window {
-        primary_window.resolution.set_physical_resolution(width, height);
-    }
     
-	let w = {
+	let (w, event_loop) = {
 		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
 		let event_loop = pi_winit::event_loop::EventLoopBuilder::new().with_any_thread(true).build();
 		let window = pi_winit::window::Window::new(&event_loop).unwrap();
-		window
+		(Arc::new(window), event_loop)
 	};
 
     let mut cfg = AssetMgrConfigs::default();
     cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 100  });
     app.insert_resource(cfg);
-    app.add_plugins(
-        (
-            InputPlugin::default(),
-            window_plugin,
-        )
-    );
-    app.add_plugins(
-        (
-            AccessibilityPlugin,
-            pi_bevy_winit_window::WinitPlugin::new(Arc::new(w)).with_size(width, height),
-            pi_bevy_asset::PiAssetPlugin::default(),
-            PiRenderPlugin::default(),
-            PluginLocalLoad,
-            PluginFrameTime,
-        )
-    );
-            
-    app.add_plugins(PluginBundleDefault);
-    app.add_plugins((
-        PluginNodeMaterial,
-        PluginShadowGenerator,
-        PluginShadowMapping,
-    ));
-    app.add_plugins(
-        (
-            PluginCubeBuilder,
-            PluginQuadBuilder,
-            PluginBallBuilder,
-            PluginStateToFile,
-            PluginUnlitMaterial,
-            PluginStandardMaterial,
-        )
-    );
+
+    #[cfg(feature = "use_bevy")]
+    {
+        let mut window_plugin = bevy_window::WindowPlugin::default();
+        if let Some(primary_window) = &mut window_plugin.primary_window {
+            primary_window.resolution.set_physical_resolution(width, height);
+        }
+        app.add_plugins(
+            (
+                InputPlugin::default(),
+                window_plugin,
+            )
+        );
+        app.add_plugins(AccessibilityPlugin);
+    }
+
+
+    app.add_plugins(pi_bevy_winit_window::WinitPlugin::new(w.clone()).with_size(width, height));
+    app.add_plugins(pi_bevy_asset::PiAssetPlugin::default());
+    app.add_plugins(PiRenderPlugin::default());
+    app.add_plugins(PluginLocalLoad);
+    app.add_plugins(PluginFrameTime);
+
+    PluginBundleDefault::add(&mut app);
+
+    app.add_plugins(PluginNodeMaterial);
+    app.add_plugins(PluginShadowGenerator);
+    app.add_plugins(PluginShadowMapping);
+
+    app.add_plugins(PluginCubeBuilder);
+    app.add_plugins(PluginQuadBuilder);
+    app.add_plugins(PluginBallBuilder);
+    app.add_plugins(PluginStateToFile);
+    app.add_plugins(PluginUnlitMaterial);
+    app.add_plugins(PluginStandardMaterial);
+
     app.add_plugins(
         PluginSceneTimeFromPluginFrame
     );
-    app.add_plugins(
-        (
-            PluginParticleSystem,
-            pi_gltf2_load::PluginGLTF2Res,
-            pi_trail_renderer::PluginTrail
-        )
-    );
+    app.add_plugins(PluginParticleSystem);
+    app.add_plugins(pi_gltf2_load::PluginGLTF2Res);
+    app.add_plugins(pi_trail_renderer::PluginTrail);
     
     app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 64, max_spot_light_count: 64, max_hemi_light_count: 4 }));
     app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 8, max_spot_light_count: 4, max_hemi_light_count: 4 }));
@@ -378,13 +374,16 @@ pub fn test_plugins_with_gltf() -> App {
     ));
 
     app.add_plugins(copy::PluginImageCopy);
-    app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
+    // app.add_frame_event::<ComponentEvent<Changed<Layer>>>();
 
     app.world.get_resource_mut::<StateResource>().unwrap().debug = true;
 
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup_default_mat);
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, setup_default_mat);
     
-    app
+    (app, w, event_loop)
 }
 
 pub fn setup_default_mat(

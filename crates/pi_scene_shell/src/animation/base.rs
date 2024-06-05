@@ -1,3 +1,4 @@
+use crate::ecs::*;
 
 use std::hash::Hash;
 
@@ -14,9 +15,7 @@ use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFra
 use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
 
-use bevy_ecs::prelude::*;
-
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
 pub struct FlagAnimationStartResetComp;
 
@@ -24,7 +23,7 @@ pub type KeyAnimeCurve = String;
 
 pub type IDAssetTypeFrameCurve = u64;
 
-#[derive(Clone, Copy, PartialEq, Eq, Component, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Component, Default, Hash)]
 pub struct SceneID(pub Entity);
 
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
@@ -67,7 +66,7 @@ pub trait TAnimatableCompRecord<T: TAnimatableComp>: Component {
     fn comp(&self) -> T;
 }
 
-#[derive(Default, Component)]
+#[derive(Component, Default)]
 pub struct AnimationGroups {
     pub map: XHashMap<AnimationGroupID, AnimationGroupID>,
 }
@@ -83,10 +82,10 @@ impl TagGroupListen {
 
 pub type AnimeFrameEventData = u32;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct AnimationGroupKey(pub DefaultKey);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct AnimationGroupScene(pub Entity);
 
 pub enum EAnimatorableEntityType {
@@ -94,10 +93,10 @@ pub enum EAnimatorableEntityType {
     Attribute,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct AnimatorableUniform;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct AnimatorableAttribute;
 
 #[derive(Resource)]
@@ -154,6 +153,11 @@ impl SceneAnimationContext {
                 AnimationGroupManagerDefault::<Entity>::default()
             )
         )
+    }
+}
+impl Default for SceneAnimationContext {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

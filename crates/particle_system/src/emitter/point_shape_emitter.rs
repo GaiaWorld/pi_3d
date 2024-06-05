@@ -11,6 +11,7 @@ use super::{
 /**
  * 点发射器
  */
+#[derive(Default)]
 pub struct PointShapeEmitter {
     _max_z: f32,
     /**

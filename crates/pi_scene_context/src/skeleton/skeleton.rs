@@ -10,16 +10,16 @@ pub enum StageSkeleton {
     Calc,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SkeletonInitBaseMatrix;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Skeleton {
     pub root: ObjectID,
     pub bones: Vec<ObjectID>,
     pub mode: ESkinCode,
     pub meshes: Vec<ObjectID>,
-    pub bind: Arc<ShaderBindModelAboutSkinValue>,
+    pub bind: Option<Arc<ShaderBindModelAboutSkinValue>>,
 }
 impl Skeleton {
     pub fn new(
@@ -36,7 +36,7 @@ impl Skeleton {
                 bones,
                 mode,
                 meshes: vec![],
-                bind: Arc::new(bind),
+                bind: Some(Arc::new(bind)),
             })
         } else {
             None
@@ -44,22 +44,22 @@ impl Skeleton {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct BindSkinValue(pub Option<Arc<ShaderBindModelAboutSkinValue>>);
 
 
-#[derive(Component)]
-pub struct SkeletonID(pub ObjectID);
-impl TEntityRef for SkeletonID {
-    fn id(&self) -> Entity {
-        self.0
-    }
-}
+#[derive(Component, Default)]
+pub struct SkeletonID(pub Option<ObjectID>);
+// impl TEntityRef for SkeletonID {
+//     fn id(&self) -> Entity {
+//         self.0
+//     }
+// }
 
-#[derive(Default, Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct DirtySkeletonRefs(pub bool);
 
 pub type SkeletonRefs = EntityRefInfo<DirtySkeletonRefs>;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SkeletonBonesDirty(pub bool);

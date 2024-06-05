@@ -38,7 +38,10 @@ pub struct StateTransform {
     pub max_level: u32,
 }
 
+#[cfg(feature = "use_bevy")]
 pub type StateTransformQuery = QueryState<(&'static SceneID, &'static Enable, &'static GlobalEnable)>;
+#[cfg(not(feature = "use_bevy"))]
+pub type StateTransformQuery = QueryState<(&'static SceneID, &'static Enable, &'static GlobalEnable), ()>;
 
 pub fn sys_state_transform(
     items: Query<(&SceneID, &Enable, &GlobalEnable)>,

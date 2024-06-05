@@ -37,13 +37,13 @@ pub fn sys_set0_modify(
             if let Some((_, meta)) = &meta.0 {
                 // log::error!("Set0 Modify 3");
                 let bind_base_effect = if BindDefines::need_scene_effect(meta.binddefines) {
-                    Some(bind_base_effect.0.clone())
+                    Some(bind_base_effect.0.as_ref().unwrap().clone())
                 } else { None };
 
                 let bind_viewer = match (BindDefines::need_viewer(meta.binddefines), bind_viewer) {
                     (true, Some(bindviewer)) => {
                         // log::error!("Set0 Modify 4");
-                        Some(bindviewer.0.clone())
+                        Some(bindviewer.0.as_ref().unwrap().clone())
                     },
                     (false, _) => {
                         // log::error!("Set0 Modify 44");
@@ -57,7 +57,7 @@ pub fn sys_set0_modify(
                     }
                 };
                 
-                let bind_lighting = Some(scene_lighting.0.clone());
+                let bind_lighting = Some(scene_lighting.0.as_ref().unwrap().clone());
                 let bind_shadow = match (BindDefines::need_shadowmap(meta.binddefines), &shadowtarget.0, scene_shadow) {
                     (true, Some(shadowtarget), Some(scene_shadow)) => {
                         if let Some(shadowtarget) = targets.get(shadowtarget.clone()) {

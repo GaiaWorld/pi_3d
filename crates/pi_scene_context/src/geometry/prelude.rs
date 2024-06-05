@@ -24,13 +24,3 @@ pub struct ResourceGeometry<'w> {
     pub vb_mgr: Res<'w, ShareAssetMgr<EVertexBufferRange>>,
     pub vb_wait: ResMut<'w, VertexBufferDataMap3D>,
 }
-
-pub struct BundleGeometry(
-    GeometryDesc,
-    VertexBufferLayoutsComp,
-    MeshID,
-    GeometryRefs,
-    RenderGeometryComp,
-    IndicesBufferDesc,
-    AssetResBufferIndices,
-);

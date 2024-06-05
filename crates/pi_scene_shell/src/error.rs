@@ -1,6 +1,8 @@
-use bevy_ecs::{system::Resource, entity::Entity};
-use pi_bevy_render_plugin::GraphError;
+use std::any::Any;
 
+use crate::ecs::*;
+
+use pi_bevy_render_plugin::GraphError;
 
 pub type EErorr = u32;
 
@@ -8,8 +10,8 @@ pub type EErorr = u32;
 pub struct ErrorRecord(pub Vec<u32>, pub bool);
 impl ErrorRecord {
     pub fn record(&mut self, entity: Entity, error: EErorr) {
-        if self.1 {
-            self.0.push(entity.index());
+        if self.1 { 
+            // self.0.push(entity::index());
             self.0.push(error);
         }
     }

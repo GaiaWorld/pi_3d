@@ -8,6 +8,11 @@ repository = "https://github.com/GaiaWorld/pi_3d"
 license = "MIT OR Apache-2.0"
 keywords = ["3d scene"]
 
+[features]
+default_features = ["use_pi_ecs"]
+use_bevy = []
+use_pi_ecs = []
+
 [dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
 log             = "0.4"
@@ -21,12 +26,13 @@ parry3d         = "0.13"
 lazy_static     = "1.4"
 pi_spatial      = "0.5"
 
+bevy_ecs            = "0.11"
+pi_world            = { version = "0.1" }
+# bevy_app        = "0.11"
 
 approx          = "0.5"
 naga            = { version = "0.19", features = [ "glsl-in" ] }
 bytemuck        = { version = "1.4", features = [ "derive" ] }
-bevy_ecs        = "0.11"
-bevy_app        = "0.11"
 winit           = { version = "0.27", registry = "yn" }
 pollster        = "0.2"
 spin_sleep      = "1.1"

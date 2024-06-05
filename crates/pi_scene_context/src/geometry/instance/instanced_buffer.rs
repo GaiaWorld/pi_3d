@@ -3,7 +3,9 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Default)]
+pub struct InstancedInfoComp(pub Option<InstancedInfo>);
+
 pub struct InstancedInfo {
     // pub state: u32,
     pub bytes_per_instance: u32,

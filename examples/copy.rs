@@ -1,14 +1,14 @@
-use bevy_app::Plugin;
 use pi_mesh_builder::quad::QuadBuilder;
 use pi_node_materials::prelude::{BlockMainTexture, BlockUVAtlas, NodeMaterialBuilder};
 use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::*;
+use pi_slotmap::Key;
 
 pub fn main() {}
 
 pub struct PluginImageCopy;
 impl Plugin for PluginImageCopy {
-    fn build(&self, app: &mut bevy_app::prelude::App) {
+    fn build(&self, app: &mut App) {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
         ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderImageCopy::KEY), ShaderImageCopy::res());
     }
@@ -62,7 +62,7 @@ impl PluginImageCopy {
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
             actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
-            let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
+            let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
@@ -121,7 +121,7 @@ impl PluginImageCopy {
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
             actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
-            let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.to_bits().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
+            let copy_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));

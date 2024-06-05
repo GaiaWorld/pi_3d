@@ -13,7 +13,7 @@ pub fn sys_set1_modify(
     mut items: Query<(&PassModelID, &PassBindEffectValue, &PassEffectReady, &mut PassBindGroupModel), Or<(Changed<PassModelID>, Changed<PassEffectReady>, Changed<PassBindEffectValue>)>>,
     models: Query<
         (
-            Option<&BindModel>, &BindSkinValue, Option<&SkeletonID>, &ModelLightingIndexs
+            Option<&BindModel>, &BindSkinValue, &SkeletonID, &ModelLightingIndexs
         ),
     >,
     device: Res<PiRenderDevice>,
@@ -39,8 +39,8 @@ pub fn sys_set1_modify(
                 if let Ok( ( bind_model, bind_skl, id_skl, lightingidxs) ) = models.get(idmodel.0) {
                     match (BindDefines::need_model(meta.binddefines), bind_model) {
                         (true, Some(bind)) => {
-                            bind_matrix = Some(bind.0.clone());
-                            match (&bind_skl.0, id_skl) {
+                            bind_matrix = Some(bind.0.as_ref().unwrap().clone());
+                            match (&bind_skl.0, id_skl.0) {
                                 (Some(bind), Some(_)) => { bind_skin = Some(bind.clone()); },
                                 (None, None) => { },
                                 _ => {

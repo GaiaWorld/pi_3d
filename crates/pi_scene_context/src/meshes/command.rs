@@ -204,14 +204,14 @@ pub type ActionListMeshForceLighting = ActionList<OpsMeshForceLighting>;
 // }
 // pub type ActionListMeshForceHemiLighting = ActionList<OpsMeshForceHemiLighting>;
 
-pub struct BundleMeshGeometry (
+pub type BundleMeshGeometry = (
     GeometryID,
     RenderGeometryEable,
     MeshInstanceState,
     DirtyInstanceSourceRefs,
 );
 
-pub struct BundleMeshRenderState (
+pub type BundleMeshRenderState = (
     // CCullMode,
     // CFrontFace,
     // CPolygonMode,
@@ -229,11 +229,11 @@ pub struct BundleMeshRenderState (
     // ModelBlend,
 );
 
-pub struct BundleMeshMaterial(
+pub type BundleMeshMaterial = (
     PassIDs,
 );
 
-pub struct BundleMeshFunctionRenderModules (
+pub type BundleMeshFunctionRenderModules = (
     BundleMeshLighting,
     ModelVelocity,
     BindSkinValue,
@@ -241,7 +241,7 @@ pub struct BundleMeshFunctionRenderModules (
     ScalingMode,
 );
 
-pub struct BundleMeshLighting(
+pub type BundleMeshLighting = (
     MeshLightingMode,
     ModelLightingIndexs,
     ModelForcePointLightings,
@@ -252,7 +252,7 @@ pub struct BundleMeshLighting(
     // ModelHemiLightingDirty,
 );
 
-pub struct BundleMesh(
+pub type BundleMesh = (
     BundleTransformNode,
     AbstructMesh,
     Mesh,
@@ -310,7 +310,7 @@ pub struct BundleMesh(
     // ModelHemiLightingDirty,
 );
 
-pub struct BundleInstanceMesh(
+pub type BundleInstanceMesh = (
     BundleTransformNode,
     AbstructMesh,
     AbstructMeshCullingFlag,
@@ -325,7 +325,7 @@ pub struct BundleInstanceMesh(
     GeometryCullingMode,
 );
 
-pub struct BundlePass(
+pub type BundlePass = (
     PassModelID,
     PassSceneID,
     PassSceneForSet3,
@@ -338,7 +338,7 @@ pub struct BundlePass(
     PassTag,
 );
 
-pub struct BundlePassActived(
+pub type BundlePassActived = (
     BundlePass,
     PassBindEffectValue,
     PassBindEffectTextures,

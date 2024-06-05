@@ -6,13 +6,7 @@ use crate::{
 };
 
 use super::{
-    render_primitive::*,
-    base::*,
-    render_depth_and_stencil::*,
-    render_sort::*,
-    render_blend::*,
-    render_target_state::*,
-    renderer::*,
+    base::*, render_blend::*, render_depth_and_stencil::*, render_object::RenderState, render_primitive::*, render_sort::*, render_target_state::*, renderer::*
 };
 
 
@@ -197,14 +191,14 @@ use super::{
     }
 
     pub fn sys_pass_pipeline_request_by_renderer(
-        renderers: Query<(&RendererEnable, &ViewerID, &PassTag), Or<(Changed<RenderColorFormat>, Changed<RenderDepthFormat>, Changed<RendererBlend>, Changed<RendererEnable>, Changed<PassTag>)>>,
+        renderers: Query<(&RendererParam, &ViewerID, &PassTag), Or<(Changed<RendererParam>, Changed<PassTag>)>>,
         viewers: Query<(&ModelList, &ForceIncludeModelList)>,
         modelspass: Query<&PassIDs>,
         mut passes: Query<&mut PassPipelineStateDirty>,
     ) {
         // let time1 = pi_time::Instant::now();
-        renderers.iter().for_each(|(enable, idviewer, passtag)| {
-            if enable.0 {
+        renderers.iter().for_each(|(param, idviewer, passtag)| {
+            if param.enable.0 {
                 if let Ok((modellist, forcemodels)) = viewers.get(idviewer.0) {
                     modellist.0.iter().for_each(|idmodel| {
                         if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
@@ -226,22 +220,17 @@ use super::{
     }
 
     pub fn sys_pass_pipeline(
-        renderers: Query<(&RenderColorFormat, &RenderDepthFormat, &RendererBlend)>,
+        renderers: Query<&RendererParam>,
         models: Query<&GeometryID>,
         geometrys: Query<&VertexBufferLayoutsComp>, 
         mut passes: Query<
             (
                 ObjectID, &DisposeReady, &PassModelID, &PassBindGroups, &PassShader, &mut PassPipeline, &PassRendererID,
-                (
-                    &PrimitiveState,
-                    &ModelBlend,
-                    &DepthState, &StencilState
-                )
+                &RenderState,
             ),
             Or<(
                 Changed<PassShader>, Changed<PassPipelineStateDirty>, Changed<PassRendererID>,
-                Changed<ModelBlend>, Changed<PrimitiveState>,
-                Or<(Changed<DepthState>, Changed<StencilState>)>
+                Changed<RenderState>
             )>
         >,
         assets: ResMut<ShareAssetMgr<Pipeline3D>>,
@@ -252,9 +241,7 @@ use super::{
 
         passes.iter_mut().for_each(|(
             id_pass, disposeready, id_model, bindgroups, shader, mut oldpipeline, idrenderer,
-            (cull,
-            blend,
-            depth_state, stencil_state)
+            renderstate
         )| {
             if disposeready.0 == true { return; }
             // log::warn!("SysPipeline: 0 Pass");
@@ -263,12 +250,12 @@ use super::{
                 if let Ok(id_geo) = models.get(id_model.0) {
                     // log::warn!("SysPipeline: 2 Pass {:?}", (geometrys.get(id_geo.0).is_ok(), renderers.get(idrenderer.0).is_ok()));
                     match (geometrys.get(id_geo.0), renderers.get(idrenderer.0)) {
-                        (Ok(vb), Ok((colorformat, depthstencilformat, blendenable))) => {
-                            let blend = blend.clone(); // if blendenable.0 { blend.clone() } else { ModelBlend::default() };
+                        (Ok(vb), Ok(param)) => {
+                            let blend = renderstate.blend.clone(); // if blendenable.0 { blend.clone() } else { ModelBlend::default() };
                             if let Ok(pipeline) = pipeline(
-                                shader, bindgroups, vb, &colorformat.0, &depthstencilformat.0,
-                                blend, depth_state, stencil_state,
-                                cull,
+                                shader, bindgroups, vb, &param.colorformat.0, &param.depthstencilformat.0,
+                                blend, &renderstate.depth, &renderstate.stencil,
+                                &renderstate.primitive,
                                 id_pass, & assets, &device
                             ) {
                                 // log::warn!("SysPipeline: {:?}", (colorformat, passtag, passpasstag));
@@ -380,7 +367,7 @@ use super::{
     }
 
     pub fn sys_renderer_draws_modify(
-        mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererEnable, &RenderViewport, &RendererBlend ) >,
+        mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererParam ) >,
         viewers: Query< (&ModelListAfterCulling, &ViewerGlobalPosition, &ViewerDirection, &DisposeReady, &ViewerDistanceCompute), >,
         scenes: Query< (&BatchParamOpaque, &BatchParamTransparent) >,
         models: Query<
@@ -402,10 +389,10 @@ use super::{
     ) {
         let time1 = pi_time::Instant::now();
 
-        renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, enable, viewport, transparent)| {
+        renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, param)| {
             renderer.clear();
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id, id_viewer.0, enable.0);
-            if enable.0 == false {
+            if param.enable.0 == false {
                 return;
             }
             let mut count_vertex = 0;
@@ -418,7 +405,7 @@ use super::{
                 if disposed.0 { return; }
 
                     // log::warn!("renderer_draws : ModelListAfterCulling: {:?}, ", (list_model.0.len()));
-                    renderer.draws.viewport = viewport.val();
+                    renderer.draws.viewport = param.viewport.val();
                     list_model.0.iter().for_each(|id_obj| {
                         if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passids)) = models.get(id_obj.clone()) {
                             // log::warn!("Renderer: A {:?}", (disposed.0, globalenable.0));
@@ -426,7 +413,7 @@ use super::{
                             let passids = passids.0;
 
                             let index = 0;
-                            let is_transparent = transparent.0;
+                            let is_transparent = param.blend.0;
                             if passtag.index() < passids.len() {
                                 let passid = passids[passtag.index()];
                                 if let Ok((PassDraw(Some(draw)), passrendererid)) = passes.get(passid) {

@@ -1,14 +1,14 @@
 
-use std::sync::Arc;
+use crate::ecs::*;
 
-use bevy_ecs::prelude::Component;
+use std::sync::Arc;
 use pi_assets::asset::Handle;
 
 use pi_render::renderer::texture::*;
 
 use crate::{assets::texture::TEXTURE_SLOT_COUNT, shader::UniformTextureWithSamplerParam};
 
-#[derive(Default, Clone, Hash, PartialEq, Eq, Component)]
+#[derive(Clone, Hash, PartialEq, Eq, Component, Default)]
 pub struct EffectBindTexture2DList {
     pub data: [Option<(ETextureViewUsage, EKeyTexture)>; TEXTURE_SLOT_COUNT],
     pub loaded: Vec<usize>,

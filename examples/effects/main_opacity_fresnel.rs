@@ -117,12 +117,18 @@ impl Plugin for PluginTest {
 }
 
 pub fn main() {
-    let mut app = base::test_plugins();
+    let (mut app, window, event_loop) = base::test_plugins();
     
     app.add_plugins(PluginTest);
     
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, sys_setup_ball);
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, sys_setup_ball);
+        #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
     
     // app.run()

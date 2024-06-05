@@ -89,11 +89,11 @@ use super::base::*;
             )| {
                 // log::debug!("SysViewerUpdated: {:?}, {:?}", bind.0.data().offset(), bind.0.data().size());
 
-                viewmatrix.update(bind.0.data());
-                projmatrix.update(bind.0.data());
-                transmatrix.update(bind.0.data());
-                position.update(bind.0.data());
-                direction.update(bind.0.data());
+                viewmatrix.update(bind.0.as_ref().unwrap().data());
+                projmatrix.update(bind.0.as_ref().unwrap().data());
+                transmatrix.update(bind.0.as_ref().unwrap().data());
+                position.update(bind.0.as_ref().unwrap().data());
+                direction.update(bind.0.as_ref().unwrap().data());
             }
         );
     }

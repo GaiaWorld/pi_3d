@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Debug, Default, Clone, Hash, Component)]
+#[derive(Debug, Clone, Hash, Component, Default)]
 pub struct EnvTextureSlot(pub Option<Atom>, pub bool);
 
-#[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq, Component, Default)]
 pub struct EnvIrradiance(pub Option<Arc<BindEnvIrradiance>>);
 
-#[derive(Default, Clone, Deref, Hash, PartialEq, Eq, Component)]
+#[derive(Clone, Deref, Hash, PartialEq, Eq, Component, Default)]
 pub struct EnvTexture(pub Option<Arc<ShaderBindEnvTexture>>);
 impl From<ETextureViewUsage> for EnvTexture {
     fn from(value: ETextureViewUsage) -> Self { Self( Some(Arc::new(ShaderBindEnvTexture(BindDataTexture2D(value)))) ) }
@@ -35,7 +35,7 @@ impl EnvTexture {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct EnvSampler(pub Option<Arc<ShaderBindEnvSampler>>);
 impl EnvSampler {
     pub fn new(device: &RenderDevice, asset: &Share<AssetMgr<SamplerRes>>) -> Self {

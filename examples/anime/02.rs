@@ -115,14 +115,17 @@ impl Plugin for PluginTest {
 
 
 pub fn main() {
-    let mut app = base::test_plugins();
+    let (mut app, window, event_loop) = base::test_plugins();
     
     app.add_plugins(PluginTest);
 
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
+        #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
+    #[cfg(not(feature = "use_bevy"))]
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     // while !app.ready() {

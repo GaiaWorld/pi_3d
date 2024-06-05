@@ -1,17 +1,22 @@
 use std::{hash::{Hash, Hasher}, sync::Arc};
 
+use bevy_ecs::entity;
 use pi_scene_shell::prelude::*;
 
 use crate::{prelude::{RenderGeometryComp, ActionListDisposeCan, ActionListDisposeReadyForRef, OpsDisposeCan, MeshInstanceState}, object::ActionEntity};
 
 use super::{
-    vertex_buffer_useinfo::*,
-    base::*,
-    instance::instanced_buffer::{InstancedInfo, InstanceBufferAllocator},
+    base::*, instance::instanced_buffer::{InstanceBufferAllocator, InstancedInfo, InstancedInfoComp}, vertex_buffer_useinfo::*, RenderGeometryEable
 };
 
 use super::command::*;
 
+pub type BundleGeometry = (
+    (DisposeReady, DisposeCan),
+    GeometryDesc,
+    (VertexBufferLayoutsComp, MeshID, RenderGeometryComp, IndicesBufferDescComp, AssetKeyBufferIndices, AssetDescVBSlots, LoadedKeyVBSlots, AssetResVBSlots),
+    AssetResBufferIndicesComp, InstancedInfoComp, GeometryResourceHash
+);
 
 pub fn sys_create_geometry(
     mut commands: Commands,
@@ -23,6 +28,7 @@ pub fn sys_create_geometry(
     mut instanceallocator: ResMut<InstanceBufferAllocator>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
+    // mut cmdgeo: Alter<(), (), BundleGeometry, ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, mut vertex_desc, indices_desc)| {
         
@@ -53,7 +59,7 @@ pub fn sys_create_geometry(
         //     vertex_desc.push(VertexBufferDesc::new(KeyVertexBuffer::from(""), VertexBufferDescRange::default(), attrs, true));
         // }
 
-        ActionGeometry::init(&mut geocommands, &vertex_desc, indices_desc.clone(), id_mesh);
+        let (comp1, comp2, comp3, comp4, comp5, mut comp6) = ActionGeometry::init(&vertex_desc, indices_desc.clone(), id_mesh);
 
         let geo_desc = GeometryDesc { list: vertex_desc };
         let mut hasher = DefaultHasher::default();
@@ -61,105 +67,45 @@ pub fn sys_create_geometry(
         if instancestate.use_single_instancebuffer {
             entity.hash(&mut hasher);
         }
-        geocommands.insert(GeometryResourceHash(hasher.finish()));
-    
-        geocommands
-            .remove::<AssetDescVBSlot01>()
-            .remove::<AssetDescVBSlot02>()
-            .remove::<AssetDescVBSlot03>()
-            .remove::<AssetDescVBSlot04>()
-            .remove::<AssetDescVBSlot05>()
-            .remove::<AssetDescVBSlot06>()
-            .remove::<AssetDescVBSlot07>()
-            .remove::<AssetDescVBSlot08>()
-            // .remove::<AssetDescVBSlot09>()
-            // .remove::<AssetDescVBSlot10>()
-            // .remove::<AssetDescVBSlot11>()
-            // .remove::<AssetDescVBSlot12>()
-            // .remove::<AssetDescVBSlot13>()
-            // .remove::<AssetDescVBSlot14>()
-            // .remove::<AssetDescVBSlot15>()
-            // .remove::<AssetDescVBSlot16>()
-            .remove::<AssetResVBSlot01>()
-            .remove::<AssetResVBSlot02>()
-            .remove::<AssetResVBSlot03>()
-            .remove::<AssetResVBSlot04>()
-            .remove::<AssetResVBSlot05>()
-            .remove::<AssetResVBSlot06>()
-            .remove::<AssetResVBSlot07>()
-            .remove::<AssetResVBSlot08>()
-            ;
+
+        let mut desclist = AssetDescVBSlots::default();
+        let mut keyslist = LoadedKeyVBSlots::default();
+        let mut datalist = AssetResVBSlots::default();
+        let mut instacned = InstancedInfoComp(None);
 
         let loader = &mut geoloader.loader_01;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot01::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot01::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot01::from(desc));
-        }
-        let loader = &mut geoloader.loader_02;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot02::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot02::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot02::from(desc));
-        }
-        let loader = &mut geoloader.loader_03;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot03::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot03::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot03::from(desc));
-        }
-        let loader = &mut geoloader.loader_04;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot04::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot04::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot04::from(desc));
-        }
-        let loader = &mut geoloader.loader_05;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot05::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot05::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot05::from(desc));
-        }
-        let loader = &mut geoloader.loader_06;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot06::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot06::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot06::from(desc));
-        }
-        let loader = &mut geoloader.loader_07;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot07::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot07::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot07::from(desc));
-        }
-        let loader = &mut geoloader.loader_08;
-        if let Some((desc, buff)) = init_slot(&geo_desc, &mut vb_data_map, &asset_mgr, &mut geocommands,  &mut instanceallocator, AssetDescVBSlot08::ASK_SLOT_COUNT as usize - 1) {
-            if let Some(buff) = buff { geocommands.insert(AssetResVBSlot08::from(buff)); } else { loader.request(entity, &desc.key, None, &mut vb_data_map); }
-            geocommands.insert(AssetDescVBSlot08::from(desc));
+        for slot in 0..VB_SLOTS_COUNT {
+            if let Some((desc, buff)) = init_slot(&geo_desc, &asset_mgr, &mut instanceallocator, &mut instacned, slot) {
+                if let Some(buff) = buff {
+                    datalist[slot] = Some(AssetResVBSlot::from(buff));
+                    keyslist[slot] = Some(desc.key.clone());
+                } else {
+                    loader.request((entity, slot as u8), &desc.key, None, &mut vb_data_map);
+                }
+                desclist[slot] = Some(AssetDescVBSlot::from(desc));
+            }
         }
 
-        // init_slot::<AssetDescVBSlot01, AssetResVBSlot01>(entity, &geo_desc, &mut geoloader.loader_01,  &mut vb_data_map, &asset_mgr, &mut geocommands,   &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot02, AssetResVBSlot02>(entity, &geo_desc, &mut geoloader.loader_02,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot03, AssetResVBSlot03>(entity, &geo_desc, &mut geoloader.loader_03,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot04, AssetResVBSlot04>(entity, &geo_desc, &mut geoloader.loader_04,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot05, AssetResVBSlot05>(entity, &geo_desc, &mut geoloader.loader_05,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot06, AssetResVBSlot06>(entity, &geo_desc, &mut geoloader.loader_06,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot07, AssetResVBSlot07>(entity, &geo_desc, &mut geoloader.loader_07,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot08, AssetResVBSlot08>(entity, &geo_desc, &mut geoloader.loader_08,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-
-        // init_slot::<AssetDescVBSlot09, AssetResVBSlot09>(entity, &geo_desc, &mut geoloader.loader_09,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot10, AssetResVBSlot10>(entity, &geo_desc, &mut geoloader.loader_10,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot11, AssetResVBSlot11>(entity, &geo_desc, &mut geoloader.loader_11,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-        // init_slot::<AssetDescVBSlot12, AssetResVBSlot12>(entity, &geo_desc, &mut geoloader.loader_12,  &mut vb_data_map, &asset_mgr,  &mut geocommands,  &mut instanceallocator);
-
-        // log::error!(">>>>  GeometryDesc ");
-        geocommands.insert(geo_desc);
-        // let instance_code = EVerticeExtendCode(EVerticeExtendCode::NONE + instancestate);
-        // geocommands.insert(EVerticeExtendCodeComp(instance_code));
-        
+        let mut indicesres = AssetResBufferIndicesComp(None);
         if let Some(indices_desc) = indices_desc {
             if let Some(data) = asset_mgr.get(&indices_desc.buffer.asset_u64()) {
-                // log::warn!("Indice Buffer Ok!");
-                geocommands.insert(AssetResBufferIndices::from(EVerticesBufferUsage::Other(data)));
+                indicesres.0 = Some(AssetResBufferIndices::from(EVerticesBufferUsage::Other(data)));
+                comp6.0 = Some(indices_desc.buffer.clone());
             } else {
                 geoloader.loader_indices.request(entity, &indices_desc.buffer, None, &mut vb_data_map);
             }
-        } else {
-            geocommands.remove::<AssetResBufferIndices>();
         }
+
+        let bundle = (
+            comp1,
+            geo_desc,
+            (comp2, comp3, comp4, comp5, comp6, desclist, keyslist, datalist),
+            indicesres,
+            instacned,
+            GeometryResourceHash(hasher.finish()),
+        );
+        geocommands.insert(bundle);
+        // cmdgeo.alter(entity, bundle);
     });
 }
 
@@ -187,53 +133,39 @@ impl ActionVertexBuffer {
     }
 }
 
-pub type GeometryBundle = (
-    EntityBundle,
-    (
-        VertexBufferLayoutsComp,
-        MeshID,
-        RenderGeometryComp,
-    )
+pub type GeometryInitBundle = (
+    BundleEntity,
+    VertexBufferLayoutsComp,
+    MeshID,
+    RenderGeometryComp,
+    IndicesBufferDescComp,
+    AssetKeyBufferIndices,
 );
 
 pub struct ActionGeometry;
 impl ActionGeometry {
     pub fn init(
-        cmds: &mut EntityCommands,
         vertex_desc: &Vec<VertexBufferDesc>,
         indices_desc: Option<IndicesBufferDesc>,
         id_mesh: Entity,
-    ) {
-        // log::warn!("{:?}", vertex_desc);
-        cmds.insert(
-            (
-                ActionEntity::init(),
-                VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)),
-                MeshID(id_mesh),
-                RenderGeometryComp::default(),
-            )
-        );
-        if let Some(indices_desc) = indices_desc {
-            cmds.insert(indices_desc);
-        } else {
-            cmds.remove::<IndicesBufferDesc>();
-        }
+    ) -> GeometryInitBundle {
+        (
+            ActionEntity::init(),
+            VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)),
+            MeshID(id_mesh),
+            RenderGeometryComp::default(),
+            IndicesBufferDescComp(indices_desc),
+            AssetKeyBufferIndices(None),
+        )
     }
 }
 
 fn init_slot
-// <
-//     D: TVertexBufferUseInfo + Component,
-//     D1: From<EVerticesBufferUsage> + Component,
-// >
 (
-    // id_geo: ObjectID,
     geodesc: &GeometryDesc,
-    // loader: &mut VertexBufferLoader<ObjectID, D1>,
-    vb_data_map: &mut SingleVertexBufferDataMap,
     asset_mgr: &ShareAssetMgr<EVertexBufferRange>,
-    commands: &mut EntityCommands,
     instanceallocator: &mut InstanceBufferAllocator,
+    instancecomp: &mut InstancedInfoComp,
     // instancestate: u32,
     slot_index: usize,
 ) -> Option<(VertexBufferDesc, Option<EVerticesBufferUsage>)> {
@@ -245,19 +177,14 @@ fn init_slot
             if let Some(data) = asset_mgr.get(&desc.key.asset_u64()) {
                 // log::warn!("Vertex Buffer Ok!");
                 buffer = Some(EVerticesBufferUsage::Other(data));
-                // commands.insert(D1::from());
-            // } else {
-            //     loader.request(id_geo, &desc.key, None, vb_data_map);
             }
         } else {
             let info = InstancedInfo::new(desc.stride() as u32, EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             // log::warn!("Geometry Instance: {:?}", EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             let data = instanceallocator.instance_initial_buffer();
             buffer = Some(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2))));
-            // commands.insert(D1::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))));
-            commands.insert(info);
+            instancecomp.0 = Some(info);
         }
-        // commands.insert(D::from(desc));
         Some((desc, buffer))
     } else {
         None

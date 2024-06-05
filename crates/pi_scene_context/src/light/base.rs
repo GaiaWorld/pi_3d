@@ -29,16 +29,16 @@ pub enum StageLighting {
 }
 
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct DirectLight;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct PointLight;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SpotLight;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct HemisphericLight;
 
 // pub struct 

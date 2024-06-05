@@ -11,8 +11,35 @@ use crate::{
 
 use super::base::*;
 
+#[cfg(feature = "use_bevy")]
 struct SceneBoundingFilter<'a, 'w, 's>(pub &'a Query<'w, 's, (&'static GlobalEnable, Option<&'static InstanceSourceRefs>), With<AbstructMesh>>, pub &'a XHashSet<Entity>);
+#[cfg(feature = "use_bevy")]
 impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
+    fn filter(&self, entity: Entity) -> bool {
+        if self.1.contains(&entity) {
+            if let Ok((enable, instances)) = self.0.get(entity) {
+                if let Some(instances) = instances {
+                    if instances.len() > 0 {
+                        true
+                    } else {
+                        enable.0
+                    }
+                } else {
+                    enable.0
+                }
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
+}
+
+#[cfg(not(feature = "use_bevy"))]
+struct SceneBoundingFilter<'a, 'w>(pub &'a Query<'w, (&'static GlobalEnable, Option<&'static InstanceSourceRefs>), With<AbstructMesh>>, pub &'a XHashSet<Entity>);
+#[cfg(not(feature = "use_bevy"))]
+impl<'a, 'w> TFilter for SceneBoundingFilter<'a, 'w> {
     fn filter(&self, entity: Entity) -> bool {
         if self.1.contains(&entity) {
             if let Ok((enable, instances)) = self.0.get(entity) {
@@ -177,7 +204,7 @@ pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProj
         );
     });
 
-    performance.culling_time((pi_time::Instant::now() - time1).as_micros() as u32);
+    // performance.culling_time((pi_time::Instant::now() - time1).as_micros() as u32);
     
     // log::debug!("SysModelListAfterCullingTick: {:?}", pi_time::Instant::now() - time1);
 }

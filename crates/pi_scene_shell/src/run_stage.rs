@@ -1,7 +1,5 @@
+use crate::ecs::*;
 
-
-use bevy_ecs::prelude::*;
-use bevy_app::prelude::{Plugin, Update};
 use pi_bevy_render_plugin::{PiRenderSystemSet, FrameState, should_run};
 
 use crate::prelude::{EngineInstant, ErrorRecord};
@@ -132,7 +130,7 @@ pub enum ERunStageChap {
 
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
-    fn build(&self, app: &mut bevy_app::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.configure_set(Update, ERunStageChap::New);
         app.configure_set(Update, ERunStageChap::Initial.after(ERunStageChap::New));
         app.configure_set(Update, ERunStageChap::_InitialApply.after(ERunStageChap::Initial));
@@ -147,8 +145,11 @@ impl Plugin for PluginRunstage {
 
         app.insert_resource(RunState3D::default());
 
-        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
-        app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
+#[cfg(feature = "use_bevy")]
+{
+    app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
+    app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
+}
 
         app.insert_resource(RunSystemRecord::default());
         app.add_systems(Update, sys_reset_system_record.in_set(ERunStageChap::StateCheck));
@@ -192,17 +193,19 @@ impl RunState3D {
 }
 
 pub fn should_run_with_lighting(
-    state: Res<FrameState>,
+    // state: Res<FrameState>,
     state3d: Res<RunState3D>,
 ) -> bool {
-    should_run(state) && (state3d.0 & RunState3D::USE_LIGHTING) == RunState3D::USE_LIGHTING
+    // should_run(state) && 
+    (state3d.0 & RunState3D::USE_LIGHTING) == RunState3D::USE_LIGHTING
 }
 
 pub fn should_run_with_animation(
-    state: Res<FrameState>,
+    // state: Res<FrameState>,
     state3d: Res<RunState3D>,
 ) -> bool {
-    should_run(state) && (state3d.0 & RunState3D::ANIMATION) == RunState3D::ANIMATION
+    // should_run(state) && 
+    (state3d.0 & RunState3D::ANIMATION) == RunState3D::ANIMATION
 }
 
 #[derive(Default, Resource)]

@@ -30,7 +30,7 @@ pub type ShadowGeneratorBundle = (
         ShadowAngle,
         SceneID
     ),
-    EntityBundle,
+    BundleEntity,
     ViewerBundle,
 );
 

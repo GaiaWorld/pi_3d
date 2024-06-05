@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::{iparticle_system_config::{
     TSHAPE_ARC_MODE_BURST_SPREAD, TSHAPE_ARC_MODE_LOOP, TSHAPE_ARC_MODE_PING_PONG,
     TSHAPE_ARC_MODE_RANDOM,
@@ -40,6 +42,11 @@ impl ShapeEmitter {
             spherize_direction: 0.,
             randomize_position: 0.,
         }
+    }
+}
+impl Default for ShapeEmitter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -89,7 +96,11 @@ impl TypeShapeEmitter {
         (self.fn_position)(&self, position_to_update, _emission_loop, _emission_progress, _emission_index, _emission_total, random);
     }
 }
-
+impl Default for TypeShapeEmitter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 /**
  * Shape emitter represents a volume emitting particles.
  * This is the responsibility of the implementation to define the volume shape like cone/sphere/box.
@@ -184,8 +195,9 @@ impl Default for EShapeEmitterArcMode {
 /**
  * 形状发射器创建模式
  */
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Default)]
 pub enum EShapeEmitterDirectionMode {
+    #[default]
     Unity = 0,
 }
 

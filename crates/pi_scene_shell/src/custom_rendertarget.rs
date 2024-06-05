@@ -1,4 +1,5 @@
-use bevy_ecs::system::Resource;
+use crate::ecs::*;
+
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator};
 use pi_render::{components::view::target_alloc::{TextureDescriptor, ShareTargetView, TargetDescriptor}, renderer::{sampler::{BindDataSampler, KeySampler, SamplerRes}}, rhi::device::RenderDevice};

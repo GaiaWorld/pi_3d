@@ -18,6 +18,8 @@ pub fn sys_create_skin(
     mut dynbuffer: ResMut<ResBindBufferAllocator>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut skinlinked: Query<&mut SkeletonID>,
+    // mut alter: Alter<(), (), SkeletonBundle, ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
         let bone_count = bones.len();
@@ -27,13 +29,15 @@ pub fn sys_create_skin(
         match Skeleton::new(root, bones.clone(), mode, &device, &mut dynbuffer, cachedata) {
             Some(skeleton) => {
                 bones.iter().for_each(|id_bone| {
-                    if let Some(mut cmd) = commands.get_entity(id_bone.clone()) {
-                        cmd.insert(SkeletonID(id_skin));
+                    if let Ok(mut skinlinked) = skinlinked.get_mut(id_bone.clone()) {
+                        skinlinked.0 = Some(id_skin);
                     }
                 });
 
                 if let Some(mut cmd) = commands.get_entity(id_skin) {
-                    cmd.insert(ActionSkeleton::init(skeleton)) ;
+                    let bundle = ActionSkeleton::init(skeleton);
+                    cmd.insert(bundle) ;
+                    // alter.alter(id_skin, bundle);
                 }
             },
             None => {
@@ -51,14 +55,17 @@ pub fn sys_act_skin_use(
     mut skins: Query<(&mut Skeleton, &mut SkeletonRefs, &mut DirtySkeletonRefs)>,
     mut meshes: Query<&mut BindSkinValue>,
     mut commands: Commands,
+    mut skinlinks: Query<&mut SkeletonID>,
 ) {
     cmds.drain().drain(..).for_each(|ops| {
         match ops {
             OpsSkinUse::Use(entity, skin) => {
                 if let (Ok(mut bind), Ok((skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
-                    *bind = BindSkinValue(Some(skeleton.bind.clone()));
-                    commands.entity(entity).insert(SkeletonID(skin));
-                    // log::warn!("Skinn OKKKKKKKKKKKK");
+                    *bind = BindSkinValue(Some(skeleton.bind.as_ref().unwrap().clone()));
+                    if let Ok(mut skinlinked) = skinlinks.get_mut(entity) {
+                        skinlinked.0 = Some(skin);
+                    }
+
                     if skeletonrefs.insert(entity) {
                         *flag = DirtySkeletonRefs::default();
                     }
@@ -83,6 +90,7 @@ pub fn sys_create_bone(
     mut cmds: ResMut<ActionListBoneCreate>,
     mut commands: Commands,
     empty: Res<SingleEmptyEntity>,
+    // mut alter: Alter<(), (), BoneBoundle, ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene)| {
         let mut bonecmd = if let Some(cmd) = commands.get_entity(bone) {
@@ -90,7 +98,9 @@ pub fn sys_create_bone(
         } else {
             return;
         };
-        bonecmd.insert(ActionBone::init(&empty, parent, scene));
+        let bundle = ActionBone::init(&empty, parent, scene);
+        bonecmd.insert(bundle);
+        // alter.alter(bone, bundle);
     });
 }
 
@@ -102,8 +112,10 @@ pub fn sys_act_bone_pose(
     cmds.drain().drain(..).for_each(|OpsBonePose(bone, matrix)| {
         if let Ok((skeleton, mut basematrix)) = bones.get_mut(bone) {
             *basematrix = BoneBaseMatrix(matrix);
-            if let Ok(mut flag) = skins.get_mut(skeleton.0) {
-                *flag = SkeletonInitBaseMatrix;
+            if let Some(idskin) = skeleton.0 {
+                if let Ok(mut flag) = skins.get_mut(idskin) {
+                    *flag = SkeletonInitBaseMatrix;
+                }
             }
         } else {
             cmds.push(OpsBonePose::ops(bone, matrix));
@@ -136,7 +148,7 @@ impl ActionSkeleton {
 
 pub type BoneBoundle = (
     (
-        BoneParent, BoneAbsolute, BoneAbsoluteInv, BoneDifferenceMatrix, BoneMatrix, BoneBaseMatrix
+        BoneParent, BoneAbsolute, BoneAbsoluteInv, BoneDifferenceMatrix, BoneMatrix, BoneBaseMatrix, SkeletonID
     ),
     TransformNodeBundle
 );
@@ -156,7 +168,7 @@ impl ActionBone {
                 BoneDifferenceMatrix(Matrix::identity()),
                 BoneMatrix(Matrix::identity()),
                 BoneBaseMatrix(Matrix::identity()),
-                // .insert(SkeletonID(empty.id()))
+                SkeletonID(None)
             ),
             ActionTransformNode::init(scene)
         )

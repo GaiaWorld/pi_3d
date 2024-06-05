@@ -12,6 +12,7 @@ use super::transform_node::*;
 pub fn sys_create_transform_node(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
     mut commands: Commands,
+    // mut alter: Alter<(), (), (TransformNode, TransformNodeBundle), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity)| {
         let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
@@ -19,10 +20,12 @@ pub fn sys_create_transform_node(
         } else {
             return;
         };
-        transformnode.insert((
+        let bundle = (
             TransformNode,
             ActionTransformNode::init(scene),
-        ));
+        );
+        transformnode.insert(bundle);
+        // alter.alter(entity, bundle);
     });
 }
 
@@ -99,17 +102,18 @@ pub fn sys_act_local(
     });
 }
 
-pub type TreeNodeBundle = (Down, Up, Layer, Enable, RecordEnable, GlobalEnable);
+pub type BundleTreeNode = (Down, Up, Layer, Enable, RecordEnable, GlobalEnable);
+pub type BundleTransform = (
+    TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
+    RecordLocalPosition, RecordLocalScaling, RecordLocalRotationQuaternion, RecordLocalEulerAngles,
+    LocalRotation, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp, CullingFlag
+);
 
 pub type TransformNodeBundle = (
-    (DisposeReady, DisposeCan),
+    BundleEntity,
     SceneID,
-    TreeNodeBundle,
-    (
-        TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
-        RecordLocalPosition, RecordLocalScaling, RecordLocalRotationQuaternion, RecordLocalEulerAngles,
-        LocalRotation, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp, CullingFlag
-    )
+    BundleTreeNode,
+    BundleTransform,
 );
 
 pub struct ActionTransformNode;
@@ -146,7 +150,7 @@ impl ActionTransformNode {
         )
     }
 
-    pub(crate) fn init_for_tree() -> TreeNodeBundle {
+    pub(crate) fn init_for_tree() -> BundleTreeNode {
         // log::debug!("init_for_tree====={:?}", commands.id());
         (
             Down::default(),

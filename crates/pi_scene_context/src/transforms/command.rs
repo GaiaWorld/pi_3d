@@ -43,7 +43,7 @@ impl OpsTransformNodeLocalRotationQuaternion {
 }
 pub type ActionListTransformNodeLocalRotationQuaternion = ActionList<OpsTransformNodeLocalRotationQuaternion>;
 
-pub struct BundleTransformNode(
+pub type BundleTransformNode = (
     Enable,
     TransformNodeDirty,
     CullingFlag,

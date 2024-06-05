@@ -50,7 +50,10 @@ pub struct ActionSetCamera<'w> {
     pub forceinclude: ResMut<'w, ActionListViewerForceInclude>,
 }
 
+#[cfg(feature = "use_bevy")]
 pub type StateCameraQuery = QueryState<(&'static Camera, &'static ModelList, &'static ModelListAfterCulling)>;
+#[cfg(not(feature = "use_bevy"))]
+pub type StateCameraQuery = QueryState<(&'static Camera, &'static ModelList, &'static ModelListAfterCulling), ()>;
 
 pub fn sys_state_camera(
     mut state: ResMut<StateCamera>,

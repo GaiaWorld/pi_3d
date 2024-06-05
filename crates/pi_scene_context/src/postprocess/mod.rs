@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Component, Default)]
 pub struct Postprocess {
 
 }
