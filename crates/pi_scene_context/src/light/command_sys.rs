@@ -2,7 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    layer_mask::prelude::*, shadow::prelude::LightLinkedShadowID, transforms::command_sys::*, viewer::prelude::ViewerDistanceCompute
+    layer_mask::prelude::*, prelude::*, shadow::prelude::LightLinkedShadowID, transforms::command_sys::*, viewer::prelude::ViewerDistanceCompute
 };
 
 use super::{
@@ -16,20 +16,39 @@ pub fn sys_create_light(
     mut commands: Commands,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
+    mut scenes: Query<(&mut SceneDirectLightsQueue, &mut ScenePointLightsQueue, &mut SceneSpotLightsQueue, &mut SceneHemiLightsQueue, &mut SceneLightingInfosDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity, ltype)| {
-        let mut lightcmd = if let Some(cmd) = commands.get_entity(entity) {
-            cmd
+        let (mut lightcmd, itemidx) = if let (Some(cmd), Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi, mut dirty))) = (commands.get_entity(entity), scenes.get_mut(scene)) {
+            let itemidx = match ltype {
+                ELightType::Direct => {
+                    *dirty = SceneLightingInfosDirty;
+                    queuedirect.0.add(entity)
+                },
+                ELightType::Spot => {
+                    *dirty = SceneLightingInfosDirty;
+                    queuespot.0.add(entity)
+                },
+                ELightType::Point => {
+                    *dirty = SceneLightingInfosDirty;
+                    queuepoint.0.add(entity)
+                },
+                ELightType::Hemispheric => {
+                    *dirty = SceneLightingInfosDirty;
+                    queuehemi.0.add(entity)
+                }
+            };
+            (cmd, itemidx)
         } else {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
         };
 
         match ltype {
-            ELightType::Direct =>       lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_direct_light())),
-            ELightType::Spot =>         lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_spot_light())),
-            ELightType::Point =>        lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_point_light())),
-            ELightType::Hemispheric =>  lightcmd.insert((ActionTransformNode::init(scene), ActionLight::as_hemi_light())),
+            ELightType::Direct =>       lightcmd.insert((itemidx, ActionTransformNode::init(scene), ActionLight::as_direct_light())),
+            ELightType::Spot =>         lightcmd.insert((itemidx, ActionTransformNode::init(scene), ActionLight::as_spot_light())),
+            ELightType::Point =>        lightcmd.insert((itemidx, ActionTransformNode::init(scene), ActionLight::as_point_light())),
+            ELightType::Hemispheric =>  lightcmd.insert((itemidx, ActionTransformNode::init(scene), ActionLight::as_hemi_light())),
         };
     });
 }

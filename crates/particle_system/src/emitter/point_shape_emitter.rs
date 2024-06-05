@@ -11,6 +11,7 @@ use super::{
 /**
  * 点发射器
  */
+#[derive(Default)]
 pub struct PointShapeEmitter {
     _max_z: f32,
     /**
@@ -210,71 +211,3 @@ impl IShapeEmitterType for PointShapeEmitter {
         self.base.randomize_position.clone()
     }
 }
-
-// export class PointShapeEmitter implements IShapeEmitterType {
-
-//     public rotation: BABYLON.Vector3 = new BABYLON.Vector3(0, 0, 0);
-//     public position: BABYLON.Vector3 = new BABYLON.Vector3(0, 0, 0);
-//     public scaling: BABYLON.Vector3 = new BABYLON.Vector3(1, 1, 1);
-//     public localMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
-
-//     alignDirection: boolean = false;
-//     randomizeDirection: number = 0;
-//     spherizeDirection: number = 0;
-//     randomizePosition: number = 0;
-//     /**
-//      *
-//      */
-//     public startDirectionFunction(worldMatrix: BABYLON.Matrix, directionToUpdate: BABYLON.Vector3, position: BABYLON.Vector3, localPosition: BABYLON.Vector3, isLocal: boolean): void {
-//         let randX = rng.gen_range(self.direction1[0], self.direction2[0]);
-//         let randY = rng.gen_range(self.direction1[1], self.direction2[1]);
-//         let randZ = rng.gen_range(self.direction1[2], self.direction2[2]);
-
-//         if (isLocal) {
-//             directionToUpdate.copyFromFloats(randX, randY, randZ);
-//         }
-//         else {
-//             BABYLON.Vector3.TransformNormalFromFloatsToRef(randX, randY, randZ, worldMatrix, directionToUpdate);
-//         }
-//     }
-
-//     /**
-//      * Called by the particle System when the position is computed for the created particle.
-//      * @param worldMatrix is the world matrix of the particle system
-//      * @param positionToUpdate is the position vector to update with the result
-//      * @param particle is the particle we are computed the position for
-//      * @param isLocal defines if the position should be set in local space
-//      */
-//     startPositionFunction(worldMatrix: BABYLON.Matrix, positionToUpdate: BABYLON.Vector3, emissionLoop: number, emissionProgress: number, emissionIndex: number, emissionTotal: number, isLocal: boolean): void {
-//         if (isLocal) {
-//             positionToUpdate.copyFromFloats(0, 0, 0);
-//         }
-//         else {
-//             BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(0, 0, 0, worldMatrix, positionToUpdate);
-//         }
-//     }
-
-//     /**
-//      * Clones the current emitter and returns a copy of it
-//      * @returns the new emitter
-//      */
-//     public clone(): PointShapeEmitter {
-//         let newOne = new PointShapeEmitter();
-
-//         BABYLON.DeepCopier.DeepCopy(self, newOne);
-
-//         return newOne;
-//     }
-
-//     /**
-//      * @returns a string containing the class name
-//      */
-//     public getClassName(): string {
-//         return "PointParticleEmitter";
-//     }
-
-//     public dispose() {
-//         // self.direction1 = undefined;
-//         // self.direction2 = undefined;
-//     }
-// }

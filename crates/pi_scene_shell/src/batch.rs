@@ -1,4 +1,4 @@
-use bevy_ecs::component::Component;
+use crate::ecs::*;
 
 
 pub struct BatchParam {

@@ -11,38 +11,6 @@ use crate::{
 
 use super::{spot::SpotLightAngle, hemisphere::HemiGrounds, base::*};
 
-pub fn sys_light_index_create(
-    mut commands: Commands,
-    items: Query<(Entity, &SceneID, Option<&DirectLight>, Option<&PointLight>, Option<&SpotLight>, Option<&HemisphericLight>), Or<(Added<DirectLight>, Added<PointLight>, Added<SpotLight>, Added<HemisphericLight>)>>,
-    mut scenes: Query<(&mut SceneDirectLightsQueue, &mut ScenePointLightsQueue, &mut SceneSpotLightsQueue, &mut SceneHemiLightsQueue, &mut SceneLightingInfosDirty)>,
-) {
-
-    items.iter().for_each(|(entity, idscene, direct, point, spot, hemi)| {
-
-        if let Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi, mut dirty)) = scenes.get_mut(idscene.0) {
-
-            let mut cmd = commands.entity(entity);
-            if direct.is_some() {
-                cmd.insert(queuedirect.0.add(entity));
-                *dirty = SceneLightingInfosDirty;
-            }
-            if point.is_some() {
-                // log::warn!("Add Point !!");
-                cmd.insert(queuepoint.0.add(entity));
-                *dirty = SceneLightingInfosDirty;
-            }
-            if spot.is_some() {
-                cmd.insert(queuespot.0.add(entity));
-                *dirty = SceneLightingInfosDirty;
-            }
-            if hemi.is_some() {
-                cmd.insert(queuehemi.0.add(entity));
-                *dirty = SceneLightingInfosDirty;
-            }
-        }
-    });
-}
-
 pub fn sys_direct_light_update(
     items: Query<
         (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightParam, &LayerMask, &GlobalEnable, &GlobalMatrix),
@@ -55,7 +23,7 @@ pub fn sys_direct_light_update(
             let mut gdirection = Vector3::zeros();
             CoordinateSytem3::transform_normal(&direction.0, &wm.matrix, &mut gdirection);
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
-            info.0.direct_light_data(lidx.val(), enabled.0, layer.0 as f32, gdirection.x, gdirection.y, gdirection.z, r, g, b)
+            info.0.as_ref().unwrap().direct_light_data(lidx.val(), enabled.0, layer.0 as f32, gdirection.x, gdirection.y, gdirection.z, r, g, b)
         }
     });
 }
@@ -71,7 +39,7 @@ pub fn sys_point_light_update(
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
-            info.0.point_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius))
+            info.0.as_ref().unwrap().point_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius))
         }
     });
 }
@@ -87,7 +55,7 @@ pub fn sys_spot_light_update(
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
-            info.0.spot_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius), angle.in_value, angle.out_value, d.0.x, d.0.y, d.0.z);
+            info.0.as_ref().unwrap().spot_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius), angle.in_value, angle.out_value, d.0.x, d.0.y, d.0.z);
         }
     });
 }
@@ -102,7 +70,7 @@ pub fn sys_hemi_light_update(
     items.iter().for_each(|(_hemi, idscene, lidx, color, transform, layer, enabled)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
-            info.0.hemi_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, color.color.x, color.color.y, color.color.z, 1., 1., 0., 0., 0., 0.);
+            info.0.as_ref().unwrap().hemi_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, color.color.x, color.color.y, color.color.z, 1., 1., 0., 0., 0., 0.);
         }
     });
 }

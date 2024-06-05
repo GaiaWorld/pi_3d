@@ -1,8 +1,6 @@
-// use std::mem::replace;
-// use pi_bevy_ecs_extend::prelude::EntityTreeMut;
+use crate::ecs::*;
+
 use crate::prelude::*;
-use bevy_app::{App, Plugin, Update};
-use bevy_ecs::{prelude::*, system::EntityCommands};
 
 // #[derive(Debug, Clone, Copy, Default)]
 // pub struct GameObject;
@@ -27,11 +25,11 @@ impl Default for DisposeCan {
     }
 }
 
-pub type EntityBundle = (DisposeReady, DisposeCan);
+pub type BundleEntity = (DisposeReady, DisposeCan);
 
 pub struct ActionEntity;
 impl ActionEntity {
-    pub fn init() -> EntityBundle {
+    pub fn init() -> BundleEntity {
         (DisposeReady::default(), DisposeCan::default())
     }
 }

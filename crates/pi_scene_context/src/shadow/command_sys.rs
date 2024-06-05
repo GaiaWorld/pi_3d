@@ -20,7 +20,9 @@ use super::{
 pub fn sys_create_shadow_generator(
     mut commands: Commands,
     mut cmds: ResMut<ActionListShadowGenerator>,
-    mut direct_lights: Query<(&SceneID, &GlobalEnable, &mut LightLinkedShadowID, Option<&DirectLight>, Option<&SpotLight>, &LayerMask, &ViewerDistanceCompute), Or<(With<DirectLight>, With<SpotLight>)>>,
+    directlights: Query<(), With<DirectLight>>,
+    spotlights: Query<(), With<SpotLight>>,
+    mut lights: Query<(&SceneID, &GlobalEnable, &mut LightLinkedShadowID, &LayerMask, &ViewerDistanceCompute), ()>,
     mut scene_shadow: Query<&mut SceneShadowQueue>,
     mut dynallocator: ResMut<ResBindBufferAllocator> ,
     mut matcreatecmds: ResMut<ActionListMaterialCreate>,
@@ -30,49 +32,55 @@ pub fn sys_create_shadow_generator(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     cmds.drain().drain(..).for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
-        if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, isdirect, issopt, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), direct_lights.get_mut(light)) {
+        if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), lights.get_mut(light)) {
             let mat = commands.spawn_empty().id();
 
             let mut shadowcommands = if let Some(cmd) = commands.get_entity(entity) { cmd } else {
                 disposereadylist.push(OpsDisposeReadyForRef::ops(entity)); commands.entity(mat).despawn(); return;
             };
-
+            
+            if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
                 matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
                 matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
-
-                shadowcommands
-                .insert(
-                    (
-                        ActionShadow::as_shadow_generator(idscene.0, enabled.0),
-                        LinkedMaterialID(empty.id()),
-                        RendererID(entity),
-                        ShadowLayerMask(layermask.clone()),
-                        queueshadow.0.add(entity),
-                        ShadowCastPassTag(passtag),
-                        viewerdistance.clone(),
-                    )
-                );
                 
-                if isdirect.is_some() {
+                if directlights.contains(light) {
                     linkedshadow.0 = Some(entity);
                     
                     shadowcommands.insert((
+                        (
+                            ActionShadow::as_shadow_generator(idscene.0, enabled.0),
+                            LinkedMaterialID(empty.id()),
+                            RendererID(entity),
+                            ShadowLayerMask(layermask.clone()),
+                            queueshadow.0.add(entity),
+                            ShadowCastPassTag(passtag),
+                            viewerdistance.clone(),
+                            bindviewer,
+                        ),
                         ShadowLinkedLightID(light),
                         DirectionalShadowDirection::default(),
                         DirectionalShadowProjection::default(),
                     ));
-                }
-                if issopt.is_some() {
+                } else if spotlights.contains(light) {
                     linkedshadow.0 = Some(entity);
                     shadowcommands.insert((
+                        (
+                            ActionShadow::as_shadow_generator(idscene.0, enabled.0),
+                            LinkedMaterialID(empty.id()),
+                            RendererID(entity),
+                            ShadowLayerMask(layermask.clone()),
+                            queueshadow.0.add(entity),
+                            ShadowCastPassTag(passtag),
+                            viewerdistance.clone(),
+                            bindviewer,
+                        ),
                         ShadowLinkedLightID(light),
                         DirectionalShadowDirection::default(),
                         SpotShadowProjection::default(),
                     ));
                 }
-    
-                if let Some(bindviewer) = BindViewer::new(&mut dynallocator) { shadowcommands.insert(bindviewer); }
             }
+        }
     });
 }
 

@@ -15,9 +15,10 @@ pi_hash         = "0.1"
 pi_assets       = "0.13"
 pi_atom         = { version="0.5", features = ["serde"] }
 
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
+bevy_ecs        = { version="0.11", default-features = false }
+
+wgpu            = {version = "0.1", registry = "yn", package="pi_wgpu" }
 naga            = { version = "0.19", features = [ "glsl-in", ] }
-# bevy            = { version="0.11", default-features = false }
 
 log             = "0.4"
 

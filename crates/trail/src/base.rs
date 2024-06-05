@@ -5,34 +5,35 @@ use pi_scene_math::{*, vector::TToolVector3};
 use pi_wy_rng::WyRng;
 
 #[derive(Component)]
-pub struct ColorOverTrail(pub Color4Gradient);
+pub struct TrailParam {
+    pub size: f32,
+    pub color: Vector4,
+    pub age_control: u32,
+    pub linked: Entity,
+    pub world_place: bool,
+    pub minimun_vertex_distance: Number,
+    pub wildth_over_trail: FloatInterpolation,
+    pub color_over_trail: Color4Gradient,
+}
+impl Default for TrailParam {
+    fn default() -> Self {
+        Self {
+            linked: Entity::from_bits(0),
+            ..Default::default()
+        }
+    }
+}
 
-#[derive(Component)]
-pub struct WidthOverTrail(pub FloatInterpolation);
-
-#[derive(Component)]
-pub struct TrailMinimunVertexDistance(pub Number);
-
-#[derive(Component)]
-pub struct TrailWorldPlace(pub bool);
-
-#[derive(Component)]
-pub struct TrailLinkedTransform(pub Entity);
-
-#[derive(Component)]
-pub struct TrailAgeControl(pub u32);
-
-#[derive(Component)]
-pub struct TrailColor(pub Vector4);
-
-#[derive(Component)]
-pub struct TrailSize(pub f32);
-
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct TrailRandom(pub WyRng);
 
 #[derive(Component)]
 pub struct TrailGeometry(pub Entity);
+impl Default for TrailGeometry {
+    fn default() -> Self {
+        Self(Entity::from_bits(0))
+    }
+}
 
 #[derive(Clone)]
 pub struct KeyPoint {
@@ -48,7 +49,7 @@ pub struct KeyPoint {
     pub color: Vector4,
 }
 
-#[derive(Default, Component)]
+#[derive(Component, Default)]
 pub struct TrailPoints(pub Vec<PathPoint>, pub Vec<Vector4>, pub Vec<Number>, pub bool);
 impl TrailPoints {
     pub fn reset(&mut self) {
@@ -221,7 +222,7 @@ impl TrailPoints {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct TrailBase {
     /// 启动时间点
     pub starttime: u32,

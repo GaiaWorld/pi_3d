@@ -15,13 +15,18 @@ pub trait TMaterial {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Component)]
 pub struct LinkedMaterialID (pub Entity);
+impl Default for LinkedMaterialID {
+    fn default() -> Self {
+        Self(Entity::from_bits(0))
+    }
+}
 impl TEntityRef for LinkedMaterialID {
     fn id(&self) -> Entity {
         self.0
     }
 }
 
-#[derive(Clone, Default, Component)]
+#[derive(Clone, Component, Default)]
 pub struct DirtyMaterialRefs;
 
 /// 材质被哪些实体使用

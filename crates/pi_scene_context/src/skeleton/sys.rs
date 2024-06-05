@@ -11,8 +11,10 @@ use super::{skeleton::*, bone::*};
         bones: Query<&SkeletonID, Changed<GlobalMatrix>>,
     ) {
         bones.iter().for_each(|skin| {
-            if let Ok(mut item) = skins.get_mut(skin.0) {
-                *item = SkeletonBonesDirty(true);
+            if let Some(idskin) = skin.0 {
+                if let Ok(mut item) = skins.get_mut(idskin) {
+                    *item = SkeletonBonesDirty(true);
+                }
             }
         });
     }
@@ -68,7 +70,7 @@ use super::{skeleton::*, bone::*};
                                 }
                             });
                             // log::warn!("skin_buffer_update");
-                            skel.bind.data().write_data(0, bytemuck::cast_slice(&data));
+                            skel.bind.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&data));
                         }
                     },
                     ESkinCode::RowTexture(_) => {
@@ -126,6 +128,7 @@ use super::{skeleton::*, bone::*};
                         // }
                         match tree.get_down(p_id) {
                             Some(node_children_head) => {
+                                // let node_children_head = node_children_head.head.0;
                                 let node_children_head = node_children_head.head.0;
                                 tree.iter(node_children_head).for_each(|entity| {
                                     calc_bone_one(

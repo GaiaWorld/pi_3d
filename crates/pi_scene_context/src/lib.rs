@@ -28,6 +28,7 @@ pub mod animation;
 pub mod pass;
 pub mod state;
 pub mod commands;
+pub mod sprites;
 pub mod prelude;
 
 pub fn bytes_write_to_memory(

@@ -1,4 +1,6 @@
 
+use std::default;
+
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
 
@@ -105,6 +107,11 @@ pub enum SceneBoundingPool {
     List(VecBoundingInfoCalc),
     QuadTree(),
     OctTree(BoundingOctTree),
+}
+impl Default for SceneBoundingPool {
+    fn default() -> Self {
+        Self::List(VecBoundingInfoCalc::default())
+    }
 }
 impl SceneBoundingPool {
     pub const MODE_LIST: u8 = 0;
@@ -213,6 +220,11 @@ impl SceneBoundingPool {
 pub struct BoundingBoxDisplay {
     pub mesh: Entity,
     pub display: bool,
+}
+impl Default for BoundingBoxDisplay {
+    fn default() -> Self {
+        Self { mesh: Entity::from_bits(0), display: false }
+    }
 }
 impl BoundingBoxDisplay {
     pub const ATTRIBUTE_MINIMUM: &'static str = "BoxMinimum";

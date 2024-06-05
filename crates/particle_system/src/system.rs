@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
-use pi_scene_context::{prelude::*, geometry::instance::{instanced_buffer::{InstancedInfo, InstanceBufferAllocator}, types::ModelInstanceAttributes}};
+use pi_scene_context::{geometry::instance::{instanced_buffer::InstancedInfoComp, types::ModelInstanceAttributes}, prelude::*};
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}};
 
 use crate::base::*;
@@ -56,7 +56,7 @@ pub fn sys_prewarm(
     )| {
         if let Ok((
             base, modifiers, overlifetime
-        )) = calculators.get(ids.calculator.0) {
+        )) = calculators.get(ids.calculator.as_ref().unwrap().0) {
             let delta_ms = 66 as u32;
 
             if state.0 && disposestate.0 == false && base.prewarm {
@@ -74,7 +74,7 @@ pub fn sys_prewarm(
                     fn_emission(base, &modifiers.emission, &mut random, &mut ids, &mut time, &mut emission, &mut randoms, &mut modifystate);
                     fn_emitmatrix(localscl, gmatrix, &ids, &mut emitmatrix, &mut abstransform, &global_position);
                     fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut locpos, &mut directions, &ids, &time, &randoms);
-                    if let (Ok(trailmodifier), Some(trails)) = (calculators_trail.get(ids.calculator.0), trails.as_deref_mut()) {
+                    if let (Ok(trailmodifier), Some(trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), trails.as_deref_mut()) {
                         fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut ages, &mut diewaittimes, Some(trailmodifier), Some(trails));
                     } else {
                         fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut ages, &mut diewaittimes, None, None);
@@ -162,19 +162,6 @@ pub fn fn_ids(
             ids.unactives.push(*idx);
         }
     });
-    // ids.dies.clone().drain(..).for_each(|idx| {
-    //     let age = ages.get(idx).unwrap();
-    //     let diewait = diewaittimes.0.get(idx).unwrap();
-    //     // log::warn!("Age: {:?}, Lifetime: {:?}", age.age, age.lifetime);
-    //     if age.age <= age.lifetime {
-    //         ids.actives.push(idx);
-    //     } else if age.age < age.lifetime + diewait {
-    //         ids.dies.push(idx);
-    //     } else {
-    //         ids.unactives.push(idx);
-    //     }
-    // });
-
     // log::warn!("actives: {:?}", ids.actives);
 }
 pub fn sys_emission(
@@ -185,7 +172,7 @@ pub fn sys_emission(
 ) {
     let time0 = pi_time::Instant::now();
     particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emissiondata, mut randoms, mut modifystate)| {
-        if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.0)) {
+        if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.as_ref().unwrap().0)) {
 
             let delta_ms = scenetime.delta_ms() as u32;
 
@@ -301,7 +288,7 @@ pub fn sys_start(
     )| {
         if time.running_delta_ms <= 0 { return; }
 
-        if let Ok(calculator) = calculators.get(ids.calculator.0) {
+        if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
             fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut locpos, &mut directions, &ids, &time, &randoms);
             // let emitter = &emitter.0;
             // let newids = &ids.newids;
@@ -309,7 +296,7 @@ pub fn sys_start(
 
             // locpos.start(newids, &mut directions, randoms, time, emitter, startspeed);
             
-            if let (Ok(trailmodifier), Ok(mut trails)) = (calculators_trail.get(ids.calculator.0), particle_sys_trail.get_mut(entity)) {
+            if let (Ok(trailmodifier), Ok(mut trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), particle_sys_trail.get_mut(entity)) {
                 fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut items_lifetime, &mut diewaittimes, Some(trailmodifier), Some(&mut trails));
             } else {
                 fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut items_lifetime, &mut diewaittimes, None, None);
@@ -322,7 +309,7 @@ pub fn sys_start(
             fn_start_color(&calculator.startcolor, ids, time, randoms, &mut items_color, &mut coloranduv.color);
             
         }
-        if let Ok(calculator) = calculators_overlifetime.get(ids.calculator.0) {
+        if let Ok(calculator) = calculators_overlifetime.get(ids.calculator.as_ref().unwrap().0) {
             if let Some(calculator) = &calculator.texturesheet { fn_start_texture_sheet(calculator, ids, randoms, &mut coloranduv.uv); }
         }
     });
@@ -332,31 +319,6 @@ pub fn sys_start(
     // log::warn!("emitter: {:?}", time1 - time);
 }
 
-// pub fn sys_emitter(
-//     calculators: Query<&ParticleCalculatorStartModifiers>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     // let time = pi_time::Instant::now();
-
-//     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut locpos, mut directions)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut locpos, &mut directions, &ids, &time, &randoms);
-//             // let emitter = &emitter.0;
-//             // let newids = &ids.newids;
-//             // // let activeids = &ids.actives;
-
-//             // locpos.start(newids, &mut directions, randoms, time, emitter, startspeed);
-//         }
-//     });
-    
-//     performance.sys_emitter = (pi_time::Instant::now() - time0).as_micros() as u32;
-//     // let time1 = pi_time::Instant::now();
-//     // log::warn!("emitter: {:?}", time1 - time);
-// }
 fn fn_emitter(
     emitter: &ParticleCalculatorShapeEmitter, startspeed: &ParticleCalculatorStartSpeed,
     locpos: &mut ParticleLocalPosition, directions: &mut ParticleDirection, ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom
@@ -368,36 +330,6 @@ fn fn_emitter(
     locpos.start(newids, directions, randoms, time, emitter, startspeed);
 }
 
-// pub fn sys_start_lifetime(
-//     calculators: Query<&ParticleCalculatorStartModifiers>,
-//     mut particle_sys: Query<(Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleAgeLifetime, &mut ParticleDieWaitTime), Changed<ParticleSystemModifyState>>,
-//     calculators_trail: Query<&ParticleCalculatorTrail>,
-//     mut particle_sys_trail: Query<&mut ParticleTrail>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(entity, ids, time, randoms, mut items_lifetime, mut diewaittimes)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let (Ok(trailmodifier), Ok(mut trails)) = (calculators_trail.get(ids.calculator.0), particle_sys_trail.get_mut(entity)) {
-//                 fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut items_lifetime, &mut diewaittimes, Some(trailmodifier), Some(&mut trails));
-//             } else {
-//                 fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut items_lifetime, &mut diewaittimes, None, None);
-//             }
-//             // let calculator = &calculator.0;
-//             // let newids = &ids.newids;
-//             // items.start(time, newids, calculator, randoms);
-
-//             // if let (Ok(trailmodifier), Ok(mut trails)) = (calculators_trail.get(ids.calculator.0), particle_sys_trail.get_mut(entity)) {
-//             //     trails.start(newids, &items, &mut diewaittimes.0, &randoms, time, &trailmodifier.0);
-//             // } else {
-//             //     diewaittimes.start(newids, &items, randoms, time, None);
-//             // }
-//         }
-//     });
-//     performance.sys_start_lifetime = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 fn fn_start_lifetime(
     calculator: &ParticleCalculatorStartLifetime, 
     ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom, items: &mut ParticleAgeLifetime, diewaittimes: &mut ParticleDieWaitTime,
@@ -407,32 +339,13 @@ fn fn_start_lifetime(
     let newids = &ids.newids;
     items.start(time, newids, calculator, randoms);
 
-    if let (Some(trailmodifier), Some(trails)) = (trailmodifier, trails) {
-        trails.start(newids, &items, &mut diewaittimes.0, &randoms, time, &trailmodifier.0);
+    if let (Some(ParticleCalculatorTrail(Some(trailmodifier))), Some(trails)) = (trailmodifier, trails) {
+        trails.start(newids, &items, &mut diewaittimes.0, &randoms, time, trailmodifier);
     } else {
         diewaittimes.start(newids, &items, randoms, time, None);
     }
 }
 
-// pub fn sys_start_size(
-//     calculators: Query<&ParticleCalculatorStartModifiers>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items_size, mut localscalings)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             fn_start_size(&calculator.startsize, ids, time, randoms, &mut items_size, &mut localscalings);
-//             // let calculator = &calculator.0;
-//             // let newids = &ids.newids;
-//             // // let activeids = &ids.actives;
-//             // items.start(newids, &mut localscalings, &randoms, time, calculator, );
-//         }
-//     });
-//     performance.sys_start_size = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 fn fn_start_size(
     calculator: &ParticleCalculatorStartSize,
     ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom, items: &mut ParticleStartScaling, localscalings: &mut ParticleLocalScaling
@@ -443,24 +356,6 @@ fn fn_start_size(
     items.start(newids, localscalings, &randoms, time, calculator, );
 }
 
-// pub fn sys_start_rotation(
-//     calculators: Query<&ParticleCalculatorStartModifiers>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items_rotation)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             fn_start_rotation(&calculator.startrotation, ids, time, randoms, &mut items_rotation);
-//             // let calculator = &calculator.0;
-//             // let newids = &ids.newids;
-//             // items.start(newids, &randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_start_rotation = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_start_rotation(
     calculator: &ParticleCalculatorStartRotation,
     ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom, items: &mut ParticleLocalRotation
@@ -470,24 +365,6 @@ pub fn fn_start_rotation(
     items.start(newids, &randoms, time, calculator);
 }
 
-// pub fn sys_start_color(
-//     calculators: Query<&ParticleCalculatorStartModifiers>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleStartColor, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut items_color, mut coloranduv)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             fn_start_color(&calculator.startcolor, ids, time, randoms, &mut items_color, &mut coloranduv.color);
-//             // let calculator = &calculator.0;
-//             // let newids = &ids.newids;
-//             // items.start(newids, &mut colors, &randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_start_color = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_start_color(
     calculator: &ParticleCalculatorStartColor,
     ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom, items: &mut ParticleStartColor, colors: &mut ParticleColor
@@ -497,25 +374,6 @@ pub fn fn_start_color(
     items.start(newids, &mut colors.0, &randoms, time, calculator);
 }
 
-// pub fn sys_start_texture_sheet(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, randoms, mut coloranduv)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-            
-//             if let Some(calculator) = &calculator.texturesheet { fn_start_texture_sheet(calculator, ids, randoms, &mut coloranduv.uv); }
-//             // let calculator = &calculator.0;
-//             // let newids = &ids.newids;
-//             // items.start(newids, &randoms, calculator);
-//         }
-//     });
-//     performance.sys_start_texture_sheet = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_start_texture_sheet(
     calculator: &ParticleCalculatorTextureSheet,
     ids: &ParticleIDs, randoms: &ParticleBaseRandom, items: &mut ParticleUV
@@ -558,11 +416,11 @@ pub fn sys_over_lifetime(
     )| {
         if time.running_delta_ms <= 0 { return; }
 
-        if let Ok(calculator) = calculators.get(ids.calculator.0) {
+        if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
             fn_gravity(&calculator.gravity, ages, ids, time, emitmatrixs, randoms, &mut gravities);
         }
 
-        if let Ok(calculator) = calculators_overlifetime.get(ids.calculator.0) {
+        if let Ok(calculator) = calculators_overlifetime.get(ids.calculator.as_ref().unwrap().0) {
             fn_force_over_life_time(&calculator.force, ids, time, ages, emitmatrixs, randoms, &mut items_force);
             fn_orbit_over_life_time(&calculator.orbitoffset, &calculator.orbitvelocity, &calculator.orbitradial, ids, ages, randoms, &mut items_orbitoff, &mut items_orbit_velocity, &mut items_orbitradial);
             if let Some(calculator) = &calculator.color { fn_color_over_life_time(calculator, ids, ages, randoms, startcolors, &mut items_coloranduv.color); }
@@ -577,44 +435,10 @@ pub fn sys_over_lifetime(
     performance.sys_gravity = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
-// pub fn sys_gravity(
-//     calculators: Query<&ParticleCalculatorStartModifiers>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleEmitMatrix, &ParticleBaseRandom, &mut ParticleGravityFactor), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, emitmatrixs, randoms, mut items_gravity)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             fn_gravity(&calculator.gravity, ages, ids, time, emitmatrixs, randoms, &mut items_gravity);
-//         }
-//     });
-//     performance.sys_gravity = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 fn fn_gravity(calculator: &ParticleCalculatorGravity, ages: &ParticleAgeLifetime, ids: &ParticleIDs, time: &ParticleSystemTime, emitmatrixs: &ParticleEmitMatrix, randoms: &ParticleBaseRandom, items: &mut ParticleGravityFactor) {
     items.run(&ids.actives, &ages.0, emitmatrixs, &randoms.0, time, calculator);
 }
 
-// pub fn sys_force_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleEmitMatrix, &ParticleBaseRandom, &mut ParticleForce), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, emitmatrixs, randoms, mut items_force)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             fn_force_over_life_time(&calculator.force, ids, time, ages, emitmatrixs, randoms, &mut items_force);
-//             // let calculator = &calculator.0;
-//             // // let newids = &ids.newids;
-//             // let activeids = &ids.actives;
-//             // items.run(activeids, ages, randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_force_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_force_over_life_time(
     calculator: &ParticleCalculatorForceOverLifetime,
     ids: &ParticleIDs, time: &ParticleSystemTime, ages: &ParticleAgeLifetime, emitmatrixs: &ParticleEmitMatrix, randoms: &ParticleBaseRandom, items: &mut ParticleForce,
@@ -625,25 +449,6 @@ pub fn fn_force_over_life_time(
     items.run(activeids, ages, emitmatrixs, randoms, time, calculator);
 }
 
-// pub fn sys_color_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartColor, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, startcolors, mut items_coloranduv)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.color { fn_color_over_life_time(calculator, ids, ages, randoms, startcolors, &mut items_coloranduv.color); }
-//             // let calculator = &calculator.0;
-//             // // let newids = &ids.newids;
-//             // let activeids = &ids.actives;
-//             // items.run(activeids, ages, startcolors, randoms, calculator);
-//         }
-//     });
-//     performance.sys_color_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_color_over_life_time(
     calculator: &ParticleCalculatorColorOverLifetime,
     ids: &ParticleIDs, ages: &ParticleAgeLifetime, randoms: &ParticleBaseRandom, startcolors: &ParticleStartColor, items: &mut ParticleColor,
@@ -654,25 +459,6 @@ pub fn fn_color_over_life_time(
     items.run(activeids, ages, startcolors, randoms, calculator);
 }
 
-// pub fn sys_rotation_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items_rotation)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.rotation { fn_rotation_over_life_time(calculator, ids, time, ages, randoms, &mut items_rotation); }
-//             // let calculator = &calculator.0;
-//             // // let newids = &ids.newids;
-//             // let activeids = &ids.actives;
-//             // items.run(activeids, ages, randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_rotation_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_rotation_over_life_time(
     calculator: &ParticleCalculatorRotationOverLifetime,
     ids: &ParticleIDs, time: &ParticleSystemTime, ages: &ParticleAgeLifetime, randoms: &ParticleBaseRandom, items: &mut ParticleLocalRotation,
@@ -683,25 +469,6 @@ pub fn fn_rotation_over_life_time(
     items.run(activeids, ages, randoms, time, calculator);
 }
 
-// pub fn sys_size_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &ParticleStartScaling, &mut ParticleLocalScaling), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, startsizes, mut items_size)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.size { fn_size_over_life_time(calculator, ids, time, ages, randoms, startsizes, &mut items_size); }
-//             // let calculator = &calculator.0;
-//             // // let newids = &ids.newids;
-//             // let activeids = &ids.actives;
-//             // items.run(activeids, ages, &startsizes.0, randoms, calculator);
-//         }
-//     });
-//     performance.sys_size_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_size_over_life_time(
     calculator: &ParticleCalculatorSizeOverLifetime,
     ids: &ParticleIDs, _time: &ParticleSystemTime, ages: &ParticleAgeLifetime, randoms: &ParticleBaseRandom, startsizes: &ParticleStartScaling, items: &mut ParticleLocalScaling,
@@ -712,25 +479,6 @@ pub fn fn_size_over_life_time(
     items.run(activeids, ages, &startsizes.0, randoms, calculator);
 }
 
-// pub fn sys_velocity_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleVelocity), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items_velocity)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.velocity { fn_velocity_over_life_time(calculator, ids, time, ages, randoms, &mut items_velocity); }
-//             // let calculator = &calculator.0;
-//             // // let newids = &ids.newids;
-//             // let activeids = &ids.actives;
-//             // items.run(activeids, ages, randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_velocity_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_velocity_over_life_time(
     calculator: &ParticleCalculatorVelocityOverLifetime,
     ids: &ParticleIDs, time: &ParticleSystemTime, ages: &ParticleAgeLifetime, randoms: &ParticleBaseRandom, items: &mut ParticleVelocity,
@@ -741,25 +489,6 @@ pub fn fn_velocity_over_life_time(
     items.run(activeids, ages, randoms, time, calculator);
 }
 
-// pub fn sys_orbit_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleOrbitOffset, &mut ParticleOrbitVelocity, &mut ParticleOrbitRadial), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items_orbitoff, mut items_orbit_velocity, mut items_orbitradial)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculators) = calculators.get(ids.calculator.0) {
-//             fn_orbit_over_life_time(&calculators.orbitoffset, &calculators.orbitvelocity, &calculators.orbitradial, ids, ages, randoms, &mut items_orbitoff, &mut items_orbit_velocity, &mut items_orbitradial);
-//         }
-
-//         // // let newids = &ids.newids;
-//         // let activeids = &ids.actives;
-//         // items.run(activeids, ages, randoms, time, offset, velocity, radial);
-//     });
-//     performance.sys_orbit_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_orbit_over_life_time(
     offset: &ParticleCalculatorOrbitOffset,
     velocity: &ParticleCalculatorOrbitVelocity,
@@ -773,25 +502,6 @@ pub fn fn_orbit_over_life_time(
     items3.run(activeids, ages, randoms, radial);
 }
 
-// pub fn sys_speed_modifier_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleSpeedFactor), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items_speed)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.speed { fn_speed_modifier_over_life_time(calculator, ids, time, ages, randoms, &mut items_speed); }
-//             // let calculator = &calculator.0;
-//             // // let newids = &ids.newids;
-//             // let activeids = &ids.actives;
-//             // items.run(activeids, ages, randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_speed_modifier_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_speed_modifier_over_life_time(
     calculator: &ParticleCalculatorSpeedModifier,
     ids: &ParticleIDs, time: &ParticleSystemTime, ages: &ParticleAgeLifetime, randoms: &ParticleBaseRandom, items: &mut ParticleSpeedFactor,
@@ -802,25 +512,6 @@ pub fn fn_speed_modifier_over_life_time(
     items.run(activeids, ages, randoms, time, calculator);
 }
 
-// pub fn sys_limit_velocity_over_life_time(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleLimitVelocityScalar), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, ages, randoms, mut items_limitvelocity)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.limitvelocity { fn_limit_velocity_over_life_time(calculator, ids, time, ages, randoms, &mut items_limitvelocity); }
-//             // let calculator = &calculator.0;
-//             // // let newids = &ids.newids;
-//             // let activeids = &ids.actives;
-//             // items.run(activeids, ages, randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_limit_velocity_over_life_time = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_limit_velocity_over_life_time(
     calculator: &ParticleCalculatorLimitVelocityOverLifetime,
     ids: &ParticleIDs, time: &ParticleSystemTime, ages: &ParticleAgeLifetime, randoms: &ParticleBaseRandom, items: &mut ParticleLimitVelocityScalar,
@@ -853,7 +544,7 @@ pub fn sys_direction(
         )| {
             if time.running_delta_ms <= 0 { return; }
 
-            if let Ok(calculator) = calculators.get(ids.calculator.0) {
+            if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
                 fn_direction(&calculator.shapeemitter, ids, time, velocities, gravities, forces, speedfactors, limitscalars, orbitsoffset, orbitsvelocity, orbitsradial, &mut direction, &mut positions);
                 // let emitter = &calculator.0;
                 // // let newids = &ids.newids;
@@ -897,7 +588,7 @@ pub fn sys_by_speed(
     )| {
         if time.running_delta_ms <= 0 { return; }
 
-        if let Ok(calculator) = calculators.get(ids.calculator.0) {
+        if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
             if let Some(calculator) = &calculator.colorbyspeed { fn_color_by_speed(calculator, ids, time, directions, randoms, &mut items_coloranduv.color); }
             
             if let Some(calculator) = &calculator.sizebyspeed { fn_size_by_speed(calculator, ids, time, directions, randoms, &mut items_size); }
@@ -908,25 +599,6 @@ pub fn sys_by_speed(
     performance.sys_color_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
-// pub fn sys_color_by_speed(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, directions, randoms, mut items_coloranduv)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.colorbyspeed { fn_color_by_speed(calculator, ids, time, directions, randoms, &mut items_coloranduv.color); }
-//             // let calculator = &calculator.0;
-//             // let activeids = &ids.actives;
-//             // items.speed(activeids, directions, randoms, calculator);
-//         }
-//     });
-//     performance.sys_color_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
-
 pub fn fn_color_by_speed(
     calculator: &ParticleCalculatorColorBySpeed,
     ids: &ParticleIDs, time: &ParticleSystemTime, directions: &ParticleDirection, randoms: &ParticleBaseRandom, items: &mut ParticleColor
@@ -936,25 +608,6 @@ pub fn fn_color_by_speed(
     items.speed(activeids, directions, randoms, calculator);
 }
 
-// 
-// pub fn sys_size_by_speed(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalScaling), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, directions, randoms, mut items_size)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.sizebyspeed { fn_size_by_speed(calculator, ids, time, directions, randoms, &mut items_size); }
-//             // let calculator = &calculator.0;
-//             // let activeids = &ids.actives;
-//             // items.speed(activeids, directions, randoms, calculator);
-//         }
-//     });
-//     performance.sys_size_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_size_by_speed(
     calculator: &ParticleCalculatorSizeBySpeed,
     ids: &ParticleIDs, time: &ParticleSystemTime, directions: &ParticleDirection, randoms: &ParticleBaseRandom, items: &mut ParticleLocalScaling
@@ -964,25 +617,6 @@ pub fn fn_size_by_speed(
     items.speed(activeids, directions, randoms, calculator);
 }
 
-// 
-// pub fn sys_rotation_by_speed(
-//     calculators: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom, &mut ParticleLocalRotation), Changed<ParticleSystemModifyState>>,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(|(ids, time, directions, randoms, mut items_rotation)| {
-//         if time.running_delta_ms <= 0 { return; }
-
-//         if let Ok(calculator) = calculators.get(ids.calculator.0) {
-//             if let Some(calculator) = &calculator.rotationbyspeed { fn_rotation_by_speed(calculator, ids, time, directions, randoms, &mut items_rotation); }
-//             // let calculator = &calculator.0;
-//             // let activeids = &ids.actives;
-//             // items.speed(activeids, directions, randoms, time, calculator);
-//         }
-//     });
-//     performance.sys_rotation_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_rotation_by_speed(
     calculator: &ParticleCalculatorRotationBySpeed,
     ids: &ParticleIDs, time: &ParticleSystemTime, directions: &ParticleDirection, randoms: &ParticleBaseRandom, items: &mut ParticleLocalRotation
@@ -992,28 +626,6 @@ pub fn fn_rotation_by_speed(
     items.speed(activeids, directions, randoms, time, calculator);
 }
 
-// pub fn sys_texturesheet(
-//     texturesheets: Query<&ParticleCalculatorOverLifetime>,
-//     mut particle_sys: Query<
-//         (&ParticleIDs, &ParticleAgeLifetime, &ParticleBaseRandom, &mut ParticleColorAndUV), Changed<ParticleSystemModifyState>
-//     >,
-//     mut performance: ResMut<ParticleSystemPerformance>,
-// ) {
-//     let time0 = pi_time::Instant::now();
-//     particle_sys.iter_mut().for_each(
-//         |(
-//             ids, ages, baserandoms,
-//             mut items_coloranduv
-//         )| {
-//             if let Ok(calculator) = texturesheets.get(ids.calculator.0) {
-//                 if let Some(calculator) = &calculator.texturesheet { fn_texturesheet(calculator, ids, ages, baserandoms, &mut items_coloranduv.uv); }
-//                 // let activeids = &ids.actives;
-//                 // uvs.run(activeids, ages, baserandoms, &texturesheet.0);
-//             }
-//         }
-//     );
-//     performance.sys_texturesheet = (pi_time::Instant::now() - time0).as_micros() as u32;
-// }
 pub fn fn_texturesheet(
     texturesheet: &ParticleCalculatorTextureSheet,
     ids: &ParticleIDs, ages: &ParticleAgeLifetime, baserandoms: &ParticleBaseRandom, uvs: &mut ParticleUV
@@ -1029,25 +641,8 @@ pub fn sys_update_buffer(
     >,
     meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes)>,
     mut meshrenderenables: Query<&mut RenderGeometryEable>,
-    instanceinfos: Query<&InstancedInfo>,
-    mut slots: (
-        Query<&mut AssetResVBSlot01>,
-        Query<&mut AssetResVBSlot02>,
-        Query<&mut AssetResVBSlot03>,
-        Query<&mut AssetResVBSlot04>,
-        Query<&mut AssetResVBSlot05>,
-        Query<&mut AssetResVBSlot06>,
-        Query<&mut AssetResVBSlot07>,
-        Query<&mut AssetResVBSlot08>,
-        // Query<&mut AssetResVBSlot09>,
-        // Query<&mut AssetResVBSlot10>,
-        // Query<&mut AssetResVBSlot11>,
-        // Query<&mut AssetResVBSlot12>,
-        // Query<&mut AssetResVBSlot13>,
-        // Query<&mut AssetResVBSlot14>,
-        // Query<&mut AssetResVBSlot15>,
-        // Query<&mut AssetResVBSlot16>,
-    ),
+    instanceinfos: Query<&InstancedInfoComp>,
+    mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
     mut performance: ResMut<ParticleSystemPerformance>,
     instant: Res<EngineInstant>,
 ) {
@@ -1083,12 +678,12 @@ pub fn sys_update_buffer(
                     if enable.0 == false { return; }
                     
                     let id_geo = idgeo.0;
-                    if let Ok(instanceinfo) = instanceinfos.get(id_geo) {
+                    if let Ok(InstancedInfoComp(Some(instanceinfo))) = instanceinfos.get(id_geo) {
 
                         count_particles += particle_count;
 
                         // log::warn!("sys_update_buffer B");
-                        if let Ok(calculator) = calculators.get(ids.calculator.0) {
+                        if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
                             collectdata.clear();
                             // let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
                             
@@ -1126,41 +721,6 @@ pub fn sys_update_buffer(
                                 let mut collect_float: Vec<f32> = Vec::with_capacity(ids.actives.len() * stripe);
                                 unsafe { collect_float.set_len(ids.actives.len() * stripe); }
 
-                                // let collect = &mut collect_float;
-                                // let mut tempbytes = instanceattributes.bytes().clone();
-
-                                // let mut matrixoffset = None;
-                                // let mut coloroffset = None;
-                                // let mut tilloffset = None;
-                                // let mut extaoffset: Option<usize> = None;
-                                // let mut extboffset: Option<usize> = None;
-                                
-                                // // 粒子系统内部各粒子的网格属性是相同的
-                                // attributes.0.iter().for_each(|v| {
-                                //     match v.vtype {
-                                //         EParticleAttributeType::Matrix => if instanceattributes.worldmatrix() {
-                                //             matrixoffset = Some(0 as usize);
-                                //             stripe += 16 * 4;
-                                //         },
-                                //         EParticleAttributeType::Color => if let Some(offset) = instanceattributes.offset(&v.attr) {
-                                //             coloroffset = Some(offset.offset() as usize);
-                                //             stripe += 4 * 4;
-                                //         },
-                                //         EParticleAttributeType::Tilloff => if let Some(offset) = instanceattributes.offset(&v.attr) {
-                                //             tilloffset = Some(offset.offset() as usize);
-                                //             stripe += 4 * 4;
-                                //         },
-                                //         EParticleAttributeType::Extend4A => if let Some(_offset) = instanceattributes.offset(&v.attr) {
-                                //             // let mut idx = offset.offset() as usize;
-                                //             // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
-                                //         },
-                                //         EParticleAttributeType::Extend4B => if let Some(_offset) = instanceattributes.offset(&v.attr) {
-                                //             // let mut idx = offset.offset() as usize;
-                                //             // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { tempbytes[idx] = *v; idx += 1; });
-                                //         },
-                                //     }
-                                // });
-        
                                 let mut index = 0;
                                 ids.actives.iter().for_each(|idx| {
                                     let scaling = scalings.get(*idx).unwrap();
@@ -1268,17 +828,17 @@ pub fn sys_update_buffer_trail(
                             }
                             return;
                         }
-                        if let Ok(trailmodifier) = trailmodifiers.get(ids.calculator.0) {
+                        if let Ok(ParticleCalculatorTrail(Some(trailmodifier))) = trailmodifiers.get(ids.calculator.as_ref().unwrap().0) {
                             let newids = &ids.newids;
-                            trails.run_new(newids, randoms, &colors.color.0, positions, scalings, rotations, emitmatrixs, directions, &trailmodifier.0);
+                            trails.run_new(newids, randoms, &colors.color.0, positions, scalings, rotations, emitmatrixs, directions, &trailmodifier);
 
                             let activeids = [ids.actives.clone(), ids.dies.clone()].concat();
                             // log::warn!("Trail Update: {:?}", activeids.len());
-                            trails.run(&activeids, randoms, &colors.color.0, positions, scalings, rotations, emitmatrixs, time, &trailmodifier.0);
+                            trails.run(&activeids, randoms, &colors.color.0, positions, scalings, rotations, emitmatrixs, time, &trailmodifier);
 
                             let mut start = u32::MAX;
                             let mut end = 0;
-                            let trailworldspace = trailmodifier.0.use_world_space;
+                            let trailworldspace = trailmodifier.use_world_space;
                             activeids.iter().for_each(|idx| {
                                 let item = trails.pathlist.get_mut(*idx).unwrap();
                                 let parentmatrix = &emitmatrixs.get(*idx).unwrap().matrix;

@@ -42,11 +42,7 @@ pub struct QueryParam<'w, 's> (
         'w,
         's,
         (
-            &'static RendererEnable, &'static DisposeReady, &'static Renderer, &'static RenderSize,
-            &'static RenderColorFormat, &'static RenderColorClear,
-            &'static RenderDepthFormat, &'static RenderDepthClear,
-            &'static RenderStencilClear,
-            &'static RenderAutoClearColor, &'static RenderAutoClearDepth, &'static RenderAutoClearStencil,
+            &'static RendererParam, &'static DisposeReady, &'static Renderer,
             &'static RendererRenderTarget,
         ),
     >,
@@ -59,11 +55,7 @@ pub struct QueryParam0<'w, 's> (
         'w,
         's,
         (
-            &'static RendererEnable, &'static DisposeReady, &'static Renderer, &'static RenderSize,
-            &'static RenderColorFormat, &'static RenderColorClear,
-            &'static RenderDepthFormat, &'static RenderDepthClear,
-            &'static RenderStencilClear,
-            &'static RenderAutoClearColor, &'static RenderAutoClearDepth, &'static RenderAutoClearStencil,
+            &'static RendererParam, &'static DisposeReady, &'static Renderer,
             &'static mut RendererRenderTarget,
         ),
     >,
@@ -104,16 +96,16 @@ impl Node for RenderNode {
         let mut param: QueryParam0 = param.get_mut(world);
         let (atlas_allocator, mut query) = (param.0, param.1);
         if let Ok((
-            enable, disposed, renderer, rendersize, colorformat, color_clear, depthstencilformat, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, mut to_final_target
+            param, disposed, renderer, mut to_final_target
         )) = query.get_mut(self.renderer_id) {
     
             // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
-            if !enable.0 || disposed.0 {
+            if !param.enable.0 || disposed.0 {
                 return Ok(output);
             }
     
             // let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
-            let need_depth = depthstencilformat.need_depth();
+            let need_depth = param.depthstencilformat.need_depth();
             
             // let clear_color_ops = if auto_clear_color.0 {
             //     wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: StoreOp::Store }
@@ -147,7 +139,7 @@ impl Node for RenderNode {
                 RendererRenderTarget::None(val) => {
                     let currlist: Vec<ShareTargetView> = vec![];
                     let srt = if let Some(srt) = input.target.clone() {
-                        match (depthstencilformat.0.val(), &srt.target().depth) {
+                        match (param.depthstencilformat.0.val(), &srt.target().depth) {
                             (Some(format), Some(depthview)) => {
                                 if depthview.1.format() == format {
                                     Some(srt)
@@ -161,7 +153,7 @@ impl Node for RenderNode {
                     };
                     let srt = match srt {
                         Some(srt) => {
-                            if srt.target().colors[0].1.format() == colorformat.0.val() {
+                            if srt.target().colors[0].1.format() == param.colorformat.0.val() {
                                 Some(srt)
                             } else {
                                 None
@@ -175,15 +167,15 @@ impl Node for RenderNode {
                         srt
                     } else {
                         // log::warn!("SRT Allocate by allocate.");
-                        let width = rendersize.width();
-                        let height = rendersize.height();
+                        let width = param.rendersize.width();
+                        let height = param.rendersize.height();
                         let target_type = atlas_allocator.get_or_create_type(
                             TargetDescriptor {
-                                colors_descriptor: colorformat.desc(),
+                                colors_descriptor: param.colorformat.desc(),
                                 need_depth: need_depth, 
                                 default_width: 2048,
                                 default_height: 2048,
-                                depth_descriptor: depthstencilformat.desc()
+                                depth_descriptor: param.depthstencilformat.desc()
                             }
                         );
 
@@ -217,12 +209,12 @@ impl Node for RenderNode {
         let param: QueryParam = param.get(world);
         let (screen, _atlas_allocator, query) = (param.0, param.1, param.2);
         if let Ok((
-            enable, disposed, renderer, rendersize, colorformat, color_clear, depthstencilformat, depth_clear, stencil_clear, auto_clear_color, auto_clear_depth, auto_clear_stencil, to_final_target
+            param, disposed, renderer, to_final_target
         )) = query.get(self.renderer_id) {
             // query.
     
             // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
-            if !enable.0 || disposed.0 {
+            if !param.enable.0 || disposed.0 {
                 return Box::pin(
                     async move {
                         Ok(())
@@ -231,18 +223,18 @@ impl Node for RenderNode {
             }
     
             let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
-            let need_depth = depthstencilformat.need_depth();
+            let need_depth = param.depthstencilformat.need_depth();
             
-            let clear_color_ops = if auto_clear_color.0 {
-                wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: StoreOp::Store }
+            let clear_color_ops = if param.auto_clear_color.0 {
+                wgpu::Operations { load: wgpu::LoadOp::Clear(param.color_clear.color()), store: StoreOp::Store }
             } else {
                 wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Discard }
             };
-            let clear_depth_ops = if auto_clear_depth.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: StoreOp::Store, })
+            let clear_depth_ops = if param.auto_clear_depth.0 {
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(param.depth_clear.0), store: StoreOp::Store, })
             } else { None };
-            let clear_stencil_ops = if auto_clear_stencil.0 {
-                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: StoreOp::Store, })
+            let clear_stencil_ops = if param.auto_clear_stencil.0 {
+                Some(wgpu::Operations { load: wgpu::LoadOp::Clear(param.stencil_clear.0), store: StoreOp::Store, })
             } else {
                 None
             };
@@ -284,8 +276,8 @@ impl Node for RenderNode {
                 },
                 RendererRenderTarget::Custom(srt) => {
                     // log::warn!("Graphic: Custom");
-                    let width = rendersize.width();
-                    let height = rendersize.height();
+                    let width = param.rendersize.width();
+                    let height = param.rendersize.height();
                     x = srt.rect().min.x as f32 + width as f32 * x;
                     y = srt.rect().min.y as f32 + height as f32 * y;
                     w = width as f32 * w;
@@ -306,7 +298,7 @@ impl Node for RenderNode {
                 RendererRenderTarget::None(srt) => {
                     let srt = match srt {
                         Some(srt) => {
-                            if srt.target().colors[0].1.format() == colorformat.0.val() {
+                            if srt.target().colors[0].1.format() == param.colorformat.0.val() {
                                 srt
                             } else {
                                 return Box::pin( async move { Ok(()) } );
@@ -366,7 +358,7 @@ impl Node for RenderNode {
                     depth_stencil_attachment = None;
                 };
 
-                if auto_clear_color.0 || auto_clear_depth.0 || auto_clear_stencil.0 {
+                if param.auto_clear_color.0 || param.auto_clear_depth.0 || param.auto_clear_stencil.0 {
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
                             label: None,

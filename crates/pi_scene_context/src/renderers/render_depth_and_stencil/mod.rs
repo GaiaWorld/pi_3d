@@ -5,7 +5,7 @@ use pi_scene_shell::prelude::*;
 
 use super::*;
 
-#[derive(Clone, Component)]
+#[derive(Clone)]
 pub struct DepthState {
     pub depth_write: bool,
     pub compare: CompareFunction,
@@ -36,27 +36,9 @@ impl OpsDepthState {
     }
 }
 pub type ActionListDepthState = ActionList<OpsDepthState>;
-pub fn sys_act_depth_state(
-    mut cmds: ResMut<ActionListDepthState>,
-    models: Query<&PassIDs>,
-    mut items: Query<&mut DepthState>,
-) {
-    cmds.drain().drain(..).for_each(|OpsDepthState(entity, tag, cmd)| {
-        if let Ok(passids) = models.get(entity) {
-            let passid = passids.0[tag.index()];
 
-            if let Ok(mut item) = items.get_mut(passid) {
-                match cmd {
-                    EDepthState::Write(val) => item.depth_write = val,
-                    EDepthState::Compare(val) => item.compare = val,
-                    EDepthState::Bias(val) => item.bias = val,
-                }
-            }
-        }
-    });
-}
 
-#[derive(Clone, Component)]
+#[derive(Clone)]
 pub struct StencilState {
     pub stencil_front: StencilFaceState,
     pub stencil_back: StencilFaceState,
@@ -86,26 +68,6 @@ impl OpsStencilState {
     }
 }
 pub type ActionListStencilState = ActionList<OpsStencilState>;
-pub fn sys_act_stencil_state(
-    mut cmds: ResMut<ActionListStencilState>,
-    models: Query<&PassIDs>,
-    mut items: Query<&mut StencilState>,
-) {
-    cmds.drain().drain(..).for_each(|OpsStencilState(entity, tag, cmd)| {
-        if let Ok(passids) = models.get(entity) {
-            let passid = passids.0[tag.index()];
-
-            if let Ok(mut item) = items.get_mut(passid) {
-                match cmd {
-                    EStencilState::Front(val) => item.stencil_front = val,
-                    EStencilState::Back(val) => item.stencil_back = val,
-                    EStencilState::Read(val) => item.stencil_read = val,
-                    EStencilState::Write(val) => item.stencil_write = val,
-                }
-            }
-        }
-    });
-}
 
 pub fn depth_stencil_state(
     format: wgpu::TextureFormat,

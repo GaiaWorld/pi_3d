@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-use crate::prelude::{DepthState, ModelBlend, PrimitiveState, StencilState};
+use crate::renderers::prelude::*;
 
 use super::{command::*, pass_object::*};
 
@@ -14,18 +14,84 @@ pub fn sys_create_pass_object(
         if let Ok(passid) = models.get(idmodel) {
             let id_pass = passid.0[pass.index()];
 
-            // log::warn!("sys_create_pass_object ");
-
-            if let Some(mut entitycmds) = commands.get_entity(id_pass) {
-                ActionPassObject::reset(&mut entitycmds, idmodel, idmaterial);
+            if let Some(mut cmd) = commands.get_entity(id_pass) {
+                let bundle = ActionPassObject::reset(idmodel, idmaterial);
+                cmd.insert(bundle);
             }
         }
     });
 }
 
-pub type PassObjBundle = (
-    PassModelID,
+pub fn sys_act_pass_object(
+    models: Query<&PassIDs>,
+    mut items: Query<&mut RenderState>,
+    mut primivite_cmds: ResMut<ActionListPrimitiveState>,
+    mut depth_cmds: ResMut<ActionListDepthState>,
+    mut blend_cmds: ResMut<ActionListBlend>,
+    mut stencil_cmds: ResMut<ActionListStencilState>,
+) {
+    primivite_cmds.drain().drain(..).for_each(|OpsPrimitiveState(entity, tag, cmd)| {
+        if let Ok(passids) = models.get(entity) {
+            let passid = passids.0[tag.index()];
+
+            if let Ok(mut item) = items.get_mut(passid) {
+                match cmd {
+                    EPrimitiveState::CCullMode      (val) => item.primitive.cull = val ,
+                    EPrimitiveState::CPolygonMode   (val) => item.primitive.polygon = val ,
+                    EPrimitiveState::CFrontFace     (val) => item.primitive.frontface = val ,
+                    EPrimitiveState::CUnClipDepth   (val) => item.primitive.unclip_depth = val ,
+                    EPrimitiveState::Topology       (val) => item.primitive.topology = val ,
+                }
+            }
+        }
+    });
+
+    depth_cmds.drain().drain(..).for_each(|OpsDepthState(entity, tag, cmd)| {
+        if let Ok(passids) = models.get(entity) {
+            let passid = passids.0[tag.index()];
+
+            if let Ok(mut item) = items.get_mut(passid) {
+                match cmd {
+                    EDepthState::Write(val)         => item.depth.depth_write = val,
+                    EDepthState::Compare(val)   => item.depth.compare = val,
+                    EDepthState::Bias(val)      => item.depth.bias = val,
+                }
+            }
+        }
+    });
+    blend_cmds.drain().drain(..).for_each(|cmd| {
+        match cmd {
+            OpsRenderBlend::Disable(_) => todo!(),
+            OpsRenderBlend::Blend(entity, tag, value) => {
+                if let Ok(passids) = models.get(entity) {
+                    let passid = passids.0[tag.index()];
+        
+                    if let Ok(mut item) = items.get_mut(passid) {
+                        item.blend = value;
+                    }
+                }
+            },
+        }
+    });
+    stencil_cmds.drain().drain(..).for_each(|OpsStencilState(entity, tag, cmd)| {
+        if let Ok(passids) = models.get(entity) {
+            let passid = passids.0[tag.index()];
+
+            if let Ok(mut item) = items.get_mut(passid) {
+                match cmd {
+                    EStencilState::Front(val)   => item.stencil.stencil_front = val,
+                    EStencilState::Back(val)    => item.stencil.stencil_back = val,
+                    EStencilState::Read(val)    => item.stencil.stencil_read = val,
+                    EStencilState::Write(val)   => item.stencil.stencil_write = val,
+                }
+            }
+        }
+    });
+}
+
+pub type PassObjInitBundle = (
     PassSceneID,
+    PassModelID,
     PassSceneForSet3,
     PassViewerID,
     PassMaterialID,
@@ -33,10 +99,29 @@ pub type PassObjBundle = (
     PassRendererID,
     PassPipelineStateDirty,
     PassDrawDirty,
-    PrimitiveState,
-    DepthState,
-    StencilState,
-    ModelBlend,
+    RenderState,
+    PassReset,
+);
+
+pub type PassObjBundle = (
+    (
+        PassBindEffectValue,
+        PassBindEffectTextures,
+        PassBindGroupScene,
+        PassBindGroupModel,
+        PassBindGroupTextureSamplers,
+        PassBindGroupLightingShadow,
+        PassBindGroups,
+        PassEffectReady,
+        PassShader,
+        PassPipeline,
+        PassDraw,
+    ),
+    PassModelID,
+    PassMaterialID,
+    PassPipelineStateDirty,
+    PassDrawDirty,
+    // RenderState,
     PassReset,
 );
 
@@ -46,10 +131,10 @@ impl ActionPassObject {
         empty: Entity,
         idmodel: Entity,
         idscene: Entity,
-    ) -> PassObjBundle {
+    ) -> PassObjInitBundle {
         (
-            PassModelID(idmodel),
             PassSceneID(idscene),
+            PassModelID(idmodel),
             PassSceneForSet3(idscene),
             PassViewerID(empty),
             PassMaterialID(empty),
@@ -57,35 +142,34 @@ impl ActionPassObject {
             PassRendererID(empty),
             PassPipelineStateDirty,
             PassDrawDirty,
-            PrimitiveState::default(),
-            DepthState::default(),
-            StencilState::default(),
-            ModelBlend::default(),
+            RenderState::default(),
             PassReset,
         )
     }
     pub fn reset(
-        entitycmds: &mut EntityCommands,
         idmodel: Entity,
         material: Entity,
-    ) {
-        entitycmds
-        .insert((
-            PassBindEffectValue(None),
-            PassBindEffectTextures(None),
-            PassBindGroupScene(None),
-            PassBindGroupModel(None),
-            PassBindGroupTextureSamplers(None),
-            PassBindGroupLightingShadow(None),
-            PassBindGroups(None),
-            PassEffectReady(None),
-            PassShader(None),
-            PassPipeline(None),
-            PassDraw(None),
+    ) -> PassObjBundle {
+        (
+            (
+                PassBindEffectValue(None),
+                PassBindEffectTextures(None),
+                PassBindGroupScene(None),
+                PassBindGroupModel(None),
+                PassBindGroupTextureSamplers(None),
+                PassBindGroupLightingShadow(None),
+                PassBindGroups(None),
+                PassEffectReady(None),
+                PassShader(None),
+                PassPipeline(None),
+                PassDraw(None),
+            ),
             PassModelID(idmodel),
             PassMaterialID(material),
+            PassPipelineStateDirty,
+            PassDrawDirty,
+            // RenderState::default(),
             PassReset,
-        ))
-        ;
+        )
     }
 }

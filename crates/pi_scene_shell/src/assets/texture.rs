@@ -46,32 +46,6 @@ impl TextureKeyList {
     }
 }
 
-// #[derive(Default, Clone, Component)]
-// pub struct TextureResList {
-//     pub data: [Option<pi_assets::asset::Handle<crate::prelude::TextureRes>>; TEXTURE_SLOT_COUNT],
-//     pub loaded: Vec<usize>,
-// }
-// impl TextureResList {
-//     pub fn empty(&mut self) {
-//         self.data   = [None, None, None, None, None, None, None, None];
-//         self.loaded = vec![];
-//     }
-//     pub fn loaded(&mut self, slot: usize, tex: pi_assets::asset::Handle<crate::prelude::TextureRes>) {
-//         match slot {
-//             0 => self.data[0] = Some(tex),
-//             1 => self.data[1] = Some(tex),
-//             2 => self.data[2] = Some(tex),
-//             3 => self.data[3] = Some(tex),
-//             4 => self.data[4] = Some(tex),
-//             5 => self.data[5] = Some(tex),
-//             6 => self.data[6] = Some(tex),
-//             7 => self.data[7] = Some(tex),
-//             _ => { return; }
-//         }
-//         self.loaded.push(slot);
-//     }
-// }
-
 
 pub trait ITexture {
     fn view(&self) -> &TextureView;

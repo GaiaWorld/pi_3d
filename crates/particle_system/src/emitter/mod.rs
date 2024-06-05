@@ -1,3 +1,5 @@
+use std::default;
+
 use pi_scene_shell::prelude::*;
 
 use crate::tools::Random;
@@ -38,6 +40,11 @@ pub enum ShapeEmitter {
     Point(PointShapeEmitter),
     Rectangle(RectangleShapeEmitter),
     Sphere(SphereShapeEmitter),
+}
+impl Default for ShapeEmitter {
+    fn default() -> Self {
+        Self::Point(PointShapeEmitter::default())
+    }
 }
 
 impl ShapeEmitter {

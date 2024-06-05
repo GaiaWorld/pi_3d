@@ -13,7 +13,7 @@ use self::{
     sys_renderer_pre::*,
     sys_renderer::*,
     render_primitive::*,
-    render_blend::{ActionListBlend, sys_act_model_blend},
+    render_blend::ActionListBlend,
     render_depth_and_stencil::*,
     command::*,
     command_sys::*,
@@ -90,104 +90,74 @@ impl Plugin for PluginRenderer {
         app.insert_resource(ActionListRendererTarget::default());
         app.insert_resource(RendererDrawCallRecord::default());
 
+        app.configure_sets(
+            Update,
+            (
+                StageRenderer::Create.after(StageCamera::_Create).after(StageShadowGenerator::_Create),
+                StageRenderer::_CreateApply.after(StageRenderer::Create),
+                StageRenderer::RenderStateCommand.in_set(FrameDataPrepare).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply),
+                StageRenderer::RendererCommand.in_set(FrameDataPrepare).after(StageRenderer::_CreateApply),
+                StageRenderer::PassBindGroup.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform),
+                StageRenderer::PassBindGroups.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup),
+                StageRenderer::PassShader.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups),
+                StageRenderer::PassPipeline.in_set(FrameDataPrepare).after(StageRenderer::PassShader),
+                StageRenderer::PassDraw.in_set(FrameDataPrepare).after(StageRenderer::PassPipeline),
+                StageRenderer::DrawList.in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(ERunStageChap::Dispose),
+            )
+        );
         
-        app.configure_set(Update, StageRenderer::Create.after(StageCamera::_Create).after(StageShadowGenerator::_Create));
-        app.configure_set(Update, StageRenderer::_CreateApply.after(StageRenderer::Create));
-        app.configure_set(Update, StageRenderer::RenderStateCommand.in_set(FrameDataPrepare).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply));
-        app.configure_set(Update, StageRenderer::RendererCommand.in_set(FrameDataPrepare).after(StageRenderer::_CreateApply));
-        app.configure_set(Update, StageRenderer::PassBindGroup.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform));
-        app.configure_set(Update, StageRenderer::PassBindGroups.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup));
-        app.configure_set(Update, StageRenderer::PassShader.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups));
-        app.configure_set(Update, StageRenderer::PassPipeline.in_set(FrameDataPrepare).after(StageRenderer::PassShader));
-        app.configure_set(Update, StageRenderer::PassDraw.in_set(FrameDataPrepare).after(StageRenderer::PassPipeline));
-        app.configure_set(Update, StageRenderer::DrawList.in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(ERunStageChap::Dispose));
-        
-        app.add_systems(Update, 
-            apply_deferred.in_set(StageRenderer::_CreateApply)
-        );
-
-        app.add_systems(Update, 
-            sys_create_renderer.in_set(StageRenderer::Create)
-        );
-
         app.add_systems(
-			Update,
+            Update, 
             (
-                sys_act_model_blend,
-                sys_act_mesh_primitive_state,
-                
-                sys_act_depth_state,
-                sys_act_stencil_state,
-
-                sys_act_render_queue,
-                sys_act_renderer_connect,
-                sys_act_renderer_target,
-            ).in_set(StageRenderer::RenderStateCommand)
-        );
-
-        app.add_systems(Update, 
-            sys_renderer_modify.in_set(StageRenderer::RendererCommand)
-        );
-        app.add_systems(
-			Update,
-            sys_bind_buffer_apply.in_set(ERunStageChap::Uniform),
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_sets_modify_by_viewer,
-                sys_sets_modify_by_model,
-                sys_passrendererid_pass_reset,
-                sys_sets_modify_by_scene_extend,
-            ).chain().in_set(StageRenderer::PassBindGroup)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_set0_modify,
-                sys_set1_modify,
-                sys_set2_modify,
-                // sys_set3_modify,
-                sys_bind_group_loaded,
-                sys_pass_bind_groups,
-            ).chain().in_set(StageRenderer::PassBindGroups)
-        );
-        app.add_systems(
-			Update,
-            (
+                apply_deferred.in_set(StageRenderer::_CreateApply),
+                sys_create_renderer.in_set(StageRenderer::Create),
+                (
+                    // sys_act_model_blend,
+                    // sys_act_mesh_primitive_state,
+                    
+                    // sys_act_depth_state,
+                    // sys_act_stencil_state,
+    
+                    sys_act_render_queue,
+                    sys_act_renderer_connect,
+                ).in_set(StageRenderer::RenderStateCommand),
+                (
+                    sys_act_renderer_modify,
+                    sys_act_renderer_target,
+                ).chain().in_set(StageRenderer::RendererCommand),
+                sys_bind_buffer_apply.in_set(ERunStageChap::Uniform),
+                (
+                    sys_sets_modify_by_viewer,
+                    sys_sets_modify_by_model,
+                    sys_passrendererid_pass_reset,
+                    sys_sets_modify_by_scene_extend,
+                ).chain().in_set(StageRenderer::PassBindGroup),
+                (
+                    sys_set0_modify,
+                    sys_set1_modify,
+                    sys_set2_modify,
+                    // sys_set3_modify,
+                    sys_bind_group_loaded,
+                    sys_pass_bind_groups,
+                ).chain().in_set(StageRenderer::PassBindGroups),
                 (
                     sys_pass_shader_request_by_model,
-                    sys_pass_shader_request_by_geometry
-                ),
-                sys_pass_shader
-            ).chain().in_set(StageRenderer::PassShader)
-        );
-        app.add_systems(
-			Update,
-            (
+                    sys_pass_shader_request_by_geometry,
+                    sys_pass_shader
+                ).chain().in_set(StageRenderer::PassShader),
+                sys_bind_buffer_apply.in_set(ERunStageChap::Uniform),
                 (
                     sys_pass_pipeline_request_by_model,
-                sys_pass_pipeline_request_by_renderer
-                ),
-                sys_pass_pipeline
-            ).chain().in_set(StageRenderer::PassPipeline)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_pass_draw_modify_by_model,
-                sys_pass_draw_modify_by_pass
-            ).chain().in_set(StageRenderer::PassDraw)
-        );
-        app.add_systems(
-            Update,
-            sys_renderer_draws_modify.in_set(StageRenderer::DrawList)
-        );
-
-        app.add_systems(
-            Update,
-            sys_dispose_renderer.after(sys_dispose_can).in_set(ERunStageChap::Dispose)
+                    sys_pass_pipeline_request_by_renderer,
+                    sys_pass_pipeline
+                ).chain().in_set(StageRenderer::PassPipeline),
+                (
+                    sys_pass_draw_modify_by_model,
+                    sys_pass_draw_modify_by_pass
+                ).chain().in_set(StageRenderer::PassDraw),
+                sys_renderer_draws_modify.in_set(StageRenderer::DrawList),
+                sys_dispose_renderer.after(sys_dispose_can).in_set(ERunStageChap::Dispose)
+            )
         );
     }
 }

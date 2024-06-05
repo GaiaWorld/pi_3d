@@ -3,7 +3,7 @@
 use pi_scene_shell::prelude::*;
 use super::*;
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy)]
 pub struct ModelBlend {
     pub enable: bool,
     pub src_color: BlendFactor,
@@ -55,23 +55,3 @@ impl OpsRenderBlend {
 }
 
 pub type ActionListBlend = ActionList<OpsRenderBlend>;
-pub fn sys_act_model_blend(
-    mut cmds: ResMut<ActionListBlend>,
-    models: Query<&PassIDs>,
-    mut items: Query<&mut ModelBlend>,
-) {
-    cmds.drain().drain(..).for_each(|cmd| {
-        match cmd {
-            OpsRenderBlend::Disable(_) => todo!(),
-            OpsRenderBlend::Blend(entity, tag, value) => {
-                if let Ok(passids) = models.get(entity) {
-                    let passid = passids.0[tag.index()];
-        
-                    if let Ok(mut item) = items.get_mut(passid) {
-                        *item = value;
-                    }
-                }
-            },
-        }
-    });
-}

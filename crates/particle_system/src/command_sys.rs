@@ -15,7 +15,8 @@ pub fn sys_create_particle_calculator(
         } else { return; };
 
         // log::warn!("particle_calculator");
-        format(&mut entitycmd, &cfg);
+        let bundle = format(&cfg);
+        entitycmd.insert(bundle);
     });
 }
 
@@ -67,6 +68,8 @@ pub fn sys_create_cpu_partilce_system(
                         ParticleSystemTime::new(performance.frame_time_ms),
                         ParticleSystemEmission::new(),
                         ParticleIDs::new(calculator, maxcount),
+                    ),
+                    (
                         ParticleBaseRandom::new(maxcount),
                         ParticleAgeLifetime::new(maxcount),
                         ParticleDieWaitTime::new(maxcount),
@@ -76,24 +79,26 @@ pub fn sys_create_cpu_partilce_system(
                         ParticleLocalRotation::new(maxcount),
                     ),
                     (
-                    
-                    ParticleLocalScaling::new(maxcount),
-                    ParticleColorAndUV::new(maxcount),
-                    ParticleEmitMatrix::new(maxcount, &base.scaling_space, &base.simulation_space),
-                    ParticleGravityFactor::new(maxcount, &startmodifiers.gravity, &base.simulation_space),
-                    ParticleForce::new(maxcount, overlifetime.force.0.is_local_space, overlifetime.force.0.translation_interpolate.constant()),
-                    ParticleVelocity::new(maxcount),
-                    ParticleSpeedFactor::new(maxcount),
-                    ParticleOrbitVelocity::new(maxcount, &overlifetime.orbitvelocity),
-                    ParticleOrbitOffset::new(maxcount, &overlifetime.orbitoffset),
-                    ParticleOrbitRadial::new(maxcount, &overlifetime.orbitradial),
-                    ParticleLimitVelocityScalar::new(maxcount),
-                    ParticleDirection::new(maxcount),
-                    ParticleCustomV4::new(maxcount),
-                    ParticleTrailMesh::new(trailmesh, trailgeo),
+                        ParticleLocalScaling::new(maxcount),
+                        ParticleColorAndUV::new(maxcount),
+                        ParticleEmitMatrix::new(maxcount, &base.scaling_space, &base.simulation_space),
+                        ParticleGravityFactor::new(maxcount, &startmodifiers.gravity, &base.simulation_space),
+                        ParticleForce::new(maxcount, overlifetime.force.0.is_local_space, overlifetime.force.0.translation_interpolate.constant()),
+                        ParticleVelocity::new(maxcount),
+                        ParticleSpeedFactor::new(maxcount),
+                    ),
+                    (
+                        ParticleOrbitVelocity::new(maxcount, &overlifetime.orbitvelocity),
+                        ParticleOrbitOffset::new(maxcount, &overlifetime.orbitoffset),
+                        ParticleOrbitRadial::new(maxcount, &overlifetime.orbitradial),
+                        ParticleLimitVelocityScalar::new(maxcount),
+                        ParticleDirection::new(maxcount),
+                        ParticleCustomV4::new(maxcount),
+                        ParticleTrailMesh::new(trailmesh, trailgeo),
+                    )
                 )
-            ));
-            if let (Ok(_), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
+            );
+            if let (Ok(ParticleCalculatorTrail(Some(_))), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
                 // log::warn!("Trail Init: ");
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
@@ -125,35 +130,43 @@ pub fn sys_create_cpu_partilce_system(
                             GeometryID(id_geo),
                             ModelStatic,
                             // 显式重置为默认
-                           commonbindmodel.0.clone(),
+                            commonbindmodel.0.clone(),
                         ));
                     }
-                    if let Some(mut cmd) = commands.get_entity(id_geo) {
+                    if let Some(mut geocommands) = commands.get_entity(id_geo) {
                         // log::warn!("Geometry Ok");
                         let vertex_desc = vec![trailbuffer.buffer_desc_billboard()];
-                        ActionGeometry::init(&mut cmd, &vertex_desc, None, id_mesh);
+                        let (comp1, comp2, comp3, comp4, comp5, comp6) = ActionGeometry::init(&vertex_desc, None, id_mesh);
 
                         // let mut verticescode = EVerticeExtendCodeComp::default();
                         // verticescode.0.0 += EVerticeExtendCode::TRIAL_BILLBOARD;
-                        let slot = AssetDescVBSlot01::from(vertex_desc[0].clone());
+                        let slot = AssetDescVBSlot::from(vertex_desc[0].clone());
                         let geo_desc = GeometryDesc { list: vertex_desc };
-                        let buffer = AssetResVBSlot01::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
+                        let buffer = AssetResVBSlot::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
                         
+                        let mut desclist = AssetDescVBSlots::default();
+                        let mut keyslist = LoadedKeyVBSlots::default();
+                        let mut datalist = AssetResVBSlots::default();
+                        keyslist[0] = Some(slot.key().clone());
+                        desclist[0] = Some(slot);
+                        datalist[0] = Some(buffer);
+
                         let mut hasher = DefaultHasher::default();
                         geo_desc.hash_resource(&mut hasher);
-                        cmd
-                            .insert((
-                                GeometryResourceHash(hasher.finish()),
+                        geocommands.insert(
+                            (
+                                comp1,
                                 geo_desc,
-                                slot,
-                                buffer,
-                            // .insert(verticescode)
-                            ))
-                            ;
+                                (comp2, comp3, comp4, comp5, comp6, desclist, keyslist, datalist),
+                                AssetResBufferIndicesComp(None),
+                                RenderGeometryEable(false),
+                                GeometryResourceHash(hasher.finish()),
+                            )
+                        );
                     }
                 // }
                 
-                commands.entity(entity).insert(ParticleTrail::new(maxcount));
+                commands.entity(entity).insert((ParticleTrail::new(maxcount),));
             }
         } else if count < 2 {
             // log::warn!("create_cpu_partilce_system FAIL");

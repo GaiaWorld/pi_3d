@@ -33,29 +33,31 @@ impl Plugin for PluginMaterial {
         {
             app.insert_resource(ImageTextureLoader::default());
             app.insert_resource(StateTextureLoader::default());
-
-            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(FrameDataPrepare));
-            app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
-            app.add_systems(
-                Update,
-                (
-                    sys_image_texture_load_launch,
-                    sys_image_texture_loaded
-                ).chain().in_set(StageTextureLoad::TextureLoading)
-            );
             app.insert_resource(ImageTextureViewLoader2::default());
-            app.add_systems(
+
+            app.configure_sets(
                 Update,
                 (
-                    sys_image_texture_view_load_launch2
-                ).chain().in_set(StageTextureLoad::TextureRequest)
+                    StageTextureLoad::TextureRequest.in_set(FrameDataPrepare),
+                    StageTextureLoad::TextureLoading.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest),
+                    StageTextureLoad::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform),
+                )
             );
+
             app.add_systems(
                 Update,
                 (
-                    sys_image_texture_view_loaded_check2
-                ).chain().in_set(StageTextureLoad::TextureLoaded)
+                    (
+                        sys_image_texture_load_launch,
+                        sys_image_texture_loaded
+                    ).chain().in_set(StageTextureLoad::TextureLoading),
+                    (
+                        sys_image_texture_view_load_launch2
+                    ).chain().in_set(StageTextureLoad::TextureRequest),
+                    (
+                        sys_image_texture_view_loaded_check2
+                    ).chain().in_set(StageTextureLoad::TextureLoaded),
+                )
             );
         }
         if app.world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
@@ -110,69 +112,54 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListTargetAnimationUniform::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::Create.after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
-        app.configure_set(Update, StageMaterial::_Init.after(StageMaterial::Create));
-        app.configure_set(Update, StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
-        app.configure_set(Update, StageMaterial::Ready.in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageMaterial::_Init));
-
+        app.configure_sets(
+            Update,
+            (
+                StageMaterial::Create.after(StageShadowGenerator::_Create).after(StageModel::_InitMesh),
+                StageMaterial::_Init.after(StageMaterial::Create),
+                StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running),
+                StageMaterial::Ready.in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform),
+            )
+        );
+        
         app.add_systems(
 			Update,
             (
-                sys_create_material,
-            ).in_set(StageMaterial::Create)
-        );
+                (
+                    sys_create_material,
+                ).in_set(StageMaterial::Create),
+                apply_deferred.in_set(StageMaterial::_Init),
+                (
+                    sys_act_material_use,
+                    sys_act_target_animation_uniform,
+                    sys_act_material_texture_from_target,
 
-        app.add_systems(Update, 
-            (
-                sys_act_target_animation_uniform,
-                sys_act_material_texture_from_target,
-            ).in_set(StageMaterial::Command)
-        );
+                    // sys_act_uniform,
+                    // sys_act_uniform_by_name,
+                    sys_act_material_value,
+                    // sys_act_material_mat2.run_if(should_run),
+                    // sys_act_material_vec4,
+                    // sys_act_material_vec2,
+                    // sys_act_material_float,
+                    // sys_act_material_int.run_if(should_run),
+                    // sys_act_material_uint,
 
-        app.add_systems(Update, 
-            (
-                sys_act_material_use,
-                sys_material_textures_modify,
-            ).chain().in_set(StageMaterial::Command)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                // sys_act_uniform,
-                // sys_act_uniform_by_name,
-                sys_act_material_value.after(sys_act_target_animation_uniform),
-                // sys_act_material_mat2.run_if(should_run),
-                // sys_act_material_vec4,
-                // sys_act_material_vec2,
-                // sys_act_material_float,
-                // sys_act_material_int.run_if(should_run),
-                // sys_act_material_uint,
-                sys_act_material_texture,
-            ).before(sys_material_textures_modify).after(sys_act_material_texture_from_target).chain().in_set(StageMaterial::Command)
-            // .after(sys_sync_load_check_await::<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_texture_ready07,
-            ).chain().in_set(StageMaterial::Ready)
-        );
-        app.add_systems(Update, 
-                sys_material_uniform_apply.in_set(ERunStageChap::Uniform)
-        );
-
-        app.add_systems(Update, 
-            sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+                    sys_act_material_texture,
+                    sys_material_textures_modify,
+                ).chain().in_set(StageMaterial::Command),
+                (
+                    sys_texture_ready07,
+                ).chain().in_set(StageMaterial::Ready),
+                sys_material_uniform_apply.in_set(ERunStageChap::Uniform),
+                sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            )
         );
     }
 }
 
 pub struct PluginGroupMaterial;
 impl PluginGroupMaterial {
-    pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {
-        group.add(PluginMaterial)
+    pub fn add(app: &mut App) -> &mut App {
+        app.add_plugins(PluginMaterial)
     }
 }

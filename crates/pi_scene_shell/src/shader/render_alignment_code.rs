@@ -1,7 +1,9 @@
 
+#[derive(Default)]
 pub enum EParticleScalingMode {
     /// * 粒子： 节点树上的缩放信息被保留应用
     /// * 发射器: 节点树上的缩放信息被保留应用
+    #[default]
     Hierarchy,
     /// * 粒子： 节点树上的缩放信息 只保留了LocalScaling
     /// * 发射器: 节点树上的缩放信息 只保留了LocalScaling
@@ -10,8 +12,9 @@ pub enum EParticleScalingMode {
     /// * 发射器: 节点树上的缩放信息被保留应用
     Shape,
 }
-
+#[derive(Default)]
 pub enum EParticleSimulationSpace {
+    #[default]
     Local,
     World,
 }
@@ -331,28 +334,3 @@ impl ERenderAlignment {
         }
     }
 }
-
-
-// pub enum EParticleRenderMode {
-//     Base,
-//     /// * 所有旋转信息被忽略,
-//     /// * 发射时的 缩放 偏移 应用 粒子的缩放、局部坐标 获得粒子 全局 缩放 偏移，传入shader
-//     StretchedBillboard,
-//     /// * 所有旋转信息被忽略, 仅应用 粒子 Z 轴旋转信息
-//     /// * 发射时的 缩放 偏移 应用 粒子的缩放、局部坐标 获得粒子 全局 缩放 偏移, 加上 粒子 z 旋转 和 固定 x 轴 90 度旋转, 即 粒子的世界矩阵, ，传入shader
-//     HorizontalBillboard,
-//     /// * 所有旋转信息被忽略, 粒子 Z 轴强制为指向相机的方向, 并应用 粒子 z 轴旋转信息
-//     /// * 发射时的 缩放 偏移 应用 粒子的缩放、局部坐标 获得粒子 全局 缩放 偏移, 加上 粒子 z 旋转, 即 粒子的世界矩阵，传入shader
-//     /// * 由 粒子 全局坐标 和 相机全局坐标 的 X-Z 轴投影获得渲染阶段的矩阵, 被粒子世界矩阵作用
-//     VerticalBillboard,
-// }
-// impl EParticleRenderMode {
-//     pub fn running_code(&self) -> String {
-//         match self {
-//             EParticleRenderMode::Base => todo!(),
-//             EParticleRenderMode::StretchedBillboard => todo!(),
-//             EParticleRenderMode::HorizontalBillboard => todo!(),
-//             EParticleRenderMode::VerticalBillboard => todo!(),
-//         }
-//     }
-// }

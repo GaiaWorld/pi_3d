@@ -150,8 +150,8 @@ pub fn sys_render_matrix_for_uniform(
     meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, bind_model)| {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
 
-        bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-        bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
+        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
+        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
     });
 }
 
@@ -160,7 +160,7 @@ pub fn sys_velocity_for_uniform(
 ) {
     meshes.iter_mut().for_each(|(velocity, bind_model)| {
         let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-        bind_model.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
+        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
     });
 }
 
@@ -220,7 +220,7 @@ pub fn sys_dispose_about_mesh(
         (
             Entity, &DisposeReady,
             &PassIDs,
-            &GeometryID, &InstanceSourceRefs, &Mesh, Option<&SkeletonID>, &ModelInstanceAttributes
+            &GeometryID, &InstanceSourceRefs, &Mesh, &SkeletonID, &ModelInstanceAttributes
         ),
         Or<(Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
     >,
@@ -258,11 +258,11 @@ pub fn sys_dispose_about_mesh(
         // log::warn!("Geometry: {:?}", idgeo.0);
         disposecanlist.push(OpsDisposeCan::ops(idgeo.0));
 
-        if let Some(idskin) = idskin {
-            if let Ok((mut refs, _skin)) = skeletons.get_mut(idskin.0) {
+        if let Some(idskin) = idskin.0 {
+            if let Ok((mut refs, _skin)) = skeletons.get_mut(idskin) {
                 refs.remove(&entity);
             }
-            disposereadylist.push(OpsDisposeReadyForRef::ops(idskin.0));
+            disposereadylist.push(OpsDisposeReadyForRef::ops(idskin));
         }
         viewers.iter_mut().for_each(|(mut list0, mut list1)| {
             list0.0.remove(&entity);

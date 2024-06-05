@@ -25,7 +25,7 @@ pub fn sys_sets_modify_by_viewer(
         (ObjectID, &SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo),
         Or<(Changed<BindViewer>, Changed<FlagModelList>, Changed<ForceIncludeModelList>, Changed<DirtyViewerRenderersInfo>)>,
     >,
-    renderers: Query<(&RendererEnable, &PassTag)>,
+    renderers: Query<(&RendererParam, &PassTag)>,
     modelspass: Query<&PassIDs>,
     mut passes: Query<(&PassSceneID, &DisposeReady, &mut PassViewerID, &mut PassRendererID)>,
 ) {
@@ -39,7 +39,7 @@ pub fn sys_sets_modify_by_viewer(
             // log::error!("DDD 1 idviewer: {:?}, idrenderer: {:?}, models: {:?}", idviewer, idrenderer, modellist.0.len());
             if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
                 // log::error!("DDD 2");
-                if rendererenable.0 == true {
+                if rendererenable.enable.0 == true {
                     // log::error!("DDD 3 idviewer: {:?}, idrenderer: {:?}, models: {:?}", idviewer, idrenderer, modellist.0.len());
                     _sets_modify_by_viewer(idrenderer, idviewer, &mut passes, id_scene.0, &modelspass, modellist, forcemodels, passtag);
                 }
@@ -116,7 +116,7 @@ fn __sets_modify_by_viewer(
 
 pub fn sys_passrendererid_pass_reset(
     viewers: Query<(Entity, &SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo)>,
-    renderers: Query<(&RendererEnable, &PassTag)>,
+    renderers: Query<(&RendererParam, &PassTag)>,
     mut passes: Query<(&mut PassRendererID, &mut PassViewerID, &PassModelID, &PassSceneID, &PassTag), Changed<PassReset>>,
 ) {
     passes.iter_mut().for_each(|(mut passrenderer, mut passviewer, idmodel, idscene, passpasstag)| {
@@ -130,7 +130,7 @@ pub fn sys_passrendererid_pass_reset(
 
                     if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
                         // log::error!("BBB 4 ");
-                        if rendererenable.0 == true && passtag == passpasstag {
+                        if rendererenable.enable.0 == true && passtag == passpasstag {
                             // log::error!("BBB 5 ");
                             if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
                                 // passrenderer.0 = idrenderer;
@@ -169,7 +169,7 @@ pub fn sys_sets_modify_by_model(
             Entity, &PassIDs
         ),
         Or<(
-            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Added<ModelLightingIndexs>
+            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Changed<ModelLightingIndexs>
         )>,
     >,
     mut passes: Query<&mut PassModelID>,

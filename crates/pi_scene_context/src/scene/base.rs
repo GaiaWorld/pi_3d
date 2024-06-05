@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Scene;
 
 #[derive(Component, Deref, DerefMut)]
@@ -15,22 +15,22 @@ impl Default for SceneAnimationEnable {
 }
 
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneLightingInfosDirty;
 
-#[derive(Clone, Component)]
-pub struct SceneLightingInfos(pub Arc<ShaderBindSceneLightInfos>);
+#[derive(Clone, Component, Default)]
+pub struct SceneLightingInfos(pub Option<Arc<ShaderBindSceneLightInfos>>);
 impl SceneLightingInfos {
     pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo) -> Option<Self> {
         if let Some(data) = ShaderBindSceneLightInfos::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count) {
-            Some(Self ( Arc::new(data) ))
+            Some(Self ( Some(Arc::new(data)) ))
         } else {
             None
         }
     }
 }
 
-#[derive(Component, Deref, Clone, Copy)]
+#[derive(Component, Default, Deref, Clone, Copy)]
 pub struct SceneItemIndex(u32);
 impl SceneItemIndex {
     pub fn val(&self) -> u32 {
@@ -39,6 +39,7 @@ impl SceneItemIndex {
 }
 
 /// 场景内指定内容的ID的队列分配
+#[derive(Default)]
 pub struct SceneItemsQueue {
     max_count: u32,
     idxs: Vec<u32>,
@@ -74,31 +75,31 @@ impl SceneItemsQueue {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneDirectLightsQueue(pub SceneItemsQueue);
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ScenePointLightsQueue(pub SceneItemsQueue);
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneSpotLightsQueue(pub SceneItemsQueue);
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneHemiLightsQueue(pub SceneItemsQueue);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneShadowQueue(pub SceneItemsQueue);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneShadowInfosDirty;
 
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SceneShadowRenderTarget(pub Option<KeyRenderTarget>);
 
-#[derive(Clone, Component)]
-pub struct SceneShadowInfos(pub Arc<ShaderBindShadowData>, pub Option<ShareTargetView>, pub Option<BindDataTexture2D>, pub Option<BindDataSampler>);
+#[derive(Clone, Component, Default)]
+pub struct SceneShadowInfos(pub Option<Arc<ShaderBindShadowData>>, pub Option<ShareTargetView>, pub Option<BindDataTexture2D>, pub Option<BindDataSampler>);
 impl SceneShadowInfos {
     pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo, shadowlimit: ShadowLimitInfo) -> Option<Self> {
         if let Some(data) = ShaderBindShadowData::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count, shadowlimit.max_count) {
-            Some(Self ( Arc::new(data), None, None, None ))
+            Some(Self ( Some(Arc::new(data)), None, None, None ))
         } else {
             None
         }
@@ -106,7 +107,7 @@ impl SceneShadowInfos {
     pub fn binds(&self, target: &CustomRenderTarget) -> (Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>) {
             let tex = ETextureViewUsage::SRT(target.rt.clone());
             (
-                self.0.clone(),
+                self.0.as_ref().unwrap().clone(),
                 Arc::new(ShaderBindShadowTexture(BindDataTexture2D(tex))),
                 Arc::new(ShaderBindShadowSampler(target.sampler.clone()))
             )

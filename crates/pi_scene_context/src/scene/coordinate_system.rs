@@ -1,3 +1,5 @@
+use std::default;
+
 use pi_scene_math::coordiante_system;
 use pi_scene_shell::prelude::*;
 
@@ -9,8 +11,9 @@ impl Default for SceneCoordinateSytem3D {
     }
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Default)]
 pub enum ESceneCoordinateMode {
+    #[default]
     Left,
     Right,
 }

@@ -27,7 +27,7 @@ pub enum StageCulling {
     CalcBounding,
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct IsCulled;
 
 pub trait TIntersect {
@@ -43,24 +43,24 @@ impl Plugin for PluginCulling {
         app.insert_resource(ActionListMeshBounding::default());
         app.insert_resource(ActionListBoundingBoxDisplay::default());
 
-        app.configure_set(Update, StageCulling::Command.after(StageScene::_Create).before(StageMaterial::Command));
-        app.configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix));
-
-        app.add_systems(Update, (
-            sys_act_mesh_bounding_culling_display
-        ).in_set(StageCulling::Command));
-
-        app.add_systems(Update, (
-            sys_act_mesh_bounding
-        ).in_set(StageModel::AbstructMeshCommand));
+        app.configure_sets(Update, 
+            (
+                StageCulling::Command.after(StageScene::_Create).before(StageMaterial::Command),
+                StageCulling::CalcBounding.after(StageModel::RenderMatrix),
+            )
+        );
 
         app.add_systems(
-            Update,
+            Update, 
             (
-                sys_update_culling_by_worldmatrix,
-                sys_update_culling_by_cullinginfo,
-                sys_abstructmesh_culling_flag_reset,
-            ).chain().in_set(StageCulling::CalcBounding)
+                sys_act_mesh_bounding_culling_display.in_set(StageCulling::Command),
+                sys_act_mesh_bounding.in_set(StageModel::AbstructMeshCommand),
+                (
+                    sys_update_culling_by_worldmatrix,
+                    sys_update_culling_by_cullinginfo,
+                    sys_abstructmesh_culling_flag_reset,
+                ).chain().in_set(StageCulling::CalcBounding)
+            )
         );
     }
 }

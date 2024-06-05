@@ -36,6 +36,7 @@ mod custom_rendertarget;
 mod batch;
 mod vertex_buffer_loader;
 mod vertices;
+mod ecs;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 

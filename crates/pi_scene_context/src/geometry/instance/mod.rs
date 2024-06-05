@@ -1,4 +1,5 @@
 use pi_scene_shell::prelude::*;
+use pi_slotmap::Key;
 
 pub mod instanced_buffer;
 pub mod types;
@@ -13,9 +14,14 @@ pub mod sys_instance;
 
 #[derive(Debug, Clone, Component)]
 pub struct InstanceMesh(pub Entity);
+impl Default for InstanceMesh {
+    fn default() -> Self {
+        Self(Entity::from_bits(0))
+    }
+}
 impl InstanceMesh {
     pub fn id(&self) -> String {
-        self.0.to_bits().to_string()
+        self.0.index().to_string()
     }
 }
 impl TEntityRef for InstanceMesh {
@@ -24,10 +30,10 @@ impl TEntityRef for InstanceMesh {
     }
 }
 
-#[derive(Debug, Clone, Default, Component)]
+#[derive(Debug, Clone, Component, Default)]
 pub struct DirtyInstanceSourceRefs;
 
 pub type InstanceSourceRefs = EntityRefInfo<DirtyInstanceSourceRefs>;
 
-#[derive(Debug, Clone, Default, Component)]
+#[derive(Debug, Clone, Component, Default)]
 pub struct DirtyInstanceSourceForSingleBuffer;

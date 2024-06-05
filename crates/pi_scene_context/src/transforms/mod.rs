@@ -33,53 +33,47 @@ impl Plugin for PluginTransformNode {
             .insert_resource(TransformDirtyRoots::default())
             ;
 
-        app.configure_set(Update, StageTransform::TransformCreate.after(StageScene::_Create));
-        app.configure_set(Update, StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command));
-        app.configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create));
-        // app.configure_set(Update, StageTransform::TransformCommandApply.after(StageTransform::TransformCommand));
-        app.configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageTransform::_TransformCreate));
-
-        app.add_systems(Update, 
-            sys_create_transform_node.in_set(StageTransform::TransformCreate),
-        );
-        app.add_systems(Update, 
-            sys_act_transform_parent.in_set(StageTransform::TransformCommand),
-        );
-        app.add_systems(
-			Update,
+        app.configure_sets(Update, 
             (
-                sys_act_local,
-            ).in_set(StageTransform::TransformCommand)
-        );
-        app.add_systems(
-			Update,
-            (
-                sys_local_euler_calc_rotation,
-                sys_act_local_rotation,
-                sys_local_quaternion_calc_rotation,
-                sys_local_matrix_calc,
-                sys_tree_layer_changed,
-                sys_world_matrix_calc,
-                sys_world_matrix_calc2,
-            ).chain().in_set(StageTransform::TransformCalcMatrix)
+                StageTransform::TransformCreate.after(StageScene::_Create),
+                StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command),
+                StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create),
+                StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform),
+            )
         );
 
         app.add_systems(
-			Update,
-            sys_dispose_about_transform_node.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            Update, 
+            (
+                apply_deferred.in_set(StageTransform::_TransformCreate),
+                sys_create_transform_node.in_set(StageTransform::TransformCreate),
+                sys_act_transform_parent.in_set(StageTransform::TransformCommand),
+                (
+                    sys_act_local,
+                ).in_set(StageTransform::TransformCommand),
+                (
+                    sys_local_euler_calc_rotation,
+                    sys_act_local_rotation,
+                    sys_local_quaternion_calc_rotation,
+                    sys_local_matrix_calc,
+                    sys_tree_layer_changed,
+                    sys_world_matrix_calc,
+                    sys_world_matrix_calc2,
+                ).chain().in_set(StageTransform::TransformCalcMatrix),
+                sys_dispose_about_transform_node.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            )
         );
     }
 }
 
 pub struct PluginGroupTransformNode;
 impl PluginGroupTransformNode {
-    pub fn add(group: PluginGroupBuilder) -> PluginGroupBuilder {
+    pub fn add(group: &mut App) -> &mut App {
         group
-            .add(PluginTransformNode)
-            .add(PluginAnimeLocalPosition::new())
-            .add(PluginAnimeLocalEuler::new())
-            .add(PluginAnimeLocalQuaternion::new())
-            .add(PluginAnimeLocalScaling::new())
+            .add_plugins(PluginTransformNode)
+            .add_plugins(PluginAnimeLocalPosition::new())
+            .add_plugins(PluginAnimeLocalEuler::new())
+            .add_plugins(PluginAnimeLocalQuaternion::new())
+            .add_plugins(PluginAnimeLocalScaling::new())
     }
 }

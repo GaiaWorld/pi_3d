@@ -32,14 +32,14 @@ impl Default for EScalingMode {
 }
 
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Mesh;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 /// 相对于 SourceMesh 的 AlphaIndex
 pub struct InstanceTransparentIndex(pub i32);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct AbstructMeshCullingFlag(pub bool);
 
 #[derive(Component)]
@@ -54,7 +54,7 @@ impl Default for MeshInstanceState {
     }
 }
 
-#[derive(Clone, Default, Component)]
+#[derive(Clone, Component, Default)]
 pub struct DirtyMeshRef;
 
 pub type MeshRefs = EntityRefInfo<DirtyMeshRef>;
@@ -67,7 +67,7 @@ impl Default for RenderAlignment {
     }
 }
 
-#[derive(Clone, Default, Component, Deref, DerefMut)]
+#[derive(Clone, Component, Default, Deref, DerefMut)]
 pub struct ScalingMode(pub EScalingMode);
 
 #[derive(Clone, Component, Deref, DerefMut)]
@@ -78,18 +78,18 @@ impl Default for ModelVelocity {
     }
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Default, Clone)]
 pub struct ModelStatic;
 
-#[derive(Component, Clone)]
-pub struct BindModel(pub Arc<ShaderBindModelAboutMatrix>);
+#[derive(Component, Default, Clone)]
+pub struct BindModel(pub Option<Arc<ShaderBindModelAboutMatrix>>);
 impl BindModel {
     pub fn new(
         allocator: &mut BindBufferAllocator,
     ) -> Option<Self> {
 
         if let Some(bind) = ShaderBindModelAboutMatrix::new(allocator) {
-            Some(Self(Arc::new(bind)))
+            Some(Self(Some(Arc::new(bind))))
         } else {
             None
         }
@@ -99,7 +99,7 @@ impl BindModel {
 #[derive(Resource)]
 pub struct CommonBindModel(pub BindModel);
 
-#[derive(Component, Clone, Default)]
+#[derive(Component, Default, Clone)]
 pub struct RecordIndiceRenderRange(pub IndiceRenderRange);
 impl TAnimatableCompRecord<IndiceRenderRange> for RecordIndiceRenderRange {
     fn comp(&self) -> IndiceRenderRange {
@@ -210,7 +210,7 @@ impl Default for VertexRenderRange {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct RenderMatrixDirty(pub bool);
 impl TInstanceFlag for RenderMatrixDirty {
     fn dirty(&self) -> bool {
@@ -222,7 +222,7 @@ impl TInstanceFlag for RenderMatrixDirty {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrix(pub Matrix);
 impl RenderWorldMatrix {
     pub fn new(m: Matrix) -> Self {
@@ -259,7 +259,7 @@ impl TInstanceData for RenderWorldMatrix {
     // }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrixInv(pub Matrix);
 impl RenderWorldMatrixInv {
     pub fn new(m: Matrix) -> Self {
@@ -267,19 +267,19 @@ impl RenderWorldMatrixInv {
     }
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct InstancedMeshTransparentSortCollection(pub Vec<(i32, Range<u32>)>);
 
-// #[derive(Component, Default)]
+// #[derive(Component, Default, Default)]
 // pub struct ModelSpotLightingDirty;
 
-// #[derive(Component, Default)]
+// #[derive(Component, Default, Default)]
 // pub struct ModelPointLightingDirty;
 
-// #[derive(Component, Default)]
+// #[derive(Component, Default, Default)]
 // pub struct ModelHemiLightingDirty;
 
-// #[derive(Component)]
+// #[derive(Component, Default)]
 // pub struct ModelLightingInfosDirty;
 
 #[derive(Component, Default)]
@@ -293,7 +293,7 @@ pub struct ModelForceSpotLightings(pub Vec<Entity>);
 #[derive(Component, Default)]
 pub struct ModelForceHemiLightings(pub Vec<Entity>);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ModelLightingIndexs {
     pub bind: Option<Arc<BindModelLightIndexs>>,
     pub count: u32,

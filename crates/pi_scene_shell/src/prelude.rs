@@ -1,12 +1,5 @@
-use std::{hash::Hash, mem::replace, ops::Range};
+use std::{default, hash::Hash, mem::replace, ops::Range};
 
-pub use bevy_ecs::{prelude::*, system::{CommandQueue, EntityCommands, SystemState, SystemParam}};
-pub use bevy_app::{prelude::*, PluginGroupBuilder};
-pub use bevy_hierarchy::prelude::*;
-pub use bevy_input::{prelude::*, InputPlugin};
-pub use bevy_log::prelude::*;
-pub use bevy_math::prelude::*;
-pub use bevy_time::prelude::*;
 pub use parry3d::{
     bounding_volume::Aabb,
     na::{Isometry3 as NAIsometry3, Point3},
@@ -101,17 +94,19 @@ pub use crate::custom_rendertarget::*;
 pub use crate::object::*;
 pub use crate::batch::*;
 pub use crate::static_string::*;
+pub use crate::ecs::*;
 
 #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);
 
 ///
-#[derive(Default, Clone, Hash, PartialEq, Eq, Component)]
+#[derive(Clone, Hash, PartialEq, Eq, Component, Default)]
 pub struct EffectTextureSamplersComp(pub Option<EffectTextureSamplers>);
 
 /////////////////////////////////////// Global Control
-#[derive(Component)]
+#[derive(Component, Default)]
 pub enum GlobalColorSpace {
+    #[default]
     Linear,
     Gamma,
 }
@@ -130,7 +125,7 @@ pub struct VBLoaderSlot<T: Clone + core::hash::Hash + PartialEq + Eq, D: From<EV
 #[derive(Resource, DerefMut, Deref)]
 pub struct VertexBufferDataMap3D(pub SingleVertexBufferDataMap);
 
-#[derive(Component, Clone)]
+#[derive(Clone)]
 pub struct IndicesBufferDesc {
     pub format: wgpu::IndexFormat,
     /// bytes 范围
@@ -138,8 +133,11 @@ pub struct IndicesBufferDesc {
     pub buffer: KeyVertexBuffer,
 }
 
-#[derive(Deref, Clone, Hash, Component)]
-pub struct AssetKeyBufferIndices(pub KeyVertexBuffer);
+#[derive(Component, Default, Clone)]
+pub struct IndicesBufferDescComp(pub Option<IndicesBufferDesc>);
+
+#[derive(Deref, Clone, Hash, Component, Default)]
+pub struct AssetKeyBufferIndices(pub Option<KeyVertexBuffer>);
 
 // TODO Send问题， 临时解决
 unsafe impl Send for AssetKeyBufferIndices {}
@@ -173,7 +171,10 @@ impl HashAsResource for VertexBufferDesc {
     }
 }
 
-#[derive(Deref, Component)]
+#[derive(Deref, Component, Default)]
+pub struct AssetResBufferIndicesComp(pub Option<AssetResBufferIndices>);
+
+#[derive(Deref)]
 pub struct AssetResBufferIndices(pub EVerticesBufferUsage);
 
 // TODO Send问题， 临时解决
@@ -188,6 +189,14 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
 
 #[derive(Component)]
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts, pub KeyShaderFromAttributes);
+impl Default for VertexBufferLayoutsComp {
+    fn default() -> Self {
+        Self(
+            VertexBufferLayouts::from(&vec![]),
+            KeyShaderFromAttributes::new(&vec![])
+        )
+    }
+}
 
 ////////////////////////////////////// Shader
 pub type KeyShaderMeta = Atom;

@@ -3,7 +3,7 @@ use std::ops::Range;
 
 use pi_scene_shell::prelude::*;
 
-use crate::{prelude::*, geometry::instance::instanced_buffer::{InstancedInfo, InstanceBufferAllocator}};
+use crate::{geometry::instance::instanced_buffer::{InstanceBufferAllocator, InstancedInfoComp}, prelude::*};
 
 use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode, BoundingBoxDisplay};
 
@@ -78,25 +78,8 @@ pub fn sys_tick_culling_box(
         )
     >,
     dispoeds: Query<&DisposeReady>,
-    geometrys: Query<&InstancedInfo>,
-    mut slots: (
-        Query<&mut AssetResVBSlot01>,
-        Query<&mut AssetResVBSlot02>,
-        Query<&mut AssetResVBSlot03>,
-        Query<&mut AssetResVBSlot04>,
-        Query<&mut AssetResVBSlot05>,
-        Query<&mut AssetResVBSlot06>,
-        Query<&mut AssetResVBSlot07>,
-        Query<&mut AssetResVBSlot08>,
-        // Query<&mut AssetResVBSlot09>,
-        // Query<&mut AssetResVBSlot10>,
-        // Query<&mut AssetResVBSlot11>,
-        // Query<&mut AssetResVBSlot12>,
-        // Query<&mut AssetResVBSlot13>,
-        // Query<&mut AssetResVBSlot14>,
-        // Query<&mut AssetResVBSlot15>,
-        // Query<&mut AssetResVBSlot16>,
-    ),
+    geometrys: Query<&InstancedInfoComp>,
+    mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
     instancedcache: Res<InstanceBufferAllocator>,
     mut allocator: ResMut<VertexBufferAllocator3D>,
     device: Res<PiRenderDevice>,
@@ -106,7 +89,7 @@ pub fn sys_tick_culling_box(
         if boundingboxs.display == false { return; }
         if let Ok((_idsource, idgeo, _meshinsstate, mut renderenable, mut instancessortinfos)) = sources.get_mut(boundingboxs.mesh) {
             let instances = pool.entities();
-            if let Ok(buffer) = geometrys.get(idgeo.0) {
+            if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
                 if buffer.bytes_per_instance > 0 {
                     *renderenable = RenderGeometryEable(false);
                     instancessortinfos.0.clear();

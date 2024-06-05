@@ -40,68 +40,46 @@ impl Plugin for PluginCamera {
         app.insert_resource(ActionListCameraTarget::default());
         app.insert_resource(StateCamera::default());
 
-        app.configure_set(Update, StageCamera::CameraCreate.after(StageScene::_Create));
-        app.configure_set(Update, StageCamera::_Create.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command));
-        app.configure_set(Update, StageCamera::CameraCommand.after(StageCamera::_Create).before(StageRenderer::Create));
-        app.configure_set(Update, StageCamera::CameraCalcMatrix.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command));
-        app.configure_set(Update, StageCamera::CameraCulling.in_set(FrameDataPrepare).after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageCamera::_Create));
-
-        app.add_systems(
-			Update,
+        app.configure_sets(
+            Update,
             (
-                sys_create_camera,
-                // sys_create_camera_renderer,
-            ).in_set(StageCamera::CameraCreate)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_act_camera_mode,
-                sys_act_camera_aspect,
-            ).in_set(StageCamera::CameraCommand)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_update_camera_param,
-                sys_update_target_camera_modify,
-                // sys_update_camera_renderer,
-            ).after(sys_act_camera_aspect).in_set(StageCamera::CameraCommand)
-        );
-
-        // init_plugin_for_viewer::<TargetCameraParam, Fn, CameraParam, Fn>(app, sys_cmds_target_camera_modify, sys_world_matrix_calc)
-        app.add_systems(
-			Update,
-            (
-                sys_calc_view_matrix_by_viewer::<TargetCameraParam>,
-                sys_calc_proj_matrix::<CameraParam>,
-                sys_calc_transform_matrix::<TargetCameraParam, CameraParam>,
-            ).chain().in_set(StageCamera::CameraCalcMatrix)
+                StageCamera::CameraCreate.after(StageScene::_Create),
+                StageCamera::_Create.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command),
+                StageCamera::CameraCommand.after(StageCamera::_Create).before(StageRenderer::Create),
+                StageCamera::CameraCalcMatrix.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command),
+                StageCamera::CameraCulling.in_set(FrameDataPrepare).after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform),
+            )
         );
         app.add_systems(
-			Update,
-            (
-                sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>,
-                sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>,
-            ).chain().in_set(StageCamera::CameraCalcMatrix)
+            Update, (
+                apply_deferred.in_set(StageCamera::_Create),
+                sys_create_camera.in_set(StageCamera::CameraCreate),
+                (
+                    sys_act_camera_mode,
+                    sys_act_camera_aspect,
+                ).in_set(StageCamera::CameraCommand),
+                (
+                    sys_update_camera_param,
+                    sys_update_target_camera_modify,
+                    // sys_update_camera_renderer,
+                ).after(sys_act_camera_aspect).in_set(StageCamera::CameraCommand),
+                (
+                    sys_calc_view_matrix_by_viewer::<TargetCameraParam>,
+                    sys_calc_proj_matrix::<CameraParam>,
+                    sys_calc_transform_matrix::<TargetCameraParam, CameraParam>,
+                ).chain().in_set(StageCamera::CameraCalcMatrix),
+                (
+                    sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>,
+                    sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam>,
+                ).chain().in_set(StageCamera::CameraCalcMatrix),
+                (
+                    sys_tick_viewer_culling::<TargetCameraParam, CameraParam, StateCamera>       // .run_if(should_run)
+                ).chain().in_set(StageCamera::CameraCulling),
+                (
+                    sys_update_viewer_uniform::<TargetCameraParam, CameraParam>,
+                ).in_set(ERunStageChap::Uniform),
+                sys_dispose_about_camera.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+            )
         );
-        app.add_systems(
-			Update,
-            (
-                sys_tick_viewer_culling::<TargetCameraParam, CameraParam, StateCamera>       // .run_if(should_run)
-            ).chain().in_set(StageCamera::CameraCulling)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_update_viewer_uniform::<TargetCameraParam, CameraParam>,
-            ).in_set(ERunStageChap::Uniform)
-        );
-
-        app.add_systems(Update, sys_dispose_about_camera.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
 }

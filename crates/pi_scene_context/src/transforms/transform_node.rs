@@ -1,29 +1,34 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Number, SQuaternion};
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct NodeDown(pub Option<Entity>);
 
 #[derive(Clone, Copy, Component)]
 pub struct NodeUp(pub Entity);
+impl Default for NodeUp {
+    fn default() -> Self {
+        Self(Entity::from_bits(0))
+    }
+}
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct NodeBrothers {
     pub idx: usize,
     pub pre: Option<Entity>,
     pub next: Option<Entity>,
 }
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct TransformNode;
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Default)]
 pub struct TransformNodeDirty;
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalDirtyRotation;
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalDirtyScaling;
 
 #[derive(Clone, Component, Default)]
@@ -230,10 +235,10 @@ impl TAnimatableComp for LocalRotationQuaternion {
 
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalRoationWithQuaternion(pub bool);
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalRotation(pub Rotation3);
 
 #[derive(Clone, Component, Default)]
@@ -290,7 +295,7 @@ impl TAnimatableComp for LocalScaling {
 }
 
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, Default)]
 pub struct LocalMatrix(pub Matrix);
 impl LocalMatrix {
     pub fn new(m: Matrix) -> Self {

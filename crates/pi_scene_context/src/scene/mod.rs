@@ -52,54 +52,39 @@ impl Plugin for PluginScene {
         app.insert_resource(ImageTextureViewLoader::<BRDFTextureSlot>::default());
         app.insert_resource(ImageTextureViewLoader::<EnvTextureSlot>::default());
 
-        app.configure_sets(
-            Update,
+        app.configure_sets(Update,
             (
                 StageScene::Create.after(ERunStageChap::_InitialApply),
-                StageScene::_Create.before(EStageAnimation::Create),
-                StageScene::Command
-            ).chain()
+                StageScene::_Create.before(EStageAnimation::Create).after(StageScene::Create),
+                StageScene::Command.after(StageScene::_Create),
+                StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading),
+                StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform),
+            )
         );
-
-        app.configure_set(Update, StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading));
-        app.configure_set(Update, StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
-        app.add_systems(Update, apply_deferred.in_set(StageScene::_Create));
 
         app.add_systems(
             Update,
             (
-                sys_env_texture_load_launch,
-                sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>
-            ).in_set(StageScene::TextureRequest)
+                apply_deferred.in_set(StageScene::_Create),
+                (
+                    sys_env_texture_load_launch,
+                    sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>
+                ).in_set(StageScene::TextureRequest),
+                (
+                    sys_env_texture_loaded_check,
+                    sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture>,
+                ).in_set(StageScene::TextureLoaded),
+                sys_create_scene.in_set(StageScene::Create),
+                (
+                    sys_act_scene_ambient,
+                    sys_act_scene_render,
+                ).in_set(StageScene::Command),
+                (
+                    sys_bind_update_scene_ambient,
+                ).in_set(ERunStageChap::Uniform),
+                sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose),
+            )
         );
-        app.add_systems(
-            Update,
-            (
-                sys_env_texture_loaded_check,
-                sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture>,
-            ).in_set(StageScene::TextureLoaded)
-        );
-
-        app.add_systems(Update, 
-            sys_create_scene.in_set(StageScene::Create)
-        );
-        
-        app.add_systems(
-			Update,
-            (
-                sys_act_scene_ambient,
-                sys_act_scene_render,
-            ).in_set(StageScene::Command)
-        );
-
-        app.add_systems(
-			Update,
-            (
-                sys_bind_update_scene_ambient,
-            ).in_set(ERunStageChap::Uniform)
-        );
-
-        app.add_systems(Update, sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose));
     }
     
 }

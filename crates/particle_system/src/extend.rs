@@ -9,7 +9,7 @@ use crate::{
     base::*,
 };
 
-pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
+pub fn format(config: &IParticleSystemConfig) -> (ParticleCalculatorBase, ParticleCalculatorStartModifiers, ParticleCalculatorOverLifetime, ParticleCalculatorCustomV4, ParticleCalculatorTrail) {
     let mut base = ParticleCalculatorBase {
         looping: config.looping == 1,
         prewarm: config.prewarm,
@@ -31,7 +31,7 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
     if let Some(render_pivot) = config.render_pivot {
         base.pivot = Vector3::new(render_pivot[0], render_pivot[1], render_pivot[2]);
     }
-    cmds.insert(base);
+    // cmds.insert(base);
 
     let shapeemitter = format_shape(Some(&config.shape));
     let emission = format_emission(config);
@@ -66,7 +66,7 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
     parse_float_interpolation(&mut interpolation, &Some(config.gravity.clone()), TParamType::TParamGravity, 1.0, );
     let gravity = ParticleCalculatorGravity(Gravity { interpolation }, Vector3::new(0., -9.8, 0.));
     
-    cmds.insert(ParticleCalculatorStartModifiers {
+    let comp1 = ParticleCalculatorStartModifiers {
         emission,
         shapeemitter,
         startcolor,
@@ -75,7 +75,7 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         startsize,
         startspeed,
         gravity,
-    });
+    };
 
     // VelocityOverLifetime
     let mut velocity = None;
@@ -195,7 +195,7 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         texturesheet = Some(ParticleCalculatorTextureSheet(t_sheet));
     }
 
-    cmds.insert(ParticleCalculatorOverLifetime {
+    let comp2 =ParticleCalculatorOverLifetime {
         orbitoffset,
         orbitradial,
         orbitvelocity,
@@ -210,10 +210,10 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         speed,
         limitvelocity,
         texturesheet
-    });
+    };
     
     // Custom Data V4
-    if let Some(custom1) = &(config.custom1) {
+    let comp3 = if let Some(custom1) = &(config.custom1) {
         let mut x = FloatInterpolation::new(0.);
         parse_float_interpolation(&mut x, &Some(custom1[0].clone()), TParamType::TParamStartLifetime, 1.0);
         let mut y = FloatInterpolation::new(0.);
@@ -223,10 +223,13 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
         let mut w = FloatInterpolation::new(0.);
         parse_float_interpolation(&mut w, &Some(custom1[3].clone()), TParamType::TParamStartLifetime, 1.0);
 
-        cmds.insert(ParticleCalculatorCustomV4 { x, y, z, w });
-    }
+        ParticleCalculatorCustomV4(Some(_ParticleCalculatorCustomV4 { x, y, z, w }))
+    } else {
+        ParticleCalculatorCustomV4(None)
+    };
+
     // Trail
-    if let Some(trail) = &(config.trail) {
+    let comp4 = if let Some(trail) = &(config.trail) {
         let mut ps_trail = TrailModifier::new();
         // ps_trail.set_mode(trail.mode);
         ps_trail.mode = trail.mode;
@@ -262,8 +265,14 @@ pub fn format(cmds: &mut EntityCommands, config: &IParticleSystemConfig) {
             Some(&trail.color_over_trail),
             TParamType::None,
         );
-        cmds.insert(ParticleCalculatorTrail(ps_trail));
-    }
+        ParticleCalculatorTrail(Some(ps_trail))
+    } else {
+        ParticleCalculatorTrail(None)
+    };
+
+    (
+        base, comp1, comp2, comp3, comp4
+    )
 }
 
 pub fn format_shape(shape: Option<&IShape>) -> ParticleCalculatorShapeEmitter {

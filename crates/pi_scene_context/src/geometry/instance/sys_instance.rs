@@ -48,25 +48,8 @@ impl Ord for TmpInstanceSort {
             )>
         >,
         dispoeds: Query<&DisposeReady>,
-        geometrys: Query<&InstancedInfo>,
-        mut slots: (
-            Query<&mut AssetResVBSlot01>,
-            Query<&mut AssetResVBSlot02>,
-            Query<&mut AssetResVBSlot03>,
-            Query<&mut AssetResVBSlot04>,
-            Query<&mut AssetResVBSlot05>,
-            Query<&mut AssetResVBSlot06>,
-            Query<&mut AssetResVBSlot07>,
-            Query<&mut AssetResVBSlot08>,
-            // Query<&mut AssetResVBSlot09>,
-            // Query<&mut AssetResVBSlot10>,
-            // Query<&mut AssetResVBSlot11>,
-            // Query<&mut AssetResVBSlot12>,
-            // Query<&mut AssetResVBSlot13>,
-            // Query<&mut AssetResVBSlot14>,
-            // Query<&mut AssetResVBSlot15>,
-            // Query<&mut AssetResVBSlot16>,
-        ),
+        geometrys: Query<&InstancedInfoComp>,
+        mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
         instancedcache: Res<InstanceBufferAllocator>,
         mut allocator: ResMut<VertexBufferAllocator3D>,
         device: Res<PiRenderDevice>,
@@ -78,7 +61,8 @@ impl Ord for TmpInstanceSort {
                 if meshinsstate.use_single_instancebuffer == false { return; }
                 // *renderenable = RenderGeometryEable(false);
 
-                if let Ok(buffer) = geometrys.get(idgeo.0) {
+                if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
+                    
                     if buffer.bytes_per_instance > 0 {
                         *renderenable = RenderGeometryEable(false);
                         instancessortinfos.0.clear();
@@ -138,25 +122,8 @@ impl Ord for TmpInstanceSort {
             )
         >,
         dispoeds: Query<&DisposeReady>,
-        geometrys: Query<&InstancedInfo>,
-        mut slots: (
-            Query<&mut AssetResVBSlot01>,
-            Query<&mut AssetResVBSlot02>,
-            Query<&mut AssetResVBSlot03>,
-            Query<&mut AssetResVBSlot04>,
-            Query<&mut AssetResVBSlot05>,
-            Query<&mut AssetResVBSlot06>,
-            Query<&mut AssetResVBSlot07>,
-            Query<&mut AssetResVBSlot08>,
-            // Query<&mut AssetResVBSlot09>,
-            // Query<&mut AssetResVBSlot10>,
-            // Query<&mut AssetResVBSlot11>,
-            // Query<&mut AssetResVBSlot12>,
-            // Query<&mut AssetResVBSlot13>,
-            // Query<&mut AssetResVBSlot14>,
-            // Query<&mut AssetResVBSlot15>,
-            // Query<&mut AssetResVBSlot16>,
-        ),
+        geometrys: Query<&InstancedInfoComp>,
+        mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
         mut instancedcache: ResMut<InstanceBufferAllocator>,
         mut allocator: ResMut<VertexBufferAllocator3D>,
         device: Res<PiRenderDevice>,
@@ -171,7 +138,7 @@ impl Ord for TmpInstanceSort {
                 
                 // log::warn!("sys_tick_instanced_buffer_update: ");
 
-                if let Ok(buffer) = geometrys.get(idgeo.0) {
+                if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
                     if buffer.bytes_per_instance > 0 {
                         *renderenable = RenderGeometryEable(false);
                         instancessortinfos.0.clear();
@@ -235,24 +202,7 @@ pub fn reset_instances_buffer(
     instancedinfo: &InstancedInfo,
     collected: Vec<u8>,
     count: u32,
-    slots: &mut (
-        Query<&mut AssetResVBSlot01>,
-        Query<&mut AssetResVBSlot02>,
-        Query<&mut AssetResVBSlot03>,
-        Query<&mut AssetResVBSlot04>,
-        Query<&mut AssetResVBSlot05>,
-        Query<&mut AssetResVBSlot06>,
-        Query<&mut AssetResVBSlot07>,
-        Query<&mut AssetResVBSlot08>,
-        // Query<&mut AssetResVBSlot09>,
-        // Query<&mut AssetResVBSlot10>,
-        // Query<&mut AssetResVBSlot11>,
-        // Query<&mut AssetResVBSlot12>,
-        // Query<&mut AssetResVBSlot13>,
-        // Query<&mut AssetResVBSlot14>,
-        // Query<&mut AssetResVBSlot15>,
-        // Query<&mut AssetResVBSlot16>,
-    ),
+    slots: &mut Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
     _instancedcache: &mut InstanceBufferAllocator,
     _allocator: &mut VertexBufferAllocator3D,
     _device:&RenderDevice,
@@ -274,47 +224,24 @@ pub fn reset_instances_buffer(
 pub fn reset_instances_buffer_range(
     idgeo: Entity,
     instancedinfo: &InstancedInfo,
-    slots: &mut (
-        Query<&mut AssetResVBSlot01>,
-        Query<&mut AssetResVBSlot02>,
-        Query<&mut AssetResVBSlot03>,
-        Query<&mut AssetResVBSlot04>,
-        Query<&mut AssetResVBSlot05>,
-        Query<&mut AssetResVBSlot06>,
-        Query<&mut AssetResVBSlot07>,
-        Query<&mut AssetResVBSlot08>,
-        // Query<&mut AssetResVBSlot09>,
-        // Query<&mut AssetResVBSlot10>,
-        // Query<&mut AssetResVBSlot11>,
-        // Query<&mut AssetResVBSlot12>,
-        // Query<&mut AssetResVBSlot13>,
-        // Query<&mut AssetResVBSlot14>,
-        // Query<&mut AssetResVBSlot15>,
-        // Query<&mut AssetResVBSlot16>,
-    ),
+    slots: &mut Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
     data: Vec<u8>,
     count: u32,
 ) {
     let data = EVerticesBufferTmp::Memory(EVerteicesMemory { data: data, itemcount: count as u32, slot: instancedinfo.slot() as u32 });
-    match instancedinfo.slot() {
-        EVertexBufferSlot::Slot01 => if let Ok(mut buffer) = slots.0.get_mut(idgeo)  { buffer.0 = data; },
-        EVertexBufferSlot::Slot02 => if let Ok(mut buffer) = slots.1.get_mut(idgeo)  { buffer.0 = data; },
-        EVertexBufferSlot::Slot03 => if let Ok(mut buffer) = slots.2.get_mut(idgeo)  { buffer.0 = data; },
-        EVertexBufferSlot::Slot04 => if let Ok(mut buffer) = slots.3.get_mut(idgeo)  { buffer.0 = data; },
-        EVertexBufferSlot::Slot05 => if let Ok(mut buffer) = slots.4.get_mut(idgeo)  { buffer.0 = data; },
-        EVertexBufferSlot::Slot06 => if let Ok(mut buffer) = slots.5.get_mut(idgeo)  { buffer.0 = data; },
-        EVertexBufferSlot::Slot07 => if let Ok(mut buffer) = slots.6.get_mut(idgeo)  { buffer.0 = data; },
-        EVertexBufferSlot::Slot08 => if let Ok(mut buffer) = slots.7.get_mut(idgeo)  { buffer.0 = data; },
-        // EVertexBufferSlot::Slot09 => if let Ok(mut buffer) = slots.8.get_mut(idgeo)  { buffer.0 = data; },
-        // EVertexBufferSlot::Slot10 => if let Ok(mut buffer) = slots.9.get_mut(idgeo)  { buffer.0 = data; },
-        // EVertexBufferSlot::Slot11 => if let Ok(mut buffer) = slots.10.get_mut(idgeo) { buffer.0 = data; },
-        // EVertexBufferSlot::Slot12 => if let Ok(mut buffer) = slots.11.get_mut(idgeo) { buffer.0 = data; },
-        // EVertexBufferSlot::Slot13 => if let Ok(mut buffer) = slots.12.get_mut(idgeo) { buffer.0 = data; },
-        // EVertexBufferSlot::Slot14 => if let Ok(mut buffer) = slots.13.get_mut(idgeo) { buffer.0 = data; },
-        // EVertexBufferSlot::Slot15 => if let Ok(mut buffer) = slots.14.get_mut(idgeo) { buffer.0 = data; },
-        // EVertexBufferSlot::Slot16 => if let Ok(mut buffer) = slots.15.get_mut(idgeo) { buffer.0 = data; },
-        _ => {}
-    };
+    if let Ok((desclist, mut buffer, mut keys)) = slots.get_mut(idgeo)  { 
+        match instancedinfo.slot() {
+            EVertexBufferSlot::Slot01 => { buffer[0] = Some(AssetResVBSlot(data)); keys.0[0] = desclist.key(0); },
+            EVertexBufferSlot::Slot02 => { buffer[1] = Some(AssetResVBSlot(data)); keys.0[1] = desclist.key(1); },
+            EVertexBufferSlot::Slot03 => { buffer[2] = Some(AssetResVBSlot(data)); keys.0[2] = desclist.key(2); },
+            EVertexBufferSlot::Slot04 => { buffer[3] = Some(AssetResVBSlot(data)); keys.0[3] = desclist.key(3); },
+            EVertexBufferSlot::Slot05 => { buffer[4] = Some(AssetResVBSlot(data)); keys.0[4] = desclist.key(4); },
+            EVertexBufferSlot::Slot06 => { buffer[5] = Some(AssetResVBSlot(data)); keys.0[5] = desclist.key(5); },
+            EVertexBufferSlot::Slot07 => { buffer[6] = Some(AssetResVBSlot(data)); keys.0[6] = desclist.key(6); },
+            EVertexBufferSlot::Slot08 => { buffer[7] = Some(AssetResVBSlot(data)); keys.0[7] = desclist.key(7); },
+            _ => {}
+        }
+    }
 }
 
 #[inline(never)]
@@ -322,48 +249,25 @@ pub fn reset_instances_buffer_single(
     idgeo: Entity,
     instancedinfo: &InstancedInfo,
     collected: &[u8],
-    slots: &mut (
-        Query<&mut AssetResVBSlot01>,
-        Query<&mut AssetResVBSlot02>,
-        Query<&mut AssetResVBSlot03>,
-        Query<&mut AssetResVBSlot04>,
-        Query<&mut AssetResVBSlot05>,
-        Query<&mut AssetResVBSlot06>,
-        Query<&mut AssetResVBSlot07>,
-        Query<&mut AssetResVBSlot08>,
-        // Query<&mut AssetResVBSlot09>,
-        // Query<&mut AssetResVBSlot10>,
-        // Query<&mut AssetResVBSlot11>,
-        // Query<&mut AssetResVBSlot12>,
-        // Query<&mut AssetResVBSlot13>,
-        // Query<&mut AssetResVBSlot14>,
-        // Query<&mut AssetResVBSlot15>,
-        // Query<&mut AssetResVBSlot16>,
-    ),
+    slots: &mut Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
     instancedcache: &InstanceBufferAllocator,
     allocator: &mut VertexBufferAllocator3D,
     device:&RenderDevice,
     queue: &PiRenderQueue,
 ) {
-    match instancedinfo.slot() {
-        EVertexBufferSlot::Slot01 => if let Ok(mut buffer) = slots.0.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        EVertexBufferSlot::Slot02 => if let Ok(mut buffer) = slots.1.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        EVertexBufferSlot::Slot03 => if let Ok(mut buffer) = slots.2.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        EVertexBufferSlot::Slot04 => if let Ok(mut buffer) = slots.3.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        EVertexBufferSlot::Slot05 => if let Ok(mut buffer) = slots.4.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        EVertexBufferSlot::Slot06 => if let Ok(mut buffer) = slots.5.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        EVertexBufferSlot::Slot07 => if let Ok(mut buffer) = slots.6.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        EVertexBufferSlot::Slot08 => if let Ok(mut buffer) = slots.7.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot09 => if let Ok(mut buffer) = slots.8.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot10 => if let Ok(mut buffer) = slots.9.get_mut(idgeo)  { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot11 => if let Ok(mut buffer) = slots.10.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot12 => if let Ok(mut buffer) = slots.11.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot13 => if let Ok(mut buffer) = slots.12.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot14 => if let Ok(mut buffer) = slots.13.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot15 => if let Ok(mut buffer) = slots.14.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        // EVertexBufferSlot::Slot16 => if let Ok(mut buffer) = slots.15.get_mut(idgeo) { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue) },
-        _ => {}
-    };
+    if let Ok((desclist, mut buffer, mut keys)) = slots.get_mut(idgeo) {
+        match instancedinfo.slot() {
+            EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[0] = desclist.key(0); } },
+            EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[1] = desclist.key(1); } },
+            EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[2] = desclist.key(2); } },
+            EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[3] = desclist.key(3); } },
+            EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[4] = desclist.key(4); } },
+            EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[5] = desclist.key(5); } },
+            EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[6] = desclist.key(6); } },
+            EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[7] = desclist.key(7); } },
+            _ => {}
+        }
+    }
 }
 
 fn update_instanced_buffer_for_single(

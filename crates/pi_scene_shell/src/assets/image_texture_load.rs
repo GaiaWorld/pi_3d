@@ -379,18 +379,6 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
             );
         }
         app.insert_resource(ImageTextureViewLoader::<K>::default());
-        // app.add_systems(
-		// 	Update,
-        //     (
-        //         sys_image_texture_view_load_launch::<K, D>,
-        //     ).chain().in_set(StageTextureLoad::TextureRequest)
-        // );
-        // app.add_systems(
-		// 	Update,
-        //     (
-        //         sys_image_texture_view_loaded_check::<K, D>,
-        //     ).in_set(StageTextureLoad::TextureLoaded)
-        // );
     }
 }
 impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component> Default for PluginImageTextureViewLoad<K, D> {

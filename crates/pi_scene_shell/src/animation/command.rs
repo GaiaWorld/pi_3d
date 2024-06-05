@@ -1,10 +1,9 @@
+use crate::ecs::*;
 
 use derive_deref::Deref;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation::AnimationInfo};
 
 use pi_curves::{curve::{frame::KeyFrameCurveValue, FramePerSecond}, easing::EEasingMode};
-
-use bevy_ecs::{prelude::*, system::SystemParam};
 
 use crate::prelude::ActionList;
 
@@ -12,8 +11,13 @@ use super::{base::*, float::AnimatorableFloat, vec2::AnimatorableVec2, vec3::Ani
 
 #[derive(Component, Deref)]
 pub struct AnimatorableLink(pub(crate) Entity);
+impl Default for AnimatorableLink {
+    fn default() -> Self {
+        Self(Entity::from_bits(0))
+    }
+}
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct TargetAnimatorableIsRunning;
 
 pub struct OpsAnimatorableFloat(pub(crate) Entity, pub(crate) Entity, pub(crate) AnimatorableFloat, pub(crate) EAnimatorableEntityType);

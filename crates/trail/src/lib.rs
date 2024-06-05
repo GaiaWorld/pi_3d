@@ -53,25 +53,28 @@ impl Plugin for PluginTrail {
         app.insert_resource(ActionListTrailAge::default());
         app.insert_resource(StateTrail::default());
 
-        app.configure_set(Update, StageTrail::TrailCreate.after(StageSkeleton::_SkinCreate));
-        app.configure_set(Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command));
-        app.configure_set(Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate));
-        app.configure_set(Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded));
-        app.add_systems(Update, apply_deferred.in_set(StageTrail::_TrailCreate));
-
-        app.add_systems(Update, sys_create_trail_mesh.in_set(StageTrail::TrailCreate));
-        app.add_systems(Update, (
-            sys_act_trail_age           // .run_if(should_run)
-        ).in_set(StageTrail::TrailCommand));
-        app.add_systems(Update, (
-            sys_trail_update            // .run_if(should_run)
-        ).in_set(StageTrail::TrailUpdate));
-        app.add_systems(
-			Update,
+        app.configure_sets(
+            Update,
             (
-                sys_dispose_about_trail_linked,
-                sys_dispose_about_trail
-            ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
+                StageTrail::TrailCreate.after(StageSkeleton::_SkinCreate),
+                StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command),
+                StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate),
+                StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded),
+            )
+        );
+
+        app.add_systems(
+            Update, 
+            (
+                apply_deferred.in_set(StageTrail::_TrailCreate),
+                sys_create_trail_mesh.in_set(StageTrail::TrailCreate),
+                sys_act_trail_age.in_set(StageTrail::TrailCommand),
+                sys_trail_update.in_set(StageTrail::TrailUpdate),
+                (
+                    sys_dispose_about_trail_linked,
+                    sys_dispose_about_trail
+                ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
+            )
         );
     }
 }

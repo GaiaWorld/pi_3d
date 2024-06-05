@@ -75,6 +75,7 @@ pub fn sys_state_material(
     state.count_ready = 0;
 
     materials.iter().for_each(|(meta, texs)| {
+        let meta = meta.0.as_ref().unwrap();
         state.count += 1;
         if let Some(texs) = &texs.0 {
             if texs.textures.len() == meta.textures.len() {

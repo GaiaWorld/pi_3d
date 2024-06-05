@@ -18,6 +18,7 @@ pub fn sys_create_renderer(
     mut graphic: ResMut<PiRenderGraph>,
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
     mut error: ResMut<ErrorRecord>,
+    // mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
         if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
@@ -25,10 +26,13 @@ pub fn sys_create_renderer(
             match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
                     if let Some(mut cmd) = commands.get_entity(entity) {
-                        cmd.insert((
+                        let bundle = (
                             GraphId(nodeid), sceneid.clone(),
                             ActionRenderer::init(id_viewer, passtag, transparent)
-                        ));
+                        );
+                        cmd.insert(bundle);
+                        // alter.alter(entity, bundle);
+
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
                     }
@@ -46,7 +50,7 @@ pub fn sys_create_renderer(
 
 pub fn sys_act_renderer_target(
     mut cmds: ResMut<ActionListRendererTarget>,
-    mut renderers: Query<(&mut RenderSize, &mut RenderColorFormat, &mut RenderDepthFormat, &mut RendererRenderTarget, &GraphId)>,
+    mut renderers: Query<(&mut RendererParam, &mut RendererRenderTarget, &GraphId)>,
     targets: Res<CustomRenderTargets>,
     mut graphic: ResMut<PiRenderGraph>,
     mut error: ResMut<ErrorRecord>,
@@ -54,15 +58,15 @@ pub fn sys_act_renderer_target(
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsRendererTarget::Custom(entity, keytarget) => {
-                if let Ok((mut rendersize, mut color_format, mut depth_stencil_format, mut rendertarget, nodeid)) = renderers.get_mut(entity) {
+                if let Ok((mut renderparam, mut rendertarget, nodeid)) = renderers.get_mut(entity) {
 
                     match keytarget {
                         KeyCustomRenderTarget::Custom(key) => {
                             if let Some(srt) = targets.get(key) {
-                                *rendersize = RenderSize::new(srt.width, srt.height);
+                                renderparam.rendersize = RenderSize::new(srt.width, srt.height);
                                 *rendertarget = RendererRenderTarget::Custom(srt.rt.clone());
-                                *color_format = RenderColorFormat(srt.color_format);
-                                *depth_stencil_format = RenderDepthFormat(srt.depth_stencil_format);
+                                renderparam.colorformat = RenderColorFormat(srt.color_format);
+                                renderparam.depthstencilformat = RenderDepthFormat(srt.depth_stencil_format);
                                 // log::warn!("sys_act_renderer_target Custom {:?}", srt.color_format);
                             } else {
                                 *rendertarget = RendererRenderTarget::None(None);
@@ -77,8 +81,8 @@ pub fn sys_act_renderer_target(
                                 _ => ColorFormat::Rgba8Unorm
                             };
     
-                            *color_format = RenderColorFormat(format);
-                            *depth_stencil_format = RenderDepthFormat(DepthStencilFormat::None);
+                            renderparam.colorformat = RenderColorFormat(format);
+                            renderparam.depthstencilformat = RenderDepthFormat(DepthStencilFormat::None);
                             *rendertarget = RendererRenderTarget::FinalRender;
     
                             if let Err(err) = graphic.set_finish(nodeid.0, true) {
@@ -89,10 +93,10 @@ pub fn sys_act_renderer_target(
                 };
             },
             OpsRendererTarget::Auto(entity, width, height, colorformat, depthstencilformat) => {
-                if let Ok((mut rendersize, mut color_format, mut depth_stencil_format, mut rendertarget, _nodeid)) = renderers.get_mut(entity) {
-                    *rendersize = RenderSize::new(width as u32, height as u32);
-                    *color_format = RenderColorFormat(colorformat);
-                    *depth_stencil_format = RenderDepthFormat(depthstencilformat);
+                if let Ok((mut renderparam, mut rendertarget, _nodeid)) = renderers.get_mut(entity) {
+                    renderparam.rendersize = RenderSize::new(width as u32, height as u32);
+                    renderparam.colorformat = RenderColorFormat(colorformat);
+                    renderparam.depthstencilformat = RenderDepthFormat(depthstencilformat);
                     *rendertarget = RendererRenderTarget::None(None);
                 }
             },
@@ -100,67 +104,55 @@ pub fn sys_act_renderer_target(
     });
 }
 
-pub fn sys_renderer_modify(
+pub fn sys_act_renderer_modify(
     mut cmds: ResMut<ActionListRendererModify>,
-    mut enables: Query<&mut RendererEnable>,
-    // mut rendersizes: Query<&mut RenderSize>,
-    mut colorclear: Query<&mut RenderColorClear>,
-    // mut colorformat: Query<&mut RenderColorFormat>,
-    mut depthclear: Query<&mut RenderDepthClear>,
-    // mut depthformat: Query<&mut RenderDepthFormat>,
-    mut stencilclear: Query<&mut RenderStencilClear>,
-    mut autoclearcolor: Query<&mut RenderAutoClearColor>,
-    mut autocleardepth: Query<&mut RenderAutoClearDepth>,
-    mut autoclearstencil: Query<&mut RenderAutoClearStencil>,
-    mut viewport: Query<&mut RenderViewport>,
-    mut renderblend: Query<&mut RendererBlend>,
-    // mut tofinals: Query<&mut RendererRenderTarget>,
+    mut params: Query<&mut RendererParam>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsRendererCommand::Active(entity, val) => {
-                if let Ok(mut comp) = enables.get_mut(entity) {
-                    *comp = RendererEnable(val);
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.enable = RendererEnable(val);
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::Blend(entity, val) => {
-                if let Ok(mut comp) = renderblend.get_mut(entity) {
-                    *comp = RendererBlend(val);
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.blend = RendererBlend(val);
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::ColorClear(entity, val) => {
-                if let Ok(mut comp) = colorclear.get_mut(entity) {
-                    *comp = val;
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.color_clear = val;
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::DepthClear(entity, val) => {
-                if let Ok(mut comp) = depthclear.get_mut(entity) {
-                    *comp = val;
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.depth_clear = val;
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::StencilClear(entity, val) => {
-                if let Ok(mut comp) = stencilclear.get_mut(entity) {
-                    *comp = val;
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.stencil_clear = val;
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::AutoClearColor(entity, val) => {
-                if let Ok(mut comp) = autoclearcolor.get_mut(entity) {
-                    *comp = RenderAutoClearColor(val);
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.auto_clear_color = RenderAutoClearColor(val);
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::AutoClearDepth(entity, val) => {
-                if let Ok(mut comp) = autocleardepth.get_mut(entity) {
-                    *comp = RenderAutoClearDepth(val);
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.auto_clear_depth = RenderAutoClearDepth(val);
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::AutoClearStencil(entity, val) => {
-                if let Ok(mut comp) = autoclearstencil.get_mut(entity) {
-                    *comp = RenderAutoClearStencil(val);
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.auto_clear_stencil = RenderAutoClearStencil(val);
                 } else { cmds.push(cmd) }
             },
             OpsRendererCommand::Viewport(entity, x, y, z, w) => {
-                if let Ok(mut comp) = viewport.get_mut(entity) {
-                    *comp = RenderViewport(x, y, z, w, 0., 1.);
+                if let Ok(mut comp) = params.get_mut(entity) {
+                    comp.viewport = RenderViewport(x, y, z, w, 0., 1.);
                 } else { cmds.push(cmd) }
             }
         }
@@ -191,7 +183,7 @@ pub fn sys_act_renderer_connect(
 
 pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
-    renderers: Query<(Entity, &GraphId, &RendererEnable, &DisposeCan, &ViewerID), Changed<DisposeCan>>,
+    renderers: Query<(Entity, &GraphId, &RendererParam, &DisposeCan, &ViewerID), Changed<DisposeCan>>,
     mut viewers: Query<&mut ViewerRenderersInfo>,
     mut error: ResMut<ErrorRecord>,
 ) {
@@ -208,25 +200,12 @@ pub fn sys_dispose_renderer(
 }
 
 pub type RendererBundle = (
-    EntityBundle,
+    BundleEntity,
     (
         PassTag,
         Renderer,
-        RenderViewport,
-        RenderSize,
-        RendererEnable,
-        RenderColorClear,
-        RenderColorFormat,
-        RenderDepthClear,
-        RenderDepthFormat,
-        RenderStencilClear,
-    ),
-    (
-        RenderAutoClearColor,
-        RenderAutoClearDepth,
-        RenderAutoClearStencil,
+        RendererParam,
         RendererRenderTarget,
-        RendererBlend,
         ViewerID,
         Postprocess,
     )
@@ -244,47 +223,12 @@ impl ActionRenderer {
             (
                 passtag,
                 Renderer::new(),
-                RenderViewport::default(),
-                RenderSize::new(100, 100),
-                RendererEnable(true),
-                RenderColorClear::default(),
-                RenderColorFormat::default(),
-                RenderDepthClear::default(),
-                RenderDepthFormat::default(),
-                RenderStencilClear::default(),
-                
-            ),
-            (
-                RenderAutoClearColor::default(),
-                RenderAutoClearDepth::default(),
-                RenderAutoClearStencil::default(),
+                RendererParam::new(transparent),
                 RendererRenderTarget::None(None),
-                RendererBlend(transparent),
                 ViewerID(id_viewer),
                 Postprocess::default(),
             )
         )
-    }
-    pub fn create_graphic_node(
-        commands: &mut Commands,
-        render_graphic: &mut PiRenderGraph,
-        error: &mut ErrorRecord,
-        name: String,
-    ) -> Entity {
-        let entity = commands.spawn_empty().id();
-        let render_node = RenderNode::new(entity);
-        match render_graphic.add_node(name, render_node, NodeId::null()) {
-            Ok(nodeid) => {
-                if let Some(mut cmd) = commands.get_entity(entity) {
-                    cmd.insert(GraphId(nodeid));  
-                }
-            },
-            Err(err) => {
-                error.graphic(entity, err);
-            },
-        }
-
-        entity
     }
     pub fn apply_graph_id(
         node: NodeId,

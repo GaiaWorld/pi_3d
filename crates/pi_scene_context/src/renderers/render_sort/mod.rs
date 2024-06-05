@@ -1,5 +1,7 @@
 
 
+use std::default;
+
 use pi_scene_shell::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Component)]
@@ -7,8 +9,13 @@ pub enum ERenderSortParam {
     Opaque(OpaqueSortParam),
     Tansparent(TransparentSortParam),
 }
+impl Default for ERenderSortParam {
+    fn default() -> Self {
+        Self::Opaque(OpaqueSortParam { disance: 0. })
+    }
+}
 
-#[derive(Debug, Clone, Copy, PartialOrd, Component)]
+#[derive(Debug, Clone, Copy, PartialOrd, Component, Default)]
 pub struct OpaqueSortParam {
     pub disance: f32,
 }
@@ -21,7 +28,7 @@ impl Eq for OpaqueSortParam {
     fn assert_receiver_is_total_eq(&self) {}
 }
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Default)]
 pub struct TransparentSortParam {
     /// 同 渲染类型 中的 渲染分组
     pub group: i32,
@@ -86,16 +93,6 @@ impl OpsRenderQueue {
     }
 }
 pub type ActionListRenderQueue = ActionList<OpsRenderQueue>;
-
-pub struct ActionRenderSort;
-impl ActionRenderSort {
-    pub fn modify(
-        commands: &mut EntityCommands,
-        val: TransparentSortParam,
-    ) {
-        commands.insert(val);
-    }
-}
 
 pub fn sys_act_render_queue(
     mut cmds: ResMut<ActionListRenderQueue>,

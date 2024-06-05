@@ -25,6 +25,7 @@ pub fn sys_material_textures_modify(
         mut slots,
         mut samplers
     )| {
+        let effect = effect.0.as_ref().unwrap().as_ref();
         if effect.textures.len() == 0 {
             //
         } else {
@@ -135,6 +136,7 @@ pub fn sys_texture_ready07(
         , textures, samplers
         , mut comp
     )| {
+        let binddesc = binddesc.0.as_ref().unwrap();
         let need = binddesc.textures.len();
         let mut texsamplerarr =  EffectTextureSamplers::default();
 

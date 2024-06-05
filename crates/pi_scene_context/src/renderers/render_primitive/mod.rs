@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 
 use super::*;
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy)]
 pub struct PrimitiveState {
     pub cull: CullMode,
     pub polygon: PolygonMode,
@@ -52,24 +52,3 @@ impl OpsPrimitiveState {
     }
 }
 pub type ActionListPrimitiveState = ActionList<OpsPrimitiveState>;
-pub fn sys_act_mesh_primitive_state(
-    mut cmds: ResMut<ActionListPrimitiveState>,
-    models: Query<&PassIDs>,
-    mut items: Query<&mut PrimitiveState>,
-) {
-    cmds.drain().drain(..).for_each(|OpsPrimitiveState(entity, tag, cmd)| {
-        if let Ok(passids) = models.get(entity) {
-            let passid = passids.0[tag.index()];
-
-            if let Ok(mut item) = items.get_mut(passid) {
-                match cmd {
-                    EPrimitiveState::CCullMode      (val) =>  item.cull = val ,
-                    EPrimitiveState::CPolygonMode   (val) => item.polygon = val ,
-                    EPrimitiveState::CFrontFace     (val) => item.frontface = val ,
-                    EPrimitiveState::CUnClipDepth   (val) => item.unclip_depth = val ,
-                    EPrimitiveState::Topology       (val) => item.topology = val ,
-                }
-            }
-        }
-    });
-}

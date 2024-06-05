@@ -14,9 +14,9 @@ pub mod prelude;
 
 ///
 /// * 渲染视口功能
-/// * T - 获取 ViewerViewMatrix 的 Component
+/// * T - 获取 ViewerViewMatrix 的 component
 /// * S - 获取 ViewerViewMatrix 需要依赖的 System
-/// * T2 - 获取 ViewerProjectionMatrix 的 Component
+/// * T2 - 获取 ViewerProjectionMatrix 的 component
 /// * S2 - 获取 ViewerProjectionMatrix 需要依赖的 System
 pub struct PluginViewerBase;
 impl Plugin for PluginViewerBase {

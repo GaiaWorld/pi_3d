@@ -19,7 +19,8 @@ use super::{
 };
 
 pub type MaterialBundle = (
-    EntityBundle,
+    BundleEntity,
+    (BindEffect, AssetResShaderEffectMeta, TexWithAtlas),
     (
         TargetAnimatorableIsRunning,
         UniformAnimated,
@@ -46,6 +47,7 @@ pub fn sys_create_material(
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
+    // mut alter: Alter<(), (), MaterialBundle, ()>
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
@@ -58,20 +60,10 @@ pub fn sys_create_material(
         if let Some(meta) = asset_shader.get(&key_shader) {
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
             let mut matcmds = commands.entity(entity);
-            matcmds.insert((BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)));
-        } else {
-            errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
-            // log::error!("ERROR_MATERIAL_SHADER_NOTFOUND: {:?}", key_shader);
-        }
 
-        let mut matcmds = commands.entity(entity);
-        // let keytex = Arc::new(UniformTextureWithSamplerParam::default());
-
-        if texatlas { matcmds.insert(TexWithAtlas); }
-
-        matcmds.insert(
-            (
+            let bundle = (
                 ActionEntity::init(),
+                (BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta), TexWithAtlas(texatlas)),
                 (
                     TargetAnimatorableIsRunning,
                     UniformAnimated::default(),
@@ -87,8 +79,13 @@ pub fn sys_create_material(
                     EffectBindTexture2DList::default(),
                     EffectTextureSamplersComp::default(),
                 )
-            )
-        );
+            );
+            matcmds.insert(bundle);
+            // alter.alter(entity, bundle);
+        } else {
+            errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
+            // log::error!("ERROR_MATERIAL_SHADER_NOTFOUND: {:?}", key_shader);
+        }
     });
 }
 
@@ -273,12 +270,12 @@ fn _bind_value(
 
 pub fn sys_act_material_texture(
     mut cmds: ResMut<ActionListUniformTexture>,
-    mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty, Option<&TexWithAtlas>)>,
+    mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty, &TexWithAtlas)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsUniformTexture(entity, mut param)| {
         if let Ok((mut textureparams, mut flag, texatlas)) = textureparams.get_mut(entity) {
             // log::warn!("EUniformCommand::Texture");
-            if texatlas.is_some() {
+            if texatlas.0 {
                 param.sample.address_mode_u = EAddressMode::default();
                 param.sample.address_mode_v = EAddressMode::default();
                 param.sample.address_mode_w = EAddressMode::default();

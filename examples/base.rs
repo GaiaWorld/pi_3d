@@ -1,4 +1,5 @@
 use bevy_a11y::AccessibilityPlugin;
+use bevy_input::*;
 #[allow(dead_code)]
 #[allow(unused_imports)]
 
@@ -220,7 +221,7 @@ impl AddEvent for App {
 pub fn test_plugins() -> App {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
-    let mut app = App::default();
+    let mut app = App::new();
 
     let width = 800;
     let height = 600;
@@ -258,7 +259,7 @@ pub fn test_plugins() -> App {
         )
     );
             
-    app.add_plugins(PluginBundleDefault);
+    PluginBundleDefault::add(&mut app);
     
     app.add_plugins((
         PluginNodeMaterial,
@@ -304,7 +305,7 @@ pub fn test_plugins() -> App {
 pub fn test_plugins_with_gltf() -> App {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
-    let mut app = App::default();
+    let mut app = App::new();
     let width = 800;
     let height = 600;
 
@@ -344,7 +345,7 @@ pub fn test_plugins_with_gltf() -> App {
         )
     );
             
-    app.add_plugins(PluginBundleDefault);
+    PluginBundleDefault::add(&mut app);
     app.add_plugins((
         PluginNodeMaterial,
         PluginShadowGenerator,

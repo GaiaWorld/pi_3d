@@ -15,6 +15,78 @@ use super::{
 };
 
 
+pub type BundleModelStatic = (GeometryID, ModelStatic, BindModel);
+pub type BundleModel = (
+    TransformNodeBundle,
+    BundleMesh,
+    BundleInstanceSource,
+    TargetAnimatorableIsRunning, InstanceAttributeAnimated,
+    BundleMeshLighting,
+    MeshStates, DirtyMeshStates, ModelInstanceAttributes, MeshInstanceState
+);
+
+pub type BundleMesh = (
+    (
+        AbstructMesh,
+        Mesh,
+        GeometryID,
+        RenderGeometryEable,
+        RenderWorldMatrix,
+        RenderWorldMatrixInv,
+        RenderMatrixDirty,
+        MeshCastShadow,
+        MeshReceiveShadow,
+        PassDirtyBindEffectValue,
+        FlagPassDirtyBindEffectValue,
+        PassDirtyBindEffectTextures,
+        FlagPassDirtyBindEffectTextures,
+        LayerMask,
+        AbstructMeshCullingFlag,
+    ),
+    (
+        TransparentSortParam,
+        BindSkinValue,
+        ModelVelocity,
+        RenderAlignment,
+        ScalingMode,
+        IndiceRenderRange,
+        RecordIndiceRenderRange,
+        VertexRenderRange,
+        GeometryBounding,
+        GeometryCullingMode,
+        InstancedMeshTransparentSortCollection,
+        SkeletonID,
+    )
+);
+
+pub type BundleInstanceSource = (
+    InstanceSourceRefs,
+    DirtyInstanceSourceRefs,
+    DirtyInstanceSourceForSingleBuffer,
+);
+
+pub type BundleInstance = (
+    AbstructMesh,
+    AbstructMeshCullingFlag,
+    InstanceTransparentIndex,
+    InstanceMesh,
+    RenderMatrixDirty,
+    RenderWorldMatrix,
+    RenderWorldMatrixInv,
+    ModelVelocity,
+    ScalingMode,
+    GeometryBounding,
+    GeometryCullingMode,
+);
+
+pub type BundleMeshLighting = (
+    MeshLightingMode,
+    ModelLightingIndexs,
+    ModelForcePointLightings,
+    ModelForceSpotLightings,
+    ModelForceHemiLightings,
+);
+
 pub fn sys_create_mesh(
     mut cmds: ResMut<ActionListMeshCreate>,
     mut commands: Commands,
@@ -25,6 +97,8 @@ pub fn sys_create_mesh(
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
     mut instancecmds: ResMut<ActionListInstanceMeshCreate>,
+    // mut altermodel: Alter<(), (), BundleModel, ()>,
+    // mut insert: Insert<PassObjBundle>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
@@ -39,6 +113,7 @@ pub fn sys_create_instanced_mesh(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
     mut commands: Commands,
     mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &ModelInstanceAttributes)>,
+    // mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, InstanceBundle)), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, count)| {
         if let Ok((id_scene, mut instancelist, mut flag, instanceattrs)) = meshes.get_mut(source) {
@@ -46,12 +121,14 @@ pub fn sys_create_instanced_mesh(
             let instanceattrs = instanceattrs.clone();
 
             if let Some(mut commands) = commands.get_entity(instance) {
-                commands.insert((
+                let bundle = (
                     instanceattrs,
                     TargetAnimatorableIsRunning,
                     InstanceAttributeAnimated::default(),
                     ActionInstanceMesh::init(source, id_scene.0),
-                ));
+                );
+                commands.insert(bundle);
+                // alter.alter(instance, bundle);
     
                 instancelist.insert(instance);
                 *flag = DirtyInstanceSourceRefs;
@@ -161,7 +238,7 @@ pub fn sys_act_mesh_modify(
     value_cmds.drain().drain(..).for_each(|OpsAbstructMeshValueStateModify(entity, val)| {
         match val {
             EMeshValueStateModify::BoneOffset(val) => if let Ok(bind) = skinoff_items.get(entity) {
-                bind.0.data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[val]));
+                bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[val]));
             },
             EMeshValueStateModify::IndiceRange(val) => if let Ok((mut item, mut record)) = indices_items.get_mut(entity) {
                 *record = RecordIndiceRenderRange(IndiceRenderRange::new(val.clone()));
@@ -251,59 +328,6 @@ pub fn sys_act_instance_attribute(
     });
 }
 
-pub type MeshBundle = (
-    (
-        AbstructMesh,
-        Mesh,
-        GeometryID,
-        RenderGeometryEable,
-        RenderWorldMatrix,
-        RenderWorldMatrixInv,
-        RenderMatrixDirty,
-        MeshCastShadow,
-        MeshReceiveShadow,
-        PassDirtyBindEffectValue,
-        FlagPassDirtyBindEffectValue,
-        PassDirtyBindEffectTextures,
-        FlagPassDirtyBindEffectTextures,
-        LayerMask,
-        AbstructMeshCullingFlag,
-    ),
-    (
-        TransparentSortParam,
-        BindSkinValue,
-        ModelVelocity,
-        RenderAlignment,
-        ScalingMode,
-        IndiceRenderRange,
-        RecordIndiceRenderRange,
-        VertexRenderRange,
-        GeometryBounding,
-        GeometryCullingMode,
-        InstancedMeshTransparentSortCollection,
-    )
-);
-
-pub type InstanceSourceBundle = (
-    InstanceSourceRefs,
-    DirtyInstanceSourceRefs,
-    DirtyInstanceSourceForSingleBuffer,
-);
-
-pub type InstanceBundle = (
-    AbstructMesh,
-    AbstructMeshCullingFlag,
-    InstanceTransparentIndex,
-    InstanceMesh,
-    RenderMatrixDirty,
-    RenderWorldMatrix,
-    RenderWorldMatrixInv,
-    ModelVelocity,
-    ScalingMode,
-    GeometryBounding,
-    GeometryCullingMode,
-);
-
 pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
@@ -315,6 +339,7 @@ impl ActionMesh {
         mut state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
+        // altermodel: &mut Alter<(), (), BundleModel, ()>,
     ) -> bool {
         // state.instance_matrix = true;
         // state.instances.push(
@@ -325,68 +350,115 @@ impl ActionMesh {
         //     )
         // );
         // state.instances.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::ModelMaterialSkin));
-
+        
         let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
-        let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
-            cmd
-        } else {
+        if commands.get_entity(entity).is_none() {
             return false;
         };
+
+        let id01 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01)).id();
+        let id02 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02)).id();
+        let id03 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03)).id();
+        let id04 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04)).id();
+        let id05 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_05)).id();
+        let id06 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06)).id();
+        let id07 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07)).id();
+        let id08 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08)).id();
+        let passids = PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]);
+
+        let mut entitycmd = commands.get_entity(entity).unwrap();
+        let instanceattr = meshinstanceattributes.bytes().len() > 0;
+
         let modellightidx = ModelLightingIndexs::new(allocator, lightlimit);
-
-        if meshinstanceattributes.bytes().len() > 0 {
-            entitycmd.insert((commonbindmodel.0.clone(), ModelStatic));
-        } else {
-            if let Some(bind) = BindModel::new(allocator) {
-                // log::info!("BindModel New");
-                entitycmd.insert(bind);
-            }
-        }
-
-        entitycmd.insert((
+        let lightbundle = (
+            MeshLightingMode::default(),
+            modellightidx,
+            ModelForcePointLightings::default(),
+            ModelForceSpotLightings::default(),
+            ModelForceHemiLightings::default(),
+        );
+        let bundle: BundleModel = (
             ActionTransformNode::init(scene),
             ActionMesh::as_mesh(empty.id()),
             ActionMesh::as_instance_source(),
             TargetAnimatorableIsRunning, InstanceAttributeAnimated::default(),
-            (
-                MeshLightingMode::default(),
-                modellightidx,
-                ModelForcePointLightings::default(),
-                ModelForceSpotLightings::default(),
-                ModelForceHemiLightings::default(),
-                MeshStates::default(),
-                DirtyMeshStates,
-                meshinstanceattributes,
-                state,
-            )
-        ));
+            lightbundle,
+            MeshStates::default(),
+            DirtyMeshStates,
+            meshinstanceattributes,
+            state,
+        );
 
-        // entitycmd.insert(ModelPointLightingDirty::default());
-        // entitycmd.insert(ModelSpotLightingDirty::default());
-        // entitycmd.insert(ModelHemiLightingDirty::default());
+        if instanceattr {
+            entitycmd.insert((bundle, commonbindmodel.0.clone(), ModelStatic, passids));
+        } else {
+            if let Some(bind) = BindModel::new(allocator) {
+                entitycmd.insert((bundle, bind, passids));
+            }
+        }
 
-        let id01 = commands.spawn_empty().id();
-        let id02 = commands.spawn_empty().id();
-        let id03 = commands.spawn_empty().id();
-        let id04 = commands.spawn_empty().id();
-        let id05 = commands.spawn_empty().id();
-        let id06 = commands.spawn_empty().id();
-        let id07 = commands.spawn_empty().id();
-        let id08 = commands.spawn_empty().id();
-        commands.entity(entity).insert(PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]));
-        create_passobj(commands, id01, entity, scene, empty.id(), PassTag::PASS_TAG_01);
-        create_passobj(commands, id02, entity, scene, empty.id(), PassTag::PASS_TAG_02);
-        create_passobj(commands, id03, entity, scene, empty.id(), PassTag::PASS_TAG_03);
-        create_passobj(commands, id04, entity, scene, empty.id(), PassTag::PASS_TAG_04);
-        create_passobj(commands, id05, entity, scene, empty.id(), PassTag::PASS_TAG_05);
-        create_passobj(commands, id06, entity, scene, empty.id(), PassTag::PASS_TAG_06);
-        create_passobj(commands, id07, entity, scene, empty.id(), PassTag::PASS_TAG_07);
-        create_passobj(commands, id08, entity, scene, empty.id(), PassTag::PASS_TAG_08);
+        // let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
+        // let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
+        //     cmd
+        // } else {
+        //     return false;
+        // };
+        // let modellightidx = ModelLightingIndexs::new(allocator, lightlimit);
+
+        // if meshinstanceattributes.bytes().len() > 0 {
+        //     entitycmd.insert((commonbindmodel.0.clone(), ModelStatic));
+        //     log::warn!(">>>>>>>>>>> sys_create_mesh 1");
+        // } else {
+        //     if let Some(bind) = BindModel::new(allocator) {
+        //         // log::info!("BindModel New");
+        //         entitycmd.insert((bind,));
+        //         log::warn!(">>>>>>>>>>> sys_create_mesh 2");
+        //     }
+        // }
+        // let lightbundle = (
+        //     MeshLightingMode::default(),
+        //     modellightidx,
+        //     ModelForcePointLightings::default(),
+        //     ModelForceSpotLightings::default(),
+        //     ModelForceHemiLightings::default(),
+        // );
+        // let bundle: BundleModel = (
+        //     ActionTransformNode::init(scene),
+        //     ActionMesh::as_mesh(empty.id()),
+        //     ActionMesh::as_instance_source(),
+        //     TargetAnimatorableIsRunning, InstanceAttributeAnimated::default(),
+        //     lightbundle,
+        //     MeshStates::default(),
+        //     DirtyMeshStates,
+        //     meshinstanceattributes,
+        //     state,
+        // );
+
+        // log::warn!(">>>>>>>>>>> sys_create_mesh 3");
+        // entitycmd.insert(bundle);
+        // // altermodel.alter(entity, bundle);
+        
+        // log::warn!(">>>>>>>>>>> sys_create_mesh OKKK");
+
+        // // entitycmd.insert(ModelPointLightingDirty::default());
+        // // entitycmd.insert(ModelSpotLightingDirty::default());
+        // // entitycmd.insert(ModelHemiLightingDirty::default());
+
+        // let id01 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01)).id();
+        // let id02 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02)).id();
+        // let id03 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03)).id();
+        // let id04 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04)).id();
+        // let id05 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_05)).id();
+        // let id06 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06)).id();
+        // let id07 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07)).id();
+        // let id08 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08)).id();
+        // commands.entity(entity).insert((PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]),));
+
         return true;
     }
     pub(crate) fn as_mesh(
         geometry: Entity,
-    ) -> MeshBundle {
+    ) -> BundleMesh {
         // let mut unclipdepth = false;
         // #[cfg(not(target_arch = "wasm32"))]
         // {
@@ -421,10 +493,11 @@ impl ActionMesh {
             GeometryBounding::default(),
             GeometryCullingMode::default(),
             InstancedMeshTransparentSortCollection(vec![]),
+            SkeletonID(None),
         ))
     }
 
-    pub fn as_instance_source() -> InstanceSourceBundle {
+    pub fn as_instance_source() -> BundleInstanceSource {
         (
             InstanceSourceRefs::default(),
             DirtyInstanceSourceRefs::default(),
@@ -437,7 +510,7 @@ impl ActionInstanceMesh {
     pub fn init(
         source: Entity,
         scene: Entity,
-    ) -> (TransformNodeBundle, InstanceBundle) {
+    ) -> (TransformNodeBundle, BundleInstance) {
         (
             ActionTransformNode::init(scene),
             ActionInstanceMesh::as_instance(source)
@@ -445,7 +518,7 @@ impl ActionInstanceMesh {
     }
     pub(crate) fn as_instance(
         source: Entity,
-    ) -> InstanceBundle {
+    ) -> BundleInstance {
         (
             AbstructMesh,
             AbstructMeshCullingFlag(false),
@@ -463,17 +536,14 @@ impl ActionInstanceMesh {
 }
 
 fn create_passobj(
-    commands: &mut Commands,
-    id: Entity,
     idmodel: Entity,
     scene: Entity,
     empty: Entity,
     tag: PassTag,
-) {
-    let mut entitycmd = commands.entity(id);
-    entitycmd.insert((
+) -> (BundleEntity, PassObjInitBundle, PassTag) {
+    (
         ActionEntity::init(),
         ActionPassObject::init(empty, idmodel, scene),
         tag
-    ));
+    )
 }
