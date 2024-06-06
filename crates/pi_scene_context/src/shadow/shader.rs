@@ -54,7 +54,7 @@ layout(location = 0) out vec4 gl_FragColor;
 layout(location = 0) in float vDepthMetricSM;
 "), 
                 running: Atom::from("
-if (vDepthMetricSM <= 0.00001) {
+if (vDepthMetricSM <= 0.0) {
     discard;
 }
 float depthSM = vDepthMetricSM * uShadowDepthScale;

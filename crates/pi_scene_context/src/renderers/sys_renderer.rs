@@ -543,7 +543,7 @@ use super::{
                         }
                     }
 
-                    // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
+                    // log::warn!("Renderer Draw {:?}", (passtag, list_model.0.len(), renderer.draws.list.len()));
             }
 
             renderer.vertexs = count_vertex;
