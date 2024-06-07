@@ -10,8 +10,8 @@ use crate::{
 use super::base::*;
 
 pub fn sys_set0_modify(
-    mut items: Query<(&PassModelID, &PassSceneID, &PassViewerID, &PassEffectReady, &mut PassBindGroupScene), Or<(Changed<PassSceneID>, Changed<PassViewerID>, Changed<PassEffectReady>)>>,
-    viewers: Query<Option<&BindViewer>>,
+    mut items: Query<(Entity, &PassModelID, &PassSceneID, &PassViewerID, &PassEffectReady, &mut PassBindGroupScene), Or<(Changed<PassSceneID>, Changed<PassViewerID>, Changed<PassEffectReady>)>>,
+    viewers: Query<&BindViewer>,
     scenes: Query<(&BindSceneEffect, &SceneLightingInfos, &BRDFTexture, &BRDFSampler, &MainCameraOpaqueTarget, &MainCameraDepthTarget, &SceneShadowRenderTarget, Option<&SceneShadowInfos>, &EnvTexture, &EnvIrradiance, &EnvSampler)>,
     device: Res<PiRenderDevice>,
     asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
@@ -21,8 +21,9 @@ pub fn sys_set0_modify(
 ) {
     let time1 = pi_time::Instant::now();
 
-    items.iter_mut().for_each(|(idmodel, idscene, idviewer, meta, mut set0)| {
+    items.iter_mut().for_each(|(idpass, idmodel, idscene, idviewer, meta, mut set0)| {
         // log::error!("Set0 Modify 1, {:?}", (scenes.get(idscene.0).is_ok(), viewers.get(idviewer.0).is_ok()));
+        // log::error!("Set0 Modify 2 {:?}", (meta.0.is_some(), idpass, idviewer.0));
         if let (
             Ok((
                 bind_base_effect,
@@ -33,20 +34,20 @@ pub fn sys_set0_modify(
             )),
             Ok(bind_viewer)
         ) = (scenes.get(idscene.0), viewers.get(idviewer.0)) {
-            // log::error!("Set0 Modify 2");
+            // log::error!("Set0 Modify 2 {:?}", (meta.0.is_some(), idpass));
             if let Some((_, meta)) = &meta.0 {
                 // log::error!("Set0 Modify 3");
                 let bind_base_effect = if BindDefines::need_scene_effect(meta.binddefines) {
                     Some(bind_base_effect.0.as_ref().unwrap().clone())
                 } else { None };
 
-                let bind_viewer = match (BindDefines::need_viewer(meta.binddefines), bind_viewer) {
+                let bind_viewer = match (BindDefines::need_viewer(meta.binddefines), &bind_viewer.0) {
                     (true, Some(bindviewer)) => {
                         // log::error!("Set0 Modify 4");
-                        Some(bindviewer.0.as_ref().unwrap().clone())
+                        Some(bindviewer.clone())
                     },
                     (false, _) => {
-                        // log::error!("Set0 Modify 44");
+                        // log::error!("Set0 Modify 44 {:?}", meta.key());
                         None
                     },
                     _ => {
@@ -68,6 +69,9 @@ pub fn sys_set0_modify(
                         }
                     },
                     (false, _, _) => None,
+                    (true, _, _) => {
+                        *set0 = PassBindGroupScene(None); return;
+                    },
                     _ => {
                         errors.record(idmodel.0, ErrorRecord::ERROR_PASS_BIND_SHADOW_NONE); 
                         *set0 = PassBindGroupScene(None); return;

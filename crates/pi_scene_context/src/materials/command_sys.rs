@@ -52,12 +52,13 @@ pub fn sys_create_material(
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
         if commands.get_entity(entity).is_none() { 
-            // log::error!("Material: Not Found!!");
+            // log::error!("Material: Not Found!! {:?}", key_shader);
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
         };
 
         if let Some(meta) = asset_shader.get(&key_shader) {
+            // log::error!("Material: oK!! {:?}", key_shader);
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
             let mut matcmds = commands.entity(entity);
 

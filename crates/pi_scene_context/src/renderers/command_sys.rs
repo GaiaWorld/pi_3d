@@ -35,6 +35,7 @@ pub fn sys_create_renderer(
 
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
+                        // log::error!("CreateRenderer {:?}", (id_viewer, entity, viewerrenderinfo.len()));
                     }
                 },
                 Err(err) => {

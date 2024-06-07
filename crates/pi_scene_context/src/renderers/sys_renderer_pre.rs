@@ -111,18 +111,19 @@ fn __sets_modify_by_viewer(
             if flagpassviewer.0 != idviewer { *flagpassviewer = PassViewerID(idviewer); }
             if passrenderer.0 != idrenderer { *passrenderer = PassRendererID(idrenderer); }
         }
+        // log::warn!("__sets_modify_by_viewer {:?}", (idviewer));
     }
 }
 
 pub fn sys_passrendererid_pass_reset(
     viewers: Query<(Entity, &SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo)>,
     renderers: Query<(&RendererParam, &PassTag)>,
-    mut passes: Query<(&mut PassRendererID, &mut PassViewerID, &PassModelID, &PassSceneID, &PassTag), Changed<PassReset>>,
+    mut passes: Query<(Entity, &mut PassRendererID, &mut PassViewerID, &PassModelID, &PassSceneID, &PassTag), Changed<PassReset>>,
 ) {
-    passes.iter_mut().for_each(|(mut passrenderer, mut passviewer, idmodel, idscene, passpasstag)| {
+    passes.iter_mut().for_each(|(idpass, mut passrenderer, mut passviewer, idmodel, idscene, passpasstag)| {
         // log::error!("BBB 1 ");
         viewers.iter().for_each(|(idviewer, viewscene, list0, list1, viewrenderinfos)| {
-            // log::error!("BBB 2 ");
+            // if viewrenderinfos.len() == 0 { log::error!("BBB 2 viewrenderinfos {:?}", (idpass, idviewer, viewrenderinfos.len())); }
             if viewscene.0 == idscene.0 {
                 viewrenderinfos.renderers().for_each(|idrenderer| {
                     let idrenderer = *idrenderer;
@@ -133,6 +134,7 @@ pub fn sys_passrendererid_pass_reset(
                         if rendererenable.enable.0 == true && passtag == passpasstag {
                             // log::error!("BBB 5 ");
                             if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
+                                // log::warn!("Dirty PassRenderID While Pass Reset {:?}", (idpass, idviewer, passviewer.0 != idviewer));
                                 // passrenderer.0 = idrenderer;
                                 // passviewer.0 = idviewer;
 

@@ -291,11 +291,17 @@ impl Renderer {
     }
 }
 
-#[derive(Clone, Component, Default)]
-pub struct ViewerRenderersInfo(pub Vec<Entity>, pub Vec<PassTag>);
+#[derive(Clone, Component)]
+pub struct ViewerRenderersInfo(Vec<Entity>, Vec<PassTag>);
+impl Default for ViewerRenderersInfo {
+    fn default() -> Self {
+        // log::error!("ViewerRenderersInfo::default");
+        Self(vec![], vec![])
+    }
+}
 impl ViewerRenderersInfo {
     pub fn add(&mut self, renderer: Entity, pass: PassTag) {
-        // log::error!("Add Renderer {:?}", (renderer, pass));
+        // log::error!("ViewerRenderersInfo Add {:?}", (renderer, pass));
         match self.0.binary_search(&renderer) {
             Ok(_) => {
                 // self.0.insert(idx, renderer);
@@ -305,6 +311,9 @@ impl ViewerRenderersInfo {
                 self.1.insert(idx, pass);
             },
         }
+    }
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
     pub fn remove(&mut self, renderer: Entity) -> Result<(), EErorr> {
         // log::error!("Remove Renderer");

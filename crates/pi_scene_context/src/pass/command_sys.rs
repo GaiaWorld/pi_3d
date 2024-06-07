@@ -9,14 +9,24 @@ pub fn sys_create_pass_object(
     mut cmds: ResMut<ActionListPassObject>,
     mut commands: Commands,
     models: Query<& PassIDs>,
+    mut passes: Query<(&mut PassReset, &mut PassDrawDirty, &mut PassModelID, &mut PassMaterialID, &mut PassPipelineStateDirty)>,
     // mut alter: Alter<(), (), PassObjBundle, ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsPassObject(idmodel, idmaterial, pass)| {
         if let Ok(passid) = models.get(idmodel) {
             let id_pass = passid.0[pass.index()];
 
+            if let Ok(mut comps) = passes.get_mut(id_pass) {
+                *comps.0 = PassReset;
+                *comps.1 = PassDrawDirty;
+                *comps.2 = PassModelID(idmodel);
+                *comps.3 = PassMaterialID(idmaterial);
+                *comps.4 = PassPipelineStateDirty;
+            }
+
             if let Some(mut cmd) = commands.get_entity(id_pass) {
                 let bundle = ActionPassObject::reset(idmodel, idmaterial);
+                // log::warn!("Pass {:?}", (idmodel, pass, idmaterial, id_pass));
                 cmd.insert(bundle);
                 // alter.alter(id_pass, bundle);
             }
@@ -106,7 +116,6 @@ pub type PassObjInitBundle = (
 );
 
 pub type PassObjBundle = (
-    (
         PassBindEffectValue,
         PassBindEffectTextures,
         PassBindGroupScene,
@@ -118,13 +127,6 @@ pub type PassObjBundle = (
         PassShader,
         PassPipeline,
         PassDraw,
-    ),
-    PassModelID,
-    PassMaterialID,
-    PassPipelineStateDirty,
-    PassDrawDirty,
-    // RenderState,
-    PassReset,
 );
 
 pub struct ActionPassObject;
@@ -152,7 +154,6 @@ impl ActionPassObject {
         idmodel: Entity,
         material: Entity,
     ) -> PassObjBundle {
-        (
             (
                 PassBindEffectValue(None),
                 PassBindEffectTextures(None),
@@ -165,13 +166,6 @@ impl ActionPassObject {
                 PassShader(None),
                 PassPipeline(None),
                 PassDraw(None),
-            ),
-            PassModelID(idmodel),
-            PassMaterialID(material),
-            PassPipelineStateDirty,
-            PassDrawDirty,
-            // RenderState::default(),
-            PassReset,
-        )
+            )
     }
 }

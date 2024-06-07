@@ -1,6 +1,5 @@
 #![feature(box_into_inner)]
 
-
 use base::DemoScene;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_scene_shell::prelude::*;
@@ -39,6 +38,7 @@ impl Plugin for PluginTest {
         anime_assets: TypeAnimeAssetMgrs,
         mut anime_contexts: TypeAnimeContexts,
         mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+        mut matmetas: ResMut<ShareAssetMgr<ShaderEffectMeta>>,
     ) {
 
 
@@ -144,7 +144,7 @@ impl Plugin for PluginTest {
         actions.material.usemat.push(OpsMaterialUse::Use(cube, lightingmat, DemoScene::PASS_OPAQUE));
         actions.mesh.state.push(OpsMeshStateModify::ops(cube, EMeshStateModify::CastShadow(true)));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Scaling(100., 1., 100.)));
-        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(0., -1., 0.)));
+        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(0., -0.5, 0.)));
     }
 
     let (vertices, indices) = (BallBuilder::attrs_meta(), Some(BallBuilder::indices_meta()));
@@ -156,6 +156,24 @@ impl Plugin for PluginTest {
         use_single_instancebuffer: false,
     };
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta());
+    let planarmat =  {
+        let idmat = commands.spawn_empty().id();
+        actions.material.create.push(OpsMaterialCreate::ops(idmat, unlit_material::PlanarShadow::KEY));
+        idmat
+    };
+    actions.material.usemat.push(OpsMaterialUse::Use(source, planarmat, DemoScene::PASS_TRANSPARENT));
+    let mut blend = ModelBlend::default(); blend.combine();
+    actions.mesh.blend.push(OpsRenderBlend::Blend(source, DemoScene::PASS_TRANSPARENT, blend));
+    // actions.mesh.stencil_state.push(OpsStencilState::ops(source, DemoScene::PASS_TRANSPARENT, EStencilState::Write(1)));
+    // actions.mesh.stencil_state.push(OpsStencilState::ops(source, DemoScene::PASS_TRANSPARENT, EStencilState::Front(StencilFaceState{
+    //     compare: CompareFunction::NotEqual,
+    //     fail_op: StencilOperation::Keep,
+    //     depth_fail_op: StencilOperation::Keep,
+    //     pass_op: StencilOperation::Keep,
+    // })));
+    actions.mesh.depth_state.push(OpsDepthState::ops(source, DemoScene::PASS_TRANSPARENT, EDepthState::Write(false)));
 
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
     actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
@@ -168,7 +186,7 @@ impl Plugin for PluginTest {
                 for k in 0..1 {
                     let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
-                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 2. - (tes_size) as f32, 0.5, j as f32 * 2. - (tes_size) as f32)));
                     // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
                     actions.instance.attr.push(OpsInstanceAttr::ops(cube, EInstanceAttr::Vec2([(i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.)]), Atom::from("InsV2")));
                 }
@@ -236,7 +254,6 @@ impl Plugin for PluginTest {
             actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
         }
 }
-
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins_with_gltf();

@@ -24,8 +24,8 @@ pub type BundleSpotShadow = (
 pub fn sys_create_shadow_generator(
     mut commands: Commands,
     mut cmds: ResMut<ActionListShadowGenerator>,
-    directlights: Query<(), With<DirectLight>>,
-    spotlights: Query<(), With<SpotLight>>,
+    directlights: Query<(&DirectLight), With<DirectLight>>,
+    spotlights: Query<(&SpotLight), With<SpotLight>>,
     mut lights: Query<(&SceneID, &GlobalEnable, &mut LightLinkedShadowID, &LayerMask, &ViewerDistanceCompute), ()>,
     mut scene_shadow: Query<(&mut SceneShadowQueue), ()>,
     mut dynallocator: ResMut<ResBindBufferAllocator> ,
@@ -39,16 +39,18 @@ pub fn sys_create_shadow_generator(
 ) {
     cmds.drain().drain(..).for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
         if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), lights.get_mut(light)) {
-            let mat = commands.spawn_empty().id();
+            let mat = commands.spawn(ActionEntity::init()).id();
 
             let mut shadowcommands = if let Some(cmd) = commands.get_entity(entity) { cmd } else {
                 disposereadylist.push(OpsDisposeReadyForRef::ops(entity)); commands.entity(mat).despawn(); return;
             };
             
+            // log::error!("Shadow 01");
             if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
                 matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
                 matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
                 
+                // log::error!("Shadow 02");
                 if directlights.contains(light) {
                     linkedshadow.0 = Some(entity);
                     let bundle = (
@@ -67,6 +69,7 @@ pub fn sys_create_shadow_generator(
                         DirectionalShadowProjection::default(),
                     );
                     shadowcommands.insert(bundle);
+                    // log::error!("Shadow Ok {:?}", (entity, light));
                     // alterdirect.alter(entity, bundle);
                 } else if spotlights.contains(light) {
                     linkedshadow.0 = Some(entity);

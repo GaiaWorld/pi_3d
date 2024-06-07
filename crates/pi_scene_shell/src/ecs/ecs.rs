@@ -20,8 +20,8 @@ pub use pi_world::{
 #[cfg(not(feature = "use_bevy"))]
 pub type Ref<'a, T> = Ticker<'a, &'a T>;
 
-#[cfg(not(feature = "use_bevy"))]
-pub type Or<T> = T;
+// #[cfg(not(feature = "use_bevy"))]
+// pub type Or<T> = T;
 
 #[cfg(not(feature = "use_bevy"))]
 pub type Commands<'a> = EntityEditor<'a>;
@@ -81,140 +81,6 @@ impl InsertTmp {
     }
 }
 
-#[cfg(not(feature = "use_bevy"))]
-pub trait InsertBundle {
-    fn index(editor: &mut EntityEditor, list: &mut InsertTmp);
-    fn insert(self, editor: &mut EntityCommands, list: &mut InsertTmp);
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static> InsertBundle for (T,) {
-    fn index(editor: &mut EntityEditor, list: &mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-    }
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static, T1: Bundle + 'static> InsertBundle for (T, T1) {
-    fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-        list.push(editor.init_component::<T1>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.1;
-    }
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static, T1: Bundle + 'static, T2: Bundle + 'static> InsertBundle for (T, T1, T2) {
-    fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-        list.push(editor.init_component::<T1>());
-        list.push(editor.init_component::<T2>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.1;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.2;
-    }
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static, T1: Bundle + 'static, T2: Bundle + 'static, T3: Bundle + 'static> InsertBundle for (T, T1, T2, T3) {
-    fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-        list.push(editor.init_component::<T1>());
-        list.push(editor.init_component::<T2>());
-        list.push(editor.init_component::<T3>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.1;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.2;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.3;
-    }
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static, T1: Bundle + 'static, T2: Bundle + 'static, T3: Bundle + 'static, T4: Bundle + 'static> InsertBundle for (T, T1, T2, T3, T4) {
-    fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-        list.push(editor.init_component::<T1>());
-        list.push(editor.init_component::<T2>());
-        list.push(editor.init_component::<T3>());
-        list.push(editor.init_component::<T4>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.1;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.2;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.3;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.4;
-    }
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static, T1: Bundle + 'static, T2: Bundle + 'static, T3: Bundle + 'static, T4: Bundle + 'static, T5: Bundle + 'static> InsertBundle for (T, T1, T2, T3, T4, T5) {
-    fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-        list.push(editor.init_component::<T1>());
-        list.push(editor.init_component::<T2>());
-        list.push(editor.init_component::<T3>());
-        list.push(editor.init_component::<T4>());
-        list.push(editor.init_component::<T5>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.1;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.2;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.3;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.4;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.5;
-    }
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static, T1: Bundle + 'static, T2: Bundle + 'static, T3: Bundle + 'static, T4: Bundle + 'static, T5: Bundle + 'static, T6: Bundle + 'static> InsertBundle for (T, T1, T2, T3, T4, T5, T6) {
-    fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-        list.push(editor.init_component::<T1>());
-        list.push(editor.init_component::<T2>());
-        list.push(editor.init_component::<T3>());
-        list.push(editor.init_component::<T4>());
-        list.push(editor.init_component::<T5>());
-        list.push(editor.init_component::<T6>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.1;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.2;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.3;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.4;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.5;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.6;
-    }
-}
-#[cfg(not(feature = "use_bevy"))]
-impl<T: Bundle + 'static, T1: Bundle + 'static, T2: Bundle + 'static, T3: Bundle + 'static, T4: Bundle + 'static, T5: Bundle + 'static, T6: Bundle + 'static, T7: Bundle + 'static> InsertBundle for (T, T1, T2, T3, T4, T5, T6, T7) {
-    fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
-        list.push(editor.init_component::<T>());
-        list.push(editor.init_component::<T1>());
-        list.push(editor.init_component::<T2>());
-        list.push(editor.init_component::<T3>());
-        list.push(editor.init_component::<T4>());
-        list.push(editor.init_component::<T5>());
-        list.push(editor.init_component::<T6>());
-        list.push(editor.init_component::<T7>());
-    }
-    fn insert(self, cmd: &mut EntityCommands, list:&mut InsertTmp) {
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.0;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.1;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.2;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.3;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.4;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.5;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.6;
-        *cmd.commands.get_component_unchecked_mut_by_id(cmd.entity, list.idx()) = self.7;
-    }
-}
-
 // impl<T: InsertBundle> InsertBundle for (T,) {
 //     fn index(editor: &mut EntityEditor, list:&mut InsertTmp) {
 //         T::index(editor, list);
@@ -235,12 +101,21 @@ impl<'w, 'a> EntityCommands<'w, 'a> {
         self.entity
     }
     pub fn insert<A: Bundle + 'static>(&mut self, bundle: A) -> &mut Self {
-
-        let entity = self.entity;
-        let mut alter = self.alter::<A>();
-        match alter.alter(entity, bundle) {
+        
+        // let entity = self.entity;
+        // let mut alter = self.alter::<A>();
+        // match alter.alter(entity, bundle) {
+        //     Ok(_) => {}
+        //     Err(e) => {
+        //         // log::error!(" insert {:?}", e);
+        //     }
+        // }
+        
+        match self.commands.add_components(self.entity, bundle) {
             Ok(_) => {}
-            Err(e) => { log::error!(" insert {:?}", e); }
+            Err(e) => {
+                // log::error!(" insert {:?}", e);
+            }
         }
 
         self
@@ -257,9 +132,9 @@ impl<'w, 'a> EntityCommands<'w, 'a> {
     //     }
     //     alter
     // }
-    pub fn alter<A: Bundle + 'static>(&mut self) -> pi_world::alter::Alterer<(), (), A, ()> {
-        self.commands.world().make_alterer::<(), (), A, ()>()
-    }
+    // pub fn alter<A: Bundle + 'static>(&mut self) -> pi_world::alter::Alterer<(), (), A, ()> {
+    //     // self.commands.world().make_alterer::<(), (), A, ()>()
+    // }
     pub fn despawn(&mut self) {
         self.commands.destroy(self.entity);
     }
@@ -275,7 +150,8 @@ pub trait TEntityCommands<'w> {
 #[cfg(not(feature = "use_bevy"))]
 impl<'w> TEntityCommands<'w> for EntityEditor<'w> {
     fn spawn_empty<'a>(&'a mut self) -> EntityCommands<'w, 'a> {
-        let entity = self.world().make_inserter().insert(());
+        
+        let entity = self.insert_entity(()); // self.world().make_inserter().insert(());
 
         // let entity = self.alloc_entity();
         EntityCommands {
@@ -284,10 +160,12 @@ impl<'w> TEntityCommands<'w> for EntityEditor<'w> {
         }
     }
     fn spawn<'a, A: Bundle + 'static>(&'a mut self, bundle: A) -> EntityCommands<'w, 'a> {
-        let entity = self.world().make_inserter().insert(bundle);
+        // let entity = self.world().make_inserter().insert(());
         // match self.world().make_alterer::<(), (), A, ()>().alter(entity, bundle) {
         //     Ok(_) => {},
-        //     Err(e) => { log::error!("spawn {:?}", e); }
+        //     Err(e) => { 
+        //         // log::error!("spawn {:?}", e);
+        //     }
         // }
 
         // let entity = self.alloc_entity();
@@ -299,6 +177,8 @@ impl<'w> TEntityCommands<'w> for EntityEditor<'w> {
         // });
         // self.insert_components_by_index(&indexs);
         // *self.get_component_mut::<A>(entity).unwrap() = bundle;
+
+        let entity = self.insert_entity(bundle);
 
         EntityCommands {
             entity,

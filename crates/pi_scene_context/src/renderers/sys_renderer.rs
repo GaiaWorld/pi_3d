@@ -50,11 +50,12 @@ use super::{
                     }
                 };
                 let lightshadow = match (need_set3, set_3.val()) {
-                    (true, Some(val)) => Some(val.clone()),
+                    (true, Some(val)) => {
+                        Some(val.clone())
+                    },
                     (false, _) => None,
                     _ => {
                         if bindgroups.val().is_some() { *bindgroups = PassBindGroups::new(None); }
-                        // log::warn!("Bindgroups: lightshadow fail");
                         return;
                     }
                 };
@@ -406,6 +407,7 @@ use super::{
 
                     // log::warn!("renderer_draws : ModelListAfterCulling: {:?}, ", (list_model.0.len()));
                     renderer.draws.viewport = param.viewport.val();
+                    let mut countmesh = 0;
                     list_model.0.iter().for_each(|id_obj| {
                         if let Ok((globalenable, disposed, nodeposition, rendersort, instancessortinfo, passids)) = models.get(id_obj.clone()) {
                             // log::warn!("Renderer: A {:?}", (disposed.0, globalenable.0));
@@ -414,6 +416,7 @@ use super::{
 
                             let index = 0;
                             let is_transparent = param.blend.0;
+                            // log::error!("is_transparent {:?}", (is_transparent));
                             if passtag.index() < passids.len() {
                                 let passid = passids[passtag.index()];
                                 if let Ok((PassDraw(Some(draw)), passrendererid)) = passes.get(passid) {
@@ -434,12 +437,15 @@ use super::{
                                             &mut opaque_list, &mut transparent_list, &instancessortinfo, &mut draws
                                         );
                                     } else {
-                                        // log::error!("PassDraw Error {:?}", (passtag));
+                                        // log::error!("PassDraw Renderer Error {:?}", (passtag));
                                     }
+                                } else {
+                                    // log::error!("PassDraw Error {:?}", (passtag, passid));
                                 }
                             } else {
                                 // log::error!("passtag.index() < passids.len() fail .");
                             }
+                            countmesh += 1;
                         } else {
                             // log::warn!("models.get Fail");
                         }
@@ -448,6 +454,7 @@ use super::{
                     opaque_list.sort();
                     transparent_list.sort();
 
+                    // log::warn!("Mesh: {:?}", countmesh);
                     // log::warn!("Opaque: {:?}", opaque_list.len());
                     // log::warn!("Transparent: {:?}", transparent_list.len());
 
