@@ -241,11 +241,17 @@ impl WorldResourceTemp for World {
     }
 
     fn get_resource<T: 'static>(& self) -> Option<& T> {
-        self.get_single_res::<T>()
+        match self.get_single_res::<T>() {
+            Some(r) => Some(&**r),
+            None => None,
+        }
     }
 
     fn get_resource_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        self.get_single_res_mut::<T>()
+        match self.get_single_res_mut::<T>() {
+            Some(r) => Some(&mut **r),
+            None => None,
+        }
     }
 
     fn contains_resource<T: 'static>(&self) -> bool {
