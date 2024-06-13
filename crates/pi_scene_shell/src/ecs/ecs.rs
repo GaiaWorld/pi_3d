@@ -54,6 +54,7 @@ pub struct EntityCommandsEmpty<'w> {
     entity: Entity,
     commands: EntityEditor<'w>,
 }
+#[cfg(not(feature = "use_bevy"))]
 impl<'w> EntityCommandsEmpty<'w> {
     #[inline]
     #[must_use = "Omit the .id() call if you do not need to store the `Entity` identifier."]

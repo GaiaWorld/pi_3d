@@ -26,6 +26,10 @@ pub fn sys_create_renderer(
             match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
                     if let Some(mut cmd) = commands.get_entity(entity) {
+                        viewerrenderinfo.add(entity, passtag);
+                        *viewerflag = DirtyViewerRenderersInfo;
+                        log::error!("CreateRenderer {:?}", (id_viewer, entity, viewerrenderinfo.len()));
+
                         let bundle = (
                             GraphId(nodeid), sceneid.clone(),
                             ActionRenderer::init(id_viewer, passtag, transparent)
@@ -33,9 +37,6 @@ pub fn sys_create_renderer(
                         cmd.insert(bundle);
                         // alter.alter(entity, bundle);
 
-                        viewerrenderinfo.add(entity, passtag);
-                        *viewerflag = DirtyViewerRenderersInfo;
-                        // log::error!("CreateRenderer {:?}", (id_viewer, entity, viewerrenderinfo.len()));
                     }
                 },
                 Err(err) => {
