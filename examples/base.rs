@@ -33,7 +33,7 @@ impl Plugin for PluginLocalLoad {
                 .spawn(async move {
                     // log::debug!("Load {}", path);
                     let r = std::fs::read(path.clone()).unwrap();
-                    on_load(&path, r);
+                    on_load(&path, Ok(r));
                 })
                 .unwrap();
         }));

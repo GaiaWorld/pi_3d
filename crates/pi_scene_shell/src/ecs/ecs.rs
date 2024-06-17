@@ -15,6 +15,7 @@ pub use pi_world::prelude::{SingleResMut as ResMut, SingleRes as Res};
 pub use pi_world::{
     editor::EntityEditor, filter::Changed, schedule_config::{IntoSystemConfigs, StageLabel}, world::Entity,
     query::*,
+    fetch::FetchComponents,
 };
 
 #[cfg(not(feature = "use_bevy"))]
@@ -152,7 +153,7 @@ pub trait TEntityCommands<'w> {
 impl<'w> TEntityCommands<'w> for EntityEditor<'w> {
     fn spawn_empty<'a>(&'a mut self) -> EntityCommands<'w, 'a> {
         
-        let entity = self.insert_entity(()); // self.world().make_inserter().insert(());
+        let entity = self.alloc_entity(); // self.world().make_inserter().insert(());
 
         // let entity = self.alloc_entity();
         EntityCommands {
@@ -207,6 +208,13 @@ impl<T: 'static> Resource for T {
 
 }
 
+pub struct Entities<'w>(&'w mut World);
+impl<'w> Entities<'w> {
+    pub fn reserve_entity(&mut self) -> Entity {
+        self.0.spawn_empty().id()
+    }
+}
+
 #[cfg(not(feature = "use_bevy"))]
 pub trait AppResourceTemp {
     fn insert_resource<T: 'static>(&mut self, resource: T) -> &mut Self;
@@ -233,6 +241,8 @@ pub trait WorldResourceTemp {
     fn get_resource_mut<T: 'static>(&mut self) -> Option<& mut T>;
     fn contains_resource<T: 'static>(&self) -> bool;
     fn spawn_empty<'w>(&'w mut self) -> EntityCommandsEmpty<'w>;
+    // fn query<'a, Q: FetchComponents + 'static, F: FilterComponents + 'static>(&'a mut self) -> Queryer<'a, Q, F>;
+    fn entities<'a>(&'a mut self) -> Entities<'a>;
 }
 #[cfg(not(feature = "use_bevy"))]
 impl WorldResourceTemp for World {
@@ -259,16 +269,39 @@ impl WorldResourceTemp for World {
         self.contains_resource::<T>()
     }
     fn spawn_empty<'w>(&'w mut self) -> EntityCommandsEmpty<'w> {
-        let entity = self.make_inserter().insert(());
         let mut editor = self.make_entity_editor();
+        let entity = editor.alloc_entity();
         EntityCommandsEmpty {
             entity: entity,
             commands: editor
         }
+    }
+    // fn query<'a, Q: FetchComponents + 'static, F: FilterComponents + 'static>(&'a mut self) -> Queryer<'a, Q, F> {
+    //     self.make_queryer::<Q, F>()
+    // }
+    fn entities<'a>(&'a mut self) -> Entities<'a> {
+        Entities(self)
     }
 }
 
 #[cfg(not(feature = "use_bevy"))]
 pub fn add_systems(label: impl StageLabel, ) {
     
+}
+
+pub struct SystemState<T: SystemParam>(SystemMeta, T::State);
+impl<T: SystemParam> SystemState<T> {
+    pub fn new(world: &mut World) -> Self {
+        let mut meta = SystemMeta::new(pi_world::system::TypeInfo::of::<()>());
+        let state = <T as SystemParam>::init_state(world, &mut meta);
+        Self(meta, state)
+    }
+    pub fn get_mut(&mut self, world: &mut World) -> T {
+        let tick = world.tick();
+        <T>::get_self(&world, &self.0, &mut self.1, tick)
+    }
+    pub fn get(&mut self, world: &World) -> T {
+        let tick = world.tick();
+        <T>::get_self(&world, &self.0, &mut self.1, tick)
+    }
 }
