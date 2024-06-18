@@ -103,13 +103,17 @@ pub fn sys_dispose(
     items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
     mut tree: EntityTreeMut,
 ) {
+    let mut removes = vec![];
     items.iter().for_each(|(entity, state)| {
         if state.0 == true {
-            if let Some(mut commands) = commands.get_entity(entity) {
-                // log::debug!("despawn====={:?}", commands.id());
-                tree.remove(entity);
-                commands.despawn();
-            }
+            tree.remove(entity);
+            removes.push(entity);
+        }
+    });
+    removes.drain(..).for_each(|entity| {
+        if let Some(mut commands) = commands.get_entity(entity) {
+            // log::warn!("despawn====={:?}", commands.id());
+            commands.despawn();
         }
     });
 }
