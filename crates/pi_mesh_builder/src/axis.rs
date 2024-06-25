@@ -86,12 +86,12 @@ impl AxisBuilder {
             VertexBufferDesc::vertices(
                 KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_POSITION),
                 VertexBufferDescRange::default(),
-                vec![ EVertexAttribute::Buildin(EBuildinVertexAtribute::Position) ]
+                vec![ EVertexAttribute::Buildin(EBuildinVertexAtribute::Position, wgpu::VertexFormat::Float32x3) ]
             ),
             VertexBufferDesc::vertices(
                 KeyVertexBuffer::from(AxisBuilder::KEY_BUFFER_COLOR4),
                 VertexBufferDescRange::default(),
-                vec![EVertexAttribute::Buildin(EBuildinVertexAtribute::Color4)]
+                vec![EVertexAttribute::Buildin(EBuildinVertexAtribute::Color4, wgpu::VertexFormat::Float32x4)]
             ),
         ]
     }

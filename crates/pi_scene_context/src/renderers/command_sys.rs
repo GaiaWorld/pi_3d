@@ -28,7 +28,7 @@ pub fn sys_create_renderer(
                     if let Some(mut cmd) = commands.get_entity(entity) {
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
-                        log::error!("CreateRenderer {:?}", (id_viewer, entity, viewerrenderinfo.len()));
+                        // log::error!("CreateRenderer {:?}", (nodeid, id_viewer, entity, viewerrenderinfo.len()));
 
                         let bundle = (
                             GraphId(nodeid), sceneid.clone(),
@@ -171,10 +171,12 @@ pub fn sys_act_renderer_connect(
         if let (Ok(nbefore), Ok(nafter)) = (renderers.get(before), renderers.get(after)) {
             if isdisconnect {
                 if let Err(err) = render_graphic.remove_depend(nbefore.0, nafter.0) {
+                    // log::error!("3D Disconnect: {:?}", (nbefore.0, nafter.0));
                     error.graphic(before, err);
                 }
             } else {
                 if let Err(err) = render_graphic.add_depend(nbefore.0, nafter.0) {
+                    // log::error!("3D Connect: {:?}", (nbefore.0, nafter.0));
                     error.graphic(before, err);
                 }
             }

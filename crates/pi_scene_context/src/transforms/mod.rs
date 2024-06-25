@@ -46,10 +46,10 @@ impl Plugin for PluginTransformNode {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageTransform::TransformCreate.after(StageScene::_Create))
-        .configure_set(Update, StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command))
-        .configure_set(Update, StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create))
-        .configure_set(Update, StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageTransform::TransformCreate      .after(StageScene::_Create))
+        .configure_set(Update, StageTransform::_TransformCreate     .after(StageTransform::TransformCreate).before(StageEnable::Command))
+        .configure_set(Update, StageTransform::TransformCommand     .in_set(FrameDataPrepare).after(StageTransform::_TransformCreate).before(EStageAnimation::Create))
+        .configure_set(Update, StageTransform::TransformCalcMatrix  .in_set(FrameDataPrepare).after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
         ;
 
 #[cfg(feature = "use_bevy")]

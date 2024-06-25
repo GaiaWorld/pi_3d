@@ -207,8 +207,8 @@ impl StateGeometryBuffer {
             self.key.clone(),
             VertexBufferDescRange::default(),
             vec![
-                EVertexAttribute::Buildin(EBuildinVertexAtribute::Position),
-                EVertexAttribute::Buildin(EBuildinVertexAtribute::Color4),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Position, wgpu::VertexFormat::Float32x3),
+                EVertexAttribute::Buildin(EBuildinVertexAtribute::Color4, wgpu::VertexFormat::Float32x4),
             ],
             false,
         )

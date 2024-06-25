@@ -3,8 +3,8 @@ use std::ops::Mul;
 use pi_scene_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-#[derive(Component, Default)]
-pub struct BoneParent(pub ObjectID);
+// #[derive(Component, Default)]
+// pub struct BoneParent(pub ObjectID);
 
 #[derive(Component, Default)]
 pub struct BoneAbsolute(pub Matrix);

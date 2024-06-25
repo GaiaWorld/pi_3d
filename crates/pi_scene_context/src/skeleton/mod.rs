@@ -57,10 +57,10 @@ impl Plugin for PluginSkeleton {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageSkeleton::SkinCreate.after(StageModel::_InitMesh))
-        .configure_set(Update, StageSkeleton::_SkinCreate.after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand))
-        .configure_set(Update, StageSkeleton::Command.in_set(FrameDataPrepare).after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform))
-        .configure_set(Update, StageSkeleton::Calc.in_set(FrameDataPrepare).after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageSkeleton::SkinCreate    .in_set(FrameDataPrepare).after(StageModel::_InitMesh))
+        .configure_set(Update, StageSkeleton::_SkinCreate   .in_set(FrameDataPrepare).after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand))
+        .configure_set(Update, StageSkeleton::Command       .in_set(FrameDataPrepare).after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageSkeleton::Calc          .in_set(FrameDataPrepare).after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

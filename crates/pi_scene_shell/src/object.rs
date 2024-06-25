@@ -101,15 +101,23 @@ pub fn sys_dispose_can(
 pub fn sys_dispose(
     mut commands: Commands,
     items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
+    nodes: Query<(&Up), (With<Layer>, With<Down>, With<Up>)>,
     mut tree: EntityTreeMut,
 ) {
+   
     let mut removes = vec![];
     items.iter().for_each(|(entity, state)| {
         if state.0 == true {
-            tree.remove(entity);
+            if let Ok(up) = nodes.get(entity) {
+                // log::error!("Dispose {:?}", (entity, up.parent(), up.prev(), up.next(), nodes.contains(up.parent()), nodes.contains(up.prev()), nodes.contains(up.next())));
+                if nodes.contains(up.parent()) {
+                    tree.remove(entity);
+                }
+            }
             removes.push(entity);
         }
     });
+    // log::error!("sys_dispose >>> {:?} ", removes);
     removes.drain(..).for_each(|entity| {
         if let Some(mut commands) = commands.get_entity(entity) {
             // log::warn!("despawn====={:?}", commands.id());

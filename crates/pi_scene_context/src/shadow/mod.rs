@@ -53,7 +53,7 @@ impl Plugin for PluginShadowGenerator {
     app
     .configure_set(Update, StageShadowGenerator::Create.after(StageLighting::_LightCreate).after(StageCamera::_Create))
     .configure_set(Update, StageShadowGenerator::_Create.after(StageShadowGenerator::Create).before(StageRenderer::Create))
-    .configure_set(Update, StageShadowGenerator::Command.in_set(FrameDataPrepare).after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command))
+    .configure_set(Update, StageShadowGenerator::Command.after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command))
     .configure_set(Update, StageShadowGenerator::CalcMatrix.in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix))
     .configure_set(Update, StageShadowGenerator::ViewerUpdate.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix))
     .configure_set(Update, StageShadowGenerator::BindUpdate.in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate))
