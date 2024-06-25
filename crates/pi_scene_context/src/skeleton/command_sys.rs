@@ -54,7 +54,7 @@ pub fn sys_act_skin_use(
     mut cmds: ResMut<ActionListSkinUse>,
     mut skins: Query<(&mut Skeleton, &mut SkeletonRefs, &mut DirtySkeletonRefs)>,
     mut meshes: Query<&mut BindSkinValue>,
-    mut commands: Commands,
+    // mut bones: Query<&mut BoneParent>,
     mut skinlinks: Query<&mut SkeletonID>,
 ) {
     cmds.drain().drain(..).for_each(|ops| {
@@ -82,6 +82,11 @@ pub fn sys_act_skin_use(
                     cmds.push(OpsSkinUse::UnUse(entity, skin));
                 }
             },
+            OpsSkinUse::Bone(bone, parent) => {
+                // if let Ok(mut boneparent) = bones.get_mut(bone) {
+                //     boneparent.0 = parent;
+                // }
+            },
         }
     });
 }
@@ -92,13 +97,13 @@ pub fn sys_create_bone(
     empty: Res<SingleEmptyEntity>,
     // mut alter: Alter<(), (), BoneBoundle, ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, parent, scene)| {
+    cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, scene)| {
         let mut bonecmd = if let Some(cmd) = commands.get_entity(bone) {
             cmd
         } else {
             return;
         };
-        let bundle = ActionBone::init(&empty, parent, scene);
+        let bundle = ActionBone::init(&empty, scene);
         bonecmd.insert(bundle);
         // alter.alter(bone, bundle);
     });
@@ -148,7 +153,8 @@ impl ActionSkeleton {
 
 pub type BoneBoundle = (
     (
-        BoneParent, BoneAbsolute, BoneAbsoluteInv, BoneDifferenceMatrix, BoneMatrix, BoneBaseMatrix, SkeletonID
+        // BoneParent, 
+        BoneAbsolute, BoneAbsoluteInv, BoneDifferenceMatrix, BoneMatrix, BoneBaseMatrix, SkeletonID
     ),
     TransformNodeBundle
 );
@@ -157,12 +163,11 @@ pub struct ActionBone;
 impl ActionBone {
     pub fn init(
         _empty: &SingleEmptyEntity,
-        parent: Entity,
         scene: Entity,
     ) -> BoneBoundle {
         (
             (
-                BoneParent(parent),
+                // BoneParent(parent),
                 BoneAbsolute(Matrix::identity()),
                 BoneAbsoluteInv(Matrix::identity()),
                 BoneDifferenceMatrix(Matrix::identity()),

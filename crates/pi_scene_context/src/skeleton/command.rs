@@ -21,10 +21,14 @@ pub type ActionListSkinCreate = ActionList<OpsSkinCreation>;
 pub enum OpsSkinUse {
     Use(Entity, Entity),
     UnUse(Entity, Entity),
+    Bone(Entity, Entity),
 }
 impl OpsSkinUse {
     pub fn ops(id_mesh: Entity, skin: Entity) -> Self {
         Self::Use(id_mesh, skin)
+    }
+    pub fn bone(bone: Entity, boneparent: Entity) -> Self {
+        Self::Bone(bone, boneparent)
     }
     pub fn ops_unuse(id_mesh: Entity, skin: Entity) -> Self {
         Self::UnUse(id_mesh, skin)
@@ -32,10 +36,10 @@ impl OpsSkinUse {
 }
 pub type ActionListSkinUse = ActionList<OpsSkinUse>;
 
-pub struct OpsBoneCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity);
+pub struct OpsBoneCreation(pub(crate) Entity, pub(crate) Entity);
 impl OpsBoneCreation {
-    pub fn ops(bone: Entity, parent: Entity, scene: Entity) -> Self {
-        Self(bone, parent, scene)
+    pub fn ops(bone: Entity, scene: Entity) -> Self {
+        Self(bone, scene)
     }
 }
 pub type ActionListBoneCreate = ActionList<OpsBoneCreation>;

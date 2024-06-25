@@ -55,7 +55,6 @@ pi_bevy_winit_window    = { version = "0.1", registry = "yn" }
 pi_bevy_post_process    = { version = "0.1", registry = "yn" }
 pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
 pi_bevy_asset           = { version = "0.1", registry = "yn" }
-pi_bevy_log             = { version = "0.1", registry = "yn" }
 
 pi_scene_math           = { version = "0.0.*", registry = "yn" }
 pi_animation            = { version = "0.1", registry = "yn" }
@@ -90,7 +89,6 @@ pi_bevy_render_plugin   = { path = "../pi_bevy/crates/render" }
 pi_bevy_winit_window    = { path = "../pi_bevy/crates/winit_window" }
 pi_bevy_ecs_extend      = { path = "../pi_bevy/crates/ecs_extend" }
 pi_bevy_asset           = { path = "../pi_bevy/crates/asset" }
-pi_bevy_log             = { path = "../pi_bevy/crates/log" }
 
 pi_animation            = { path = "../pi_animation" }
 

@@ -23,7 +23,7 @@ impl TShaderAttributesCode for EVertexAttribute {
         result += crate::prelude::S_SPACE;
 
         match self {
-            EVertexAttribute::Buildin(_) => result += "V",
+            EVertexAttribute::Buildin(_, _) => result += "V",
             EVertexAttribute::Custom(_) => {},
         }
         result += self.var_code();
@@ -35,7 +35,7 @@ impl TShaderAttributesCode for EVertexAttribute {
         let mut result = String::from("");
 
         match self {
-            EVertexAttribute::Buildin(val) => {
+            EVertexAttribute::Buildin(val, _) => {
                 match val {
                     EBuildinVertexAtribute::Color4 => {},
                     EBuildinVertexAtribute::UV => {},

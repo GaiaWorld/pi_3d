@@ -26,15 +26,15 @@ pub fn sys_create_renderer(
             match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
                     if let Some(mut cmd) = commands.get_entity(entity) {
+                        viewerrenderinfo.add(entity, passtag);
+                        *viewerflag = DirtyViewerRenderersInfo;
+
                         let bundle = (
                             GraphId(nodeid), sceneid.clone(),
                             ActionRenderer::init(id_viewer, passtag, transparent)
                         );
                         cmd.insert(bundle);
                         // alter.alter(entity, bundle);
-
-                        viewerrenderinfo.add(entity, passtag);
-                        *viewerflag = DirtyViewerRenderersInfo;
                     }
                 },
                 Err(err) => {

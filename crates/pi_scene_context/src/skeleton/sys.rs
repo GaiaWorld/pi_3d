@@ -33,14 +33,13 @@ use super::{skeleton::*, bone::*};
             let temp = if let Ok((base, mut abs, mut absinv)) = bones.get_mut(root) {
                 abs.0.copy_from(&base.0);
                 absinv.update(&abs);
-                Some((root, abs.0.clone()))
+                (root, abs.0.clone())
             } else {
-                None
+                (root, Matrix::identity())
             };
-            if let Some((node, abs)) = temp {
-                let temp_ids: Vec<(ObjectID, Matrix)> = vec![(node, abs)];
-                calc_bone(&mut bones, temp_ids, &parents);
-            }
+            let (node, abs) = temp;
+            let temp_ids: Vec<(ObjectID, Matrix)> = vec![(node, abs)];
+            calc_bone(&mut bones, temp_ids, &parents);
         });
     }
 

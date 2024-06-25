@@ -22,9 +22,9 @@ impl QuadBuilder {
                 keypos, 
                 VertexBufferDescRange::default(),
                 vec![
-                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Position),
-                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Normal),
-                    EVertexAttribute::Buildin(EBuildinVertexAtribute::UV),
+                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Position, wgpu::VertexFormat::Float32x3),
+                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Normal, wgpu::VertexFormat::Float32x3),
+                    EVertexAttribute::Buildin(EBuildinVertexAtribute::UV, wgpu::VertexFormat::Float32x2),
                     // VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
                     // VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },
                     // VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }

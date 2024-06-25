@@ -3,13 +3,13 @@ use std::ops::Mul;
 use pi_scene_shell::prelude::*;
 use pi_scene_math::Matrix;
 
-#[derive(Component)]
-pub struct BoneParent(pub Entity);
-impl Default for BoneParent {
-    fn default() -> Self {
-        Self(Entity::from_bits(0))
-    }
-}
+// #[derive(Component)]
+// pub struct BoneParent(pub Entity);
+// impl Default for BoneParent {
+//     fn default() -> Self {
+//         Self(Entity::from_bits(0))
+//     }
+// }
 
 #[derive(Component, Default)]
 pub struct BoneAbsolute(pub Matrix);

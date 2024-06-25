@@ -41,10 +41,10 @@ pub fn sys_create_geometry(
 
         let mut attrs = vec![];
         if instancestate.instance_matrix {
-            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow1));
-            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow2));
-            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow3));
-            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow4));
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow1, wgpu::VertexFormat::Float32x4));
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow2, wgpu::VertexFormat::Float32x4));
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow3, wgpu::VertexFormat::Float32x4));
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow4, wgpu::VertexFormat::Float32x4));
         }
         instancestate.instances.iter().for_each(|attr| {
             attrs.push(EVertexAttribute::Custom(attr.clone()));

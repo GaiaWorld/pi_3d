@@ -139,9 +139,9 @@ impl Plugin for PluginRunstage {
         app.configure_set(Update, ERunStageChap::AnimeAmount.in_set(FrameDataPrepare).after(ERunStageChap::_InitialApply));
         app.configure_set(Update, ERunStageChap::Anime.in_set(FrameDataPrepare).after(ERunStageChap::AnimeAmount));
         app.configure_set(Update, ERunStageChap::Uniform.in_set(FrameDataPrepare).after(ERunStageChap::Anime));
-        app.configure_set(Update, ERunStageChap::Dispose.after(ERunStageChap::Uniform));
-        app.configure_set(Update, ERunStageChap::_DisposeApply.after(ERunStageChap::Dispose));
-        app.configure_set(Update, ERunStageChap::StateCheck.after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
+        app.configure_set(Update, ERunStageChap::Dispose.in_set(FrameDataPrepare).after(ERunStageChap::Uniform));
+        app.configure_set(Update, ERunStageChap::_DisposeApply.in_set(FrameDataPrepare).after(ERunStageChap::Dispose));
+        app.configure_set(Update, ERunStageChap::StateCheck.in_set(FrameDataPrepare).after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
 
         app.insert_resource(ErrorRecord(vec![], false));
 

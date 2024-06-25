@@ -1,2 +1,2 @@
 
-    gl_FragColor = v_color.rgba;
+    gl_FragColor = v_color;

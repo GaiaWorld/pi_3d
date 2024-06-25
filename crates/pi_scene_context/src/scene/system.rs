@@ -17,6 +17,7 @@ pub fn sys_dispose_about_scene(
             }
         });
 
-        disposecanlist.push(OpsDisposeCan::ops(entity));
+        // disposecanlist.push(OpsDisposeCan::ops(entity));
+        disposereadylist.push(OpsDisposeReady::ops(entity));
     });
 }
