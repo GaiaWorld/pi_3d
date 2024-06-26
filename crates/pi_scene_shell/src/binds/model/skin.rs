@@ -44,6 +44,7 @@ impl ShaderBindModelAboutSkinValue {
                 data: cache,
             })
         } else {
+            // log::error!("Skin bind size  {:?}", size);
             if size > 0 {
                 if let Some(buffer) = allocator.allocate(size as u32) {
                     Some(Self {

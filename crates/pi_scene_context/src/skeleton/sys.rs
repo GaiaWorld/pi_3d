@@ -8,11 +8,13 @@ use super::{skeleton::*, bone::*};
 
     pub fn sys_skin_dirty_by_bone(
         mut skins: Query<&mut SkeletonBonesDirty>,
-        bones: Query<&SkeletonID, Changed<GlobalMatrix>>,
+        bones: Query<&SkeletonID, (Or<(Changed<GlobalMatrix>, Changed<BoneAbsoluteInv>, Changed<SkeletonID>)>, With<BoneAbsoluteInv>)>,
     ) {
         bones.iter().for_each(|skin| {
+            // log::error!("skin_dirty_by_bone {:?}", &skin.0);
             if let Some(idskin) = skin.0 {
                 if let Ok(mut item) = skins.get_mut(idskin) {
+                    // log::error!("skin_dirty_by_bone {:?}", (2));
                     *item = SkeletonBonesDirty(true);
                 }
             }
@@ -29,17 +31,23 @@ use super::{skeleton::*, bone::*};
         parents: EntityTree,
     ) {
         items.iter().for_each(|skeleton| {
-            let root = skeleton.root;
-            let temp = if let Ok((base, mut abs, mut absinv)) = bones.get_mut(root) {
-                abs.0.copy_from(&base.0);
-                absinv.update(&abs);
-                (root, abs.0.clone())
-            } else {
-                (root, Matrix::identity())
-            };
-            let (node, abs) = temp;
-            let temp_ids: Vec<(ObjectID, Matrix)> = vec![(node, abs)];
-            calc_bone(&mut bones, temp_ids, &parents);
+            skeleton.bones.iter().for_each(|bone| {
+                if let Some(parent) = parents.get_up(*bone) {
+                    let parent = parent.parent();
+                    if bones.contains(parent) == false {
+                        let temp_ids: Vec<(ObjectID, Matrix)> = vec![(parent, Matrix::identity())];
+                        calc_bone(&mut bones, temp_ids, &parents);
+                    }
+                }
+
+            });
+            // let temp = if let Ok((base, mut abs, mut absinv)) = bones.get_mut(root) {
+            //     abs.0.copy_from(&base.0);
+            //     absinv.update(&abs);
+            //     (root, abs.0.clone())
+            // } else {
+            //     (root, Matrix::identity())
+            // };
         });
     }
 
@@ -47,17 +55,18 @@ use super::{skeleton::*, bone::*};
         mut items: Query<
             (
                 &Skeleton,
-                &mut SkeletonBonesDirty
+                &SkeletonBonesDirty
             ),
             Changed<SkeletonBonesDirty>
         >,
         bones: Query<(&GlobalMatrix, &BoneAbsoluteInv)>,
     ) {
-        items.iter_mut().for_each(|(skel, mut skindirty)| {
+        items.iter_mut().for_each(|(skel, skindirty)| {
             if skindirty.0 {
                 match skel.mode {
                     ESkinCode::None => {},
                     ESkinCode::UBO(_, _, cache) => {
+                        // log::error!("skin_buffer_update {:?}", (cache, skel.bones.len()));
                         if cache == 1 {
                             let mut data = vec![];
                             skel.bones.iter().for_each(|bone| {
@@ -96,8 +105,6 @@ use super::{skeleton::*, bone::*};
                 }
                 
             }
-
-            skindirty.0 = false;
         });
     }
 
@@ -157,7 +164,8 @@ use super::{skeleton::*, bone::*};
     ) {
         match bones.get_mut(entity) {
             Ok((_base, mut abs, mut absinv)) => {
-                abs.update(p_abs);
+                abs.0 = p_abs * _base.0;
+                // abs.update(p_abs);
                 absinv.update(&abs);
 
                 temp_list.push((entity, abs.0.clone()));

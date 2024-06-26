@@ -21,6 +21,7 @@ pub fn sys_create_skin(
     mut skinlinked: Query<&mut SkeletonID>,
     // mut alter: Alter<(), (), SkeletonBundle, ()>,
 ) {
+    // log::error!("Skin Create");
     cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
         let bone_count = bones.len();
         let bonecount = EBoneCount::new(bone_count as u8 + 1);
@@ -31,6 +32,8 @@ pub fn sys_create_skin(
                 bones.iter().for_each(|id_bone| {
                     if let Ok(mut skinlinked) = skinlinked.get_mut(id_bone.clone()) {
                         skinlinked.0 = Some(id_skin);
+                    // } else {
+                    //     log::error!("Bone No SkeletonID !!!");
                     }
                 });
 
@@ -39,8 +42,10 @@ pub fn sys_create_skin(
                     cmd.insert(bundle) ;
                     // alter.alter(id_skin, bundle);
                 }
+                // log::error!("Skeleton Create Success !!!");
             },
             None => {
+                // log::error!("Skeleton Create Fail !!!");
                 bones.iter().for_each(|entity| {
                     disposecanlist.push(OpsDisposeCan::ops(*entity));
                 });
@@ -97,6 +102,7 @@ pub fn sys_create_bone(
     empty: Res<SingleEmptyEntity>,
     // mut alter: Alter<(), (), BoneBoundle, ()>,
 ) {
+    // log::error!("Bone Create");
     cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, scene)| {
         let mut bonecmd = if let Some(cmd) = commands.get_entity(bone) {
             cmd
@@ -106,6 +112,7 @@ pub fn sys_create_bone(
         let bundle = ActionBone::init(&empty, scene);
         bonecmd.insert(bundle);
         // alter.alter(bone, bundle);
+        // log::error!("Bone Create Success");
     });
 }
 

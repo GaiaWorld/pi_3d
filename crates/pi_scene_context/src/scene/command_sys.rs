@@ -223,7 +223,7 @@ impl ActionScene {
             ActionTransformNode::init_for_tree(),
             ActionEntity::init(),
             (
-                Scene,
+                Scene::default(),
                 SceneCoordinateSytem3D::default(),
                 SceneTime::new(),
                 SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. },
