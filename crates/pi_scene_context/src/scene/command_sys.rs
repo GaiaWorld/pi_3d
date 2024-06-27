@@ -29,7 +29,7 @@ pub fn sys_create_scene(
     mut meshstate: ResMut<ActionListMeshStateModify>,
     // mut alter: Alter<(), (), (BundleScene, SceneBoundingPool, SceneAnimationContext, BoundingBoxDisplay), ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool)| {
+    cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool, pool2)| {
 
         let id_left = commands.spawn_empty().id();
         let id_right = commands.spawn_empty().id();
@@ -57,6 +57,8 @@ pub fn sys_create_scene(
                 let bundle = (
                     bundle,
                     pool,
+                    pool2,
+                    SceneColliderPool::default(),
                     SceneAnimationContext::new(),
                     BoundingBoxDisplay { mesh: bounding, display: false }
                 );

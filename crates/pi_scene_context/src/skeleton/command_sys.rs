@@ -61,6 +61,7 @@ pub fn sys_act_skin_use(
     mut meshes: Query<&mut BindSkinValue>,
     // mut bones: Query<&mut BoneParent>,
     mut skinlinks: Query<&mut SkeletonID>,
+    mut bonelinks: Query<&mut BoneLinked>,
 ) {
     cmds.drain().drain(..).for_each(|ops| {
         match ops {
@@ -91,6 +92,11 @@ pub fn sys_act_skin_use(
                 // if let Ok(mut boneparent) = bones.get_mut(bone) {
                 //     boneparent.0 = parent;
                 // }
+            },
+            OpsSkinUse::BoneLink(bone, link) => {
+                if let Ok(mut bonelink) = bonelinks.get_mut(bone) {
+                    bonelink.0 = Some(link);
+                }
             },
         }
     });
@@ -137,6 +143,7 @@ pub fn sys_act_bone_pose(
 
 pub type SkeletonBundle = (
     Skeleton,
+    SkeletonBoneWorldMatrixDirty,
     SkeletonInitBaseMatrix,
     SkeletonBonesDirty,
     SkeletonRefs,
@@ -150,6 +157,7 @@ impl ActionSkeleton {
     ) -> SkeletonBundle {
         (
             skeleton,
+            SkeletonBoneWorldMatrixDirty,
             SkeletonInitBaseMatrix,
             SkeletonBonesDirty(true),
             SkeletonRefs::default(),
@@ -161,9 +169,13 @@ impl ActionSkeleton {
 pub type BoneBoundle = (
     (
         // BoneParent, 
-        BoneAbsolute, BoneAbsoluteInv, BoneDifferenceMatrix, BoneMatrix, BoneBaseMatrix, SkeletonID
+        BoneLinked,
+        BoneWorldMatrix, BoneAbsolute, BoneAbsoluteInv, BoneDifferenceMatrix, BoneMatrix, BoneBaseMatrix, SkeletonID
     ),
-    TransformNodeBundle
+    // TransformNodeBundle
+    BundleEntity,
+    SceneID,
+    BundleTreeNode,
 );
 
 pub struct ActionBone;
@@ -175,6 +187,8 @@ impl ActionBone {
         (
             (
                 // BoneParent(scene),
+                BoneLinked(None),
+                BoneWorldMatrix(Matrix::identity()),
                 BoneAbsolute(Matrix::identity()),
                 BoneAbsoluteInv(Matrix::identity()),
                 BoneDifferenceMatrix(Matrix::identity()),
@@ -182,7 +196,10 @@ impl ActionBone {
                 BoneBaseMatrix(Matrix::identity()),
                 SkeletonID(None)
             ),
-            ActionTransformNode::init(scene)
+            // ActionTransformNode::init(scene)
+            ActionEntity::init(),
+            SceneID(scene),
+            ActionTransformNode::init_for_tree(),
         )
     }
     // pub(crate) fn modify_pose(

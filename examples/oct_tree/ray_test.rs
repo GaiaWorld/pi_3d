@@ -1,5 +1,7 @@
 #![feature(box_into_inner)]
 
+use std::mem::replace;
+
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_scene_shell::{frame_time::SingleFrameTimeCommand, prelude::*};
 
@@ -136,7 +138,7 @@ fn setup(
         }
     }
 
-    let q = LocalRotationQuaternion::create(0., -0.9, 0., 0.1);
+    let q: LocalRotationQuaternion = LocalRotationQuaternion::create(0., -0.9, 0., 0.1);
     // log::warn!("Q: {:?}", q.0 * 0.5);
 
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
@@ -151,7 +153,7 @@ pub struct ActionListTestData(Vec<(ObjectID, Entity, f32, f32)>);
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
-        app.add_plugins(PluginRayTest);
+        // app.add_plugins(PluginRayTest);
 
         app.insert_resource(ActionListTestData::default());
     }
@@ -159,13 +161,45 @@ impl Plugin for PluginTest {
 
 pub fn sys_test(
     mut list: ResMut<ActionListTestData>,
-    mut rays: ResMut<ActionListRayTest>,
-    res: Res<RayTestID>,
+    scenes: Query<(&SceneColliderPool, &SceneBoundingPool)>,
+    viewers: Query<(&ViewerTransformMatrix, &ViewerViewMatrix, &GlobalMatrix)>,
 ) {
-    list.0
-        .iter_mut()
-        .for_each(|item| rays.push(RayTest(item.0, item.1, item.2, item.3)));
-    // println!("res: {:?}", res.as_ref());
+    let mut temp = replace(&mut list.0, vec![]);
+    temp.drain(..).for_each(|(scene, viewer, x, y)| {
+        if let (Ok((colliderpool, boundingpool)), Ok((transformatrix, viewmatrix, worldmatrix))) = (scenes.get(scene), viewers.get(viewer)) {
+            let mut matrix = Matrix::identity();
+            let invtransform = if let Some(invtransform) = transformatrix.0.try_inverse() {
+                invtransform
+            } else {
+                Matrix::identity()
+            };
+
+            let near_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), -1.0);
+            let far_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), 1.0);
+            let mut near = Vector3::zeros();
+            let mut far = Vector3::zeros();
+            let vv = invtransform.fixed_view::<4, 1>(0, 3);
+            CoordinateSytem3::transform_coordinates(&near_screen_source, &invtransform, &mut near);
+            let num = near.x * vv.x + near.y * vv.y + near.z * vv.z + vv.w;
+            near.scale_mut(1.0 / num);
+            CoordinateSytem3::transform_coordinates(&far_screen_source, &invtransform, &mut far);
+            let num = far.x * vv.x + far.y * vv.y + far.z * vv.z + vv.w;
+            far.scale_mut(1.0 / num);
+
+            let origin = near;
+            let direction = far - origin;
+            let mut result = None;
+
+            colliderpool.ray_test(origin.clone(), direction.clone(), &mut result);
+            if result.is_none() {
+                boundingpool.ray_test(origin, direction, &mut result)
+            }
+
+            log::error!("Ray : {:?}", result);
+        } else {
+            list.0.push((scene, viewer, x, y))
+        }
+    });
 }
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins();

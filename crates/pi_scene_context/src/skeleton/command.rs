@@ -22,6 +22,7 @@ pub enum OpsSkinUse {
     Use(Entity, Entity),
     UnUse(Entity, Entity),
     Bone(Entity, Entity),
+    BoneLink(Entity, Entity),
 }
 impl OpsSkinUse {
     pub fn ops(id_mesh: Entity, skin: Entity) -> Self {
@@ -29,6 +30,9 @@ impl OpsSkinUse {
     }
     pub fn bone(bone: Entity, boneparent: Entity) -> Self {
         Self::Bone(bone, boneparent)
+    }
+    pub fn bone_link(bone: Entity, link: Entity) -> Self {
+        Self::BoneLink(bone, link)
     }
     pub fn ops_unuse(id_mesh: Entity, skin: Entity) -> Self {
         Self::UnUse(id_mesh, skin)

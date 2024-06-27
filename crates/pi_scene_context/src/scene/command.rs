@@ -6,24 +6,33 @@ use crate::cullings::prelude::*;
 
 use super::environment::fog::*;
 
-pub struct OpsSceneCreation(pub(crate) Entity, pub(crate) SceneBoundingPool);
+pub struct OpsSceneCreation(pub(crate) Entity, pub(crate) SceneBoundingPool, pub(crate) SceneColliderPool);
 impl OpsSceneCreation {
     pub fn ops(scene: Entity, cullingmode: u8, param: [i32;9]) -> Self {
-        let pool = match cullingmode {
+        let (pool, pool2) = match cullingmode {
             2 => {
-                SceneBoundingPool::create_oct(
-                    (param[0] as Number, param[1] as Number, param[2] as Number),
-                    (param[3] as Number, param[4] as Number, param[5] as Number),
-                    param[6] as usize,
-                    param[7] as usize,
-                    param[8] as usize
+                (
+                    SceneBoundingPool::create_oct(
+                        (param[0] as Number, param[1] as Number, param[2] as Number),
+                        (param[3] as Number, param[4] as Number, param[5] as Number),
+                        param[6] as usize,
+                        param[7] as usize,
+                        param[8] as usize
+                    ),
+                    SceneColliderPool::create_oct(
+                        (param[0] as Number, param[1] as Number, param[2] as Number),
+                        (param[3] as Number, param[4] as Number, param[5] as Number),
+                        param[6] as usize,
+                        param[7] as usize,
+                        param[8] as usize
+                    )
                 )
             },
             _ => {
-                SceneBoundingPool::create_vec()
+                (SceneBoundingPool::create_vec(), SceneColliderPool::create_vec())
             }
         };
-        Self(scene, pool)
+        Self(scene, pool, pool2)
     }
 }
 pub type ActionListSceneCreate = ActionList<OpsSceneCreation>;

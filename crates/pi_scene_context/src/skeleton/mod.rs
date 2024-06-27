@@ -45,7 +45,7 @@ impl Plugin for PluginSkeleton {
                 (
                     sys_act_skin_use,
                     sys_act_bone_pose,
-                    sys_bones_initial
+                    sys_bones_absolute
                 ).chain().in_set(StageSkeleton::Command),
                 (
                     sys_skin_dirty_by_bone,
@@ -69,8 +69,10 @@ impl Plugin for PluginSkeleton {
         .add_systems(Update, sys_create_skin.after(sys_create_bone).in_set(StageSkeleton::SkinCreate))
         .add_systems(Update, sys_act_skin_use.in_set(StageSkeleton::Command))
         .add_systems(Update, sys_act_bone_pose.after(sys_act_skin_use).in_set(StageSkeleton::Command))
-        .add_systems(Update, sys_bones_initial.after(sys_act_bone_pose).in_set(StageSkeleton::Command))
-        .add_systems(Update, sys_skin_dirty_by_bone.in_set(StageSkeleton::Calc))
+        .add_systems(Update, sys_bones_absolute.after(sys_act_bone_pose).in_set(StageSkeleton::Command))
+        .add_systems(Update, sys_bones_local_dirty.in_set(StageSkeleton::Calc))
+        .add_systems(Update, sys_bones_worldmatrix.after(sys_bones_local_dirty).in_set(StageSkeleton::Calc))
+        .add_systems(Update, sys_skin_dirty_by_bone.after(sys_bones_worldmatrix).in_set(StageSkeleton::Calc))
         .add_systems(Update, sys_skin_buffer_update.after(sys_skin_dirty_by_bone).in_set(StageSkeleton::Calc))
         .add_systems(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
         ;

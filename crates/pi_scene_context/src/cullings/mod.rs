@@ -41,6 +41,7 @@ pub struct PluginCulling;
 impl Plugin for PluginCulling {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListMeshBounding::default());
+        app.insert_resource(ActionListCollider::default());
         app.insert_resource(ActionListBoundingBoxDisplay::default());
 
 #[cfg(feature = "use_bevy")]
@@ -55,9 +56,11 @@ impl Plugin for PluginCulling {
         app.add_systems(
             Update, 
             (
+                sys_act_collider.in_set(StageCulling::Command),
                 sys_act_mesh_bounding_culling_display.in_set(StageCulling::Command),
                 sys_act_mesh_bounding.in_set(StageModel::AbstructMeshCommand),
                 (
+                    sys_update_collider,
                     sys_update_culling_by_worldmatrix,
                     sys_update_culling_by_cullinginfo,
                     sys_abstructmesh_culling_flag_reset,
@@ -73,8 +76,10 @@ impl Plugin for PluginCulling {
 
 #[cfg(not(feature = "use_bevy"))]
         app
+        .add_systems(Update, sys_act_collider                       .in_set(StageCulling::Command))
         .add_systems(Update, sys_act_mesh_bounding_culling_display   .in_set(StageCulling::Command))
         .add_systems(Update, sys_act_mesh_bounding                   .in_set(StageModel::AbstructMeshCommand))
+        .add_systems(Update, sys_update_collider                                                                            .in_set(StageCulling::CalcBounding))
         .add_systems(Update, sys_update_culling_by_worldmatrix                                                              .in_set(StageCulling::CalcBounding))
         .add_systems(Update, sys_update_culling_by_cullinginfo           .after(sys_update_culling_by_worldmatrix)  .in_set(StageCulling::CalcBounding))
         .add_systems(Update, sys_abstructmesh_culling_flag_reset         .after(sys_update_culling_by_cullinginfo)  .in_set(StageCulling::CalcBounding))

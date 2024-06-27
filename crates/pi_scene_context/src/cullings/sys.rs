@@ -7,6 +7,21 @@ use crate::{geometry::instance::instanced_buffer::{InstanceBufferAllocator, Inst
 
 use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode, BoundingBoxDisplay};
 
+pub fn sys_update_collider(
+    mut scenes: Query<&mut SceneColliderPool>,
+    items: Query<(Entity, &Collider, &GlobalMatrix, &SceneID, &DisposeReady), Or<(Changed<Collider>, Changed<GlobalMatrix>, Changed<DisposeReady>)>>,
+) {
+    items.iter().for_each(|(entity, collider, worldmatrix, idscene, dispose)| {
+        if let Ok(mut pool) = scenes.get_mut(idscene.0) {
+            if dispose.0 == true {
+                pool.remove(entity);
+            } else {
+                pool.set(entity, collider, worldmatrix.matrix());
+            }
+        }
+    });
+}
+
 pub fn sys_update_culling_by_worldmatrix(
     mut scenes: Query<&mut SceneBoundingPool>,
     items: Query<(Entity, &RenderWorldMatrix, &SceneID, &DisposeReady), Or<(Changed<RenderWorldMatrix>, Changed<DisposeReady>)>>,

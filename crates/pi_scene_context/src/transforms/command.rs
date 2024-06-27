@@ -1,7 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 
-use crate::flags::*;
+use crate::{flags::*, cullings::prelude::Collider};
 
 use super::transform_node::*;
 

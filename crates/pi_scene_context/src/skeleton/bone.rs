@@ -15,6 +15,14 @@ impl BoneAbsolute {
 }
 
 #[derive(Component, Default)]
+pub struct BoneWorldMatrix(pub Matrix);
+impl BoneWorldMatrix {
+    pub fn update(&mut self, parent: &Matrix, local: &Matrix) {
+        self.0 = parent * local;
+    }
+}
+
+#[derive(Component, Default)]
 pub struct BoneAbsoluteInv(pub Matrix);
 impl BoneAbsoluteInv {
     pub fn update(&mut self, abs: &BoneAbsolute) {

@@ -124,6 +124,29 @@ impl ViewerTransformMatrix {
     pub fn update(&self, range: &BindBufferRange) {
         range.write_data(ShaderBindViewer::OFFSET_VIEW_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
+    pub fn ray(&self, x: f32, y: f32) -> (Vector3, Vector3) {
+        let invtransform = if let Some(invtransform) = self.0.try_inverse() {
+            invtransform
+        } else {
+            Matrix::identity()
+        };
+
+        let near_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), -1.0);
+        let far_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), 1.0);
+        let mut near = Vector3::zeros();
+        let mut far = Vector3::zeros();
+        let vv = invtransform.fixed_view::<4, 1>(0, 3);
+        CoordinateSytem3::transform_coordinates(&near_screen_source, &invtransform, &mut near);
+        let num = near.x * vv.x + near.y * vv.y + near.z * vv.z + vv.w;
+        near.scale_mut(1.0 / num);
+        CoordinateSytem3::transform_coordinates(&far_screen_source, &invtransform, &mut far);
+        let num = far.x * vv.x + far.y * vv.y + far.z * vv.z + vv.w;
+        far.scale_mut(1.0 / num);
+
+        let origin = near;
+        let direction = far - origin;
+        (origin, direction)
+    }
 }
 #[derive(Clone, Component)]
 pub struct ViewerGlobalPosition(pub Vector3);

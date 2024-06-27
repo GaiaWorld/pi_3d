@@ -6,7 +6,7 @@ use pi_scene_math::{
 
 use super::base::{TBoundingInfoCalc, TFilter};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct VecBoundingInfoCalc {
     pool: XHashMap<Entity, ((Number, Number, Number), (Number, Number, Number))>,
     fast: XHashSet<Entity>,

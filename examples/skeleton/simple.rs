@@ -53,46 +53,62 @@ fn setup(
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
     // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     
-    let bone0 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone0, scene));
-    let bone1 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone1, bone0));
+    let node0 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node0, scene));
+    let node1 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node1, node0));
     let key_curve0 = pi_atom::Atom::from((1).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone1, animation));
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node1, animation));
     }
-    let bone2 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone2, bone0));
+    let node2 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node2, node0));
     let key_curve0 = pi_atom::Atom::from((2).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone2, animation));
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node2, animation));
     }
-    let bone3 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone3, bone0));
+    let node3 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node3, node0));
     let key_curve0 = pi_atom::Atom::from((3).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone3, animation));
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node3, animation));
     }
-    let bone4 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone4, bone0));
+    let node4 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node4, node0));
     let key_curve0 = pi_atom::Atom::from((4).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), bone4, animation));
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node4, animation));
     }
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
+    
+    actions.transform.create.push(OpsTransformNode::ops(scene, node0));
+    actions.transform.create.push(OpsTransformNode::ops(scene, node1));
+    actions.transform.create.push(OpsTransformNode::ops(scene, node2));
+    actions.transform.create.push(OpsTransformNode::ops(scene, node3));
+    actions.transform.create.push(OpsTransformNode::ops(scene, node4));
 
+    let bone0 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone0, scene));
+    let bone1 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone1, bone0));
+    let bone2 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone2, bone0));
+    let bone3 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone3, bone0));
+    let bone4 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone4, bone0));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone0, scene));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone1, scene));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone2, scene));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone3, scene));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone4, scene));
+    actions.skin.skin_use.push(OpsSkinUse::bone_link(bone0, node0));
+    actions.skin.skin_use.push(OpsSkinUse::bone_link(bone1, node1));
+    actions.skin.skin_use.push(OpsSkinUse::bone_link(bone2, node2));
+    actions.skin.skin_use.push(OpsSkinUse::bone_link(bone3, node3));
+    actions.skin.skin_use.push(OpsSkinUse::bone_link(bone4, node4));
 
     // actions.transform.tree.push(OpsTransformNodeParent::ops(bone0, scene));
     // actions.transform.tree.push(OpsTransformNodeParent::ops(bone1, bone0));
@@ -134,7 +150,7 @@ fn setup(
     }));
 
     let skeleton = commands.spawn_empty().id();
-    actions.skin.skin_create.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, scene, &vec![bone0, bone1, bone2, bone3, bone4], 1, None));
+    actions.skin.skin_create.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, bone0, &vec![bone0, bone1, bone2, bone3, bone4], 1, None));
     actions.skin.skin_use.push(OpsSkinUse::ops(source, skeleton));
 
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Euler(1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2)));
@@ -155,7 +171,7 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     
-        #[cfg(feature = "use_bevy")]
+    #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));

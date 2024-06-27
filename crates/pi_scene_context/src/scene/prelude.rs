@@ -2,6 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::prelude::ActionListBoundingBoxDisplay;
+use crate::prelude::ActionListCollider;
 
 pub use super::base::*;
 pub use super::command::*;
@@ -28,5 +29,6 @@ pub struct ActionSetScene<'w> {
     pub env: ResMut<'w, ActionListSceneEnvTexture>,
     pub shadowmap: ResMut<'w, ActionListSceneShadowMap>,
     pub boundingboxdisplay: ResMut<'w, ActionListBoundingBoxDisplay>,
+    pub collider: ResMut<'w, ActionListCollider>,
 }
 

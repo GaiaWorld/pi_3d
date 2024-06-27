@@ -91,6 +91,30 @@ pub enum ECullingStrategy {
 }
 
 #[derive(Component)]
+pub struct Collider {
+    pub minimum: Vector3,
+    pub maximum: Vector3,
+}
+impl Default for Collider {
+    fn default() -> Self {
+        Self { minimum: Vector3::new(-0.5, -0.5, -0.5), maximum: Vector3::new(0.5, 0.5, 0.5) }
+    }
+}
+impl Collider {
+    pub fn minmax(&self, matrix: &Matrix) -> ((Number, Number, Number), (Number, Number, Number)) {
+        let mut temp = Vector3::zeros();
+        CoordinateSytem3::transform_coordinates(&self.minimum, matrix, &mut temp);
+        let min = (temp.x, temp.y, temp.z);
+        CoordinateSytem3::transform_coordinates(&self.maximum, matrix, &mut temp);
+        let max = (temp.x, temp.y, temp.z);
+        (
+            (Number::min(min.0, max.0), Number::min(min.1, max.1), Number::min(min.2, max.2)),
+            (Number::max(min.0, max.0), Number::max(min.1, max.1), Number::max(min.2, max.2))
+        )
+    }
+}
+
+#[derive(Component)]
 pub struct GeometryBounding {
     pub minimum: Vector3,
     pub maximum: Vector3,
@@ -121,6 +145,83 @@ pub trait TFilter {
 
 #[derive(Component, Default)]
 pub struct GeometryCullingMode(pub ECullingStrategy);
+
+
+#[derive(Component)]
+pub enum SceneColliderPool {
+    List(VecBoundingInfoCalc),
+    QuadTree(),
+    OctTree(BoundingOctTree),
+}
+impl Default for SceneColliderPool {
+    fn default() -> Self {
+        Self::List(VecBoundingInfoCalc::default())
+    }
+}
+impl SceneColliderPool {
+    pub const MODE_LIST: u8 = 0;
+    pub const MODE_QUAD_TREE: u8 = 1;
+    pub const MODE_OCTREE: u8 = 2;
+    pub fn create_vec() -> Self {
+        Self::List(VecBoundingInfoCalc::default())
+    }
+    pub fn create_oct(min: (Number, Number, Number), max: (Number, Number, Number), adjust_min: usize, adjust_max: usize, deep: usize) -> Self {
+        let tree = OctTree::new(
+            Aabb::new(
+                Point3::new(min.0, min.1, min.2),
+                Point3::new(max.0, max.1, max.2),
+            ),
+            Vector3::new(max.0, max.1, max.2),
+            Vector3::new(min.0, min.1, min.2),
+            adjust_min,
+            adjust_max,
+            deep
+        );
+        Self::OctTree(BoundingOctTree { fast: XHashSet::default(), tree })
+    }
+    pub fn remove(&mut self, entity: Entity) {
+        match self {
+            SceneColliderPool::List(items) => items.remove(entity),
+            SceneColliderPool::QuadTree() => todo!(),
+            SceneColliderPool::OctTree(items) => items.remove(entity),
+        }
+    }
+    pub fn set(&mut self, entity: Entity, info: &Collider, matrix: &Matrix) {
+
+        match self {
+            SceneColliderPool::List(items) => {
+                let (min, max) = info.minmax(matrix);
+                items.add(entity, min, max)
+            },
+            SceneColliderPool::QuadTree() => {
+                
+            },
+            SceneColliderPool::OctTree(items) => {
+                let (min, max) = info.minmax(matrix);
+                items.add(entity, min, max)
+            },
+        }
+    }
+    pub fn ray_test(
+        &self,
+        org: Vector3,
+        dir: Vector3,
+        result: &mut Option<Entity>,
+    ) {
+        match self {
+            SceneColliderPool::List(item) => item.ray_test(org, dir, result),
+            SceneColliderPool::QuadTree() => todo!(),
+            SceneColliderPool::OctTree(item) => item.ray_test(org, dir, result),
+        }
+    }
+    pub fn entities(&self) -> Vec<Entity> {
+        match self {
+            SceneColliderPool::List(items) => items.entities(),
+            SceneColliderPool::QuadTree() => vec![],
+            SceneColliderPool::OctTree(items) => items.entities(),
+        }
+    }
+}
 
 
 #[derive(Component)]
@@ -215,7 +316,6 @@ impl SceneBoundingPool {
             },
         }
     }
-
     pub fn ray_test(
         &self,
         org: Vector3,
