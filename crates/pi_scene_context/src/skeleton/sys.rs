@@ -61,22 +61,6 @@ use super::{skeleton::*, bone::*};
             // log::error!("sys_bones_local_dirty ");
             let parent = skeleton.root;
             roots.insert(parent);
-            // let temp_ids: Vec<(ObjectID, Matrix)> = vec![(parent, Matrix::identity())];
-            // calc_bone_world_matrix(&nodes, &mut bones, temp_ids, &parents);
-            // if bones.contains(parent) == false {
-            //     let temp_ids: Vec<(ObjectID, Matrix)> = vec![(parent, Matrix::identity())];
-            //     calc_bone_world_matrix(&nodes, &mut bones, temp_ids, &parents);
-            // }
-
-            // skeleton.bones.iter().for_each(|bone| {
-            //     if let Some(parent) = parents.get_up(*bone) {
-            //         let parent = parent.parent();
-            //         if bones.contains(parent) == false {
-            //             let temp_ids: Vec<(ObjectID, Matrix)> = vec![(parent, Matrix::identity())];
-            //             calc_bone_world_matrix(&mut bones, temp_ids, &parents);
-            //         }
-            //     }
-            // });
         });
         roots.iter().for_each(|root| {
             if let Ok((link, mut world)) = bones.get_mut(*root) {
@@ -102,10 +86,13 @@ use super::{skeleton::*, bone::*};
         parents: EntityTree,
     ) {
         items.iter().for_each(|skeleton| {
+            // log::error!("sys_skin_buffer_update >>>>>>>>>>>>>>>>>>");
             let parent = skeleton.root;
             if let Ok((base, mut abs, mut absinv)) = bones.get_mut(parent) {
                 abs.0 = base.0.clone();
                 absinv.update(&abs);
+                
+                // log::error!("{:?}", (&base.0, &abs.0, &absinv.0));
                 let temp_ids: Vec<(ObjectID, Matrix)> = vec![(parent, abs.0.clone())];
                 calc_bone_absolute(&mut bones, temp_ids, &parents);
             }
@@ -235,19 +222,6 @@ use super::{skeleton::*, bone::*};
             }
             temp_list.push((entity, world.0.clone()));
         }
-
-        // match (nodes.get(entity), bones.get_mut(entity)) {
-        //     (Ok(local), Ok(mut world)) => {
-        //         world.0 = p_world * local.0;
-        //         temp_list.push((entity, world.0.clone()));
-        //     },
-        //     (Ok(local), _) => {
-        //         temp_list.push((entity, p_world * local.0));
-        //     },
-        //     (_, _) => {
-                
-        //     },
-        // }
     }
 
     fn calc_bone_absolute(
@@ -299,6 +273,7 @@ use super::{skeleton::*, bone::*};
                 // abs.update(p_abs);
                 absinv.update(&abs);
 
+                // log::error!("{:?}", (&_base.0, &abs.0, &absinv.0));
                 temp_list.push((entity, abs.0.clone()));
             },
             Err(_e) => {
