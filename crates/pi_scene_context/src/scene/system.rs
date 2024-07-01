@@ -3,6 +3,7 @@ use pi_scene_shell::prelude::*;
 use super::base::Scene;
 
 pub fn sys_dispose_about_scene(
+    mut event: ComponentChanged<DisposeReady>,
     mut scenes: Query<(Entity, &mut DisposeReady, &Scene), Changed<DisposeReady>>,
     items: Query<(Entity, &SceneID)>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,

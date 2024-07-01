@@ -11,11 +11,13 @@ use super::transform_node::*;
 use super::prelude::*;
 
     pub fn sys_local_euler_calc_rotation(
-        localmatrixs: Query<(Entity, &LocalEulerAngles), Changed<LocalEulerAngles>>,
+        changed: ComponentChanged<LocalEulerAngles>,
+        localmatrixs: Query<&LocalEulerAngles>,
+        // localmatrixs: Query<(Entity, &LocalEulerAngles), Changed<LocalEulerAngles>>,
         mut loacl_quaternions: Query<(&mut LocalRotationQuaternion, &mut LocalRotation)>,
     ) {
-        localmatrixs.iter().for_each(|(entity, euler)| {
-            if let Ok((mut loacl_quaternion, mut local_rotation)) = loacl_quaternions.get_mut(entity) {
+        changed.iter().for_each(|entity| {
+            if let (Ok(euler), Ok((mut loacl_quaternion, mut local_rotation))) = (localmatrixs.get(*entity), loacl_quaternions.get_mut(*entity)) {
                 let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
                 let quaternion = Quaternion::from_rotation_matrix(&rotation);
                 *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone());
@@ -23,24 +25,44 @@ use super::prelude::*;
                 *local_rotation = LocalRotation(rotation);
             }
         });
+        // localmatrixs.iter().for_each(|(entity, euler)| {
+        //     if let Ok((mut loacl_quaternion, mut local_rotation)) = loacl_quaternions.get_mut(entity) {
+        //         let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
+        //         let quaternion = Quaternion::from_rotation_matrix(&rotation);
+        //         *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone());
+        //         // log::error!("loacl_quaternion from euler {:?}", (entity, loacl_quaternion));
+        //         *local_rotation = LocalRotation(rotation);
+        //     }
+        // });
     }
 
     pub fn sys_local_quaternion_calc_rotation(
-        localmatrixs: Query<(Entity, Ref<LocalRotationQuaternion>), Changed<LocalRotationQuaternion>>,
+        changed: ComponentChanged<LocalRotationQuaternion>,
+        localmatrixs: Query<&LocalRotationQuaternion>,
+        // localmatrixs: Query<(Entity, Ref<LocalRotationQuaternion>), Changed<LocalRotationQuaternion>>,
         mut local_rotation: Query<&mut LocalRotation>,
     ) {
-        localmatrixs.iter().for_each(|(entity, quat)| {
-            if let Ok(mut local_rotation) = local_rotation.get_mut(entity) {
-                // if quat.is_added() {
-                    // log::warn!("Quaternion: {:?}", quat);
-                    let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
-                    // log::warn!("Quaternion: Ok");
-                    // *loacl_quaternion = LocalRotationQuaternion(quaternion);
-                    *local_rotation = LocalRotation(rotation);
-                    // log::error!("local_rotation {:?}", (entity, quat.0));
-                // }
+        changed.iter().for_each(|entity| {
+            if let (Ok(quat), Ok(mut local_rotation)) = (localmatrixs.get(*entity), local_rotation.get_mut(*entity)) {
+                // log::warn!("Quaternion: {:?}", quat);
+                let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
+                // log::warn!("Quaternion: Ok");
+                // *loacl_quaternion = LocalRotationQuaternion(quaternion);
+                *local_rotation = LocalRotation(rotation);
             }
         });
+        // localmatrixs.iter().for_each(|(entity, quat)| {
+        //     if let Ok(mut local_rotation) = local_rotation.get_mut(entity) {
+        //         // if quat.is_added() {
+        //             // log::warn!("Quaternion: {:?}", quat);
+        //             let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
+        //             // log::warn!("Quaternion: Ok");
+        //             // *loacl_quaternion = LocalRotationQuaternion(quaternion);
+        //             *local_rotation = LocalRotation(rotation);
+        //             // log::error!("local_rotation {:?}", (entity, quat.0));
+        //         // }
+        //     }
+        // });
     }
 
     pub fn sys_local_matrix_calc(

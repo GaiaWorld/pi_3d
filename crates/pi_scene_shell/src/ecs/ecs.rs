@@ -16,6 +16,7 @@ pub use pi_world::{
     editor::EntityEditor, filter::Changed, schedule_config::{IntoSystemConfigs, StageLabel}, world::Entity,
     query::*,
     fetch::FetchComponents,
+    prelude::ComponentChanged,
 };
 
 #[cfg(not(feature = "use_bevy"))]
@@ -303,5 +304,8 @@ impl<T: SystemParam> SystemState<T> {
     pub fn get(&mut self, world: &World) -> T {
         let tick = world.tick();
         <T>::get_self(&world, &self.0, &mut self.1, tick)
+    }
+    pub fn align(&mut self, world: &World) {
+        T::align(world, &self.0, &mut self.1)
     }
 }
