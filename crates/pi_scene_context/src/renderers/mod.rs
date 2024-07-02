@@ -161,8 +161,8 @@ impl Plugin for PluginRenderer {
         app
         .configure_set(Update, StageRenderer::Create.after(StageCamera::_Create).after(StageShadowGenerator::_Create))
         .configure_set(Update, StageRenderer::_CreateApply.after(StageRenderer::Create))
-        .configure_set(Update, StageRenderer::RenderStateCommand.in_set(FrameDataPrepare).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply))
-        .configure_set(Update, StageRenderer::RendererCommand.in_set(FrameDataPrepare).after(StageRenderer::_CreateApply))
+        .configure_set(Update, StageRenderer::RenderStateCommand.in_set(FrameDataPrepare).after(StageRenderer::Create).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply))
+        .configure_set(Update, StageRenderer::RendererCommand.in_set(FrameDataPrepare).after(StageRenderer::Create).after(StageRenderer::_CreateApply))
         .configure_set(Update, StageRenderer::PassBindGroup.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform))
         .configure_set(Update, StageRenderer::PassBindGroups.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
         .configure_set(Update, StageRenderer::PassShader.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))

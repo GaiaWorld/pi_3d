@@ -86,12 +86,13 @@ impl TViewerViewMatrix for TargetCameraParam {
 
 
                     // let mut up = Vector3::zeros();
-                    CoordinateSytem3::transform_coordinates(&up.clone(), transformation, &mut up);
+                    CoordinateSytem3::transform_normal(&up.clone(), transformation, &mut up);
                     // log::warn!("up: {:?}", up);
 
                     let mut iso = Isometry3::identity();
                     coordsys.lookat(&eye, &target, &up, &mut iso);
                     // iso.translation.clone_from(&Translation3::new(eye.x, eye.y, eye.z));
+                    // log::warn!("Camera : {:?}", (position, self.target, eye, target, up));
 
                     (ViewerViewMatrix(iso.to_matrix()), ViewerGlobalPosition(eye))
                 },

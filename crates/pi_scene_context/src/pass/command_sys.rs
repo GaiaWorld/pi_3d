@@ -54,7 +54,11 @@ pub fn sys_act_pass_object(
                     EPrimitiveState::CUnClipDepth   (val) => item.primitive.unclip_depth = val ,
                     EPrimitiveState::Topology       (val) => item.primitive.topology = val ,
                 }
+            // } else {
+            //     log::error!("Not Found RenderState {:?}", passid);
             }
+        // } else {
+        //     log::error!("Not Found Mesh {:?}", entity);
         }
     });
 

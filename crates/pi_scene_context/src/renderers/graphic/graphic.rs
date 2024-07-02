@@ -1,5 +1,5 @@
 
-use std::ops::{Deref, DerefMut};
+use std::{ops::{Deref, DerefMut}, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
@@ -64,11 +64,13 @@ pub struct QueryParam0<'w> (
 
 pub struct RenderNode {
     pub renderer_id: ObjectID,
+    pub auto_srt: Option<Arc<SafeTargetView>>
 }
 impl RenderNode {
     pub fn new(renderer_id: ObjectID) -> Self {
         Self {
             renderer_id,
+            auto_srt: None,
         }
     }
 }
@@ -137,7 +139,7 @@ impl Node for RenderNode {
             match to_final_target {
                 RendererRenderTarget::FinalRender => {},
                 RendererRenderTarget::Custom(_srt) => output.target = input.target.clone(),
-                RendererRenderTarget::None(val) => {
+                RendererRenderTarget::None(_) => {
                     let currlist: Vec<ShareTargetView> = vec![];
                     let srt = if let Some(srt) = input.target.clone() {
                         match (param.depthstencilformat.0.val(), &srt.target().depth) {
@@ -183,7 +185,7 @@ impl Node for RenderNode {
                         atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
                     };
 
-                    *val = Some(srt.clone());
+                    self.auto_srt = Some(srt.clone());
                     output.target = Some(srt.clone());
                 },
             };
@@ -296,8 +298,9 @@ impl Node for RenderNode {
                     
                     // output.target = Some(srt.clone());
                 },
-                RendererRenderTarget::None(srt) => {
-                    let srt = match srt {
+                RendererRenderTarget::None(_) => {
+                    // log::warn!("Graphic None: {:?}", (self.renderer_id, clear_color_ops));
+                    let srt = match &self.auto_srt {
                         Some(srt) => {
                             if srt.target().colors[0].1.format() == param.colorformat.0.val() {
                                 srt
@@ -335,6 +338,7 @@ impl Node for RenderNode {
 
             // log::warn!("Graphic: {:?}", (can_render, renderer.draws.list.len()));
             if can_render {
+                // log::warn!("Graphic: {:?}", (self.renderer_id, can_render, clear_color_ops));
                 clear_color_attachments = [
                     Some( wgpu::RenderPassColorAttachment { view: render_color_view, resolve_target: None, ops: clear_color_ops, } )
                 ];
@@ -395,6 +399,8 @@ impl Node for RenderNode {
             }
         }
         
+        self.auto_srt = None;
+
         return Box::pin( async move { Ok(()) } );
     }
 

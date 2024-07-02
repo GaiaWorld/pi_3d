@@ -732,7 +732,6 @@ fn pipeline(
         // *oldpipeline = PassPipeline::new(Some(pipeline));
         Ok(pipeline)
     } else {
-        // log::debug!("SysPipeline: 4 Pass");
         let pipeline = KeyPipeline3D::create(key_pipeline, shader.clone(), bind_group_layouts, &device);
         assets.insert(key_u64, pipeline)
     }
