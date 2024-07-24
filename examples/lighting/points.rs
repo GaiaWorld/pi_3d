@@ -62,15 +62,15 @@ impl Plugin for PluginTest {
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 0.7 )));
         actions.camera.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
 
-        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
 
-        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
         actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
         // {
-        //     let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
+        //     let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
         //     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(light, 0., 10., -10.));
         //     actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         //     actions.lighting.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
@@ -92,14 +92,14 @@ impl Plugin for PluginTest {
         // }
 
         // {
-        //     let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
+        //     let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
         //     actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         //     actions.lighting.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
         //     actions.lighting.param.push(ELightModifyCommand::Directional(light, Vector3::new(-1., -0.2, 0.2)));
         //     actions.lighting.color.push(OpsLightColor::ops(light, 0.0 * 0.2, 0.8 * 0.2, 0.0 * 0.2));
         // }
         // {
-        //     let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
+        //     let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
         //     actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         //     actions.lighting.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
         //     actions.lighting.param.push(ELightModifyCommand::Directional(light, Vector3::new(1., -0.2, 0.2)));
@@ -137,7 +137,7 @@ impl Plugin for PluginTest {
         }
 
     let lightingmat = {
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY));
         idmat
     };
@@ -159,7 +159,7 @@ impl Plugin for PluginTest {
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..tes_size {
-                    let cube = commands.spawn_empty().id();
+                    let cube = commands.spawn_empty_id();
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i as f32 - half) * 1., (k as f32 - half * 0.5) * 1., (j as f32 - half) * 1.)));
@@ -168,7 +168,7 @@ impl Plugin for PluginTest {
             }
         }
 
-        let id_group = commands.spawn_empty().id();
+        let id_group = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.create_group(scene).unwrap();
         // animegroupres.global.record_group(source, id_group);
         actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));

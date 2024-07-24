@@ -42,7 +42,7 @@ fn setup(
     let mut blend = ModelBlend::default(); blend.combine();
     actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_OPAQUE, blend));
 
-    let idmat = commands.spawn_empty().id();
+    let idmat = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),

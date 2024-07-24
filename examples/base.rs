@@ -28,12 +28,19 @@ mod copy;
 pub struct PluginLocalLoad;
 impl Plugin for PluginLocalLoad {
     fn build(&self, _: &mut App) {
-        init_load_cb(Arc::new(|path: String| {
+        init_load_cb(Arc::new(|module, func, hash, rag| {
             MULTI_MEDIA_RUNTIME
                 .spawn(async move {
                     // log::debug!("Load {}", path);
-                    let r = std::fs::read(path.clone()).unwrap();
-                    on_load(&path, Ok(r));
+                    match &rag[0] {
+                        pi_hal::Arg::Number(_) => todo!(),
+                        pi_hal::Arg::String(path) => {
+                            let r = std::fs::read(path.clone()).unwrap();
+                            on_load(hash.parse::<u64>().unwrap(), Ok(r));
+                        },
+                        pi_hal::Arg::Buffer(_) => todo!(),
+                        pi_hal::Arg::None => todo!(),
+                    }
                 })
                 .unwrap();
         }));
@@ -122,11 +129,11 @@ impl DemoScene {
         
         let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
 
-        let scene = commands.spawn_empty().id();
+        let scene = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.init_scene(scene);
         actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
-        let camera = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
+        let camera = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
         actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
         actions.camera.param.push(OpsCameraModify::ops(camera, ECameraModify::FreeMode( freemode ) ));
@@ -137,7 +144,7 @@ impl DemoScene {
         actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::NearFar( 0.1,  100.)));
         actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
 
-        let opaque_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
+        let opaque_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(opaque_renderer, true));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(opaque_renderer, true));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
@@ -146,7 +153,7 @@ impl DemoScene {
         actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
         // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
-        let transparent_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
+        let transparent_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
@@ -166,8 +173,8 @@ impl DemoScene {
         indices: Option<IndicesBufferDesc>,
         state: MeshInstanceState,
     ) -> Entity {
-        let id_geo = commands.spawn_empty().id();
-        let mesh = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
+        let id_geo = commands.spawn_empty_id();
+        let mesh = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(mesh, parent));
         actions.mesh.create.push(OpsMeshCreation::ops(scene, mesh, state));
         actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
 

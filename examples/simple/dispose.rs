@@ -43,17 +43,17 @@ pub struct ListTestData(Vec<(Entity, Entity)>, Option<Entity>, WyRng);
         if let Some(scene) = testdata.1.clone() {
             let random = &mut testdata.2;
             // log::warn!("Random: {:?}", random.gen_range(-5.0f32..5.0f32));
-            let cube: Entity = commands.spawn_empty().id();
+            let cube: Entity = commands.spawn_empty_id();
             actions.mesh.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState::default()));
             actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
             actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(random.gen_range(-5.0f32..5.0f32) as f32 * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5)));
 
-            let id_geo = commands.spawn_empty().id();
+            let id_geo = commands.spawn_empty_id();
             let attrs = CubeBuilder::attrs_meta();
             // attrs.push(VertexBufferDesc::instance_world_matrix());
             actions.geometry.create.push(OpsGeomeryCreate::ops(cube, id_geo, attrs, Some(CubeBuilder::indices_meta())));
     
-            let idmat = commands.spawn_empty().id();
+            let idmat = commands.spawn_empty_id();
             actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
             // let idmat = defaultmat.0;
             actions.material.usemat.push(OpsMaterialUse::ops(cube, idmat, DemoScene::PASS_OPAQUE));
@@ -103,14 +103,14 @@ fn setup(
     for i in 0..tes_size {
         for j in 0..tes_size {
             for _k in 0..1 {
-                let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+                let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
                 actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { instance_matrix: true, ..Default::default() }));
 
-                let id_geo = commands.spawn_empty().id();
+                let id_geo = commands.spawn_empty_id();
                 let attrs = CubeBuilder::attrs_meta();
                 actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
                 
-                let idmat = commands.spawn_empty().id();
+                let idmat = commands.spawn_empty_id();
                 actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
                 // let idmat = defaultmat.0;
                 actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));

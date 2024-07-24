@@ -80,14 +80,14 @@ fn setup(
 
     // actions.mesh.render_alignment.push(OpsMeshRenderAlignment::ops(source, ERenderAlignment::StretchedBillboard));
 
-    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { instance_matrix: true, use_single_instancebuffer: true ,..Default::default() }));
 
-    let id_geo = commands.spawn_empty().id();
+    let id_geo = commands.spawn_empty_id();
     let attrs = CubeBuilder::attrs_meta();
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
     
-    let idmat = commands.spawn_empty().id();
+    let idmat = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
     // let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
@@ -96,8 +96,8 @@ fn setup(
     for i in 0..tes_size {
         for j in 0..tes_size {
             for _k in 0..1 {
-                let instance = commands.spawn_empty().id(); actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
-                let node = commands.spawn_empty().id(); actions.transform.create.push(OpsTransformNode::ops(scene, node));
+                let instance = commands.spawn_empty_id(); actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
+                let node = commands.spawn_empty_id(); actions.transform.create.push(OpsTransformNode::ops(scene, node));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
 

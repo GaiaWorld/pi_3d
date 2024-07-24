@@ -40,12 +40,12 @@ fn setup(
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
-    let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
+    let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
 
     let mut mats = vec![];
     {
-        let idmattrail = commands.spawn_empty().id();
+        let idmattrail = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
         actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -57,7 +57,7 @@ fn setup(
     }
 
     {
-        let idmattrail = commands.spawn_empty().id();
+        let idmattrail = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
         actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -89,12 +89,12 @@ fn setup(
                     //
                     let syskey = String::from("Test");
                     let syscfg = demo_cfg(10., 5.);
-                    let calculator = commands.spawn_empty().id();
+                    let calculator = commands.spawn_empty_id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
                     let calculator = particlesys_res.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
-                    let trailmesh = commands.spawn_empty().id();
-                    let trailgeo = commands.spawn_empty().id();
+                    let trailmesh = commands.spawn_empty_id();
+                    let trailgeo = commands.spawn_empty_id();
                     actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator, base::particelsystem_attrs()));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_start(source));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
@@ -122,7 +122,7 @@ fn setup(
 
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));

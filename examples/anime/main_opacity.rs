@@ -51,7 +51,7 @@ fn setup(
     let mut blend = ModelBlend::default(); blend.combine();
     actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
 
-    let idmat = commands.spawn_empty().id();
+    let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, MainOpacityShader::KEY));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
@@ -75,7 +75,7 @@ fn setup(
     );
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));

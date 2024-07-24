@@ -173,7 +173,7 @@ impl BindEffectValues {
             Ok(idx) => {
                 let offset = &mut self.offsets.get_mut(idx).unwrap().1;
                 if offset.entity.is_none() {
-                    let entity = command.spawn_empty().id();
+                    let entity = command.spawn_empty_id();
                     offset.entity = Some(entity);
                     match offset.atype() {
                         EAnimatorableType::Vec4     => {

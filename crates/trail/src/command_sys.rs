@@ -27,7 +27,7 @@ pub fn sys_create_trail_mesh(
         cmds.drain().drain(..).for_each(|OpsTrail(id_scene, id_linked, entity)| {
 
             let id_mesh = entity;
-            let id_geo = commands.spawn_empty().id();
+            let id_geo = commands.spawn_empty_id();
 
             // matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 

@@ -42,7 +42,7 @@ fn setup(
     // actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
     // actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
-    let root = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(root, scene));
+    let root = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(root, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, root));
     // actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(root, 0., 0., 0.));
     // actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, root));
@@ -56,7 +56,7 @@ fn setup(
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));

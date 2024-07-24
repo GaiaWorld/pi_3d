@@ -41,10 +41,10 @@ fn setup(
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera01, ETransformSRT::Translation(0., 0., -20.)));
     // actions.camera.target.push(OpsCameraTarget::ops(camera01, 0.0, -2.0, 1.0));
 
-    let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
+    let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
 
-    let idmattrail = commands.spawn_empty().id();
+    let idmattrail = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
     actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -59,13 +59,13 @@ fn setup(
     let _euler = -3.0..3.0;
 
     let node = {
-        let node01 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node01, scene));
+        let node01 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node01, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, node01));
-        let node02 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node02, node01));
+        let node02 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node02, node01));
         actions.transform.create.push(OpsTransformNode::ops(scene, node02));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node02, ETransformSRT::Translation(10., 7.5, 0.09)));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node02, ETransformSRT::Euler(-90.2_f32.to_radians(), 0., 0.)));
-        let node03 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node03, node02));
+        let node03 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node03, node02));
         actions.transform.create.push(OpsTransformNode::ops(scene, node03));
         node03
     };
@@ -82,17 +82,17 @@ fn setup(
                     //
                     let syskey = String::from("Test");
                     let syscfg = cone_cfg(10., 3.);
-                    let calculator = commands.spawn_empty().id();
+                    let calculator = commands.spawn_empty_id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
                     let calculator = particlesys_res.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
-                    let trailmesh = commands.spawn_empty().id();
-                    let trailgeo = commands.spawn_empty().id();
+                    let trailmesh = commands.spawn_empty_id();
+                    let trailgeo = commands.spawn_empty_id();
                     actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator, base::particelsystem_attrs()));
                     actions.parsys.state.push(OpsCPUParticleSystemState::ops_start(source));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
-                    let idmat = commands.spawn_empty().id();
+                    let idmat = commands.spawn_empty_id();
                     actions.material.usemat.push(OpsMaterialUse::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
                     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
                     actions.parsys.trailmaterial.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
@@ -104,12 +104,12 @@ fn setup(
                 // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(item, 0.2, 0.2, 0.2));
 
                 
-                // let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
+                // let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
                 // actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
-                // let id_geo = commands.spawn_empty().id();
+                // let id_geo = commands.spawn_empty_id();
                 // let mut attrs = QuadBuilder::attrs_meta();
                 // actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(QuadBuilder::indices_meta())));
-                // let idmat = commands.spawn_empty().id();
+                // let idmat = commands.spawn_empty_id();
                 // actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
                 // actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
 
@@ -122,7 +122,7 @@ fn setup(
 
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));

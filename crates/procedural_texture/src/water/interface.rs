@@ -8,7 +8,7 @@ impl InterfaceWaterMaterial {
     //     let mut queue = CommandQueue::default();
     //     let mut commands = Commands::new(&mut queue, &app.world);
 
-    //     let entity = commands.spawn_empty().id();
+    //     let entity = commands.spawn_empty_id();
     //     queue.apply(&mut app.world);
 
     //     ActionMaterial::init(app, entity, KeyShaderMeta::from(WaterShader::KEY), EPassTag::Opaque);

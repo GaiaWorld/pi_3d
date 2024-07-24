@@ -84,7 +84,7 @@ impl QuadBuilder {
 //     ) -> Entity {
 //         let mut queue = CommandQueue::default();
 //         let mut commands = Commands::new(&mut queue, &app.world);
-//         let id_geo = commands.spawn_empty().id();
+//         let id_geo = commands.spawn_empty_id();
 
 //         let id_mesh = ActionMesh::create(app, scene, name);
 //         ActionMesh::use_geometry(app, id_mesh, QuadBuilder::attrs_meta(), Some(QuadBuilder::indices_meta()));

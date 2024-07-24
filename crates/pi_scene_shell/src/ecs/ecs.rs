@@ -145,22 +145,23 @@ impl<'w, 'a> EntityCommands<'w, 'a> {
 
 #[cfg(not(feature = "use_bevy"))]
 pub trait TEntityCommands<'w> {
-    fn spawn_empty<'a>(&'a mut self) -> EntityCommands<'w, 'a>;
+    fn spawn_empty_id<'a>(&'a mut self) -> Entity;
     fn spawn<'a, M: Bundle + 'static>(&'a mut self, bundle: M) -> EntityCommands<'w, 'a>;
     fn get_entity<'a>(&'a mut self, entity: Entity) -> Option<EntityCommands<'w, 'a>>;
     fn entity<'a>(&'a mut self, entity: Entity) -> EntityCommands<'w, 'a>;
 }
 #[cfg(not(feature = "use_bevy"))]
 impl<'w> TEntityCommands<'w> for EntityEditor<'w> {
-    fn spawn_empty<'a>(&'a mut self) -> EntityCommands<'w, 'a> {
-        
-        let entity = self.alloc_entity(); // self.world().make_inserter().insert(());
+    fn spawn_empty_id<'a>(&'a mut self) -> Entity {
+        self.alloc_entity()
 
-        // let entity = self.alloc_entity();
-        EntityCommands {
-            entity: entity,
-            commands: self
-        }
+        // let entity = self.alloc_entity(); // self.world().make_inserter().insert(());
+
+        // // let entity = self.alloc_entity();
+        // EntityCommands {
+        //     entity: entity,
+        //     commands: self
+        // }
     }
     fn spawn<'a, A: Bundle + 'static>(&'a mut self, bundle: A) -> EntityCommands<'w, 'a> {
         // let entity = self.world().make_inserter().insert(());
@@ -212,7 +213,7 @@ impl<T: 'static> Resource for T {
 pub struct Entities<'w>(&'w mut World);
 impl<'w> Entities<'w> {
     pub fn reserve_entity(&mut self) -> Entity {
-        self.0.spawn_empty().id()
+        self.0.spawn_empty_id()
     }
 }
 
@@ -241,7 +242,7 @@ pub trait WorldResourceTemp {
     fn get_resource<T: 'static>(&self) -> Option<& T>;
     fn get_resource_mut<T: 'static>(&mut self) -> Option<& mut T>;
     fn contains_resource<T: 'static>(&self) -> bool;
-    fn spawn_empty<'w>(&'w mut self) -> EntityCommandsEmpty<'w>;
+    fn spawn_empty_id<'w>(&'w mut self) -> Entity;
     // fn query<'a, Q: FetchComponents + 'static, F: FilterComponents + 'static>(&'a mut self) -> Queryer<'a, Q, F>;
     fn entities<'a>(&'a mut self) -> Entities<'a>;
 }
@@ -269,13 +270,14 @@ impl WorldResourceTemp for World {
     fn contains_resource<T: 'static>(&self) -> bool {
         self.contains_resource::<T>()
     }
-    fn spawn_empty<'w>(&'w mut self) -> EntityCommandsEmpty<'w> {
-        let mut editor = self.make_entity_editor();
-        let entity = editor.alloc_entity();
-        EntityCommandsEmpty {
-            entity: entity,
-            commands: editor
-        }
+    fn spawn_empty_id<'w>(&'w mut self) -> Entity {
+        self.spawn_empty()
+        // let mut editor = self.make_entity_editor();
+        // let entity = editor.alloc_entity();
+        // EntityCommandsEmpty {
+        //     entity: entity,
+        //     commands: editor
+        // }
     }
     // fn query<'a, Q: FetchComponents + 'static, F: FilterComponents + 'static>(&'a mut self) -> Queryer<'a, Q, F> {
     //     self.make_queryer::<Q, F>()

@@ -48,11 +48,11 @@ fn setup(
     let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
-    let root = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(root, scene));
+    let root = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(root, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, root));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -75,7 +75,7 @@ fn setup(
     actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), root, animation));
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
 
-    let temproot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(temproot, root));
+    let temproot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(temproot, root));
     actions.transform.create.push(OpsTransformNode::ops(scene, temproot));
     // let cell_col = 4.;
     // let cell_row = 4.;
@@ -84,7 +84,7 @@ fn setup(
         for j in 0..size {
             for k in 0..size {
                 
-                let ins: Entity = commands.spawn_empty().id();
+                let ins: Entity = commands.spawn_empty_id();
                 actions.instance.create.push(OpsInstanceMeshCreation::ops(source, ins));
                 actions.transform.tree.push(OpsTransformNodeParent::ops(ins, temproot));
                 

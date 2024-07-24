@@ -16,7 +16,7 @@ impl DemoLight {
         parent: Entity,
         actions: &mut pi_3d::ActionSets,
     ) -> Entity {
-        let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
+        let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(0., 20., -10.)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
@@ -36,7 +36,7 @@ impl DemoLight {
         color: (f32, f32, f32),
         layer: u32,
     ) -> Entity {
-        let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
+        let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
@@ -55,7 +55,7 @@ impl DemoLight {
         color: (f32, f32, f32),
         layer: u32,
     ) -> Entity {
-        let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
+        let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Point));
@@ -74,7 +74,7 @@ impl DemoLight {
         color: (f32, f32, f32),
         layer: u32,
     ) -> Entity {
-        let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
+        let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, parent));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Spot));

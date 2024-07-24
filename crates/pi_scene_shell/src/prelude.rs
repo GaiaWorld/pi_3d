@@ -71,10 +71,9 @@ pub use pi_share::{Share, ThreadSync, ShareRefCell};
 pub use crate::run_stage::ERunStageChap;
 pub use crate::object::ObjectID;
 pub use crate::engine_shell::*;
-pub use crate::assets::{
-    sync_load::*,
-    image_texture_load::*
-};
+pub use crate::assets::texture::*;
+pub use crate::assets::image_texture_load::*;
+pub use crate::assets::texture_atlas::*;
 pub use crate::effect_sampler2d::*;
 pub use crate::effect_texture2d::*;
 pub use crate::frame_time::SingleFrameTimeCommand;
@@ -95,6 +94,7 @@ pub use crate::object::*;
 pub use crate::batch::*;
 pub use crate::static_string::*;
 pub use crate::ecs::*;
+pub use crate::render_state::*;
 
 #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);

@@ -33,14 +33,14 @@ fn setup(
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
-    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, base::particelsystem_mesh_state()));
     
-    let id_geo = commands.spawn_empty().id();
+    let id_geo = commands.spawn_empty_id();
     let attrs = CubeBuilder::attrs_meta();
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
-    let idmat = commands.spawn_empty().id();
+    let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {

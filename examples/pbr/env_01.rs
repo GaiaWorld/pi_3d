@@ -64,10 +64,10 @@ impl Plugin for PluginTest {
         // actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01_image.env")), true));
         actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01.env")), false));
         
-        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
         // actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cameraroot, 0., 0., 0.));
-        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
         {
@@ -130,7 +130,7 @@ impl Plugin for PluginTest {
 
     let lightingmat = {
         
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
@@ -173,7 +173,7 @@ impl Plugin for PluginTest {
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..1 {
-                    let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
+                    let cube = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Scaling(1.,  1., 1.)));
@@ -182,7 +182,7 @@ impl Plugin for PluginTest {
             }
         }
 
-        let id_group = commands.spawn_empty().id();
+        let id_group = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.create_group(scene).unwrap();
         // animegroupres.global.record_group(source, id_group);
         actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));

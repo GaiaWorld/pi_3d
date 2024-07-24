@@ -689,7 +689,7 @@ impl GLTFTempLoaded {
                     let index = node.index();
                     let cfg: IParticleSystemConfig = gltf_format_particle_cfg(cfg);
                     let key_u64 = result.key_particle_calculator(index);
-                    let id = commands.spawn_empty().id();
+                    let id = commands.spawn_empty_id();
                     particlesys_cmds.calculator.push(OpsCPUParticleCalculator::ops(id, cfg));
                     let res = ParticleSystemCalculatorID(id, 1024, particlesys_res.calculator_queue.queue());
                     if let Ok(res) = particlesys_res.calcultors.insert(key_u64, res) {

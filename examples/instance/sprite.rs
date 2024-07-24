@@ -4,9 +4,9 @@
 use base::DemoScene;
 use pi_atom::Atom;
 use pi_scene_shell::prelude::*;
-use pi_node_materials::{prelude::*, NodeMaterialBlocks};
+use pi_node_materials::prelude::*;
 use pi_scene_context::prelude::*;
-use pi_mesh_builder::{cube::*, ball::*};
+use pi_mesh_builder::cube::*;
 use unlit_material::*;
 
 #[path = "../base.rs"]
@@ -17,18 +17,18 @@ mod copy;
 fn setup(
     mut commands: Commands,
     mut actions: pi_3d::ActionSets,
+    mut atlasmgr: ResMut<TextureFrameAtlasManager>,
     mut matmetas: ResMut<ShareAssetMgr<ShaderEffectMeta>>,
     mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
-    nodematblocks: Res<NodeMaterialBlocks>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
 ) {
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(DistortionUVShader::KEY), DistortionUVShader::create(&nodematblocks));
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta());
 
     let tes_size = 5;
     fps.frame_ms = 4;
 
-    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
+    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         tes_size as f32, 0.7, (0., 0., -10.), true
     );
@@ -41,7 +41,22 @@ fn setup(
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = MeshInstanceState::default();
+    let mut state = MeshInstanceState::default();
+    state.instance_matrix = true;
+    state.instances.push(
+        CustomVertexAttribute::new(
+            Atom::from("InsTilloff"),
+            Atom::from("A_UV = A_UV * InsTilloff.xy + InsTilloff.zw;"),
+            ECustomVertexType::Vec4, None
+        )
+    );
+    state.instances.push(
+        CustomVertexAttribute::new(
+            Atom::from("InsColor"),
+            Atom::from("A_COLOR4 = InsColor * A_COLOR4;"),
+            ECustomVertexType::Vec4, None
+        )
+    );
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let mut blend = ModelBlend::default(); blend.combine();
@@ -49,43 +64,47 @@ fn setup(
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, DistortionUVShader::KEY));
+    actions.material.create.push(OpsMaterialCreate::ops(idmat, MainOpacityShader::KEY));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("assets/images/fractal.png"),
+        url: EKeyTexture::from("./assets/images/fractal.png"),
     }));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
+        url: EKeyTexture::from("./assets/images/icon_city.png"),
     }));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
-        slotname: Atom::from(BlockMaskTexture::KEY_TEX),
-        filter: true,
-        sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("assets/images/eff_uv_lf_002.png"),
-    }));
-    actions.material.vec2.push(OpsUniformVec2::ops(idmat, Atom::from(BlockMaskTextureUVOffsetSpeed::KEY_PARAM), 1., 1.));
+    actions.material.vec4.push(
+        OpsUniformVec4::ops(
+            idmat, 
+            Atom::from(BlockEmissiveTexture::KEY_INFO), 
+            1., 1., 1., 1.
+        )
+    );
 
-}
+    let url = "E:/Rust/PI/pi_3d/assets/images/icon_city.png";
+    let frame_name = "00";
+    let keyatals = url.asset_u64();
+    let mut atlas = TextureFrameAtlas::new(String::from(url));
+    atlas.height = 128;
+    atlas.width = 128;
+    let frame: TextureFrame = TextureFrame::from_data(&[1, 1, 128, 128, 0, 0, 128, 128, 0, 0, 128, 128]);
+    atlas.append_frame(String::from(frame_name), frame);
+    let idxframe = atlas.get_frame_idx(String::from(frame_name));
+    atlasmgr.insert(keyatals, atlas);
 
-fn sys_setup_ball(
-    mut data_map: ResMut<VertexBufferDataMap3D>,
-) {
-    let param = BallParam { sectors: 20, stacks: 20 };
-
-    let (positions, normals, indices, uvs) = generate_sphere(&param);
-    let id = "BallPos#20#20";
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&positions).iter().map(|v| *v).collect::<Vec<u8>>());
-    let id = "BallNor#20#20";
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&normals).iter().map(|v| *v).collect::<Vec<u8>>());
-    let id = "BallUV#20#20";
-    ActionVertexBuffer::create(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&uvs).iter().map(|v| *v).collect::<Vec<u8>>());
-    let id = "BallInd#20#20";
-    ActionVertexBuffer::create_indices(&mut data_map, KeyVertexBuffer::from(id), bytemuck::cast_slice(&indices).iter().map(|v| *v).collect::<Vec<u8>>());
+    let sprite = commands.spawn_empty_id();
+    actions.transform.tree.push(OpsTransformNodeParent::ops(sprite, scene));
+    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(sprite, ETransformSRT::Translation(3., 0., 0.)));
+    actions.instance.create.push(OpsInstanceMeshCreation::ops(source, sprite));
+    actions.instance.attr.push(OpsInstanceAttr::ops(sprite, EInstanceAttr::Vec4([1., 1., 1., 1.]), Atom::from("InsColor")));
+    // actions.instance.attr.push(OpsInstanceAttr::ops(sprite, EInstanceAttr::Vec4([1., 1., 0., 0.]), Atom::from("InsTilloff")));
+    actions.spritecreate.push(OpsSpriteCreate::ops(source, sprite, keyatals));
+    actions.spritemodify.push(OpsSpriteModify::ops(sprite, idxframe.unwrap()));
+    log::warn!(">>>>>>>>>>>>>>> Pose {:?}", sprite);
 }
 
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
@@ -103,10 +122,6 @@ pub fn main() {
     
     app.add_plugins(PluginTest);
     
-    #[cfg(feature = "use_bevy")]
-    app.add_systems(Startup, sys_setup_ball);
-    #[cfg(not(feature = "use_bevy"))]
-    app.add_startup_system(Update, sys_setup_ball);
         #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]

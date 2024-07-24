@@ -52,7 +52,7 @@ fn setup(
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -64,7 +64,7 @@ fn setup(
         for j in 0..tes_size {
             for _k in 0..1 {
                 
-                let cube: Entity = commands.spawn_empty().id();
+                let cube: Entity = commands.spawn_empty_id();
                 actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                 actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
 

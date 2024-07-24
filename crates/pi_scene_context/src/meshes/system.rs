@@ -19,8 +19,9 @@ use super::{
 pub fn sys_calc_render_matrix(
     mut meshes: Query<
         (ObjectID, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut AbsoluteTransform),
-        (Without<InstanceMesh>, Or<(Changed<GlobalMatrix>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>)>)
+        (Without<InstanceMesh>, Or<(Changed<GlobalMatrix>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>, Changed<RenderPoseMatrix>)>)
     >,
+    pose: Query<&RenderPoseMatrix>,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
     // let time = pi_time::Instant::now();
@@ -42,6 +43,15 @@ pub fn sys_calc_render_matrix(
             match scalingmode.0 {
                 crate::prelude::EScalingMode::Hierarchy => {
                     if renderalignment.0 == ERenderAlignment::Local {
+                        if let Ok(pose) = pose.get(obj) {
+                            let mut m = Matrix::identity();
+                            m.clone_from(&transform.matrix);
+                            m = m * pose.0;
+                            wm.0.clone_from(&m);
+                            m.try_inverse_mut();
+                            wmi.0.clone_from(&m);
+                            return;
+                        }
                         wm.0.clone_from(transform.matrix());
                         wmi.0.clone_from(&transform.matrix_inv);
                         return;
@@ -65,6 +75,10 @@ pub fn sys_calc_render_matrix(
                 m = m * local;
             }
 
+            if let Ok(pose) = pose.get(obj) {
+                m = m * pose.0;
+            }
+
             if let Some(mi) = m.try_inverse() {
                 wm.0.clone_from(&m);
                 wmi.0.clone_from(&mi);
@@ -77,13 +91,14 @@ pub fn sys_calc_render_matrix(
     // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
 }
 
-pub fn sys_calc_render_matrix_instance(
+pub fn sys_calc_render_matrix_for_instance(
     meshes: Query<&RenderAlignment>,
     mut instances: Query<
         (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalMatrix, &InstanceMesh, &mut AbsoluteTransform),
-        Or<(Changed<GlobalMatrix>, Changed<ModelVelocity>, Changed<ScalingMode>)>
+        Or<(Changed<GlobalMatrix>, Changed<ModelVelocity>, Changed<ScalingMode>, Changed<RenderPoseMatrix>)>
     >,
-    mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
+    mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
+    pose: Query<&RenderPoseMatrix>,
 ) {
     let time = pi_time::Instant::now();
 
@@ -91,9 +106,8 @@ pub fn sys_calc_render_matrix_instance(
         obj, _,
         localscaling, scalingmode, velocity, transform, id_source, mut abstransform
     )| {
-        // log::warn!("calc_render_matrix:");
         if let (
-            Ok((mut wm, mut wmi, mut instanceattributes)),
+            Ok((mut wm, mut wmi)),
             Ok(renderalignment)
         ) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
             // let mut flag = true;
@@ -106,9 +120,19 @@ pub fn sys_calc_render_matrix_instance(
             match scalingmode.0 {
                 crate::prelude::EScalingMode::Hierarchy => {
                     if renderalignment.0 == ERenderAlignment::Local {
+                        if let Ok(pose) = pose.get(obj) {
+                            let mut m = Matrix::identity();
+                            m.clone_from(&transform.matrix);
+                            m = m * pose.0;
+                            wm.0.clone_from(&m);
+                            m.try_inverse_mut();
+                            wmi.0.clone_from(&m);
+                            // log::warn!("Normal Alignment {:?}", (m, obj));
+                            return;
+                        }
+                        // log::warn!("Normal Alignment 2 {:?}", (obj));
                         wm.0.clone_from(&transform.matrix);
                         wmi.0.clone_from(&transform.matrix_inv);
-                        instanceattributes.update_worldmatrix(&wm.0);
                         // log::warn!("Normal Alignment");
                         return;
                     }
@@ -131,13 +155,40 @@ pub fn sys_calc_render_matrix_instance(
                 m = m * local;
             }
 
+            if let Ok(pose) = pose.get(obj) { m = m * pose.0; }
+
             wm.0.clone_from(&m);
             m.try_inverse_mut();
             wmi.0.clone_from(&m);
-
-            instanceattributes.update_worldmatrix(&wm.0);
         }
 
+    });
+    
+    let time1 = pi_time::Instant::now();
+    // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
+}
+
+// pub fn sys_render_matrix_with_posematrix(
+//     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv, &RenderPoseMatrix), Changed<RenderPoseMatrix>>,
+// ) {
+//     matrixs.iter_mut().for_each(|(mut rm, mut rmi, pm)| {
+//         let mut m = rm.0 * pm.0;
+//         rm.0.clone_from(&m);
+//         m.try_inverse_mut();
+//         rmi.0.clone_from(&m);
+//     });
+// }
+
+pub fn sys_calc_render_matrix_instance(
+    mut instances: Query<(Entity, &RenderWorldMatrix, &RenderWorldMatrixInv, &mut ModelInstanceAttributes), Changed<RenderWorldMatrix>>,
+) {
+    let time = pi_time::Instant::now();
+
+    instances.iter_mut().for_each(|(
+        obj, wm, wmi, mut instanceattributes
+    )| {
+        // log::warn!(">>>>>> render_matrix {:?}", (obj, &wm.0));
+        instanceattributes.update_worldmatrix(&wm.0);
     });
     
     let time1 = pi_time::Instant::now();

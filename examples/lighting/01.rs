@@ -60,9 +60,9 @@ impl Plugin for PluginTest {
     
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
         
-        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
-        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
         actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
@@ -93,7 +93,7 @@ impl Plugin for PluginTest {
 
     let lightingmat = {
         
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY));
         // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         //     slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -111,7 +111,7 @@ impl Plugin for PluginTest {
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
     actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
     
-    let ins = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(ins, scene));
+    let ins = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(ins, scene));
     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, ins));
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(ins, ETransformSRT::Scaling(100., 1., 100.)));
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(ins, ETransformSRT::Translation(0., -1., 0.)));
@@ -121,7 +121,7 @@ impl Plugin for PluginTest {
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..1 {
-                    let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
+                    let cube = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 3. - (tes_size) as f32, 0., j as f32 * 3. - (tes_size) as f32)));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Scaling(1.,  (f32::sin((i * j) as f32) * 0.5 + 0.5) * 6., 1.)));
@@ -129,7 +129,7 @@ impl Plugin for PluginTest {
             }
         }
 
-        let id_group = commands.spawn_empty().id();
+        let id_group = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.create_group(scene).unwrap();
         // animegroupres.global.record_group(source, id_group);
         actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
