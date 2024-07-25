@@ -97,7 +97,7 @@ impl Plugin for PluginMaterial {
         );
         app.insert_resource(defaulttextures);
         
-        let entity = app.world.spawn_empty().id();
+        let entity = app.world.spawn_empty();
         let single = SingleIDBaseDefaultMaterial(entity);
         app.insert_resource(single);
 
