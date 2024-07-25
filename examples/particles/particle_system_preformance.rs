@@ -44,9 +44,9 @@ fn setup(
         for j in 0..temp {
             for k in 0..temp {
                 let item = {
-                    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+                    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
                     actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
-                    let id_geo = commands.spawn_empty().id();
+                    let id_geo = commands.spawn_empty_id();
                     let mut attrs = CubeBuilder::attrs_meta();
                     // ParticleSystem Add
                     attrs.push(VertexBufferDesc::instance_world_matrix());
@@ -56,14 +56,14 @@ fn setup(
                     //
                     let syskey = String::from("Test");
                     let syscfg = demo_cfg(10000., 50.);
-                    let calculator = commands.spawn_empty().id();
+                    let calculator = commands.spawn_empty_id();
                     actions.particlesys_cmds.calculator_.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, actions.parsys.calculator_queue.queue());
                     let calculator = actions.parsys.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
                     actions.particlesys_cmds.particlesys_.push(OpsCPUParticleSystem::ops(source, source, calculator, 100));
                     actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_start(source));
                     //
-                    let idmat = commands.spawn_empty().id();
+                    let idmat = commands.spawn_empty_id();
                     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
                     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));
                     source

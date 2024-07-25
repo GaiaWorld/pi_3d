@@ -70,10 +70,10 @@ impl Plugin for PluginTest {
         actions.scene.brdf.push(OpsSceneBRDF::ops(scene, Atom::from("./assets/images/fractal.png"), false));
         actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01.env")), false));
         
-        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
         // actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cameraroot, 0., 0., 0.));
-        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
         actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
@@ -125,7 +125,7 @@ impl Plugin for PluginTest {
 
     let lightingmat = {
         
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
@@ -138,7 +138,7 @@ impl Plugin for PluginTest {
     };
 
     let predepthmat = {
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, predepth::ShaderPreDepth::KEY));
         idmat
     };
@@ -179,7 +179,7 @@ impl Plugin for PluginTest {
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..1 {
-                    let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
+                    let cube = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 3. - (tes_size) as f32, 0., j as f32 * 3. - (tes_size) as f32)));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Euler((i as f32).sin() * 0.5 + 1.1,  (j as f32).sin() * 0.5 + 1.1, (i as f32).sin() * 0.5 + 1.1)));
@@ -188,7 +188,7 @@ impl Plugin for PluginTest {
             }
         }
 
-        let id_group = commands.spawn_empty().id();
+        let id_group = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.create_group(scene).unwrap();
         // animegroupres.global.record_group(source, id_group);
         actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -229,7 +229,7 @@ impl Plugin for PluginTest {
             let (targets, device, asset_samp, atlas_allocator) = (&mut assets.0, &assets.1, &assets.2, &assets.3);
             let depthtarget = targets.create(device, KeySampler::linear_repeat(), asset_samp, atlas_allocator, ColorFormat::R16Float, DepthStencilFormat::Depth32Float, 256, 256 );
 
-            let depth_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.index().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false));
+            let depth_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.index().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(depth_renderer, true));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(depth_renderer, true));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(depth_renderer, true));
@@ -257,7 +257,7 @@ impl Plugin for PluginTest {
             let mut blend = ModelBlend::default(); blend.combine();
             actions.mesh.blend.push(OpsRenderBlend::Blend(source, DemoScene::PASS_TRANSPARENT, blend));
 
-            let distortiommat = commands.spawn_empty().id();
+            let distortiommat = commands.spawn_empty_id();
             actions.material.create.push(OpsMaterialCreate::ops(distortiommat, water::ShaderWater::KEY));
             actions.material.usemat.push(OpsMaterialUse::Use(source, distortiommat, DemoScene::PASS_TRANSPARENT));
             // actions.material.texture.push(OpsUniformTexture::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));

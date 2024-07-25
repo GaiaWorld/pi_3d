@@ -37,7 +37,7 @@ impl Plugin for PluginScene {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "use_bevy")]
         {
-            let id = app.world.spawn_empty();
+            let id = app.world.spawn_empty_id();
             app.insert_resource(SingleEmptyEntity::new(id));
         }
         #[cfg(not(feature = "use_bevy"))]

@@ -46,12 +46,12 @@ fn setup(
 
     
 
-    let scene = commands.spawn_empty().id();
+    let scene = commands.spawn_empty_id();
     actions.scene
         .create
         .push(OpsSceneCreation::ops(scene, ScenePassRenderCfg::default()));
 
-    let camera01 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, scene));
+    let camera01 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, scene));
     actions.camera.create.push(OpsCameraCreation::ops(
         scene,
         camera01,
@@ -78,7 +78,7 @@ fn setup(
             EPassTag::Transparent,
         ]),
     };
-    let id_renderer = commands.spawn_empty().id(); actions.renderer.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
+    let id_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(id_renderer, desc.curr.clone()));
     actions.renderer.connect.push(OpsRendererConnect::ops(final_render.clear_entity, id_renderer, false));
     actions.renderer.connect.push(OpsRendererConnect::ops(id_renderer, false));
     actions.camera.render.push(OpsCameraRendererInit::ops(camera01, id_renderer, desc.curr, desc.passorders,
@@ -86,14 +86,14 @@ fn setup(
         DepthStencilFormat::None,
     ));
 
-    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     actions.mesh.create.push(OpsMeshCreation::ops(
         scene,
         source,
         String::from("TestCube"),
     ));
 
-    let id_geo = commands.spawn_empty().id();
+    let id_geo = commands.spawn_empty_id();
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(VertexBufferDesc::instance_world_matrix());
     attrs.push(VertexBufferDesc::instance_color());
@@ -106,7 +106,7 @@ fn setup(
         Some(CubeBuilder::indices_meta()),
     ));
 
-    let idmat = commands.spawn_empty().id();
+    let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
     actions.material.create.push(OpsMaterialCreate::ops(
         idmat,

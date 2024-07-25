@@ -36,6 +36,14 @@ impl OpsInstanceMeshCreation {
 }
 pub type ActionListInstanceMeshCreate = ActionList<OpsInstanceMeshCreation>;
 
+pub struct OpsAbstractMeshPose(pub(crate) Entity, pub Matrix);
+impl OpsAbstractMeshPose {
+    pub fn ops(source: Entity, pose: Matrix) -> Self {
+        Self(source, pose)
+    }
+}
+pub type ActionListAbstractMeshPose = ActionList<OpsAbstractMeshPose>;
+
 // #[derive(Debug)]
 // pub enum OpsMeshShadow {
 //     CastShadow(Entity, bool),

@@ -16,7 +16,8 @@ use pi_scene_context::{
     layer_mask::PluginLayerMask,
     materials::PluginGroupMaterial,
     renderers::PluginRenderer,
-    skeleton::PluginSkeleton, cullings::PluginCulling, viewer::PluginViewerBase, shadow::PluginShadowGenerator
+    skeleton::PluginSkeleton, cullings::PluginCulling, viewer::PluginViewerBase,
+    shadow::PluginShadowGenerator
 };
 use pi_trail_renderer::{ActionSetTrailRenderer, ResTrailBuffer};
 
@@ -409,6 +410,7 @@ impl PluginBundleDefault {
             .add_plugins(PluginAnimeCameraFOV::new())
             .add_plugins(PluginAnimeCameraSize::new())
             .add_plugins(PluginMesh)
+            .add_plugins(PluginSprite)
             // .add(PluginAnimeBoneOffset::new())
             .add_plugins(PluginAnimeRenderIndiceRange::new())
             .add_plugins(PluginGeometry)
@@ -485,6 +487,8 @@ pub struct ActionSets<'w> {
     pub trail: ActionSetTrailRenderer<'w>,
     pub parsys: ActionSetParticleSystem<'w>,
     pub property_targetanimation: ResMut<'w, ActionListPropertyTargetAnimation>,
+    pub spritecreate: ResMut<'w, ActionListSpriteCreate>,
+    pub spritemodify: ResMut<'w, ActionListSpriteModify>,
 }
 
 #[derive(SystemParam)]
@@ -516,4 +520,5 @@ pub struct ResourceSets<'w> {
     pub trailbuffer: ResMut<'w, ResTrailBuffer>,
     pub particlesys: ResourceParticleSystem<'w>,
     pub error_record: ResMut<'w, ErrorRecord>,
+    pub textureatlas: ResMut<'w, TextureFrameAtlasManager>,
 }

@@ -31,10 +31,10 @@ pub fn sys_create_scene(
 ) {
     cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool, pool2)| {
 
-        let id_left = commands.spawn_empty().id();
-        let id_right = commands.spawn_empty().id();
-        let bounding = commands.spawn_empty().id();
-        let boundinggeo = commands.spawn_empty().id();
+        let id_left = commands.spawn_empty_id();
+        let id_right = commands.spawn_empty_id();
+        let bounding = commands.spawn_empty_id();
+        let boundinggeo = commands.spawn_empty_id();
 
         if let Some(mut entitycmds) = commands.get_entity(entity) {
             meshcreate.push(OpsMeshCreation::ops(entity, bounding, BoundingBoxDisplay::mesh_state()));

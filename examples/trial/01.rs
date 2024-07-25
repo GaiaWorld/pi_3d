@@ -39,7 +39,7 @@ fn setup(
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
-    let idmat = commands.spawn_empty().id();
+    let idmat = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -48,18 +48,18 @@ fn setup(
         url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_daoguang_lf_004.png"),
     }));
 
-    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState::default()));
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(0., 10., 0.)));
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
-    let id_geo = commands.spawn_empty().id();
+    let id_geo = commands.spawn_empty_id();
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
     
-    let node = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
+    let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
 
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -103,11 +103,11 @@ fn setup(
     for idx in 0..10 {
         // let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
-        let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
+        let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
         // if idx == 0 {
         //     actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
         //     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
-        //     let id_geo = commands.spawn_empty().id();
+        //     let id_geo = commands.spawn_empty_id();
         //     let instancestate = 0;
         //     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()), instancestate));
         // } else {
@@ -117,7 +117,7 @@ fn setup(
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(4., 4., 4.)));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Euler(3., 0., 0.)));
 
-        let trail = commands.spawn_empty().id();
+        let trail = commands.spawn_empty_id();
         actions.trail.create.push(OpsTrail::ops(scene, source, trail));
         actions.trail.age.push(OpsTrailAgeControl::ops(trail, 500));
         actions.material.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));

@@ -67,10 +67,10 @@ impl Plugin for PluginTest {
         actions.scene.brdf.push(OpsSceneBRDF::ops(scene, Atom::from("./assets/images/fractal.png"), false));
         actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01.env")), false));
         
-        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
         // actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cameraroot, 0., 0., 0.));
-        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
         actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
@@ -122,7 +122,7 @@ impl Plugin for PluginTest {
 
     let lightingmat = {
         
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
@@ -159,7 +159,7 @@ impl Plugin for PluginTest {
     
     ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta());
     let planarmat =  {
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, unlit_material::PlanarShadow::KEY));
         idmat
     };
@@ -184,7 +184,7 @@ impl Plugin for PluginTest {
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..1 {
-                    let cube = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
+                    let cube = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 2. - (tes_size) as f32, 0.5, j as f32 * 2. - (tes_size) as f32)));
                     // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
@@ -193,7 +193,7 @@ impl Plugin for PluginTest {
             }
         }
 
-        let id_group = commands.spawn_empty().id();
+        let id_group = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.create_group(scene).unwrap();
         // animegroupres.global.record_group(source, id_group);
         actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
@@ -246,7 +246,7 @@ impl Plugin for PluginTest {
             actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(4., 4., 4.)));
             actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(false)));
 
-            let distortiommat = commands.spawn_empty().id();
+            let distortiommat = commands.spawn_empty_id();
             actions.material.create.push(OpsMaterialCreate::ops(distortiommat, distortion_material::ShaderDistortion::KEY));
             actions.material.usemat.push(OpsMaterialUse::Use(source, distortiommat, DemoScene::PASS_TRANSPARENT));
             actions.material.texture.push(OpsUniformTexture::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));

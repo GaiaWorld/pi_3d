@@ -18,7 +18,7 @@ impl DemoShadow {
         rendertarget: Option<KeyRenderTarget>,
         actions: &mut pi_3d::ActionSets,
     ) -> Entity {
-        let shadow = commands.spawn_empty().id(); 
+        let shadow = commands.spawn_empty_id(); 
         actions.shadow.create.push(OpsShadowGenerator::ops(shadow, scene, light, pass));
         actions.shadow.param.push(OpsShadowGeneratorParam::Bias(shadow, 0.005));
         actions.shadow.param.push(OpsShadowGeneratorParam::NormalBias(shadow, 0.005));

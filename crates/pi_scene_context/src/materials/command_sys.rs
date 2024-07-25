@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pi_scene_shell::{assets::texture::TextureKeyList, prelude::*};
+use pi_scene_shell::prelude::*;
 
 use crate::{
     pass::*,

@@ -42,19 +42,19 @@ fn setup(
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
-    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState::default()));
     actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     
     // let key_group = pi_atom::Atom::from("key_group");
-    let id_group = commands.spawn_empty().id();
+    let id_group = commands.spawn_empty_id();
     // animegroupres.scene_ctxs.create_group(scene).unwrap();
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
     // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
     
-    let node0 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node0, scene));
-    let node1 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node1, node0));
+    let node0 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node0, scene));
+    let node1 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node1, node0));
     let key_curve0 = pi_atom::Atom::from((1).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
@@ -62,7 +62,7 @@ fn setup(
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node1, animation));
     }
-    let node2 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node2, node0));
+    let node2 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node2, node0));
     let key_curve0 = pi_atom::Atom::from((2).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
@@ -70,7 +70,7 @@ fn setup(
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node2, animation));
     }
-    let node3 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node3, node0));
+    let node3 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node3, node0));
     let key_curve0 = pi_atom::Atom::from((3).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
@@ -78,7 +78,7 @@ fn setup(
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
         actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node3, animation));
     }
-    let node4 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node4, node0));
+    let node4 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node4, node0));
     let key_curve0 = pi_atom::Atom::from((4).to_string());
     let key_curve0 = key_curve0.asset_u64();
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
@@ -94,11 +94,11 @@ fn setup(
     actions.transform.create.push(OpsTransformNode::ops(scene, node3));
     actions.transform.create.push(OpsTransformNode::ops(scene, node4));
 
-    let bone0 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone0, scene));
-    let bone1 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone1, bone0));
-    let bone2 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone2, bone0));
-    let bone3 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone3, bone0));
-    let bone4 = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone4, bone0));
+    let bone0 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone0, scene));
+    let bone1 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone1, bone0));
+    let bone2 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone2, bone0));
+    let bone3 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone3, bone0));
+    let bone4 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(bone4, bone0));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone0, scene));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone1, scene));
     actions.skin.bone_create.push(OpsBoneCreation::ops(bone2, scene));
@@ -134,12 +134,12 @@ fn setup(
         vec![ EVertexAttribute::Custom(CustomVertexAttribute::new(Atom::from("A_JOINT_INC1"), Atom::from(""), ECustomVertexType::Uint, None)) ]
     );
     
-    let id_geo = commands.spawn_empty().id();
+    let id_geo = commands.spawn_empty_id();
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(jointdesc);
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
 
-    let idmat = commands.spawn_empty().id();
+    let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
@@ -149,7 +149,7 @@ fn setup(
         url: EKeyTexture::from("assets/images/bubbles.png"),
     }));
 
-    let skeleton = commands.spawn_empty().id();
+    let skeleton = commands.spawn_empty_id();
     actions.skin.skin_create.push(OpsSkinCreation::ops(skeleton, ESkinBonesPerVertex::One, bone0, &vec![bone0, bone1, bone2, bone3, bone4], 1, None));
     actions.skin.skin_use.push(OpsSkinUse::ops(source, skeleton));
 

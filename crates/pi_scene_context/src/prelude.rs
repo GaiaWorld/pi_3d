@@ -21,6 +21,7 @@ pub use crate::{
     cullings::prelude::*,
     light::prelude::*,
     shadow::prelude::*,
+    sprite::*,
 };
 
 #[derive(SystemParam)]

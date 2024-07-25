@@ -10,7 +10,7 @@ fn setup(
     mut commands: Commands,
     loader: Res<pi_gltf2_load::GLTFResLoader>,
 ) {
-    let id = commands.spawn_empty().id();
+    let id = commands.spawn_empty_id();
     loader.create_load(id, pi_gltf2_load::KeyGLTF { base_url: Atom::from("E:/Rust/PI/pi_3d/assets/gltf/AnMiaoYi_YeYueZouQinQu_Cast_ff/AnMiaoYi_YeYueZouQinQu_Cast_ff.gltf"), dyn_desc: Atom::from("")  });
 }
 

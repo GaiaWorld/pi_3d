@@ -1,5 +1,4 @@
 
-use pi_scene_shell::assets::texture::TextureKeyList;
 use pi_scene_shell::prelude::*;
 
 pub use super::material::*;

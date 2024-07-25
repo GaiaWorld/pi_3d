@@ -1,5 +1,5 @@
 
-use pi_scene_shell::{assets::texture::{TextureKeyList, TEXTURE_SLOT_COUNT}, prelude::*};
+use pi_scene_shell::prelude::*;
 
 use super::{
     material::*,

@@ -142,6 +142,17 @@ pub fn sys_create_instanced_mesh(
     });
 }
 
+pub fn sys_create_abstract_posematrix(
+    mut cmds: ResMut<ActionListAbstractMeshPose>,
+    mut commands: Commands,
+) {
+    cmds.drain().drain(..).for_each(|OpsAbstractMeshPose(entity, matrix)| {
+        if let Some(mut entitycmd) = commands.get_entity(entity) {
+            entitycmd.insert(RenderPoseMatrix(matrix));
+        }
+    })
+}
+
 pub fn sys_act_target_animation_attribute(
     mut cmds: ResMut<ActionListTargetAnimationAttribute>,
     mut items: Query<(&mut ModelInstanceAttributes, &mut InstanceAttributeAnimated)>,

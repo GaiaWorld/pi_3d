@@ -22,7 +22,7 @@ pub mod texture;
 //         let mut queue = CommandQueue::default();
 //         let mut commands = Commands::new(&mut queue, &app.world);
 
-//         let mat = commands.spawn_empty().id();
+//         let mat = commands.spawn_empty_id();
 //         queue.apply(&mut app.world);
 
 //         ActionMaterial::init(app, mat, KeyShaderMeta::from(SkyboxShader::KEY), EPassTag::Sky);

@@ -48,6 +48,7 @@ impl crate::Plugin for PluginMesh {
         app.insert_resource(ActionListInstanceAttr::default());
         app.insert_resource(ActionListMeshForceLighting::default());
         app.insert_resource(ActionListTargetAnimationAttribute::default());
+        app.insert_resource(ActionListAbstractMeshPose::default());
 
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update, 
@@ -83,6 +84,7 @@ impl crate::Plugin for PluginMesh {
                 apply_deferred.in_set(StageModel::_InitInstance),
                 sys_create_mesh.in_set(StageModel::MeshCreate),
                 sys_create_instanced_mesh.in_set(StageModel::InstanceCreate),
+                sys_create_abstract_posematrix.in_set(StageModel::InstanceCreate),
                 (
                     sys_act_target_animation_attribute,
                     sys_act_instance_attribute.after(sys_act_target_animation_attribute),
@@ -91,7 +93,8 @@ impl crate::Plugin for PluginMesh {
                 sys_enable_about_instance.in_set(StageModel::InstanceEffectMesh),
                 (
                     sys_calc_render_matrix,
-                    sys_calc_render_matrix_instance
+                    // sys_render_matrix_with_posematrix,
+                    sys_calc_render_matrix_instance,
                 ).chain().in_set(StageModel::RenderMatrix),
                 (
                     sys_render_matrix_for_uniform,
@@ -120,14 +123,18 @@ impl crate::Plugin for PluginMesh {
 #[cfg(not(feature = "use_bevy"))]
         app
         .add_systems(Update, sys_create_mesh     .in_set(StageModel::MeshCreate))
-        .add_systems(Update, sys_create_instanced_mesh       .in_set(StageModel::InstanceCreate))
-        
+        .add_systems(Update, sys_create_instanced_mesh          .in_set(StageModel::InstanceCreate))
+
+        .add_systems(Update, sys_create_abstract_posematrix     .in_set(StageModel::InstanceCreate))
         .add_systems(Update, sys_act_mesh_modify                                                                     .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_act_target_animation_attribute                                                      .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_act_instance_attribute          .after(sys_act_target_animation_attribute)  .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_enable_about_instance               .in_set(StageModel::InstanceEffectMesh))
         .add_systems(Update, sys_calc_render_matrix                                                      .in_set(StageModel::RenderMatrix))
-        .add_systems(Update, sys_calc_render_matrix_instance     .after(sys_calc_render_matrix)  .in_set(StageModel::RenderMatrix))
+        .add_systems(Update, sys_calc_render_matrix_for_instance     .after(sys_calc_render_matrix)  .in_set(StageModel::RenderMatrix))
+        .add_systems(Update, sys_calc_render_matrix_instance   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))
+        // .add_systems(Update, sys_render_matrix_with_posematrix   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))
+        // .add_systems(Update, sys_calc_render_matrix_instance   .after(sys_render_matrix_with_posematrix)  .in_set(StageModel::RenderMatrix))
         .add_systems(Update, sys_render_matrix_for_uniform       .in_set(ERunStageChap::Uniform))
         .add_systems(Update, sys_velocity_for_uniform            .in_set(ERunStageChap::Uniform))
         .add_systems(Update, sys_animator_update_instance_attribute                                                        .in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),

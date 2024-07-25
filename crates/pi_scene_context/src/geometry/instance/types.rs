@@ -83,7 +83,7 @@ impl ModelInstanceAttributes {
         }
 
         insances.iter().for_each(|attr| {
-            // let entity = command.spawn_empty().id();
+            // let entity = command.spawn_empty_id();
             let atype = animatorable_type(&attr.vtype());
             attributes.push((Atom::from(attr.var_code()), InstanceAttributeOffset::new(attr.vtype(), offset, None)));
             match atype {
@@ -182,7 +182,7 @@ impl ModelInstanceAttributes {
             Ok(idx) => {
                 let offset = &mut self.attributes.get_mut(idx).unwrap().1;
                 if offset.entity.is_none() {
-                    let entity = command.spawn_empty().id();
+                    let entity = command.spawn_empty_id();
                     offset.entity = Some(entity);
                     match offset.atype() {
                         EAnimatorableType::Vec4     => {

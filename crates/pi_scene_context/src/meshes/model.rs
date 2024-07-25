@@ -35,6 +35,14 @@ impl Default for EScalingMode {
 #[derive(Component, Default)]
 pub struct Mesh;
 
+#[derive(Component)]
+pub struct RenderPoseMatrix(pub Matrix);
+impl Default for RenderPoseMatrix {
+    fn default() -> Self {
+        Self(Matrix::identity())
+    }
+}
+
 #[derive(Component, Default)]
 /// 相对于 SourceMesh 的 AlphaIndex
 pub struct InstanceTransparentIndex(pub i32);

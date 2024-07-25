@@ -61,9 +61,9 @@ impl Plugin for PluginTest {
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 0.7 )));
         actions.camera.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
 
-        let cameraroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
+        let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
-        let lightroot = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
+        let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
         actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
@@ -114,7 +114,7 @@ impl Plugin for PluginTest {
         ];
         let mut lights: Vec<Entity> = vec![];
         for i in 0..light_colors.len() {
-            let light = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, lightroot));
+            let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, lightroot));
             actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
             actions.lighting.create.push(OpsLightCreate::ops(scene, light, ELightType::Point, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, ShadowAtlasSize::DEFAULT, ShadowAtlasSize::DEFAULT));
             let color = &light_colors[i]; let pos = &light_position[i];
@@ -126,15 +126,15 @@ impl Plugin for PluginTest {
     let attrs = CubeBuilder::attrs_meta();
 
     let lightingmat = {
-        let idmat = commands.spawn_empty().id();
+        let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY));
         idmat
     };
 
-    let source = commands.spawn_empty().id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
     let instancestate = InstanceState::INSTANCE_BASE;
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
-    let id_geo = commands.spawn_empty().id();
+    let id_geo = commands.spawn_empty_id();
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs.clone(), Some(CubeBuilder::indices_meta())));
     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., -1., 0.));
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
@@ -149,7 +149,7 @@ impl Plugin for PluginTest {
         for i in 0..tes_size {
             for j in 0..tes_size {
                 for k in 0..tes_size {
-                    let cube = commands.spawn_empty().id();
+                    let cube = commands.spawn_empty_id();
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
                     actions.transform.tree.push(OpsTransformNodeParent::ops(cube, source));
                     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(cube, (i as f32 - half) * 1., (k as f32 - half * 0.5) * 1., (j as f32 - half) * 1.));

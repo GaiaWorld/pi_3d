@@ -15,7 +15,7 @@ pub mod engine_shell;
 pub mod object;
 pub mod run_stage;
 pub mod setup;
-pub mod assets;
+mod assets;
 pub mod prelude;
 mod static_string;
 mod entity_ref;
@@ -37,6 +37,7 @@ mod batch;
 mod vertex_buffer_loader;
 mod vertices;
 mod ecs;
+mod render_state;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 
