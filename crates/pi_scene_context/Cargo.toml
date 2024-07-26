@@ -45,7 +45,7 @@ pi_null             = "0.1"
 pi_atom             = { version="0.5", features = ["serde"] }
 
 pi_time             = "0.3"
-pi_assets           = "0.13"
+pi_assets           = "0.14"
 pi_futures          = "0.1"
 
 pi-async-rt         = "0.1"
