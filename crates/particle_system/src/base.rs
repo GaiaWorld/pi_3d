@@ -189,7 +189,7 @@ impl Size for ParticleSystemCalculatorID {
 }
 impl TAssetCapacity for ParticleSystemCalculatorID {
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 100 * 1024, max: 200 * 1024, timeout: 10 * 1000 }
+        AssetCapacity { flag: false, min: 100 * 1024, max: 1, timeout: 10 * 1000 }
     }
 
     const ASSET_TYPE: &'static str = "ParticleSystemCalculator";
@@ -356,7 +356,7 @@ pub struct ResParticleCommonBuffer(pub Option<Arc<NotUpdatableBufferRange>>);
 impl TAssetCapacity for ResParticleCommonBuffer {
     const ASSET_TYPE: &'static str = "PARTICLE_COMMON_BUFFER";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 1024 * 1024, max: 1024 * 1024, timeout: 1000 }
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 4, timeout: 1000 }
     }
 }
 impl ResParticleCommonBuffer {
@@ -405,7 +405,7 @@ pub struct ResParticleTrailBuffer(pub Option<TrailBuffer>);
 impl TAssetCapacity for ResParticleTrailBuffer {
     const ASSET_TYPE: &'static str = "PARTICLE_TRAIL_BUFFER";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 1024 * 1024, max: 2 * 1024 * 1024, timeout: 1000 }
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 2, timeout: 1000 }
     }
 }
 

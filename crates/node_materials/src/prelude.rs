@@ -30,7 +30,7 @@ pub use crate::{PluginNodeMaterial, NodeMaterialBlocks};
 pub struct AssetCfgMaterialAnime(pub AssetCapacity);
 impl Default for AssetCfgMaterialAnime {
     fn default() -> Self {
-        Self(AssetCapacity { flag: false, min: 1024, max: 10 * 1024, timeout: 10 * 1000 })
+        Self(AssetCapacity { flag: false, min: 1024, max: 1, timeout: 10 * 1000 })
     }
 }
 impl AsRef<AssetCapacity> for AssetCfgMaterialAnime {

@@ -332,7 +332,7 @@ impl TrailBuffer {
 impl TAssetCapacity for TrailBuffer {
     const ASSET_TYPE: &'static str = "TRAIL_BUFFER";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 1024 * 1024, max: 1 * 1024 * 1024, timeout: 1000  }
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 2, timeout: 1000  }
     }
 }
 

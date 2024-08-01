@@ -37,7 +37,7 @@ impl pi_curves::curve::frame::FrameDataValue for AnimatorableVec2 {
 impl TAssetCapacity for AnimatorableVec2 {
     const ASSET_TYPE: &'static str = "AnimeVec2";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 200 * 1024, max: 400 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 200 * 1024, max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for AnimatorableVec2 {}

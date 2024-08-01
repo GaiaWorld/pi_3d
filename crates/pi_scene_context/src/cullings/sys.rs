@@ -57,7 +57,7 @@ pub fn sys_update_culling_by_worldmatrix(
 
 pub fn sys_update_culling_by_cullinginfo(
     mut scenes: Query<&mut SceneBoundingPool>,
-    items: Query<(&RenderWorldMatrix, &DisposeReady), Changed<RenderWorldMatrix>>,
+    items: Query<(&RenderWorldMatrix, &DisposeReady)>,
     boundings: Query<(Entity, &SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs), Or<(Changed<GeometryBounding>, Changed<GeometryCullingMode>)>>,
 ) {
     boundings.iter().for_each(|(entity, idscene, info, mode, instances)| {

@@ -101,9 +101,9 @@ fn setup(
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(sprite, ETransformSRT::Translation(3., 0., 0.)));
     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, sprite));
     actions.instance.attr.push(OpsInstanceAttr::ops(sprite, EInstanceAttr::Vec4([1., 1., 1., 1.]), Atom::from("InsColor")));
-    // actions.instance.attr.push(OpsInstanceAttr::ops(sprite, EInstanceAttr::Vec4([1., 1., 0., 0.]), Atom::from("InsTilloff")));
-    actions.spritecreate.push(OpsSpriteCreate::ops(source, sprite, keyatals));
-    actions.spritemodify.push(OpsSpriteModify::ops(sprite, idxframe.unwrap()));
+    actions.instance.attr.push(OpsInstanceAttr::ops(sprite, EInstanceAttr::Vec4([1., 1., 0., 0.]), Atom::from("InsTilloff")));
+    // actions.spritecreate.push(OpsSpriteCreate::ops(source, sprite, keyatals));
+    // actions.spritemodify.push(OpsSpriteModify::ops(sprite, idxframe.unwrap()));
     log::warn!(">>>>>>>>>>>>>>> Pose {:?}", sprite);
 }
 

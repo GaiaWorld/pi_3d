@@ -78,7 +78,7 @@ impl Default for Enable {
 impl TAssetCapacity for Enable {
     const ASSET_TYPE: &'static str = "AnimeCurveEnable";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for Enable {}

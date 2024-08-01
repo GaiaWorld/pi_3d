@@ -58,7 +58,6 @@ render_derive       = { version = "0.1", registry = "yn" }
 
 pi_bevy_render_plugin   = { version = "0.1", registry = "yn" }
 pi_bevy_winit_window    = { version = "0.1", registry = "yn" }
-pi_bevy_post_process    = { version = "0.1", registry = "yn" }
 pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
 pi_bevy_asset           = { version = "0.1", registry = "yn" }
 

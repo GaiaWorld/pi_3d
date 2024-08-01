@@ -242,7 +242,11 @@ pub fn sys_act_mesh_modify(
             EMeshStateModify::BoundingCullingMode(val) => if let Ok(mut cullingmode) = culling_items.get_mut(entity) {
                 if val != cullingmode.0 {
                     cullingmode.0 = val;
+                } else {
+                    log::error!("BoundingCullingMode Same. {:?}", entity);
                 }
+            } else {
+                log::error!("BoundingCullingMode Not Found. {:?}", entity);
             },
         }
     });

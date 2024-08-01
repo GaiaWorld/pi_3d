@@ -184,7 +184,7 @@ impl Asset for ShaderEffectMeta {
 impl TAssetCapacity for ShaderEffectMeta {
 	const ASSET_TYPE: &'static str = "SHADER_EFFECT_META";
 	fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 4 * 1024 * 1024, max: 6 * 1024 * 1024, timeout: 60 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 4 * 1024 * 1024, max: 1, timeout: 60 * 60 * 1000 }
 	}
 }
 impl Size for ShaderEffectMeta {

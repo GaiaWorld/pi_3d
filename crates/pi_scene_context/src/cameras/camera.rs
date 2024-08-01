@@ -90,7 +90,7 @@ impl Default for CameraFov {
 impl TAssetCapacity for CameraFov {
     const ASSET_TYPE: &'static str = "AnimeCurveCameraFov";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for CameraFov {}
@@ -142,7 +142,7 @@ impl Default for CameraOrthSize {
 impl TAssetCapacity for CameraOrthSize {
     const ASSET_TYPE: &'static str = "AnimeCurveCameraOrthSize";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for CameraOrthSize {}

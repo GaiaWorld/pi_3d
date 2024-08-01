@@ -146,6 +146,6 @@ impl Size for Shader3D {
 impl TAssetCapacity for Shader3D {
 	const ASSET_TYPE: &'static str = "SHADER_3D";
 	fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 64 * 1024, max: 128 * 1024, timeout: 10 * 1000 }
+        AssetCapacity { flag: false, min: 64 * 1024, max: 1, timeout: 10 * 1000 }
 	}
 }

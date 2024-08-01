@@ -228,6 +228,9 @@ fn _sys_tick_viewer_culling(
                 &mut cullings.0
             );
         } else {
+            if list_model.0.len() > 2 {
+                log::error!("No BoundingPool. {:?}", list_model.0.len());
+            }
             // log::warn!("ModelList: {:?}", (list_model.0.len(), forceincludes.0.len()));
             list_model.0.iter().for_each(|objid| {
                 // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
@@ -273,5 +276,9 @@ fn _sys_tick_viewer_culling(
                 *flag = AbstructMeshCullingFlag(true);
             }
         });
+    } else {
+        if list_model.0.len() > 2 {
+            log::error!("Not Active. {:?}", list_model.0.len());
+        }
     }
 }

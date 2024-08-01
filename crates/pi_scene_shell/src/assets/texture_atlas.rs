@@ -11,12 +11,14 @@ pub type KeyTextureFrameAtlas   = u64;
 pub type IdxTextureFrame        = u16;
 pub type IdxTextureFrameAnim    = u8;
 
+#[derive(Clone)]
 pub enum ETextureFrameRenderMode {
     EAtlasRenderBase    = 0,
     EAtlasRenderHSB     = 1,
     EAtlasRenderHS      = 2,
 }
 
+#[derive(Clone)]
 pub struct TextureFrame {
     pub rotated: bool,
     pub trimmed: bool,
@@ -50,6 +52,7 @@ impl TextureFrame {
     }
 }
 
+#[derive(Clone)]
 pub struct TextureFrameAtlas {
     pub _frames: XHashMap<u64, IdxTextureFrame>,
     pub _animations: XHashMap<u64, IdxTextureFrameAnim>,
@@ -72,7 +75,7 @@ impl pi_bevy_asset::TAssetCapacity for TextureFrameAtlas {
         pi_bevy_asset::AssetCapacity {
             flag: true,
             min: 1024,
-            max: 1024*1024,
+            max: 1,
             timeout: 10,
         }
     }
@@ -103,10 +106,11 @@ impl TextureFrameAtlas {
             height: 1,
         }
     }
-    pub fn append_animation(&mut self, animname: String, data: Vec<IdxTextureFrame>) {
+    pub fn append_animation(&mut self, animname: String, data: Vec<IdxTextureFrame>) -> IdxTextureFrameAnim {
         let idx = self.animations.len();
         self._animations.insert(animname.asset_u64(), idx as IdxTextureFrameAnim);
         self.animations.push(data);
+        idx as IdxTextureFrameAnim
     }
     pub fn get_animation(&self, animname: String) -> Option<&Vec<IdxTextureFrame>> {
         if let Some(idx) = self._animations.get(&animname.asset_u64()) {
@@ -118,10 +122,11 @@ impl TextureFrameAtlas {
     pub fn get_animation_by_idx(&self, idx: IdxTextureFrameAnim) -> Option<&Vec<IdxTextureFrame>> {
         return self.animations.get(idx as usize);
     }
-    pub fn append_frame(&mut self, frame_name: String, frame: TextureFrame) {
+    pub fn append_frame(&mut self, frame_name: String, frame: TextureFrame) -> IdxTextureFrame {
         let frame_idx = self.frames.len();
         self._frames.insert(frame_name.asset_u64(), frame_idx as IdxTextureFrame);
         self.frames.push(frame);
+        frame_idx as IdxTextureFrame
     }
     pub fn get_frame(&self, frame_name: String) -> Option<&TextureFrame> {
         match self._frames.get(&frame_name.asset_u64()) {

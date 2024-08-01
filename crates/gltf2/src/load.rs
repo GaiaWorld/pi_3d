@@ -27,7 +27,7 @@ impl TAssetCapacity for GLTFBin {
     const ASSET_TYPE: &'static str = "RES_GLTF2_BIN";
 
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 512 * 1024, max: 2 * 1024 * 1024, timeout: 1000 }
+        AssetCapacity { flag: false, min: 512 * 1024, max: 1, timeout: 1000 }
     }
 }
 impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, Atom, G> for GLTFBin  {
@@ -124,7 +124,7 @@ impl TAssetCapacity for GLTFBase {
     const ASSET_TYPE: &'static str = "RES_GLTF2_FILE";
 
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 256 * 1024, max: 512 * 1024, timeout: 1000 }
+        AssetCapacity { flag: false, min: 256 * 1024, max: 1, timeout: 1000 }
     }
 }
 impl GLTFBase {
@@ -316,7 +316,7 @@ impl TAssetCapacity for GLTF {
     const ASSET_TYPE: &'static str = "RES_GLTF2";
 
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 64 * 1024, max: 128 * 1024, timeout: 100 }
+        AssetCapacity { flag: false, min: 64 * 1024, max: 1, timeout: 100 }
     }
 }
 impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, (GLTF, u64), G> for GLTF  {

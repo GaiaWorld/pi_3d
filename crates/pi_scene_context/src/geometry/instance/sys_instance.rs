@@ -129,14 +129,14 @@ impl Ord for TmpInstanceSort {
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
     ) {
-        // log::warn!("Instance Update");
+        // log::error!("Instance Update");
         sources.iter_mut().for_each(|(idsource, instances, idgeo, meshinsstate, mut renderenable, mut instancessortinfos)| {
             if let Ok(disposed) = dispoeds.get(idsource) {
                 if disposed.0 == true { return; }
                 if meshinsstate.use_single_instancebuffer == true { return; }
                 // *renderenable = RenderGeometryEable(false);
                 
-                // log::warn!("sys_tick_instanced_buffer_update: ");
+                // log::error!("sys_tick_instanced_buffer_update: ");
 
                 if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
                     if buffer.bytes_per_instance > 0 {
@@ -155,7 +155,7 @@ impl Ord for TmpInstanceSort {
                     });
                     sorted_instances.sort();
 
-                    // log::warn!("InstanceCount: {}", sorted_instances.len());
+                    // log::error!("InstanceCount: {}", sorted_instances.len());
                     if sorted_instances.len() > 0 {
                         let mut idx: u32 = 0;
                         let mut collected: Vec<u8> = vec![];
@@ -258,13 +258,13 @@ pub fn reset_instances_buffer_single(
     if let Ok((desclist, mut buffer, mut keys)) = slots.get_mut(idgeo) {
         match instancedinfo.slot() {
             EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[0] = desclist.key(0); } },
-            EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[1] = desclist.key(1); } },
-            EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[2] = desclist.key(2); } },
-            EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[3] = desclist.key(3); } },
-            EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[4] = desclist.key(4); } },
-            EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[5] = desclist.key(5); } },
-            EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[6] = desclist.key(6); } },
-            EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[7] = desclist.key(7); } },
+            EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[1] = desclist.key(1); } },
+            EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[2] = desclist.key(2); } },
+            EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[3] = desclist.key(3); } },
+            EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[4] = desclist.key(4); } },
+            EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[5] = desclist.key(5); } },
+            EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[6] = desclist.key(6); } },
+            EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { update_instanced_buffer_for_single(&mut buffer.0, collected, instancedcache, allocator, device, queue); keys.0[7] = desclist.key(7); } },
             _ => {}
         }
     }

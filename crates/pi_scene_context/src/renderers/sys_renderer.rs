@@ -367,6 +367,8 @@ use super::{
         // // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
 
+    /// 遍历 Renderer , 对所属 Viewer 的 ModelListAfterCulling 进行遍历, 获取 与 Renderer 相关 Pass 关联的 物体
+    /// 对收集到的物体进行排序、渲染合并
     pub fn sys_renderer_draws_modify(
         mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererParam ) >,
         viewers: Query< (&ModelListAfterCulling, &ViewerGlobalPosition, &ViewerDirection, &DisposeReady, &ViewerDistanceCompute), >,
@@ -829,6 +831,7 @@ fn collect_draw_batch(
             EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
         };
 
+        // log::warn!("Draw Instance {:?}", instances);
         let mut draw = DrawObj {
             pipeline: pipeline.clone(),
             bindgroups: bindgroups.groups(),

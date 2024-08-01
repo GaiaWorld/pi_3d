@@ -57,7 +57,7 @@ pub fn sys_modify_sprite(
         
                         let mut rotation = Vector3::zeros();
                         if frame.rotated {
-                            rotation.z = std::f32::consts::PI * 0.25;
+                            rotation.z = std::f32::consts::PI * 0.5;
                             scaling.x = dh;
                             scaling.y = dw;
                         }

@@ -190,7 +190,7 @@ impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {
 impl TAssetCapacity for IndiceRenderRange {
     const ASSET_TYPE: &'static str = "AnimeCurveIndiceRenderRange";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 500 * 1024 , max: 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 500 * 1024 , max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for IndiceRenderRange {

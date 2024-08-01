@@ -38,7 +38,6 @@ render_compile          = { version = "0.1", registry = "yn" }
 
 pi_bevy_render_plugin   = { version = "0.1", registry = "yn" }
 pi_bevy_winit_window    = { version = "0.1", registry = "yn" }
-pi_bevy_post_process    = { version = "0.1", registry = "yn" }
 pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
 pi_bevy_asset           = { version = "0.1", registry = "yn" }
 pi_bevy_log             = { version = "0.1", registry = "yn" }
@@ -48,7 +47,7 @@ pi_animation            = { version = "0.1", registry = "yn" }
 pi_curves               = { version = "0.1", registry = "yn" }
 pi_atom                 = { version = "0.5", features = ["serde"] }
 pi_hal                  = { version = "0.1", registry = "yn" }
-pi_assets               = "0.13"
+pi_assets               = "0.14"
 pi-async-rt             = "0.1"
 pi_wy_rng               = "0.1"
 pi_share                = "0.4"
@@ -77,7 +76,6 @@ pi_bevy_winit_window    = { path = "../pi_bevy/crates/winit_window" }
 pi_bevy_ecs_extend      = { path = "../pi_bevy/crates/ecs_extend" }
 pi_bevy_asset           = { path = "../pi_bevy/crates/asset" }
 pi_bevy_log             = { path = "../pi_bevy/crates/log" }
-pi_bevy_post_process    = { path = "../pi_bevy/crates/post_process" }
 
 pi_animation            = { path = "../pi_animation" }
 pi_curves               = { path = "../pi_curves" }

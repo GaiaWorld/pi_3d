@@ -72,7 +72,7 @@ impl Default for LocalPosition {
 impl TAssetCapacity for LocalPosition {
     const ASSET_TYPE: &'static str = "AnimeCurveLocalPosition";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for LocalPosition {
@@ -125,7 +125,7 @@ impl Default for LocalEulerAngles {
 impl TAssetCapacity for LocalEulerAngles {
     const ASSET_TYPE: &'static str = "AnimeCurveLocalEulerAngles";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for LocalEulerAngles {
@@ -223,7 +223,7 @@ impl Default for LocalRotationQuaternion {
 impl TAssetCapacity for LocalRotationQuaternion {
     const ASSET_TYPE: &'static str = "AnimeCurveLocalRotationQuaternion";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for LocalRotationQuaternion {
@@ -282,7 +282,7 @@ impl Default for LocalScaling {
 impl TAssetCapacity for LocalScaling {
     const ASSET_TYPE: &'static str = "AnimeCurveLocalScaling";
     fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 1 * 60 * 1000 }
+        AssetCapacity { flag: false, min: 5 * 1024 * 1024, max: 1, timeout: 1 * 60 * 1000 }
     }
 }
 impl TAnimatableComp for LocalScaling {

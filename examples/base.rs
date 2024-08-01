@@ -329,7 +329,7 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
 	};
 
     let mut cfg = AssetMgrConfigs::default();
-    cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 10 * 1024 * 1024, timeout: 100  });
+    cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 4, timeout: 100  });
     app.insert_resource(cfg);
 
     #[cfg(feature = "use_bevy")]
