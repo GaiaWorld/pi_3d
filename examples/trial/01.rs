@@ -45,7 +45,7 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_daoguang_lf_004.png"),
+        url: EKeyTexture::from("assets/images/eff_daoguang_lf_004.png"),
     }));
 
     let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));

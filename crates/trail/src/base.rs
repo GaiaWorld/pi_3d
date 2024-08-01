@@ -336,6 +336,7 @@ impl TAssetCapacity for TrailBuffer {
     }
 }
 
+
 #[test]
 fn test_trail() {
     let mut trailpoints = TrailPoints::default();

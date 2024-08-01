@@ -52,7 +52,7 @@ fn setup(
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
-            url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_daoguang_lf_004.png"),
+            url: EKeyTexture::from("assets/images/eff_daoguang_lf_004.png"),
         }));
         mats.push(idmattrail);
     }
@@ -64,13 +64,13 @@ fn setup(
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
-            url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/4.png"),
+            url: EKeyTexture::from("assets/images/4.png"),
         }));
         mats.push(idmattrail);
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 10;
+    let temp = 2;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {

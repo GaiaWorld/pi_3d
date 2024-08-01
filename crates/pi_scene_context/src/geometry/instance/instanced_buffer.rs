@@ -35,6 +35,9 @@ impl InstancedInfo {
 }
 
 #[derive(Resource)]
+pub struct ArgInstanceBufferAllocatorSize(pub u32);
+
+#[derive(Resource)]
 pub struct InstanceBufferAllocator(PiInstanceBufferAllocator);
 impl InstanceBufferAllocator {
     pub fn one_mesh_max_instance_bytes(&self) -> usize {

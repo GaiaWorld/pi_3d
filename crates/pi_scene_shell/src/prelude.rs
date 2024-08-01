@@ -117,6 +117,9 @@ pub enum GlobalColorSpace {
 pub struct ResBindBufferAllocator(pub BindBufferAllocator);
 
 ////////////////////////////////////// Vertex Buffer
+#[derive(Resource)]
+pub struct ArgVertexBufferAllocator3DSize(pub u32);
+
 #[derive(Resource, DerefMut, Deref)]
 pub struct VertexBufferAllocator3D(pub VertexBufferAllocator);
 

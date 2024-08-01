@@ -10,7 +10,7 @@ use pi_3d::*;
 use pi_bevy_render_plugin::PiRenderPlugin;
 use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
-use pi_particle_system::{PluginParticleSystem, prelude::{ResParticleCommonBuffer, ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
+use pi_particle_system::{PluginParticleSystem, prelude::{ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
 use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator, scene::StageScene};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_standard_material::PluginStandardMaterial;
@@ -329,7 +329,7 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
 	};
 
     let mut cfg = AssetMgrConfigs::default();
-    cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 4, timeout: 100  });
+    // cfg.insert(String::from(ResParticleCommonBuffer::ASSET_TYPE), AssetCapacity { flag: false, min: 10 * 1024 * 1024, max: 4, timeout: 100  });
     app.insert_resource(cfg);
 
     #[cfg(feature = "use_bevy")]

@@ -1,5 +1,6 @@
 
 
+use instance::instanced_buffer::ArgInstanceBufferAllocatorSize;
 use pi_atom::Atom;
 
 use pi_scene_shell::prelude::*;
@@ -43,10 +44,17 @@ impl Plugin for PluginGeometry {
             app.insert_resource(AssetCfgVertexBuffer3D::default());
             app.world.get_resource::<AssetCfgVertexBuffer3D>().unwrap()
         };
+        let vbsize = if let Some(arg) = app.world.get_resource::<ArgVertexBufferAllocator3DSize>() {
+            arg.0
+        } else { 10 * 1024 * 1024 };
+        let insbsize = if let Some(arg) = app.world.get_resource::<ArgInstanceBufferAllocatorSize>() {
+            arg.0
+        } else { 2 * 1024 * 1024 };
+
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap();
-        let mut allocator = VertexBufferAllocator3D(VertexBufferAllocator::new(cfg.0.min, cfg.0.timeout));
-        let instanceallocator = InstanceBufferAllocator::new(4 * 1024 * 1024, &mut allocator, device, queue);
+        let mut allocator = VertexBufferAllocator3D(VertexBufferAllocator::new(vbsize as usize, cfg.0.timeout));
+        let instanceallocator = InstanceBufferAllocator::new(insbsize, &mut allocator, device, queue);
         app.insert_resource(allocator);
         app.insert_resource(instanceallocator);
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<EVertexBufferRange>();

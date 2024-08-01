@@ -351,54 +351,57 @@ impl ParticleCalculatorBase {
     }
 }
 
-#[derive(Resource, Deref, DerefMut)]
-pub struct ResParticleCommonBuffer(pub Option<Arc<NotUpdatableBufferRange>>);
-impl TAssetCapacity for ResParticleCommonBuffer {
-    const ASSET_TYPE: &'static str = "PARTICLE_COMMON_BUFFER";
-    fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 1024 * 1024, max: 4, timeout: 1000 }
-    }
-}
-impl ResParticleCommonBuffer {
-    pub fn new(
-        maxbytes: u32, 
-        allocator: &mut VertexBufferAllocator,
-        device: &RenderDevice,
-        queue: &RenderQueue,
-    ) -> Self {
-        let size = maxbytes;
-        let mut data = Vec::with_capacity(size as usize);
-        for _ in 0..size {
-            data.push(0);
-        }
+#[derive(Resource)]
+pub struct ArgParticleCommonBufferSize(pub u32);
 
-        // log::error!("ResParticleCommonBuffer {}", data.len());
-        let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None);
-        Self(buffer)
-    }
-    pub fn byte_count(&self) -> usize {
-        if let Some(item) = &self.0 {
-            item.size() as usize
-        } else {
-            0
-        }
-    }
-    pub fn buffer(&self, start: u32, end: u32) -> EVerticesBufferUsage {
-        EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(self.0.as_ref().unwrap().clone(), start, end)))
-    }
-    pub fn update(&self, data: &[u8], queue: &RenderQueue) -> bool {
-        if let Some(item) = &self.0 {
-            if data.len() as u32 <= item.size()  {
-                queue.write_buffer(item.buffer(), 0, data);
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
-    }
-}
+// #[derive(Resource, Deref, DerefMut)]
+// pub struct ResParticleCommonBuffer(pub Option<Arc<NotUpdatableBufferRange>>);
+// impl TAssetCapacity for ResParticleCommonBuffer {
+//     const ASSET_TYPE: &'static str = "PARTICLE_COMMON_BUFFER";
+//     fn capacity() -> AssetCapacity {
+//         AssetCapacity { flag: false, min: 1024 * 1024, max: 4, timeout: 1000 }
+//     }
+// }
+// impl ResParticleCommonBuffer {
+//     pub fn new(
+//         maxbytes: u32, 
+//         allocator: &mut VertexBufferAllocator,
+//         device: &RenderDevice,
+//         queue: &RenderQueue,
+//     ) -> Self {
+//         let size = maxbytes;
+//         let mut data = Vec::with_capacity(size as usize);
+//         for _ in 0..size {
+//             data.push(0);
+//         }
+
+//         // log::error!("ResParticleCommonBuffer {}", data.len());
+//         let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None);
+//         Self(buffer)
+//     }
+//     pub fn byte_count(&self) -> usize {
+//         if let Some(item) = &self.0 {
+//             item.size() as usize
+//         } else {
+//             0
+//         }
+//     }
+//     pub fn buffer(&self, start: u32, end: u32) -> EVerticesBufferUsage {
+//         EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(self.0.as_ref().unwrap().clone(), start, end)))
+//     }
+//     pub fn update(&self, data: &[u8], queue: &RenderQueue) -> bool {
+//         if let Some(item) = &self.0 {
+//             if data.len() as u32 <= item.size()  {
+//                 queue.write_buffer(item.buffer(), 0, data);
+//                 return false;
+//             } else {
+//                 return true;
+//             }
+//         } else {
+//             return false;
+//         }
+//     }
+// }
 
 #[derive(Resource)]
 pub struct ResParticleTrailBuffer(pub Option<TrailBuffer>);
@@ -408,6 +411,9 @@ impl TAssetCapacity for ResParticleTrailBuffer {
         AssetCapacity { flag: false, min: 1024 * 1024, max: 2, timeout: 1000 }
     }
 }
+
+#[derive(Resource)]
+pub struct ArgParticleTrailBufferSize(pub u32);
 
 #[derive(Component, Default)]
 pub struct ParticleTrailMesh {

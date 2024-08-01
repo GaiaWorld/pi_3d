@@ -16,6 +16,9 @@ pub use system::*;
 #[derive(Resource, Deref, DerefMut)]
 pub struct ResTrailBuffer(pub Option<TrailBuffer>);
 
+#[derive(Resource)]
+pub struct ArgTrailBufferSize(pub usize);
+
 #[derive(SystemParam)]
 pub struct ActionSetTrailRenderer<'w> {
     pub create: ResMut<'w, ActionListTrail>,
@@ -40,8 +43,10 @@ pub struct StateTrail {
 pub struct PluginTrail;
 impl Plugin for PluginTrail {
     fn build(&self, app: &mut App) {
-        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<TrailBuffer>();
-        let maxcount = cfg.max;
+        let maxcount = if let Some(arg) = app.world.get_resource::<ArgTrailBufferSize>() {
+            arg.0 as u32
+        } else {  4 * 1024 * 1024 };
+
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
 

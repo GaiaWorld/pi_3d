@@ -30,12 +30,15 @@ impl Plugin for PluginParticleSystem {
         let cfgparticlecalc = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ParticleSystemCalculatorID>();
         let mut temp = ParticleSystemPerformance::default(); temp.frame_time_ms = 16; temp.update_frame_time_ms = 50;
 
-        let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleTrailBuffer>();
+        let maxbytes = if let Some(arg) = app.world.get_resource::<ArgParticleTrailBufferSize>() {
+            arg.0 as u32
+        } else { 2 * 1024 * 1024 };
+
         // let cfg2 = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleCommonBuffer>();
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
         let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
-        let trailbuffer = TrailBuffer::new(cfg.max as u32, &mut allocator, &device, &queue);
+        let trailbuffer = TrailBuffer::new(maxbytes, &mut allocator, &device, &queue);
         // let particlecommonbuffer= ResParticleCommonBuffer::new(cfg2.max as u32, &mut allocator, &device, &queue);
         // app.insert_resource(particlecommonbuffer);
         
