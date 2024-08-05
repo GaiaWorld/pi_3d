@@ -1,7 +1,7 @@
 
 use std::{sync::Arc, ops::{Deref, Range}};
 
-use crate::{bindgroup::*, prelude::{EVerteicesMemory, GeometryDesc, GeometryResourceHash, IndiceRenderRange, VertexRenderRange}};
+use crate::{bindgroup::*, prelude::{create_bind_group, EVerteicesMemory, GeometryDesc, GeometryResourceHash, IndiceRenderRange, VertexRenderRange}};
 
 pub use pi_scene_shell::prelude::*;
 
@@ -12,12 +12,12 @@ pub enum DrawObj3D {
 
 #[derive(Clone)]
 pub struct DrawObjTmp {
+    pub instance_memory: Option<EVerteicesMemory>,
     pub pipeline: u64,
     pub passentity: Entity,
     pub bindgroupshash: BindGroups3DHashResource,
     pub vertexentity: Entity,
     pub vertexhash: GeometryResourceHash,
-    pub instance_memory: Option<EVerteicesMemory>,
     pub indice_range: IndiceRenderRange,
     pub vertex_range: VertexRenderRange,
 }
@@ -32,8 +32,8 @@ impl DrawObjTmp {
         //         (self.instance_memory.is_some() , other.instance_memory.is_some())
         //     );
         // }
-        if self.indice_range.0.is_some() || other.indice_range.0.is_some() { return false; }
-        if self.vertex_range.0.is_some() || other.vertex_range.0.is_some() { return false; }
+        if self.indice_range.is_some() || other.indice_range.is_some() { return false; }
+        if self.vertex_range.is_some() || other.vertex_range.is_some() { return false; }
         if self.pipeline == other.pipeline
             && self.vertexhash == other.vertexhash
             && self.bindgroupshash == other.bindgroupshash
@@ -79,14 +79,14 @@ pub struct PassModelID(pub Entity);
 #[derive(Component, Default)]
 pub struct PassRendererID(pub Entity);
 
-#[derive(Component, Default)]
-pub struct PassSceneID(pub Entity);
+// #[derive(Component, Default)]
+// pub struct PassSceneID(pub Entity);
 
-#[derive(Component, Default)]
-pub struct PassSceneForSet3(pub Entity);
+// #[derive(Component, Default)]
+// pub struct PassSceneForSet3(pub Entity);
 
-#[derive(Component, Default)]
-pub struct PassViewerID(pub Entity);
+// #[derive(Component, Default)]
+// pub struct PassViewerID(pub Entity);
 
 #[derive(Component, Default)]
 pub struct PassMaterialID(pub Entity);
@@ -96,6 +96,9 @@ pub struct PassGeometryID(pub Entity);
 
 #[derive(Component, Default)]
 pub struct PassPipelineStateDirty;
+
+#[derive(Component, Default)]
+pub struct PassBindGroupsDirty;
 
 #[derive(Component, Default)]
 pub struct PassDrawDirty;
@@ -108,89 +111,94 @@ pub trait TPass: Default {
 #[derive(Component, Default)]
 pub struct PassIDs(pub [Entity;8]);
 
-/// * 标识物体 已准备好的 Passs
-/// * 材质没有纹理时 在使用材质时即准备好
-/// * 材质有纹理时 在纹理准备好时才准备好
-#[derive(Component, Default)]
-pub struct PassEffectReady(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for PassEffectReady {
-    fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-    fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-}
+// /// * 标识物体 已准备好的 Passs
+// /// * 材质没有纹理时 在使用材质时即准备好
+// /// * 材质有纹理时 在纹理准备好时才准备好
+// #[derive(Component, Default)]
+// pub struct PassEffectReady(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
+// impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for PassEffectReady {
+//     fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
+//     fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
+// }
 
-#[derive(Component, Default)]
-pub struct PassBindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-impl TPassData<Option<Arc<ShaderBindEffectValue>>> for PassBindEffectValue {
-    fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-}
+// #[derive(Component, Default)]
+// pub struct PassBindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
+// impl TPassData<Option<Arc<ShaderBindEffectValue>>> for PassBindEffectValue {
+//     fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
+//     fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
+// }
 
-#[derive(Component, Default)]
-pub struct PassBindEffectTextures(pub Option<EffectTextureSamplers>);
-impl TPassData<Option<EffectTextureSamplers>> for PassBindEffectTextures {
-    fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-    fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-}
+// #[derive(Component, Default)]
+// pub struct PassBindEffectTextures(pub Option<EffectTextureSamplers>);
+// impl TPassData<Option<EffectTextureSamplers>> for PassBindEffectTextures {
+//     fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
+//     fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
+// }
 
 
-/// * Set0
-/// * 更新依赖: BindSceneEffect, BindViewer
-#[derive(Clone, Component, Default)]
-pub struct PassBindGroupScene(pub Option<Arc<BindGroupScene>>);
-impl TPassData<Option<Arc<BindGroupScene>>> for PassBindGroupScene {
-    fn new(val: Option<Arc<BindGroupScene>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<BindGroupScene>> { &self.0 }
-}
+// /// * Set0
+// /// * 更新依赖: BindSceneEffect, BindViewer
+// #[derive(Clone, Component, Default)]
+// pub struct PassBindGroupScene(pub Option<Arc<BindGroupScene>>);
+// impl TPassData<Option<Arc<BindGroupScene>>> for PassBindGroupScene {
+//     fn new(val: Option<Arc<BindGroupScene>>) -> Self { Self(val) }
+//     fn val(&self) -> &Option<Arc<BindGroupScene>> { &self.0 }
+// }
 
-/// * Set1
-/// * 更新依赖: BindModel, BindEffectValues
-#[derive(Clone, Component, Default)]
-pub struct PassBindGroupModel(pub Option<Arc<BindGroupModel>>);
-impl TPassData<Option<Arc<BindGroupModel>>> for PassBindGroupModel {
-    fn new(val: Option<Arc<BindGroupModel>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<BindGroupModel>> { &self.0 }
-}
+// /// * Set1
+// /// * 更新依赖: BindModel, BindEffectValues
+// #[derive(Clone, Component, Default)]
+// pub struct PassBindGroupModel(pub Option<Arc<BindGroupModel>>);
+// impl TPassData<Option<Arc<BindGroupModel>>> for PassBindGroupModel {
+//     fn new(val: Option<Arc<BindGroupModel>>) -> Self { Self(val) }
+//     fn val(&self) -> &Option<Arc<BindGroupModel>> { &self.0 }
+// }
 
-/// * Set2
-/// * 更新依赖: BindTextureSamplers
-#[derive(Clone, Component, Default)]
-pub struct PassBindGroupTextureSamplers(pub Option<Arc<BindGroupTextureSamplers>>);
-impl TPassData<Option<Arc<BindGroupTextureSamplers>>> for PassBindGroupTextureSamplers {
-    fn new(val: Option<Arc<BindGroupTextureSamplers>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<BindGroupTextureSamplers>> { &self.0 }
-}
+// /// * Set2
+// /// * 更新依赖: BindTextureSamplers
+// #[derive(Clone, Component, Default)]
+// pub struct PassBindGroupTextureSamplers(pub Option<Arc<BindGroupTextureSamplers>>);
+// impl TPassData<Option<Arc<BindGroupTextureSamplers>>> for PassBindGroupTextureSamplers {
+//     fn new(val: Option<Arc<BindGroupTextureSamplers>>) -> Self { Self(val) }
+//     fn val(&self) -> &Option<Arc<BindGroupTextureSamplers>> { &self.0 }
+// }
 
-/// * Set3
-/// * 更新依赖: BindGroupLightingShadow
-#[derive(Clone, Component, Default)]
-pub struct PassBindGroupLightingShadow(pub Option<Arc<BindGroupSetExtend>>);
-impl TPassData<Option<Arc<BindGroupSetExtend>>> for PassBindGroupLightingShadow {
-    fn new(val: Option<Arc<BindGroupSetExtend>>) -> Self { Self(val) }
-    fn val(&self) -> &Option<Arc<BindGroupSetExtend>> { &self.0 }
-}
+// /// * Set3
+// /// * 更新依赖: BindGroupLightingShadow
+// #[derive(Clone, Component, Default)]
+// pub struct PassBindGroupLightingShadow(pub Option<Arc<BindGroupSetExtend>>);
+// impl TPassData<Option<Arc<BindGroupSetExtend>>> for PassBindGroupLightingShadow {
+//     fn new(val: Option<Arc<BindGroupSetExtend>>) -> Self { Self(val) }
+//     fn val(&self) -> &Option<Arc<BindGroupSetExtend>> { &self.0 }
+// }
 
 #[derive(Clone, Component, Default)]
 pub struct RecordPassDraw(pub [Option<ObjectID>; 8]);
 
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
-#[derive(Clone, Component, Default)]
-pub struct PassBindGroups(pub Option<(BindGroups3D, BindGroups3DHashResource)>);
+#[derive(Clone, Component)]
+pub struct PassBindGroups(BindGroups3D, BindGroups3DHashResource);
 impl PassBindGroups {
     pub fn new(val: Option<BindGroups3D>) -> Self {
         if let Some(val) = val {
             let hash = BindGroups3DHashResource::from(&val);
-            Self(Some((val, hash)))
+            Self(val, hash)
         } else {
-            Self(None)
+            Self(BindGroups3D::default(), BindGroups3DHashResource(0))
         }
     }
     pub fn val(&self) -> Option<&BindGroups3D> {
-        if let Some(val) = &self.0 {
-            Some(&val.0)
+        if self.1.0 != 0 {
+            Some(&self.0)
         } else {
             None
         }
+    }
+}
+impl Default for PassBindGroups {
+    fn default() -> Self {
+        Self(BindGroups3D::default(), BindGroups3DHashResource(0))
     }
 }
 
@@ -265,3 +273,31 @@ impl PassDraw {
 // pub struct AssetLoaderPipeline3D(pub AssetLoader<u64, ObjectID, Pipeline3D, ()>);
 
 
+
+pub fn _set2_modify(
+    _key_meta: &Atom,
+    meta: &Handle<ShaderEffectMeta>,
+    effect_texture_samplers: &EffectTextureSamplers,
+    device: &PiRenderDevice,
+    asset_mgr_bindgroup_layout: &ShareAssetMgr<BindGroupLayout>,
+    asset_mgr_bindgroup: &ShareAssetMgr<BindGroup>,
+) -> Option<Arc<BindGroupTextureSamplers>> {
+    let mut result = None;
+
+    let key = KeyBindGroupTextureSamplers::new(effect_texture_samplers.clone(), meta.clone());
+
+    if let Some(key) = key {
+        let key_bind_group = key.key_bind_group();
+        if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
+            let data = BindGroupTextureSamplers::new(key, BindGroupUsage::new(key_bind_group, bind_group));
+            let data = Arc::new(data);
+            result = Some(data.clone());
+        } else {
+            // log::error!("Set2: NN");
+        };
+    } else {
+        // log::error!("Set2: NNN");
+    }
+
+    return result;
+}

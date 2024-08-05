@@ -28,9 +28,13 @@ pub trait TAssetResVertexBuffer {
 pub struct EVerteicesMemory {
     pub data: Vec<u8>,
     pub itemcount: u32,
-    pub slot: u32,
+    pub slot: u8,
 }
 
+///
+/// 顶点Buffer数据
+/// * 每物体的实例数据,内存数据,保存在物体上
+/// * 每顶点的数据,为Buffer的引用
 #[derive(Clone)]
 pub enum EVerticesBufferTmp {
     Memory(EVerteicesMemory),

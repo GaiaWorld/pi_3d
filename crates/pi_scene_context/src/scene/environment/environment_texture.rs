@@ -70,6 +70,7 @@ pub fn sys_env_texture_load_launch(
 
         match imgtex_assets_mgr.get(&key_u64) {
             Some(view) => {
+                // log::error!("env sys_env_texture_load_launch");
                 *item = EnvTexture::from(ETextureViewUsage::Image(view));
                 irradiance.0 = item.irradiance(&mut allocator);
                 state.texview_success += 1;
@@ -127,6 +128,7 @@ pub fn sys_env_texture_loaded_check(
     while let Some((entity, _key, view, _)) = item {
         item = loader.success.pop();
         if let Ok((_, mut item, mut irradiance)) = items.get_mut(entity) {
+            // log::error!("env sys_env_texture_loaded_check");
             *item = EnvTexture::from(view);
             irradiance.0 = item.irradiance(&mut allocator);
             state.texview_success += 1;

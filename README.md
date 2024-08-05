@@ -56,6 +56,16 @@
     * 跳跃
 * 包围盒检测
 
+request: 
+    ColorFormat
+    DepthStencilFormat
+    (Width, Height)
+response
+    RenderTarget(ColorTextureView,DepthStencilTextureView,(X,Y,Width,Height))
+action
+    TextureBind,TextureTilloff
+    BindGroup
+    Pipeline
 
   var count = 16;
   window.record = [];

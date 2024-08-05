@@ -142,7 +142,7 @@ impl TValue<1> for CameraOrthSize {
 impl TValue<2> for IndiceRenderRange {
     fn newn(data: &[f32], offset: usize) -> Self {
         let x = data[offset + 0] as u32; let y = data[offset + 1] as u32;
-        Self(Some(Range { start: x, end: y, }))
+        Self::new(Some((x, y)))
     }
 }
 impl TValue<1> for AnimatorableFloat {

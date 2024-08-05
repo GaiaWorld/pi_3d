@@ -106,10 +106,10 @@ pub fn sys_act_pass_object(
 }
 
 pub type PassObjInitBundle = (
-    PassSceneID,
+    // PassSceneID,
     PassModelID,
-    PassSceneForSet3,
-    PassViewerID,
+    // PassSceneForSet3,
+    // PassViewerID,
     PassMaterialID,
     PassGeometryID,
     PassRendererID,
@@ -117,17 +117,18 @@ pub type PassObjInitBundle = (
     PassDrawDirty,
     RenderState,
     PassReset,
+    PassBindGroupsDirty,
 );
 
 pub type PassObjBundle = (
-        PassBindEffectValue,
-        PassBindEffectTextures,
-        PassBindGroupScene,
-        PassBindGroupModel,
-        PassBindGroupTextureSamplers,
-        PassBindGroupLightingShadow,
+        // PassBindEffectValue,
+        // PassBindEffectTextures,
+        // PassBindGroupScene,
+        // PassBindGroupModel,
+        // PassBindGroupTextureSamplers,
+        // PassBindGroupLightingShadow,
         PassBindGroups,
-        PassEffectReady,
+        // PassEffectReady,
         PassShader,
         PassPipeline,
         PassDraw,
@@ -141,10 +142,10 @@ impl ActionPassObject {
         idscene: Entity,
     ) -> PassObjInitBundle {
         (
-            PassSceneID(idscene),
+            // PassSceneID(idscene),
             PassModelID(idmodel),
-            PassSceneForSet3(idscene),
-            PassViewerID(empty),
+            // PassSceneForSet3(idscene),
+            // PassViewerID(empty),
             PassMaterialID(empty),
             PassGeometryID(empty),
             PassRendererID(empty),
@@ -152,6 +153,7 @@ impl ActionPassObject {
             PassDrawDirty,
             RenderState::default(),
             PassReset,
+            PassBindGroupsDirty,
         )
     }
     pub fn reset(
@@ -159,14 +161,14 @@ impl ActionPassObject {
         material: Entity,
     ) -> PassObjBundle {
             (
-                PassBindEffectValue(None),
-                PassBindEffectTextures(None),
-                PassBindGroupScene(None),
-                PassBindGroupModel(None),
-                PassBindGroupTextureSamplers(None),
-                PassBindGroupLightingShadow(None),
-                PassBindGroups(None),
-                PassEffectReady(None),
+                // PassBindEffectValue(None),
+                // PassBindEffectTextures(None),
+                // PassBindGroupScene(None),
+                // PassBindGroupModel(None),
+                // PassBindGroupTextureSamplers(None),
+                // PassBindGroupLightingShadow(None),
+                PassBindGroups::default(),
+                // PassEffectReady(None),
                 PassShader(None),
                 PassPipeline(None),
                 PassDraw(None),

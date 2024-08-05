@@ -228,7 +228,7 @@ pub fn reset_instances_buffer_range(
     data: Vec<u8>,
     count: u32,
 ) {
-    let data = EVerticesBufferTmp::Memory(EVerteicesMemory { data: data, itemcount: count as u32, slot: instancedinfo.slot() as u32 });
+    let data = EVerticesBufferTmp::Memory(EVerteicesMemory { data: data, itemcount: count as u32, slot: instancedinfo.slot() as u8 });
     if let Ok((desclist, mut buffer, mut keys)) = slots.get_mut(idgeo)  { 
         match instancedinfo.slot() {
             EVertexBufferSlot::Slot01 => { buffer[0] = Some(AssetResVBSlot(data)); keys.0[0] = desclist.key(0); },

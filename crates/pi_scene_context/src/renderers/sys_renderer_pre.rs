@@ -27,7 +27,7 @@ pub fn sys_sets_modify_by_viewer(
     >,
     renderers: Query<(&RendererParam, &PassTag)>,
     modelspass: Query<&PassIDs>,
-    mut passes: Query<(&PassSceneID, &DisposeReady, &mut PassViewerID, &mut PassRendererID)>,
+    mut passes: Query<(&DisposeReady, &mut PassRendererID)>,
 ) {
     let time1 = pi_time::Instant::now();
 
@@ -79,7 +79,7 @@ pub fn sys_sets_modify_by_viewer(
 fn _sets_modify_by_viewer(
     idrenderer: Entity,
     idviewer: Entity,
-    passes: &mut Query<(&PassSceneID, &DisposeReady, &mut PassViewerID, &mut PassRendererID)>,
+    passes: &mut Query<(&DisposeReady, &mut PassRendererID)>,
     id_scene: Entity,
     models: &Query<&PassIDs>,
     modellist: &ModelList,
@@ -103,12 +103,11 @@ fn __sets_modify_by_viewer(
     idrenderer: Entity,
     idviewer: Entity,
     passid: Entity,
-    passes: &mut Query<(&PassSceneID, &DisposeReady, &mut PassViewerID, &mut PassRendererID)>,
+    passes: &mut Query<(&DisposeReady, &mut PassRendererID)>,
     id_scene: Entity,
 ) {
-    if let Ok((passscene, disposeready, mut flagpassviewer, mut passrenderer) ) = passes.get_mut(passid) {
-        if disposeready.0 == false && passscene.0 == id_scene {
-            if flagpassviewer.0 != idviewer { *flagpassviewer = PassViewerID(idviewer); }
+    if let Ok((disposeready, mut passrenderer) ) = passes.get_mut(passid) {
+        if disposeready.0 == false {
             if passrenderer.0 != idrenderer { *passrenderer = PassRendererID(idrenderer); }
         }
         // log::warn!("__sets_modify_by_viewer {:?}", (idviewer));
@@ -118,47 +117,62 @@ fn __sets_modify_by_viewer(
 pub fn sys_passrendererid_pass_reset(
     viewers: Query<(Entity, &SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo)>,
     renderers: Query<(&RendererParam, &PassTag)>,
-    mut passes: Query<(Entity, &mut PassRendererID, &mut PassViewerID, &PassModelID, &PassSceneID, &PassTag), Changed<PassReset>>,
+    model: Query<&SceneID>,
+    mut passes: Query<(Entity, &mut PassRendererID, &PassModelID, &PassTag), Changed<PassReset>>,
 ) {
-    passes.iter_mut().for_each(|(idpass, mut passrenderer, mut passviewer, idmodel, idscene, passpasstag)| {
-        // log::error!("BBB 1 ");
-        viewers.iter().for_each(|(idviewer, viewscene, list0, list1, viewrenderinfos)| {
-            // if viewrenderinfos.len() == 0 { log::error!("BBB 2 viewrenderinfos {:?}", (idpass, idviewer, viewrenderinfos.len())); }
-            if viewscene.0 == idscene.0 {
-                viewrenderinfos.renderers().for_each(|idrenderer| {
-                    let idrenderer = *idrenderer;
-                    // log::error!("BBB 3 ");
-
-                    if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
-                        // log::error!("BBB 4 ");
-                        if rendererenable.enable.0 == true && passtag == passpasstag {
-                            // log::error!("BBB 5 ");
-                            if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
-                                // log::warn!("Dirty PassRenderID While Pass Reset {:?}", (idpass, idviewer, passviewer.0 != idviewer));
-                                // passrenderer.0 = idrenderer;
-                                // passviewer.0 = idviewer;
-
-                                if passviewer.0 != idviewer { *passviewer = PassViewerID(idviewer); }
-                                if passrenderer.0 != idrenderer { *passrenderer = PassRendererID(idrenderer); }
-                                // log::warn!("Dirty PassRenderID While Pass Reset");
+    passes.iter_mut().for_each(|(idpass, mut passrenderer, idmodel, passpasstag)| {
+        if let Ok(idscene) = model.get(idmodel.0) {
+            // log::error!("BBB 1 ");
+            viewers.iter().for_each(|(idviewer, viewscene, list0, list1, viewrenderinfos)| {
+                // if viewrenderinfos.len() == 0 { log::error!("BBB 2 viewrenderinfos {:?}", (idpass, idviewer, viewrenderinfos.len())); }
+                if idscene.0 == viewscene.0 {
+                    viewrenderinfos.renderers().for_each(|idrenderer| {
+                        let idrenderer = *idrenderer;
+                        // log::error!("BBB 3 ");
+        
+                        if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
+                            // log::error!("BBB 4 ");
+                            if rendererenable.enable.0 == true && passtag == passpasstag {
+                                // log::error!("BBB 5 ");
+                                if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
+                                    // log::warn!("Dirty PassRenderID While Pass Reset {:?}", (idpass, idviewer, passviewer.0 != idviewer));
+                                    // passrenderer.0 = idrenderer;
+                                    // passviewer.0 = idviewer;
+                                    if passrenderer.0 != idrenderer { *passrenderer = PassRendererID(idrenderer); }
+                                    // log::warn!("Dirty PassRenderID While Pass Reset");
+                                }
                             }
                         }
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
+        }
     });
 }
 
 pub fn sys_sets_modify_by_scene_extend(
-    scenes: Query<Entity, Or<(Changed<BRDFTexture>, Changed<MainCameraOpaqueTarget>, Changed<MainCameraDepthTarget>, Changed<EnvTexture>, Changed<SceneShadowRenderTarget>)>>,
-    mut passes: Query<(&mut PassSceneForSet3, &SceneID)>,
+    events: Event<Or<(Changed<BRDFTexture>, Changed<MainCameraOpaqueTarget>, Changed<MainCameraDepthTarget>, Changed<EnvTexture>, Changed<SceneShadowRenderTarget>)>>,
+    scenes: Query<(Entity, &MainCameraOpaqueTarget), Or<(Changed<BRDFTexture>, Changed<MainCameraOpaqueTarget>, Changed<MainCameraDepthTarget>, Changed<EnvTexture>, Changed<SceneShadowRenderTarget>)>>,
+    mut passes: Query<(&mut PassBindGroupsDirty, &PassModelID)>,
+    models: Query<&SceneID>,
 ) {
     let time1 = pi_time::Instant::now();
 
-    passes.iter_mut().for_each(|(mut dirty, idscene)| {
-        if scenes.contains(idscene.0) {
-            *dirty = PassSceneForSet3(idscene.0);
+    if scenes.is_empty() { return; }
+
+    let mut temp = vec![];
+    scenes.iter().for_each(|(scene, _)| {
+        temp.push(scene);
+    });
+
+    // log::error!("Scene : {:?}", temp);
+
+    passes.iter_mut().for_each(|(mut dirty, idmodel)| {
+        if let Ok(idscene) = models.get(idmodel.0) {
+            if temp.contains(&idscene.0) {
+                // log::error!("sys_sets_modify_by_scene_extend");
+                *dirty = PassBindGroupsDirty;
+            }
         }
     });
 
@@ -174,13 +188,14 @@ pub fn sys_sets_modify_by_model(
             Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Changed<ModelLightingIndexs>
         )>,
     >,
-    mut passes: Query<&mut PassModelID>,
+    mut passes: Query<&mut PassBindGroupsDirty>,
 ) {
     let time1 = pi_time::Instant::now();
 
     models.iter().for_each(|(entity, passids)| {
+        // log::error!("sys_sets_modify_by_model");
         passids.0.iter().for_each(|id| {
-            if let Ok(mut dirty) = passes.get_mut(*id) { *dirty = PassModelID(entity); }
+            if let Ok(mut dirty) = passes.get_mut(*id) { *dirty = PassBindGroupsDirty; }
         });
     });
 

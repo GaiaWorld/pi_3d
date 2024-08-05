@@ -70,14 +70,14 @@ pub fn sys_state_resource(
     imagetextures: Res<ShareAssetMgr<ImageTexture>>,
     shadermetas: Res<ShareAssetMgr<ShaderEffectMeta>>,
     passes: (
-        Query<&PassBindGroupScene>,
-        Query<&PassBindGroupModel>,
-        Query<&PassBindGroupTextureSamplers>,
+        // Query<&PassBindGroupScene>,
+        // Query<&PassBindGroupModel>,
+        // Query<&PassBindGroupTextureSamplers>,
         Query<&PassBindGroups>,
         Query<&PassShader>,
         Query<&PassPipeline>,
         Query<&PassDraw>,
-        Query<&PassBindEffectTextures>,
+        // Query<&PassBindEffectTextures>,
     ),
     mut stateglobal: ResMut<StateResource>,
     renderers: Query<&Renderer>,
@@ -124,29 +124,29 @@ pub fn sys_state_resource(
     });
     stateglobal.count_passbindgroups = count;
 
-    count = 0;
-    passes.4.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passshader = count;
+    // count = 0;
+    // passes.4.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passshader = count;
 
-    count = 0;
-    passes.5.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passpipeline = count;
+    // count = 0;
+    // passes.5.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passpipeline = count;
 
-    count = 0;
-    passes.6.iter().for_each(|item| {
-        if item.is_some() { count += 1; }
-    });
-    stateglobal.count_passdraw = count;
+    // count = 0;
+    // passes.6.iter().for_each(|item| {
+    //     if item.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passdraw = count;
 
-    count = 0;
-    passes.7.iter().for_each(|item| {
-        if item.0.is_some() { count += 1; }
-    });
-    stateglobal.count_passtexs = count;
+    // count = 0;
+    // passes.7.iter().for_each(|item| {
+    //     if item.0.is_some() { count += 1; }
+    // });
+    // stateglobal.count_passtexs = count;
 
     // count = 0;
     // passes.8.iter().for_each(|item| {
@@ -309,7 +309,11 @@ pub fn sys_info_node(
 }
 
 pub fn sys_info_draw(
-    draws: Query<(&PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue, &PassBindEffectTextures, &PassShader, &PassBindGroups, &PassPipeline, &PassDraw)>,
+    draws: Query<(
+        // &PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue,
+        // &PassBindEffectTextures,
+        &PassShader, &PassBindGroups, &PassPipeline, &PassDraw
+    )>,
     geometries: Query<&RenderGeometryComp>,
     meshes: Query<&RenderGeometryEable>,
     viewers: Query<(&ModelList, &ForceIncludeModelList, &ModelListAfterCulling)>,
@@ -327,12 +331,17 @@ pub fn sys_info_draw(
     let mut count_shader = 0;
     let mut count_pipeline = 0;
     let mut count_draw = 0;
-    draws.iter().for_each(|(bindgroup_scene, bindgroup_model, bindeffect, bindtextures, shader, bindgroups, pipeline, draw)| {
-        if bindgroup_scene.is_some() { count_set0 += 1; }
-        if bindgroup_model.is_some() { count_set1 += 1; }
-        if bindeffect.0.is_some() { count_effect += 1; }
-        if bindtextures.val().is_some() { count_textures += 1; }
-        if bindgroups.0.is_some() { count_bindgroups += 1; }
+    draws.iter().for_each(|(
+        // bindgroup_scene, bindgroup_model,bindeffect,
+        // bindtextures,
+        shader, bindgroups, pipeline, draw)| {
+        // if bindtextures.val().is_some() { count_textures += 1; }
+        if bindgroups.val().is_some() { count_bindgroups += 1; }
+
+        // if bindgroup_scene.is_some() { count_set0 += 1; }
+        // if bindgroup_model.is_some() { count_set1 += 1; }
+        // if bindeffect.0.is_some() { count_effect += 1; }
+
         if shader.is_some() { count_shader += 1; }
         if pipeline.is_some() { count_pipeline += 1; }
         if draw.is_some() {

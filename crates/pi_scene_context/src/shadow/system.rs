@@ -182,6 +182,7 @@ pub fn sys_shadow_bind_modify(
 ) {
     // record.0.push(String::from("sys_shadow_bind_modify"));
     scenes.iter().for_each(|(_entity, shadowdata, queueshadow)| {
+        if queueshadow.0.count() == 0 { return }
         shadowdata.0.as_ref().unwrap().reset();
         queueshadow.0.items().for_each(|v| {
             if let (Ok(indexshadow), Ok((light, matrix, shadow))) = (indexs.get(*v), shadows.get(*v)) {

@@ -73,6 +73,9 @@ impl SceneItemsQueue {
             self.idxs.push(id.0)
         }
     }
+    pub fn count(&self) -> usize {
+        self.items.len()
+    }
 }
 
 #[derive(Component, Default)]

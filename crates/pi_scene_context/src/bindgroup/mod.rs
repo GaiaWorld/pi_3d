@@ -44,7 +44,7 @@ impl AssetBindGroupTextureSamplersWaits {
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct BindGroups3D {
     pub scene: Option<Arc<BindGroupScene>>,
     pub model: Option<Arc<BindGroupModel>>, 

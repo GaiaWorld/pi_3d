@@ -84,7 +84,7 @@ pi_curves               = { path = "../pi_curves" }
 # pi_egl                  = { path = "../pi_egl" }
 # winit                   = { path = "../winit" }
 # pi_hal                  = { path = "../pi_hal" }
-# pi_postprocess          = { path = "../pi_post_process"}
+pi_postprocess          = { path = "../pi_post_process_new"}
 
 [patch.crates-io]
 pi_world                = { path = "../pi_world", features = ["single_thread"] }
@@ -99,6 +99,8 @@ bevy_a11y       = "0.11"
 bevy_app        = "0.11"
 bevy_window     = "0.11"
 bevy_input      = "0.11"
+
+pi_postprocess      = { version = "0.1", registry = "yn" }
 
 pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
 env_logger          = "0.9"

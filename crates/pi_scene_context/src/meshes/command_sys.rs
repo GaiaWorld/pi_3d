@@ -100,13 +100,18 @@ pub fn sys_create_mesh(
     // mut altermodel: Alter<(), (), BundleModel, ()>,
     // mut insert: Insert<PassObjBundle>,
 ) {
+    let time1 = pi_time::Instant::now();
+    let mut count = 0;
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
         if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
+        count += 1;
         // instancecmds.push(OpsInstanceMeshCreation::ops(entity, entity));
     });
+
+    log::error!("Creat Mesh Count {:?}, Time: {:?}", count, pi_time::Instant::now() - time1)
 }
 
 pub fn sys_create_instanced_mesh(
@@ -243,10 +248,10 @@ pub fn sys_act_mesh_modify(
                 if val != cullingmode.0 {
                     cullingmode.0 = val;
                 } else {
-                    log::error!("BoundingCullingMode Same. {:?}", entity);
+                    // log::error!("BoundingCullingMode Same. {:?}", entity);
                 }
             } else {
-                log::error!("BoundingCullingMode Not Found. {:?}", entity);
+                // log::error!("BoundingCullingMode Not Found. {:?}", entity);
             },
         }
     });
@@ -261,7 +266,7 @@ pub fn sys_act_mesh_modify(
             },
             EMeshValueStateModify::VertexRange(val) => if let Ok(mut item) = vertexrange_items.get_mut(entity) {
                 // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-                *item = VertexRenderRange(val);
+                *item = VertexRenderRange::new(val);
             },
             EMeshValueStateModify::Velocity(x, y, z) => if let Ok(mut item) = velocity_items.get_mut(entity) {
                 *item = ModelVelocity(Vector3::new(x, y, z));
@@ -411,63 +416,6 @@ impl ActionMesh {
                 entitycmd.insert((bundle, bind, passids));
             }
         }
-
-        // let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
-        // let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
-        //     cmd
-        // } else {
-        //     return false;
-        // };
-        // let modellightidx = ModelLightingIndexs::new(allocator, lightlimit);
-
-        // if meshinstanceattributes.bytes().len() > 0 {
-        //     entitycmd.insert((commonbindmodel.0.clone(), ModelStatic));
-        //     log::warn!(">>>>>>>>>>> sys_create_mesh 1");
-        // } else {
-        //     if let Some(bind) = BindModel::new(allocator) {
-        //         // log::info!("BindModel New");
-        //         entitycmd.insert((bind,));
-        //         log::warn!(">>>>>>>>>>> sys_create_mesh 2");
-        //     }
-        // }
-        // let lightbundle = (
-        //     MeshLightingMode::default(),
-        //     modellightidx,
-        //     ModelForcePointLightings::default(),
-        //     ModelForceSpotLightings::default(),
-        //     ModelForceHemiLightings::default(),
-        // );
-        // let bundle: BundleModel = (
-        //     ActionTransformNode::init(scene),
-        //     ActionMesh::as_mesh(empty.id()),
-        //     ActionMesh::as_instance_source(),
-        //     TargetAnimatorableIsRunning, InstanceAttributeAnimated::default(),
-        //     lightbundle,
-        //     MeshStates::default(),
-        //     DirtyMeshStates,
-        //     meshinstanceattributes,
-        //     state,
-        // );
-
-        // log::warn!(">>>>>>>>>>> sys_create_mesh 3");
-        // entitycmd.insert(bundle);
-        // // altermodel.alter(entity, bundle);
-        
-        // log::warn!(">>>>>>>>>>> sys_create_mesh OKKK");
-
-        // // entitycmd.insert(ModelPointLightingDirty::default());
-        // // entitycmd.insert(ModelSpotLightingDirty::default());
-        // // entitycmd.insert(ModelHemiLightingDirty::default());
-
-        // let id01 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01)).id();
-        // let id02 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02)).id();
-        // let id03 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03)).id();
-        // let id04 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04)).id();
-        // let id05 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_05)).id();
-        // let id06 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06)).id();
-        // let id07 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07)).id();
-        // let id08 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08)).id();
-        // commands.entity(entity).insert((PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]),));
 
         return true;
     }

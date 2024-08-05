@@ -64,23 +64,33 @@ pub fn sys_dispose_ready(
     mut cmdsforref: ResMut<ActionListDisposeReadyForRef>,
     mut items: Query<&mut DisposeReady>,
     empty: Res<SingleEmptyEntity>,
+    mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsDisposeReady(entity)| {
-        if empty.id() == entity { return }
+        if empty.id() == entity || commands.contains_entity(entity) == false { return }
 
         if let Ok(mut item) = items.get_mut(entity) {
             *item = DisposeReady(true);
         } else {
-            cmds.push(OpsDisposeReady(entity))
+            log::warn!("sys_dispose_ready  ====={:?}", entity);
+            if let Some(mut commands) = commands.get_entity(entity) {
+                // log::warn!("despawn====={:?}", commands.id());
+                commands.despawn();
+            }
+            // cmds.push(OpsDisposeReady(entity))
         }
     });
     cmdsforref.drain().drain(..).for_each(|OpsDisposeReadyForRef(entity)| {
-        if empty.id() == entity { return }
+        if empty.id() == entity || commands.contains_entity(entity) == false { return }
 
         if let Ok(mut item) = items.get_mut(entity) {
             *item = DisposeReady(true);
         } else {
-            cmdsforref.push(OpsDisposeReadyForRef(entity))
+            log::warn!("sys_dispose_ready Ref ====={:?}", entity);
+            if let Some(mut commands) = commands.get_entity(entity) {
+                commands.despawn();
+            }
+            // cmdsforref.push(OpsDisposeReadyForRef(entity))
         }
     });
 }
@@ -88,12 +98,18 @@ pub fn sys_dispose_can(
     mut cmds: ResMut<ActionListDisposeCan>,
     mut items: Query<&mut DisposeCan>,
     empty: Res<SingleEmptyEntity>,
+    mut commands: Commands,
 ) {
     cmds.drain().drain(..).for_each(|OpsDisposeCan(entity)| {
         if empty.id() == entity { return }
 
         if let Ok(mut item) = items.get_mut(entity) {
             *item = DisposeCan(true);
+        } else {
+            if let Some(mut commands) = commands.get_entity(entity) {
+                // log::warn!("despawn====={:?}", commands.id());
+                commands.despawn();
+            }
         }
     });
 }

@@ -3,6 +3,7 @@
 use base::DemoScene;
 use pi_animation::loop_mode::ELoopMode;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
+use pi_postprocess::prelude::TImageEffect;
 use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::prelude::BlockMainTexture;
@@ -26,6 +27,8 @@ fn setup(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    mut graphic: ResMut<PiRenderGraph>,
+    mut resources: ResMut<pi_postprocess::image_effect::SingleImageEffectResource>
 ) {
     let tes_size = 50;
     let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres,
@@ -33,8 +36,71 @@ fn setup(
         tes_size as f32, 0.7, (0., 10., -50.), true
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
+    
+    pi_postprocess::image_effect::EffectBlurBokeh::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectBlurDirect::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectBlurDual::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectBlurRadial::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectColorEffect::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectCopy::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectFilterBrightness::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectFilterSobel::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectHorizonGlitch::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectRadialWave::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectBlurGauss::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectImageMask::setup(&assets.1, &mut resources, &assets.2);
+    pi_postprocess::image_effect::EffectClipSdf::setup(&assets.1, &mut resources, &assets.2);
+    let copyrenderer = commands.spawn_empty_id();
+    let render_node = pi_postprocess::graphic::RenderNode::new(copyrenderer);
+    match graphic.add_node("TestPostProcess", render_node, NodeId::null()) {
+        Ok(nodeid) => {
+            let dst = pi_postprocess::component::PostProcessDst {
+                width: 10,
+                height: 1,
+                vtype: None,
+                format: wgpu::TextureFormat::Bgra8Unorm,
+                depth: 0.,
+                screen: true,
+            };
+            match demopass.transparent_target.unwrap() {
+                KeyCustomRenderTarget::Custom(key) => {
+                    log::error!("PostProcess Ok");
+                    let target = assets.0.get(key).unwrap();
+                    let bundle = (
+                        GraphId(nodeid),
+                        pi_postprocess::postprocess::PostProcess::default(),
+                        pi_postprocess::postprocess::PostProcessAnalyzer::default(),
+                        dst,
+                        pi_postprocess::component::PostProcessMatrix(Matrix::identity()),
+                        pi_postprocess::component::PostprocessDrawList::default(),
+                        pi_postprocess::component::PostProcessResult::default(),
+                        pi_postprocess::component::PostProcessSrc(Some(pi_postprocess::temprory_render_target::PostprocessTexture::from_share_target(target.rt, ColorFormat::Rgba8Unorm.val())))
+                    );
+                    commands.add_components::<(
+                        GraphId,
+                        pi_postprocess::postprocess::PostProcess,
+                        pi_postprocess::postprocess::PostProcessAnalyzer,
+                        pi_postprocess::component::PostProcessDst,
+                        pi_postprocess::component::PostProcessMatrix,
+                        pi_postprocess::component::PostprocessDrawList,
+                        pi_postprocess::component::PostProcessResult,
+                        pi_postprocess::component::PostProcessSrc
+                    )>(copyrenderer, bundle);
+                    
+                    if let Err(err) = graphic.set_finish(nodeid, true) {
+                        // error.graphic(entity, err);
+                    }
+                },
+                KeyCustomRenderTarget::FinalRender => todo!(),
+            }
+        },
+        Err(err) => {
+            // log::error!("CreateRenderer Fail Graphic Error");
+            // error.graphic(entity, err);
+        },
+    }
 
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer, demopass.transparent_target);
+    // let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer, demopass.transparent_target);
     actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
@@ -150,6 +216,11 @@ pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
+        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+        let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
+        let buffer = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        let temp = pi_postprocess::image_effect::SingleImageEffectResource::new(&device, &queue, buffer);
+        app.insert_resource(temp);
         app.insert_resource(ActionListTestData::default());
     }
 }

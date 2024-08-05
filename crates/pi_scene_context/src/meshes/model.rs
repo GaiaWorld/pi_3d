@@ -1,4 +1,4 @@
-use std::{sync::Arc, ops::Range};
+use std::{ops::Range, sync::Arc, u32};
 
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
@@ -116,18 +116,19 @@ impl TAnimatableCompRecord<IndiceRenderRange> for RecordIndiceRenderRange {
 }
 
 #[derive(Component, Clone)]
-pub struct IndiceRenderRange(pub Option<Range<u32>>);
+pub struct IndiceRenderRange(pub Range<u32>);
 impl IndiceRenderRange {
     pub fn new(val: Option<(u32, u32)>) -> Self {
         if let Some((start, end)) = val {
-            Self(Some(Range { start, end }))
+            Self(Range { start, end })
         } else {
-            Self(None)
+            Self(Range { start: u32::MAX, end: 0 })
         }
     }
     pub fn apply(&self, geo: &RenderGeometry) -> Option<RenderIndices> {
         if let Some(mut indices) = geo.indices.clone() {
-            if let Some(renderrange) = &self.0 {
+            let renderrange = &self.0;
+            if renderrange.start < u32::MAX {
                 let range0 = indices.buffer.range();
                 let mut start = renderrange.start as u64 * indices.format.use_bytes();
                 let mut end = renderrange.end as u64 * indices.format.use_bytes();
@@ -153,10 +154,13 @@ impl IndiceRenderRange {
             None
         }
     }
+    pub fn is_some(&self) -> bool {
+        self.0.start < u32::MAX
+    }
 }
 impl Default for IndiceRenderRange {
     fn default() -> Self {
-        Self(None)
+        Self(Range { start: u32::MAX, end: 0 })
     }
 }
 impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {
@@ -198,23 +202,35 @@ impl TAnimatableComp for IndiceRenderRange {
 }
 
 #[derive(Component, Clone)]
-pub struct VertexRenderRange(pub Option<(u32, u32)>);
+pub struct VertexRenderRange(u32, u32);
 impl VertexRenderRange {
+    pub fn new(val: Option<(u32, u32)>) -> Self {
+        if let Some((start, end)) = val {
+            Self(start, end)
+        } else {
+            Self(u32::MAX, 0)
+        }
+    }
     pub fn apply(&self, geo: &RenderGeometry) -> Range<u32> {
-        if let Some((start, count)) = &self.0 {
+        let start = self.0;
+        let count = self.1;
+        if start < u32::MAX {
             let range0 = geo.vertex_range();
-            let start = (*start + range0.start).min(range0.end);
-            let end = (*count + start).min(range0.end);
+            let start = (start + range0.start).min(range0.end);
+            let end = (count + start).min(range0.end);
 
             Range { start, end }
         } else {
             geo.vertex_range()
         }
     }
+    pub fn is_some(&self) -> bool {
+        self.0 < u32::MAX
+    }
 }
 impl Default for VertexRenderRange {
     fn default() -> Self {
-        Self(None)
+        Self(u32::MAX, 0)
     }
 }
 
