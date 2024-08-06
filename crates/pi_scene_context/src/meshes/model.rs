@@ -234,17 +234,17 @@ impl Default for VertexRenderRange {
     }
 }
 
-#[derive(Component, Default)]
-pub struct RenderMatrixDirty(pub bool);
-impl TInstanceFlag for RenderMatrixDirty {
-    fn dirty(&self) -> bool {
-        self.0
-    }
+// #[derive(Component, Default)]
+// pub struct RenderMatrixDirty(pub bool);
+// impl TInstanceFlag for RenderMatrixDirty {
+//     fn dirty(&self) -> bool {
+//         self.0
+//     }
 
-    fn reset(&mut self) {
-        self.0 = false
-    }
-}
+//     fn reset(&mut self) {
+//         self.0 = false
+//     }
+// }
 
 #[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrix(pub Matrix);

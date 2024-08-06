@@ -3,7 +3,7 @@ use pi_scene_shell::{prelude::*, engine_shell::asset_capacity};
 
 
 use crate::{
-    bindgroup::*, cameras::prelude::*, object::sys_dispose_can, pass::*, scene::StageScene, shadow::prelude::StageShadowGenerator, transforms::prelude::*
+    bindgroup::*, cameras::prelude::*, object::sys_dispose_can, pass::*, prelude::StageModel, scene::StageScene, shadow::prelude::StageShadowGenerator, transforms::prelude::*
 };
 
 use self::{
@@ -180,7 +180,7 @@ impl Plugin for PluginRenderer {
             // .add_systems(Update, sys_act_depth_state                 .in_set(StageRenderer::RenderStateCommand))
             // .add_systems(Update, sys_act_stencil_state               .in_set(StageRenderer::RenderStateCommand))
 
-            .add_systems(Update, sys_act_render_queue                .in_set(StageRenderer::RenderStateCommand))
+            .add_systems(Update, sys_act_render_queue                .in_set(StageModel::AbstructMeshCommand))
             .add_systems(Update, sys_act_renderer_connect            .in_set(StageRenderer::RenderStateCommand))
             .add_systems(Update, sys_act_renderer_modify             .in_set(StageRenderer::RendererCommand))
             .add_systems(Update, sys_act_renderer_target             .after(sys_act_renderer_modify).in_set(StageRenderer::RendererCommand))

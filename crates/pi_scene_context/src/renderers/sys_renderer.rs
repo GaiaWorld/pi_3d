@@ -881,12 +881,12 @@ fn collect_draw(
         draws.push(draw.clone());
         opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline, resourcehash: (draw.vertexhash.0, draw.bindgroupshash.0) });
     } else {
-        // log::warn!("instancessortinfo.0.len() {}", instancessortinfo.0.len());
-        if instancessortinfo.0.len() <= 1  {
+        if instancessortinfo.0.len() < 1  {
             let index = draws.len();
             draws.push(draw.clone());
             transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue: sort_param.clone(), resourcehash: (draw.vertexhash.0, draw.bindgroupshash.0) });
         } else {
+            // log::error!("instancessortinfo.0.len() {:?}", (&instancessortinfo.0, draw.instance_memory.is_some()));
             if let Some(instance_memory) = &draw.instance_memory {
                 let itemsize = instance_memory.data.len() / instance_memory.itemcount as usize;
                 instancessortinfo.0.iter().for_each(|(alphaindex, range)| {

@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 use crate::{
     cullings::prelude::*, geometry::{
         instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer}, prelude::*
-    }, layer_mask::prelude::*, object::ActionEntity, pass::*, prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, renderers::prelude::*, skeleton::prelude::*, state::{DirtyMeshStates, MeshStates}, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}
+    }, layer_mask::prelude::*, object::ActionEntity, pass::*, prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, renderers::prelude::*, skeleton::prelude::*, state::*, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}
 };
 
 use super::{
@@ -22,7 +22,8 @@ pub type BundleModel = (
     BundleInstanceSource,
     TargetAnimatorableIsRunning, InstanceAttributeAnimated,
     BundleMeshLighting,
-    MeshStates, DirtyMeshStates, ModelInstanceAttributes, MeshInstanceState
+    // MeshStates, DirtyMeshStates, 
+    ModelInstanceAttributes, MeshInstanceState
 );
 
 pub type BundleMesh = (
@@ -33,13 +34,13 @@ pub type BundleMesh = (
         RenderGeometryEable,
         RenderWorldMatrix,
         RenderWorldMatrixInv,
-        RenderMatrixDirty,
+        // RenderMatrixDirty,
         MeshCastShadow,
         MeshReceiveShadow,
-        PassDirtyBindEffectValue,
-        FlagPassDirtyBindEffectValue,
-        PassDirtyBindEffectTextures,
-        FlagPassDirtyBindEffectTextures,
+        // PassDirtyBindEffectValue,
+        // FlagPassDirtyBindEffectValue,
+        // PassDirtyBindEffectTextures,
+        // FlagPassDirtyBindEffectTextures,
         LayerMask,
         AbstructMeshCullingFlag,
     ),
@@ -70,7 +71,7 @@ pub type BundleInstance = (
     AbstructMeshCullingFlag,
     InstanceTransparentIndex,
     InstanceMesh,
-    RenderMatrixDirty,
+    // RenderMatrixDirty,
     RenderWorldMatrix,
     RenderWorldMatrixInv,
     ModelVelocity,
@@ -97,21 +98,25 @@ pub fn sys_create_mesh(
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
     mut instancecmds: ResMut<ActionListInstanceMeshCreate>,
-    // mut altermodel: Alter<(), (), BundleModel, ()>,
+    mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
+    mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     // mut insert: Insert<PassObjBundle>,
 ) {
     let time1 = pi_time::Instant::now();
     let mut count = 0;
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
-        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
+        // if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
+        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
         count += 1;
         // instancecmds.push(OpsInstanceMeshCreation::ops(entity, entity));
     });
 
-    log::error!("Creat Mesh Count {:?}, Time: {:?}", count, pi_time::Instant::now() - time1)
+    if count > 0 {
+        log::error!("Creat Mesh Count {:?}, Time: {:?}", count, pi_time::Instant::now() - time1);
+    }
 }
 
 pub fn sys_create_instanced_mesh(
@@ -359,7 +364,8 @@ impl ActionMesh {
         mut state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
-        // altermodel: &mut Alter<(), (), BundleModel, ()>,
+        altermodel: &mut Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
+        passinsert: &mut Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     ) -> bool {
         // state.instance_matrix = true;
         // state.instances.push(
@@ -375,15 +381,23 @@ impl ActionMesh {
         if commands.get_entity(entity).is_none() {
             return false;
         };
-
-        let id01 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01)).id();
-        let id02 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02)).id();
-        let id03 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03)).id();
-        let id04 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04)).id();
-        let id05 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_05)).id();
-        let id06 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06)).id();
-        let id07 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07)).id();
-        let id08 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08)).id();
+        // let passids = PassIDs([entity, entity, entity, entity, entity, entity, entity, entity]);
+        let id01 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01));
+        let id02 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02));
+        let id03 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03));
+        let id04 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04));
+        let id05 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_05));
+        let id06 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06));
+        let id07 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07));
+        let id08 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08));
+        // let id01 = commands.spawn().id();
+        // let id02 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02)).id();
+        // let id03 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03)).id();
+        // let id04 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04)).id();
+        // let id05 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_05)).id();
+        // let id06 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06)).id();
+        // let id07 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07)).id();
+        // let id08 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08)).id();
         let passids = PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]);
 
         let mut entitycmd = commands.get_entity(entity).unwrap();
@@ -403,18 +417,22 @@ impl ActionMesh {
             ActionMesh::as_instance_source(),
             TargetAnimatorableIsRunning, InstanceAttributeAnimated::default(),
             lightbundle,
-            MeshStates::default(),
-            DirtyMeshStates,
+            // MeshStates::default(),
+            // DirtyMeshStates,
             meshinstanceattributes,
             state,
         );
 
-        if instanceattr {
-            entitycmd.insert((bundle, commonbindmodel.0.clone(), ModelStatic, passids));
-        } else {
-            if let Some(bind) = BindModel::new(allocator) {
-                entitycmd.insert((bundle, bind, passids));
-            }
+        // if instanceattr {
+        //     entitycmd.insert((bundle, commonbindmodel.0.clone(), ModelStatic, passids));
+        // } else {
+        //     if let Some(bind) = BindModel::new(allocator) {
+        //         entitycmd.insert((bundle, bind, passids));
+        //     }
+        // }
+        if let Some(bind) = BindModel::new(allocator) {
+            // entitycmd.insert((bundle, bind, passids));
+            altermodel.alter(entity, (bundle, bind, passids));
         }
 
         return true;
@@ -435,13 +453,13 @@ impl ActionMesh {
             RenderGeometryEable(false),
             RenderWorldMatrix(Matrix::identity()),
             RenderWorldMatrixInv(Matrix::identity()),
-            RenderMatrixDirty(true),
+            // RenderMatrixDirty(true),
             MeshCastShadow(false),
             MeshReceiveShadow(false),
-            PassDirtyBindEffectValue(0),
-            FlagPassDirtyBindEffectValue,
-            PassDirtyBindEffectTextures(0),
-            FlagPassDirtyBindEffectTextures,
+            // PassDirtyBindEffectValue(0),
+            // FlagPassDirtyBindEffectValue,
+            // PassDirtyBindEffectTextures(0),
+            // FlagPassDirtyBindEffectTextures,
             LayerMask::default(),
             AbstructMeshCullingFlag(false),
         ),(
@@ -487,7 +505,7 @@ impl ActionInstanceMesh {
             AbstructMeshCullingFlag(false),
             InstanceTransparentIndex(0),
             InstanceMesh(source),
-            RenderMatrixDirty(true),
+            // RenderMatrixDirty(true),
             RenderWorldMatrix(Matrix::identity()),
             RenderWorldMatrixInv(Matrix::identity()),
             ModelVelocity::default(),

@@ -4,6 +4,8 @@ use std::default;
 
 use pi_scene_shell::prelude::*;
 
+use crate::prelude::InstanceTransparentIndex;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Component)]
 pub enum ERenderSortParam {
     Opaque(OpaqueSortParam),
@@ -97,10 +99,15 @@ pub type ActionListRenderQueue = ActionList<OpsRenderQueue>;
 pub fn sys_act_render_queue(
     mut cmds: ResMut<ActionListRenderQueue>,
     mut items: Query<&mut TransparentSortParam>,
+    mut instances: Query<&mut InstanceTransparentIndex>,
 ) {
     cmds.drain().drain(..).for_each(|OpsRenderQueue(entity, val, count)| {
         if let Ok(mut item) = items.get_mut(entity) {
             *item = val;
+            return;
+        }
+        if let Ok(mut item) = instances.get_mut(entity) {
+            *item = InstanceTransparentIndex(val.index);
             return;
         }
 

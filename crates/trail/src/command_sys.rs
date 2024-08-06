@@ -18,7 +18,8 @@ pub fn sys_create_trail_mesh(
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
     mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
-    // mut altermodel: Alter<(), (), BundleModel, ()>,
+    mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
+    mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     // mut altergeo: Alter<(), (), BundleGeometry, ()>,
     // mut altertrail: Alter<(), (), BundleTrail, ()>,
 ) {
@@ -32,7 +33,7 @@ pub fn sys_create_trail_mesh(
             // matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 
             // meshcreate.push(OpsMeshCreation::ops(id_scene, id_mesh, String::from("")));
-            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel);
+            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert);
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));

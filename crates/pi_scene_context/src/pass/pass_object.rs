@@ -58,20 +58,20 @@ pub trait TPassData<T: Clone> {
 #[derive(Component, Default)]
 pub struct PassReset;
 
-#[derive(Component, Default)]
-pub struct PassDirtyBindEffectValue(pub PassTagValue);
+// #[derive(Component, Default)]
+// pub struct PassDirtyBindEffectValue(pub PassTagValue);
 
-#[derive(Component, Default)]
-pub struct PassDirtyBindEffectTextures(pub PassTagValue);
+// #[derive(Component, Default)]
+// pub struct PassDirtyBindEffectTextures(pub PassTagValue);
 
-#[derive(Component, Default)]
-pub struct FlagPassDirtyBindEffectValue;
+// #[derive(Component, Default)]
+// pub struct FlagPassDirtyBindEffectValue;
 
-#[derive(Component, Default)]
-pub struct FlagPassDirtyBindEffectTextures;
+// #[derive(Component, Default)]
+// pub struct FlagPassDirtyBindEffectTextures;
 
-#[derive(Component, Default)]
-pub struct PassTransparent(pub bool);
+// #[derive(Component, Default)]
+// pub struct PassTransparent(pub bool);
 
 #[derive(Component, Default)]
 pub struct PassModelID(pub Entity);
