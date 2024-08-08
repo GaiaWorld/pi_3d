@@ -92,6 +92,7 @@ impl crate::Plugin for PluginMesh {
                 ).in_set(StageModel::AbstructMeshCommand),
                 sys_enable_about_instance.in_set(StageModel::InstanceEffectMesh),
                 (
+                    sys_calc_render_matrix_pre,
                     sys_calc_render_matrix,
                     // sys_render_matrix_with_posematrix,
                     sys_calc_render_matrix_instance,
@@ -130,7 +131,8 @@ impl crate::Plugin for PluginMesh {
         .add_systems(Update, sys_act_target_animation_attribute                                                      .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_act_instance_attribute          .after(sys_act_target_animation_attribute)  .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_enable_about_instance               .in_set(StageModel::InstanceEffectMesh))
-        .add_systems(Update, sys_calc_render_matrix                                                      .in_set(StageModel::RenderMatrix))
+        .add_systems(Update, sys_calc_render_matrix_pre.in_set(StageModel::RenderMatrix))
+        .add_systems(Update, sys_calc_render_matrix.after(sys_calc_render_matrix_pre)               .in_set(StageModel::RenderMatrix))
         .add_systems(Update, sys_calc_render_matrix_for_instance     .after(sys_calc_render_matrix)  .in_set(StageModel::RenderMatrix))
         .add_systems(Update, sys_calc_render_matrix_instance   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))
         // .add_systems(Update, sys_render_matrix_with_posematrix   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))

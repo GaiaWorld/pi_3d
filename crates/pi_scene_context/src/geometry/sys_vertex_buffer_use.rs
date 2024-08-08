@@ -6,9 +6,7 @@ use pi_scene_shell::prelude::*;
 use crate::geometry::geometry::RenderVerticesFrom;
 
 use super::{
-    vertex_buffer_useinfo::*,
-    base::GeometryDesc,
-    geometry::*
+    base::GeometryDesc, geometry::*, vertex_buffer_useinfo::*, FlagGeometryDirty
 };
 
 #[inline(never)]
@@ -47,89 +45,98 @@ fn _sys_vertex_buffer_slots_loaded(
 }
 
 pub fn sys_vertex_buffer_slots_loaded(
+    addeds: ComponentAdded<FlagGeometryDirty>,
+    changes: ComponentChanged<FlagGeometryDirty>,
     items: Query<
         (
             Entity, 
             (&MeshID, &GeometryDesc, &IndicesBufferDescComp, &AssetResBufferIndicesComp, &AssetKeyBufferIndices)
             , &AssetDescVBSlots, &AssetResVBSlots, &LoadedKeyVBSlots
-        ),
-        Or<(
-            Changed<AssetDescVBSlots>, Changed<AssetResVBSlots>,
-            Changed<AssetResBufferIndicesComp>, Changed<IndicesBufferDescComp>
-        )>
+        )
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut meshes: Query<&mut RenderGeometryEable>,
+    devicelimits: Res<DeviceLimits3D>,
 ) {
-    items.iter().for_each(|(
-        idgeo, 
-        (idmesh, desc, indicesdesc, indices, indiceskey)
-        , desclist, datalist, keyslist
-    )| {
-        if let (Ok(mut geometry), Ok(mut rendergeo)) = (geometries.get_mut(idgeo), meshes.get_mut(idmesh.0)) {
-
-            let mut values = vec![];
-            let mut instance_memory = None;
-            let mut isready = true;
-
-            for slot in 0..VB_SLOTS_COUNT {
-                match (&desclist[slot], &keyslist[slot], &datalist[slot]) {
-                    (Some(desc), Some(key), Some(data)) => {
-                        match &data.0 {
-                            EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
-                            EVerticesBufferTmp::Buffer(buf) => {
-                                let buff = RenderVertices {
-                                    slot: slot as u32,
-                                    buffer: buf.clone(),
-                                    buffer_range: desc.range(),
-                                    size_per_value: desc.0.stride()
-                                };
-                                values.push((desc.0.step_mode(), buff));
-                            },
+    let changes = changes.iter().chain(addeds.iter());
+    changes.for_each(|entity| {
+        if let Ok((
+            idgeo, 
+            (idmesh, desc, indicesdesc, indices, indiceskey)
+            , desclist, datalist, keyslist
+        )) = items.get(*entity) {
+            if let (Ok(mut geometry), Ok(mut rendergeo)) = (geometries.get_mut(idgeo), meshes.get_mut(idmesh.0)) {
+    
+                let mut values = vec![];
+                let mut instance_memory = None;
+                let mut isready = true;
+    
+                let max: usize = devicelimits.max_vertex_buffers as usize;
+                for slot in 0..max {
+                    match (desclist.get(slot), datalist.get(slot)) {
+                        (Some(Some(desc)), Some(Some(data))) => {
+                            // log::warn!("Ready Slot {:?}", slot);
+                            match &data.0 {
+                                EVerticesBufferTmp::Memory(mem) => { instance_memory = Some(mem.clone()); },
+                                EVerticesBufferTmp::Buffer(buf) => {
+                                    let buff = RenderVertices {
+                                        slot: slot as u32,
+                                        buffer: buf.clone(),
+                                        buffer_range: desc.range(),
+                                        size_per_value: desc.0.stride()
+                                    };
+                                    values.push((desc.0.step_mode(), buff));
+                                },
+                            }
+                        },
+                        (None, None) => {
+                            break;
+                        },
+                        _ => {
+                            // log::error!("Not Ready Slot {:?}", slot);
+                            isready = false;
+                            break;
                         }
-                    },
-                    (None, None, None) => {
-                        break;
-                    },
-                    _ => {
-                        isready = false;
-                        break;
                     }
                 }
-            }
-
-            if isready {
-                match (&indicesdesc.0, &indiceskey.0, &indices.0) {
-                    (Some(desc), Some(key), Some(data)) => {
-                        if &desc.buffer == key {
+    
+                if isready {
+                    match (&indicesdesc.0, &indiceskey.0, &indices.0) {
+                        (Some(desc), Some(key), Some(data)) => {
+                            if &desc.buffer == key {
+                                geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory));
+                                *rendergeo = RenderGeometryEable(true);
+                            } else {
+                                *rendergeo = RenderGeometryEable(false);
+                            }
+                        },
+                        (None, None, None) => {
                             geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory));
                             *rendergeo = RenderGeometryEable(true);
-                        } else {
-                            *rendergeo = RenderGeometryEable(false);
+                        },
+                        _ => {
+                            isready = false;
                         }
-                    },
-                    (None, None, None) => {
-                        geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory));
-                        *rendergeo = RenderGeometryEable(true);
-                    },
-                    _ => {
-                        isready = false;
                     }
                 }
+    
             }
-
+    
         }
-
     });
 }
 
 pub fn sys_geometry_enable(
-    geometries: Query<(&RenderGeometryComp, &MeshID), Changed<RenderGeometryComp>>,
+    addeds: ComponentAdded<RenderGeometryComp>,
+    changes: ComponentChanged<RenderGeometryComp>,
+    geometries: Query<(&RenderGeometryComp, &MeshID)>,
     mut meshes: Query<&mut RenderGeometryEable>,
 ) {
-    geometries.iter().for_each(|(geometrycomp, idmesh)| {
-        if let Ok(mut state) = meshes.get_mut(idmesh.0) {
-            *state = RenderGeometryEable(geometrycomp.is_some());
+    addeds.iter().chain(changes.iter()).for_each(|entity| {
+        if let Ok((geometrycomp, idmesh)) = geometries.get(*entity) {
+            if let Ok(mut state) = meshes.get_mut(idmesh.0) {
+                *state = RenderGeometryEable(geometrycomp.is_some());
+            }
         }
     });
 }

@@ -44,19 +44,19 @@ pub type StateTransformQuery = QueryState<(&'static SceneID, &'static Enable, &'
 pub type StateTransformQuery = QueryState<(&'static SceneID, &'static Enable, &'static GlobalEnable), ()>;
 
 pub fn sys_state_transform(
-    items: Query<(&SceneID, &Enable, &GlobalEnable)>,
-    mut state: ResMut<StateTransform>
+    // items: Query<(&SceneID, &Enable, &GlobalEnable)>,
+    // mut state: ResMut<StateTransform>
 ) {
-    state.count = 0;
-    state.enable = 0;
-    state.global_enable = 0;
-    if let Some(scene) = state.scene {
-        items.iter().for_each(|(idscene, enable, globalenable)| {
-            if scene == idscene.0 {
-                state.count += 1;
-                if enable.bool() { state.enable += 1; }
-                if globalenable.0 { state.global_enable += 1; }
-            }
-        });
-    }
+    // state.count = 0;
+    // state.enable = 0;
+    // state.global_enable = 0;
+    // if let Some(scene) = state.scene {
+    //     items.iter().for_each(|(idscene, enable, globalenable)| {
+    //         if scene == idscene.0 {
+    //             state.count += 1;
+    //             if enable.bool() { state.enable += 1; }
+    //             if globalenable.0 { state.global_enable += 1; }
+    //         }
+    //     });
+    // }
 }

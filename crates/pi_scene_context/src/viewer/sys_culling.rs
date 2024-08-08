@@ -127,23 +127,25 @@ pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T
     mut viewers: Query<
         (&ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList), (With<T>, With<T2>)
     >,
+    addeds0: ComponentAdded<FlagAbstructMeshForView>,
+    changes0: ComponentChanged<FlagAbstructMeshForView>,
     items: Query<
-        (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh),
-        Or<(Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
+        (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &DisposeReady, &AbstructMesh),
     >,
 ) {
     // let time1 = pi_time::Instant::now();
     // log::debug!("CameraModelListByModel :");
-
-    items.iter().for_each(|(id_obj, iscene, ilayer, instances, disposestate, _)| {
-        // log::error!("CameraModelListByModel : 0");
-        viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, mut flag_list_model)| {
-            // log::error!("CameraModelListByModel : 1");
-            _sys_update_viewer_model_list_by_model(
-                id_obj, iscene, ilayer, instances, disposestate,
-                vieweractive, scene, layer, &mut list_model, &mut flag_list_model
-            );
-        });
+    addeds0.iter().chain(changes0.iter()).for_each(|entity| {
+        if let Ok((id_obj, iscene, ilayer, instances, disposestate, _)) = items.get(*entity) {
+            // log::error!("CameraModelListByModel : 0");
+            viewers.iter_mut().for_each(|(vieweractive, scene, layer, mut list_model, mut flag_list_model)| {
+                // log::error!("CameraModelListByModel : 1");
+                _sys_update_viewer_model_list_by_model(
+                    id_obj, iscene, ilayer, instances, disposestate,
+                    vieweractive, scene, layer, &mut list_model, &mut flag_list_model
+                );
+            });
+        }
     });
 
     // log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
@@ -151,27 +153,25 @@ pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T
 
 #[inline(never)]
 fn _sys_update_viewer_model_list_by_model(
-    id_obj: Entity, iscene: &SceneID, ilayer: Option<&LayerMask>, instances: Option<&InstanceSourceRefs>, disposestate: &DisposeReady,
+    id_obj: Entity, iscene: &SceneID, ilayer: &LayerMask, instances: &InstanceSourceRefs, disposestate: &DisposeReady,
     vieweractive: &ViewerActive, scene: &SceneID, layer: &LayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
 ) {
     if vieweractive.0 {
         if iscene == scene && disposestate.0 == false {
             // log::error!("CameraModelListByModel : 2");
-            if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
-                // log::error!("CameraModelListByModel : 3 {:?}", (layer.0, ilayer.0) );
-                if layer.include(ilayer.0) {
-                    // log::error!("CameraModelListByModel : 4 {:?}", (list_model.0.len()));
-                    list_model.0.insert(id_obj);
-                    *flag_list_model = FlagModelList::default();
-                    instances.iter().for_each(|instance| {
-                        list_model.0.insert(*instance);
-                    });
-                } else {
-                    list_model.0.remove(&id_obj);
-                    instances.iter().for_each(|instance| {
-                        list_model.0.remove(instance);
-                    });
-                }
+            // log::error!("CameraModelListByModel : 3 {:?}", (layer.0, ilayer.0) );
+            if layer.include(ilayer.0) {
+                // log::error!("CameraModelListByModel : 4 {:?}", (list_model.0.len()));
+                list_model.0.insert(id_obj);
+                *flag_list_model = FlagModelList::default();
+                instances.iter().for_each(|instance| {
+                    list_model.0.insert(*instance);
+                });
+            } else {
+                list_model.0.remove(&id_obj);
+                instances.iter().for_each(|instance| {
+                    list_model.0.remove(instance);
+                });
             }
         } else {
             list_model.0.remove(&id_obj);
@@ -194,7 +194,7 @@ pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProj
     >,
     mut performance: ResMut<R>
 ) {
-    let time1 = pi_time::Instant::now();
+    // let time1 = pi_time::Instant::now();
     // log::warn!("SysModelListAfterCullinUpdateByCamera: ");
     viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
         // log::warn!("SysViewerCulling: {:?}", vieweractive);
@@ -229,7 +229,7 @@ fn _sys_tick_viewer_culling(
             );
         } else {
             if list_model.0.len() > 2 {
-                log::error!("No BoundingPool. {:?}", list_model.0.len());
+                // log::error!("No BoundingPool. {:?}", list_model.0.len());
             }
             // log::warn!("ModelList: {:?}", (list_model.0.len(), forceincludes.0.len()));
             list_model.0.iter().for_each(|objid| {
@@ -278,7 +278,7 @@ fn _sys_tick_viewer_culling(
         });
     } else {
         if list_model.0.len() > 2 {
-            log::error!("Not Active. {:?}", list_model.0.len());
+            // log::error!("Not Active. {:?}", list_model.0.len());
         }
     }
 }

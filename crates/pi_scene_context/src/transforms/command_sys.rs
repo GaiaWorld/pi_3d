@@ -11,21 +11,21 @@ use super::transform_node::*;
 
 pub fn sys_create_transform_node(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
-    mut commands: Commands,
-    // mut alter: Alter<(), (), (TransformNode, TransformNodeBundle), ()>,
+    // mut commands: Commands,
+    mut alter: Alter<(), (), (TransformNode, TransformNodeBundle), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity)| {
-        let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
-            cmd
-        } else {
-            return;
-        };
+        // let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
+        //     cmd
+        // } else {
+        //     return;
+        // };
         let bundle = (
             TransformNode,
             ActionTransformNode::init(scene),
         );
-        transformnode.insert(bundle);
-        // alter.alter(entity, bundle);
+        // transformnode.insert(bundle);
+        alter.alter(entity, bundle);
     });
 }
 
@@ -34,9 +34,13 @@ pub fn sys_act_transform_parent(
     // mut parents: Query<&mut NodeChilds>,
     // mut childrens: Query<(&SceneID, &mut NodeParent)>,
     nodes: Query<&DisposeReady, (With<Layer>, With<Down>, With<Up>)>,
+    mut flags: Query<&mut TransformNodeDirty>,
     mut tree: EntityTreeMut,
 ) {
     cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val)| {
+        if let Ok(mut flag) = flags.get_mut(entity) {
+            *flag = TransformNodeDirty(true);
+        }
         if let (Some(_down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
             // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
             // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
@@ -106,7 +110,7 @@ pub type BundleTreeNode = (Down, Up, Layer, Enable, RecordEnable, GlobalEnable);
 pub type BundleTransform = (
     TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
     RecordLocalPosition, RecordLocalScaling, RecordLocalRotationQuaternion, RecordLocalEulerAngles,
-    LocalRotation, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp, CullingFlag
+    LocalRotation, FlagLocalMatrix, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp,
 );
 
 pub type TransformNodeBundle = (
@@ -126,13 +130,9 @@ impl ActionTransformNode {
             ActionTransformNode::as_transform_node(),
         )
     }
-    fn as_transform_node() -> (
-        TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
-        RecordLocalPosition, RecordLocalScaling, RecordLocalRotationQuaternion, RecordLocalEulerAngles,
-        LocalRotation, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp, CullingFlag
-    ) {
+    fn as_transform_node() -> BundleTransform {
         (
-            TransformNodeDirty,
+            TransformNodeDirty(true),
             LocalPosition::default(),
             LocalScaling::default(),
             LocalRotationQuaternion::default(),
@@ -142,11 +142,11 @@ impl ActionTransformNode {
             RecordLocalRotationQuaternion::default(),
             RecordLocalEulerAngles::default(),
             LocalRotation(Rotation3::identity()),
+            FlagLocalMatrix,
             LocalMatrix::new(Matrix::identity()),
             GlobalMatrix::default(),
             AbsoluteTransform::default(),
             FlagAnimationStartResetComp,
-            CullingFlag(true),
         )
     }
 

@@ -97,6 +97,9 @@ pub use crate::static_string::*;
 pub use crate::ecs::*;
 pub use crate::render_state::*;
 
+#[derive(Resource, Deref)]
+pub struct DeviceLimits3D(pub(crate) wgpu::Limits);
+
 #[derive(Resource)]
 pub struct EngineInstant(pub pi_time::Instant);
 

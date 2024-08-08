@@ -9,46 +9,6 @@ use crate::{
 
 use super::base::*;
 
-pub fn sys_set1_modify(
-    // mut items: Query<(&PassModelID, &PassBindEffectValue, &PassEffectReady, &mut PassBindGroupModel), Or<(Changed<PassModelID>, Changed<PassEffectReady>, Changed<PassBindEffectValue>)>>,
-    mut items: Query<(&mut PassBindGroupsDirty), Changed<PassModelID>>,
-    // models: Query<
-    //     (
-    //         Option<&BindModel>, &BindSkinValue, &SkeletonID, &ModelLightingIndexs
-    //     ),
-    // >,
-    // device: Res<PiRenderDevice>,
-    // asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
-    // asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-) {
-    let time1 = pi_time::Instant::now();
-
-    items.iter_mut().for_each(|mut dirty| {
-        *dirty = PassBindGroupsDirty;
-    });
-
-    // items.iter_mut().for_each(|(idmodel, bind_effect_value, effect_ready, mut set0)| {
-    //     match effect_ready.val() {
-    //         Some((_key_meta, meta)) => {
-
-    //             let result = _set1_modify(
-    //                 idmodel.0, &bind_effect_value.0, _key_meta, meta,
-    //                 &models, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup
-    //             );
-
-    //             *set0 = PassBindGroupModel(result);
-    //         },
-    //         None => {
-    //             // log::error!("create_bind_group 0: Error");
-    //             *set0 = PassBindGroupModel(None);
-    //         }
-    //     }
-    // });
-
-    // log::trace!("SysSet0ModifyFromScene: {:?}", pi_time::Instant::now() - time1);
-}
-
-
 pub fn _set1_modify(
     idmodel: Entity,
     bind_effect_value: &Option<Arc<ShaderBindEffectValue>>,

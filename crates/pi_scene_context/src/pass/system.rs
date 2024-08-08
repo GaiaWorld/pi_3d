@@ -8,15 +8,22 @@ pub fn sys_modify_pass_effect_by_pass(
     // materials: Query<
     // (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp),
     // >,
-    mut passes: Query<(Entity, &mut PassBindGroupsDirty), Changed<PassMaterialID>>,
+    addeds: ComponentAdded<PassMaterialID>,
+    changes: ComponentChanged<PassMaterialID>,
+    mut passes: Query<(Entity, &mut PassBindGroupsDirty)>,
     // mut passes: Query<(Entity, &mut PassEffectReady, &mut PassBindEffectValue, &mut PassBindGroupTextureSamplers, &PassMaterialID), Changed<PassMaterialID>>,
     // device: Res<PiRenderDevice>,
     // asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
     // asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
 ) {
-    passes.iter_mut().for_each(|(idpass, mut dirty)| {
-        *dirty = PassBindGroupsDirty;
+    addeds.iter().chain(changes.iter()).for_each(|entity| {
+        if let Ok((idpass, mut dirty)) = passes.get_mut(*entity) {
+            *dirty = PassBindGroupsDirty;
+        }
     });
+    // passes.iter_mut().for_each(|(idpass, mut dirty)| {
+    //     *dirty = PassBindGroupsDirty;
+    // });
     // passes.iter_mut().for_each(|(idpass, mut passready, mut passbind, mut set2, idmat)| {
         
     //     // log::error!("Material {:?}", idmat.0);
@@ -51,24 +58,61 @@ pub fn sys_modify_pass_effect_by_pass(
 }
 
 pub fn sys_modify_pass_effect_by_material(
-    materials: Query<
-        (Entity, &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp),
-        Or<(Changed<PassTag>, Changed<DirtyMaterialRefs>, Changed<BindEffectReset>, Changed<EffectTextureSamplersComp>)>
-    >,
+    changes: ComponentChanged<PassTag>,
+    changes2: ComponentChanged<DirtyMaterialRefs>,
+    changes3: ComponentChanged<BindEffectReset>,
+    changes4: ComponentChanged<EffectTextureSamplersComp>,
+    materials: Query<&MaterialRefs>,
     mut passes: Query<(Entity, &mut PassBindGroupsDirty)>,
-    // mut passes: Query<(&mut PassEffectReady, &mut PassBindEffectValue, &mut PassBindGroupTextureSamplers)>,
-    // device: Res<PiRenderDevice>,
-    // asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
-    // asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
 ) {
-    materials.iter().for_each(|(idmat, effect_key, meta, bind, list, textures)| {
+    changes.iter().for_each(|entity| {
         // log::error!("sys_modify_pass_effect_by_material");
-        list.iter().for_each(|target| {
-            if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
-                *dirty = PassBindGroupsDirty;
-            }
-        });
+        if let Ok(list) = materials.get(*entity) {
+            list.iter().for_each(|target| {
+                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                    *dirty = PassBindGroupsDirty;
+                }
+            });
+        }
     });
+    changes2.iter().for_each(|entity| {
+        // log::error!("sys_modify_pass_effect_by_material");
+        if let Ok(list) = materials.get(*entity) {
+            list.iter().for_each(|target| {
+                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                    *dirty = PassBindGroupsDirty;
+                }
+            });
+        }
+    });
+    changes3.iter().for_each(|entity| {
+        // log::error!("sys_modify_pass_effect_by_material");
+        if let Ok(list) = materials.get(*entity) {
+            list.iter().for_each(|target| {
+                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                    *dirty = PassBindGroupsDirty;
+                }
+            });
+        }
+    });
+    changes4.iter().for_each(|entity| {
+        // log::error!("sys_modify_pass_effect_by_material");
+        if let Ok(list) = materials.get(*entity) {
+            list.iter().for_each(|target| {
+                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                    *dirty = PassBindGroupsDirty;
+                }
+            });
+        }
+    });
+    // materials.iter().for_each(|(idmat, effect_key, meta, bind, list, textures)| {
+    //     // log::error!("sys_modify_pass_effect_by_material");
+    //     list.iter().for_each(|target| {
+    //         if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+    //             *dirty = PassBindGroupsDirty;
+    //         }
+    //     });
+    // });
     // // log::error!("MaterialBind : ");
     // materials.iter().for_each(|(idmat, effect_key, meta, bind, list, textures)| {
     //     let (bindvalue, bindtextures, effect) = _pass_effect_ready(

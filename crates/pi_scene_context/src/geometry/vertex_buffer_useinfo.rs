@@ -2,8 +2,9 @@ use std::ops::Range;
 
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
+use smallvec::SmallVec;
 
-pub const VB_SLOTS_COUNT: usize = 8;
+pub const VB_SLOTS_COUNT: usize = 4;
 
 pub trait AsKeyVertexBuffer {
     fn create(desc: &VertexBufferDesc) -> Self;
@@ -58,19 +59,19 @@ pub type GeometryRefs = EntityRefInfo<DirtyGeometryRef>;
 pub struct MeshID(pub ObjectID);
 
 #[derive(Deref, DerefMut, Clone, Hash, Component, Default)]
-pub struct LoadedKeyVBSlots(pub [Option<KeyVertexBuffer>;VB_SLOTS_COUNT]);
+pub struct LoadedKeyVBSlots(pub SmallVec<[Option<KeyVertexBuffer>;VB_SLOTS_COUNT]>);
 #[derive(Deref, DerefMut, Component, Default)]
-pub struct AssetDescVBSlots(pub [Option<AssetDescVBSlot>;VB_SLOTS_COUNT]);
+pub struct AssetDescVBSlots(pub SmallVec<[Option<AssetDescVBSlot>;VB_SLOTS_COUNT]>);
 impl AssetDescVBSlots {
     pub fn key(&self, slot: usize) -> Option<KeyVertexBuffer> {
-        match self.get(slot).unwrap() {
-            Some(desc) => Some(desc.key()),
-            None => None,
+        match self.get(slot) {
+            Some(Some(desc)) => Some(desc.key()),
+            _ => None,
         }
     }
 }
 #[derive(Deref, DerefMut, Component, Default)]
-pub struct AssetResVBSlots(pub [Option<AssetResVBSlot>;VB_SLOTS_COUNT]);
+pub struct AssetResVBSlots(pub SmallVec<[Option<AssetResVBSlot>;VB_SLOTS_COUNT]>);
 
 #[derive(Deref, DerefMut, Clone, Hash, Component, Default)]
 pub struct AssetKeyVBSlot(pub KeyVertexBuffer);

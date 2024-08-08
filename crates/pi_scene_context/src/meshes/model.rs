@@ -246,6 +246,9 @@ impl Default for VertexRenderRange {
 //     }
 // }
 
+#[derive(Component, Default)]
+pub struct FlagRenderWorldMatrix;
+
 #[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrix(pub Matrix);
 impl RenderWorldMatrix {

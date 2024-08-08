@@ -71,7 +71,7 @@ impl Plugin for PluginCulling {
 #[cfg(not(feature = "use_bevy"))]
         app
         .configure_set(Update, StageCulling::Command.after(StageScene::_Create).before(StageMaterial::Command))
-        .configure_set(Update, StageCulling::CalcBounding.after(StageModel::RenderMatrix))
+        .configure_set(Update, StageCulling::CalcBounding.in_set(FrameDataPrepare).after(StageModel::RenderMatrix))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
@@ -79,7 +79,8 @@ impl Plugin for PluginCulling {
         .add_systems(Update, sys_act_collider                       .in_set(StageCulling::Command))
         .add_systems(Update, sys_act_mesh_bounding_culling_display   .in_set(StageCulling::Command))
         .add_systems(Update, sys_act_mesh_bounding                   .in_set(StageModel::AbstructMeshCommand))
-        .add_systems(Update, sys_update_collider                                                                            .in_set(StageCulling::CalcBounding))
+        .add_systems(Update, sys_update_collider_by_matrix                                                                  .in_set(StageCulling::CalcBounding))
+        .add_systems(Update, sys_update_collider.after(sys_update_collider_by_matrix)                               .in_set(StageCulling::CalcBounding))
         .add_systems(Update, sys_update_culling_by_worldmatrix                                                              .in_set(StageCulling::CalcBounding))
         .add_systems(Update, sys_update_culling_by_cullinginfo           .after(sys_update_culling_by_worldmatrix)  .in_set(StageCulling::CalcBounding))
         .add_systems(Update, sys_abstructmesh_culling_flag_reset         .after(sys_update_culling_by_cullinginfo)  .in_set(StageCulling::CalcBounding))

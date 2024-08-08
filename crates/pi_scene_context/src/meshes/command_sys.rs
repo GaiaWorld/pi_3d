@@ -8,10 +8,7 @@ use crate::{
 };
 
 use super::{
-    command::*,
-    model::*,
-    abstract_mesh::AbstructMesh,
-    lighting::*,
+    abstract_mesh::AbstructMesh, command::*, lighting::*, model::*, prelude::FlagAbstructMeshForView
 };
 
 
@@ -29,11 +26,13 @@ pub type BundleModel = (
 pub type BundleMesh = (
     (
         AbstructMesh,
+        FlagAbstructMeshForView,
         Mesh,
         GeometryID,
         RenderGeometryEable,
         RenderWorldMatrix,
         RenderWorldMatrixInv,
+        FlagRenderWorldMatrix,
         // RenderMatrixDirty,
         MeshCastShadow,
         MeshReceiveShadow,
@@ -55,6 +54,7 @@ pub type BundleMesh = (
         VertexRenderRange,
         GeometryBounding,
         GeometryCullingMode,
+        ItemCullingDirty,
         InstancedMeshTransparentSortCollection,
         SkeletonID,
     )
@@ -68,16 +68,19 @@ pub type BundleInstanceSource = (
 
 pub type BundleInstance = (
     AbstructMesh,
+    FlagAbstructMeshForView,
     AbstructMeshCullingFlag,
     InstanceTransparentIndex,
     InstanceMesh,
     // RenderMatrixDirty,
     RenderWorldMatrix,
     RenderWorldMatrixInv,
+    FlagRenderWorldMatrix,
     ModelVelocity,
     ScalingMode,
     GeometryBounding,
     GeometryCullingMode,
+    ItemCullingDirty,
 );
 
 pub type BundleMeshLighting = (
@@ -90,24 +93,22 @@ pub type BundleMeshLighting = (
 
 pub fn sys_create_mesh(
     mut cmds: ResMut<ActionListMeshCreate>,
-    mut commands: Commands,
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
-    mut instancecmds: ResMut<ActionListInstanceMeshCreate>,
     mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     // mut insert: Insert<PassObjBundle>,
 ) {
-    let time1 = pi_time::Instant::now();
+    // let time1 = pi_time::Instant::now();
     let mut count = 0;
     cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
         // if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
-        if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert) == false {
+        if ActionMesh::init(entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
         count += 1;
@@ -115,34 +116,32 @@ pub fn sys_create_mesh(
     });
 
     if count > 0 {
-        log::error!("Creat Mesh Count {:?}, Time: {:?}", count, pi_time::Instant::now() - time1);
+        // log::error!("Creat Mesh Count {:?}, Time: {:?}", count, pi_time::Instant::now() - time1);
     }
 }
 
 pub fn sys_create_instanced_mesh(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
-    mut commands: Commands,
-    mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &ModelInstanceAttributes)>,
-    // mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, InstanceBundle)), ()>,
+    mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &ModelInstanceAttributes, &mut FlagAbstructMeshForView)>,
+    mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, count)| {
-        if let Ok((id_scene, mut instancelist, mut flag, instanceattrs)) = meshes.get_mut(source) {
+        if let Ok((id_scene, mut instancelist, mut flag, instanceattrs, mut flagview)) = meshes.get_mut(source) {
 
             let instanceattrs = instanceattrs.clone();
 
-            if let Some(mut commands) = commands.get_entity(instance) {
-                let bundle = (
-                    instanceattrs,
-                    TargetAnimatorableIsRunning,
-                    InstanceAttributeAnimated::default(),
-                    ActionInstanceMesh::init(source, id_scene.0),
-                );
-                commands.insert(bundle);
-                // alter.alter(instance, bundle);
-    
-                instancelist.insert(instance);
-                *flag = DirtyInstanceSourceRefs;
-            }
+            let bundle = (
+                instanceattrs,
+                TargetAnimatorableIsRunning,
+                InstanceAttributeAnimated::default(),
+                ActionInstanceMesh::init(source, id_scene.0),
+            );
+            // commands.insert(bundle);
+            alter.alter(instance, bundle);
+
+            instancelist.insert(instance);
+            *flag = DirtyInstanceSourceRefs;
+            *flagview = FlagAbstructMeshForView;
             // 
         } else {
             if count < 2 {
@@ -176,8 +175,14 @@ pub fn sys_act_target_animation_attribute(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut targetanimations: ResMut<ActionListAddTargetAnime>,
+    instances: Query<&InstanceMesh>,
+    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
     cmds.drain().drain(..).for_each(|OpsTargetAnimationAttribute(item, attr, group, curve)| {
+        let mut mesh = item;
+        if let Ok(instance) = instances.get(item) {
+            mesh = instance.0;
+        }
         if let Ok((mut attributes, mut animated)) = items.get_mut(item) {
             if let Some(offset) = attributes.animator(&attr, item, &mut command, &mut animatorablefloat, &mut animatorablevec2s, &mut animatorablevec3s, &mut animatorablevec4s, &mut animatorableuints, &mut animatorablesints) {
                 match offset.entity() {
@@ -212,6 +217,10 @@ pub fn sys_act_target_animation_attribute(
                     },
                     None => { },
                 }
+                
+            }
+            if let Ok(mut flag) = meshes.get_mut(mesh) {
+                *flag = DirtyInstanceSourceRefs;
             }
         }
     });
@@ -227,7 +236,8 @@ pub fn sys_act_mesh_modify(
     mut velocity_items: Query<&mut ModelVelocity>,
     mut indices_items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
     mut vertexrange_items: Query<&mut VertexRenderRange>,
-    mut culling_items: Query<&mut GeometryCullingMode>,
+    mut culling_items: Query<(&mut GeometryCullingMode, &mut ItemCullingDirty)>,
+    mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
     skinoff_items: Query<&BindModel>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshStateModify(entity, cmd)| {
@@ -235,9 +245,15 @@ pub fn sys_act_mesh_modify(
             EMeshStateModify::Alignment(val) => if let Ok(mut item) = align_items.get_mut(entity) {
                 // log::warn!("RenderAlignment: {:?}", (val));
                 *item = RenderAlignment(val);
+                if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {
+                    *flag = FlagRenderWorldMatrix;
+                }
             },
             EMeshStateModify::ScalingMode(val) => if let Ok(mut item) = scalingode_items.get_mut(entity) {
                 *item = ScalingMode(val);
+                if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {
+                    *flag = FlagRenderWorldMatrix;
+                }
             },
             EMeshStateModify::CastShadow(val) => if let Ok(mut castshadow) = castshadows.get_mut(entity) {
                 if val != castshadow.0 {
@@ -249,9 +265,10 @@ pub fn sys_act_mesh_modify(
                     *receiveshadow = MeshReceiveShadow(val);
                 }
             },
-            EMeshStateModify::BoundingCullingMode(val) => if let Ok(mut cullingmode) = culling_items.get_mut(entity) {
+            EMeshStateModify::BoundingCullingMode(val) => if let Ok((mut cullingmode, mut flag)) = culling_items.get_mut(entity) {
                 if val != cullingmode.0 {
                     cullingmode.0 = val;
+                    *flag = ItemCullingDirty;
                 } else {
                     // log::error!("BoundingCullingMode Same. {:?}", entity);
                 }
@@ -275,6 +292,9 @@ pub fn sys_act_mesh_modify(
             },
             EMeshValueStateModify::Velocity(x, y, z) => if let Ok(mut item) = velocity_items.get_mut(entity) {
                 *item = ModelVelocity(Vector3::new(x, y, z));
+                if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {
+                    *flag = FlagRenderWorldMatrix;
+                }
             },
         }
     });
@@ -282,7 +302,7 @@ pub fn sys_act_mesh_modify(
 
 pub fn sys_act_instance_attribute(
     mut cmdsfloat: ResMut<ActionListInstanceAttr>,
-    mut instances: Query<&mut ModelInstanceAttributes>,
+    mut instances: Query<(&InstanceMesh, &mut ModelInstanceAttributes)>,
 
     mut animator_vec4: ResMut<ActionListAnimatorableVec4>,
     mut animator_vec3: ResMut<ActionListAnimatorableVec3>,
@@ -295,10 +315,11 @@ pub fn sys_act_instance_attribute(
     mut pointlight_items: Query<&mut ModelForcePointLightings>,
     mut spotlight_items: Query<&mut ModelForceSpotLightings>,
     mut hemilight_items: Query<&mut ModelForceHemiLightings>,
+    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
 
     cmdsfloat.drain().drain(..).for_each(|OpsInstanceAttr(instance, val, attr)| {
-        if let Ok(mut attributes) = instances.get_mut(instance) {
+        if let Ok((inssource, mut attributes)) = instances.get_mut(instance) {
             if let Some(offset) = attributes.offset(&attr) {
                 if let Some(target) = offset.entity() {
                     match val {
@@ -320,6 +341,10 @@ pub fn sys_act_instance_attribute(
                         EInstanceAttr::Vec2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
                     }
                     ;
+                }
+                
+                if let Ok(mut flag) = meshes.get_mut(inssource.0) {
+                    *flag = DirtyInstanceSourceRefs;
                 }
             }
         }
@@ -356,7 +381,6 @@ pub fn sys_act_instance_attribute(
 pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
-        commands: &mut Commands,
         entity: Entity,
         scene: Entity,
         allocator: &mut ResBindBufferAllocator,
@@ -378,9 +402,7 @@ impl ActionMesh {
         // state.instances.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::ModelMaterialSkin));
         
         let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
-        if commands.get_entity(entity).is_none() {
-            return false;
-        };
+
         // let passids = PassIDs([entity, entity, entity, entity, entity, entity, entity, entity]);
         let id01 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01));
         let id02 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02));
@@ -400,8 +422,8 @@ impl ActionMesh {
         // let id08 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08)).id();
         let passids = PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]);
 
-        let mut entitycmd = commands.get_entity(entity).unwrap();
-        let instanceattr = meshinstanceattributes.bytes().len() > 0;
+        // let mut entitycmd = commands.get_entity(entity).unwrap();
+        // let instanceattr = meshinstanceattributes.bytes().len() > 0;
 
         let modellightidx = ModelLightingIndexs::new(allocator, lightlimit);
         let lightbundle = (
@@ -448,11 +470,14 @@ impl ActionMesh {
         let unclipdepth = false;
         ((
             AbstructMesh,
+            FlagAbstructMeshForView,
             Mesh,
             GeometryID(geometry),
             RenderGeometryEable(false),
             RenderWorldMatrix(Matrix::identity()),
             RenderWorldMatrixInv(Matrix::identity()),
+            FlagRenderWorldMatrix,
+
             // RenderMatrixDirty(true),
             MeshCastShadow(false),
             MeshReceiveShadow(false),
@@ -473,6 +498,7 @@ impl ActionMesh {
             VertexRenderRange::default(),
             GeometryBounding::default(),
             GeometryCullingMode::default(),
+            ItemCullingDirty::default(),
             InstancedMeshTransparentSortCollection(vec![]),
             SkeletonID(None),
         ))
@@ -502,16 +528,20 @@ impl ActionInstanceMesh {
     ) -> BundleInstance {
         (
             AbstructMesh,
+            FlagAbstructMeshForView,
             AbstructMeshCullingFlag(false),
             InstanceTransparentIndex(0),
             InstanceMesh(source),
             // RenderMatrixDirty(true),
             RenderWorldMatrix(Matrix::identity()),
             RenderWorldMatrixInv(Matrix::identity()),
+            FlagRenderWorldMatrix,
+
             ModelVelocity::default(),
             ScalingMode::default(),
             GeometryBounding::default(),
             GeometryCullingMode::default(),
+            ItemCullingDirty::default(),
         )
     }
 }

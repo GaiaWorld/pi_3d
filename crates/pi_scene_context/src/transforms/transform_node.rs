@@ -18,7 +18,7 @@ pub struct NodeBrothers {
 pub struct TransformNode;
 
 #[derive(Clone, Copy, Component, Default)]
-pub struct TransformNodeDirty;
+pub struct TransformNodeDirty(pub bool);
 
 #[derive(Clone, Component, Default)]
 pub struct LocalDirtyRotation;
@@ -289,6 +289,8 @@ impl TAnimatableComp for LocalScaling {
 
 }
 
+#[derive(Component, Default)]
+pub struct FlagLocalMatrix;
 
 #[derive(Clone, Component, Default)]
 pub struct LocalMatrix(pub Matrix);
@@ -373,48 +375,61 @@ impl GlobalMatrix {
     }
 }
 
-#[derive(Default, Component)]
+#[derive(Component)]
 pub struct AbsoluteTransform {
-    scaling: Option<Vector3>,
-    rotation: Option<Rotation3>,
-    quaternion: Option<Quaternion>,
+    scaling: Vector3,
+    rotation: Rotation3,
+    quaternion: Quaternion,
+    _needupdate: bool,
+}
+impl Default for AbsoluteTransform {
+    fn default() -> Self {
+        Self {
+            scaling: Vector3::new(1., 1., 1.),
+            rotation: Rotation3::identity(),
+            quaternion: Quaternion::identity(),
+            _needupdate: true,
+        }
+    }
 }
 impl AbsoluteTransform {
     pub fn reset_while_world_matrix_update(&mut self) {
-        self.scaling = None;
-        self.rotation = None;
-        self.quaternion = None;
+        // self.scaling = None;
+        // self.rotation = None;
+        // self.quaternion = None;
+        self._needupdate = true;
     }
     pub fn euler_angles(&mut self, gm: &Matrix) -> (Number, Number, Number) {
         self.decompose(gm);
-        self.rotation.unwrap().euler_angles()
+        self.rotation.euler_angles()
     }
     pub fn rotation_quaternion(&mut self, gm: &Matrix) -> &Quaternion {
         self.decompose(gm);
-        self.quaternion.as_ref().unwrap()
+        &self.quaternion
     }
     pub fn rotation(&mut self, gm: &Matrix) -> &Rotation3 {
         self.decompose(gm);
-        self.rotation.as_ref().unwrap()
+        &self.rotation
     }
     pub fn scaling(&mut self, gm: &Matrix) -> &Vector3 {
         self.decompose(gm);
-        self.scaling.as_ref().unwrap()
+        &self.scaling
     }
     pub fn iso(&mut self, gm: &Matrix) -> Isometry3 {
         self.decompose(gm);
         let temp = Vector3::from(gm.fixed_view::<3, 1>(0, 3));
-        Isometry3::from_parts(Translation3::new(temp[0], temp[1], temp[2]), self.quaternion.unwrap().clone())
+        Isometry3::from_parts(Translation3::new(temp[0], temp[1], temp[2]), self.quaternion.clone())
     }
     fn decompose(&mut self, gm: &Matrix) {
-        if self.rotation.is_none() {
+        if self._needupdate {
             let mut g_r = Rotation3::identity();
             let mut g_p = Vector3::new(0., 0., 0.);
             let mut g_s = Vector3::new(1., 1., 1.);
             CoordinateSytem3::matrix4_decompose_rotation(&gm, Some(&mut g_s), Some(&mut g_r), Some(&mut g_p));
-            self.quaternion = Some(Quaternion::from_rotation_matrix(&g_r));
-            self.rotation = Some(g_r);
-            self.scaling = Some(g_s);
+            self.quaternion = Quaternion::from_rotation_matrix(&g_r);
+            self.rotation = g_r;
+            self.scaling = g_s;
+            self._needupdate = true;
         }
     }
 }

@@ -46,7 +46,6 @@ pub type ActionListTransformNodeLocalRotationQuaternion = ActionList<OpsTransfor
 pub type BundleTransformNode = (
     Enable,
     TransformNodeDirty,
-    CullingFlag,
     GlobalEnable,
     LocalPosition,
     LocalScaling,

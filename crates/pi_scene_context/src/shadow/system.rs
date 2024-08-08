@@ -37,15 +37,15 @@ pub fn sys_shadow_param_update_while_mat_create(
     mut shadows: Query<
         &mut LinkedMaterialID
     >,
-    materails: Query<
-        Entity,
-        Changed<BindEffectReset>,
-    >,
+    addeds: ComponentChanged<BindEffectReset>,
+    changes: ComponentChanged<BindEffectReset>,
 ) {
-    shadows.iter_mut().for_each(|mut id_mat| {
-        if let Ok(idmaterial) = materails.get(id_mat.0) {
-            id_mat.0 = idmaterial;
-        }
+    addeds.iter().chain(changes.iter()).for_each(|entity| {
+        shadows.iter_mut().for_each(|mut id_mat| {
+            if id_mat.0 == *entity {
+                id_mat.0 = *entity;
+            }
+        });
     });
 }
 
@@ -278,7 +278,7 @@ pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Compo
         (With<T>, With<T2>)
     >,
     items: Query<
-        (Entity, &SceneID, Option<&LayerMask>, Option<&InstanceSourceRefs>, &DisposeReady, &AbstructMesh, &MeshCastShadow),
+        (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &DisposeReady, &AbstructMesh, &MeshCastShadow),
         Or<(Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>, Changed<MeshCastShadow>)>,
     >,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
@@ -302,12 +302,12 @@ pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Compo
 }
 #[inline(never)]
 fn _sys_update_shadow_viewer_model_list_by_model(
-    id_obj: Entity, iscene: &SceneID, ilayer: Option<&LayerMask>, instances: Option<&InstanceSourceRefs>, disposestate: &DisposeReady, castshadow: &MeshCastShadow,
+    id_obj: Entity, iscene: &SceneID, ilayer: &LayerMask, instances: &InstanceSourceRefs, disposestate: &DisposeReady, castshadow: &MeshCastShadow,
     vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
 ) {
     if vieweractive.0 {
         if iscene == scene && disposestate.0 == false {
-            if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
+            // if let (Some(ilayer), Some(instances)) = (ilayer, instances) {
                 if layer.include(ilayer.0) && castshadow.0 {
                     list_model.0.insert(id_obj);
                     *flag_list_model = FlagModelList::default();
@@ -320,7 +320,7 @@ fn _sys_update_shadow_viewer_model_list_by_model(
                         list_model.0.remove(entity);
                     });
                 }
-            }
+            // }
         } else {
             list_model.0.remove(&id_obj);
         }

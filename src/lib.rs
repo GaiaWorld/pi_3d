@@ -383,7 +383,9 @@ pub fn sys_info_resource(
     states: Res<StateResource>,
     psperformance: Res<ParticleSystemPerformance>,
     performance: Res<Performance>,
+    errors: Res<ErrorRecord>,
 ) {
+    log::warn!("Errors {:?}", errors.0.len());
     // log::warn!(
     //     "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
     //     states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture

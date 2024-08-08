@@ -84,27 +84,28 @@ pub type StateMeshQuery = QueryState<(&'static SceneID, &'static GlobalEnable, O
 
 pub fn sys_state_mesh(
     mut state: ResMut<StateMesh>,
-    meshes: Query<(&SceneID, &GlobalEnable, Option<&RenderGeometryEable>, Option<&InstanceMesh>), With<AbstructMesh>>,
+    // meshes: Query<(&SceneID, &GlobalEnable, &RenderGeometryEable), With<AbstructMesh>>,
+    // instances: Query<&InstanceMesh>,
 ) {
-    state.abstructmesh = 0;
-    state.meshes = 0;
-    state.instances = 0;
-    state.abstructenable_count = 0;
-    state.geometry_enable = 0;
-    if let Some(scene) = state.scene {
-        meshes.iter().for_each(|(idscene, enable, geoenable, instance)| {
-            if scene == idscene.0 {
-                state.abstructmesh += 1;
-                if enable.0 { state.abstructenable_count += 1; }
-                if instance.is_some() {
-                    state.instances += 1;
-                } else if let Some(geoenable) = geoenable {
-                    state.meshes += 1;
-                    if geoenable.0 {
-                        state.geometry_enable += 1;
-                    }
-                }
-            }
-        });
-    }
+    // state.abstructmesh = 0;
+    // state.meshes = 0;
+    // state.instances = 0;
+    // state.abstructenable_count = 0;
+    // state.geometry_enable = 0;
+    // if let Some(scene) = state.scene {
+    //     meshes.iter().for_each(|(idscene, enable, geoenable, instance)| {
+    //         if scene == idscene.0 {
+    //             state.abstructmesh += 1;
+    //             if enable.0 { state.abstructenable_count += 1; }
+    //             if instance.is_some() {
+    //                 state.instances += 1;
+    //             } else if let Some(geoenable) = geoenable {
+    //                 state.meshes += 1;
+    //                 if geoenable.0 {
+    //                     state.geometry_enable += 1;
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
 }

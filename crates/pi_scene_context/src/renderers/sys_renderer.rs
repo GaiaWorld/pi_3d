@@ -81,9 +81,10 @@ use super::{
     //     });
     // }
     pub fn sys_pass_bind_groups(
+        addeds: ComponentAdded<PassBindGroupsDirty>,
+        changes: ComponentChanged<PassBindGroupsDirty>,
         mut passes: Query<
-            (ObjectID, &PassModelID, &PassGeometryID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &PassTag),
-            Changed<PassBindGroupsDirty>
+            (ObjectID, &PassModelID, &PassGeometryID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader)
         >,
         renderers: Query<(&SceneID, &ViewerID)>,
         materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp )>,
@@ -96,117 +97,139 @@ use super::{
         asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
         mut errors: ResMut<ErrorRecord>,
     ) {
-        passes.iter_mut().for_each(|(_id_pass, idmodel, idgeo, idmat, idrenderer, mut bindgroups, passtag)| {
-            let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
-                (idscene.0, idviewer.0)
-            } else {
-                return;
-            };
-            // log::error!("Bindgroups {:?}", (idrenderer.0, passtag));
-            let idmodel = idmodel.0;
-            let scenes = &scenes;
-            let device = &device;
-            let asset_mgr_bindgroup_layout = &asset_mgr_bindgroup_layout;
-            let asset_mgr_bindgroup = &asset_mgr_bindgroup;
-            let targets = &targets;
-            let errors = &mut errors;
-            let viewers = &viewers;
-            let models = &models;
-
-            if let Ok((effect_key, meta, bind, _list, textures)) = materials.get(idmat.0) {
-                let (bindvalue, bindtextures, effect) = _pass_effect_ready(
-                    effect_key, textures, meta, bind
-                );
-                
-                // log::warn!("Bindgroups: _pass_effect_ready {:?}", (bindvalue.is_some(), bindtextures.is_some(), effect.is_some()));
-
-                if let Some((key_meta, meta)) = &effect {
-                    let set0 = _set0_modify(
-                        idmodel, idscene, idviewer, meta,
-                        viewers, scenes, device,
-                        asset_mgr_bindgroup_layout, asset_mgr_bindgroup, targets, errors
-                    );
-
-                    let bind_effect_value = match bindvalue {
-                        Some(bindvalue) => Some(bindvalue.bind()),
-                        None => None,
-                    };
-                    let set1 = _set1_modify(
-                        idmodel, &bind_effect_value, key_meta, meta,
-                        models, device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup
-                    );
-
-                    let set2 = if let Some(effect_texture_samplers) = bindtextures {
-                        _set2_modify(
-                            key_meta, meta, effect_texture_samplers,
-                            device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup
-                        )
-                    } else {
-                        None
-                    };
-
-                    let set0 = match (BindDefines::need_bind_group_set0(meta.binddefines), set0) {
-                        (true, val) => val,
-                        (false, _) => None,
-                        _ => {
-                            if bindgroups.val().is_some() { *bindgroups = PassBindGroups::new(None); }
-                            // log::warn!("Bindgroups: Set0 fail");
-                            return;
-                        }
-                    };
-                    let set1 = match (BindDefines::need_bind_group_set1(meta.binddefines), set1) {
-                        (true, val) => val,
-                        (false, _) => None,
-                        _ => {
-                            if bindgroups.val().is_some() { *bindgroups = PassBindGroups::new(None); }
-                            // log::warn!("Bindgroups: Set1 fail");
-                            return;
-                        }
-                    };
-                    let need_set2 = meta.textures.len() > 0;
-                    let need_set3 = BindDefines::need_bind_group_set3(meta.binddefines);
+        addeds.iter().chain(changes.iter()).for_each(|entity| {
+            if let Ok((_id_pass, idmodel, idgeo, idmat, idrenderer, mut bindgroups, mut flag)) = passes.get_mut(*entity) {
+                let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
+                    (idscene.0, idviewer.0)
+                } else {
+                    return;
+                };
+                // log::error!("Bindgroups {:?}", (idrenderer.0, passtag));
+                let idmodel = idmodel.0;
+                let scenes = &scenes;
+                let device = &device;
+                let asset_mgr_bindgroup_layout = &asset_mgr_bindgroup_layout;
+                let asset_mgr_bindgroup = &asset_mgr_bindgroup;
+                let targets = &targets;
+                let errors = &mut errors;
+                let viewers = &viewers;
+                let models = &models;
     
-                    let textures = match (need_set2, set2) {
-                        (true, val) => val,
-                        (false, _) => None,
-                        _ => {
-                            if bindgroups.val().is_some() { *bindgroups = PassBindGroups::new(None); }
-                            // log::warn!("Bindgroups: textures fail");
-                            return;
-                        }
-                    };
+                if let Ok((effect_key, meta, bind, _list, textures)) = materials.get(idmat.0) {
+                    let (bindvalue, bindtextures, effect) = _pass_effect_ready(
+                        effect_key, textures, meta, bind
+                    );
                     
-                    // log::error!("Bindgroups Ok");
-                    let lightshadow = None;
-                    let data = BindGroups3D::create(set0, set1, textures, lightshadow);
-                    *bindgroups = PassBindGroups::new(Some(data));
+                    // log::warn!("Bindgroups: _pass_effect_ready {:?}", (bindvalue.is_some(), bindtextures.is_some(), effect.is_some()));
+    
+                    if let Some((key_meta, meta)) = &effect {
+                        let set0 = _set0_modify(
+                            idmodel, idscene, idviewer, meta,
+                            viewers, scenes, device,
+                            asset_mgr_bindgroup_layout, asset_mgr_bindgroup, targets, errors
+                        );
+    
+                        let bind_effect_value = match bindvalue {
+                            Some(bindvalue) => Some(bindvalue.bind()),
+                            None => None,
+                        };
+                        let set1 = _set1_modify(
+                            idmodel, &bind_effect_value, key_meta, meta,
+                            models, device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup
+                        );
+    
+                        let set2 = if let Some(effect_texture_samplers) = bindtextures {
+                            _set2_modify(
+                                key_meta, meta, effect_texture_samplers,
+                                device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup
+                            )
+                        } else {
+                            None
+                        };
+    
+                        let set0 = match (BindDefines::need_bind_group_set0(meta.binddefines), set0) {
+                            (true, val) => val,
+                            (false, _) => None,
+                            _ => {
+                                if bindgroups.val().is_some() {
+                                    *bindgroups = PassBindGroups::new(None);
+                                    *flag = PassFlagShader;
+                                }
+                                // log::warn!("Bindgroups: Set0 fail");
+                                return;
+                            }
+                        };
+                        let set1 = match (BindDefines::need_bind_group_set1(meta.binddefines), set1) {
+                            (true, val) => val,
+                            (false, _) => None,
+                            _ => {
+                                if bindgroups.val().is_some() {
+                                    *bindgroups = PassBindGroups::new(None);
+                                    *flag = PassFlagShader;
+                                }
+                                // log::warn!("Bindgroups: Set1 fail");
+                                return;
+                            }
+                        };
+                        let need_set2 = meta.textures.len() > 0;
+                        let need_set3 = BindDefines::need_bind_group_set3(meta.binddefines);
+        
+                        let textures = match (need_set2, set2) {
+                            (true, val) => val,
+                            (false, _) => None,
+                            _ => {
+                                if bindgroups.val().is_some() {
+                                    *bindgroups = PassBindGroups::new(None);
+                                    *flag = PassFlagShader;
+                                }
+                                // log::warn!("Bindgroups: textures fail");
+                                return;
+                            }
+                        };
+                        
+                        // log::error!("Bindgroups Ok");
+                        let lightshadow = None;
+                        let data = BindGroups3D::create(set0, set1, textures, lightshadow);
+                        *bindgroups = PassBindGroups::new(Some(data));
+                        *flag = PassFlagShader;
+                    }
+                } else {
+                    // log::error!("Bindgroups Fail materials");
+                    if bindgroups.val().is_some() {
+                        *bindgroups = PassBindGroups::new(None);
+                        *flag = PassFlagShader;
+                    }
                 }
-            } else {
-                // log::error!("Bindgroups Fail materials");
-                if bindgroups.val().is_some() { *bindgroups = PassBindGroups::new(None); }
             }
         });
     }
 
 /// 渲染器搜集渲染
     pub fn sys_pass_shader_request_by_model(
+        addeds0: ComponentAdded<GeometryID>,
+        changes0: ComponentChanged<GeometryID>,
+        addeds1: ComponentAdded<RenderAlignment>,
+        changes1: ComponentChanged<RenderAlignment>,
         models: Query<
             (
                 &GeometryID, &PassIDs
-            ),
-            Or<(Changed<GeometryID>, Changed<RenderAlignment>)>,
+            )
         >,
-        mut passes: Query<&mut PassGeometryID>,
+        mut passes: Query<(&mut PassGeometryID, &mut PassPipelineStateDirty, &mut PassFlagShader)>,
     ) {
         // let time1 = pi_time::Instant::now();
-
-        models.iter().for_each(
-            |(id_geo, passids)| {
+        addeds0.iter().chain(changes0.iter()).chain(addeds1.iter()).chain(changes1.iter()).for_each(|entity| {
+            if let Ok((id_geo, passids)) = models.get(*entity) {
+                // log::error!("sys_pass_shader_request_by_model");
                 passids.0.iter().for_each(|id| {
-                    if let Ok(mut idgeometry) = passes.get_mut(*id) { *idgeometry = PassGeometryID(id_geo.0); }
+                    if let Ok((mut idgeometry, mut flagpipeline, mut flagshader)) = passes.get_mut(*id) {
+                        *idgeometry = PassGeometryID(id_geo.0);
+                        *flagpipeline = PassPipelineStateDirty;
+                        *flagshader = PassFlagShader;
+                    }
                 });
             }
-        );
+        });
 
         // log::debug!("SysPassShaderRequestByModel: {:?}", pi_time::Instant::now() - time1);
     }
@@ -214,16 +237,25 @@ use super::{
         models: Query<
             (&GeometryID, &PassIDs),
         >,
-        geometrys: Query<(Entity, &MeshID), Changed<VertexBufferLayoutsComp>>,
-        mut passes: Query<&mut PassGeometryID>,
+        addeds: ComponentAdded<VertexBufferLayoutsComp>,
+        changes: ComponentChanged<VertexBufferLayoutsComp>,
+        geometrys: Query<(Entity, &MeshID)>,
+        mut passes: Query<(&mut PassGeometryID, &mut PassPipelineStateDirty, &mut PassFlagShader)>,
     ) {
         // let time1 = pi_time::Instant::now();
-        geometrys.iter().for_each(|(entity, idmesh)| {
-            if let Ok((id_geo, passids)) = models.get(idmesh.0) {
-                if entity == id_geo.0 {
-                    passids.0.iter().for_each(|id| {
-                        if let Ok(mut idgeometry) = passes.get_mut(*id) { *idgeometry = PassGeometryID(id_geo.0); }
-                    });
+        addeds.iter().chain(changes.iter()).for_each(|entity| {
+            // log::error!("sys_pass_shader_request_by_geometry");
+            if let Ok((entity, idmesh)) = geometrys.get(*entity) {
+                if let Ok((id_geo, passids)) = models.get(idmesh.0) {
+                    if entity == id_geo.0 {
+                        passids.0.iter().for_each(|id| {
+                            if let Ok((mut idgeometry, mut flagpipeline, mut flagshader)) = passes.get_mut(*id) {
+                                *idgeometry = PassGeometryID(id_geo.0);
+                                *flagpipeline = PassPipelineStateDirty;
+                                *flagshader = PassFlagShader;
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -233,59 +265,71 @@ use super::{
 
 /// 渲染器搜集渲染
     pub fn sys_pass_shader(
+        addeds: ComponentAdded<PassFlagShader>,
+        changes: ComponentChanged<PassFlagShader>,
         models: Query<&RenderAlignment>,
         geometrys: Query<&VertexBufferLayoutsComp>, 
         materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta )>,
         mut passes: Query<
-            (ObjectID, &DisposeReady, &PassModelID, &PassGeometryID, &PassMaterialID, &PassBindGroups, &mut PassShader),
-            Or<(Changed<PassBindGroups>, Changed<PassGeometryID>)>
+            (ObjectID, &DisposeReady, &PassModelID, &PassGeometryID, &PassMaterialID, &PassBindGroups, &mut PassShader, &mut PassPipelineStateDirty),
         >,
         assets: Res<ShareAssetMgr<Shader3D>>,
         device: Res<PiRenderDevice>,
     ) {
         // let time1 = pi_time::Instant::now();
+        addeds.iter().chain(changes.iter()).for_each(|entity| {
+            if let Ok((id_pass, disposeready, id_model, id_geo, idmat, bindgroups, mut old_shader, mut flagpipeline)) = passes.get_mut(*entity) {
 
-        passes.iter_mut().for_each(|(id_pass, disposeready, id_model, id_geo, idmat, bindgroups, mut old_shader)| {
-            if disposeready.0 == true { return; }
+                if disposeready.0 == true { return; }
             
-            if let Ok((effect_key, meta)) = materials.get(idmat.0) {
-                let key_meta = &effect_key.0;
-                let meta = &meta.0;
-                // log::debug!("SysPassShaderRequestByPass: 0");
-                if let (Some(meta), Some(bindgroups)) = (meta, bindgroups.val()) {
-                    // log::debug!("SysPassShaderRequestByPass: 1");
-                    match (models.get(id_model.0), geometrys.get(id_geo.0)) {
-                        (Ok(renderalignment), Ok(vb)) => {
-    
-                            let limit = device.0.limits();
-                            if vb.0.attrcount as u32 <= limit.max_vertex_attributes && vb.0.desccount as u32 <= limit.max_vertex_buffers {
-                                let renderalignment = renderalignment.shader_tag(false);
-                                if let Ok(shader) = shader(
-                                    id_pass, meta, key_meta, vb, bindgroups, renderalignment, &assets, &device
-                                ) {
-                                    // log::error!("Shader Success");
-                        
-                                    if let Some(old) = &old_shader.0 {
-                                        if old.key() != shader.key() { *old_shader = PassShader(Some(shader)) }
-                                    } else { *old_shader = PassShader(Some(shader)) }
-                                } else {
-                                    // log::error!("Shader Fail");
-                                    if old_shader.0.is_some() {
-                                        *old_shader = PassShader(None);
+                if let Ok((effect_key, meta)) = materials.get(idmat.0) {
+                    let key_meta = &effect_key.0;
+                    let meta = &meta.0;
+                    // log::debug!("SysPassShaderRequestByPass: 0");
+                    if let (Some(meta), Some(bindgroups)) = (meta, bindgroups.val()) {
+                        // log::debug!("SysPassShaderRequestByPass: 1");
+                        match (models.get(id_model.0), geometrys.get(id_geo.0)) {
+                            (Ok(renderalignment), Ok(vb)) => {
+        
+                                let limit = device.0.limits();
+                                if vb.0.attrcount as u32 <= limit.max_vertex_attributes && vb.0.desccount as u32 <= limit.max_vertex_buffers {
+                                    let renderalignment = renderalignment.shader_tag(false);
+                                    if let Ok(shader) = shader(
+                                        id_pass, meta, key_meta, vb, bindgroups, renderalignment, &assets, &device
+                                    ) {
+                                        // log::error!("Shader Success");
+                            
+                                        if let Some(old) = &old_shader.0 {
+                                            if old.key() != shader.key() {
+                                                *old_shader = PassShader(Some(shader));
+                                                *flagpipeline = PassPipelineStateDirty;
+                                            }
+                                        } else {
+                                            *old_shader = PassShader(Some(shader));
+                                            *flagpipeline = PassPipelineStateDirty;
+                                        }
+                                    } else {
+                                        // log::error!("Shader Fail");
+                                        if old_shader.0.is_some() {
+                                            *old_shader = PassShader(None);
+                                            *flagpipeline = PassPipelineStateDirty;
+                                        }
                                     }
+                                } else {
+                                    // log::error!("MAX_ATTRIBUTES: {}, Using Attributes: {}, MAX_BUFFER: {}, Using Buffers: {}", limit.max_vertex_attributes, vb.0.attrcount, limit.max_vertex_buffers, vb.0.desccount);
+                                    *old_shader = PassShader(None);
+                                    *flagpipeline = PassPipelineStateDirty;
                                 }
-                            } else {
-                                // log::error!("MAX_ATTRIBUTES: {}, Using Attributes: {}, MAX_BUFFER: {}, Using Buffers: {}", limit.max_vertex_attributes, vb.0.attrcount, limit.max_vertex_buffers, vb.0.desccount);
-                                *old_shader = PassShader(None);
+                            },
+                            _ => {
+                                // log::error!("Shader Fail Geometry");
+                                if old_shader.0.is_some() {
+                                    *old_shader = PassShader(None);
+                                    *flagpipeline = PassPipelineStateDirty;
+                                }
                             }
-                        },
-                        _ => {
-                            // log::error!("Shader Fail Geometry");
-                            if old_shader.0.is_some() {
-                                *old_shader = PassShader(None);
-                            }
-                        }
-                    };
+                        };
+                    }
                 }
             }
         });
@@ -294,42 +338,44 @@ use super::{
     }
 
     pub fn sys_pass_pipeline_request_by_model(
-        models: Query<
-            (&DisposeReady, &PassIDs),
-            Or<(
-                Changed<GeometryID>,
-            )>
-        >,
+        addeds: ComponentAdded<PassRendererID>,
+        addeds2: ComponentAdded<RenderState>,
+        changes: ComponentChanged<PassRendererID>,
+        changes2: ComponentChanged<RenderState>,
         mut passes: Query<&mut PassPipelineStateDirty, With<PassPipeline>>,
     ) {
         // let time1 = pi_time::Instant::now();
 
-        models.iter().for_each(|(disposeenable, passids)|{
-            if disposeenable.0 == true { return; }
-            passids.0.iter().for_each(|id| {
-                if let Ok(mut flag ) = passes.get_mut(*id) { *flag = PassPipelineStateDirty; }
-            });
+        addeds.iter().chain(addeds2.iter()).chain(changes.iter()).chain(changes2.iter()).for_each(|entity| {
+            if let Ok(mut flag) = passes.get_mut(*entity) {
+                *flag = PassPipelineStateDirty;
+            }
         });
 
         // // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
 
     pub fn sys_pass_pipeline_request_by_renderer(
-        renderers: Query<(&RendererParam, &ViewerID, &PassTag), Or<(Changed<RendererParam>, Changed<PassTag>)>>,
+        changes0: ComponentAdded<RendererParam>,
+        changes: ComponentChanged<RendererParam>,
+        renderers: Query<(&RendererParam, &ViewerID, &PassTag)>,
         viewers: Query<(&ModelList, &ForceIncludeModelList)>,
         modelspass: Query<&PassIDs>,
         mut passes: Query<&mut PassPipelineStateDirty>,
     ) {
+        let changes = changes0.iter().chain(changes.iter());
         // let time1 = pi_time::Instant::now();
-        renderers.iter().for_each(|(param, idviewer, passtag)| {
-            if param.enable.0 {
-                if let Ok((modellist, forcemodels)) = viewers.get(idviewer.0) {
-                    modellist.0.iter().for_each(|idmodel| {
-                        if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
-                    });
-                    forcemodels.0.iter().for_each(|idmodel| {
-                        if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
-                    });
+        changes.for_each(|entity| {
+            if let Ok((param, idviewer, passtag)) = renderers.get(*entity) {
+                if param.enable.0 {
+                    if let Ok((modellist, forcemodels)) = viewers.get(idviewer.0) {
+                        modellist.0.iter().for_each(|idmodel| {
+                            if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
+                        });
+                        forcemodels.0.iter().for_each(|idmodel| {
+                            if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
+                        });
+                    }
                 }
             }
         });
@@ -344,63 +390,80 @@ use super::{
     }
 
     pub fn sys_pass_pipeline(
+        addeds: ComponentAdded<PassPipelineStateDirty>,
+        changes: ComponentChanged<PassPipelineStateDirty>,
         renderers: Query<&RendererParam>,
         models: Query<&GeometryID>,
-        geometrys: Query<&VertexBufferLayoutsComp>, 
+        geometrys: Query<&VertexBufferLayoutsComp>,
         mut passes: Query<
             (
                 ObjectID, &DisposeReady, &PassModelID, &PassBindGroups, &PassShader, &mut PassPipeline, &PassRendererID,
-                &RenderState, &PassTag
-            ),
-            Or<(
-                Changed<PassShader>, Changed<PassPipelineStateDirty>, Changed<PassRendererID>,
-                Changed<RenderState>
-            )>
+                &RenderState, &mut PassDrawDirty
+            )
         >,
         assets: ResMut<ShareAssetMgr<Pipeline3D>>,
         device: Res<PiRenderDevice>,
         mut errors: ResMut<ErrorRecord>,
     ) {
         // let time1 = pi_time::Instant::now();
-
-        passes.iter_mut().for_each(|(
-            id_pass, disposeready, id_model, bindgroups, shader, mut oldpipeline, idrenderer,
-            renderstate, passtag
-        )| {
-            if disposeready.0 == true { return; }
-            // log::warn!("SysPipeline: 0 Pass");
-            if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
-                // log::warn!("SysPipeline: 1 Pass");
-                if let Ok(id_geo) = models.get(id_model.0) {
-                    // log::warn!("SysPipeline: 2 Pass {:?}", (geometrys.get(id_geo.0).is_ok(), renderers.get(idrenderer.0).is_ok()));
-                    match (geometrys.get(id_geo.0), renderers.get(idrenderer.0)) {
-                        (Ok(vb), Ok(param)) => {
-                            let blend = renderstate.blend.clone(); // if blendenable.0 { blend.clone() } else { ModelBlend::default() };
-                            if let Ok(pipeline) = pipeline(
-                                shader, bindgroups, vb, &param.colorformat.0, &param.depthstencilformat.0,
-                                blend, &renderstate.depth, &renderstate.stencil,
-                                &renderstate.primitive,
-                                id_pass, & assets, &device
-                            ) {
-                                // log::warn!("SysPipeline: {:?}", (passtag, idrenderer.0));
-                                // *oldpipeline = PassPipeline(Some(pipeline));
-                                if let Some(old) = &oldpipeline.0 {
-                                    if old.key() != pipeline.key() { *oldpipeline = PassPipeline(Some(pipeline)); }
-                                } else { *oldpipeline = PassPipeline(Some(pipeline)); }
-                            } else {
-                                errors.record(id_model.0, ErrorRecord::ERROR_PASS_PIPELINE_FAIL);
-                                if oldpipeline.0.is_some() { *oldpipeline = PassPipeline(None); }
+        addeds.iter().chain(changes.iter()).for_each(|entity| {
+            if let Ok((
+                id_pass, disposeready, id_model, bindgroups, shader, mut oldpipeline, idrenderer,
+                renderstate, mut flag
+            )) = passes.get_mut(*entity) {
+                if disposeready.0 == true { return; }
+                // log::warn!("SysPipeline: 0 Pass");
+                if let (Some(shader), Some(bindgroups)) = (shader.val(), bindgroups.val()) {
+                    // log::warn!("SysPipeline: 1 Pass");
+                    if let Ok(id_geo) = models.get(id_model.0) {
+                        // log::warn!("SysPipeline: 2 Pass {:?}", (geometrys.get(id_geo.0).is_ok(), renderers.get(idrenderer.0).is_ok()));
+                        match (geometrys.get(id_geo.0), renderers.get(idrenderer.0)) {
+                            (Ok(vb), Ok(param)) => {
+                                let blend = renderstate.blend.clone(); // if blendenable.0 { blend.clone() } else { ModelBlend::default() };
+                                if let Ok(pipeline) = pipeline(
+                                    shader, bindgroups, vb, &param.colorformat.0, &param.depthstencilformat.0,
+                                    blend, &renderstate.depth, &renderstate.stencil,
+                                    &renderstate.primitive,
+                                    id_pass, & assets, &device
+                                ) {
+                                    // log::warn!("SysPipeline: {:?}", (passtag, idrenderer.0));
+                                    // *oldpipeline = PassPipeline(Some(pipeline));
+                                    if let Some(old) = &oldpipeline.0 {
+                                        if old.key() != pipeline.key() {
+                                            *oldpipeline = PassPipeline(Some(pipeline));
+                                            *flag = PassDrawDirty;
+                                        }
+                                    } else {
+                                        *oldpipeline = PassPipeline(Some(pipeline));
+                                        *flag = PassDrawDirty;
+                                    }
+                                } else {
+                                    errors.record(id_model.0, ErrorRecord::ERROR_PASS_PIPELINE_FAIL);
+                                    if oldpipeline.0.is_some() {
+                                        *oldpipeline = PassPipeline(None);
+                                        *flag = PassDrawDirty;
+                                    }
+                                }
+                            },
+                            _ => { 
+                                if oldpipeline.0.is_some() {
+                                    *oldpipeline = PassPipeline(None);
+                                    *flag = PassDrawDirty;
+                                }
                             }
-                        },
-                        _ => { 
-                            if oldpipeline.0.is_some() { *oldpipeline = PassPipeline(None); }
+                        }
+                    } else {
+                        if oldpipeline.0.is_some() {
+                            *oldpipeline = PassPipeline(None);
+                            *flag = PassDrawDirty;
                         }
                     }
                 } else {
-                    if oldpipeline.0.is_some() { *oldpipeline = PassPipeline(None); }
+                    if oldpipeline.0.is_some() {
+                        *oldpipeline = PassPipeline(None);
+                        *flag = PassDrawDirty;
+                    }
                 }
-            } else {
-                if oldpipeline.0.is_some() { *oldpipeline = PassPipeline(None); }
             }
         });
 
@@ -409,16 +472,18 @@ use super::{
 
 
     pub fn sys_pass_draw_modify_by_model(
-        models: Query<
-            (&PassIDs), 
-            Or<(Changed<RenderGeometryEable>, Changed<IndiceRenderRange>, Changed<VertexRenderRange>, Changed<DisposeReady>)>
-        >,
+        models: Query<&PassIDs>,
+        changes0: ComponentChanged<RenderGeometryEable>,
+        changes1: ComponentChanged<IndiceRenderRange>,
+        changes2: ComponentChanged<VertexRenderRange>,
         mut passes: Query<&mut PassDrawDirty>,
     ) {
-        models.iter().for_each(|(passids)| {
-            passids.0.iter().for_each(|id| {
-                if let Ok(mut drawdirty) = passes.get_mut(*id) { *drawdirty = PassDrawDirty; }
-            });
+        changes0.iter().chain(changes1.iter()).chain(changes2.iter()).for_each(|entity| {
+            if let Ok(passids) = models.get(*entity) {
+                passids.0.iter().for_each(|id| {
+                    if let Ok(mut drawdirty) = passes.get_mut(*id) { *drawdirty = PassDrawDirty; }
+                });
+            }
         });
 
         // // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
@@ -427,64 +492,56 @@ use super::{
     pub fn sys_pass_draw_modify_by_pass(
         models: Query<(&GeometryID, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable, &InstanceSourceRefs, &DisposeReady)>,
         geometrys: Query<(&RenderGeometryComp, &GeometryResourceHash)>,
-        mut passes: Query<(Entity, &PassModelID, &PassBindGroups, &PassPipeline, &mut PassDraw, &PassTag, &PassRendererID), Or<(Changed<PassPipeline>, Changed<PassDrawDirty>, Changed<PassBindGroups>, Changed<PassModelID>)>>,
+        changes: ComponentChanged<PassDrawDirty>,
+        mut passes: Query<(Entity, &PassModelID, &PassBindGroups, &PassPipeline, &mut PassDraw, &PassTag, &PassRendererID)>,
         // mut commands: Commands,
     ) {
-        passes.iter_mut().for_each(|(entity, id_model, bindgroups, pipeline, mut old_draw, passtag, idrenderer)| {
-            if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
-                if let Ok((id_geo, renderindices, rendervertex, geoenable, instances, disposed)) = models.get(id_model.0) {
-                    if geoenable.0 == false || disposed.0 == true {
-                        if old_draw.val().is_some() { *old_draw = PassDraw(None); };
-                        return;
-                    }
-
-                    if let Ok((RenderGeometryComp(Some(rendergeo)), geohash)) = geometrys.get(id_geo.0.clone()) {
-                        if rendergeo.isok() {
-                            // let draw = if instances.len() == 0 {
-                            //     DrawObj3D::Draw( Arc::new(DrawObj {
-                            //         pipeline: Some(pipeline.clone()),
-                            //         bindgroups: bindgroups.groups(),
-                            //         vertices: rendergeo.vertices(),
-                            //         instances: rendergeo.instances(),
-                            //         vertex: rendervertex.apply(rendergeo),
-                            //         indices: renderindices.apply(rendergeo),
-                            //     }))
-                            // } else {
-                            //     DrawObj3D::InstanceNotClip( DrawObjTmp {
-                            //         pipeline: Some(pipeline.clone()),
-                            //         bindgroups: bindgroups.clone(),
-                            //         vertices: rendergeo.vertices(),
-                            //         instances: rendergeo.instances(),
-                            //         instance_memory: rendergeo.instance_memory.clone(),
-                            //         vertex: rendervertex.apply(rendergeo),
-                            //         indices: renderindices.apply(rendergeo),
-                            //     })
-                            // };
-                            // log::error!("DrawTmp {:?}", (idrenderer.0, passtag));
-                            let draw = DrawObjTmp {
-                                pipeline: pipeline.key().clone(),
-                                passentity: entity,
-                                bindgroupshash: BindGroups3DHashResource::from(bindgroups),
-                                vertexentity: id_geo.0.clone(),
-                                vertexhash: geohash.clone(),
-                                instance_memory: rendergeo.instance_memory.clone(),
-                                indice_range: renderindices.clone(),
-                                vertex_range: rendervertex.clone(),
+        changes.iter().for_each(|entity| {
+            if let Ok((entity, id_model, bindgroups, pipeline, mut old_draw, passtag, idrenderer)) = passes.get_mut(*entity) {
+                if let (Some(bindgroups), Some(pipeline)) = (bindgroups.val(), pipeline.val()) {
+                    if let Ok((id_geo, renderindices, rendervertex, geoenable, instances, disposed)) = models.get(id_model.0) {
+                        if geoenable.0 == false || disposed.0 == true {
+                            if old_draw.val().is_some() {
+                                *old_draw = PassDraw(None);
+                                // log::error!("PassDraw Disabled {:?}", (geoenable.0, disposed.0));
                             };
-
-                            *old_draw = PassDraw(Some(draw));
+                            return;
+                        }
+    
+                        if let Ok((RenderGeometryComp(Some(rendergeo)), geohash)) = geometrys.get(id_geo.0.clone()) {
+                            if rendergeo.isok() {
+                                // log::error!("DrawTmp {:?}", (idrenderer.0, passtag));
+                                let draw = DrawObjTmp {
+                                    pipeline: pipeline.key().clone(),
+                                    passentity: entity,
+                                    bindgroupshash: BindGroups3DHashResource::from(bindgroups),
+                                    vertexentity: id_geo.0.clone(),
+                                    vertexhash: geohash.clone(),
+                                    instance_memory: rendergeo.instance_memory.clone(),
+                                    indice_range: renderindices.clone(),
+                                    vertex_range: rendervertex.clone(),
+                                };
+    
+                                *old_draw = PassDraw(Some(draw));
+                                // if rendergeo.instance_memory.is_some() {
+                                //     log::error!("PassDraw Ok With Instances {:?}", id_geo.0);
+                                // }
+                            } else {
+                                // log::error!("PassDraw Geo Not Ok");
+                                *old_draw = PassDraw(None);
+                            }
+                            // log::debug!("PassDrawLoaded: 1 Pass");
                         } else {
+                            // log::error!("PassDraw Geo None");
+                            // log::warn!("PassDraw None: {:?}", id_pass);
                             *old_draw = PassDraw(None);
                         }
-                        // log::debug!("PassDrawLoaded: 1 Pass");
-                    } else {
-                        // log::warn!("PassDraw None: {:?}", id_pass);
-                        *old_draw = PassDraw(None);
                     }
+                } else {
+                    // log::error!("PassDraw BIndGroup  {:?} Pipeline {:?}", bindgroups.val().is_some(), pipeline.val().is_some());
+                    // log::warn!("PassDraw None: {:?}", id_pass);
+                    *old_draw = PassDraw(None);
                 }
-            } else {
-                // log::warn!("PassDraw None: {:?}", id_pass);
-                *old_draw = PassDraw(None);
             }
         });
 
@@ -516,6 +573,7 @@ use super::{
     ) {
         let time1 = pi_time::Instant::now();
 
+        // log::error!("sys_renderer_draws_modify ");
         renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, param)| {
             renderer.clear();
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
@@ -531,7 +589,7 @@ use super::{
             if let (Ok((list_model, viewposition, viewdirection, disposed, distancecomp)), Ok((batchopaque, batchtransparent))) = (viewers.get(id_viewer.0), scenes.get(idscene.0)) {
                 if disposed.0 { return; }
 
-                    // log::warn!("renderer_draws : ModelListAfterCulling: {:?}, ", (list_model.0.len()));
+                    // log::error!("renderer_draws : ModelListAfterCulling: {:?}, ", (list_model.0.len()));
                     renderer.draws.viewport = param.viewport.val();
                     let mut countmesh = 0;
                     list_model.0.iter().for_each(|id_obj| {
@@ -580,9 +638,9 @@ use super::{
                     opaque_list.sort();
                     transparent_list.sort();
 
-                    // log::warn!("Mesh: {:?}", countmesh);
+                    // log::error!("Mesh: {:?}", countmesh);
                     // log::warn!("Opaque: {:?}", opaque_list.len());
-                    // log::warn!("Transparent: {:?}", transparent_list.len());
+                    // log::error!("Transparent: {:?}", transparent_list.len());
 
                     let mut lastdraw: Option<DrawObjTmp> = None;
                     opaque_list.iter().for_each(|tmp| {
@@ -676,7 +734,7 @@ use super::{
                         }
                     }
 
-                    // log::warn!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
+                    // log::error!("Renderer Draw {:?} {:?}", list_model.0.len(), renderer.draws.list.len());
             }
 
             renderer.vertexs = count_vertex;
@@ -912,6 +970,8 @@ fn collect_draw(
                         let mut queue = sort_param.clone();
                         queue.index += *alphaindex;
                         transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline, queue, resourcehash: (draw.vertexhash.0, draw.bindgroupshash.0) });
+                    } else {
+                        // log::error!("instancessortinfo Error {:?}", (range, instance_memory.itemcount));
                     }
                 });
             } else {
@@ -970,6 +1030,7 @@ fn collect_draw_batch(
             indices.value_range().end - indices.value_range().start
         } else { draw.vertex.end - draw.vertex.start };
         *count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
+        // log::error!("draw instances {:?}", (&draw.instances, &draw.vertex));
         renderer.draws.list.push(Arc::new(draw));
     } else {
         let draw = DrawObj {
@@ -984,6 +1045,7 @@ fn collect_draw_batch(
             indices.value_range().end - indices.value_range().start
         } else { draw.vertex.end - draw.vertex.start };
         *count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
+        // log::error!("draw item {:?}", (&draw.instances, &draw.vertex));
         renderer.draws.list.push(Arc::new(draw));
     }
 }

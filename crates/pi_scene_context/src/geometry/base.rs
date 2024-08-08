@@ -3,6 +3,9 @@ use pi_scene_shell::prelude::*;
 use super::vertex_buffer_useinfo::*;
 
 #[derive(Component, Default)]
+pub struct FlagGeometryDirty;
+
+#[derive(Component, Default)]
 pub struct GeometryDesc {
     pub list: Vec<VertexBufferDesc>,
 }
@@ -30,13 +33,13 @@ pub struct GeometryLayoutHash(pub u64);
 
 #[derive(Resource)]
 pub struct GeometryVBLoader {
-    pub loader_01: VertexBufferLoader<(ObjectID, u8), AssetResVBSlot>,
+    pub loader_vertices: VertexBufferLoader<(ObjectID, u8), AssetResVBSlot>,
     pub loader_indices: VertexBufferLoader<ObjectID, AssetResBufferIndices>,
 }
 impl Default for GeometryVBLoader {
     fn default() -> Self {
         Self {
-            loader_01: VertexBufferLoader::<(ObjectID, u8), AssetResVBSlot>::default(),
+            loader_vertices: VertexBufferLoader::<(ObjectID, u8), AssetResVBSlot>::default(),
             loader_indices: VertexBufferLoader::<ObjectID, AssetResBufferIndices>::default(),
         }
     }

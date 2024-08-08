@@ -47,26 +47,30 @@ pub fn sys_model_direct_lighting_modify_by_light(
 pub fn sys_model_direct_lighting_modify_by_model(
     scenes: Query<&SceneDirectLightsQueue>,
     transforms: Query<&GlobalMatrix>,
-    enabled: Query<&GlobalEnable, With<DirectLight>>,
+    enabled: Query<(&GlobalEnable, &DirectLight)>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
-    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs), Changed<LayerMask>>,
+    addeds: ComponentAdded<LayerMask>,
+    changes: ComponentChanged<LayerMask>,
+    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs)>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_direct_lighting_modify_by_model"));
-    meshes.iter().for_each(|(idm, idscene, ids)| {
-        if let Ok(queuedirect) = scenes.get(idscene.0) {
-            if let Ok(my) = layermask.get(idm) {
-                if let Some(ids) = &ids.bind {
-                    let mut indexlight = vec![];
-                    queuedirect.0.items().for_each(|idlight| {
-                        if let (Ok(_lp), Ok(ly), Ok(lidx), Ok(enabled)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
-                            if enabled.0 && ly.include(my.0) {
-                                indexlight.push(lidx.val());
+    addeds.iter().chain(changes.iter()).for_each(|entity| {
+        if let Ok((idm, idscene, ids)) = meshes.get(*entity) {
+            if let Ok(queuedirect) = scenes.get(idscene.0) {
+                if let Ok(my) = layermask.get(idm) {
+                    if let Some(ids) = &ids.bind {
+                        let mut indexlight = vec![];
+                        queuedirect.0.items().for_each(|idlight| {
+                            if let (Ok(_lp), Ok(ly), Ok(lidx), Ok((enabled, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
+                                if enabled.0 && ly.include(my.0) {
+                                    indexlight.push(lidx.val());
+                                }
                             }
-                        }
-                    });
-                    ids.direct_light_data(&indexlight);
+                        });
+                        ids.direct_light_data(&indexlight);
+                    }
                 }
             }
         }
@@ -76,37 +80,59 @@ pub fn sys_model_direct_lighting_modify_by_model(
 pub fn sys_model_point_lighting_modify_by_model(
     scenes: Query<&ScenePointLightsQueue>,
     transforms: Query<&GlobalMatrix>,
-    enabled: Query<&GlobalEnable, With<PointLight>>,
+    enabledpoint: Query<(&GlobalEnable, &PointLight)>,
+    enabledspot: Query<(&GlobalEnable, &SpotLight)>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
-    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForcePointLightings), Or<(Changed<LayerMask>, Changed<ModelForcePointLightings>)>>,
+    
+    addeds: ComponentAdded<LayerMask>,
+    changes: ComponentChanged<LayerMask>,
+    addeds2: ComponentAdded<ModelForcePointLightings>,
+    changes2: ComponentChanged<ModelForcePointLightings>,
+    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForcePointLightings)>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_point_lighting_modify_by_model"));
-    meshes.iter().for_each(|(idm, idscene, ids, forcelights)| {
-        if let Ok(queuepoint) = scenes.get(idscene.0) {
-            if let Ok(my) = layermask.get(idm) {
-                if let Some(ids) = &ids.bind {
-
-                    let mut indexlight = vec![];
-
-                    forcelights.0.iter().for_each(|idlight| {
-                        if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok(enable)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
-                            if enable.0 {
-                                let idx = lidx.val();
-                                if indexlight.contains(&idx) == false { indexlight.push(idx); }
+    addeds.iter().chain(changes.iter()).chain(addeds2.iter()).chain(changes2.iter()).for_each(|entity| {
+        if let Ok((idm, idscene, ids, forcelights)) = meshes.get(*entity) {
+            if let Ok(queuepoint) = scenes.get(idscene.0) {
+                if let Ok(my) = layermask.get(idm) {
+                    if let Some(ids) = &ids.bind {
+    
+                        let mut indexlightpoint = vec![];
+                        let mut indexlightspot = vec![];
+    
+                        forcelights.0.iter().for_each(|idlight| {
+                            if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok((enable, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledpoint.get(*idlight)) {
+                                if enable.0 {
+                                    let idx = lidx.val();
+                                    if indexlightpoint.contains(&idx) == false { indexlightpoint.push(idx); }
+                                }
                             }
-                        }
-                    });
-                    queuepoint.0.items().for_each(|idlight| {
-                        if let (Ok(_lp), Ok(ly), Ok(lidx), Ok(enabled)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
-                            if enabled.0 && ly.include(my.0) {
-                                let idx = lidx.val();
-                                if indexlight.contains(&idx) == false { indexlight.push(idx); }
+                            if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok((enable, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledspot.get(*idlight)) {
+                                if enable.0 {
+                                    let idx = lidx.val();
+                                    if indexlightspot.contains(&idx) == false { indexlightspot.push(idx); }
+                                }
                             }
-                        }
-                    });
-                    ids.point_light_data(&indexlight);
+                        });
+                        queuepoint.0.items().for_each(|idlight| {
+                            if let (Ok(_lp), Ok(ly), Ok(lidx), Ok((enabled, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledpoint.get(*idlight)) {
+                                if enabled.0 && ly.include(my.0) {
+                                    let idx = lidx.val();
+                                    if indexlightpoint.contains(&idx) == false { indexlightpoint.push(idx); }
+                                }
+                            }
+                            if let (Ok(_lp), Ok(ly), Ok(lidx), Ok((enabled, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledspot.get(*idlight)) {
+                                if enabled.0 && ly.include(my.0) {
+                                    let idx = lidx.val();
+                                    if indexlightspot.contains(&idx) == false { indexlightspot.push(idx); }
+                                }
+                            }
+                        });
+                        ids.point_light_data(&indexlightpoint);
+                        ids.spot_light_data(&indexlightspot);
+                    }
                 }
             }
         }
@@ -114,41 +140,41 @@ pub fn sys_model_point_lighting_modify_by_model(
 }
 
 pub fn sys_model_spot_lighting_modify_by_model(
-    scenes: Query<&SceneSpotLightsQueue>,
-    transforms: Query<&GlobalMatrix>,
-    enabled: Query<&GlobalEnable, With<SpotLight>>,
-    layermask: Query<&LayerMask>,
-    lightindex: Query<&SceneItemIndex>,
-    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceSpotLightings), Or<(Changed<LayerMask>, Changed<ModelForceSpotLightings>)>>,
+    // scenes: Query<&SceneSpotLightsQueue>,
+    // transforms: Query<&GlobalMatrix>,
+    // enabledspot: Query<(&GlobalEnable, &SpotLight)>,
+    // layermask: Query<&LayerMask>,
+    // lightindex: Query<&SceneItemIndex>,
+    // meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceSpotLightings), Or<(Changed<LayerMask>, Changed<ModelForceSpotLightings>)>>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_spot_lighting_modify_by_model"));
-    meshes.iter().for_each(|(idm, idscene, ids, forcelights)| {
-        if let Ok(queuepoint) = scenes.get(idscene.0) {
-            if let Ok(my) = layermask.get(idm) {
-                if let Some(ids) = &ids.bind {
+    // meshes.iter().for_each(|(idm, idscene, ids, forcelights)| {
+    //     if let Ok(queuepoint) = scenes.get(idscene.0) {
+    //         if let Ok(my) = layermask.get(idm) {
+    //             if let Some(ids) = &ids.bind {
 
-                    let mut indexlight = vec![];
+    //                 let mut indexlightspot = vec![];
 
-                    forcelights.0.iter().for_each(|idlight| {
-                        if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok(enable)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
-                            if enable.0 {
-                                let idx = lidx.val();
-                                if indexlight.contains(&idx) == false { indexlight.push(idx); }
-                            }
-                        }
-                    });
-                    queuepoint.0.items().for_each(|idlight| {
-                        if let (Ok(_lp), Ok(ly), Ok(lidx), Ok(enabled)) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabled.get(*idlight)) {
-                            if enabled.0 && ly.include(my.0) {
-                                let idx = lidx.val();
-                                if indexlight.contains(&idx) == false { indexlight.push(idx); }
-                            }
-                        }
-                    });
-                    ids.spot_light_data(&indexlight);
-                }
-            }
-        }
-    });
+    //                 forcelights.0.iter().for_each(|idlight| {
+    //                     if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok((enable, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledspot.get(*idlight)) {
+    //                         if enable.0 {
+    //                             let idx = lidx.val();
+    //                             if indexlightspot.contains(&idx) == false { indexlightspot.push(idx); }
+    //                         }
+    //                     }
+    //                 });
+    //                 queuepoint.0.items().for_each(|idlight| {
+    //                     if let (Ok(_lp), Ok(ly), Ok(lidx), Ok((enabled, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledspot.get(*idlight)) {
+    //                         if enabled.0 && ly.include(my.0) {
+    //                             let idx = lidx.val();
+    //                             if indexlightspot.contains(&idx) == false { indexlightspot.push(idx); }
+    //                         }
+    //                     }
+    //                 });
+    //                 ids.spot_light_data(&indexlightspot);
+    //             }
+    //         }
+    //     }
+    // });
 }

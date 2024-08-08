@@ -1,8 +1,8 @@
 use crate::ecs::*;
 
-use pi_bevy_render_plugin::{PiRenderSystemSet, FrameState, should_run};
+use pi_bevy_render_plugin::{should_run, FrameState, PiRenderDevice, PiRenderSystemSet};
 
-use crate::prelude::{EngineInstant, ErrorRecord};
+use crate::prelude::{DeviceLimits3D, EngineInstant, ErrorRecord};
 use crate::prelude::FrameDataPrepare;
 
 // pub struct RunStage {
@@ -144,6 +144,10 @@ impl Plugin for PluginRunstage {
         app.insert_resource(ErrorRecord(vec![], false));
 
         app.insert_resource(RunState3D::default());
+
+        let device = app.world.get_resource::<PiRenderDevice>().unwrap();
+        let limits = device.limits();
+        app.insert_resource(DeviceLimits3D(limits));
 
 #[cfg(feature = "use_bevy")]
 {

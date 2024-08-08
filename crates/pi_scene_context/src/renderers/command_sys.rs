@@ -13,19 +13,19 @@ use super::{
 };
 
 pub fn sys_create_renderer(
-    mut commands: Commands,
+    // mut commands: Commands,
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
     mut error: ResMut<ErrorRecord>,
-    // mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
+    mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
         if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
             match graphic.add_node(name, render_node, NodeId::null()) {
                 Ok(nodeid) => {
-                    if let Some(mut cmd) = commands.get_entity(entity) {
+                    // if let Some(mut cmd) = commands.get_entity(entity) {
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
                         // log::error!("CreateRenderer {:?}", (nodeid, id_viewer, entity, viewerrenderinfo.len()));
@@ -34,10 +34,10 @@ pub fn sys_create_renderer(
                             GraphId(nodeid), sceneid.clone(),
                             ActionRenderer::init(id_viewer, passtag, transparent)
                         );
-                        cmd.insert(bundle);
-                        // alter.alter(entity, bundle);
+                        // cmd.insert(bundle);
+                        alter.alter(entity, bundle);
 
-                    }
+                    // }
                 },
                 Err(err) => {
                     // log::error!("CreateRenderer Fail Graphic Error");
@@ -56,6 +56,7 @@ pub fn sys_act_renderer_target(
     targets: Res<CustomRenderTargets>,
     mut graphic: ResMut<PiRenderGraph>,
     mut error: ResMut<ErrorRecord>,
+    mut cmdmodifys: ResMut<ActionListRendererModify>,
 ) {
     cmds.drain().drain(..).for_each(|cmd| {
         match cmd {
@@ -104,61 +105,110 @@ pub fn sys_act_renderer_target(
             },
         }
     });
-}
-
-pub fn sys_act_renderer_modify(
-    mut cmds: ResMut<ActionListRendererModify>,
-    mut params: Query<&mut RendererParam>,
-) {
-    cmds.drain().drain(..).for_each(|cmd| {
+    cmdmodifys.drain().drain(..).for_each(|cmd| {
         match cmd {
             OpsRendererCommand::Active(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.enable = RendererEnable(val);
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::Blend(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.blend = RendererBlend(val);
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::ColorClear(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.color_clear = val;
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::DepthClear(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.depth_clear = val;
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::StencilClear(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.stencil_clear = val;
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::AutoClearColor(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.auto_clear_color = RenderAutoClearColor(val);
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::AutoClearDepth(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.auto_clear_depth = RenderAutoClearDepth(val);
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::AutoClearStencil(entity, val) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.auto_clear_stencil = RenderAutoClearStencil(val);
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::Viewport(entity, x, y, z, w) => {
-                if let Ok(mut comp) = params.get_mut(entity) {
+                if let Ok((mut comp, _, _)) = renderers.get_mut(entity) {
                     comp.viewport = RenderViewport(x, y, z, w, 0., 1.);
-                } else { cmds.push(cmd) }
+                } else { cmdmodifys.push(cmd) }
             }
         }
     });
+}
+
+pub fn sys_act_renderer_modify(
+    // mut cmds: ResMut<ActionListRendererModify>,
+    // mut params: Query<&mut RendererParam>,
+) {
+    // cmds.drain().drain(..).for_each(|cmd| {
+    //     match cmd {
+    //         OpsRendererCommand::Active(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.enable = RendererEnable(val);
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::Blend(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.blend = RendererBlend(val);
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::ColorClear(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.color_clear = val;
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::DepthClear(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.depth_clear = val;
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::StencilClear(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.stencil_clear = val;
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::AutoClearColor(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.auto_clear_color = RenderAutoClearColor(val);
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::AutoClearDepth(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.auto_clear_depth = RenderAutoClearDepth(val);
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::AutoClearStencil(entity, val) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.auto_clear_stencil = RenderAutoClearStencil(val);
+    //             } else { cmds.push(cmd) }
+    //         },
+    //         OpsRendererCommand::Viewport(entity, x, y, z, w) => {
+    //             if let Ok(mut comp) = params.get_mut(entity) {
+    //                 comp.viewport = RenderViewport(x, y, z, w, 0., 1.);
+    //             } else { cmds.push(cmd) }
+    //         }
+    //     }
+    // });
 }
 
 pub fn sys_act_renderer_connect(
@@ -187,20 +237,33 @@ pub fn sys_act_renderer_connect(
 
 pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
-    renderers: Query<(Entity, &GraphId, &RendererParam, &DisposeCan, &ViewerID), Changed<DisposeCan>>,
+    changes: ComponentChanged<DisposeCan>,
+    renderers: Query<(Entity, &GraphId, &RendererParam, &DisposeCan, &ViewerID)>,
     mut viewers: Query<&mut ViewerRenderersInfo>,
     mut error: ResMut<ErrorRecord>,
 ) {
-    renderers.iter().for_each(|(entity, nodeid, _, flag, idviewer)| {
-        if flag.0 == false { return; }
-        
-        if let Err(err) = render_graphic.remove_node(nodeid.0) {
-            error.graphic(entity, err);
-        }
-        if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
-            renderinfos.remove(entity);
+    changes.iter().for_each(|entity| {
+        if let Ok((entity, nodeid, _, flag, idviewer)) = renderers.get(*entity) {
+            if flag.0 == false { return; }
+            
+            if let Err(err) = render_graphic.remove_node(nodeid.0) {
+                error.graphic(entity, err);
+            }
+            if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
+                renderinfos.remove(entity);
+            }
         }
     });
+    // renderers.iter().for_each(|(entity, nodeid, _, flag, idviewer)| {
+    //     if flag.0 == false { return; }
+        
+    //     if let Err(err) = render_graphic.remove_node(nodeid.0) {
+    //         error.graphic(entity, err);
+    //     }
+    //     if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
+    //         renderinfos.remove(entity);
+    //     }
+    // });
 }
 
 pub type RendererBundle = (

@@ -7,10 +7,10 @@ use super::{command::*, pass_object::*};
 
 pub fn sys_create_pass_object(
     mut cmds: ResMut<ActionListPassObject>,
-    mut commands: Commands,
+    // mut commands: Commands,
     models: Query<& PassIDs>,
-    mut passes: Query<(&mut PassReset, &mut PassDrawDirty, &mut PassModelID, &mut PassMaterialID, &mut PassPipelineStateDirty)>,
-    // mut alter: Alter<(), (), PassObjBundle, ()>,
+    mut passes: Query<(&mut PassReset, &mut PassDrawDirty, &mut PassModelID, &mut PassMaterialID, &mut PassPipelineStateDirty, &mut PassBindGroupsDirty)>,
+    mut alter: Alter<(), (), PassObjBundle, ()>,
 ) {
     cmds.drain().drain(..).for_each(|OpsPassObject(idmodel, idmaterial, pass)| {
         if let Ok(passid) = models.get(idmodel) {
@@ -22,14 +22,15 @@ pub fn sys_create_pass_object(
                 *comps.2 = PassModelID(idmodel);
                 *comps.3 = PassMaterialID(idmaterial);
                 *comps.4 = PassPipelineStateDirty;
+                *comps.5 = PassBindGroupsDirty;
             }
 
-            if let Some(mut cmd) = commands.get_entity(id_pass) {
+            // if let Some(mut cmd) = commands.get_entity(id_pass) {
                 let bundle = ActionPassObject::reset(idmodel, idmaterial);
                 // log::warn!("Pass {:?}", (idmodel, pass, idmaterial, id_pass));
-                cmd.insert(bundle);
-                // alter.alter(id_pass, bundle);
-            }
+                // cmd.insert(bundle);
+                alter.alter(id_pass, bundle);
+            // }
         }
     });
 }
@@ -118,6 +119,7 @@ pub type PassObjInitBundle = (
     RenderState,
     PassReset,
     PassBindGroupsDirty,
+    PassFlagShader,
 );
 
 pub type PassObjBundle = (
@@ -154,6 +156,7 @@ impl ActionPassObject {
             RenderState::default(),
             PassReset,
             PassBindGroupsDirty,
+            PassFlagShader,
         )
     }
     pub fn reset(

@@ -15,7 +15,7 @@ pub type BundleGeometry = (
     (DisposeReady, DisposeCan),
     GeometryDesc,
     (VertexBufferLayoutsComp, MeshID, RenderGeometryComp, IndicesBufferDescComp, AssetKeyBufferIndices, AssetDescVBSlots, LoadedKeyVBSlots, AssetResVBSlots),
-    AssetResBufferIndicesComp, InstancedInfoComp, GeometryResourceHash
+    AssetResBufferIndicesComp, InstancedInfoComp, GeometryResourceHash, FlagGeometryDirty
 );
 
 pub fn sys_create_geometry(
@@ -28,7 +28,8 @@ pub fn sys_create_geometry(
     mut instanceallocator: ResMut<InstanceBufferAllocator>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
-    // mut cmdgeo: Alter<(), (), BundleGeometry, ()>,
+    mut cmdgeo: Alter<(), (), BundleGeometry, ()>,
+    devicelimits: Res<DeviceLimits3D>,
 ) {
     cmds.drain().drain(..).for_each(|OpsGeomeryCreate(id_mesh, entity, mut vertex_desc, indices_desc)| {
         
@@ -73,9 +74,16 @@ pub fn sys_create_geometry(
         let mut datalist = AssetResVBSlots::default();
         let mut instacned = InstancedInfoComp(None);
 
-        let loader = &mut geoloader.loader_01;
-        for slot in 0..VB_SLOTS_COUNT {
-            if let Some((desc, buff)) = init_slot(&geo_desc, &asset_mgr, &mut instanceallocator, &mut instacned, slot) {
+        let loader = &mut geoloader.loader_vertices;
+        let max: usize = devicelimits.max_vertex_buffers as usize;
+        for slot in 0..max {
+
+            if let Some((desc, buff)) = init_geometry_vertices_slot(&geo_desc, &asset_mgr, &mut instanceallocator, &mut instacned, slot) {
+                
+                datalist.push(None);
+                keyslist.push(None);
+                desclist.push(None);
+
                 if let Some(buff) = buff {
                     datalist[slot] = Some(AssetResVBSlot::from(buff));
                     keyslist[slot] = Some(desc.key.clone());
@@ -103,9 +111,10 @@ pub fn sys_create_geometry(
             indicesres,
             instacned,
             GeometryResourceHash(hasher.finish()),
+            FlagGeometryDirty,
         );
-        geocommands.insert(bundle);
-        // cmdgeo.alter(entity, bundle);
+        // geocommands.insert(bundle);
+        cmdgeo.alter(entity, bundle);
     });
 }
 
@@ -160,7 +169,7 @@ impl ActionGeometry {
     }
 }
 
-fn init_slot
+fn init_geometry_vertices_slot
 (
     geodesc: &GeometryDesc,
     asset_mgr: &ShareAssetMgr<EVertexBufferRange>,

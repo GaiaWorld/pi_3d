@@ -16,75 +16,46 @@ use super::{
     abstract_mesh::AbstructMesh,
 };
 
+pub fn sys_calc_render_matrix_pre(
+    adds: ComponentAdded<GlobalMatrix>,
+    changes: ComponentChanged<GlobalMatrix>,
+    mut matrixs: Query<(&mut FlagRenderWorldMatrix)>,
+) {
+    let changes = changes.iter().chain(adds.iter());
+    changes.for_each(|entity| {
+        if let Ok(mut flag) = matrixs.get_mut(*entity) {
+            *flag = FlagRenderWorldMatrix;
+        }
+    });
+}
+
 pub fn sys_calc_render_matrix(
+    changes: ComponentChanged<FlagRenderWorldMatrix>,
     mut meshes: Query<
         (ObjectID, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut AbsoluteTransform),
-        (Without<InstanceMesh>, Or<(Changed<GlobalMatrix>, Changed<ScalingMode>, Changed<RenderAlignment>, Changed<ModelVelocity>, Changed<RenderPoseMatrix>)>)
+        (Without<InstanceMesh>)
     >,
     pose: Query<&RenderPoseMatrix>,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
     // let time = pi_time::Instant::now();
+    changes.iter().for_each(|entity| {
+        if let Ok((
+            obj, _,
+            localscaling, transform, scalingmode, renderalignment, velocity, mut abstransform
+        )) = meshes.get_mut(*entity) {
+            if let Ok((mut wm, mut wmi)) = matrixs.get_mut(obj) {
+    
+                // log::warn!("calc_render_matrix:");
+                // render_wm.0.clone_from(&worldmatrix.0);
+                // render_wminv.0.clone_from(&worldmatrix_inv.0);
 
-    meshes.iter_mut().for_each(|(
-        obj, _,
-        localscaling, transform, scalingmode, renderalignment, velocity, mut abstransform
-    )| {
-        if let Ok((mut wm, mut wmi)) = matrixs.get_mut(obj) {
-
-            // log::warn!("calc_render_matrix:");
-            // render_wm.0.clone_from(&worldmatrix.0);
-            // render_wminv.0.clone_from(&worldmatrix_inv.0);
-            
-            let pos = transform.position();
-            let mut scl = Vector3::new(1., 1., 1.);
-            
-            let g_rotation;
-            match scalingmode.0 {
-                crate::prelude::EScalingMode::Hierarchy => {
-                    if renderalignment.0 == ERenderAlignment::Local {
-                        if let Ok(pose) = pose.get(obj) {
-                            let mut m = Matrix::identity();
-                            m.clone_from(&transform.matrix);
-                            m = m * pose.0;
-                            wm.0.clone_from(&m);
-                            m.try_inverse_mut();
-                            wmi.0.clone_from(&m);
-                            return;
-                        }
-                        wm.0.clone_from(transform.matrix());
-                        wmi.0.clone_from(&transform.matrix_inv);
-                        return;
-                    }
-                    scl.clone_from(abstransform.scaling(transform.matrix()));
-                    g_rotation = abstransform.rotation(transform.matrix());
-                },
-                crate::prelude::EScalingMode::Local => {
-                    scl.clone_from(&localscaling.0);
-                    g_rotation = abstransform.rotation(transform.matrix());
-                },
-                crate::prelude::EScalingMode::Shape => {
-                    g_rotation = abstransform.rotation(transform.matrix());
-                },
-            }
-
-            let mut m = Matrix::identity();
-            let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
-            CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
-            if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
-                m = m * local;
-            }
-
-            if let Ok(pose) = pose.get(obj) {
-                m = m * pose.0;
-            }
-
-            if let Some(mi) = m.try_inverse() {
-                wm.0.clone_from(&m);
-                wmi.0.clone_from(&mi);
+                _calc_render_matrix(
+                    velocity, localscaling, scalingmode, renderalignment, transform,
+                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj)
+                );
             }
         }
-
     });
     
     // let time1 = pi_time::Instant::now();
@@ -92,177 +63,226 @@ pub fn sys_calc_render_matrix(
 }
 
 pub fn sys_calc_render_matrix_for_instance(
+    changes: ComponentChanged<FlagRenderWorldMatrix>,
     meshes: Query<&RenderAlignment>,
     mut instances: Query<
         (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalMatrix, &InstanceMesh, &mut AbsoluteTransform),
-        Or<(Changed<GlobalMatrix>, Changed<ModelVelocity>, Changed<ScalingMode>, Changed<RenderPoseMatrix>)>
     >,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
     pose: Query<&RenderPoseMatrix>,
 ) {
-    let time = pi_time::Instant::now();
-
-    instances.iter_mut().for_each(|(
-        obj, _,
-        localscaling, scalingmode, velocity, transform, id_source, mut abstransform
-    )| {
-        if let (
-            Ok((mut wm, mut wmi)),
-            Ok(renderalignment)
-        ) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
-            // let mut flag = true;
-
-            // render_wm.0.clone_from(&worldmatrix.0);
-            // render_wminv.0.clone_from(&worldmatrix_inv.0);
-            let pos = transform.position();
-            let mut scl = Vector3::new(1., 1., 1.);
-            let g_rotation;
-            match scalingmode.0 {
-                crate::prelude::EScalingMode::Hierarchy => {
-                    if renderalignment.0 == ERenderAlignment::Local {
-                        if let Ok(pose) = pose.get(obj) {
-                            let mut m = Matrix::identity();
-                            m.clone_from(&transform.matrix);
-                            m = m * pose.0;
-                            wm.0.clone_from(&m);
-                            m.try_inverse_mut();
-                            wmi.0.clone_from(&m);
-                            // log::warn!("Normal Alignment {:?}", (m, obj));
-                            return;
-                        }
-                        // log::warn!("Normal Alignment 2 {:?}", (obj));
-                        wm.0.clone_from(&transform.matrix);
-                        wmi.0.clone_from(&transform.matrix_inv);
-                        // log::warn!("Normal Alignment");
-                        return;
-                    }
-                    scl.clone_from(abstransform.scaling(transform.matrix()));
-                    g_rotation = abstransform.rotation(transform.matrix());
-                },
-                crate::prelude::EScalingMode::Local => {
-                    scl.clone_from(&localscaling.0);
-                    g_rotation = abstransform.rotation(transform.matrix());
-                },
-                crate::prelude::EScalingMode::Shape => {
-                    g_rotation = abstransform.rotation(transform.matrix());
-                },
+    // let time = pi_time::Instant::now();
+    changes.iter().for_each(|entity| {
+        if let Ok((
+            obj, _,
+            localscaling, scalingmode, velocity, transform, id_source, mut abstransform
+        )) = instances.get_mut(*entity) {
+            if let (
+                Ok((mut wm, mut wmi)),
+                Ok(renderalignment)
+            ) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
+                // let mut flag = true;
+                _calc_render_matrix(
+                    velocity, localscaling, scalingmode, renderalignment, transform,
+                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj)
+                );
             }
-
-            let mut m = Matrix::identity();
-            let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
-            CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
-            if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
-                m = m * local;
-            }
-
-            if let Ok(pose) = pose.get(obj) { m = m * pose.0; }
-
-            wm.0.clone_from(&m);
-            m.try_inverse_mut();
-            wmi.0.clone_from(&m);
         }
-
     });
     
-    let time1 = pi_time::Instant::now();
+    // let time1 = pi_time::Instant::now();
     // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
 }
 
-// pub fn sys_render_matrix_with_posematrix(
-//     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv, &RenderPoseMatrix), Changed<RenderPoseMatrix>>,
-// ) {
-//     matrixs.iter_mut().for_each(|(mut rm, mut rmi, pm)| {
-//         let mut m = rm.0 * pm.0;
-//         rm.0.clone_from(&m);
-//         m.try_inverse_mut();
-//         rmi.0.clone_from(&m);
-//     });
-// }
-
 pub fn sys_calc_render_matrix_instance(
-    mut instances: Query<(Entity, &RenderWorldMatrix, &RenderWorldMatrixInv, &mut ModelInstanceAttributes), Changed<RenderWorldMatrix>>,
+    changes: ComponentChanged<RenderWorldMatrix>,
+    mut instances: Query<(&InstanceMesh, &RenderWorldMatrix, &RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
+    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
-    let time = pi_time::Instant::now();
+    // let time = pi_time::Instant::now();
 
-    instances.iter_mut().for_each(|(
-        obj, wm, wmi, mut instanceattributes
-    )| {
-        // log::warn!(">>>>>> render_matrix {:?}", (obj, &wm.0));
-        instanceattributes.update_worldmatrix(&wm.0);
+    changes.iter().for_each(|entity| {
+        if let Ok((instance, wm, wmi, mut instanceattributes)) = instances.get_mut(*entity) {
+            instanceattributes.update_worldmatrix(&wm.0);
+
+            if let Ok(mut flag) = meshes.get_mut(instance.0) {
+                *flag = DirtyInstanceSourceRefs;
+            }
+        }
     });
     
-    let time1 = pi_time::Instant::now();
+    // let time1 = pi_time::Instant::now();
     // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
+}
+
+#[inline(never)]
+fn _calc_render_matrix<T>(
+    velocity: &ModelVelocity,
+    localscaling: &LocalScaling,
+    scalingmode: &ScalingMode,
+    renderalignment: &RenderAlignment,
+    transform: &GlobalMatrix,
+    abstransform: &mut AbsoluteTransform,
+    wm: &mut RenderWorldMatrix,
+    wmi: &mut RenderWorldMatrixInv,
+    pose: Result<&RenderPoseMatrix, T>,
+) {
+    let pos = transform.position();
+    let mut scl = Vector3::new(1., 1., 1.);
+    let g_rotation;
+    match scalingmode.0 {
+        crate::prelude::EScalingMode::Hierarchy => {
+            if renderalignment.0 == ERenderAlignment::Local {
+                if let Ok(pose) = pose {
+                    let mut m = Matrix::identity();
+                    m.clone_from(&transform.matrix);
+                    m = m * pose.0;
+                    wm.0.clone_from(&m);
+                    m.try_inverse_mut();
+                    wmi.0.clone_from(&m);
+                    // log::warn!("Normal Alignment {:?}", (m, obj));
+                    return;
+                }
+                // log::warn!("Normal Alignment 2 {:?}", (obj));
+                wm.0.clone_from(&transform.matrix);
+                wmi.0.clone_from(&transform.matrix_inv);
+                // log::warn!("Normal Alignment");
+                return;
+            }
+            scl.clone_from(abstransform.scaling(transform.matrix()));
+            g_rotation = abstransform.rotation(transform.matrix());
+        },
+        crate::prelude::EScalingMode::Local => {
+            scl.clone_from(&localscaling.0);
+            g_rotation = abstransform.rotation(transform.matrix());
+        },
+        crate::prelude::EScalingMode::Shape => {
+            g_rotation = abstransform.rotation(transform.matrix());
+        },
+    }
+
+    let mut m = Matrix::identity();
+    let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
+    CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
+    if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
+        m = m * local;
+    }
+
+    if let Ok(pose) = pose { m = m * pose.0; }
+
+    wm.0.clone_from(&m);
+    m.try_inverse_mut();
+    wmi.0.clone_from(&m);
 }
 
 pub fn sys_render_matrix_for_uniform(
-    mut meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), (Changed<RenderWorldMatrix>, Without<ModelStatic>)>,
+    changes: ComponentChanged<RenderWorldMatrix>,
+    meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), (Without<ModelStatic>)>,
 ) {
-    meshes.iter_mut().for_each(|(worldmatrix, worldmatrix_inv, bind_model)| {
+    changes.iter().for_each(|entity| {
+        if let Ok((worldmatrix, worldmatrix_inv, bind_model)) = meshes.get(*entity) {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
 
         bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
         bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
-    });
-}
-
-pub fn sys_velocity_for_uniform(
-    mut meshes: Query<(&ModelVelocity, &BindModel), (Changed<ModelVelocity>, Without<ModelStatic>)>,
-) {
-    meshes.iter_mut().for_each(|(velocity, bind_model)| {
-        let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
-    });
-}
-
-pub fn sys_enable_about_instance(
-    instances: Query<&InstanceMesh, Or<(Changed<GlobalEnable>, Changed<GlobalMatrix>, Changed<ModelInstanceAttributes>)>>,
-    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
-) {
-    instances.iter().for_each(|instance| {
-        if let Ok(mut flag) = meshes.get_mut(instance.0) {
-            *flag = DirtyInstanceSourceRefs;
         }
     });
 }
 
-pub fn sys_animator_update_instance_attribute(
-    floats: Query<&AnimatorableFloat, (Changed<AnimatorableFloat>, With<AnimatorableAttribute>)>,
-    _vec2s: Query<&AnimatorableVec2 , (Changed<AnimatorableVec2>, With<AnimatorableAttribute>)>,
-    _vec3s: Query<&AnimatorableVec3 , (Changed<AnimatorableVec3>, With<AnimatorableAttribute>)>,
-    _vec4s: Query<&AnimatorableVec4 , (Changed<AnimatorableVec4>, With<AnimatorableAttribute>)>,
-    _uints: Query<&AnimatorableUint , (Changed<AnimatorableUint>, With<AnimatorableAttribute>)>,
-    _sints: Query<&AnimatorableSint , (Changed<AnimatorableSint>, With<AnimatorableAttribute>)>,
-    mut items: Query<(&mut ModelInstanceAttributes, &InstanceAttributeAnimated), Changed<TargetAnimatorableIsRunning>>,
+pub fn sys_velocity_for_uniform(
+    changes: ComponentChanged<ModelVelocity>,
+    meshes: Query<(&ModelVelocity, &BindModel), (Without<ModelStatic>)>,
 ) {
-    items.iter_mut().for_each(|(mut attributes, animators)| {
-        animators.0.iter().for_each(|key| {
-            if let Some(offset) = attributes.offset(key) {
-                let mut idx = offset.offset() as usize;
-                if let Some(entity) = offset.entity() {
-                    match offset.atype() {
-                        EAnimatorableType::Vec4 => if let Ok(data) = _vec4s.get(entity) {
-                            bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                        },
-                        EAnimatorableType::Vec3 => if let Ok(data) = _vec3s.get(entity) {
-                            bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                        },
-                        EAnimatorableType::Vec2 => if let Ok(data) = _vec2s.get(entity) {
-                            bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                        },
-                        EAnimatorableType::Float => if let Ok(data) = floats.get(entity) {
-                            bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                        },
-                        EAnimatorableType::Uint => if let Ok(data) = _uints.get(entity) {
-                            bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                        },
-                        EAnimatorableType::Int => if let Ok(data) = _sints.get(entity) {
-                            bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                        },
+    changes.iter().for_each(|entity| {
+        if let Ok((velocity, bind_model)) = meshes.get(*entity) {
+        let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
+        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
+
+        }
+    });
+}
+
+pub fn sys_enable_about_instance(
+    instances: Query<&InstanceMesh>,
+    changes: ComponentChanged<GlobalEnable>,
+    changes2: ComponentChanged<GlobalMatrix>,
+    // changes3: ComponentChanged<ModelInstanceAttributes>,
+    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
+) {
+    changes.iter().for_each(|entity| {
+        if let Ok(instance) = instances.get(*entity) {
+            if let Ok(mut flag) = meshes.get_mut(instance.0) {
+                *flag = DirtyInstanceSourceRefs;
+            }
+        }
+    });
+    changes2.iter().for_each(|entity| {
+        if let Ok(instance) = instances.get(*entity) {
+            if let Ok(mut flag) = meshes.get_mut(instance.0) {
+                *flag = DirtyInstanceSourceRefs;
+            }
+        }
+    });
+    // changes3.iter().for_each(|entity| {
+    //     if let Ok(instance) = instances.get(*entity) {
+    //         if let Ok(mut flag) = meshes.get_mut(instance.0) {
+    //             *flag = DirtyInstanceSourceRefs;
+    //         }
+    //     }
+    // });
+    // instances.iter().for_each(|instance| {
+    //     if let Ok(mut flag) = meshes.get_mut(instance.0) {
+    //         *flag = DirtyInstanceSourceRefs;
+    //     }
+    // });
+}
+
+pub fn sys_animator_update_instance_attribute(
+    floats: Query<Ticker<&AnimatorableFloat>, (With<AnimatorableAttribute>)>,
+    _vec2s: Query<Ticker<&AnimatorableVec2 >, (With<AnimatorableAttribute>)>,
+    _vec3s: Query<Ticker<&AnimatorableVec3 >, (With<AnimatorableAttribute>)>,
+    _vec4s: Query<Ticker<&AnimatorableVec4 >, (With<AnimatorableAttribute>)>,
+    _uints: Query<Ticker<&AnimatorableUint >, (With<AnimatorableAttribute>)>,
+    _sints: Query<Ticker<&AnimatorableSint >, (With<AnimatorableAttribute>)>,
+    changes: ComponentChanged<TargetAnimatorableIsRunning>,
+    mut items: Query<(&mut ModelInstanceAttributes, &InstanceAttributeAnimated)>,
+) {
+    changes.iter().for_each(|entity| {
+        if let Ok((mut attributes, animators)) = items.get_mut(*entity) {
+            animators.0.iter().for_each(|key| {
+                if let Some(offset) = attributes.offset(key) {
+                    let mut idx = offset.offset() as usize;
+                    if let Some(entity) = offset.entity() {
+                        match offset.atype() {
+                            EAnimatorableType::Vec4 => if let Ok(data) = _vec4s.get(entity) {
+                                if data.is_changed() == false { return; }
+                                bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                            },
+                            EAnimatorableType::Vec3 => if let Ok(data) = _vec3s.get(entity) {
+                                if data.is_changed() == false { return; }
+                                bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                            },
+                            EAnimatorableType::Vec2 => if let Ok(data) = _vec2s.get(entity) {
+                                if data.is_changed() == false { return; }
+                                bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                            },
+                            EAnimatorableType::Float => if let Ok(data) = floats.get(entity) {
+                                if data.is_changed() == false { return; }
+                                bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                            },
+                            EAnimatorableType::Uint => if let Ok(data) = _uints.get(entity) {
+                                if data.is_changed() == false { return; }
+                                bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                            },
+                            EAnimatorableType::Int => if let Ok(data) = _sints.get(entity) {
+                                if data.is_changed() == false { return; }
+                                bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                            },
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     });
 }
 
@@ -323,56 +343,63 @@ pub fn sys_dispose_about_mesh(
 }
 
 pub fn sys_dispose_about_pass(
-    items: Query<(Entity, &DisposeReady, &PassMaterialID, &PassModelID), Changed<DisposeReady>>,
+    changes: ComponentChanged<DisposeReady>,
+    items: Query<(Entity, &DisposeReady, &PassMaterialID, &PassModelID)>,
     mut materials: Query<&mut MaterialRefs>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     empty: Res<SingleEmptyEntity>,
 ) {
-    items.iter().for_each(|(entity, state, matid, _)| {
-        if state.0 == false { return; }
-
-        disposecanlist.push(OpsDisposeCan::ops(entity));
-
-        if let Ok(mut refs) = materials.get_mut(matid.0) {
-            refs.remove(&entity);
-        }
-        if empty.id() != matid.0 {
-            disposereadylist.push(OpsDisposeReadyForRef::ops(matid.0));
+    changes.iter().for_each(|entity| {
+        if let Ok((entity, state, matid, _)) = items.get(*entity) {
+            if state.0 == false { return; }
+    
+            disposecanlist.push(OpsDisposeCan::ops(entity));
+    
+            if let Ok(mut refs) = materials.get_mut(matid.0) {
+                refs.remove(&entity);
+            }
+            if empty.id() != matid.0 {
+                disposereadylist.push(OpsDisposeReadyForRef::ops(matid.0));
+            }
         }
     });
 }
 
 pub fn sys_dispose_about_instance(
-    items: Query<(Entity, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes), Changed<DisposeReady>>,
+    changes: ComponentChanged<DisposeReady>,
+    items: Query<(Entity, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes)>,
     mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
-    mut instancesources: Query<(&mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs)>,
+    mut instancesources: Query<(&mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &mut FlagAbstructMeshForView)>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
-    items.iter().for_each(|(entity, state, sourceid, animators)| {
-        if state.0 == false { return; }
+    changes.iter().for_each(|entity| {
+        if let Ok((entity, state, sourceid, animators)) = items.get(*entity) {
+            if state.0 == false { return; }
 
-        disposecanlist.push(OpsDisposeCan::ops(entity));
-        animators.attributes().iter().for_each(|v| {
-            if let Some(entity) = v.1.entity() {
-                disposecanlist.push(OpsDisposeCan::ops(entity));
+            disposecanlist.push(OpsDisposeCan::ops(entity));
+            animators.attributes().iter().for_each(|v| {
+                if let Some(entity) = v.1.entity() {
+                    disposecanlist.push(OpsDisposeCan::ops(entity));
+                }
+            });
+
+            if let Ok((mut refs, mut flag, mut flagview)) = instancesources.get_mut(sourceid.0) {
+                // log::warn!("Remove Instance");
+                refs.remove(&entity);
+                *flag = DirtyInstanceSourceRefs;
+                *flagview = FlagAbstructMeshForView;
             }
-        });
 
-        if let Ok((mut refs, mut flag)) = instancesources.get_mut(sourceid.0) {
-            // log::warn!("Remove Instance");
-            refs.remove(&entity);
-            *flag = DirtyInstanceSourceRefs;
+            viewers.iter_mut().for_each(|(mut list0, mut list1)| {
+                list0.0.remove(&entity);
+                list1.0.remove(&entity);
+            });
+
+            // if empty.id() != sourceid.0 {
+            //     disposereadylist.push(OpsDisposeReady::ops(sourceid.0));
+            // }
         }
-
-        viewers.iter_mut().for_each(|(mut list0, mut list1)| {
-            list0.0.remove(&entity);
-            list1.0.remove(&entity);
-        });
-
-        // if empty.id() != sourceid.0 {
-        //     disposereadylist.push(OpsDisposeReady::ops(sourceid.0));
-        // }
     });
 }

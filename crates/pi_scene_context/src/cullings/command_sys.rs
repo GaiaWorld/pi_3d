@@ -17,12 +17,13 @@ pub fn sys_act_collider(
 
 pub fn sys_act_mesh_bounding(
     mut cmds: ResMut<ActionListMeshBounding>,
-    mut items: Query<&mut GeometryBounding>,
+    mut items: Query<(&mut GeometryBounding, &mut ItemCullingDirty)>,
 ) {
     cmds.drain().drain(..).for_each(|OpsMeshBounding(entity, min, max)| {
-        if let Ok(mut item) = items.get_mut(entity) {
+        if let Ok((mut item, mut flag)) = items.get_mut(entity) {
             item.minimum.copy_from(&min);
             item.maximum.copy_from(&max);
+            *flag = ItemCullingDirty;
         // } else if count < 2 {
         //     cmds.push(OpsMeshBounding(entity, min, max, count + 1))
         }

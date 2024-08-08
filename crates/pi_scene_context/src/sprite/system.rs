@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-use crate::prelude::{ActionListInstanceAttr, OpsInstanceAttr, RenderPoseMatrix};
+use crate::prelude::{ActionListInstanceAttr, FlagRenderWorldMatrix, OpsInstanceAttr, RenderPoseMatrix};
 
 use super::{command::{ActionListSpriteCreate, ActionListSpriteModify, OpsSpriteCreate, OpsSpriteModify}, Sprite};
 
@@ -26,6 +26,7 @@ pub fn sys_modify_sprite(
     mut sprites: Query<(&Sprite, &mut RenderPoseMatrix)>,
     atlasmgr: Res<TextureFrameAtlasManager>,
     mut cmdsfloat: ResMut<ActionListInstanceAttr>,
+    mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
 ) {
     cmds.drain().drain(..).for_each(|OpsSpriteModify(entity, keyframe)| {
         if let Ok((spriteinfo, mut posematrix)) = sprites.get_mut(entity) {
@@ -63,6 +64,10 @@ pub fn sys_modify_sprite(
                         }
         
                         CoordinateSytem3::matrix4_compose_euler_angle(&scaling, &rotation, &translation, &mut posematrix.0);
+                        
+                        if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {
+                            *flag = FlagRenderWorldMatrix;
+                        }
                     }
                 }
             }

@@ -47,7 +47,7 @@ pub fn sys_create_material(
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut errors: ResMut<ErrorRecord>,
-    // mut alter: Alter<(), (), MaterialBundle, ()>
+    mut alter: Alter<(), (), MaterialBundle, ()>
 ) {
     cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
@@ -81,8 +81,8 @@ pub fn sys_create_material(
                     EffectTextureSamplersComp::default(),
                 )
             );
-            matcmds.insert(bundle);
-            // alter.alter(entity, bundle);
+            // matcmds.insert(bundle);
+            alter.alter(entity, bundle);
         } else {
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
             // log::error!("ERROR_MATERIAL_SHADER_NOTFOUND: {:?}", key_shader);
@@ -294,8 +294,6 @@ pub fn sys_act_material_texture_from_target(
     mut tilloffcmds: ResMut<ActionListUniformVec4>,
     mut textureparams: Query<(
         &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty
-        // (&mut EffectBindTexture2D01Comp, &mut EffectBindTexture2D02Comp, &mut EffectBindTexture2D03Comp, &mut EffectBindTexture2D04Comp, 
-        // &mut EffectBindTexture2D05Comp, &mut EffectBindTexture2D06Comp, &mut EffectBindTexture2D07Comp, &mut EffectBindTexture2D08Comp)
     )>,
     targets: Res<CustomRenderTargets>,
     mut errors: ResMut<ErrorRecord>,
@@ -306,28 +304,6 @@ pub fn sys_act_material_texture_from_target(
             if let Some(target) = targets.get(key) {
                 let tilloff = target.tilloff((0., 0., 1., 1.));
                 tilloffcmds.push(OpsUniformVec4::ops(entity, tilloffslot, tilloff.0, tilloff.1, tilloff.2, tilloff.3));
-            //     match meta.query_tex_slot(&param.slotname) {
-            //         Some(idx) => {
-            //             let bind = ETextureViewUsage::SRT(target.rt.clone());
-            //             match idx {
-            //                 0 => { *slots.0 = EffectBindTexture2D01Comp::from(bind) },
-            //                 1 => { *slots.1 = EffectBindTexture2D02Comp::from(bind) },
-            //                 2 => { *slots.2 = EffectBindTexture2D03Comp::from(bind) },
-            //                 3 => { *slots.3 = EffectBindTexture2D04Comp::from(bind) },
-            //                 4 => { *slots.4 = EffectBindTexture2D05Comp::from(bind) },
-            //                 5 => { *slots.5 = EffectBindTexture2D06Comp::from(bind) },
-            //                 6 => { *slots.6 = EffectBindTexture2D07Comp::from(bind) },
-            //                 7 => { *slots.7 = EffectBindTexture2D08Comp::from(bind) },
-            //                 _ => { return; },
-            //             };
-            //         },
-            //         None => {
-            //             errors.record(entity, ErrorRecord::ERROR_MODIFY_ERROR_MATERIAL_TEXTURE);
-            //             // log::error!("texture_from_target Error No Slot");
-            //         },
-            //     }
-            // } else {
-            //     // log::error!("texture_from_target Error No Target");
             }
             // log::error!("texture_from_target Target {:?}", key);
             param.url = EKeyTexture::SRT(key);

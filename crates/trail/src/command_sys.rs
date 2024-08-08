@@ -20,8 +20,8 @@ pub fn sys_create_trail_mesh(
     mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
     mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
-    // mut altergeo: Alter<(), (), BundleGeometry, ()>,
-    // mut altertrail: Alter<(), (), BundleTrail, ()>,
+    mut altergeo: Alter<(), (), BundleGeometry, ()>,
+    mut altertrail: Alter<(), (), BundleTrail, ()>,
 ) {
     if let Some(trailbuffer) = &trailbuffer.0 {
 
@@ -33,7 +33,7 @@ pub fn sys_create_trail_mesh(
             // matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 
             // meshcreate.push(OpsMeshCreation::ops(id_scene, id_mesh, String::from("")));
-            ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert);
+            ActionMesh::init(id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert);
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
@@ -88,9 +88,10 @@ pub fn sys_create_trail_mesh(
                     AssetResBufferIndicesComp(None),
                     InstancedInfoComp(None),
                     GeometryResourceHash(hasher.finish()),
+                    FlagGeometryDirty,
                 );
-                geocommands.insert( bundle );
-                // altergeo.alter(id_geo, bundle);
+                // geocommands.insert( bundle );
+                altergeo.alter(id_geo, bundle);
             }
             
             if let Some(mut cmd) = commands.get_entity(entity) {
@@ -112,8 +113,8 @@ pub fn sys_create_trail_mesh(
                     TrailPoints::default(),
                     TrailRandom(pi_wy_rng::WyRng::default()),
                 );
-                cmd.insert(bundle);
-                // altertrail.alter(entity, bundle);
+                // cmd.insert(bundle);
+                altertrail.alter(entity, bundle);
             }
         });
     }

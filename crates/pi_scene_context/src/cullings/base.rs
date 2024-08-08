@@ -90,7 +90,7 @@ pub enum ECullingStrategy {
     STANDARD,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 pub struct Collider {
     pub minimum: Vector3,
     pub maximum: Vector3,
@@ -142,6 +142,8 @@ pub trait TFilter {
     fn filter(&self, entity: Entity) -> bool;
 }
 
+#[derive(Component, Default)]
+pub struct ItemCullingDirty;
 
 #[derive(Component, Default)]
 pub struct GeometryCullingMode(pub ECullingStrategy);

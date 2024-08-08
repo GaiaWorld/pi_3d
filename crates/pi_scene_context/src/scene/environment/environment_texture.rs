@@ -49,7 +49,9 @@ impl EnvSampler {
 }
 
 pub fn sys_env_texture_load_launch(
-    mut items: Query<(Entity, &EnvTextureSlot, &mut EnvTexture, &mut EnvIrradiance), Changed<EnvTextureSlot>>,
+    addeds: ComponentAdded<EnvTextureSlot>,
+    changes: ComponentChanged<EnvTextureSlot>,
+    mut items: Query<(Entity, &EnvTextureSlot, &mut EnvTexture, &mut EnvIrradiance)>,
     loader: Res<ImageTextureViewLoader<EnvTextureSlot>>,
     // image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
     imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
@@ -57,29 +59,31 @@ pub fn sys_env_texture_load_launch(
     mut state: ResMut<StateTextureLoader>,
     mut allocator: ResMut<ResBindBufferAllocator>,
 ) {
-    items.iter_mut().for_each(|(entity, param, mut item, mut irradiance)| {
-        let url = if let Some(v) = &param.0 { v } else { return; };
-
-        state.texview_count += 1;
-        let key = KeyImageTextureView::new(
-            KeyImageTexture { url: url.clone(), file: param.1, depth_or_array_layers: 6, ..Default::default() },
-            TextureViewDesc { base_mip_level: 0, array_layer_count: Some(6), ..Default::default() },
-        );
-        // let ekey = EKeyTexture::Image(key.clone());
-        let key_u64 = key.asset_u64();
-
-        match imgtex_assets_mgr.get(&key_u64) {
-            Some(view) => {
-                // log::error!("env sys_env_texture_load_launch");
-                *item = EnvTexture::from(ETextureViewUsage::Image(view));
-                irradiance.0 = item.irradiance(&mut allocator);
-                state.texview_success += 1;
-            },
-            _ => {
-                // let imgkey = key.url();
-                let id = image_loader.create_load_env(key.url().clone());
-                loader.wait.push((entity, key.clone(), id, 0));
-            },
+    addeds.iter().chain(changes.iter()).for_each(|entity| {
+        if let Ok((entity, param, mut item, mut irradiance)) = items.get_mut(*entity) {
+            let url = if let Some(v) = &param.0 { v } else { return; };
+    
+            state.texview_count += 1;
+            let key = KeyImageTextureView::new(
+                KeyImageTexture { url: url.clone(), file: param.1, depth_or_array_layers: 6, ..Default::default() },
+                TextureViewDesc { base_mip_level: 0, array_layer_count: Some(6), ..Default::default() },
+            );
+            // let ekey = EKeyTexture::Image(key.clone());
+            let key_u64 = key.asset_u64();
+    
+            match imgtex_assets_mgr.get(&key_u64) {
+                Some(view) => {
+                    // log::error!("env sys_env_texture_load_launch");
+                    *item = EnvTexture::from(ETextureViewUsage::Image(view));
+                    irradiance.0 = item.irradiance(&mut allocator);
+                    state.texview_success += 1;
+                },
+                _ => {
+                    // let imgkey = key.url();
+                    let id = image_loader.create_load_env(key.url().clone());
+                    loader.wait.push((entity, key.clone(), id, 0));
+                },
+            }
         }
     });
 }

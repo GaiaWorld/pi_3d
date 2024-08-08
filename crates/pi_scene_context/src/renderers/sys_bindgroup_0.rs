@@ -9,38 +9,6 @@ use crate::{
 
 use super::base::*;
 
-pub fn sys_set0_modify(
-    // mut items: Query<(Entity, &PassModelID, &PassSceneID, &PassViewerID, &PassEffectReady, &mut PassBindGroupScene), Or<(Changed<PassSceneID>, Changed<PassViewerID>, Changed<PassEffectReady>)>>,
-    // mut items: Query<(&mut PassBindGroupsDirty), Or<(Changed<PassSceneID>, Changed<PassViewerID>)>>,
-    // viewers: Query<&BindViewer>,
-    // scenes: Query<(&BindSceneEffect, &SceneLightingInfos, &BRDFTexture, &BRDFSampler, &MainCameraOpaqueTarget, &MainCameraDepthTarget, &SceneShadowRenderTarget, Option<&SceneShadowInfos>, &EnvTexture, &EnvIrradiance, &EnvSampler)>,
-    // device: Res<PiRenderDevice>,
-    // asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
-    // asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-    // targets: Res<CustomRenderTargets>,
-    mut errors: ResMut<ErrorRecord>,
-) {
-    let time1 = pi_time::Instant::now();
-
-    // items.iter_mut().for_each(|mut dirty| {
-    //     *dirty = PassBindGroupsDirty;
-    // });
-
-    // items.iter_mut().for_each(|(idpass, idmodel, idscene, idviewer, meta, mut set0)| {
-    //     if let Some(meta) = &meta.0 {
-    //         let result = _set0_modify(
-    //             idmodel.0, idscene.0, idviewer.0, meta,
-    //             &viewers, &scenes, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup, &targets, &mut errors
-    //         );
-    //         *set0 = PassBindGroupScene(result);
-    //     } else {
-    //         *set0 = PassBindGroupScene(None);
-    //     }
-    // });
-
-    // log::trace!("SysSet0ModifyFromScene: {:?}", pi_time::Instant::now() - time1);
-}
-
 pub fn _set0_modify(
     idmodel: Entity,
     idscene: Entity,

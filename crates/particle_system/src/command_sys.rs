@@ -148,7 +148,7 @@ pub fn sys_create_cpu_partilce_system(
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
-                    ActionMesh::init(&mut commands, id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert);
+                    ActionMesh::init(id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert);
                     meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
                     meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
                     meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
@@ -206,6 +206,7 @@ pub fn sys_create_cpu_partilce_system(
                             AssetResBufferIndicesComp(None),
                             InstancedInfoComp(None),
                             GeometryResourceHash(hasher.finish()),
+                            FlagGeometryDirty,
                         );
                         geocommands.insert(bundle);
                         // altergeo.alter(id_geo, bundle);

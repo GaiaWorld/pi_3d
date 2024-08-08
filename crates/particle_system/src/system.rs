@@ -8,16 +8,17 @@ use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, T
 use crate::base::*;
 
 pub fn sys_particle_active(
-    mut items: Query<(&GlobalEnable, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
+    mut items: Query<(&GlobalEnable, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState, &mut DirtyInstanceSourceRefs), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
     performance: Res<ParticleSystemPerformance>,
     mut globalperformance: ResMut<Performance>,
 ) {
     // let time0 = pi_time::Instant::now();
-    items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission, mut instancestate)| {
+    items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission, mut instancestate, mut flag)| {
         if enable.0 == true && active.0 == true {
             if state.0 == false {
                 instancestate.use_single_instancebuffer = true;
                 state.0 = true;
+                *flag = DirtyInstanceSourceRefs;
 
                 ids.reset();
                 let timescale = time.time_scale;
@@ -642,7 +643,7 @@ pub fn sys_update_buffer(
     meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes)>,
     mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
-    mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots)>,
+    mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots, &mut FlagGeometryDirty)>,
     mut performance: ResMut<ParticleSystemPerformance>,
     instant: Res<EngineInstant>,
 ) {

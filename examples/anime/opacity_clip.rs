@@ -72,13 +72,13 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+        url: EKeyTexture::from("./assets/images/fractal.png"),
     }));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
+        url: EKeyTexture::from("./assets/images/eff_ui_ll_085.png"),
     }));
     actions.material.float.push(
         OpsUniformFloat::ops(

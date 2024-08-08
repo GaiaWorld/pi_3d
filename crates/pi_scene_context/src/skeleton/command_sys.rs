@@ -19,7 +19,7 @@ pub fn sys_create_skin(
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     mut skinlinked: Query<&mut SkeletonID>,
-    // mut alter: Alter<(), (), SkeletonBundle, ()>,
+    mut alter: Alter<(), (), SkeletonBundle, ()>,
 ) {
     // log::error!("Skin Create");
     cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
@@ -37,11 +37,11 @@ pub fn sys_create_skin(
                     }
                 });
 
-                if let Some(mut cmd) = commands.get_entity(id_skin) {
+                // if let Some(mut cmd) = commands.get_entity(id_skin) {
                     let bundle = ActionSkeleton::init(skeleton);
-                    cmd.insert(bundle) ;
-                    // alter.alter(id_skin, bundle);
-                }
+                    // cmd.insert(bundle) ;
+                    alter.alter(id_skin, bundle);
+                // }
                 // log::error!("Skeleton Create Success !!!");
             },
             None => {

@@ -331,6 +331,7 @@ pub type BundleInstanceMesh = (
     ScalingMode,
     GeometryBounding,
     GeometryCullingMode,
+    ItemCullingDirty,
 );
 
 pub type BundlePass = (

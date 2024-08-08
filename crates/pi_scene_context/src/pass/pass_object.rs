@@ -216,6 +216,9 @@ impl From<(Handle<Shader3D>, Option<()>)> for PassShader {
     }
 }
 
+#[derive(Component, Default)]
+pub struct PassFlagShader;
+
 #[derive(Clone, Component, Default)]
 pub struct PassPipelineKey(pub Option<KeyPipeline3D>);
 impl TPassData<Option<KeyPipeline3D>> for PassPipelineKey {

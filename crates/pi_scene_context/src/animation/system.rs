@@ -36,7 +36,7 @@ pub fn sys_scene_anime_ctx(
     mut animeevents: ResMut<GlobalAnimeEvents>,
     mut performance: ResMut<Performance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    // let time0 = pi_time::Instant::now();
 
     animeglobal.runtimeinfos.reset();
     scenes.iter_mut().for_each(|(id_scene, scene_time, enable)| {
@@ -91,7 +91,7 @@ pub fn sys_scene_anime_ctx(
 
     });
 
-    let time1 = pi_time::Instant::now();
-    performance.animationgroup = (time1 - time0).as_micros() as u32;
+    // let time1 = pi_time::Instant::now();
+    // performance.animationgroup = (time1 - time0).as_micros() as u32;
     // log::debug!("SysSceneAnime: {:?}", time1 - time0);
 }
