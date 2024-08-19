@@ -13,7 +13,7 @@ pub type KeyGLTFBase = Atom;
 pub type GLTFJson = String;
 pub type GLTFDynamicJson = Atom;
 
-pub struct GLTFBin(Vec<u8>);
+pub struct GLTFBin(Share<Vec<u8>>);
 impl pi_assets::asset::Asset for GLTFBin {
     type Key = u64;
     // const TYPE: &'static str = "GLTFBin";
@@ -86,7 +86,7 @@ impl GLTFBin {
                         LoadResult::Ok(r) => Ok(r),
                         LoadResult::Wait(f) => f.await,
                         LoadResult::Receiver(recv) => {
-                            recv.receive(key, Ok(GLTFBin(data))).await
+                            recv.receive(key, Ok(GLTFBin(Share::new(data)))).await
                         }
                     }
                 }).await;

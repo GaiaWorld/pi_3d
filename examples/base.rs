@@ -36,7 +36,7 @@ impl Plugin for PluginLocalLoad {
                         pi_hal::Arg::Number(_) => todo!(),
                         pi_hal::Arg::String(path) => {
                             let r = std::fs::read(path.clone()).unwrap();
-                            on_load(hash.parse::<u64>().unwrap(), Ok(r));
+                            on_load(hash.parse::<u64>().unwrap(), Ok(Share::new(r)));
                         },
                         pi_hal::Arg::Buffer(_) => todo!(),
                         pi_hal::Arg::None => todo!(),
