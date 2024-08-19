@@ -30,9 +30,7 @@ pub fn sys_ray_test(
     pool: Query<&SceneBoundingPool>,
 ) {
     // println!("=======111111");
-    rays.drain()
-        .drain(..)
-        .for_each(|RayTest(scene_id, entity, x, y)| {
+    rays.drain().for_each(|RayTest(scene_id, entity, x, y)| {
             // println!("=======22222");
             if let Ok(world_matrix) = transforms.get(entity) {
                 let world_matrix = &world_matrix.matrix;

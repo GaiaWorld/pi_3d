@@ -1,10 +1,6 @@
 
-
-use std::ops::Deref;
-
 use pi_scene_shell::prelude::*;
 
-use crate::pass;
 use crate::prelude::DisposeReady;
 use crate::{
     viewer::prelude::*,
@@ -17,8 +13,6 @@ use super::renderer::*;
 
 pub use super::sys_bindgroup_0::*;
 pub use super::sys_bindgroup_1::*;
-pub use super::sys_bindgroup_2::*;
-pub use super::sys_bindgroup_3::*;
 
 pub fn sys_sets_modify_by_viewer(
     viewers: Query<
@@ -31,7 +25,7 @@ pub fn sys_sets_modify_by_viewer(
 ) {
     // let time1 = pi_time::Instant::now();
 
-    viewers.iter().for_each(|(idviewer, id_scene, modellist, forcemodels, viewrenderinfos)| {
+    viewers.iter().for_each(|(_idviewer, _id_scene, modellist, forcemodels, viewrenderinfos)| {
         // log::error!("DDD 0 idviewer: {:?}, rendererCount: {:?}, models: {:?}", idviewer, viewrenderinfos.0.len(), modellist.0.len());
         viewrenderinfos.renderers().for_each(|idrenderer| {
             let idrenderer = *idrenderer;
@@ -102,7 +96,7 @@ pub fn sys_passrendererid_pass_reset(
         if let Ok((idpass, mut passrenderer, idmodel, passpasstag)) = passes.get_mut(*entity) {
             if let Ok(idscene) = model.get(idmodel.0) {
                 // log::error!("BBB 1 ");
-                viewers.iter().for_each(|(idviewer, viewscene, list0, list1, viewrenderinfos)| {
+                viewers.iter().for_each(|(_idviewer, viewscene, list0, list1, viewrenderinfos)| {
                     // if viewrenderinfos.len() == 0 { log::error!("BBB 2 viewrenderinfos {:?}", (idpass, idviewer, viewrenderinfos.len())); }
                     if idscene.0 == viewscene.0 {
                         viewrenderinfos.renderers().for_each(|idrenderer| {
@@ -145,7 +139,7 @@ pub fn sys_sets_modify_by_scene_extend(
         models.iter().for_each(|(sceneid, passids)| {
             if sceneid.0 == scene {
                 passids.0.iter().for_each(|idpass| {
-                    if let Ok((mut dirty, idmodel)) = passes.get_mut(*idpass) {
+                    if let Ok((mut dirty, _idmodel)) = passes.get_mut(*idpass) {
                         // log::error!("sys_sets_modify_by_scene_extend");
                         *dirty = PassBindGroupsDirty;
                     }
@@ -179,7 +173,7 @@ pub fn sys_sets_modify_by_model(
 ) {
     // let time1 = pi_time::Instant::now();
 
-    models.iter().for_each(|(entity, passids)| {
+    models.iter().for_each(|(_entity, passids)| {
         // log::error!("sys_sets_modify_by_model");
         passids.0.iter().for_each(|id| {
             if let Ok(mut dirty) = passes.get_mut(*id) { *dirty = PassBindGroupsDirty; }
@@ -191,21 +185,24 @@ pub fn sys_sets_modify_by_model(
 
 pub fn sys_bind_buffer_apply(
     mut allocator: ResMut<ResBindBufferAllocator>,
-    mut vb_allocator: ResMut<VertexBufferAllocator3D>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
 ) {
     // let time1 = pi_time::Instant::now();
 
     allocator.write_buffer(&device, &queue);
-    vb_allocator.update_buffer(&device, &queue);
 
     // log::debug!("SysDynBufferAllocatorUpdate: {:?}", pi_time::Instant::now() - time1);
 }
 
-pub fn sys_bind_group_loaded(
-    _device: Res<PiRenderDevice>,
+pub fn sys_vertice_buffer_apply(
+    mut vb_allocator: ResMut<VertexBufferAllocator3D>,
+    device: Res<PiRenderDevice>,
+    queue: Res<PiRenderQueue>,
 ) {
-    
-}
+    // let time1 = pi_time::Instant::now();
 
+    vb_allocator.update_buffer(&device, &queue);
+
+    // log::debug!("SysDynBufferAllocatorUpdate: {:?}", pi_time::Instant::now() - time1);
+}

@@ -48,7 +48,7 @@ pub fn sys_create_particle_calculator(
     mut cmds: ResMut<ActionListCPUParticleCalculator>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleCalculator(entity, cfg)| {
+    cmds.drain().for_each(|OpsCPUParticleCalculator(entity, cfg)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else { return; };
@@ -73,14 +73,14 @@ pub fn sys_create_cpu_partilce_system(
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
     mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
-    // mut cmdps: Alter<(), (), ParticleBundle, ()>,
+    mut cmdps: Alter<(), (), ParticleBundle, ()>,
     mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
     
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
-    // mut altergeo: Alter<(), (), BundleGeometry, ()>,
+    mut altergeo: Alter<(), (), BundleGeometry, ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, count)| {
-        let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
+    cmds.drain().for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, _)| {
+        let mut _entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
             // log::warn!("create_cpu_partilce_system CANNT");
@@ -141,14 +141,17 @@ pub fn sys_create_cpu_partilce_system(
                     ParticleTrailMesh::new(trailmesh, trailgeo),
                 )
             );
-            entitycmd.insert(bundle);
-            // cmdps.alter( entity, bundle);
+            // entitycmd.insert(bundle);
+            let _ = cmdps.alter( entity, bundle);
             if let (Ok(ParticleCalculatorTrail(Some(_))), Some(trailbuffer)) = (trailmodifiers.get(idcalculator), &trailbuffer.0) {
                 // log::warn!("Trail Init: ");
                 // if trails.contains(entity) == false {
                     let id_mesh = trailmesh;
                     let id_geo = trailgeo;
-                    ActionMesh::init(id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert);
+                    ActionMesh::init(
+                        id_mesh, &mut commands, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel,
+                        &mut altermodel, &mut passinsert
+                    );
                     meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
                     meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
                     meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
@@ -173,13 +176,13 @@ pub fn sys_create_cpu_partilce_system(
                         // cmd.insert(CCullMode(CullMode::Off));
                         let bundle = (
                             GeometryID(id_geo),
-                            ModelStatic,
+                            // ModelStatic,
                             // 显式重置为默认
                            commonbindmodel.0.clone(),
                         );
                         cmd.insert(bundle);
                     }
-                    if let Some(mut geocommands) = commands.get_entity(id_geo) {
+                    if let Some(mut _geocommands) = commands.get_entity(id_geo) {
                         // log::warn!("Geometry Ok");
                         let vertex_desc = vec![trailbuffer.buffer_desc_billboard()];
                         let (comp1, comp2, comp3, comp4, comp5, comp6) = ActionGeometry::init(&vertex_desc, None, id_mesh);
@@ -208,16 +211,16 @@ pub fn sys_create_cpu_partilce_system(
                             GeometryResourceHash(hasher.finish()),
                             FlagGeometryDirty,
                         );
-                        geocommands.insert(bundle);
-                        // altergeo.alter(id_geo, bundle);
+                        // geocommands.insert(bundle);
+                        let _ = altergeo.alter(id_geo, bundle);
                     }
                 // }
                 
                 commands.entity(entity).insert((ParticleTrail::new(maxcount), ));
             }
-        } else if count < 2 {
-            // log::warn!("create_cpu_partilce_system FAIL");
-            cmds.push(OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, count + 1));
+        // } else if count < 2 {
+        //     // log::warn!("create_cpu_partilce_system FAIL");
+        //     cmds.push(OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, count + 1));
         } else {
             disposeready.push(OpsDisposeReadyForRef::ops(entity));
             disposeready.push(OpsDisposeReadyForRef::ops(trailmesh));
@@ -234,34 +237,34 @@ pub fn sys_act_partilce_system_state(
     trail_items: Query<&ParticleTrailMesh>,
     mut actions: ResMut<ActionListMaterialUse>,
 ) {
-    trail_cmds.drain().drain(..).for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count)| {
+    trail_cmds.drain().for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, _count)| {
         if let Ok(trail) = trail_items.get(entity) {
             actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
-        } else if count < 8 {
-            trail_cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
+        // } else if count < 8 {
+        //     trail_cmds.push(OpsCPUParticleSystemTrailMaterial(entity, idmat, pass, count + 1))
         }
     });
-    cmds.drain().drain(..).for_each(|cmd| {
+    cmds.drain().for_each(|cmd| {
         match cmd {
-            OpsCPUParticleSystemState::Start(entity, count) => {
+            OpsCPUParticleSystemState::Start(entity, _count) => {
                 if let Ok((mut active, _)) = items.get_mut(entity) {
                     active.0 = true;
-                } else if count < 2 {
-                    cmds.push(OpsCPUParticleSystemState::Start(entity, count + 1));
+                // } else if count < 2 {
+                //     cmds.push(OpsCPUParticleSystemState::Start(entity, count + 1));
                 }
             },
             OpsCPUParticleSystemState::TimeScale(entity, timescale, count) => {
                 if let Ok((_, mut time)) = items.get_mut(entity) {
                     time.time_scale = timescale;
-                } else if count < 2 {
-                    cmds.push(OpsCPUParticleSystemState::TimeScale(entity, timescale, count + 1));
+                // } else if count < 2 {
+                //     cmds.push(OpsCPUParticleSystemState::TimeScale(entity, timescale, count + 1));
                 }
             },
-            OpsCPUParticleSystemState::Stop(entity, count) => {
+            OpsCPUParticleSystemState::Stop(entity, _count) => {
                 if let Ok((mut active, _)) = items.get_mut(entity) {
                     active.0 = false;
-                } else if count < 2 {
-                    cmds.push(OpsCPUParticleSystemState::Stop(entity, count + 1));
+                // } else if count < 2 {
+                //     cmds.push(OpsCPUParticleSystemState::Stop(entity, count + 1));
                 }
             },
         }

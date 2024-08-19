@@ -10,7 +10,7 @@ pub fn sys_act_layer_mask(
     mut nodes: Query<&mut LayerMask>,
     mut meshes: Query<&mut FlagAbstructMeshForView>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsLayerMask(entity, layermask)| {
+    cmds.drain().for_each(|OpsLayerMask(entity, layermask)| {
         if let Ok(mut node) = nodes.get_mut(entity) {
             if *node != layermask {
                 *node = layermask;
@@ -18,8 +18,8 @@ pub fn sys_act_layer_mask(
                     *flag = FlagAbstructMeshForView;
                 }
             }
-        } else {
-            cmds.push(OpsLayerMask(entity, layermask));
+        // } else {
+        //     cmds.push(OpsLayerMask(entity, layermask));
         }
     });
 }

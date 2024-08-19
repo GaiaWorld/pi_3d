@@ -1,4 +1,4 @@
-use std::{default, hash::Hash, mem::replace, ops::Range};
+use std::{hash::Hash, mem::{replace, size_of}, ops::Range, vec::Drain};
 
 pub use parry3d::{
     bounding_volume::Aabb,
@@ -136,7 +136,8 @@ pub struct VertexBufferDataMap3D(pub SingleVertexBufferDataMap);
 pub struct IndicesBufferDesc {
     pub format: wgpu::IndexFormat,
     /// bytes 范围
-    pub buffer_range: Option<Range<wgpu::BufferAddress>>,
+    // pub buffer_range: Option<Range<wgpu::BufferAddress>>,
+    pub buffer_range: Option<Range<u32>>,
     pub buffer: KeyVertexBuffer,
 }
 
@@ -228,6 +229,9 @@ impl<T: Send + Sync> Default for ActionList<T> {
     }
 }
 impl<T: Send + Sync> ActionList<T> {
+    pub fn capacity(&self) -> usize {
+        self.0.capacity() * size_of::<T>()
+    }
     pub fn push_some(&mut self, val: impl IntoIterator<Item = T>) {
         self.0.extend(val);
     }
@@ -235,7 +239,10 @@ impl<T: Send + Sync> ActionList<T> {
         // self.0.extend([val]);
         self.0.push(val);
     }
-    pub fn drain(&mut self) -> Vec<T> {
+    pub fn drain(&mut self) -> Drain<T> {
+        self.0.drain(..)
+    }
+    pub fn exchange_empty(&mut self) -> Vec<T> {
         // self.0.drain().collect()
         replace(&mut self.0, vec![])
     }

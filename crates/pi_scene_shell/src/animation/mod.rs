@@ -28,11 +28,10 @@ pub use vec3::*;
 pub use vec4::*;
 use pi_assets::asset::GarbageEmpty;
 use pi_bevy_asset::{ShareAssetMgr, AssetMgrConfigs};
-use pi_bevy_render_plugin::should_run;
 use pi_curves::curve::frame::KeyFrameDataTypeAllocator;
 use pi_hash::XHashMap;
 
-use crate::{prelude::ERunStageChap, run_stage::should_run_with_animation};
+use crate::prelude::ERunStageChap;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum EAnimatorableType {

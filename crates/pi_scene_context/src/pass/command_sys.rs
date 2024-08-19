@@ -7,12 +7,12 @@ use super::{command::*, pass_object::*};
 
 pub fn sys_create_pass_object(
     mut cmds: ResMut<ActionListPassObject>,
-    // mut commands: Commands,
+    mut commands: Commands,
     models: Query<& PassIDs>,
     mut passes: Query<(&mut PassReset, &mut PassDrawDirty, &mut PassModelID, &mut PassMaterialID, &mut PassPipelineStateDirty, &mut PassBindGroupsDirty)>,
-    mut alter: Alter<(), (), PassObjBundle, ()>,
+    // mut alter: Alter<(), (), PassObjBundle, ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsPassObject(idmodel, idmaterial, pass)| {
+    cmds.drain().for_each(|OpsPassObject(idmodel, idmaterial, pass)| {
         if let Ok(passid) = models.get(idmodel) {
             let id_pass = passid.0[pass.index()];
 
@@ -28,8 +28,8 @@ pub fn sys_create_pass_object(
             // if let Some(mut cmd) = commands.get_entity(id_pass) {
                 let bundle = ActionPassObject::reset(idmodel, idmaterial);
                 // log::warn!("Pass {:?}", (idmodel, pass, idmaterial, id_pass));
-                // cmd.insert(bundle);
-                alter.alter(id_pass, bundle);
+                commands.entity(id_pass).insert(bundle);
+                // alter.alter(id_pass, bundle);
             // }
         }
     });
@@ -43,7 +43,7 @@ pub fn sys_act_pass_object(
     mut blend_cmds: ResMut<ActionListBlend>,
     mut stencil_cmds: ResMut<ActionListStencilState>,
 ) {
-    primivite_cmds.drain().drain(..).for_each(|OpsPrimitiveState(entity, tag, cmd)| {
+    primivite_cmds.drain().for_each(|OpsPrimitiveState(entity, tag, cmd)| {
         if let Ok(passids) = models.get(entity) {
             let passid = passids.0[tag.index()];
 
@@ -63,7 +63,7 @@ pub fn sys_act_pass_object(
         }
     });
 
-    depth_cmds.drain().drain(..).for_each(|OpsDepthState(entity, tag, cmd)| {
+    depth_cmds.drain().for_each(|OpsDepthState(entity, tag, cmd)| {
         if let Ok(passids) = models.get(entity) {
             let passid = passids.0[tag.index()];
 
@@ -76,7 +76,7 @@ pub fn sys_act_pass_object(
             }
         }
     });
-    blend_cmds.drain().drain(..).for_each(|cmd| {
+    blend_cmds.drain().for_each(|cmd| {
         match cmd {
             OpsRenderBlend::Disable(_) => todo!(),
             OpsRenderBlend::Blend(entity, tag, value) => {
@@ -90,7 +90,7 @@ pub fn sys_act_pass_object(
             },
         }
     });
-    stencil_cmds.drain().drain(..).for_each(|OpsStencilState(entity, tag, cmd)| {
+    stencil_cmds.drain().for_each(|OpsStencilState(entity, tag, cmd)| {
         if let Ok(passids) = models.get(entity) {
             let passid = passids.0[tag.index()];
 
@@ -174,7 +174,7 @@ impl ActionPassObject {
                 // PassEffectReady(None),
                 PassShader(None),
                 PassPipeline(None),
-                PassDraw(None),
+                PassDraw::default(),
             )
     }
 }

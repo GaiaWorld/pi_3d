@@ -6,7 +6,7 @@ use pi_scene_math::Vector4;
 
 use crate::{base::*, command::*, ResTrailBuffer};
 
-pub type BundleTrail = ((DisposeReady, DisposeCan), SceneID, TrailParam, TrailGeometry, TrailBase, TrailPoints, TrailRandom);
+pub type BundleTrail = (TrailParam, TrailGeometry, TrailBase, TrailPoints, TrailRandom);
 
 pub fn sys_create_trail_mesh(
     mut cmds: ResMut<ActionListTrail>,
@@ -14,7 +14,6 @@ pub fn sys_create_trail_mesh(
     trailbuffer: Res<ResTrailBuffer>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
-    // mut matuse: ResMut<ActionListMaterialUse>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
     mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
@@ -25,7 +24,7 @@ pub fn sys_create_trail_mesh(
 ) {
     if let Some(trailbuffer) = &trailbuffer.0 {
 
-        cmds.drain().drain(..).for_each(|OpsTrail(id_scene, id_linked, entity)| {
+        cmds.drain().for_each(|OpsTrail(id_scene, id_linked, entity)| {
 
             let id_mesh = entity;
             let id_geo = commands.spawn_empty_id();
@@ -33,7 +32,10 @@ pub fn sys_create_trail_mesh(
             // matuse.push(OpsMaterialUse::ops(id_mesh, id_mat));
 
             // meshcreate.push(OpsMeshCreation::ops(id_scene, id_mesh, String::from("")));
-            ActionMesh::init(id_mesh, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert);
+            // ActionMesh::init(
+            //     id_mesh, &mut commands, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel,
+            //     &mut altermodel, &mut passinsert
+            // );
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
             meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
@@ -57,11 +59,11 @@ pub fn sys_create_trail_mesh(
                     GeometryID(id_geo),
                     // 显式重置为默认
                     commonbindmodel.0.clone(),
-                    ModelStatic,
+                    // ModelStatic,
                 ));
             }
 
-            if let Some(mut geocommands) = commands.get_entity(id_geo) {
+            if let Some(mut _geocommands) = commands.get_entity(id_geo) {
                 // log::warn!("Geometry Ok");
                 let vertex_desc = vec![trailbuffer.buffer_desc()];
                 
@@ -91,13 +93,10 @@ pub fn sys_create_trail_mesh(
                     FlagGeometryDirty,
                 );
                 // geocommands.insert( bundle );
-                altergeo.alter(id_geo, bundle);
+                let _ = altergeo.alter(id_geo, bundle);
             }
-            
-            if let Some(mut cmd) = commands.get_entity(entity) {
+            // if let Some(mut _cmd) = commands.get_entity(id_mesh) {
                 let bundle: BundleTrail = (
-                    ActionEntity::init(),
-                    SceneID(id_scene),
                     TrailParam {
                         size: 1.,
                         color: Vector4::new(1., 1., 1., 1.),
@@ -113,9 +112,10 @@ pub fn sys_create_trail_mesh(
                     TrailPoints::default(),
                     TrailRandom(pi_wy_rng::WyRng::default()),
                 );
-                // cmd.insert(bundle);
-                altertrail.alter(entity, bundle);
-            }
+                // _cmd.insert(bundle);
+                let _ = altertrail.alter(id_mesh, bundle);
+                log::warn!(">>>>>>>>>>>>>>> OKkkkkk");
+            // }
         });
     }
 }
@@ -124,11 +124,9 @@ pub fn sys_act_trail_age(
     mut cmds: ResMut<ActionListTrailAge>,
     mut items: Query<&mut TrailParam>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTrailAgeControl(entity, ms, count)| {
+    cmds.drain().for_each(|OpsTrailAgeControl(entity, ms, _count)| {
         if let Ok(mut item) = items.get_mut(entity) {
             item.age_control = ms;
-        } else if count < 2 {
-            cmds.push(OpsTrailAgeControl(entity, ms, count+1))
         }
     });
 }

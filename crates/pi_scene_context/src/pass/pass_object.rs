@@ -1,7 +1,7 @@
 
 use std::{sync::Arc, ops::{Deref, Range}};
 
-use crate::{bindgroup::*, prelude::{create_bind_group, EVerteicesMemory, GeometryDesc, GeometryResourceHash, IndiceRenderRange, VertexRenderRange}};
+use crate::{bindgroup::*, prelude::{create_bind_group, EVerteicesInstance, GeometryDesc, GeometryResourceHash, IndiceRenderRange, RenderGeometry, VertexRenderRange}};
 
 pub use pi_scene_shell::prelude::*;
 
@@ -11,13 +11,99 @@ pub enum DrawObj3D {
 }
 
 #[derive(Clone)]
-pub struct DrawObjTmp {
-    pub instance_memory: Option<EVerteicesMemory>,
+pub struct DrawObjInfo {
+    pub instance_memory: Option<Arc<EVerteicesInstance>>,
     pub pipeline: u64,
     pub passentity: Entity,
     pub bindgroupshash: BindGroups3DHashResource,
     pub vertexentity: Entity,
     pub vertexhash: GeometryResourceHash,
+    pub indice_range: IndiceRenderRange,
+    pub vertex_range: VertexRenderRange,
+}
+impl DrawObjInfo {
+    pub fn can_batch_instance_memory(&self, other: &Self, debug: bool, max_combine_bytes: usize) -> bool {
+        // if debug {
+        //     log::warn!(
+        //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
+        //         (self.pipeline , other.pipeline),
+        //         (self.vertexhash.0 , other.vertexhash.0),
+        //         (self.bindgroupshash.0 , other.bindgroupshash.0),
+        //         (self.instance_memory.is_some() , other.instance_memory.is_some())
+        //     );
+        // }
+        if self.indice_range.is_some() || other.indice_range.is_some() { return false; }
+        if self.vertex_range.is_some() || other.vertex_range.is_some() { return false; }
+        if self.pipeline == other.pipeline
+            && self.vertexhash == other.vertexhash
+            && self.bindgroupshash == other.bindgroupshash
+        {
+            match (&self.instance_memory, &other.instance_memory) {
+                (Some(ins1), Some(ins2)) => {
+                    ins1.data.len() + ins2.data.len() < max_combine_bytes
+                },
+                _ => false,
+            }
+        } else {
+            false
+        }
+    }
+}
+impl Drop for DrawObjInfo {
+    fn drop(&mut self) {
+        self.instance_memory = None;
+        log::error!("DrawObjInfo Drop.");
+    }
+}
+
+#[derive(Clone)]
+pub struct DrawTmpRef<'w> {
+    pub rendergeo: &'w RenderGeometry,
+    pub pipeline: &'w Pipeline3DUsage,
+    pub bindgroups: &'w BindGroups3D,
+    pub indicerange: &'w IndiceRenderRange,
+    pub vertexrange: &'w VertexRenderRange,
+    pub inscombinerange: Range<u32>,
+    pub vertexhash: u64,
+    pub bindgroupshash: u64,
+}
+impl<'w> DrawTmpRef<'w> {
+    pub fn can_batch_instance_memory<'a>(&'a self, other: &'a Self, debug: bool) -> bool {
+        // if debug {
+        //     log::warn!(
+        //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
+        //         (self.pipeline , other.pipeline),
+        //         (self.vertexhash.0 , other.vertexhash.0),
+        //         (self.bindgroupshash.0 , other.bindgroupshash.0),
+        //         (self.instance_memory.is_some() , other.instance_memory.is_some())
+        //     );
+        // }
+        if self.indicerange.is_some() || other.indicerange.is_some() { return false; }
+        if self.vertexrange.is_some() || other.vertexrange.is_some() { return false; }
+        if self.pipeline.key() == other.pipeline.key()
+            && self.vertexhash == other.vertexhash
+            && self.bindgroupshash == other.bindgroupshash
+        {
+            match (&self.rendergeo.instance_memory, &other.rendergeo.instance_memory) {
+                (Some(ins1), Some(ins2)) => {
+                    ins1.slot == ins2.slot
+                },
+                _ => false,
+            }
+        } else {
+            false
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct DrawObjTmp {
+    pub instance_memory: Option<EVerteicesInstance>,
+    pub pipeline: u64,
+    pub passentity: Entity,
+    pub bindgroupshash: u64,
+    pub vertexentity: Entity,
+    pub vertexhash: u64,
     pub indice_range: IndiceRenderRange,
     pub vertex_range: VertexRenderRange,
 }
@@ -47,6 +133,12 @@ impl DrawObjTmp {
         } else {
             false
         }
+    }
+}
+impl Drop for DrawObjTmp {
+    fn drop(&mut self) {
+        self.instance_memory = None;
+        log::error!("DrawObjTmp Drop.");
     }
 }
 
@@ -249,10 +341,10 @@ impl PassPipeline {
     }
 }
 #[derive(Component, Default)]
-pub struct PassDraw(pub Option<DrawObjTmp>);
+pub struct PassDraw(pub bool);
 impl PassDraw {
-    pub fn new(val: Option<DrawObjTmp>) -> Self { Self(val) }
-    pub fn val(&self) -> &Option<DrawObjTmp> { &self.0 }
+    // pub fn new(val: Option<DrawObjTmp>) -> Self { Self(val) }
+    pub fn val(&self) -> bool { self.0 }
 }
 
 // #[derive(Deref, DerefMut, Resource)]

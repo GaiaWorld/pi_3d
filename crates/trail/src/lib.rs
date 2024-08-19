@@ -92,7 +92,7 @@ impl Plugin for PluginTrail {
         ;
 
 #[cfg(not(target_feature = "use_bevy"))]
-    app
+        app
         .add_systems(Update, sys_create_trail_mesh       .in_set(StageTrail::TrailCreate))
         .add_systems(Update, sys_act_trail_age           .in_set(StageTrail::TrailCommand))
         .add_systems(Update, sys_trail_update            .in_set(StageTrail::TrailUpdate))

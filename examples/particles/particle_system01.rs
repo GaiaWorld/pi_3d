@@ -12,13 +12,17 @@ use rand::Rng;
 use unlit_material::*;
 use pi_particle_system::prelude::*;
 
+// use jemallocator;
+
+// #[global_allocator]
+// static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 #[path = "../base.rs"]
 mod base;
 #[path = "../copy.rs"]
 mod copy;
 
-fn setup(
+pub fn setup(
     mut commands: Commands,
     mut actions: pi_3d::ActionSets,
     mut particlesys_res: ResourceParticleSystem,
@@ -26,6 +30,7 @@ fn setup(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    mut items: ResMut<ActionListTestData>,
 ) {
     let tes_size = 20;
     // frame.frame_ms = 200;
@@ -70,7 +75,7 @@ fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 2;
+    let temp = 3;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
@@ -107,7 +112,11 @@ fn setup(
                     source
                 };
 
-                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Translation(random.gen_range(size.clone()), random.gen_range(size.clone()), random.gen_range(size.clone()))));
+                let x = random.gen_range(size.clone());
+                let y = random.gen_range(size.clone());
+                let z = random.gen_range(size.clone());
+                items.0.push((item, x, y, z));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Translation(x, y, z)));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Euler(random.gen_range(euler.clone()), random.gen_range(euler.clone()), random.gen_range(euler.clone()))));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
             }
@@ -149,6 +158,15 @@ fn setup(
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }
 
+fn sys_modify(
+    items: Res<ActionListTestData>,
+    mut cmds: ResMut<ActionListTransformNodeLocal>,
+) {
+    items.0.iter().for_each(|(entity, x, y, z)| {
+        cmds.push(OpsTransformNodeLocal::ops(*entity, ETransformSRT::Translation(*x, *y, *z)));
+    });
+}
+
 fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     let mut cfg = IParticleSystemConfig::new();
 
@@ -187,7 +205,8 @@ fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     cfg
 }
 
-pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
+#[derive(Default)]
+pub struct ActionListTestData(Vec<(ObjectID, f32, f32, f32)>);
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
@@ -201,9 +220,9 @@ pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins_with_gltf();
     
     app.add_plugins(PluginTest);
-    app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
-    app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
-    app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
+    // app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
+    // app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
+    // app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     
@@ -216,6 +235,7 @@ pub fn main() {
     
     
     // app.run()
-    loop { app.update(); }
+    // loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

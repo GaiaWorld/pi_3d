@@ -98,8 +98,7 @@ impl crate::Plugin for PluginMesh {
                     sys_calc_render_matrix_instance,
                 ).chain().in_set(StageModel::RenderMatrix),
                 (
-                    sys_render_matrix_for_uniform,
-                    sys_velocity_for_uniform,
+                    sys_model_for_uniform,
                 ).in_set(ERunStageChap::Uniform),
                 (
                     sys_animator_update_instance_attribute  , // .run_if(should_run),
@@ -135,10 +134,7 @@ impl crate::Plugin for PluginMesh {
         .add_systems(Update, sys_calc_render_matrix.after(sys_calc_render_matrix_pre)               .in_set(StageModel::RenderMatrix))
         .add_systems(Update, sys_calc_render_matrix_for_instance     .after(sys_calc_render_matrix)  .in_set(StageModel::RenderMatrix))
         .add_systems(Update, sys_calc_render_matrix_instance   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))
-        // .add_systems(Update, sys_render_matrix_with_posematrix   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))
-        // .add_systems(Update, sys_calc_render_matrix_instance   .after(sys_render_matrix_with_posematrix)  .in_set(StageModel::RenderMatrix))
-        .add_systems(Update, sys_render_matrix_for_uniform       .in_set(ERunStageChap::Uniform))
-        .add_systems(Update, sys_velocity_for_uniform            .in_set(ERunStageChap::Uniform))
+        .add_systems(Update, sys_model_for_uniform       .in_set(ERunStageChap::Uniform))
         .add_systems(Update, sys_animator_update_instance_attribute                                                        .in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),
         .add_systems(Update, sys_tick_instanced_buffer_update       .after(sys_animator_update_instance_attribute ).in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),
         .add_systems(Update, sys_tick_instanced_buffer_update_single.after(sys_tick_instanced_buffer_update       ).in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),

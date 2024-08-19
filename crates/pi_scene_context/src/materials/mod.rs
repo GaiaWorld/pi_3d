@@ -149,7 +149,7 @@ impl Plugin for PluginMaterial {
                     sys_material_textures_modify,
                 ).chain().in_set(StageMaterial::Command),
                 (
-                    sys_texture_ready07,
+                    sys_texture_ready,
                 ).chain().in_set(StageMaterial::Ready),
                 sys_material_uniform_apply.in_set(ERunStageChap::Uniform),
                 sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
@@ -165,7 +165,7 @@ impl Plugin for PluginMaterial {
             .add_systems(Update, sys_act_material_value                  .after(sys_act_material_texture_from_target)   .in_set(StageMaterial::Command) )
             .add_systems(Update, sys_act_material_texture                .after(sys_act_material_value)                  .in_set(StageMaterial::Command) )
             .add_systems(Update, sys_material_textures_modify            .after(sys_act_material_texture)                .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_texture_ready07                 .in_set(StageMaterial::Ready) )
+            .add_systems(Update, sys_texture_ready                 .in_set(StageMaterial::Ready) )
             .add_systems(Update, sys_material_uniform_apply          .in_set(ERunStageChap::Uniform) )
             .add_systems(Update, sys_dispose_about_material          .after(sys_dispose_ready)   .in_set(ERunStageChap::Dispose) )
             ;

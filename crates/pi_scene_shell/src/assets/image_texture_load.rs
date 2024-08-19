@@ -17,7 +17,7 @@ use pi_render::rhi::asset::{ImageTextureDesc, TextureRes};
 use pi_share::Share;
 use crate::prelude::*;
 
-use super::{environment_texture_loader::EnvironmentTextureTools, texture::{ETextureSlot, TextureKeyList}};
+use super::{environment_texture_loader::EnvironmentTextureTools, texture::*};
 
 pub type IDImageTextureLoad = u64;
 
@@ -75,6 +75,15 @@ impl Default for ImageTextureLoader {
     }
 }
 impl ImageTextureLoader {
+    pub fn size(&self) -> usize {
+        self.wait.len() * 32
+        + self.success_load.len() * 8
+        + self.fails.len() * 8
+        + self.fail_reason.len() * 20
+        + self.fail_imgtex.len() * 20
+        + self.success.len() * 8
+        + self.failrecord.len() * 1
+    }
     pub fn create_load(&mut self, key: KeyImageTexture) -> IDImageTextureLoad {
         self.query_counter += 1;
         let id = self.query_counter;

@@ -1,5 +1,7 @@
 #![feature(box_into_inner)]
 
+use std::sync::Arc;
+
 use base::DemoScene;
 use pi_node_materials::prelude::*;
 use pi_scene_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
@@ -68,9 +70,47 @@ pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         app.insert_resource(ListTestData(vec![], None, pi_wy_rng::WyRng::default()));
-        app.configure_set(Update, StageTest::Cmd.before(StageScene::Create));
-        app.add_systems(Update, sys.in_set(StageTest::Cmd));
+        // app.configure_set(Update, StageTest::Cmd.before(StageScene::Create));
+        // app.add_systems(Update, sys.in_set(StageTest::Cmd));
+        
+        app.insert_resource(SimpleList::default());
+        app.add_startup_system(Update, simple_setup);
+        app.add_systems(Update, sys_simple);
     }
+}
+
+#[derive(Resource, Default)]
+pub struct SimpleList(Vec<(Entity, Number, Number, Number)>);
+
+fn simple_setup(
+    mut commands: Commands,
+    mut list: ResMut<SimpleList>,
+) {
+    let count = 10;
+    for i in 0..count {
+        for j in 0..count {
+            for k in 0..count {
+                let entity = commands.spawn((LocalMatrix::default())).id();
+                list.0.push((entity, i as Number, j as Number, k as Number));
+            }
+        }
+    }
+}
+fn sys_simple(
+    mut items: Query<&mut LocalMatrix>,
+    mut list: ResMut<SimpleList>,
+) {
+    list.0.iter_mut().for_each(|(entity, x, y, z)| {
+        if let Ok(mut matrix) = items.get_mut(*entity) {
+            let mut temp = Matrix::identity();
+            temp.append_scaling_mut(*x + *y + *z);
+            matrix.0 = temp;
+            *x += 0.01;
+            *y += 0.01;
+            *z += 0.01;
+        }
+    });
+    log::warn!("SimpleList {:?}", list.0.capacity());
 }
 
 fn setup(
@@ -134,19 +174,38 @@ pub enum StageTest {
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins();
     
+    // env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+
+    // let mut app = App::new();
+
+    // let width = 800;
+    // let height = 600;
+
+    // let mut opt = PiRenderOptions::default();
+    // // opt.backends = wgpu::Backends::VULKAN;
+    // app.insert_resource(opt);
+
+	// let (window, event_loop) = {
+	// 	use pi_winit::platform::windows::EventLoopBuilderExtWindows;
+	// 	let event_loop = pi_winit::event_loop::EventLoopBuilder::new().with_any_thread(true).build();
+	// 	let window = pi_winit::window::Window::new(&event_loop).unwrap();
+	// 	(Arc::new(window), event_loop)
+	// };
+    // app.insert_resource(AssetMgrConfigs::default());
+    
     app.add_plugins(PluginTest);
-    app.add_systems(Update, pi_3d::sys_info_node);
-    app.add_systems(Update, pi_3d::sys_info_resource);
-    app.add_systems(Update, pi_3d::sys_info_draw);
+    // app.add_systems(Update, pi_3d::sys_info_node);
+    // app.add_systems(Update, pi_3d::sys_info_resource);
+    // app.add_systems(Update, pi_3d::sys_info_draw);
     
     
-        #[cfg(feature = "use_bevy")]
-    app.add_systems(Startup, setup.after(base::setup_default_mat));
-    #[cfg(not(feature = "use_bevy"))]
-    app.add_startup_system(Update, setup.after(base::setup_default_mat));
+    //     #[cfg(feature = "use_bevy")]
+    // app.add_systems(Startup, setup.after(base::setup_default_mat));
+    // #[cfg(not(feature = "use_bevy"))]
+    // app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

@@ -19,10 +19,10 @@ pub fn sys_create_skin(
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     mut skinlinked: Query<&mut SkeletonID>,
-    mut alter: Alter<(), (), SkeletonBundle, ()>,
+    // mut alter: Alter<(), (), SkeletonBundle, ()>,
 ) {
     // log::error!("Skin Create");
-    cmds.drain().drain(..).for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
+    cmds.drain().for_each(|OpsSkinCreation(id_skin, bonemode, (root, bones), cache_frames, cachedata)| {
         let bone_count = bones.len();
         let bonecount = EBoneCount::new(bone_count as u8 + 1);
         let mode = ESkinCode::UBO(bonemode, bonecount, cache_frames);
@@ -39,8 +39,8 @@ pub fn sys_create_skin(
 
                 // if let Some(mut cmd) = commands.get_entity(id_skin) {
                     let bundle = ActionSkeleton::init(skeleton);
-                    // cmd.insert(bundle) ;
-                    alter.alter(id_skin, bundle);
+                    commands.entity(id_skin).insert(bundle) ;
+                    // alter.alter(id_skin, bundle);
                 // }
                 // log::error!("Skeleton Create Success !!!");
             },
@@ -63,7 +63,7 @@ pub fn sys_act_skin_use(
     mut skinlinks: Query<&mut SkeletonID>,
     mut bonelinks: Query<&mut BoneLinked>,
 ) {
-    cmds.drain().drain(..).for_each(|ops| {
+    cmds.drain().for_each(|ops| {
         match ops {
             OpsSkinUse::Use(entity, skin) => {
                 if let (Ok(mut bind), Ok((skeleton, mut skeletonrefs, mut flag))) = (meshes.get_mut(entity), skins.get_mut(skin)) {
@@ -75,8 +75,8 @@ pub fn sys_act_skin_use(
                     if skeletonrefs.insert(entity) {
                         *flag = DirtySkeletonRefs::default();
                     }
-                } else {
-                    cmds.push(OpsSkinUse::Use(entity, skin));
+                // } else {
+                //     cmds.push(OpsSkinUse::Use(entity, skin));
                 }
             },
             OpsSkinUse::UnUse(entity, skin) => {
@@ -84,8 +84,8 @@ pub fn sys_act_skin_use(
                     if skeletonrefs.remove(&entity) && skeletonrefs.is_empty() {
                         *flag = DirtySkeletonRefs::default();
                     }
-                } else {
-                    cmds.push(OpsSkinUse::UnUse(entity, skin));
+                // } else {
+                //     cmds.push(OpsSkinUse::UnUse(entity, skin));
                 }
             },
             OpsSkinUse::Bone(bone, parent) => {
@@ -109,7 +109,7 @@ pub fn sys_create_bone(
     // mut alter: Alter<(), (), BoneBoundle, ()>,
 ) {
     // log::error!("Bone Create");
-    cmds.drain().drain(..).for_each(|OpsBoneCreation(bone, scene)| {
+    cmds.drain().for_each(|OpsBoneCreation(bone, scene)| {
         let mut bonecmd = if let Some(cmd) = commands.get_entity(bone) {
             cmd
         } else {
@@ -127,7 +127,7 @@ pub fn sys_act_bone_pose(
     mut skins: Query<&mut SkeletonInitBaseMatrix>,
     mut bones: Query<(&SkeletonID, &mut BoneBaseMatrix)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsBonePose(bone, matrix)| {
+    cmds.drain().for_each(|OpsBonePose(bone, matrix)| {
         if let Ok((skeleton, mut basematrix)) = bones.get_mut(bone) {
             *basematrix = BoneBaseMatrix(matrix);
             if let Some(idskin) = skeleton.0 {
@@ -135,8 +135,8 @@ pub fn sys_act_bone_pose(
                     *flag = SkeletonInitBaseMatrix;
                 }
             }
-        } else {
-            cmds.push(OpsBonePose::ops(bone, matrix));
+        // } else {
+        //     cmds.push(OpsBonePose::ops(bone, matrix));
         }
     });
 }

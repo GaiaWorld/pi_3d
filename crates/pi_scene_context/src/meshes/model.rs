@@ -134,8 +134,8 @@ impl IndiceRenderRange {
                 let mut end = renderrange.end as u64 * indices.format.use_bytes();
 
                 if let Some(range) = indices.buffer_range.as_ref() {
-                    start = u64::min(range.end, range.start + start);
-                    end = u64::min(range.end, range.start + end);
+                    start = u64::min(range.end as u64, range.start as u64 + start);
+                    end = u64::min(range.end as u64, range.start as u64 + end);
                 } else {
                     let temp = range0.end - range0.start;
                     start = u64::min(temp, 0 + start);
@@ -143,7 +143,7 @@ impl IndiceRenderRange {
                 }
 
                 indices.buffer_range = Some(
-                    Range { start, end }
+                    Range { start: start as u32, end: end as u32 }
                 );
             }
             // log::warn!("IndiceRenderRange: {:?} buffer_range: {:?}", self, indices.buffer_range);

@@ -1,8 +1,9 @@
 
-use std::sync::Arc;
-
+use std::{ops::Range, sync::Arc};
 use pi_scene_shell::prelude::*;
 pub use pi_scene_shell::prelude::InstanceCacheBuffer;
+
+use crate::prelude::TmpInstanceSort;
 
 #[derive(Component, Default)]
 pub struct InstancedInfoComp(pub Option<InstancedInfo>);
@@ -58,5 +59,75 @@ impl InstanceBufferAllocator {
     }
     pub fn upload(&mut self, queue: &RenderQueue) {
         self.0.upload(queue)
+    }
+}
+
+pub struct InstanceDataRef {
+
+}
+
+pub struct DataPool {
+    vec: Vec<u8>,
+    used: usize,
+}
+impl DataPool {
+    pub fn new(initmax: usize) -> Self {
+        Self {
+            vec: Vec::with_capacity(initmax),
+            used: 0,
+        }
+    }
+    pub fn usedsize(&self) -> usize {
+        self.used
+    }
+    pub fn size(&self) -> usize {
+        self.vec.capacity()
+    }
+    pub fn reset(&mut self) {
+        // self.vec.clear();
+        self.used = 0;
+    }
+    pub fn record(&mut self, data: &[u8]) -> Range<usize> {
+        let start = self.used;
+        let end = self.used + data.len();
+
+        let mutlen = (self.vec.len() - self.used).min(data.len());
+        for idx in 0..mutlen{
+            self.vec[self.used + idx] = data[idx];
+        }
+
+        let pushlen = data.len() - mutlen;
+        for idx in 0..pushlen {
+            self.vec.push(data[mutlen + idx]);
+        }
+
+        self.used += data.len();
+
+        Range { start, end }
+    }
+    pub fn data(&self, range: &Range<usize>) -> &[u8] {
+        &self.vec.as_slice()[range.start..range.end]
+    }
+}
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct InstanceDataCommon(DataPool);
+impl InstanceDataCommon {
+    pub fn new(initmax: usize) -> Self {
+        Self(DataPool::new(initmax))
+    }
+    pub fn size(&self) -> usize {
+        self.0.size()
+    }
+}
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct CombineDataCommon(DataPool);
+impl CombineDataCommon {
+    pub fn new(initmax: usize) -> Self {
+        Self(DataPool::new(initmax))
+    }
+    pub fn size(&self) -> usize {
+        self.0.size()
     }
 }

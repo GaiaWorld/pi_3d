@@ -9,7 +9,7 @@ pub fn sys_create_sprite(
     mut commands: Commands,
     atlasmgr: Res<TextureFrameAtlasManager>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSpriteCreate(mesh, sprite, atlas)| {
+    cmds.drain().for_each(|OpsSpriteCreate(mesh, sprite, atlas)| {
         if let Some(mut entitycmd) = commands.get_entity(sprite) {
             entitycmd.insert((
                 RenderPoseMatrix::default(),
@@ -23,53 +23,83 @@ pub fn sys_create_sprite(
 
 pub fn sys_modify_sprite(
     mut cmds: ResMut<ActionListSpriteModify>,
-    mut sprites: Query<(&Sprite, &mut RenderPoseMatrix)>,
+    mut items: Query<&mut RenderPoseMatrix>,
+    sprites: Query<&Sprite>,
     atlasmgr: Res<TextureFrameAtlasManager>,
     mut cmdsfloat: ResMut<ActionListInstanceAttr>,
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSpriteModify(entity, keyframe)| {
-        if let Ok((spriteinfo, mut posematrix)) = sprites.get_mut(entity) {
-            if let Some(keyatlas) = &spriteinfo.atlas {
-                if let Some(atlas) = atlasmgr.get(keyatlas) {
-                    if let Some(frame) = atlas.get_frame_by_idx(keyframe) {
-                        
-                        let su = frame.frame_w as f32 / atlas.width   as f32;
-                        let sv = frame.frame_h as f32 / atlas.height  as f32;
-                        let ou = frame.frame_x as f32 / atlas.width   as f32;
-                        let ov = frame.frame_y as f32 / atlas.height  as f32;
-                        let dx = frame.sprite_source_size_x as f32 / frame.source_size_w as f32;
-                        let dy = frame.sprite_source_size_y as f32 / frame.source_size_h as f32;
-                        let dw = frame.sprite_source_size_w as f32 / frame.source_size_w as f32;
-                        let dh = frame.sprite_source_size_h as f32 / frame.source_size_h as f32;
-        
-                        cmdsfloat.push(OpsInstanceAttr::ops(entity, crate::prelude::EInstanceAttr::Vec4([su, sv, ou, ov]), Atom::from("InsTilloff")));
-        
-                        let translation = Vector3::new(
-                            (dx + dw * 0.5) - 0.5,
-                            (-dy - dh * 0.5) + 0.5,
-                            0.
-                        );
-                        let mut scaling = Vector3::new(
-                            dw,
-                            dh,
-                            1.
-                        );
-        
-                        let mut rotation = Vector3::zeros();
-                        if frame.rotated {
-                            rotation.z = std::f32::consts::PI * 0.5;
-                            scaling.x = dh;
-                            scaling.y = dw;
+    let mut tempparent = Matrix::identity();
+    let mut tempscaline = Vector3::zeros();
+    let mut tempposition = Vector3::zeros();
+    cmds.drain().for_each(|OpsSpriteModify(entity, keyframe)| {
+        if let Ok(mut posematrix) = items.get_mut(entity) {
+            let (frame, atlaswidth, atlasheight) = match keyframe {
+                super::SpriteModify::Idx(keyframe) => {
+                    if let Ok(spriteinfo) = sprites.get(entity) {
+                        if let Some(keyatlas) = &spriteinfo.atlas {
+                            if let Some(atlas) = atlasmgr.get(keyatlas) {
+                                if let Some(frame) = atlas.get_frame_by_idx(keyframe) {
+                                    (frame.clone(), atlas.width, atlas.height)
+                                } else {
+                                    return;
+                                }
+                            } else {
+                                return;
+                            }
+                        } else {
+                            return;
                         }
-        
-                        CoordinateSytem3::matrix4_compose_euler_angle(&scaling, &rotation, &translation, &mut posematrix.0);
-                        
-                        if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {
-                            *flag = FlagRenderWorldMatrix;
-                        }
+                    } else {
+                        return;
                     }
+                },
+                super::SpriteModify::Data(data) => {
+                    (TextureFrame::from_data(&data.as_slice()[0..12]), data[12], data[13])
                 }
+            };
+
+            let mut su = frame.frame_w as f32 / atlaswidth   as f32;
+            let mut sv = frame.frame_h as f32 / atlasheight  as f32;
+            let ou = frame.frame_x as f32 / atlaswidth   as f32;
+            let ov = frame.frame_y as f32 / atlasheight  as f32;
+            if frame.rotated {
+                su = frame.frame_h as f32 / atlaswidth   as f32;
+                sv = frame.frame_w as f32 / atlasheight  as f32;
+            }
+            let sx = frame.sprite_source_size_w as f32 / frame.source_size_w as f32;
+            let sy = frame.sprite_source_size_h as f32 / frame.source_size_h as f32;
+            let dx = frame.sprite_source_size_x as f32 / frame.source_size_w as f32;
+            let dy = (frame.source_size_h as f32 - frame.sprite_source_size_y as f32 - frame.sprite_source_size_h as f32) / frame.source_size_h as f32;
+        
+            cmdsfloat.push(OpsInstanceAttr::ops(entity, crate::prelude::EInstanceAttr::Vec4([su, sv, ou, ov]), Atom::from("InsTilloff")));
+
+            tempposition.x = dx - 0.5;
+            tempposition.y = -dy + 0.5;
+            tempposition.z= 0.;
+
+            tempscaline.x = sx;
+            tempscaline.y = sy;
+            tempscaline.z = 1.;
+            {
+                tempparent.fill_with_identity();
+                tempparent.append_nonuniform_scaling_mut(&tempscaline);
+                tempparent.append_translation_mut(&tempposition);
+            }
+            {
+                posematrix.0.fill_with_identity();
+                if frame.rotated {
+                    let rotmat = Rotation3::from_euler_angles(0., 0., -std::f32::consts::PI * 0.5);
+                    posematrix.0.copy_from(&rotmat.to_homogeneous());
+                }
+                tempposition.x = 0.5;tempposition.y = -0.5; tempposition.z = 0.;
+                posematrix.0.append_translation_mut(&tempposition);
+            }
+            
+            posematrix.0 = tempparent * posematrix.0;
+
+            if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {
+                *flag = FlagRenderWorldMatrix;
             }
         }
     });

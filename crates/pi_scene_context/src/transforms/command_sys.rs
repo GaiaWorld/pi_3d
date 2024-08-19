@@ -14,7 +14,7 @@ pub fn sys_create_transform_node(
     // mut commands: Commands,
     mut alter: Alter<(), (), (TransformNode, TransformNodeBundle), ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNode(scene, entity)| {
+    cmds.drain().for_each(|OpsTransformNode(scene, entity)| {
         // let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
         //     cmd
         // } else {
@@ -24,8 +24,8 @@ pub fn sys_create_transform_node(
             TransformNode,
             ActionTransformNode::init(scene),
         );
-        // transformnode.insert(bundle);
-        alter.alter(entity, bundle);
+        // commands.entity(entity).insert(bundle);
+        let _ = alter.alter(entity, bundle);
     });
 }
 
@@ -37,7 +37,7 @@ pub fn sys_act_transform_parent(
     mut flags: Query<&mut TransformNodeDirty>,
     mut tree: EntityTreeMut,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeParent(entity, val)| {
+    cmds.drain().for_each(|OpsTransformNodeParent(entity, val)| {
         if let Ok(mut flag) = flags.get_mut(entity) {
             *flag = TransformNodeDirty(true);
         }
@@ -63,7 +63,7 @@ pub fn sys_act_local_rotation(
     mut cmds: ResMut<ActionListTransformNodeLocalRotationQuaternion>,
     mut nodes: Query<(&mut LocalRotationQuaternion, &mut RecordLocalRotationQuaternion)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w)| {
+    cmds.drain().for_each(|OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w)| {
         if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
             let data = LocalRotationQuaternion::create(x, y, z, w);
             // log::error!("act_local_rotation {:?}", (entity, &data));
@@ -79,7 +79,7 @@ pub fn sys_act_local(
     mut nodes_euler: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles)>,
     mut nodes_scaling: Query<(&mut LocalScaling, &mut RecordLocalScaling)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTransformNodeLocal(entity, val)| {
+    cmds.drain().for_each(|OpsTransformNodeLocal(entity, val)| {
         match val {
             ETransformSRT::Euler(x, y, z) => {
                 if let Ok((mut node, mut record)) = nodes_euler.get_mut(entity) {

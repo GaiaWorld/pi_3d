@@ -31,7 +31,8 @@ impl Plugin for PluginTransformNode {
             .insert_resource(ActionListTransformNodeLocalRotationQuaternion::default())
             .insert_resource(ActionListTransformNodeParent::default())
             .insert_resource(StateTransform::default())
-            .insert_resource(TransformDirtyRoots::default())
+            .insert_resource(TmpTransformWorldCalc0::default())
+            .insert_resource(TmpTransformWorldCalc1::default())
             ;
 
 #[cfg(feature = "use_bevy")]
@@ -69,7 +70,6 @@ impl Plugin for PluginTransformNode {
                     sys_local_matrix_calc,
                     sys_tree_layer_changed,
                     sys_world_matrix_calc,
-                    sys_world_matrix_calc2,
                 ).chain().in_set(StageTransform::TransformCalcMatrix),
                 sys_dispose_about_transform_node.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
             )
@@ -86,8 +86,7 @@ impl Plugin for PluginTransformNode {
         .add_systems(Update, sys_local_quaternion_calc_rotation  .after(sys_act_local_rotation)                      .in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_local_matrix_calc               .after(sys_local_quaternion_calc_rotation)          .in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_tree_layer_changed              .after(sys_local_matrix_calc)                       .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_world_matrix_calc               .after(sys_tree_layer_changed)                      .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_world_matrix_calc2              .after(sys_world_matrix_calc)               .in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(Update, sys_world_matrix_calc               .after(sys_tree_layer_changed).in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_dispose_about_transform_node    .in_set(StageTransform::TransformCreate))
         ;
 }

@@ -1,7 +1,4 @@
 
-
-use std::default;
-
 use pi_scene_shell::prelude::*;
 
 use crate::prelude::InstanceTransparentIndex;
@@ -101,7 +98,7 @@ pub fn sys_act_render_queue(
     mut items: Query<&mut TransparentSortParam>,
     mut instances: Query<&mut InstanceTransparentIndex>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsRenderQueue(entity, val, count)| {
+    cmds.drain().for_each(|OpsRenderQueue(entity, val, count)| {
         if let Ok(mut item) = items.get_mut(entity) {
             *item = val;
             return;
@@ -111,8 +108,8 @@ pub fn sys_act_render_queue(
             return;
         }
 
-        if count < ACTION_WAIT_FRAME {
-            cmds.push(OpsRenderQueue(entity, val, count + 1));
-        }
+        // if count < ACTION_WAIT_FRAME {
+        //     cmds.push(OpsRenderQueue(entity, val, count + 1));
+        // }
     });
 }

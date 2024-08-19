@@ -184,6 +184,8 @@ fn setup(
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Euler(3., 0., 0.)));
 
         let trail = commands.spawn_empty_id();
+        actions.transform.tree.push(OpsTransformNodeParent::ops(trail, scene));
+        actions.mesh.create.push(OpsMeshCreation::ops(scene, trail, MeshInstanceState::default()));
         actions.trail.create.push(OpsTrail::ops(scene, source, trail));
         actions.trail.age.push(OpsTrailAgeControl::ops(trail, 500));
         actions.material.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));

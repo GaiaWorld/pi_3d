@@ -1,10 +1,10 @@
-use std::ops::Range;
+use std::{ops::Range, sync::Arc};
 
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 use smallvec::SmallVec;
 
-pub const VB_SLOTS_COUNT: usize = 4;
+pub const VB_SLOTS_COUNT: usize = 8;
 
 pub trait AsKeyVertexBuffer {
     fn create(desc: &VertexBufferDesc) -> Self;
@@ -26,10 +26,33 @@ pub trait TAssetResVertexBuffer {
 }
 
 #[derive(Clone)]
-pub struct EVerteicesMemory {
-    pub data: Vec<u8>,
+pub struct EVerteicesInstance {
+    pub data: Range<usize>,
     pub itemcount: u32,
     pub slot: u8,
+}
+impl EVerteicesInstance {
+    pub fn reset(&mut self) {
+        self.data.start = 0;
+        self.data.end = 0;
+        self.itemcount = 0;
+        self.slot = 0;
+    }
+}
+impl Default for EVerteicesInstance {
+    fn default() -> Self {
+        Self {
+            data: Range { start: 0, end: 0 },
+            itemcount: 0,
+            slot: 0,
+        }
+    }
+}
+impl Drop for EVerteicesInstance {
+    fn drop(&mut self) {
+        // self.data.clear();
+        // log::error!("EVerteicesMemory Drop");
+    }
 }
 
 ///
@@ -38,7 +61,7 @@ pub struct EVerteicesMemory {
 /// * 每顶点的数据,为Buffer的引用
 #[derive(Clone)]
 pub enum EVerticesBufferTmp {
-    Memory(EVerteicesMemory),
+    Instance(Arc<EVerteicesInstance>),
     Buffer(EVerticesBufferUsage),
 }
 
@@ -59,9 +82,12 @@ pub type GeometryRefs = EntityRefInfo<DirtyGeometryRef>;
 pub struct MeshID(pub ObjectID);
 
 #[derive(Deref, DerefMut, Clone, Hash, Component, Default)]
-pub struct LoadedKeyVBSlots(pub SmallVec<[Option<KeyVertexBuffer>;VB_SLOTS_COUNT]>);
+// pub struct LoadedKeyVBSlots(pub SmallVec<[Option<KeyVertexBuffer>;VB_SLOTS_COUNT]>);
+pub struct LoadedKeyVBSlots(pub [Option<KeyVertexBuffer>;VB_SLOTS_COUNT]);
+
 #[derive(Deref, DerefMut, Component, Default)]
-pub struct AssetDescVBSlots(pub SmallVec<[Option<AssetDescVBSlot>;VB_SLOTS_COUNT]>);
+// pub struct AssetDescVBSlots(pub SmallVec<[Option<AssetDescVBSlot>;VB_SLOTS_COUNT]>);
+pub struct AssetDescVBSlots(pub [Option<AssetDescVBSlot>;VB_SLOTS_COUNT]);
 impl AssetDescVBSlots {
     pub fn key(&self, slot: usize) -> Option<KeyVertexBuffer> {
         match self.get(slot) {
@@ -71,14 +97,15 @@ impl AssetDescVBSlots {
     }
 }
 #[derive(Deref, DerefMut, Component, Default)]
-pub struct AssetResVBSlots(pub SmallVec<[Option<AssetResVBSlot>;VB_SLOTS_COUNT]>);
+// pub struct AssetResVBSlots(pub SmallVec<[Option<AssetResVBSlot>;VB_SLOTS_COUNT]>);
+pub struct AssetResVBSlots(pub [Option<AssetResVBSlot>;VB_SLOTS_COUNT]);
 
 #[derive(Deref, DerefMut, Clone, Hash, Component, Default)]
 pub struct AssetKeyVBSlot(pub KeyVertexBuffer);
 impl AsKeyVertexBuffer for AssetKeyVBSlot {
     fn create(desc: &VertexBufferDesc) -> Self { Self(desc.bufferkey().clone()) }
 }
-#[derive(Component, Default)]
+#[derive(Component, Default, Debug)]
 pub struct AssetDescVBSlot(pub(crate) VertexBufferDesc);
 impl From<VertexBufferDesc> for AssetDescVBSlot {
     fn from(value: VertexBufferDesc) -> Self { Self(value) }
@@ -100,6 +127,6 @@ impl From<EVerticesBufferUsage> for AssetResVBSlot {
 }
 impl Default for AssetResVBSlot {
     fn default() -> Self {
-        Self( EVerticesBufferTmp::Memory(EVerteicesMemory { data: vec![], itemcount: 0, slot: 0 }) )
+        Self( EVerticesBufferTmp::Instance(Arc::new(EVerteicesInstance::default())) )
     }
 }

@@ -131,7 +131,8 @@ pub fn sys_material_uniform_apply(
     // performance.uniformbufferupdate = (pi_time::Instant::now() - time0).as_micros() as u32;
 }
 
-pub fn sys_texture_ready07(
+pub fn sys_texture_ready(
+    addes: ComponentAdded<EffectBindTexture2DList>,
     changes: ComponentChanged<EffectBindTexture2DList>,
     mut items: Query<
         (
@@ -142,7 +143,7 @@ pub fn sys_texture_ready07(
         )
     >,
 ) {
-    changes.iter().for_each(|entity| {
+    changes.iter().chain(addes.iter()).for_each(|entity| {
         if let Ok((
             _entity, binddesc, keys
             , textures, samplers

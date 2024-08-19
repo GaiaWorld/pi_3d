@@ -42,22 +42,28 @@ struct SceneBoundingFilter<'a, 'w>(pub &'a Query<'w, (&'static GlobalEnable, Opt
 impl<'a, 'w> TFilter for SceneBoundingFilter<'a, 'w> {
     fn filter(&self, entity: Entity) -> bool {
         if self.1.contains(&entity) {
-            if let Ok((enable, instances)) = self.0.get(entity) {
-                if let Some(instances) = instances {
-                    if instances.len() > 0 {
-                        true
-                    } else {
-                        enable.0
-                    }
+            self.query(entity)
+        } else {
+            false
+        }
+    }
+    fn query(&self, entity: Entity) -> bool {
+        if let Ok((enable, instances)) = self.0.get(entity) {
+            if let Some(instances) = instances {
+                if instances.len() > 0 {
+                    true
                 } else {
                     enable.0
                 }
             } else {
-                false
+                enable.0
             }
         } else {
             false
         }
+    }
+    fn iter(&self) -> std::collections::hash_set::Iter<Entity> {
+        self.1.iter()
     }
 }
 

@@ -30,16 +30,27 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
     fn culling<F: TFilter>(&self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
         let mut frustum_planes = FrustumPlanes::default();
         frustum_planes.from_transform_matrix(transform);
-        // log::warn!("{:?}, {:?}", frustum_planes.top, frustum_planes.bottom);
-        self.pool.iter().for_each(|(entity, item)| {
-            if filter.filter(*entity) && is_in_frustum(item.0, item.1, &frustum_planes) {
+
+        filter.iter().for_each(|entity| {
+            if self.fast.contains(entity) {
                 result.push(*entity);
+            } else if let Some(item) = self.pool.get(entity) {
+                if filter.query(*entity) && is_in_frustum(item.0, item.1, &frustum_planes) {
+                    result.push(*entity);
+                }
             }
         });
 
-        self.fast.iter().for_each(|item| {
-            result.push(*item);
-        });
+        // // log::warn!("{:?}, {:?}", frustum_planes.top, frustum_planes.bottom);
+        // self.pool.iter().for_each(|(entity, item)| {
+        //     if filter.filter(*entity) && is_in_frustum(item.0, item.1, &frustum_planes) {
+        //         result.push(*entity);
+        //     }
+        // });
+
+        // self.fast.iter().for_each(|item| {
+        //     result.push(*item);
+        // });
     }
 
     fn ray_test(&self, org: Vector3, dir: Vector3, result: &mut Option<Entity>) {

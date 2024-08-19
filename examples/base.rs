@@ -16,7 +16,7 @@ use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::Plu
 use pi_standard_material::PluginStandardMaterial;
 use unlit_material::*;
 use wgpu::Backends;
-use pi_winit::{window::Window, event_loop::EventLoop};
+use pi_winit::{event::WindowEvent, event_loop::EventLoop, window::Window};
 
 use std::sync::Arc;
 use pi_async_rt::rt::AsyncRuntime;
@@ -317,9 +317,9 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     let width = 800;
     let height = 600;
 
-    // let mut opt = PiRenderOptions::default();
-    // opt.backends = Backends::VULKAN;
-    // app.insert_resource(opt);
+    let mut opt = PiRenderOptions::default();
+    opt.backends = Backends::GL;
+    app.insert_resource(opt);
     
 	let (w, event_loop) = {
 		use pi_winit::platform::windows::EventLoopBuilderExtWindows;
@@ -404,4 +404,56 @@ pub fn setup_default_mat(
 pub fn active_lighting_shadow(mut state3d: ResMut<RunState3D>) {
     state3d.with_lighting(true);
     state3d.with_shadow(true);
+}
+
+pub fn run_loop<T>(mut app:  App, window: Arc<Window>, event_loop: EventLoop<T>) {
+
+    event_loop.run(move |event, elwt, flow| {
+        match event {
+            pi_winit::event::Event::NewEvents(_) => {},
+            pi_winit::event::Event::WindowEvent { window_id, event } => {
+                match event {
+                    WindowEvent::CloseRequested => {
+                        flow.set_exit()
+                    },
+                    WindowEvent::Resized(_) => {},
+                    WindowEvent::Moved(_) => {},
+                    WindowEvent::Destroyed => {},
+                    WindowEvent::DroppedFile(_) => {},
+                    WindowEvent::HoveredFile(_) => {},
+                    WindowEvent::HoveredFileCancelled => {},
+                    WindowEvent::ReceivedCharacter(_) => {},
+                    WindowEvent::Focused(_) => {},
+                    WindowEvent::KeyboardInput { device_id, input, is_synthetic } => {},
+                    WindowEvent::ModifiersChanged(_) => {},
+                    WindowEvent::Ime(_) => {},
+                    WindowEvent::CursorMoved { device_id, position, modifiers } => {},
+                    WindowEvent::CursorEntered { device_id } => {},
+                    WindowEvent::CursorLeft { device_id } => {},
+                    WindowEvent::MouseWheel { device_id, delta, phase, modifiers } => {},
+                    WindowEvent::MouseInput { device_id, state, button, modifiers } => {},
+                    WindowEvent::TouchpadPressure { device_id, pressure, stage } => {},
+                    WindowEvent::AxisMotion { device_id, axis, value } => {},
+                    WindowEvent::Touch(_) => {},
+                    WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size } => {},
+                    WindowEvent::ThemeChanged(_) => {},
+                    WindowEvent::Occluded(_) => {},
+                }
+            },
+            pi_winit::event::Event::DeviceEvent { device_id, event } => {},
+            pi_winit::event::Event::UserEvent(_) => {},
+            pi_winit::event::Event::Suspended => {},
+            pi_winit::event::Event::Resumed => {
+            },
+            pi_winit::event::Event::MainEventsCleared => {
+                window.request_redraw();
+            },
+            pi_winit::event::Event::RedrawRequested(_) => {
+                app.update();
+            },
+            pi_winit::event::Event::RedrawEventsCleared => {},
+            pi_winit::event::Event::LoopDestroyed => {},
+        }
+        
+    })
 }

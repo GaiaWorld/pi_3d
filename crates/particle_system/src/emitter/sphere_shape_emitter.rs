@@ -131,9 +131,9 @@ impl SphereShapeEmitter {
     ) {
         let mut direction = normalize(&local_position);
 
-        direction[0] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[1] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[2] += random.random() * Self::RANDOMIZE_DIRECTION;
+        direction[0] += random.random() * _shape.base.randomize_direction;
+        direction[1] += random.random() * _shape.base.randomize_direction;
+        direction[2] += random.random() * _shape.base.randomize_direction;
 
         direction = normalize(&direction);
 
@@ -178,9 +178,9 @@ impl SphereShapeEmitter {
         let mut rand_z = rand_radius * v;
         let mut rand_y = rand_radius * phi.sin() * theta.sin();
 
-        rand_x += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        rand_z += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        rand_y += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        rand_x += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
+        rand_z += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
+        rand_y += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
 
         CoordinateSytem3::transform_coordinates(&Vector3::new(rand_x, rand_y, rand_z), &shape.base.local_matrix, position_to_update);
     }

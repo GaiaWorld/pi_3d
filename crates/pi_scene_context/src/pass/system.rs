@@ -4,60 +4,9 @@ use crate::materials::prelude::*;
 
 use super::pass_object::*;
 
-pub fn sys_modify_pass_effect_by_pass(
-    // materials: Query<
-    // (&AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp),
-    // >,
-    addeds: ComponentAdded<PassMaterialID>,
-    changes: ComponentChanged<PassMaterialID>,
-    mut passes: Query<(Entity, &mut PassBindGroupsDirty)>,
-    // mut passes: Query<(Entity, &mut PassEffectReady, &mut PassBindEffectValue, &mut PassBindGroupTextureSamplers, &PassMaterialID), Changed<PassMaterialID>>,
-    // device: Res<PiRenderDevice>,
-    // asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
-    // asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
-) {
-    addeds.iter().chain(changes.iter()).for_each(|entity| {
-        if let Ok((idpass, mut dirty)) = passes.get_mut(*entity) {
-            *dirty = PassBindGroupsDirty;
-        }
-    });
-    // passes.iter_mut().for_each(|(idpass, mut dirty)| {
-    //     *dirty = PassBindGroupsDirty;
-    // });
-    // passes.iter_mut().for_each(|(idpass, mut passready, mut passbind, mut set2, idmat)| {
-        
-    //     // log::error!("Material {:?}", idmat.0);
-    //     if let Ok((effect_key, meta, bind, _list, textures)) = materials.get(idmat.0) {
-    //         let (bindvalue, bindtextures, effect) = _pass_effect_ready(
-    //             effect_key, textures, meta, bind
-    //         );
-    //         // log::error!("Effect None : 3 {:?}", (effect_key, effect.is_some(), idmat.0, idpass));
-    //         passready.0 = effect.clone();
-    //         // passtextures.0 = bindtextures.clone();
-    //         if let (Some(effect_texture_samplers), Some((_key_meta, meta))) = (&bindtextures, &passready.0) {
-    //             let result = _set2_modify(
-    //                 _key_meta,
-    //                 meta,
-    //                 effect_texture_samplers,
-    //                 &device,
-    //                 &asset_mgr_bindgroup_layout,
-    //                 &asset_mgr_bindgroup,
-    //             );
-    //             *set2 = PassBindGroupTextureSamplers(result);
-    //         } else {
-    //             *set2 = PassBindGroupTextureSamplers(None);
-    //         }
-    //         match bindvalue {
-    //             Some(bindvalue) => passbind.0 = Some(bindvalue.bind()),
-    //             None =>  passbind.0 = None ,
-    //         }
-    //     } else {
-    //         // log::error!("Material NotFound ");
-    //     }
-    // });
-}
-
 pub fn sys_modify_pass_effect_by_material(
+    passaddeds: ComponentAdded<PassMaterialID>,
+    passchanges: ComponentChanged<PassMaterialID>,
     changes: ComponentChanged<PassTag>,
     changes2: ComponentChanged<DirtyMaterialRefs>,
     changes3: ComponentChanged<BindEffectReset>,
@@ -65,6 +14,11 @@ pub fn sys_modify_pass_effect_by_material(
     materials: Query<&MaterialRefs>,
     mut passes: Query<(Entity, &mut PassBindGroupsDirty)>,
 ) {
+    passaddeds.iter().chain(passchanges.iter()).for_each(|entity| {
+        if let Ok((idpass, mut dirty)) = passes.get_mut(*entity) {
+            *dirty = PassBindGroupsDirty;
+        }
+    });
     changes.iter().for_each(|entity| {
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok(list) = materials.get(*entity) {

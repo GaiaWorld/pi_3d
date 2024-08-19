@@ -171,24 +171,24 @@ impl ConeShapeEmitter {
 
         let local_position = normalize(local_position);
         // println!("ConeShapeEmitter local_position: {:?}", local_position);
-        let x = direction.x * (1.0 - Self::SPHERIZE_DIRECTION) + local_position[0] * Self::SPHERIZE_DIRECTION;
+        let x = direction.x * (1.0 - shape.base.spherize_direction) + local_position[0] * shape.base.spherize_direction;
         // println!("=============x : {:?}", x);
         direction.x = x;
         // println!(
         //     "ConeShapeEmitter::start_direction_function111: {}",
         //     direction
         // );
-        direction.y = direction.y * (1.0 - Self::SPHERIZE_DIRECTION) + local_position.y * Self::SPHERIZE_DIRECTION;
-        direction.z = direction.z * (1.0 - Self::SPHERIZE_DIRECTION) + local_position.z * Self::SPHERIZE_DIRECTION;
+        direction.y = direction.y * (1.0 - shape.base.spherize_direction) + local_position.y * shape.base.spherize_direction;
+        direction.z = direction.z * (1.0 - shape.base.spherize_direction) + local_position.z * shape.base.spherize_direction;
         // println!(
         //     "ConeShapeEmitter::start_direction_function11: {}",
         //     direction
         // );
         direction = normalize(&direction);
         // println!("ConeShapeEmitter::start_direction_function2: {}", direction);
-        direction[0] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[1] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[2] += random.random() * Self::RANDOMIZE_DIRECTION;
+        direction[0] += random.random() * shape.base.randomize_direction;
+        direction[1] += random.random() * shape.base.randomize_direction;
+        direction[2] += random.random() * shape.base.randomize_direction;
         // println!("ConeShapeEmitter::start_direction_function3: {}", direction);
         // *direction_to_update = direction;
         *direction_to_update = normalize(&direction);
@@ -263,9 +263,9 @@ impl ConeShapeEmitter {
         _rand_y = radius * (s).sin();
         _rand_z = h * _height;
 
-        _rand_x += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        _rand_z += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        _rand_y += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
+        _rand_x += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
+        _rand_z += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
+        _rand_y += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
         
         // log::warn!("Position: {:?}", (_rand_x, _rand_y, _rand_z));
 

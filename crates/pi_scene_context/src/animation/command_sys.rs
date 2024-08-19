@@ -11,7 +11,7 @@ pub fn sys_act_add_property_target_animation(
     mut anime_contexts: TypeAnimeContexts,
     mut targetanimations: ResMut<ActionListAddTargetAnime>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsPropertyTargetAnimation(target, group, vtype, key)| {
+    cmds.drain().for_each(|OpsPropertyTargetAnimation(target, group, vtype, key)| {
         match vtype {
             EPropertyAnimationValueType::LocalPosition => {
                 if let Some(curve) = anime_assets.position.get(&key) {

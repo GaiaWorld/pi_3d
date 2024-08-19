@@ -27,6 +27,7 @@ pub struct ActionSetMesh<'w> {
     pub create: ResMut<'w, ActionListMeshCreate>,
     pub state: ResMut<'w, ActionListMeshStateModify>,
     pub blend: ResMut<'w, ActionListBlend>,
+    pub pose: ResMut<'w, ActionListAbstractMeshPose>,
     
     pub primitive_state: ResMut<'w, ActionListPrimitiveState>,
     // pub cullmode: ResMut<'w, ActionListCullMode>,

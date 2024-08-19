@@ -8,7 +8,7 @@ pub fn sys_act_collider(
     mut cmds: ResMut<ActionListCollider>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsCollider(entity, min, max)| {
+    cmds.drain().for_each(|OpsCollider(entity, min, max)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(Collider { minimum: min, maximum: max })
         } else { return; };
@@ -19,7 +19,7 @@ pub fn sys_act_mesh_bounding(
     mut cmds: ResMut<ActionListMeshBounding>,
     mut items: Query<(&mut GeometryBounding, &mut ItemCullingDirty)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshBounding(entity, min, max)| {
+    cmds.drain().for_each(|OpsMeshBounding(entity, min, max)| {
         if let Ok((mut item, mut flag)) = items.get_mut(entity) {
             item.minimum.copy_from(&min);
             item.maximum.copy_from(&max);
@@ -36,7 +36,7 @@ pub fn sys_act_mesh_bounding_culling_display(
     mut display_matuse: ResMut<ActionListMaterialUse>,
     deafultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
-    display_cmds.drain().drain(..).for_each(|OpsBoundingBoxDisplay(entity, mode, pass)| {
+    display_cmds.drain().for_each(|OpsBoundingBoxDisplay(entity, mode, pass)| {
         if let Ok(mut item) = display_scenes.get_mut(entity) {
             item.display = mode;
             if mode {

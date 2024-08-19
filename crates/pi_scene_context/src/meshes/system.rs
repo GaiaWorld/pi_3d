@@ -175,9 +175,11 @@ fn _calc_render_matrix<T>(
     wmi.0.clone_from(&m);
 }
 
-pub fn sys_render_matrix_for_uniform(
+pub fn sys_model_for_uniform(
     changes: ComponentChanged<RenderWorldMatrix>,
     meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), (Without<ModelStatic>)>,
+    velocitychanges: ComponentChanged<ModelVelocity>,
+    velocitymeshes: Query<(&ModelVelocity, &BindModel), (Without<ModelStatic>)>,
 ) {
     changes.iter().for_each(|entity| {
         if let Ok((worldmatrix, worldmatrix_inv, bind_model)) = meshes.get(*entity) {
@@ -187,14 +189,8 @@ pub fn sys_render_matrix_for_uniform(
         bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
         }
     });
-}
-
-pub fn sys_velocity_for_uniform(
-    changes: ComponentChanged<ModelVelocity>,
-    meshes: Query<(&ModelVelocity, &BindModel), (Without<ModelStatic>)>,
-) {
-    changes.iter().for_each(|entity| {
-        if let Ok((velocity, bind_model)) = meshes.get(*entity) {
+    velocitychanges.iter().for_each(|entity| {
+        if let Ok((velocity, bind_model)) = velocitymeshes.get(*entity) {
         let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
         bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
 
@@ -246,6 +242,8 @@ pub fn sys_animator_update_instance_attribute(
     _sints: Query<Ticker<&AnimatorableSint >, (With<AnimatorableAttribute>)>,
     changes: ComponentChanged<TargetAnimatorableIsRunning>,
     mut items: Query<(&mut ModelInstanceAttributes, &InstanceAttributeAnimated)>,
+    instances: Query<&InstanceMesh>,
+    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
     changes.iter().for_each(|entity| {
         if let Ok((mut attributes, animators)) = items.get_mut(*entity) {
@@ -282,6 +280,14 @@ pub fn sys_animator_update_instance_attribute(
                     }
                 }
             });
+            
+            if let Ok(mut flag) = meshes.get_mut(*entity) {
+                *flag = DirtyInstanceSourceRefs;
+            } else if let Ok(instance) = instances.get(*entity) {
+                if let Ok(mut flag) = meshes.get_mut(instance.0) {
+                    *flag = DirtyInstanceSourceRefs;
+                }
+            }
         }
     });
 }

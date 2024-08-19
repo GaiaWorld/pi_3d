@@ -27,11 +27,11 @@ use super::prelude::*;
     }
 
     pub fn sys_local_quaternion_calc_rotation(
-        changed: ComponentChanged<LocalRotationQuaternion>,
-        localmatrixs: Query<&LocalRotationQuaternion>,
-        mut local_rotation: Query<(&mut LocalRotation)>,
         changes: ComponentChanged<LocalScaling>,
         changes2: ComponentChanged<LocalPosition>,
+        changed: ComponentChanged<LocalRotationQuaternion>,
+        localmatrixs: Query<&LocalRotationQuaternion>,
+        mut local_rotation: Query<&mut LocalRotation>,
         mut localflags: Query< &mut FlagLocalMatrix>,
     ) {
         changed.iter().for_each(|entity| {
@@ -46,12 +46,7 @@ use super::prelude::*;
                 }
             }
         });
-        changes.iter().for_each(|entity| {
-            if let Ok(mut flag) = localflags.get_mut(*entity) {
-                *flag = FlagLocalMatrix;
-            }
-        });
-        changes2.iter().for_each(|entity| {
+        changes.iter().chain(changes2.iter()).for_each(|entity| {
             if let Ok(mut flag) = localflags.get_mut(*entity) {
                 *flag = FlagLocalMatrix;
             }
@@ -79,7 +74,7 @@ use super::prelude::*;
                 // commands.entity(obj).insert(LocalMatrix(matrix, true));
                 // localmatrix.0 = matrix;
                 // localmatrix.1 = true;
-                *localmatrix = LocalMatrix(matrix);
+                *localmatrix = LocalMatrix::new(matrix);
             }
         });
         // let time1 = pi_time::Instant::now();
@@ -87,41 +82,49 @@ use super::prelude::*;
     }
 
 #[derive(Clone)]
-struct TmpCalcWorldMatrix {
+pub struct TmpCalcWorldMatrix {
     node: Entity,
     dirty: bool,
     matrix: Matrix,
     enable: bool,
 }
 
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct TmpTransformWorldCalc0(Vec<TmpCalcWorldMatrix>);
+impl TmpTransformWorldCalc0 {
+    pub fn size(&self) -> usize {
+        self.0.capacity() * 76
+    }
+}
+
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct TmpTransformWorldCalc1(Vec<TmpCalcWorldMatrix>);
+impl TmpTransformWorldCalc1 {
+    pub fn size(&self) -> usize {
+        self.0.capacity() * 76
+    }
+}
+
 pub fn sys_tree_layer_changed(
     changes0: ComponentChanged<Layer>,
     changes1: ComponentChanged<Enable>,
     changes2: ComponentChanged<LocalMatrix>,
-    adds0: ComponentAdded<Layer>,
-    adds1: ComponentAdded<Enable>,
-    adds2: ComponentAdded<LocalMatrix>,
 
     mut layers: Query<(Entity, &mut TransformNodeDirty)>,
-    // mut dirtylist: ResMut<TransformDirtyRoots>,
-    mut state: ResMut<StateTransform>,
     tree: EntityTree,
 ) {
-    // let time = pi_time::Instant::now();
 
-    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter())
-        .chain(adds0.iter()).chain(adds1.iter()).chain(adds2.iter());
+    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
 
     changes.for_each(|entity| {
-        if let Ok((entity, mut item)) = layers.get_mut(*entity) {
+        if let Ok((_entity, mut item)) = layers.get_mut(*entity) {
             *item = TransformNodeDirty(true);
         }
     });
 
-    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter())
-        .chain(adds0.iter()).chain(adds1.iter()).chain(adds2.iter());
+    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
     changes.for_each(|entity| {
-        if let Ok((entity, mut item)) = layers.get_mut(*entity) {
+        if let Ok((entity, mut _item)) = layers.get_mut(*entity) {
             if let Some(down) = tree.get_down(entity) {
                 tree.iter(down.head()).for_each(|child| {
                     iter_dirty( child, &mut layers, 0, &tree);
@@ -129,9 +132,6 @@ pub fn sys_tree_layer_changed(
             }
         }
     });
-    
-    // let time1 = pi_time::Instant::now();
-    // state.calc_world_time = (time1 - time).as_micros() as u32;
 }
 
 #[inline(never)]
@@ -142,7 +142,7 @@ fn iter_dirty(
     tree: &EntityTree,
 ) {
     if level == 512 { return; }
-    if let Ok((entity, mut item)) = layers.get_mut(child) {
+    if let Ok((_entity, mut item)) = layers.get_mut(child) {
         *item = TransformNodeDirty(false);
         if let Some(down) = tree.get_down(child) {
             tree.iter(down.head()).for_each(|child| {
@@ -160,17 +160,17 @@ fn iter_dirty(
         mut state: ResMut<StateTransform>,
         tree: EntityTree,
         changes: ComponentChanged<TransformNodeDirty>,
-        adds: ComponentAdded<TransformNodeDirty>,
         dirtyflags: Query<&TransformNodeDirty>,
+        mut temp0: ResMut<TmpTransformWorldCalc0>,
+        mut temp1: ResMut<TmpTransformWorldCalc1>,
     ) {
         // let time = pi_time::Instant::now();
-        let mut level = 1;
 
-        let changes = changes.iter().chain(adds.iter());
+        // log::warn!("Capacity : {:?}", changes.capacity());
+        let mut level = 1;
         {
-            changes.for_each(|child| {
+            changes.iter().for_each(|child| {
                 let child = *child;
-                let mut temp_ids: Vec<TmpCalcWorldMatrix> = vec![];
 
                 if let Ok(flag) = dirtyflags.get(child) {
                     if flag.0 == false {
@@ -179,6 +179,8 @@ fn iter_dirty(
                 } else {
                     return;
                 }
+                temp0.clear();
+                temp1.clear();
 
                 let tmp = if let Some(parent) = tree.get_up(child) {
                     if let (Ok((transform, _)), Ok((_, _, penable, _))) = (transforms.get(parent.parent()), nodes.get(parent.parent())) {
@@ -196,7 +198,7 @@ fn iter_dirty(
                             child,
                             &mut nodes,
                             &mut transforms,
-                            &mut temp_ids,
+                            &mut temp0,
                             &tmp,
                         );
                     });
@@ -206,7 +208,8 @@ fn iter_dirty(
                     &mut nodes,
                     &mut transforms,
                     &tree,
-                    temp_ids
+                    &mut temp0,
+                    &mut temp1,
                 );
 
                 level = level.max(templevel);
@@ -218,10 +221,6 @@ fn iter_dirty(
         state.max_level = level as u32;
         // state.calc_world_time += (time1 - time).as_micros() as u32;
         // log::warn!("World Matrix Calc: {:?}", time1 - time);
-    }
-
-    pub fn sys_world_matrix_calc2(
-    ) {
     }
 
 
@@ -259,26 +258,27 @@ fn _calc_world_one(
 }
 
 #[inline(never)]
-fn calc_world_bytree(
+fn calc_world_bytree<'a>(
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
     transforms: &mut Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
     tree: &EntityTree,
-    mut temp_ids: Vec<TmpCalcWorldMatrix>
+    mut temp0: &'a mut Vec<TmpCalcWorldMatrix>,
+    mut temp1: &'a mut Vec<TmpCalcWorldMatrix>,
 ) -> u32 {
-    // 广度优先遍历 - 最大遍历到深度 65535
-    let max = 65535;
+    // 广度优先遍历 - 最大遍历到深度 1024
+    let max = 1024;
     let mut deep = 0;
     loop {
-        let mut temp_list = vec![];
-        if temp_ids.len() > 0 && deep < max {
-            temp_ids.into_iter().for_each(|tmp| {
+        // let mut temp_list = vec![];
+        if temp0.len() > 0 && deep < max {
+            temp0.drain(..).for_each(|tmp| {
                 if let Some(node_children_head) = tree.get_down(tmp.node) {
                     tree.iter(node_children_head.head()).for_each(|child| {
                         calc_world_one_bytree(
                             child,
                             nodes,
                             transforms,
-                            &mut temp_list,
+                            temp1,
                             &tmp
                         );
                     });
@@ -288,8 +288,11 @@ fn calc_world_bytree(
         } else {
             break;
         }
-        temp_ids = temp_list;
+        (temp0, temp1) = (temp1, temp0);
     }
+
+    temp0.clear();
+    temp1.clear();
 
     return deep;
 }

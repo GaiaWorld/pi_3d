@@ -6,9 +6,9 @@ pub use pi_world::*;
 #[cfg(not(feature = "use_bevy"))]
 pub use pi_world::prelude::{*, App};
 #[cfg(not(feature = "use_bevy"))]
-pub use pi_world_macros::{Resource};
+pub use pi_world_macros::Resource;
 #[cfg(not(feature = "use_bevy"))]
-pub use pi_world::prelude::{SystemParam};
+pub use pi_world::prelude::SystemParam;
 #[cfg(not(feature = "use_bevy"))]
 pub use pi_world::prelude::{SingleResMut as ResMut, SingleRes as Res};
 #[cfg(not(feature = "use_bevy"))]

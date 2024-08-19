@@ -28,8 +28,11 @@ impl OpsSceneCreation {
                     )
                 )
             },
-            _ => {
+            1 => {
                 (SceneBoundingPool::create_vec(), SceneColliderPool::create_vec())
+            },
+            _ => {
+                (SceneBoundingPool::default(), SceneColliderPool::default())
             }
         };
         Self(scene, pool, pool2)

@@ -66,7 +66,7 @@ pub fn sys_dispose_ready(
     empty: Res<SingleEmptyEntity>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsDisposeReady(entity)| {
+    cmds.drain().for_each(|OpsDisposeReady(entity)| {
         if empty.id() == entity || commands.contains_entity(entity) == false { return }
 
         if let Ok(mut item) = items.get_mut(entity) {
@@ -80,7 +80,7 @@ pub fn sys_dispose_ready(
             // cmds.push(OpsDisposeReady(entity))
         }
     });
-    cmdsforref.drain().drain(..).for_each(|OpsDisposeReadyForRef(entity)| {
+    cmdsforref.drain().for_each(|OpsDisposeReadyForRef(entity)| {
         if empty.id() == entity || commands.contains_entity(entity) == false { return }
 
         if let Ok(mut item) = items.get_mut(entity) {
@@ -100,7 +100,7 @@ pub fn sys_dispose_can(
     empty: Res<SingleEmptyEntity>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsDisposeCan(entity)| {
+    cmds.drain().for_each(|OpsDisposeCan(entity)| {
         if empty.id() == entity { return }
 
         if let Ok(mut item) = items.get_mut(entity) {
@@ -117,7 +117,7 @@ pub fn sys_dispose_can(
 pub fn sys_dispose(
     mut commands: Commands,
     items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
-    nodes: Query<(&Up), (With<Layer>, With<Down>, With<Up>)>,
+    nodes: Query<&Up, (With<Layer>, With<Down>, With<Up>)>,
     mut tree: EntityTreeMut,
 ) {
    
@@ -153,11 +153,11 @@ pub fn sys_act_scene_dispose(
     mut cmds: ResMut<ActionListSceneDispose>,
     mut items: Query<&mut DisposeReady>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSceneDispose(idscene)| {
+    cmds.drain().for_each(|OpsSceneDispose(idscene)| {
         if let Ok(mut item) = items.get_mut(idscene) {
             *item = DisposeReady(true);
-        } else {
-            cmds.push(OpsSceneDispose(idscene))
+        // } else {
+        //     cmds.push(OpsSceneDispose(idscene))
         }
     });
 }

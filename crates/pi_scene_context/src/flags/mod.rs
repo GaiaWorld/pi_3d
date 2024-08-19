@@ -102,7 +102,7 @@ pub fn sys_act_node_enable(
     mut cmds: ResMut<ActionListNodeEnable>,
     mut items: Query<(&mut Enable, &mut RecordEnable)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsNodeEnable(entity, val)| {
+    cmds.drain().for_each(|OpsNodeEnable(entity, val)| {
         if let Ok((mut node, mut record)) = items.get_mut(entity) {
             record.0 = val.clone();
             *node = val;

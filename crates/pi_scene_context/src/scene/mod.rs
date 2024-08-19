@@ -2,7 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 
-use crate::object::sys_dispose_ready;
+use crate::object::{sys_dispose_ready, TmpCommonVec, TmpSortDrawOpaqueVec, TmpSortDrawTransparentVec};
 
 use self::{
     environment::{sys::*, brdf::*, environment_texture::*},
@@ -56,6 +56,9 @@ impl Plugin for PluginScene {
         
         app.insert_resource(ImageTextureViewLoader::<BRDFTextureSlot>::default());
         app.insert_resource(ImageTextureViewLoader::<EnvTextureSlot>::default());
+        app.insert_resource(TmpCommonVec::default());
+        app.insert_resource(TmpSortDrawOpaqueVec::default());
+        app.insert_resource(TmpSortDrawTransparentVec::default());
 
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update,

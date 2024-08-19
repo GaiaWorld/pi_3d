@@ -24,15 +24,17 @@ use super::{skeleton::*, bone::*};
     pub fn sys_bones_local_dirty(
         mut skins: Query<(&Skeleton, &mut SkeletonBonesDirty, &mut SkeletonBoneWorldMatrixDirty)>,
         bonelinked: Query<&BoneLinked>,
-        nodes: Query<Entity, Changed<GlobalMatrix>>,
+        nodes: Query<Ticker<&GlobalMatrix>>,
         bones: Query<&SkeletonID, Changed<SkeletonID>>,
     ) {
         skins.iter_mut().for_each(|(skeleton, mut dirty, mut item)| {
             skeleton.bones.iter().for_each(|bone| {
                 if let Ok(BoneLinked(Some(linked))) = bonelinked.get(*bone) {
-                    if nodes.contains(*linked) {
-                        *item = SkeletonBoneWorldMatrixDirty;
-                        *dirty = SkeletonBonesDirty(true);
+                    if let Ok(node) = nodes.get(*linked) {
+                        if node.is_changed() {
+                            *item = SkeletonBoneWorldMatrixDirty;
+                            *dirty = SkeletonBonesDirty(true);
+                        }
                     }
                 }
             });

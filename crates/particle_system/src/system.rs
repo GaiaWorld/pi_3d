@@ -1,8 +1,8 @@
 
-use std::sync::Arc;
+use std::{ops::Range, sync::Arc};
 
 use pi_scene_shell::prelude::*;
-use pi_scene_context::{geometry::instance::{instanced_buffer::InstancedInfoComp, types::ModelInstanceAttributes}, prelude::*};
+use pi_scene_context::{geometry::instance::{instanced_buffer::*, types::ModelInstanceAttributes}, prelude::*};
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}};
 
 use crate::base::*;
@@ -74,7 +74,7 @@ pub fn sys_prewarm(
 
                     fn_emission(base, &modifiers.emission, &mut random, &mut ids, &mut time, &mut emission, &mut randoms, &mut modifystate);
                     fn_emitmatrix(localscl, gmatrix, &ids, &mut emitmatrix, &mut abstransform, &global_position);
-                    fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut locpos, &mut directions, &ids, &time, &randoms);
+                    fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut locpos, &mut directions, &mut forces, &ids, &time, &randoms);
                     if let (Ok(trailmodifier), Some(trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), trails.as_deref_mut()) {
                         fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut ages, &mut diewaittimes, Some(trailmodifier), Some(trails));
                     } else {
@@ -264,14 +264,13 @@ pub fn sys_start(
     calculators_overlifetime: Query<&ParticleCalculatorOverLifetime>,
     // mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
-    
     mut particle_sys: Query<(
         Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom
         , &mut ParticleLocalPosition, &mut ParticleDirection
         , &mut ParticleAgeLifetime, &mut ParticleDieWaitTime
         , &mut ParticleStartScaling, &mut ParticleLocalScaling
         , &mut ParticleLocalRotation
-        , &mut ParticleStartColor, &mut ParticleColorAndUV
+        , &mut ParticleStartColor, &mut ParticleColorAndUV, &mut ParticleForce
     ), Changed<ParticleSystemModifyState>>,
     calculators_trail: Query<&ParticleCalculatorTrail>,
     mut particle_sys_trail: Query<&mut ParticleTrail>,
@@ -285,12 +284,12 @@ pub fn sys_start(
         , mut items_lifetime, mut diewaittimes
         , mut items_size, mut localscalings
         , mut items_rotation
-        , mut items_color, mut coloranduv
+        , mut items_color, mut coloranduv, mut forces
     )| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-            fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut locpos, &mut directions, &ids, &time, &randoms);
+            fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut locpos, &mut directions, &mut forces, &ids, &time, &randoms);
             // let emitter = &emitter.0;
             // let newids = &ids.newids;
             // // let activeids = &ids.actives;
@@ -322,13 +321,13 @@ pub fn sys_start(
 
 fn fn_emitter(
     emitter: &ParticleCalculatorShapeEmitter, startspeed: &ParticleCalculatorStartSpeed,
-    locpos: &mut ParticleLocalPosition, directions: &mut ParticleDirection, ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom
+    locpos: &mut ParticleLocalPosition, directions: &mut ParticleDirection, forces: &mut ParticleForce, ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom
 ) {
     let emitter = &emitter.0;
     let newids = &ids.newids;
     // let activeids = &ids.actives;
 
-    locpos.start(newids, directions, randoms, time, emitter, startspeed);
+    locpos.start(newids, directions, &mut forces.values, randoms, time, emitter, startspeed);
 }
 
 fn fn_start_lifetime(
@@ -602,7 +601,7 @@ pub fn sys_by_speed(
 
 pub fn fn_color_by_speed(
     calculator: &ParticleCalculatorColorBySpeed,
-    ids: &ParticleIDs, time: &ParticleSystemTime, directions: &ParticleDirection, randoms: &ParticleBaseRandom, items: &mut ParticleColor
+    ids: &ParticleIDs, _time: &ParticleSystemTime, directions: &ParticleDirection, randoms: &ParticleBaseRandom, items: &mut ParticleColor
 ) {
     let calculator = &calculator.0;
     let activeids = &ids.actives;
@@ -611,7 +610,7 @@ pub fn fn_color_by_speed(
 
 pub fn fn_size_by_speed(
     calculator: &ParticleCalculatorSizeBySpeed,
-    ids: &ParticleIDs, time: &ParticleSystemTime, directions: &ParticleDirection, randoms: &ParticleBaseRandom, items: &mut ParticleLocalScaling
+    ids: &ParticleIDs, _time: &ParticleSystemTime, directions: &ParticleDirection, randoms: &ParticleBaseRandom, items: &mut ParticleLocalScaling
 ) {
     let calculator = &calculator.0;
     let activeids = &ids.actives;
@@ -645,6 +644,8 @@ pub fn sys_update_buffer(
     instanceinfos: Query<&InstancedInfoComp>,
     mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots, &mut FlagGeometryDirty)>,
     mut performance: ResMut<ParticleSystemPerformance>,
+    mut instancedatacommon: ResMut<InstanceDataCommon>,
+    mut combinedata: ResMut<CombineDataCommon>,
     instant: Res<EngineInstant>,
 ) {
     let time0 = pi_time::Instant::now();
@@ -655,6 +656,7 @@ pub fn sys_update_buffer(
     if performance.update_buffer {
         performance.last_running_time = currms;
         // log::warn!("ParticleBuffer: ");
+
         let mut count_particles = 0;
         let mut collectdata: Vec<u8> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16) * 4);
 
@@ -717,11 +719,12 @@ pub fn sys_update_buffer(
                                 // let zero = Vector3::zeros();
                                 let mut g_velocity = Vector3::zeros();
 
-                                let mut stripe = (16 + 4 + 4);
+                                // let mut str: i32ipe = (16 + 4 + 4);
                                 // let mut collect_common: Vec<u8> = Vec::with_capacity(ids.actives.len() * (16 + 4 + 4) * 4);
-                                let mut collect_float: Vec<f32> = Vec::with_capacity(ids.actives.len() * stripe);
-                                unsafe { collect_float.set_len(ids.actives.len() * stripe); }
 
+                                // let mut collect_float: Vec<f32> = Vec::with_capacity(ids.actives.len() * stripe);
+                                // unsafe { collect_float.set_len(ids.actives.len() * stripe); }
+                                combinedata.reset();
                                 let mut index = 0;
                                 ids.actives.iter().for_each(|idx| {
                                     let scaling = scalings.get(*idx).unwrap();
@@ -772,21 +775,43 @@ pub fn sys_update_buffer(
                                     // let offset = idx * stripe;
                                     // 获取粒子的网格实例化属性写入顶点Buffer
                                     {
-                                        let mut ii = 0;
-                                        // matrix.as_slice().iter().for_each(|v| { collect_float.push(*v); });
-                                        // color.as_slice().iter().for_each(|v| { collect_float.push(*v); });
-                                        // [uv.uscale, uv.vscale, uv.uoffset, uv.voffset].iter().for_each(|v| { collect_float.push(*v); });
+                                        // let mut ii = 0;
+                                        // matrix.as_slice().iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
+                                        // color.as_slice().iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
+                                        // [uv.uscale, uv.vscale, uv.uoffset, uv.voffset].iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
                                         
-                                        matrix.as_slice().iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
-                                        color.as_slice().iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
-                                        [uv.uscale, uv.vscale, uv.uoffset, uv.voffset].iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
+                                        combinedata.record(bytemuck::cast_slice(matrix.as_slice()));
+                                        combinedata.record(bytemuck::cast_slice(color.as_slice()));
+                                        combinedata.record(bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]));
                                     }
 
                                     index += 1;
                                 });
 
-                                let collect_common: Vec<u8> = bytemuck::cast_slice(collect_float.as_slice()).to_vec();
-                                reset_instances_buffer_range(id_geo, &instanceinfo, &mut slots, collect_common, ids.actives.len() as u32);
+                                let range = Range { start: 0, end: combinedata.usedsize() };
+                                let start = instancedatacommon.usedsize();
+                                instancedatacommon.record(combinedata.data(&range));
+                                let end = instancedatacommon.usedsize();
+
+                                // let collect_common: Vec<u8> = bytemuck::cast_slice(collect_float.as_slice()).to_vec();
+                                {
+                                    let data = EVerteicesInstance { data: Range { start, end }, itemcount: ids.actives.len() as u32, slot: instanceinfo.slot() as u8 };
+                                    let data = EVerticesBufferTmp::Instance(Arc::new(data));
+                                    if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0)  { 
+                                        // log::warn!("Instance Buffer {:?}", (instancedinfo.slot(), count));
+                                        match instanceinfo.slot() {
+                                            EVertexBufferSlot::Slot01 => { let item = buffer.get_mut(0).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty; },
+                                            EVertexBufferSlot::Slot02 => { let item = buffer.get_mut(1).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty; },
+                                            EVertexBufferSlot::Slot03 => { let item = buffer.get_mut(2).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty; },
+                                            EVertexBufferSlot::Slot04 => { let item = buffer.get_mut(3).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty; },
+                                            EVertexBufferSlot::Slot05 => { let item = buffer.get_mut(4).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty; },
+                                            EVertexBufferSlot::Slot06 => { let item = buffer.get_mut(5).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty; },
+                                            EVertexBufferSlot::Slot07 => { let item = buffer.get_mut(6).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty; },
+                                            EVertexBufferSlot::Slot08 => { let item = buffer.get_mut(7).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty; },
+                                            _ => {}
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

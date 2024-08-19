@@ -4,7 +4,6 @@ use pi_scene_shell::prelude::*;
 use crate::{
     scene::{prelude::*, environment::{brdf::{BRDFTexture, BRDFSampler}, environment_texture::{EnvTexture, EnvIrradiance, EnvSampler}}},
     viewer::prelude::*,
-    pass::*,
 };
 
 use super::base::*;

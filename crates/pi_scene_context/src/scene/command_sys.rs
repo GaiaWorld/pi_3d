@@ -27,9 +27,9 @@ pub fn sys_create_scene(
     mut meshrenderqueue: ResMut<ActionListRenderQueue>,
     mut geocreate: ResMut<ActionListGeometryCreate>,
     mut meshstate: ResMut<ActionListMeshStateModify>,
-    // mut alter: Alter<(), (), (BundleScene, SceneBoundingPool, SceneAnimationContext, BoundingBoxDisplay), ()>,
+    // mut alter: Alter<(), (), (BundleScene, SceneBoundingPool, SceneColliderPool, SceneAnimationContext, BoundingBoxDisplay), ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSceneCreation(entity, pool, pool2)| {
+    cmds.drain().for_each(|OpsSceneCreation(entity, pool, pool2)| {
 
         let id_left = commands.spawn_empty_id();
         let id_right = commands.spawn_empty_id();
@@ -58,7 +58,6 @@ pub fn sys_create_scene(
                     bundle,
                     pool,
                     pool2,
-                    SceneColliderPool::default(),
                     SceneAnimationContext::new(),
                     BoundingBoxDisplay { mesh: bounding, display: false }
                 );
@@ -85,12 +84,12 @@ pub fn sys_act_scene_ambient(
     mut cmds_anime: ResMut<ActionListSceneAnimationEnable>,
     mut scenes_anime: Query<&mut SceneAnimationEnable>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSceneTime(entity, val)| {
+    cmds.drain().for_each(|OpsSceneTime(entity, val)| {
         if let Ok(mut comp) = scenes.get_mut(entity) {
             comp.reset(val as u64);
         }
     });
-    cmds_ambient.drain().drain(..).for_each(|OpsSceneAmbientColor(entity, val)| {
+    cmds_ambient.drain().for_each(|OpsSceneAmbientColor(entity, val)| {
         if let Ok(mut comp) = scenes_ambient.get_mut(entity) {
             match val {
                 ESceneAmbientOps::Color(r, g, b) => { comp.0 = r; comp.1 = g; comp.2 = b; },
@@ -98,7 +97,7 @@ pub fn sys_act_scene_ambient(
             }
         }
     });
-    cmds_fog.drain().drain(..).for_each(|OpsSceneFogParam(entity, val)| {
+    cmds_fog.drain().for_each(|OpsSceneFogParam(entity, val)| {
         if let Ok(mut comp) = scenes_fog.get_mut(entity) {
             match val {
                 EFogOps::Color(r, g, b) =>  { comp.r = r; comp.g = g; comp.b = b; },
@@ -106,11 +105,9 @@ pub fn sys_act_scene_ambient(
             }
         }
     });
-    cmds_anime.drain().drain(..).for_each(|OpsSceneAnimationEnable(entity, val, count)| {
+    cmds_anime.drain().for_each(|OpsSceneAnimationEnable(entity, val, count)| {
         if let Ok(mut comp) = scenes_anime.get_mut(entity) {
             *comp = SceneAnimationEnable(val);
-        } else if count < 2 {
-            cmds_anime.push(OpsSceneAnimationEnable(entity, val, count + 1))
         }
     });
 }
@@ -128,30 +125,30 @@ pub fn sys_act_scene_render(
     mut shadow_cmds: ResMut<ActionListSceneShadowMap>,
     mut shadow_scenes: Query<&mut SceneShadowRenderTarget>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsSceneBRDF(entity, val, compressed)| {
+    cmds.drain().for_each(|OpsSceneBRDF(entity, val, compressed)| {
         if let Ok(mut comp) = scenes.get_mut(entity) {
             *comp = BRDFTextureSlot(EKeyTexture::Image(KeyImageTextureView::new( KeyImageTexture { url: val, srgb: false, file: true, compressed, ..Default::default() }, TextureViewDesc::default() ) ));
-        } else {
-            cmds.push(OpsSceneBRDF(entity, val, compressed));
+        // } else {
+        //     cmds.push(OpsSceneBRDF(entity, val, compressed));
         }
     });
-    opaquetarget_cmds.drain().drain(..).for_each(|OpsSceneOpaqueTexture(entity, key)| {
+    opaquetarget_cmds.drain().for_each(|OpsSceneOpaqueTexture(entity, key)| {
         if let Ok(mut comp) = opaquetarget_scenes.get_mut(entity) {
             comp.0 = targets.get(key);
         }
     });
-    depthtarget_cmds.drain().drain(..).for_each(|OpsSceneDepthTexture(entity, key)| {
+    depthtarget_cmds.drain().for_each(|OpsSceneDepthTexture(entity, key)| {
         if let Ok(mut comp) = depthtarget_scenes.get_mut(entity) {
             comp.0 = targets.get(key);
         }
     });
-    env_cmds.drain().drain(..).for_each(|OpsSceneEnvTexture(entity, path, data_is_image)| {
+    env_cmds.drain().for_each(|OpsSceneEnvTexture(entity, path, data_is_image)| {
         if let Ok(mut comp) = env_scenes.get_mut(entity) {
             comp.0 = path;
             comp.1 = data_is_image;
         }
     });
-    shadow_cmds.drain().drain(..).for_each(|OpsSceneShadowMap(entity, path)| {
+    shadow_cmds.drain().for_each(|OpsSceneShadowMap(entity, path)| {
         if let Ok(mut comp) = shadow_scenes.get_mut(entity) {
             comp.0 = path;
         }

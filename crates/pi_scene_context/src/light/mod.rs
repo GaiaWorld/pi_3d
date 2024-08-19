@@ -1,5 +1,5 @@
 
-use pi_scene_shell::{prelude::*, run_stage::should_run_with_lighting};
+use pi_scene_shell::{prelude::*, run_stage::{should_run_with_lighting, EngineCustomPlugins}};
 
 use crate::{
     transforms::prelude::*,
@@ -43,33 +43,27 @@ impl Plugin for PluginLighting {
             ShadowLimitInfo { max_count: 1, max_width: 1024, max_height: 1024, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
         ));
 
-#[cfg(feature = "use_bevy")]
-        app.add_systems(Update,
-            (
-                apply_deferred.in_set(StageLighting::_LightCreate),
-                sys_create_light.in_set(StageLighting::LightCreate),
-                sys_act_light_param.in_set(StageLighting::LightingCommand),
+        let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();
+        if enginepugins.lighting {
+            #[cfg(feature = "use_bevy")]
+            app.add_systems(Update,
                 (
-                    sys_direct_light_update,
-                    sys_spot_light_update,
-                    sys_point_light_update,
-                    sys_hemi_light_update,
-                ).chain().in_set(StageLighting::LightingUniform),
-                sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
-            )
-        );
+                    apply_deferred.in_set(StageLighting::_LightCreate),
+                    sys_create_light.in_set(StageLighting::LightCreate),
+                    sys_act_light_param.in_set(StageLighting::LightingCommand),
+                    sys_light_update.in_set(StageLighting::LightingUniform),
+                    sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
+                )
+            );
 
-#[cfg(not(feature = "use_bevy"))]
-        app
+            #[cfg(not(feature = "use_bevy"))]
+            app
             .add_systems(Update, sys_create_light.in_set(StageLighting::LightCreate))
-            // .add_systems(Update, sys_light_index_create                                                 .in_set(StageLighting::LightingCommand))
             .add_systems(Update, sys_act_light_param            .in_set(StageLighting::LightingCommand))
-            .add_systems(Update, sys_direct_light_update                                                    .in_set(StageLighting::LightingUniform))
-            .add_systems(Update, sys_spot_light_update          .after(sys_direct_light_update)     .in_set(StageLighting::LightingUniform))
-            .add_systems(Update, sys_point_light_update         .after(sys_spot_light_update)       .in_set(StageLighting::LightingUniform))
-            .add_systems(Update, sys_hemi_light_update          .after(sys_point_light_update)      .in_set(StageLighting::LightingUniform))
+            .add_systems(Update, sys_light_update               .in_set(StageLighting::LightingUniform))
             .add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
             ;
+        }
 
         // app.add_systems(Startup, setup);
     }

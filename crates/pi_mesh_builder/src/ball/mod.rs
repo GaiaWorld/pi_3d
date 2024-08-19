@@ -114,7 +114,7 @@ impl Plugin for PluginBallBuilder {
 
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
-        let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
+        let allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
 
         let (positions, normals, indces, uvs) = generate_sphere(&BallParam { sectors: 16, stacks: 16 });
 

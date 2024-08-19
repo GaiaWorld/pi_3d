@@ -224,22 +224,3 @@ impl ModelInstanceAttributes {
     }
 }
 
-#[derive(Component, Default)]
-pub struct InstanceAttributes {
-    bytes: Vec<u8>,
-}
-impl InstanceAttributes {
-    pub fn bytes(&self) -> &Vec<u8> {
-        &self.bytes
-    }
-    pub fn bytes_mut(&mut self) -> &mut Vec<u8> {
-        &mut self.bytes
-    }
-    pub fn update_worldmatrix(&mut self, data: &Matrix) {
-        let mut idx = 0;
-        bytemuck::cast_slice(data.as_slice()).iter().for_each(|v| {
-            self.bytes[idx] = *v;
-            idx += 1;
-        });
-    }
-}

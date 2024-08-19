@@ -136,10 +136,11 @@ impl HemisphereShapeEmitter {
         random: &'a mut Random,
     ) {
         let mut direction = normalize(&local_position);
+        direction.z = direction.z.abs();
 
-        direction[0] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[1] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[2] += random.random() * Self::RANDOMIZE_DIRECTION;
+        direction[0] += random.random() * _shape.base.randomize_direction;
+        direction[1] += random.random() * _shape.base.randomize_direction;
+        direction[2] += random.random() * _shape.base.randomize_direction;
 
         direction = normalize(&direction);
 
@@ -185,9 +186,9 @@ impl HemisphereShapeEmitter {
         let mut rand_z = (rand_radius * v).abs();
         let mut rand_y = rand_radius * phi.sin() * theta.sin();
 
-        rand_x += random.random() * Self::RANDOMIZE_POSITION;
-        rand_z += random.random() * Self::RANDOMIZE_POSITION;
-        rand_y += random.random() * Self::RANDOMIZE_POSITION;
+        rand_x += (random.random() * 2. - 1.) * shape.base.randomize_position;
+        rand_z += (random.random() * 2. - 1.) * shape.base.randomize_position;
+        rand_y += (random.random() * 2. - 1.) * shape.base.randomize_position;
         
             *position_to_update = Vector3::new(rand_x, rand_y, rand_z);
     }

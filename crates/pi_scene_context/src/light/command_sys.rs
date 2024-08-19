@@ -22,7 +22,7 @@ pub fn sys_create_light(
     // mut alterspot: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleSpotLight), ()>,
     // mut alterhemi: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleHemiLight), ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsLightCreate(scene, entity, ltype)| {
+    cmds.drain().for_each(|OpsLightCreate(scene, entity, ltype)| {
         let (mut lightcmd, itemidx) = if let (Some(cmd), Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi, mut dirty))) = (commands.get_entity(entity), scenes.get_mut(scene)) {
             let itemidx = match ltype {
                 ELightType::Direct => {
@@ -79,7 +79,7 @@ pub fn sys_act_light_param(
     mut spot_lights: Query<&mut SpotLightAngle>,
     mut param_lights: Query<&mut LightParam>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsLightParam(entity, cmd)| {
+    cmds.drain().for_each(|OpsLightParam(entity, cmd)| {
         match cmd {
             ELightModify::Color(r, g, b) => if let Ok(mut lightcolor) = param_lights.get_mut(entity) {
                 lightcolor.color = Vector3::new(r, g, b);

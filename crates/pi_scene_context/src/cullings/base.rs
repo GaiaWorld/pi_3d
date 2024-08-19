@@ -1,5 +1,5 @@
 
-use std::default;
+use std::{collections::vec_deque::Iter, default};
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
@@ -140,6 +140,8 @@ impl GeometryBounding {
 
 pub trait TFilter {
     fn filter(&self, entity: Entity) -> bool;
+    fn query(&self, entity: Entity) -> bool;
+    fn iter(&self) -> std::collections::hash_set::Iter<Entity>;
 }
 
 #[derive(Component, Default)]
@@ -228,13 +230,14 @@ impl SceneColliderPool {
 
 #[derive(Component)]
 pub enum SceneBoundingPool {
+    None,
     List(VecBoundingInfoCalc),
     QuadTree(),
     OctTree(BoundingOctTree),
 }
 impl Default for SceneBoundingPool {
     fn default() -> Self {
-        Self::List(VecBoundingInfoCalc::default())
+        Self::None
     }
 }
 impl SceneBoundingPool {
@@ -263,6 +266,7 @@ impl SceneBoundingPool {
             SceneBoundingPool::List(items) => items.remove(entity),
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(items) => items.remove(entity),
+            SceneBoundingPool::None => {}
         }
     }
     pub fn set(&mut self, entity: Entity, info: &GeometryBounding, mode: &GeometryCullingMode, matrix: &Matrix) {
@@ -303,6 +307,7 @@ impl SceneBoundingPool {
                     },
                 }
             },
+            SceneBoundingPool::None => {}
         }
     }
     pub fn culling<F: TFilter>(&self, transform: &ViewerTransformMatrix, filter: F, result: &mut Vec<Entity>) {
@@ -316,6 +321,13 @@ impl SceneBoundingPool {
                 // println!("================otctree");
                 item.culling(&transform, filter, result);
             },
+            SceneBoundingPool::None => {
+                filter.iter().for_each(|entity| {
+                    if filter.query(*entity) {
+                        result.push(*entity);
+                    }
+                });
+            }
         }
     }
     pub fn ray_test(
@@ -328,6 +340,7 @@ impl SceneBoundingPool {
             SceneBoundingPool::List(item) => item.ray_test(org, dir, result),
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(item) => item.ray_test(org, dir, result),
+            SceneBoundingPool::None => {}
         }
     }
     pub fn entities(&self) -> Vec<Entity> {
@@ -335,14 +348,20 @@ impl SceneBoundingPool {
             SceneBoundingPool::List(items) => items.entities(),
             SceneBoundingPool::QuadTree() => vec![],
             SceneBoundingPool::OctTree(items) => items.entities(),
+            SceneBoundingPool::None => { vec![] }
         }
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
 pub struct BoundingBoxDisplay {
     pub mesh: Entity,
     pub display: bool,
+}
+impl Default for BoundingBoxDisplay {
+    fn default() -> Self {
+        Self { mesh: Entity::default(), display: false }
+    }
 }
 impl BoundingBoxDisplay {
     pub const ATTRIBUTE_MINIMUM: &'static str = "BoxMinimum";

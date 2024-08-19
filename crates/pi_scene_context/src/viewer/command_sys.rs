@@ -12,7 +12,7 @@ pub fn sys_act_viewer_force_include(
         (&mut ForceIncludeModelList, &mut FlagForceIncludeModelList)
     >,
 ) {
-    cmds.drain().drain(..).for_each(|OpsViewerForceInclude(idviewer, idmodel, doadd)| {
+    cmds.drain().for_each(|OpsViewerForceInclude(idviewer, idmodel, doadd)| {
         if let Ok((mut list, mut flag)) = viewers.get_mut(idviewer) {
             if doadd {
                 if list.0.insert(idmodel) {

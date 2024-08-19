@@ -1,7 +1,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    flags::GlobalEnable, layer_mask::prelude::*, light::prelude::{DirectLight, PointLight, SpotLight}, materials::prelude::*, renderers::prelude::*, scene::prelude::*, viewer::prelude::*
+    flags::GlobalEnable, layer_mask::prelude::*, light::prelude::{DirectLight, SpotLight}, materials::prelude::*, renderers::prelude::*, scene::prelude::*, viewer::prelude::*
 };
 
 use super::{
@@ -10,24 +10,24 @@ use super::{
     shader::ShaderShadowGenerator, direct_light::{DirectionalShadowDirection, DirectionalShadowProjection, SpotShadowProjection}
 };
 
-pub type BundleDirectShadow = (
-    ShadowGeneratorBundle,
-    (LinkedMaterialID, RendererID, ShadowLayerMask, SceneItemIndex, ShadowCastPassTag, ViewerDistanceCompute, BindViewer), 
-    ShadowLinkedLightID, DirectionalShadowDirection, DirectionalShadowProjection
-);
-pub type BundleSpotShadow = (
-    ShadowGeneratorBundle,
-    (LinkedMaterialID, RendererID, ShadowLayerMask, SceneItemIndex, ShadowCastPassTag, ViewerDistanceCompute, BindViewer), 
-    ShadowLinkedLightID, DirectionalShadowDirection, SpotShadowProjection
-);
+// pub type BundleDirectShadow = (
+//     ShadowGeneratorBundle,
+//     (LinkedMaterialID, RendererID, ShadowLayerMask, SceneItemIndex, ShadowCastPassTag, ViewerDistanceCompute, BindViewer), 
+//     ShadowLinkedLightID, DirectionalShadowDirection, DirectionalShadowProjection
+// );
+// pub type BundleSpotShadow = (
+//     ShadowGeneratorBundle,
+//     (LinkedMaterialID, RendererID, ShadowLayerMask, SceneItemIndex, ShadowCastPassTag, ViewerDistanceCompute, BindViewer), 
+//     ShadowLinkedLightID, DirectionalShadowDirection, SpotShadowProjection
+// );
 
 pub fn sys_create_shadow_generator(
     mut commands: Commands,
     mut cmds: ResMut<ActionListShadowGenerator>,
-    directlights: Query<(&DirectLight), With<DirectLight>>,
-    spotlights: Query<(&SpotLight), With<SpotLight>>,
+    directlights: Query<&DirectLight, With<DirectLight>>,
+    spotlights: Query<&SpotLight, With<SpotLight>>,
     mut lights: Query<(&SceneID, &GlobalEnable, &mut LightLinkedShadowID, &LayerMask, &ViewerDistanceCompute), ()>,
-    mut scene_shadow: Query<(&mut SceneShadowQueue), ()>,
+    mut scene_shadow: Query<&mut SceneShadowQueue, ()>,
     mut dynallocator: ResMut<ResBindBufferAllocator> ,
     mut matcreatecmds: ResMut<ActionListMaterialCreate>,
     mut matusecmds: ResMut<ActionListMaterialUse>,
@@ -37,7 +37,7 @@ pub fn sys_create_shadow_generator(
     // mut alterdirect: Alter<(), (), BundleDirectShadow, ()>,
     // mut alterspot: Alter<(), (), BundleSpotShadow, ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
+    cmds.drain().for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
         if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), lights.get_mut(light)) {
             let mat = commands.spawn(ActionEntity::init()).id();
 
@@ -101,48 +101,48 @@ pub fn sys_act_shadow_generator(
     // mut atlassize: Query< &mut ShadowAtlasSize>,
     mut shadow: Query<&mut ShadowParam>,
 ) {
-    cmds.drain().drain(..).for_each(|cmd| {
+    cmds.drain().for_each(|cmd| {
         match cmd {
             OpsShadowGeneratorParam::ShadowMinz(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.minz = val;
-                } else {
-                    cmds.push(cmd);
+                // } else {
+                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::ShadowMaxz(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.maxz = val;
-                } else {
-                    cmds.push(cmd);
+                // } else {
+                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::ShadowFrustumSize(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.frustum = val;
-                } else {
-                    cmds.push(cmd);
+                // } else {
+                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::Bias(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.bias = val;
-                } else {
-                    cmds.push(cmd);
+                // } else {
+                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::NormalBias(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.normalbias  = val;
-                } else {
-                    cmds.push(cmd);
+                // } else {
+                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::DepthScale(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.depthscale = val;
-                } else {
-                    cmds.push(cmd);
+                // } else {
+                //     cmds.push(cmd);
                 }
             },
             // OpsShadowGeneratorParam::AtlasSize(entity, val) => {

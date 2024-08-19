@@ -4,7 +4,6 @@ use pi_scene_shell::prelude::*;
 use crate::{
     skeleton::prelude::*,
     meshes::prelude::*,
-    pass::*,
 };
 
 use super::base::*;

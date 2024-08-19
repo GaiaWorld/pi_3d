@@ -60,7 +60,7 @@ pub fn sys_create_animatorable_entity(
     //     Alter<(), (), BundleAnimSintU, ()>,
     // )
 ) {
-    cmds_float.drain().drain(..).for_each(|OpsAnimatorableFloat(entity, linked, value, etype)| {
+    cmds_float.drain().for_each(|OpsAnimatorableFloat(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             if items.contains(entity) == false {
                 let bundle = ActionEntity::init();
@@ -81,7 +81,7 @@ pub fn sys_create_animatorable_entity(
             };
         }
     });
-    cmds_vec2.drain().drain(..).for_each(|OpsAnimatorableVec2(entity, linked, value, etype)| {
+    cmds_vec2.drain().for_each(|OpsAnimatorableVec2(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             if items.contains(entity) == false { cmd.insert(ActionEntity::init()); }
             match etype {
@@ -98,7 +98,7 @@ pub fn sys_create_animatorable_entity(
             };
         }
     });
-    cmds_vec3.drain().drain(..).for_each(|OpsAnimatorableVec3(entity, linked, value, etype)| {
+    cmds_vec3.drain().for_each(|OpsAnimatorableVec3(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             if items.contains(entity) == false { cmd.insert(ActionEntity::init()); }
             match etype {
@@ -115,7 +115,7 @@ pub fn sys_create_animatorable_entity(
             };
         }
     });
-    cmds_vec4.drain().drain(..).for_each(|OpsAnimatorableVec4(entity, linked, value, etype)| {
+    cmds_vec4.drain().for_each(|OpsAnimatorableVec4(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             if items.contains(entity) == false { cmd.insert(ActionEntity::init()); }
             match etype {
@@ -137,7 +137,7 @@ pub fn sys_create_animatorable_entity(
     //         cmd.insert(value.clone(), AnimatorableLink(linked), RecordAnimatorableVec4(value.clone()));
     //     }
     // });
-    cmds_uint.drain().drain(..).for_each(|OpsAnimatorableUint(entity, linked, value, etype)| {
+    cmds_uint.drain().for_each(|OpsAnimatorableUint(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             if items.contains(entity) == false { cmd.insert(ActionEntity::init()); }
             match etype {
@@ -154,7 +154,7 @@ pub fn sys_create_animatorable_entity(
             };
         }
     });
-    cmds_int.drain().drain(..).for_each(|OpsAnimatorableSint(entity, linked, value, etype)| {
+    cmds_int.drain().for_each(|OpsAnimatorableSint(entity, linked, value, etype)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             if items.contains(entity) == false { cmd.insert(ActionEntity::init()); }
             match etype {
@@ -180,7 +180,7 @@ pub fn sys_create_animation_group(
     mut globals: ResMut<GlobalAnimeAbout>,
     // mut alter: Alter<(), (), BundleAnimGroup, ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsAnimationGroupCreation(scene, entity)| {
+    cmds.drain().for_each(|OpsAnimationGroupCreation(scene, entity)| {
         if let Ok(mut ctx) = scenes.get_mut(scene) {
             if let Some(mut commands) = commands.get_entity(entity) {
                 let id_group = ctx.0.create_animation_group();
@@ -205,7 +205,7 @@ pub fn sys_act_animation_group_action(
     mut errors: ResMut<ErrorRecord>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
-    addtargetanime_cmds.drain().drain(..).for_each(|OpsAddTargetAnimation(entity, target, animation)| {
+    addtargetanime_cmds.drain().for_each(|OpsAddTargetAnimation(entity, target, animation)| {
         if let Ok( (groupkey, idscene) ) = items.get(entity) {
             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
                 match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
@@ -215,10 +215,10 @@ pub fn sys_act_animation_group_action(
             }
         }
     });
-    frameevent_cmds.drain().drain(..).for_each(|OpsAddAnimationFrameEvent(entity, percent, data)| {
+    frameevent_cmds.drain().for_each(|OpsAddAnimationFrameEvent(entity, percent, data)| {
         if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event(groupkey.0, percent, data); }
     });
-    listen_cmds.drain().drain(..).for_each(|listen| {
+    listen_cmds.drain().for_each(|listen| {
         match listen {
             OpsAddAnimationListen::Frame(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event_listen(groupkey.0); } },
             OpsAddAnimationListen::Start(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_start_listen(groupkey.0); } },
@@ -226,7 +226,7 @@ pub fn sys_act_animation_group_action(
             OpsAddAnimationListen::End(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_end_listen(groupkey.0); } },
         }
     });
-    cmds.drain().drain(..).for_each(|act| {
+    cmds.drain().for_each(|act| {
         match act {
             OpsAnimationGroupAction::Start(entity, param, delay_time_ms, fillmode) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
                 if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
@@ -263,7 +263,7 @@ pub fn sys_act_dispose_animation_group(
     mut disposecan: ResMut<ActionListDisposeCan>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsAnimationGroupDispose(entity)| {
+    cmds.drain().for_each(|OpsAnimationGroupDispose(entity)| {
         if let Ok( (groupkey, idscene) ) = items.get(entity) {
             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
                 ctx.0.del_animation_group(groupkey.0);
@@ -281,7 +281,7 @@ pub fn sys_act_reset_while_animationgroup_start(
     scenes: Query<&SceneAnimationContext>,
     mut items: Query<&mut FlagAnimationStartResetComp>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsAnimationGroupStartReset(entity)| {
+    cmds.drain().for_each(|OpsAnimationGroupStartReset(entity)| {
         if let Ok((groupkey, idscene)) = groups.get(entity) {
             if let Ok(ctx) = scenes.get(idscene.0) {
                 if let Some(animationgroup) = ctx.0.animation_group(groupkey.0) {

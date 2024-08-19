@@ -1,6 +1,6 @@
 
 
-use instance::instanced_buffer::ArgInstanceBufferAllocatorSize;
+use instance::instanced_buffer::*;
 use pi_atom::Atom;
 
 use pi_scene_shell::prelude::*;
@@ -37,6 +37,8 @@ impl Plugin for PluginGeometry {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListGeometryCreate::default());
         app.insert_resource(VertexBufferDataMap3D(SingleVertexBufferDataMap::default()));
+        app.insert_resource(InstanceDataCommon::new(1024 * 1024));
+        app.insert_resource(CombineDataCommon::new(512 * 1024));
         
         let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgVertexBuffer3D>() {
             cfg

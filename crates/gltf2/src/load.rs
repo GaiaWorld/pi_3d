@@ -309,7 +309,23 @@ impl pi_assets::asset::Asset for GLTF {
 }
 impl pi_assets::asset::Size for GLTF {
     fn size(&self) -> usize {
-        100 * 1024
+        self.textures               .capacity() * 24 +
+        self.vbs                    .capacity() * 24 +
+        self.position               .capacity() * 24 +
+        self.euler                  .capacity() * 24 +
+        self.scaling                .capacity() * 24 +
+        self.quaternion             .capacity() * 24 +
+        self.camerafov              .capacity() * 24 +
+        self.camerasize             .capacity() * 24 +
+        self.enable                 .capacity() * 24 +
+        self.indicerange_curves     .capacity() * 24 +
+        self.float                  .capacity() * 24 +
+        self.vec2s                  .capacity() * 24 +
+        self.vec3s                  .capacity() * 24 +
+        self.vec4s                  .capacity() * 24 +
+        self.uints                  .capacity() * 24 +
+        self._ints                  .capacity() * 24 +
+        0
     }
 }
 impl TAssetCapacity for GLTF {

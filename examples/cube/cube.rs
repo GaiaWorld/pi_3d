@@ -21,7 +21,7 @@ pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
         mut list: ResMut<ActionListTestData>,
         mut transform_commands: ResMut<ActionListTransformNodeLocal>,
     ) {
-        list.drain().drain(..).for_each(|mut item| {
+        list.exchange_empty().drain(..).for_each(|mut item| {
             item.1 = item.1 + 16.0;
             item.2 = item.2 + 16.0;
             item.3 = item.3 + 16.0;

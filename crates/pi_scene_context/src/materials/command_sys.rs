@@ -49,7 +49,7 @@ pub fn sys_create_material(
     mut errors: ResMut<ErrorRecord>,
     mut alter: Alter<(), (), MaterialBundle, ()>
 ) {
-    cmds.drain().drain(..).for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
+    cmds.drain().for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
         if commands.get_entity(entity).is_none() { 
             // log::error!("Material: Not Found!! {:?}", key_shader);
@@ -60,7 +60,7 @@ pub fn sys_create_material(
         if let Some(meta) = asset_shader.get(&key_shader) {
             // log::error!("Material: oK!! {:?}", key_shader);
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), &mut allocator);
-            let mut matcmds = commands.entity(entity);
+            // let mut matcmds = commands.entity(entity);
 
             let bundle = (
                 ActionEntity::init(),
@@ -82,7 +82,7 @@ pub fn sys_create_material(
                 )
             );
             // matcmds.insert(bundle);
-            alter.alter(entity, bundle);
+            let _ = alter.alter(entity, bundle);
         } else {
             errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
             // log::error!("ERROR_MATERIAL_SHADER_NOTFOUND: {:?}", key_shader);
@@ -100,7 +100,7 @@ pub fn sys_act_material_use(
     empty: Res<SingleEmptyEntity>,
     mut errors: ResMut<ErrorRecord>,
 ) {
-    cmds.drain().drain(..).for_each(|cmd| {
+    cmds.drain().for_each(|cmd| {
         match cmd {
             OpsMaterialUse::Use(id_mesh, id_mat, pass) => {
                 if let Ok((mut materialrefs, mut flag)) = materials.get_mut(id_mat) {
@@ -148,7 +148,7 @@ pub fn sys_act_material_use(
                     errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_MAT);
                 }
             },
-            OpsMaterialUse::UnUse(id_mesh, id_mat) => {
+            OpsMaterialUse::UnUse(id_mesh, _id_mat) => {
                 if let Ok(mut matid) = linkedtargets.get_mut(id_mesh) {
                     let old = matid.0;
                     *matid = LinkedMaterialID(empty.id());
@@ -157,11 +157,11 @@ pub fn sys_act_material_use(
                         if materialrefs.remove(&id_mesh) {
                             *flag = DirtyMaterialRefs::default();
                         }
-                    } else {
-                        cmds.push(OpsMaterialUse::UnUse(id_mesh, id_mat));
+                    // } else {
+                    //     cmds.push(OpsMaterialUse::UnUse(id_mesh, id_mat));
                     }
-                } else {
-                    cmds.push(OpsMaterialUse::UnUse(id_mesh, id_mat));
+                // } else {
+                //     cmds.push(OpsMaterialUse::UnUse(id_mesh, id_mat));
                 }
             },
         }
@@ -184,7 +184,7 @@ pub fn sys_act_material_value(
 
     mut bindvalues: Query<&mut BindEffect>,
 ) {
-    cmdsmat4.drain().drain(..).for_each(|OpsUniformMat4(entity, slot, val)| {
+    cmdsmat4.drain().for_each(|OpsUniformMat4(entity, slot, val)| {
         if let Ok(mut bindvalue) = bindvalues.get_mut(entity) {
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let value = bytemuck::cast_slice(&val);
@@ -192,7 +192,7 @@ pub fn sys_act_material_value(
             }
         }
     });
-    cmdsvec4.drain().drain(..).for_each(|OpsUniformVec4(linked, slot, x, y, z, w)| {
+    cmdsvec4.drain().for_each(|OpsUniformVec4(linked, slot, x, y, z, w)| {
         if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let val = [x, y, z, w];
@@ -203,7 +203,7 @@ pub fn sys_act_material_value(
             }
         }
     });
-    cmdsvec3.drain().drain(..).for_each(|OpsUniformVec3(linked, slot, x, y, z)| {
+    cmdsvec3.drain().for_each(|OpsUniformVec3(linked, slot, x, y, z)| {
         if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let val = [x, y, z];
@@ -214,7 +214,7 @@ pub fn sys_act_material_value(
             }
         }
     });
-    cmdsvec2.drain().drain(..).for_each(|OpsUniformVec2(linked, slot, x, y)| {
+    cmdsvec2.drain().for_each(|OpsUniformVec2(linked, slot, x, y)| {
         if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let val = [x, y];
@@ -225,7 +225,7 @@ pub fn sys_act_material_value(
             }
         }
     });
-    cmdsfloat.drain().drain(..).for_each(|OpsUniformFloat(linked, slot, val)| {
+    cmdsfloat.drain().for_each(|OpsUniformFloat(linked, slot, val)| {
         if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let vv = [val];
@@ -236,7 +236,7 @@ pub fn sys_act_material_value(
             }
         }
     });
-    cmdsuint.drain().drain(..).for_each(|OpsUniformUint(linked, slot, val)| {
+    cmdsuint.drain().for_each(|OpsUniformUint(linked, slot, val)| {
         if let Ok(mut bindvalue) = bindvalues.get_mut(linked) {
             if let Some(bindvalue) = &mut bindvalue.0 {
                 let vv = [val];
@@ -273,7 +273,7 @@ pub fn sys_act_material_texture(
     mut cmds: ResMut<ActionListUniformTexture>,
     mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty, &TexWithAtlas)>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsUniformTexture(entity, mut param)| {
+    cmds.drain().for_each(|OpsUniformTexture(entity, mut param)| {
         if let Ok((mut textureparams, mut flag, texatlas)) = textureparams.get_mut(entity) {
             // log::warn!("EUniformCommand::Texture");
             if texatlas.0 {
@@ -296,9 +296,9 @@ pub fn sys_act_material_texture_from_target(
         &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty
     )>,
     targets: Res<CustomRenderTargets>,
-    mut errors: ResMut<ErrorRecord>,
+    // mut errors: ResMut<ErrorRecord>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsUniformTextureFromRenderTarget(entity, mut param, key, tilloffslot)| {
+    cmds.drain().for_each(|OpsUniformTextureFromRenderTarget(entity, mut param, key, tilloffslot)| {
         if let Ok((_meta, mut textureparams, mut flag)) = textureparams.get_mut(entity) {
             // log::warn!("EUniformCommand::Texture");
             if let Some(target) = targets.get(key) {
@@ -328,7 +328,7 @@ pub fn sys_act_target_animation_uniform(
     mut anime_contexts: TypeAnimeContexts,
     mut targetanimations: ResMut<ActionListAddTargetAnime>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTargetAnimationUniform(idmat, attr, group, curve)| {
+    cmds.drain().for_each(|OpsTargetAnimationUniform(idmat, attr, group, curve)| {
         if let Ok((mut bindvalue, mut animated)) = items.get_mut(idmat) {
             if let Some(bind) = &mut bindvalue.0 {
                 if let Some(offset) = bind.animator(&attr, idmat, &mut command, &mut animatorablefloat, &mut animatorablevec2s, &mut animatorablevec3s, &mut animatorablevec4s, &mut animatorableuints) {
@@ -397,7 +397,7 @@ impl ActionMaterial {
         app: &mut App,
         cmd: OpsMaterialUse,
     ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListMaterialUse>().unwrap();
+        let cmds = app.world.get_resource_mut::<ActionListMaterialUse>().unwrap();
         cmds.push(cmd);
     }
 }

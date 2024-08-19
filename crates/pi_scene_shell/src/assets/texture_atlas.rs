@@ -3,8 +3,7 @@ use std::{mem::size_of, num};
 use pi_assets::asset::Asset;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::XHashMap;
-use pi_render::{asset::TAssetKeyU64, renderer::sampler::KeySampler};
-use crate::render_state::*;
+use pi_render::asset::TAssetKeyU64;
 
 
 pub type KeyTextureFrameAtlas   = u64;

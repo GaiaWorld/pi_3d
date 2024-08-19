@@ -8,9 +8,13 @@ impl OpsSpriteCreate {
 }
 pub type ActionListSpriteCreate = ActionList<OpsSpriteCreate>;
 
-pub struct OpsSpriteModify(pub(crate) Entity, pub(crate) IdxTextureFrame);
+pub enum SpriteModify{
+    Idx(IdxTextureFrame),
+    Data([u16;14]),
+}
+pub struct OpsSpriteModify(pub(crate) Entity, pub(crate) SpriteModify);
 impl OpsSpriteModify {
-    pub fn ops(sprite: Entity, frame: IdxTextureFrame) -> Self {
+    pub fn ops(sprite: Entity, frame: SpriteModify) -> Self {
         Self(sprite, frame)
     }
 }

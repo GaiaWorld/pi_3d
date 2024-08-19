@@ -5,19 +5,7 @@ use pi_gltf2_load::{GLTFResLoader, GLTF};
 use pi_node_materials::prelude::*;
 use pi_particle_system::prelude::{ParticleSystemPerformance, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::{
-    prelude::*,
-    scene::PluginScene,
-    animation::PluginSceneAnimation,
-    transforms::PluginGroupTransformNode,
-    cameras::PluginCamera,
-    meshes::PluginMesh,
-    geometry::PluginGeometry,
-    light::PluginLighting,
-    layer_mask::PluginLayerMask,
-    materials::PluginGroupMaterial,
-    renderers::PluginRenderer,
-    skeleton::PluginSkeleton, cullings::PluginCulling, viewer::PluginViewerBase,
-    shadow::PluginShadowGenerator
+    animation::PluginSceneAnimation, cameras::PluginCamera, cullings::PluginCulling, geometry::{instance::instanced_buffer::*, PluginGeometry}, layer_mask::PluginLayerMask, light::PluginLighting, materials::PluginGroupMaterial, meshes::PluginMesh, prelude::*, renderers::PluginRenderer, scene::PluginScene, shadow::PluginShadowGenerator, skeleton::PluginSkeleton, transforms::{transform_node_sys::{TmpTransformWorldCalc0, TmpTransformWorldCalc1}, PluginGroupTransformNode}, viewer::PluginViewerBase
 };
 use pi_trail_renderer::{ActionSetTrailRenderer, ResTrailBuffer};
 
@@ -57,6 +45,11 @@ pub struct StateResource {
     pub count_rendergeometryenable: u32,
     pub count_material: u32,
     pub count_vertex: u32,
+    pub capcity_inscommon: u32,
+    pub capcity_combindata: u32,
+    pub capcity_transformcalc: u32,
+    pub capcity_gltfloader: u32,
+    pub capcity_commands: u32,
     // pub scenes: XHashMap<Entity, StateScene>,
 }
 
@@ -80,6 +73,12 @@ pub fn sys_state_resource(
         // Query<&PassBindEffectTextures>,
     ),
     mut stateglobal: ResMut<StateResource>,
+    res: (
+        Res<InstanceDataCommon>,
+        Res<CombineDataCommon>,
+        Res<TmpTransformWorldCalc0>,
+        Res<TmpTransformWorldCalc1>
+    ),
     renderers: Query<&Renderer>,
 ) {
     // if stateglobal.debug == false { return };
@@ -97,6 +96,9 @@ pub fn sys_state_resource(
     stateglobal.mem_imgtexture          = imagetextures.size();
     stateglobal.count_shadermeta        = shadermetas.len();
     stateglobal.mem_shadermeta          = shadermetas.size();
+    stateglobal.capcity_inscommon       = res.0.size() as u32;
+    stateglobal.capcity_combindata      = res.1.size() as u32;
+    stateglobal.capcity_transformcalc   = res.2.size() as u32 + res.3.size() as u32;
 
     let mut count;
 
@@ -400,7 +402,6 @@ pub fn sys_info_resource(
 pub struct PluginBundleDefault;
 impl PluginBundleDefault {
     pub fn add(mut app: &mut App) -> &mut App {
-
         app
         .add_plugins(PluginRunstage)
         .add_plugins(PluginGlobalAnimation)

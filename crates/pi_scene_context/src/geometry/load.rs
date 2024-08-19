@@ -47,4 +47,6 @@ use super::{base::*, AssetDescVBSlots, AssetResVBSlots, LoadedKeyVBSlots};
                 }
             });
         });
+
+        // log::error!("VertexBufferDataMap3D {:?}", data_map.size());
     }

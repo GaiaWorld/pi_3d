@@ -211,6 +211,9 @@ impl RendererParam {
     }
 }
 
+#[derive(Component, Default)]
+pub struct FlagRendererParamForPipeline;
+
 #[derive(Clone, Component)]
 pub enum RendererRenderTarget {
     None(Option<Arc<SafeTargetView>>),

@@ -1018,6 +1018,7 @@ impl ParticleLocalPosition {
         &mut self,
         newids: &Vec<IdxParticle>,
         directions: &mut Vec<Direction>,
+        forces: &mut Vec<Force>,
         randomlist: &Vec<BaseRandom>,
         time: &ParticleSystemTime,
         emitter: &TypeShapeEmitter,
@@ -1031,6 +1032,10 @@ impl ParticleLocalPosition {
             let randoms = randomlist.get(*idx).unwrap();
             let mut random = Random::new(randoms.seed);
 
+            // let force = forces.get_mut(*idx).unwrap();
+            // force.value.x = 0.;
+            // force.value.y = 0.;
+            // force.value.z = 0.;
             emitter.start_position_function(position_to_update, time.emission_loop as f32, time.emission_progress, emission_index as f32, emission_total, &mut random);
 
             let local_position = &position_to_update;
@@ -1039,6 +1044,7 @@ impl ParticleLocalPosition {
             let startspeed = startspeed.0.interpolate(time.emission_progress, randoms.base);
             direction_to_update.velocity_start.scale_mut(startspeed);
             direction_to_update.value.copy_from(&direction_to_update.velocity_start);
+            direction_to_update.velocity_force.x = 0.;direction_to_update.velocity_force.y = 0.;direction_to_update.velocity_force.z = 0.;
 
             // log::warn!("StartPosition: {:?}, Direction: {:?}", position_to_update, direction_to_update.velocity_start);
 
@@ -1358,7 +1364,9 @@ impl ParticleGravityFactor {
         if factor.abs() < PARTICLE_MIN_VALUE {
             item.value.copy_from_slice(&[0., 0., 0.]);
         } else {
+            // item.value.copy_from(&calculator.1.scale(factor));
             CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
+            // log::warn!("Gravity {:?}", (1, &item.value));
         }
     }
     fn _run<'a>(
@@ -1380,7 +1388,9 @@ impl ParticleGravityFactor {
             let mut factor = 0.;
             calculator.0.modify(&mut factor, age.progress, delta_seconds, randoms);
 
+            // item.value.copy_from(&calculator.1.scale(factor));
             CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
+            // log::warn!("Gravity {:?}", (0, &item.value));
         });
     }
 }

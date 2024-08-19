@@ -95,6 +95,7 @@ pub fn sys_create_mesh(
     mut cmds: ResMut<ActionListMeshCreate>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
+    mut commands: Commands,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
@@ -105,10 +106,13 @@ pub fn sys_create_mesh(
 ) {
     // let time1 = pi_time::Instant::now();
     let mut count = 0;
-    cmds.drain().drain(..).for_each(|OpsMeshCreation(scene, entity, state )| {
+    cmds.drain().for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
         // if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
-        if ActionMesh::init(entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel, &mut altermodel, &mut passinsert) == false {
+        if ActionMesh::init(
+            entity, &mut commands, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel,
+            &mut altermodel, &mut passinsert
+        ) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
         count += 1;
@@ -122,10 +126,11 @@ pub fn sys_create_mesh(
 
 pub fn sys_create_instanced_mesh(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
+    mut commands: Commands,
     mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &ModelInstanceAttributes, &mut FlagAbstructMeshForView)>,
-    mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
+    // mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsInstanceMeshCreation(source, instance, count)| {
+    cmds.drain().for_each(|OpsInstanceMeshCreation(source, instance, count)| {
         if let Ok((id_scene, mut instancelist, mut flag, instanceattrs, mut flagview)) = meshes.get_mut(source) {
 
             let instanceattrs = instanceattrs.clone();
@@ -136,17 +141,17 @@ pub fn sys_create_instanced_mesh(
                 InstanceAttributeAnimated::default(),
                 ActionInstanceMesh::init(source, id_scene.0),
             );
-            // commands.insert(bundle);
-            alter.alter(instance, bundle);
+            commands.get_entity(instance).unwrap().insert(bundle);
+            // alter.alter(instance, bundle);
 
             instancelist.insert(instance);
             *flag = DirtyInstanceSourceRefs;
             *flagview = FlagAbstructMeshForView;
             // 
         } else {
-            if count < 2 {
-                cmds.push(OpsInstanceMeshCreation(source, instance, count + 1))
-            }
+            // if count < 2 {
+            //     cmds.push(OpsInstanceMeshCreation(source, instance, count + 1))
+            // }
         }
     });
 }
@@ -155,7 +160,7 @@ pub fn sys_create_abstract_posematrix(
     mut cmds: ResMut<ActionListAbstractMeshPose>,
     mut commands: Commands,
 ) {
-    cmds.drain().drain(..).for_each(|OpsAbstractMeshPose(entity, matrix)| {
+    cmds.drain().for_each(|OpsAbstractMeshPose(entity, matrix)| {
         if let Some(mut entitycmd) = commands.get_entity(entity) {
             entitycmd.insert(RenderPoseMatrix(matrix));
         }
@@ -178,7 +183,7 @@ pub fn sys_act_target_animation_attribute(
     instances: Query<&InstanceMesh>,
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsTargetAnimationAttribute(item, attr, group, curve)| {
+    cmds.drain().for_each(|OpsTargetAnimationAttribute(item, attr, group, curve)| {
         let mut mesh = item;
         if let Ok(instance) = instances.get(item) {
             mesh = instance.0;
@@ -240,7 +245,7 @@ pub fn sys_act_mesh_modify(
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
     skinoff_items: Query<&BindModel>,
 ) {
-    cmds.drain().drain(..).for_each(|OpsMeshStateModify(entity, cmd)| {
+    cmds.drain().for_each(|OpsMeshStateModify(entity, cmd)| {
         match cmd {
             EMeshStateModify::Alignment(val) => if let Ok(mut item) = align_items.get_mut(entity) {
                 // log::warn!("RenderAlignment: {:?}", (val));
@@ -277,7 +282,7 @@ pub fn sys_act_mesh_modify(
             },
         }
     });
-    value_cmds.drain().drain(..).for_each(|OpsAbstructMeshValueStateModify(entity, val)| {
+    value_cmds.drain().for_each(|OpsAbstructMeshValueStateModify(entity, val)| {
         match val {
             EMeshValueStateModify::BoneOffset(val) => if let Ok(bind) = skinoff_items.get(entity) {
                 bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[val]));
@@ -318,10 +323,11 @@ pub fn sys_act_instance_attribute(
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
 
-    cmdsfloat.drain().drain(..).for_each(|OpsInstanceAttr(instance, val, attr)| {
+    cmdsfloat.drain().for_each(|OpsInstanceAttr(instance, val, attr)| {
         if let Ok((inssource, mut attributes)) = instances.get_mut(instance) {
             if let Some(offset) = attributes.offset(&attr) {
                 if let Some(target) = offset.entity() {
+                    log::error!("Push 。。。。");
                     match val {
                         EInstanceAttr::Float(val) => animator_float.push(OpsAnimatorableFloat::ops(target, instance, AnimatorableFloat(val), EAnimatorableEntityType::Attribute)),
                         EInstanceAttr::Int(val) => animator_sint.push(OpsAnimatorableSint::ops(target, instance, AnimatorableSint(val), EAnimatorableEntityType::Attribute)),
@@ -350,7 +356,7 @@ pub fn sys_act_instance_attribute(
         }
     });
 
-    forcelight_cmds.drain().drain(..).for_each(|OpsMeshForceLighting(entity, light, isadd)| {
+    forcelight_cmds.drain().for_each(|OpsMeshForceLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
         match isadd {
             EMeshForceLighting::ForcePointLighting(isadd) => if let Ok(mut item) = pointlight_items.get_mut(entity) {
@@ -382,6 +388,7 @@ pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
         entity: Entity,
+        commands: &mut Commands,
         scene: Entity,
         allocator: &mut ResBindBufferAllocator,
         empty: &SingleEmptyEntity,
@@ -412,7 +419,7 @@ impl ActionMesh {
         let id06 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06));
         let id07 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07));
         let id08 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08));
-        // let id01 = commands.spawn().id();
+        // let id01 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01)).id();
         // let id02 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02)).id();
         // let id03 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03)).id();
         // let id04 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04)).id();

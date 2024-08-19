@@ -1,5 +1,3 @@
-use std::default;
-
 use crate::{iparticle_system_config::{
     TSHAPE_ARC_MODE_BURST_SPREAD, TSHAPE_ARC_MODE_LOOP, TSHAPE_ARC_MODE_PING_PONG,
     TSHAPE_ARC_MODE_RANDOM,

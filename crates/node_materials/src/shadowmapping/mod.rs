@@ -56,7 +56,7 @@ impl Plugin for PluginShadowMapping {
         
         // #[cfg(not(target_arch="wasm32"))]
         // {
-            let mut nodematblocks = app.world.get_resource_mut::<NodeMaterialBlocks>().unwrap();
+            let nodematblocks = app.world.get_resource_mut::<NodeMaterialBlocks>().unwrap();
             nodematblocks.regist::<BlockShadowMapping>();
         // }
 

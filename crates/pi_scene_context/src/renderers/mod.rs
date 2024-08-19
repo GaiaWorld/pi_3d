@@ -121,7 +121,6 @@ impl Plugin for PluginRenderer {
                 ).in_set(StageRenderer::RenderStateCommand),
                 (
                     sys_act_renderer_modify,
-                    sys_act_renderer_target,
                 ).chain().in_set(StageRenderer::RendererCommand),
                 sys_bind_buffer_apply.in_set(ERunStageChap::Uniform),
                 (
@@ -132,16 +131,13 @@ impl Plugin for PluginRenderer {
                 ).chain().in_set(StageRenderer::PassBindGroup),
                 (
                     // sys_set3_modify,
-                    sys_bind_group_loaded,
                     sys_pass_bind_groups,
                 ).chain().in_set(StageRenderer::PassBindGroups),
                 (
                     sys_pass_shader_request_by_model,
-                    sys_pass_shader_request_by_geometry,
                     sys_pass_shader
                 ).chain().in_set(StageRenderer::PassShader),
                 (
-                    sys_pass_pipeline_request_by_model,
                     sys_pass_pipeline_request_by_renderer,
                     sys_pass_pipeline
                 ).chain().in_set(StageRenderer::PassPipeline),
@@ -149,7 +145,10 @@ impl Plugin for PluginRenderer {
                     sys_pass_draw_modify_by_model,
                     sys_pass_draw_modify_by_pass
                 ).chain().in_set(StageRenderer::PassDraw),
-                sys_renderer_draws_modify.in_set(StageRenderer::DrawList),
+                (
+                    sys_renderer_draws_modify,
+                    sys_vertice_buffer_apply,
+                ).chain().in_set(StageRenderer::DrawList),
                 sys_dispose_renderer.after(sys_dispose_can).in_set(ERunStageChap::Dispose)
             )
         );
@@ -180,25 +179,21 @@ impl Plugin for PluginRenderer {
             .add_systems(Update, sys_act_render_queue                .in_set(StageModel::AbstructMeshCommand))
             .add_systems(Update, sys_act_renderer_connect            .in_set(StageRenderer::RenderStateCommand))
             .add_systems(Update, sys_act_renderer_modify             .in_set(StageRenderer::RendererCommand))
-            .add_systems(Update, sys_act_renderer_target             .after(sys_act_renderer_modify).in_set(StageRenderer::RendererCommand))
-            .add_systems(Update, sys_bind_buffer_apply       .in_set(ERunStageChap::Uniform))
+            .add_systems(Update, sys_bind_buffer_apply                  .in_set(ERunStageChap::Uniform))
             .add_systems(Update, sys_sets_modify_by_viewer           .in_set(StageRenderer::PassBindGroup))
             .add_systems(Update, sys_sets_modify_by_model            .after(sys_sets_modify_by_viewer).in_set(StageRenderer::PassBindGroup))
             .add_systems(Update, sys_passrendererid_pass_reset       .after(sys_sets_modify_by_model).in_set(StageRenderer::PassBindGroup))
             .add_systems(Update, sys_sets_modify_by_scene_extend     .after(sys_passrendererid_pass_reset).in_set(StageRenderer::PassBindGroup))
 
-            // sys_set3_modify,
-            .add_systems(Update, sys_bind_group_loaded       .in_set(StageRenderer::PassBindGroups))
-            .add_systems(Update, sys_pass_bind_groups        .after(sys_bind_group_loaded).in_set(StageRenderer::PassBindGroups))
+            .add_systems(Update, sys_pass_bind_groups        .in_set(StageRenderer::PassBindGroups))
             .add_systems(Update, sys_pass_shader_request_by_model    .in_set(StageRenderer::PassShader))
-            .add_systems(Update, sys_pass_shader_request_by_geometry .after(sys_pass_shader_request_by_model).in_set(StageRenderer::PassShader))
-            .add_systems(Update, sys_pass_shader                     .after(sys_pass_shader_request_by_geometry).in_set(StageRenderer::PassShader))
-            .add_systems(Update, sys_pass_pipeline_request_by_model      .in_set(StageRenderer::PassPipeline))
-            .add_systems(Update, sys_pass_pipeline_request_by_renderer   .after(sys_pass_pipeline_request_by_model).in_set(StageRenderer::PassPipeline))
+            .add_systems(Update, sys_pass_shader                     .after(sys_pass_shader_request_by_model).in_set(StageRenderer::PassShader))
+            .add_systems(Update, sys_pass_pipeline_request_by_renderer   .in_set(StageRenderer::PassPipeline))
             .add_systems(Update, sys_pass_pipeline                       .after(sys_pass_pipeline_request_by_renderer).in_set(StageRenderer::PassPipeline))
             .add_systems(Update, sys_pass_draw_modify_by_model       .in_set(StageRenderer::PassDraw))
             .add_systems(Update, sys_pass_draw_modify_by_pass        .after(sys_pass_draw_modify_by_model).in_set(StageRenderer::PassDraw))
             .add_systems(Update, sys_renderer_draws_modify           .in_set(StageRenderer::DrawList))
+            .add_systems(Update, sys_vertice_buffer_apply       .after(sys_renderer_draws_modify).in_set(StageRenderer::DrawList))
             .add_systems(Update, sys_dispose_renderer                .after(sys_dispose_can).in_set(ERunStageChap::Dispose))
             ;
     }

@@ -292,16 +292,21 @@ impl TAnimatableComp for LocalScaling {
 #[derive(Component, Default)]
 pub struct FlagLocalMatrix;
 
-#[derive(Clone, Component, Default)]
+#[derive(Clone, Component)]
 pub struct LocalMatrix(pub Matrix);
 impl LocalMatrix {
     pub fn new(m: Matrix) -> Self {
         Self(m)
     }
 }
+impl Default for LocalMatrix {
+    fn default() -> Self {
+        Self::new(Matrix::identity())
+    }
+}
 impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
-        Self(self.0.scale(1.0 - amount) + rhs.0.scale(amount))
+        Self::new(self.0.scale(1.0 - amount) + rhs.0.scale(amount))
     }
 
     fn hermite(value1: &Self, tangent1: &Self, value2: &Self, tangent2: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue, frame_delta: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
@@ -317,12 +322,12 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
         let part4 = (cubed - squared) * frame_delta;
 
         let result = (((value1.0 * part1) + (value2.0 * part2)) + (tangent1.0 * part3)) + (tangent2.0 * part4);
-        return Self(result);
+        return Self::new(result);
     }
 
 
     fn append(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {
-        Self(self.0 + rhs.0.scale(amount))
+        Self::new(self.0 + rhs.0.scale(amount))
     }
     fn size() -> usize {
         16 * 4
@@ -433,6 +438,3 @@ impl AbsoluteTransform {
         }
     }
 }
-
-#[derive(Default, Resource)]
-pub struct TransformDirtyRoots(pub Vec<Entity>);

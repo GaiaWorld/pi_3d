@@ -24,6 +24,7 @@ pub fn sys_trail_update(
     mut state: ResMut<StateTrail>,
 ) {
     let time1 = pi_time::Instant::now();
+    
     if let Some(trailbuffer) = &mut buffer.0 {
         items.iter_mut().for_each(|(
             idscene, param, idgeo, mut base, mut points,

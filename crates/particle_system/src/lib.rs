@@ -1,5 +1,5 @@
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 mod tools;
 mod base;
@@ -67,36 +67,7 @@ impl Plugin for PluginParticleSystem {
                 StageParticleSystem::ParticleSysUpdate.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform),
             )
         );
-#[cfg(feature = "use_bevy")]
-        app.add_systems(
-            Update,
-            (
-                apply_deferred.in_set(StageParticleSystem::_ParticleSysCreate),
-                sys_create_particle_calculator.in_set(StageScene::Create),
-                sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate),
-                sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand),
-                (
-                    sys_ids                 ,
-                    sys_emission            ,
-                ).chain().in_set(StageParticleSystem::ParticleSysEmission),
-                sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart),
-                sys_over_lifetime.in_set(StageParticleSystem::ParticleSysParamOverLifetime),
-                sys_direction.in_set(StageParticleSystem::ParticleSysDirection),
-                sys_by_speed.in_set(StageParticleSystem::ParticleSysParamBySpeed),
-                (
-                    sys_particle_active ,
-                    sys_emitmatrix      ,
-                    sys_prewarm         ,
-                ).chain().in_set(StageParticleSystem::ParticleSysMatrix),
-                (
-                    sys_update_buffer           ,
-                    sys_update_buffer_trail     ,
-                ).chain().in_set(StageParticleSystem::ParticleSysUpdate),
-                sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck),
-            )
-        );
-
-#[cfg(not(feature = "use_bevy"))]
+        #[cfg(not(feature = "use_bevy"))]
         app
         .configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::_TrailCreate))
         .configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
@@ -110,24 +81,57 @@ impl Plugin for PluginParticleSystem {
         .configure_set(Update, StageParticleSystem::ParticleSysUpdate.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform))
         ;
 
-#[cfg(not(feature = "use_bevy"))]
-        app
-        .add_systems(Update, sys_create_particle_calculator.in_set(StageScene::Create))
-        .add_systems(Update, sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate))
-        .add_systems(Update, sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand))
-        .add_systems(Update,sys_ids.in_set(StageParticleSystem::ParticleSysEmission))
-        .add_systems(Update,sys_emission.after(sys_ids).in_set(StageParticleSystem::ParticleSysEmission))
-        .add_systems(Update, sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart))
-        .add_systems(Update, sys_over_lifetime.in_set(StageParticleSystem::ParticleSysParamOverLifetime))
-        .add_systems(Update, sys_direction.in_set(StageParticleSystem::ParticleSysDirection))
-        .add_systems(Update, sys_by_speed.in_set(StageParticleSystem::ParticleSysParamBySpeed))
-        .add_systems(Update, sys_particle_active .in_set(StageParticleSystem::ParticleSysMatrix))
-        .add_systems(Update, sys_emitmatrix      .after(sys_particle_active).in_set(StageParticleSystem::ParticleSysMatrix))
-        .add_systems(Update, sys_prewarm         .after(sys_emitmatrix).in_set(StageParticleSystem::ParticleSysMatrix))
-        .add_systems(Update, sys_update_buffer           .in_set(StageParticleSystem::ParticleSysUpdate))
-        .add_systems(Update, sys_update_buffer_trail     .after(sys_update_buffer).in_set(StageParticleSystem::ParticleSysUpdate))
-        .add_systems(Update, sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck))
-        ;
+        let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();
+        if enginepugins.particle_system {
+
+            #[cfg(feature = "use_bevy")]
+            app.add_systems(
+                Update,
+                (
+                    apply_deferred.in_set(StageParticleSystem::_ParticleSysCreate),
+                    sys_create_particle_calculator.in_set(StageScene::Create),
+                    sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate),
+                    sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand),
+                    (
+                        sys_ids                 ,
+                        sys_emission            ,
+                    ).chain().in_set(StageParticleSystem::ParticleSysEmission),
+                    sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart),
+                    sys_over_lifetime.in_set(StageParticleSystem::ParticleSysParamOverLifetime),
+                    sys_direction.in_set(StageParticleSystem::ParticleSysDirection),
+                    sys_by_speed.in_set(StageParticleSystem::ParticleSysParamBySpeed),
+                    (
+                        sys_particle_active ,
+                        sys_emitmatrix      ,
+                        sys_prewarm         ,
+                    ).chain().in_set(StageParticleSystem::ParticleSysMatrix),
+                    (
+                        sys_update_buffer           ,
+                        sys_update_buffer_trail     ,
+                    ).chain().in_set(StageParticleSystem::ParticleSysUpdate),
+                    sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck),
+                )
+            );
+
+            #[cfg(not(feature = "use_bevy"))]
+            app
+            .add_systems(Update, sys_create_particle_calculator.in_set(StageScene::Create))
+            .add_systems(Update, sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate))
+            .add_systems(Update, sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand))
+            .add_systems(Update, sys_ids.in_set(StageParticleSystem::ParticleSysEmission))
+            .add_systems(Update, sys_emission.after(sys_ids).in_set(StageParticleSystem::ParticleSysEmission))
+            .add_systems(Update, sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart))
+            .add_systems(Update, sys_over_lifetime.in_set(StageParticleSystem::ParticleSysParamOverLifetime))
+            .add_systems(Update, sys_direction.in_set(StageParticleSystem::ParticleSysDirection))
+            .add_systems(Update, sys_by_speed.in_set(StageParticleSystem::ParticleSysParamBySpeed))
+            .add_systems(Update, sys_particle_active .in_set(StageParticleSystem::ParticleSysMatrix))
+            .add_systems(Update, sys_emitmatrix      .after(sys_particle_active).in_set(StageParticleSystem::ParticleSysMatrix))
+            .add_systems(Update, sys_prewarm         .after(sys_emitmatrix).in_set(StageParticleSystem::ParticleSysMatrix))
+            .add_systems(Update, sys_update_buffer           .in_set(StageParticleSystem::ParticleSysUpdate))
+            .add_systems(Update, sys_update_buffer_trail     .after(sys_update_buffer).in_set(StageParticleSystem::ParticleSysUpdate))
+            .add_systems(Update, sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck))
+            ;
+        }
     }
 }
 

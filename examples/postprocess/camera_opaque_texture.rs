@@ -1,6 +1,7 @@
 #![feature(box_into_inner)]
 
 use base::DemoScene;
+use bevy_ecs::system::adapter::unwrap;
 use pi_curves::{curve::frame_curve::FrameCurve, easing::EEasingMode};
 use pi_scene_shell::prelude::*;
 use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
@@ -8,6 +9,7 @@ use pi_node_materials::prelude::{BlockMainTexture, BlockEmissiveTexture, BlockMa
 use pi_scene_context::{prelude::*, light::PluginLighting};
 use pi_scene_math::*;
 use pi_mesh_builder::{cube::*, ball::BallBuilder};
+use pi_winit::event::WindowEvent;
 
 #[path = "../base.rs"]
 mod base;
@@ -278,8 +280,8 @@ pub fn main() {
     #[cfg(feature = "use_bevy")]
     app.add_startup_system(Update, base::active_lighting_shadow);
     
-    
+    crate::base::run_loop(app, window, event_loop)
     // app.run()
-    loop { app.update(); }
+    // loop { app.update(); }
 
 }

@@ -65,8 +65,7 @@ impl Plugin for PluginPassObject {
                 sys_create_pass_object.in_set(StagePassObject::Create),
                 sys_act_pass_object.in_set(StagePassObject::Command),
                 (
-                    sys_modify_pass_effect_by_material,
-                    sys_modify_pass_effect_by_pass
+                    sys_modify_pass_effect_by_material
                 ).chain().in_set(StagePassObject::EffectModify),
             )
         );
@@ -84,7 +83,6 @@ impl Plugin for PluginPassObject {
         .add_systems(Update, sys_create_pass_object  .in_set(StagePassObject::Create))
         .add_systems(Update, sys_act_pass_object     .in_set(StagePassObject::Command))
         .add_systems(Update, sys_modify_pass_effect_by_material  .in_set(StagePassObject::EffectModify))
-        .add_systems(Update, sys_modify_pass_effect_by_pass      .after(sys_modify_pass_effect_by_material).in_set(StagePassObject::EffectModify))
         ;
     }
 }

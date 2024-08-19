@@ -8,11 +8,10 @@ use crate::{geometry::instance::instanced_buffer::{InstanceBufferAllocator, Inst
 use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode, BoundingBoxDisplay};
 
 pub fn sys_update_collider_by_matrix(
-    addeds: ComponentAdded<GlobalMatrix>,
     changes2: ComponentChanged<GlobalMatrix>,
     mut items: Query<&mut Collider>,
 ) {
-    addeds.iter().chain(changes2.iter()).for_each(|entity| {
+    changes2.iter().for_each(|entity| {
         if let Ok(mut collider) = items.get_mut(*entity) {
             *collider = collider.clone();
         }
@@ -26,7 +25,18 @@ pub fn sys_update_collider(
     changes0: ComponentChanged<DisposeReady>,
     items: Query<(Entity, &Collider, &GlobalMatrix, &SceneID, &DisposeReady)>,
 ) {
-    addeds.iter().chain(changes.iter()).for_each(|entity| {
+    changes.iter().for_each(|entity| {
+        if let Ok((entity, collider, worldmatrix, idscene, dispose)) = items.get(*entity) {
+            if let Ok(mut pool) = scenes.get_mut(idscene.0) {
+                if dispose.0 == true {
+                    pool.remove(entity);
+                } else {
+                    pool.set(entity, collider, worldmatrix.matrix());
+                }
+            }
+        }
+    });
+    addeds.iter().for_each(|entity| {
         if let Ok((entity, collider, worldmatrix, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if dispose.0 == true {
@@ -38,7 +48,7 @@ pub fn sys_update_collider(
         }
     });
     changes0.iter().for_each(|entity| {
-        if let Ok((entity, collider, worldmatrix, idscene, dispose)) = items.get(*entity) {
+        if let Ok((entity, _collider, _worldmatrix, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if dispose.0 == true {
                     pool.remove(entity);
@@ -76,8 +86,8 @@ pub fn sys_update_culling_by_cullinginfo(
     instances: Query<&InstanceMesh>,
 ) {
     addeds.iter().chain(changes.iter()).for_each(|entity| {
-        if let Ok(mesh) = instances.get(*entity) {
-            if let Ok((idscene, info, instances)) = boundings.get(mesh.0) {
+        if let Ok(instance) = instances.get(*entity) {
+            if let Ok((idscene, info, _instances)) = boundings.get(instance.0) {
                 if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                     if let Ok(mode) = modes.get(*entity) {
                         if let Ok((worldmatrix, disposed)) = items.get(*entity) {
@@ -162,7 +172,23 @@ pub fn sys_tick_culling_box(
                     });
                     // log::error!("Bounding: {:?}", tmp_instance_end);
                     instancessortinfos.0.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
-                    reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
+                    // reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
+                    {
+                        let instancedinfo = buffer;
+                        if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
+                            match instancedinfo.slot() {
+                                EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty; } },
+                                EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty; } },
+                                EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty; } },
+                                EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty; } },
+                                EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty; } },
+                                EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty; } },
+                                EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty; } },
+                                EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty; } },
+                                _ => {}
+                            }
+                        }
+                    }
                 }
             }
         }

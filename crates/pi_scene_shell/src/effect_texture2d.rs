@@ -1,12 +1,9 @@
 
 use crate::ecs::*;
 
-use std::sync::Arc;
-use pi_assets::asset::Handle;
-
 use pi_render::renderer::texture::*;
 
-use crate::{assets::texture::TEXTURE_SLOT_COUNT, shader::UniformTextureWithSamplerParam};
+use crate::assets::texture::TEXTURE_SLOT_COUNT;
 
 #[derive(Clone, Hash, PartialEq, Eq, Component, Default)]
 pub struct EffectBindTexture2DList {
