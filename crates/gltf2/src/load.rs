@@ -13,7 +13,7 @@ pub type KeyGLTFBase = Atom;
 pub type GLTFJson = String;
 pub type GLTFDynamicJson = Atom;
 
-pub struct GLTFBin(Vec<u8>);
+pub struct GLTFBin(Share<Vec<u8>>);
 impl pi_assets::asset::Asset for GLTFBin {
     type Key = u64;
     // const TYPE: &'static str = "GLTFBin";
@@ -72,7 +72,7 @@ impl GLTFBin {
         }
     }
     #[inline(never)]
-    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Vec<u8>) -> Result<Handle<GLTFBin>, EErorr> {
+    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Share<Vec<u8>>) -> Result<Handle<GLTFBin>, EErorr> {
 
         let key = path.asset_u64();
         let result = AssetMgr::load(&bin_assets, &key);
