@@ -72,7 +72,7 @@ impl GLTFBin {
         }
     }
     #[inline(never)]
-    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Vec<u8>) -> Result<Handle<GLTFBin>, EErorr> {
+    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Share<Vec<u8>>) -> Result<Handle<GLTFBin>, EErorr> {
 
         let key = path.asset_u64();
         let result = AssetMgr::load(&bin_assets, &key);
