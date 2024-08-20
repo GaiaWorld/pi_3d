@@ -1,4 +1,4 @@
-use std::{mem::size_of, num};
+use std::mem::size_of;
 
 use pi_assets::asset::Asset;
 use pi_bevy_asset::ShareAssetMgr;

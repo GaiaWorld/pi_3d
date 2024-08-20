@@ -139,7 +139,7 @@ impl<'w, 'a> EntityCommands<'w, 'a> {
     //     // self.commands.world().make_alterer::<(), (), A, ()>()
     // }
     pub fn despawn(&mut self) {
-        self.commands.destroy(self.entity);
+        let _ = self.commands.destroy(self.entity);
     }
 }
 

@@ -1,9 +1,6 @@
 
-
-use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 
-use super::*;
 
 #[derive(Clone)]
 pub struct DepthState {

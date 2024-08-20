@@ -22,7 +22,7 @@ impl StripesVirtualShader {
 
         nodemat.vs = String::from(include_str!("../base.vert"));
         nodemat.fs = String::from(include_str!("./stripes_virtual.frag"));
-
+        nodemat.binddefines |= BindDefines::SCENE_EFFECT;
         nodemat.varyings = Varyings(
             vec![
                 Varying { 

@@ -19,7 +19,7 @@ use super::{
 pub fn sys_calc_render_matrix_pre(
     adds: ComponentAdded<GlobalMatrix>,
     changes: ComponentChanged<GlobalMatrix>,
-    mut matrixs: Query<(&mut FlagRenderWorldMatrix)>,
+    mut matrixs: Query<&mut FlagRenderWorldMatrix>,
 ) {
     let changes = changes.iter().chain(adds.iter());
     changes.for_each(|entity| {
@@ -33,7 +33,7 @@ pub fn sys_calc_render_matrix(
     changes: ComponentChanged<FlagRenderWorldMatrix>,
     mut meshes: Query<
         (ObjectID, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut AbsoluteTransform),
-        (Without<InstanceMesh>)
+        Without<InstanceMesh>
     >,
     pose: Query<&RenderPoseMatrix>,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
@@ -102,7 +102,7 @@ pub fn sys_calc_render_matrix_instance(
     // let time = pi_time::Instant::now();
 
     changes.iter().for_each(|entity| {
-        if let Ok((instance, wm, wmi, mut instanceattributes)) = instances.get_mut(*entity) {
+        if let Ok((instance, wm, _wmi, mut instanceattributes)) = instances.get_mut(*entity) {
             instanceattributes.update_worldmatrix(&wm.0);
 
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
@@ -177,23 +177,23 @@ fn _calc_render_matrix<T>(
 
 pub fn sys_model_for_uniform(
     changes: ComponentChanged<RenderWorldMatrix>,
-    meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel), (Without<ModelStatic>)>,
+    meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel, &ModelStatic)>,
     velocitychanges: ComponentChanged<ModelVelocity>,
-    velocitymeshes: Query<(&ModelVelocity, &BindModel), (Without<ModelStatic>)>,
+    velocitymeshes: Query<(&ModelVelocity, &BindModel, &ModelStatic)>,
 ) {
     changes.iter().for_each(|entity| {
-        if let Ok((worldmatrix, worldmatrix_inv, bind_model)) = meshes.get(*entity) {
+        if let Ok((worldmatrix, worldmatrix_inv, bind_model, meshstatic)) = meshes.get(*entity) {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
-
-        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
+            if meshstatic.0 { return; }
+            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
+            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
         }
     });
     velocitychanges.iter().for_each(|entity| {
-        if let Ok((velocity, bind_model)) = velocitymeshes.get(*entity) {
-        let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-        bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
-
+        if let Ok((velocity, bind_model, meshstatic)) = velocitymeshes.get(*entity) {
+            if meshstatic.0 { return; }
+            let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
+            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
         }
     });
 }
@@ -234,12 +234,12 @@ pub fn sys_enable_about_instance(
 }
 
 pub fn sys_animator_update_instance_attribute(
-    floats: Query<Ticker<&AnimatorableFloat>, (With<AnimatorableAttribute>)>,
-    _vec2s: Query<Ticker<&AnimatorableVec2 >, (With<AnimatorableAttribute>)>,
-    _vec3s: Query<Ticker<&AnimatorableVec3 >, (With<AnimatorableAttribute>)>,
-    _vec4s: Query<Ticker<&AnimatorableVec4 >, (With<AnimatorableAttribute>)>,
-    _uints: Query<Ticker<&AnimatorableUint >, (With<AnimatorableAttribute>)>,
-    _sints: Query<Ticker<&AnimatorableSint >, (With<AnimatorableAttribute>)>,
+    floats: Query<(Ticker<&AnimatorableFloat>, &AnimatorableAttribute)>,
+    _vec2s: Query<(Ticker<&AnimatorableVec2 >, &AnimatorableAttribute)>,
+    _vec3s: Query<(Ticker<&AnimatorableVec3 >, &AnimatorableAttribute)>,
+    _vec4s: Query<(Ticker<&AnimatorableVec4 >, &AnimatorableAttribute)>,
+    _uints: Query<(Ticker<&AnimatorableUint >, &AnimatorableAttribute)>,
+    _sints: Query<(Ticker<&AnimatorableSint >, &AnimatorableAttribute)>,
     changes: ComponentChanged<TargetAnimatorableIsRunning>,
     mut items: Query<(&mut ModelInstanceAttributes, &InstanceAttributeAnimated)>,
     instances: Query<&InstanceMesh>,
@@ -252,27 +252,27 @@ pub fn sys_animator_update_instance_attribute(
                     let mut idx = offset.offset() as usize;
                     if let Some(entity) = offset.entity() {
                         match offset.atype() {
-                            EAnimatorableType::Vec4 => if let Ok(data) = _vec4s.get(entity) {
+                            EAnimatorableType::Vec4 => if let Ok((data, _)) = _vec4s.get(entity) {
                                 if data.is_changed() == false { return; }
                                 bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                             },
-                            EAnimatorableType::Vec3 => if let Ok(data) = _vec3s.get(entity) {
+                            EAnimatorableType::Vec3 => if let Ok((data, _)) = _vec3s.get(entity) {
                                 if data.is_changed() == false { return; }
                                 bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                             },
-                            EAnimatorableType::Vec2 => if let Ok(data) = _vec2s.get(entity) {
+                            EAnimatorableType::Vec2 => if let Ok((data, _)) = _vec2s.get(entity) {
                                 if data.is_changed() == false { return; }
                                 bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                             },
-                            EAnimatorableType::Float => if let Ok(data) = floats.get(entity) {
+                            EAnimatorableType::Float => if let Ok((data, _)) = floats.get(entity) {
                                 if data.is_changed() == false { return; }
                                 bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                             },
-                            EAnimatorableType::Uint => if let Ok(data) = _uints.get(entity) {
+                            EAnimatorableType::Uint => if let Ok((data, _)) = _uints.get(entity) {
                                 if data.is_changed() == false { return; }
                                 bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                             },
-                            EAnimatorableType::Int => if let Ok(data) = _sints.get(entity) {
+                            EAnimatorableType::Int => if let Ok((data, _)) = _sints.get(entity) {
                                 if data.is_changed() == false { return; }
                                 bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                             },

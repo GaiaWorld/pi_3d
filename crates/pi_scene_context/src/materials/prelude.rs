@@ -60,8 +60,6 @@ pub struct ActionSetMaterial<'w> {
     pub mat4: ResMut<'w, ActionListUniformMat4>,
     pub texture: ResMut<'w, ActionListUniformTexture>,
     pub texturefromtarget: ResMut<'w, ActionListUniformTextureFromRenderTarget>,
-    // pub targetanime: ResMut<'w, ActionListTargetAnimationUniform>,
-    // pub metas_wait: ResMut<'w, AssetSyncWait<KeyShaderMeta, AssetKeyShaderEffect, ShaderEffectMeta, AssetResShaderEffectMeta>>,
 }
 
 #[cfg(feature = "use_bevy")]
@@ -88,46 +86,3 @@ pub fn sys_state_material(
         }
     });
 }
-
-///
-pub struct BundleMaterial (
-    BindEffect,
-    UniformAnimated,
-    TargetAnimatorableIsRunning,
-    AssetKeyShaderEffect,
-    // MaterialRefs,
-    BindEffectReset,
-    // UniformTextureWithSamplerParams,
-    UniformTextureWithSamplerParamsDirty,
-    FlagAnimationStartResetComp,
-    DirtyMaterialRefs,
-    // TextureSlot01,
-    // TextureSlot02,
-    // TextureSlot03,
-    // TextureSlot04,
-    // TextureSlot05,
-    // TextureSlot06,
-    // TextureSlot07,
-    // TextureSlot08,
-    // EffectBindTexture2D01Comp,
-    // EffectBindTexture2D02Comp,
-    // EffectBindTexture2D03Comp,
-    // EffectBindTexture2D04Comp,
-    // EffectBindTexture2D05Comp,
-    // EffectBindTexture2D06Comp,
-    // EffectBindTexture2D07Comp,
-    // EffectBindTexture2D08Comp,
-    // EffectBindSampler2D01Comp,
-    // EffectBindSampler2D02Comp,
-    // EffectBindSampler2D03Comp,
-    // EffectBindSampler2D04Comp,
-    // EffectBindSampler2D05Comp,
-    // EffectBindSampler2D06Comp,
-    // EffectBindSampler2D07Comp,
-    // EffectBindSampler2D08Comp,
-    // EffectBindSampler2D08Comp,
-    TextureKeyList,
-    EffectBindSampler2DList,
-    EffectBindTexture2DList,
-    EffectTextureSamplersComp,
-);

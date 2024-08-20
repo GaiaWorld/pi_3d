@@ -38,9 +38,9 @@ pub fn sys_prewarm(
     mut items: Query<
         (
             (&DisposeReady, &ParticleSystemRunningState, &LocalScaling, &GlobalMatrix, &mut ParticleGravityFactor, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemModifyState),
-            (&mut ParticleSystemEmission, &mut ParticleRandom, &mut ParticleBaseRandom, &mut ParticleEmitMatrix, &mut AbsoluteTransform, &mut ParticleLocalPosition, &mut ParticleDirection),
-            (&mut ParticleAgeLifetime, &mut ParticleDieWaitTime, &mut ParticleStartScaling, &mut ParticleLocalScaling, &mut ParticleLocalRotation, &mut ParticleStartColor, &mut ParticleColorAndUV),
-            (&mut ParticleForce, &mut ParticleVelocity, &mut ParticleSpeedFactor, &mut ParticleLimitVelocityScalar, &mut ParticleOrbitOffset, &mut ParticleOrbitVelocity, &mut ParticleOrbitRadial, Option<&mut ParticleTrail>)
+            (&mut ParticleSystemEmission, &mut ParticleRandom, &mut ParticleBaseRandom, &mut ParticleEmitMatrix, &mut AbsoluteTransform, &mut ParticleDirection),
+            (&mut ParticleOrbitOffset, &mut ParticleOrbitVelocity, &mut ParticleOrbitRadial, Option<&mut ParticleTrail>),
+            (&mut ParticleDieWaitTime, &mut ParticleStart, &mut ParticleLocal, &mut ParticleVelocityAndForce)
         ),
         Changed<ParticleSystemRunningState>
     >,
@@ -48,12 +48,15 @@ pub fn sys_prewarm(
         &ParticleCalculatorBase, &ParticleCalculatorStartModifiers, &ParticleCalculatorOverLifetime
     )>,
     calculators_trail:  Query<&ParticleCalculatorTrail>,
+    mut performance: ResMut<ParticleSystemPerformance>,
 ) {
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     items.iter_mut().for_each(|(
         (disposestate, state, localscl, gmatrix, mut gravities, mut ids, mut time, mut modifystate),
-        (mut emission, mut random, mut randoms, mut emitmatrix, mut abstransform, mut locpos, mut directions),
-        (mut ages, mut diewaittimes, mut startscl, mut plocscl, mut plocrot, mut startcol, mut colorsanduvs),
-        (mut forces, mut velocity, mut speed, mut limitvelocty, mut orbitoffset, mut orbitvelocity, mut orbitradial, mut trails)
+        (mut emission, mut random, mut randoms, mut emitmatrix, mut abstransform, mut directions),
+        (mut orbitoffset, mut orbitvelocity, mut orbitradial, mut trails),
+        (mut diewaittimes, mut particlestart, mut particlelocal, mut particlevelocityforce)
     )| {
         if let Ok((
             base, modifiers, overlifetime
@@ -74,73 +77,77 @@ pub fn sys_prewarm(
 
                     fn_emission(base, &modifiers.emission, &mut random, &mut ids, &mut time, &mut emission, &mut randoms, &mut modifystate);
                     fn_emitmatrix(localscl, gmatrix, &ids, &mut emitmatrix, &mut abstransform, &global_position);
-                    fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut locpos, &mut directions, &mut forces, &ids, &time, &randoms);
+                    fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut particlelocal.position, &mut directions, &ids, &time, &randoms);
                     if let (Ok(trailmodifier), Some(trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), trails.as_deref_mut()) {
-                        fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut ages, &mut diewaittimes, Some(trailmodifier), Some(trails));
+                        fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut particlestart.ages, &mut diewaittimes, Some(trailmodifier), Some(trails));
                     } else {
-                        fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut ages, &mut diewaittimes, None, None);
+                        fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut particlestart.ages, &mut diewaittimes, None, None);
                     }
-                    fn_gravity(&modifiers.gravity, &ages, &ids, &time, &emitmatrix, &randoms, &mut gravities);
-                    fn_start_size(&modifiers.startsize, &ids, &time, &randoms, &mut startscl, &mut plocscl);
-                    fn_start_rotation(&modifiers.startrotation, &ids, &time, &randoms, &mut plocrot);
-                    fn_start_color(&modifiers.startcolor, &ids, &time, &randoms, &mut startcol, &mut colorsanduvs.color);
+                    fn_gravity(&modifiers.gravity, &particlestart.ages, &ids, &time, &emitmatrix, &randoms, &mut particlevelocityforce.gravities);
+                    fn_start_size(&modifiers.startsize, &ids, &time, &randoms, &mut particlestart.scale, &mut particlelocal.scalings);
+                    fn_start_rotation(&modifiers.startrotation, &ids, &time, &randoms, &mut particlelocal.rotation);
+                    fn_start_color(&modifiers.startcolor, &ids, &time, &randoms, &mut particlestart.color, &mut particlelocal.colorsanduvs.color);
                     if let Some(calculator) = &overlifetime.texturesheet {
-                        fn_start_texture_sheet(calculator, &ids, &randoms, &mut colorsanduvs.uv);
-                        fn_texturesheet(calculator, &ids, &ages, &randoms, &mut colorsanduvs.uv);
+                        fn_start_texture_sheet(calculator, &ids, &randoms, &mut particlelocal.colorsanduvs.uv);
+                        fn_texturesheet(calculator, &ids, &particlestart.ages, &randoms, &mut particlelocal.colorsanduvs.uv);
                     }
 
-                    fn_gravity(&modifiers.gravity, &ages, &ids, &time, &emitmatrix, &randoms, &mut gravities);
+                    fn_gravity(&modifiers.gravity, &particlestart.ages, &ids, &time, &emitmatrix, &randoms, &mut gravities);
                     if let Some(calculator) = &overlifetime.color {
-                        fn_color_over_life_time(calculator, &ids, &ages, &randoms, &startcol, &mut colorsanduvs.color);
+                        fn_color_over_life_time(calculator, &ids, &particlestart.ages, &randoms, &particlestart.color, &mut particlelocal.colorsanduvs.color);
                     }
                     if let Some(calculator) = &overlifetime.rotation {
-                        fn_rotation_over_life_time(calculator, &ids, &time, &ages, &randoms, &mut plocrot);
+                        fn_rotation_over_life_time(calculator, &ids, &time, &particlestart.ages, &randoms, &mut particlelocal.rotation);
                     }
                     if let Some(calculator) = &overlifetime.size {
-                        fn_size_over_life_time(calculator, &ids, &time, &ages, &randoms, &startscl, &mut plocscl);
+                        fn_size_over_life_time(calculator, &ids, &time, &particlestart.ages, &randoms, &particlestart.scale, &mut particlelocal.scalings);
                     }
                     if let Some(calculator) = &overlifetime.velocity {
-                        fn_velocity_over_life_time(calculator, &ids, &time, &ages, &randoms, &mut velocity);
+                        fn_velocity_over_life_time(calculator, &ids, &time, &particlestart.ages, &randoms, &mut particlevelocityforce.velocity);
                     }
                     if let Some(calculator) = &overlifetime.limitvelocity {
-                        fn_limit_velocity_over_life_time(calculator, &ids, &time, &ages, &randoms, &mut limitvelocty);
+                        fn_limit_velocity_over_life_time(calculator, &ids, &time, &particlestart.ages, &randoms, &mut particlevelocityforce.limitvelocityscalar);
                     }
-                    fn_force_over_life_time(&overlifetime.force, &ids, &time, &ages, &emitmatrix, &randoms, &mut forces);
-                    fn_orbit_over_life_time(&overlifetime.orbitoffset, &overlifetime.orbitvelocity, &overlifetime.orbitradial, &ids, &ages, &randoms, &mut orbitoffset, &mut orbitvelocity, &mut orbitradial);
+                    fn_force_over_life_time(&overlifetime.force, &ids, &time, &particlestart.ages, &emitmatrix, &randoms, &mut particlevelocityforce.forces);
+                    fn_orbit_over_life_time(&overlifetime.orbitoffset, &overlifetime.orbitvelocity, &overlifetime.orbitradial, &ids, &particlestart.ages, &randoms, &mut orbitoffset, &mut orbitvelocity, &mut orbitradial);
                     if let Some(calculator) = &overlifetime.speed {
-                        fn_speed_modifier_over_life_time(calculator, &ids, &time, &ages, &randoms, &mut speed);
+                        fn_speed_modifier_over_life_time(calculator, &ids, &time, &particlestart.ages, &randoms, &mut particlevelocityforce.speedfector);
                     }
-                    fn_direction(&modifiers.shapeemitter, &ids, &time, &velocity, &gravities, &forces, &speed, &limitvelocty, &orbitoffset, &orbitvelocity, &orbitradial, &mut directions, &mut locpos);
+                    fn_direction(&modifiers.shapeemitter, &ids, &time, &particlevelocityforce.velocity, &particlevelocityforce.gravities, &particlevelocityforce.forces, &particlevelocityforce.speedfector, &particlevelocityforce.limitvelocityscalar, &orbitoffset, &orbitvelocity, &orbitradial, &mut directions, &mut particlelocal.position);
 
                     if let Some(calculator) = &overlifetime.sizebyspeed {
-                        fn_size_by_speed(calculator, &ids, &time, &directions, &randoms, &mut plocscl);
+                        fn_size_by_speed(calculator, &ids, &time, &directions, &randoms, &mut particlelocal.scalings);
                     }
                     if let Some(calculator) = &overlifetime.colorbyspeed {
-                        fn_color_by_speed(calculator, &ids, &time, &directions, &randoms, &mut colorsanduvs.color);
+                        fn_color_by_speed(calculator, &ids, &time, &directions, &randoms, &mut particlelocal.colorsanduvs.color);
                     }
                     if let Some(calculator) = &overlifetime.rotationbyspeed {
-                        fn_rotation_by_speed(calculator, &ids, &time, &directions, &randoms, &mut plocrot);
+                        fn_rotation_by_speed(calculator, &ids, &time, &directions, &randoms, &mut particlelocal.rotation);
                     }
 
-                    fn_ids(&mut ids, &ages, &time, &diewaittimes);
+                    fn_ids(&mut ids, &particlestart.ages, &time, &diewaittimes);
                 }
                 time.time_scale = timescale;
             }
         }
     });
+    
+    if performance.debug { performance.sys_prewarm = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 
 /// 系统的启动
 pub fn sys_ids(
-    mut particle_sys: Query<(&mut ParticleIDs, &ParticleAgeLifetime, &ParticleSystemTime, &ParticleDieWaitTime), Changed<ParticleSystemModifyState>>,
+    mut particle_sys: Query<(&mut ParticleIDs, &ParticleStart, &ParticleSystemTime, &ParticleDieWaitTime), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     particle_sys.iter_mut().for_each(|(mut ids, ages, time, diewaittimes)| {
         if time.running_delta_ms <= 0 { return; }
-        fn_ids(&mut ids, ages, time, diewaittimes);
+        fn_ids(&mut ids, &ages.ages, time, diewaittimes);
     });
-    performance.sys_ids = (pi_time::Instant::now() - time0).as_micros() as u32;
+
+    if performance.debug { performance.sys_ids = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 pub fn fn_ids(
     ids: &mut ParticleIDs, ages: &ParticleAgeLifetime, _time: &ParticleSystemTime, diewaittimes: &ParticleDieWaitTime
@@ -171,7 +178,8 @@ pub fn sys_emission(
     mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleSystemRunningState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleSystemModifyState)>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emissiondata, mut randoms, mut modifystate)| {
         if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.as_ref().unwrap().0)) {
 
@@ -197,7 +205,8 @@ pub fn sys_emission(
             }
         }
     });
-    performance.sys_emission = (pi_time::Instant::now() - time0).as_micros() as u32;
+
+    if performance.debug { performance.sys_emission = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 fn fn_emission(
     base: &ParticleCalculatorBase, calcemission: &ParticleCalculatorEmission,
@@ -225,7 +234,8 @@ pub fn sys_emitmatrix(
     mut particle_sys: Query<(&LocalScaling, &GlobalMatrix, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix, &mut AbsoluteTransform), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     let global_position = Vector3::zeros();
     particle_sys.iter_mut().for_each(|(local_scaling, transform, ids, time, mut emitmatrixdata, mut absolute)| {
         if time.running_delta_ms <= 0 { return; }
@@ -236,7 +246,7 @@ pub fn sys_emitmatrix(
             &global_position
         );
     });
-    performance.sys_emitmatrix = (pi_time::Instant::now() - time0).as_micros() as u32;
+    if performance.debug { performance.sys_emitmatrix = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 fn fn_emitmatrix(
     local_scaling: &LocalScaling, transform: &GlobalMatrix, ids: &ParticleIDs,
@@ -262,72 +272,57 @@ fn fn_emitmatrix(
 pub fn sys_start(
     calculators: Query<&ParticleCalculatorStartModifiers>,
     calculators_overlifetime: Query<&ParticleCalculatorOverLifetime>,
-    // mut particle_sys: Query<(&ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom, &mut ParticleLocalPosition, &mut ParticleDirection), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
     mut particle_sys: Query<(
         Entity, &ParticleIDs, &ParticleSystemTime, &ParticleBaseRandom
-        , &mut ParticleLocalPosition, &mut ParticleDirection
-        , &mut ParticleAgeLifetime, &mut ParticleDieWaitTime
-        , &mut ParticleStartScaling, &mut ParticleLocalScaling
-        , &mut ParticleLocalRotation
-        , &mut ParticleStartColor, &mut ParticleColorAndUV, &mut ParticleForce
+        , &mut ParticleLocal, &mut ParticleDirection
+        , &mut ParticleStart, &mut ParticleDieWaitTime
     ), Changed<ParticleSystemModifyState>>,
     calculators_trail: Query<&ParticleCalculatorTrail>,
     mut particle_sys_trail: Query<&mut ParticleTrail>,
 ) {
-    let time0 = pi_time::Instant::now();
-    // let time = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
 
     particle_sys.iter_mut().for_each(|(
         entity, ids, time, randoms
-        , mut locpos, mut directions
-        , mut items_lifetime, mut diewaittimes
-        , mut items_size, mut localscalings
-        , mut items_rotation
-        , mut items_color, mut coloranduv, mut forces
+        , mut particlelocal, mut directions
+        , mut particlestart, mut diewaittimes
     )| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-            fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut locpos, &mut directions, &mut forces, &ids, &time, &randoms);
-            // let emitter = &emitter.0;
-            // let newids = &ids.newids;
-            // // let activeids = &ids.actives;
+            fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut particlelocal.position, &mut directions, &ids, &time, &randoms);
 
-            // locpos.start(newids, &mut directions, randoms, time, emitter, startspeed);
-            
             if let (Ok(trailmodifier), Ok(mut trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), particle_sys_trail.get_mut(entity)) {
-                fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut items_lifetime, &mut diewaittimes, Some(trailmodifier), Some(&mut trails));
+                fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut particlestart.ages, &mut diewaittimes, Some(trailmodifier), Some(&mut trails));
             } else {
-                fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut items_lifetime, &mut diewaittimes, None, None);
+                fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut particlestart.ages, &mut diewaittimes, None, None);
             }
 
-            fn_start_size(&calculator.startsize, ids, time, randoms, &mut items_size, &mut localscalings);
+            fn_start_size(&calculator.startsize, ids, time, randoms, &mut particlestart.scale, &mut particlelocal.scalings);
             
-            fn_start_rotation(&calculator.startrotation, ids, time, randoms, &mut items_rotation);
+            fn_start_rotation(&calculator.startrotation, ids, time, randoms, &mut particlelocal.rotation);
             
-            fn_start_color(&calculator.startcolor, ids, time, randoms, &mut items_color, &mut coloranduv.color);
+            fn_start_color(&calculator.startcolor, ids, time, randoms, &mut particlestart.color, &mut particlelocal.colorsanduvs.color);
             
         }
         if let Ok(calculator) = calculators_overlifetime.get(ids.calculator.as_ref().unwrap().0) {
-            if let Some(calculator) = &calculator.texturesheet { fn_start_texture_sheet(calculator, ids, randoms, &mut coloranduv.uv); }
+            if let Some(calculator) = &calculator.texturesheet { fn_start_texture_sheet(calculator, ids, randoms, &mut particlelocal.colorsanduvs.uv); }
         }
     });
-    
-    performance.sys_emitter = (pi_time::Instant::now() - time0).as_micros() as u32;
-    // let time1 = pi_time::Instant::now();
-    // log::warn!("emitter: {:?}", time1 - time);
+
+    if performance.debug { performance.sys_start = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 
 fn fn_emitter(
     emitter: &ParticleCalculatorShapeEmitter, startspeed: &ParticleCalculatorStartSpeed,
-    locpos: &mut ParticleLocalPosition, directions: &mut ParticleDirection, forces: &mut ParticleForce, ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom
+    locpos: &mut ParticleLocalPosition, directions: &mut ParticleDirection, ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom
 ) {
     let emitter = &emitter.0;
     let newids = &ids.newids;
     // let activeids = &ids.actives;
 
-    locpos.start(newids, directions, &mut forces.values, randoms, time, emitter, startspeed);
+    locpos.start(newids, directions, randoms, time, emitter, startspeed);
 }
 
 fn fn_start_lifetime(
@@ -388,51 +383,44 @@ pub fn sys_over_lifetime(
     calculators: Query<&ParticleCalculatorStartModifiers>,
     calculators_overlifetime: Query<&ParticleCalculatorOverLifetime>,
     mut particle_sys: Query<(
-        (&ParticleIDs, &ParticleSystemTime, &ParticleAgeLifetime, &ParticleEmitMatrix, &ParticleBaseRandom)
-        , &mut ParticleGravityFactor
-        , &mut ParticleForce
-        , &ParticleStartColor, &mut ParticleColorAndUV
-        , &mut ParticleLocalRotation
-        , &ParticleStartScaling, &mut ParticleLocalScaling
-        , &mut ParticleVelocity
+        (&ParticleIDs, &ParticleSystemTime, &ParticleStart, &ParticleEmitMatrix, &ParticleBaseRandom)
+        , &mut ParticleVelocityAndForce
+        , &mut ParticleLocal
         , (&mut ParticleOrbitOffset, &mut ParticleOrbitVelocity, &mut ParticleOrbitRadial)
-        , &mut ParticleSpeedFactor
-        , &mut ParticleLimitVelocityScalar
     ), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     particle_sys.iter_mut().for_each(|(
-        (ids, time, ages, emitmatrixs, randoms)
-        , mut gravities
-        , mut items_force
-        , startcolors, mut items_coloranduv
-        , mut items_rotation
-        , startsizes, mut items_size
-        , mut items_velocity
+        (ids, time, particlestart, emitmatrixs, randoms)
+        , mut particlevelocityforce
+        , mut particlelocal
         , (mut items_orbitoff, mut items_orbit_velocity, mut items_orbitradial)
-        , mut items_speed
-        , mut items_limitvelocity
     )| {
         if time.running_delta_ms <= 0 { return; }
 
+        let startcolors = &particlestart.color;
+        let startsizes = &particlestart.scale;
+
+        let ages = &particlestart.ages;
         if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-            fn_gravity(&calculator.gravity, ages, ids, time, emitmatrixs, randoms, &mut gravities);
+            fn_gravity(&calculator.gravity, ages, ids, time, emitmatrixs, randoms, &mut particlevelocityforce.gravities);
         }
 
         if let Ok(calculator) = calculators_overlifetime.get(ids.calculator.as_ref().unwrap().0) {
-            fn_force_over_life_time(&calculator.force, ids, time, ages, emitmatrixs, randoms, &mut items_force);
+            fn_force_over_life_time(&calculator.force, ids, time, ages, emitmatrixs, randoms, &mut particlevelocityforce.forces);
             fn_orbit_over_life_time(&calculator.orbitoffset, &calculator.orbitvelocity, &calculator.orbitradial, ids, ages, randoms, &mut items_orbitoff, &mut items_orbit_velocity, &mut items_orbitradial);
-            if let Some(calculator) = &calculator.color { fn_color_over_life_time(calculator, ids, ages, randoms, startcolors, &mut items_coloranduv.color); }
-            if let Some(calculator) = &calculator.rotation { fn_rotation_over_life_time(calculator, ids, time, ages, randoms, &mut items_rotation); }
-            if let Some(calculator) = &calculator.size { fn_size_over_life_time(calculator, ids, time, ages, randoms, startsizes, &mut items_size); }
-            if let Some(calculator) = &calculator.velocity { fn_velocity_over_life_time(calculator, ids, time, ages, randoms, &mut items_velocity); }
-            if let Some(calculator) = &calculator.speed { fn_speed_modifier_over_life_time(calculator, ids, time, ages, randoms, &mut items_speed); }
-            if let Some(calculator) = &calculator.limitvelocity { fn_limit_velocity_over_life_time(calculator, ids, time, ages, randoms, &mut items_limitvelocity); }
-            if let Some(calculator) = &calculator.texturesheet { fn_texturesheet(calculator, ids, ages, randoms, &mut items_coloranduv.uv); }
+            if let Some(calculator) = &calculator.color { fn_color_over_life_time(calculator, ids, ages, randoms, startcolors, &mut particlelocal.colorsanduvs.color); }
+            if let Some(calculator) = &calculator.rotation { fn_rotation_over_life_time(calculator, ids, time, ages, randoms, &mut particlelocal.rotation); }
+            if let Some(calculator) = &calculator.size { fn_size_over_life_time(calculator, ids, time, ages, randoms, startsizes, &mut particlelocal.scalings); }
+            if let Some(calculator) = &calculator.velocity { fn_velocity_over_life_time(calculator, ids, time, ages, randoms, &mut particlevelocityforce.velocity); }
+            if let Some(calculator) = &calculator.speed { fn_speed_modifier_over_life_time(calculator, ids, time, ages, randoms, &mut particlevelocityforce.speedfector); }
+            if let Some(calculator) = &calculator.limitvelocity { fn_limit_velocity_over_life_time(calculator, ids, time, ages, randoms, &mut particlevelocityforce.limitvelocityscalar); }
+            if let Some(calculator) = &calculator.texturesheet { fn_texturesheet(calculator, ids, ages, randoms, &mut particlelocal.colorsanduvs.uv); }
         }
     });
-    performance.sys_gravity = (pi_time::Instant::now() - time0).as_micros() as u32;
+    if performance.debug { performance.sys_over_life_time = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 
 fn fn_gravity(calculator: &ParticleCalculatorGravity, ages: &ParticleAgeLifetime, ids: &ParticleIDs, time: &ParticleSystemTime, emitmatrixs: &ParticleEmitMatrix, randoms: &ParticleBaseRandom, items: &mut ParticleGravityFactor) {
@@ -526,26 +514,30 @@ pub fn sys_direction(
     calculators: Query<&ParticleCalculatorStartModifiers>,
     mut particle_sys: Query<(
         &ParticleIDs, &ParticleSystemTime,
-        &ParticleVelocity, &ParticleGravityFactor, &ParticleForce, 
+        &ParticleVelocityAndForce,
         &ParticleOrbitOffset, &ParticleOrbitVelocity, &ParticleOrbitRadial,
-        &ParticleSpeedFactor, &ParticleLimitVelocityScalar,
-        &mut ParticleDirection, &mut ParticleLocalPosition
+        &mut ParticleDirection, &mut ParticleLocal
     ), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     particle_sys.iter_mut().for_each(
         |(
             ids, time,
-            velocities, gravities, forces,
+            particlevelocityforce,
             orbitsoffset, orbitsvelocity, orbitsradial,
-            speedfactors, limitscalars,
-            mut direction, mut positions
+            mut direction, mut particlelocal
         )| {
             if time.running_delta_ms <= 0 { return; }
+            let forces = &particlevelocityforce.forces;
+            let limitscalars = &particlevelocityforce.limitvelocityscalar;
+            let velocities = &particlevelocityforce.velocity;
+            let gravities = &particlevelocityforce.gravities;
+            let speedfactors = &particlevelocityforce.speedfector;
 
             if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-                fn_direction(&calculator.shapeemitter, ids, time, velocities, gravities, forces, speedfactors, limitscalars, orbitsoffset, orbitsvelocity, orbitsradial, &mut direction, &mut positions);
+                fn_direction(&calculator.shapeemitter, ids, time, velocities, gravities, forces, speedfactors, limitscalars, orbitsoffset, orbitsvelocity, orbitsradial, &mut direction, &mut particlelocal.position);
                 // let emitter = &calculator.0;
                 // // let newids = &ids.newids;
                 // let activeids = &ids.actives;
@@ -553,7 +545,7 @@ pub fn sys_direction(
             }
         }
     );
-    performance.sys_direction = (pi_time::Instant::now() - time0).as_micros() as u32;
+    if performance.debug { performance.sys_direction = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 pub fn fn_direction(
     calculator: &ParticleCalculatorShapeEmitter,
@@ -573,30 +565,27 @@ pub fn sys_by_speed(
     calculators: Query<&ParticleCalculatorOverLifetime>,
     mut particle_sys: Query<(
         &ParticleIDs, &ParticleSystemTime, &ParticleDirection, &ParticleBaseRandom
-        , &mut ParticleColorAndUV
-        , &mut ParticleLocalScaling
-        , &mut ParticleLocalRotation
+        , &mut ParticleLocal
     ), Changed<ParticleSystemModifyState>>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     particle_sys.iter_mut().for_each(|(
         ids, time, directions, randoms
-        , mut items_coloranduv
-        , mut items_size
-        , mut items_rotation
+        , mut particlelocal
     )| {
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-            if let Some(calculator) = &calculator.colorbyspeed { fn_color_by_speed(calculator, ids, time, directions, randoms, &mut items_coloranduv.color); }
+            if let Some(calculator) = &calculator.colorbyspeed { fn_color_by_speed(calculator, ids, time, directions, randoms, &mut particlelocal.colorsanduvs.color); }
             
-            if let Some(calculator) = &calculator.sizebyspeed { fn_size_by_speed(calculator, ids, time, directions, randoms, &mut items_size); }
+            if let Some(calculator) = &calculator.sizebyspeed { fn_size_by_speed(calculator, ids, time, directions, randoms, &mut particlelocal.scalings); }
             
-            if let Some(calculator) = &calculator.rotationbyspeed { fn_rotation_by_speed(calculator, ids, time, directions, randoms, &mut items_rotation); }
+            if let Some(calculator) = &calculator.rotationbyspeed { fn_rotation_by_speed(calculator, ids, time, directions, randoms, &mut particlelocal.rotation); }
         }
     });
-    performance.sys_color_by_speed = (pi_time::Instant::now() - time0).as_micros() as u32;
+    if performance.debug { performance.sys_by_speed = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 
 pub fn fn_color_by_speed(
@@ -637,22 +626,20 @@ pub fn fn_texturesheet(
 pub fn sys_update_buffer(
     calculators: Query<&ParticleCalculatorBase>,
     particle_sys: Query<
-        (Entity, &ParticleAttributes, &ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleLocalPosition, &ParticleDirection, &ParticleEmitMatrix, &ParticleColorAndUV),
+        (Entity, &ParticleAttributes, &ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
     >,
-    meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes)>,
+    mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection)>,
     mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
-    mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots, &mut FlagGeometryDirty)>,
     mut performance: ResMut<ParticleSystemPerformance>,
-    mut instancedatacommon: ResMut<InstanceDataCommon>,
     mut combinedata: ResMut<CombineDataCommon>,
     instant: Res<EngineInstant>,
 ) {
     let time0 = pi_time::Instant::now();
-    // let mut ptime = pi_time::Instant::now();
-    // let mut ptime1 = pi_time::Instant::now();
+    if performance.debug { performance.time = time0; }
+
     let currms = (time0 - instant.0).as_millis() as u64;
-    performance.update_buffer = (performance.last_running_time + performance.update_frame_time_ms as u64) < currms;
+    performance.update_buffer = true; // (performance.last_running_time + performance.update_frame_time_ms as u64) < currms;
     if performance.update_buffer {
         performance.last_running_time = currms;
         // log::warn!("ParticleBuffer: ");
@@ -662,26 +649,34 @@ pub fn sys_update_buffer(
 
         particle_sys.iter().for_each(
             |(
-                entity, _attributes, state, _time, ids, scalings, rotations, positions, directions, emitmatrixs,
-                colorsanduvs
+                entity, _attributes, state, _time, ids, particlelocal, directions, emitmatrixs
             )| {
                 let particle_count = ids.actives.len();
 
-                // log::warn!("sys_update_buffer A");
-                if state.0 == false || particle_count == 0 {
-                    if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
-                        *rendergeometry = RenderGeometryEable(false);
-                        return;
-                    }
-                }
+                // log::warn!("sys_update_buffer A {:?}", particle_count);
 
                 // if time.running_delta_ms <= 0 { return; }
-                if let Ok((enable, idgeo, _instanceattributes)) = meshes.get(entity) {
+                if let Ok((enable, idgeo, _instanceattributes, mut instancesort)) = meshes.get_mut(entity) {
+                    instancesort.reset();
+
+                    if state.0 == false || particle_count == 0 {
+                        // if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
+                        //     *rendergeometry = RenderGeometryEable(false);
+                        //     return;
+                        // }
+                        return;
+                    }
 
                     if enable.0 == false { return; }
+
+                    let positions = &particlelocal.position;
+                    let rotations = &particlelocal.rotation;
+                    let scalings = &particlelocal.scalings;
+                    let colorsanduvs = &particlelocal.colorsanduvs;
                     
                     let id_geo = idgeo.0;
                     if let Ok(InstancedInfoComp(Some(instanceinfo))) = instanceinfos.get(id_geo) {
+                        instancesort.sizeperinstance = instanceinfo.bytes_per_instance as usize;
 
                         count_particles += particle_count;
 
@@ -692,7 +687,7 @@ pub fn sys_update_buffer(
                             
                             let renderalign = calculator.render_align();
                             let updatebuffer = renderalign.is_some();
-                            // log::warn!("ActiveCount: {:?}", length);
+                            // log::warn!("ActiveCount: {:?}", ids.actives.len());
 
                             if let Some(renderalign) = renderalign {
                                 let calc_local = match renderalign {
@@ -775,43 +770,17 @@ pub fn sys_update_buffer(
                                     // let offset = idx * stripe;
                                     // 获取粒子的网格实例化属性写入顶点Buffer
                                     {
-                                        // let mut ii = 0;
-                                        // matrix.as_slice().iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
-                                        // color.as_slice().iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
-                                        // [uv.uscale, uv.vscale, uv.uoffset, uv.voffset].iter().for_each(|v| { collect_float[ii + stripe * index] = *v; ii+=1; });
-                                        
-                                        combinedata.record(bytemuck::cast_slice(matrix.as_slice()));
-                                        combinedata.record(bytemuck::cast_slice(color.as_slice()));
-                                        combinedata.record(bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]));
+                                        // log::warn!("LOCAL: {:?}", ([uv.uscale, uv.vscale, uv.uoffset, uv.voffset], color));
+                                        bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
+                                        bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
+                                        bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]).iter().for_each(|v| { instancesort.data.push(*v); });
                                     }
 
                                     index += 1;
                                 });
 
-                                let range = Range { start: 0, end: combinedata.usedsize() };
-                                let start = instancedatacommon.usedsize();
-                                instancedatacommon.record(combinedata.data(&range));
-                                let end = instancedatacommon.usedsize();
-
-                                // let collect_common: Vec<u8> = bytemuck::cast_slice(collect_float.as_slice()).to_vec();
-                                {
-                                    let data = EVerteicesInstance { data: Range { start, end }, itemcount: ids.actives.len() as u32, slot: instanceinfo.slot() as u8 };
-                                    let data = EVerticesBufferTmp::Instance(Arc::new(data));
-                                    if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0)  { 
-                                        // log::warn!("Instance Buffer {:?}", (instancedinfo.slot(), count));
-                                        match instanceinfo.slot() {
-                                            EVertexBufferSlot::Slot01 => { let item = buffer.get_mut(0).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty; },
-                                            EVertexBufferSlot::Slot02 => { let item = buffer.get_mut(1).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty; },
-                                            EVertexBufferSlot::Slot03 => { let item = buffer.get_mut(2).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty; },
-                                            EVertexBufferSlot::Slot04 => { let item = buffer.get_mut(3).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty; },
-                                            EVertexBufferSlot::Slot05 => { let item = buffer.get_mut(4).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty; },
-                                            EVertexBufferSlot::Slot06 => { let item = buffer.get_mut(5).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty; },
-                                            EVertexBufferSlot::Slot07 => { let item = buffer.get_mut(6).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty; },
-                                            EVertexBufferSlot::Slot08 => { let item = buffer.get_mut(7).unwrap(); *item = Some(AssetResVBSlot(data)); keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty; },
-                                            _ => {}
-                                        }
-                                    }
-                                }
+                                instancesort.ranges.push((0, Range { start: 0, end: index as u32 }));
+                                instancesort.count = index;
                             }
                         }
                     }
@@ -822,16 +791,13 @@ pub fn sys_update_buffer(
         performance.particles = count_particles as u32;
     }
 
-    performance.sys_update_buffer = (pi_time::Instant::now() - time0).as_micros() as u32;
-    // let ptime1 = pi_time::Instant::now();
-    // log::warn!("ParticleBuffer update_buffer: {:?}", ptime1 - ptime);
-    // log::warn!("ParticleBuffer: End");
+    if performance.debug { performance.sys_update_buffer = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 
 pub fn sys_update_buffer_trail(
     trailmodifiers: Query<&ParticleCalculatorTrail>,
     mut particle_sys: Query<
-        (&ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleColorAndUV, &ParticleLocalPosition, &ParticleLocalScaling, &ParticleLocalRotation, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
+        (&ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleEmitMatrix, &ParticleBaseRandom, &ParticleLocal, &ParticleDirection, &ParticleTrailMesh, &mut ParticleTrail),
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut meshes: Query<&mut RenderGeometryEable>,
@@ -839,13 +805,19 @@ pub fn sys_update_buffer_trail(
     queue: Res<PiRenderQueue>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    let time0 = pi_time::Instant::now();
+    if performance.debug { performance.time = pi_time::Instant::now(); }
+
     if performance.update_buffer {
         if let Some(trailbuffer) = &mut trailbuffer.0 {
             particle_sys.iter_mut().for_each(
                 |(
-                    state, time, ids, emitmatrixs, randoms, colors, positions, scalings, rotations, directions, trailmesh, mut trails
+                    state, time, ids, emitmatrixs, randoms, particlelocal, directions, trailmesh, mut trails
                 )| {
+                    let colors = &particlelocal.colorsanduvs;
+                    let positions = &particlelocal.position;
+                    let scalings = &particlelocal.scalings;
+                    let rotations = &particlelocal.rotation;
+
                     // log::warn!("Trail Update: 00");
                     if let Ok(mut geometry) = geometries.get_mut(trailmesh.geo){
                         if state.0 == false {
@@ -874,8 +846,6 @@ pub fn sys_update_buffer_trail(
                                     let (istart, iend) = trailbuffer.collect(&item, trailworldspace, parentmatrix);
                                     start = istart.min(start);
                                     end = iend.max(end);
-                                // } else {
-                                //     log::error!("Trail: OK");
                                 }
                             });
 
@@ -899,9 +869,9 @@ pub fn sys_update_buffer_trail(
                 }
             );
             trailbuffer.after_collect(&queue);
-            performance.sys_update_buffer_trail = (pi_time::Instant::now() - time0).as_micros() as u32;
         }   
     }
+    if performance.debug { performance.sys_update_buffer_trail = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
 }
 
 pub fn sys_dispose_about_particle_system(

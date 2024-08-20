@@ -12,19 +12,14 @@ pub fn sys_create_trail_mesh(
     mut cmds: ResMut<ActionListTrail>,
     mut commands: Commands,
     trailbuffer: Res<ResTrailBuffer>,
-    mut allocator: ResMut<ResBindBufferAllocator>,
-    empty: Res<SingleEmptyEntity>,
-    lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
     mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
-    mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
-    mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     mut altergeo: Alter<(), (), BundleGeometry, ()>,
     mut altertrail: Alter<(), (), BundleTrail, ()>,
 ) {
     if let Some(trailbuffer) = &trailbuffer.0 {
 
-        cmds.drain().for_each(|OpsTrail(id_scene, id_linked, entity)| {
+        cmds.drain().for_each(|OpsTrail(_id_scene, id_linked, entity)| {
 
             let id_mesh = entity;
             let id_geo = commands.spawn_empty_id();

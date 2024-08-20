@@ -156,7 +156,7 @@ pub fn sys_reset_system_record(mut record: ResMut<RunSystemRecord>) {
     record.0.clear();
 }
 
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct EngineCustomPlugins {
     pub particle_system: bool,
     pub lighting: bool,
@@ -165,6 +165,7 @@ pub struct EngineCustomPlugins {
     pub pointshadowmapping: bool,
     pub spotshadowmapping: bool,
     pub skeleton: bool,
+    pub combinebuffersize: usize,
 }
 impl Default for EngineCustomPlugins {
     fn default() -> Self {
@@ -176,6 +177,7 @@ impl Default for EngineCustomPlugins {
             directshadowmapping: true,
             pointshadowmapping: true,
             spotshadowmapping: true,
+            combinebuffersize: 1 * 1024 * 1024
         }
     }
 }

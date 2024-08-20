@@ -1,9 +1,14 @@
 
-use pi_scene_shell::{prelude::*, engine_shell::asset_capacity};
+use pi_scene_shell::prelude::*;
 
 
 use crate::{
-    bindgroup::*, cameras::prelude::*, object::sys_dispose_can, pass::*, prelude::StageModel, scene::StageScene, shadow::prelude::StageShadowGenerator, transforms::prelude::*
+    bindgroup::*,
+    cameras::prelude::*,
+    object::sys_dispose_can,
+    prelude::StageModel,
+    shadow::prelude::StageShadowGenerator,
+    transforms::prelude::*
 };
 
 use self::{

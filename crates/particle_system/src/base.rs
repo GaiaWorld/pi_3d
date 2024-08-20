@@ -1,4 +1,4 @@
-use std::{ops::Sub, sync::Arc};
+use std::ops::Sub;
 
 use crossbeam::queue::SegQueue;
 use pi_scene_shell::prelude::*;
@@ -85,30 +85,17 @@ fn _idx(idx: usize) -> usize {
 #[derive(Resource)]
 pub struct ParticleSystemInstant(pub pi_time::Instant);
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct ParticleSystemPerformance {
+    pub debug: bool,
+    pub time: pi_time::Instant,
     pub sys_ids: u32,
+    pub sys_prewarm: u32,
     pub sys_emission: u32,
-    pub sys_emitter: u32,
-    pub sys_start_lifetime: u32,
-    pub sys_start_size: u32,
-    pub sys_start_rotation: u32,
-    pub sys_start_color: u32,
-    pub sys_gravity: u32,
-    pub sys_start_texture_sheet: u32,
-    pub sys_force_over_life_time: u32,
-    pub sys_size_over_life_time: u32,
-    pub sys_color_over_life_time: u32,
-    pub sys_rotation_over_life_time: u32,
-    pub sys_velocity_over_life_time: u32,
-    pub sys_orbit_over_life_time: u32,
-    pub sys_speed_modifier_over_life_time: u32,
-    pub sys_limit_velocity_over_life_time: u32,
-    pub sys_texturesheet: u32,
+    pub sys_start: u32,
+    pub sys_over_life_time: u32,
     pub sys_direction: u32,
-    pub sys_color_by_speed: u32,
-    pub sys_size_by_speed: u32,
-    pub sys_rotation_by_speed: u32,
+    pub sys_by_speed: u32,
     pub sys_emitmatrix: u32,
     pub sys_update_buffer: u32,
     pub sys_update_buffer_trail: u32,
@@ -123,30 +110,38 @@ pub struct ParticleSystemPerformance {
     /// 是否更新数据
     pub update_buffer: bool,
 }
+impl Default for ParticleSystemPerformance {
+    fn default() -> Self {
+        Self {
+            debug: true,
+            time: pi_time::Instant::now(),
+            sys_ids: 0,
+            sys_prewarm: 0,
+            sys_emission: 0,
+            sys_start: 0,
+            sys_over_life_time: 0,
+            sys_direction: 0,
+            sys_by_speed: 0,
+            sys_emitmatrix: 0,
+            sys_update_buffer: 0,
+            sys_update_buffer_trail: 0,
+            particles: 0,
+            maxparticles: 0,
+            frame_time_ms: 0,
+            update_frame_time_ms: 0,
+            last_running_time: 0,
+            update_buffer: false,
+        }
+    }
+}
 impl ParticleSystemPerformance {
     pub fn total(&self) -> u32 {
         self.sys_ids
         + self.sys_emission
-        + self.sys_emitter
-        + self.sys_start_lifetime
-        + self.sys_start_size
-        + self.sys_start_rotation
-        + self.sys_start_color
-        + self.sys_start_texture_sheet
-        + self.sys_gravity
-        + self.sys_force_over_life_time
-        + self.sys_size_over_life_time
-        + self.sys_color_over_life_time
-        + self.sys_rotation_over_life_time
-        + self.sys_velocity_over_life_time
-        + self.sys_orbit_over_life_time
-        + self.sys_speed_modifier_over_life_time
-        + self.sys_limit_velocity_over_life_time
-        + self.sys_texturesheet
+        + self.sys_start
+        + self.sys_over_life_time
         + self.sys_direction
-        + self.sys_color_by_speed
-        + self.sys_size_by_speed
-        + self.sys_rotation_by_speed
+        + self.sys_by_speed
         + self.sys_emitmatrix
         + self.sys_update_buffer
         + self.sys_update_buffer_trail
@@ -353,55 +348,6 @@ impl ParticleCalculatorBase {
 
 #[derive(Resource)]
 pub struct ArgParticleCommonBufferSize(pub u32);
-
-// #[derive(Resource, Deref, DerefMut)]
-// pub struct ResParticleCommonBuffer(pub Option<Arc<NotUpdatableBufferRange>>);
-// impl TAssetCapacity for ResParticleCommonBuffer {
-//     const ASSET_TYPE: &'static str = "PARTICLE_COMMON_BUFFER";
-//     fn capacity() -> AssetCapacity {
-//         AssetCapacity { flag: false, min: 1024 * 1024, max: 4, timeout: 1000 }
-//     }
-// }
-// impl ResParticleCommonBuffer {
-//     pub fn new(
-//         maxbytes: u32, 
-//         allocator: &mut VertexBufferAllocator,
-//         device: &RenderDevice,
-//         queue: &RenderQueue,
-//     ) -> Self {
-//         let size = maxbytes;
-//         let mut data = Vec::with_capacity(size as usize);
-//         for _ in 0..size {
-//             data.push(0);
-//         }
-
-//         // log::error!("ResParticleCommonBuffer {}", data.len());
-//         let buffer = allocator.create_not_updatable_buffer_pre(device, queue, &data, None);
-//         Self(buffer)
-//     }
-//     pub fn byte_count(&self) -> usize {
-//         if let Some(item) = &self.0 {
-//             item.size() as usize
-//         } else {
-//             0
-//         }
-//     }
-//     pub fn buffer(&self, start: u32, end: u32) -> EVerticesBufferUsage {
-//         EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(self.0.as_ref().unwrap().clone(), start, end)))
-//     }
-//     pub fn update(&self, data: &[u8], queue: &RenderQueue) -> bool {
-//         if let Some(item) = &self.0 {
-//             if data.len() as u32 <= item.size()  {
-//                 queue.write_buffer(item.buffer(), 0, data);
-//                 return false;
-//             } else {
-//                 return true;
-//             }
-//         } else {
-//             return false;
-//         }
-//     }
-// }
 
 #[derive(Resource)]
 pub struct ResParticleTrailBuffer(pub Option<TrailBuffer>);
@@ -909,7 +855,7 @@ impl ParticleSystemEmission {
     }
 }
 
-#[derive(Component, Default, Deref)]
+#[derive(Default, Deref)]
 pub struct ParticleAgeLifetime(pub(crate) Vec<AgeLifeTime>);
 impl ParticleAgeLifetime {
     pub fn new(maxcount: usize) -> Self {
@@ -947,7 +893,7 @@ impl ParticleAgeLifetime {
     }
 }
 
-#[derive(Component, Default, Deref)]
+#[derive(Default, Deref)]
 pub struct ParticleStartColor(pub(crate) Vec<Vector4>);
 impl ParticleStartColor {
     pub fn new(maxcount: usize) -> Self {
@@ -976,7 +922,7 @@ impl ParticleStartColor {
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Default)]
 pub struct ParticleStartScaling(pub(crate) Vec<Vector3>);
 impl ParticleStartScaling {
     pub fn new(maxcount: usize) -> Self {
@@ -1004,7 +950,23 @@ impl ParticleStartScaling {
     }
 }
 
-#[derive(Component, Default, Deref, DerefMut)]
+#[derive(Component, Default)]
+pub struct ParticleStart {
+    pub color: ParticleStartColor,
+    pub scale: ParticleStartScaling,
+    pub ages: ParticleAgeLifetime,
+}
+impl ParticleStart {
+    pub fn new(maxcount: usize) -> Self {
+        Self {
+            color: ParticleStartColor::new(maxcount),
+            scale: ParticleStartScaling::new(maxcount),
+            ages: ParticleAgeLifetime::new(maxcount),
+        }
+    }
+}
+
+#[derive(Default, Deref, DerefMut)]
 pub struct ParticleLocalPosition(pub(crate) Vec<Vector3>);
 impl ParticleLocalPosition {
     pub fn new(maxcount: usize) -> Self {
@@ -1018,7 +980,6 @@ impl ParticleLocalPosition {
         &mut self,
         newids: &Vec<IdxParticle>,
         directions: &mut Vec<Direction>,
-        forces: &mut Vec<Force>,
         randomlist: &Vec<BaseRandom>,
         time: &ParticleSystemTime,
         emitter: &TypeShapeEmitter,
@@ -1032,10 +993,6 @@ impl ParticleLocalPosition {
             let randoms = randomlist.get(*idx).unwrap();
             let mut random = Random::new(randoms.seed);
 
-            // let force = forces.get_mut(*idx).unwrap();
-            // force.value.x = 0.;
-            // force.value.y = 0.;
-            // force.value.z = 0.;
             emitter.start_position_function(position_to_update, time.emission_loop as f32, time.emission_progress, emission_index as f32, emission_total, &mut random);
 
             let local_position = &position_to_update;
@@ -1051,15 +1008,9 @@ impl ParticleLocalPosition {
             emission_index += 1;
         });
     }
-    // pub fn run(
-    //     &mut self,
-    //     ids: &Vec<IdxParticle>,
-    // ) {
-
-    // }
 }
 
-#[derive(Component, Default, Deref)]
+#[derive(Default, Deref)]
 pub struct ParticleLocalRotation(pub(crate) Vec<Vector3>);
 impl ParticleLocalRotation {
     pub fn new(maxcount: usize) -> Self {
@@ -1117,7 +1068,7 @@ impl ParticleLocalRotation {
     }
 }
 
-#[derive(Component, Default, Deref, DerefMut)]
+#[derive(Default, Deref, DerefMut)]
 pub struct ParticleLocalScaling(pub(crate) Vec<Vector3>);
 impl ParticleLocalScaling {
     pub fn new(maxcount: usize) -> Self {
@@ -1157,6 +1108,46 @@ impl ParticleLocalScaling {
             let item = self.0.get_mut(*idx).unwrap();
             calculator.modify(item, direction.length, randoms);
         });
+    }
+}
+
+#[derive(Component, Default)]
+pub struct ParticleLocal {
+    pub position: ParticleLocalPosition,
+    pub rotation: ParticleLocalRotation,
+    pub scalings: ParticleLocalScaling,
+    pub speedfector: ParticleSpeedFactor,
+    pub colorsanduvs: ParticleColorAndUV,
+}
+impl ParticleLocal {
+    pub fn new(maxcount: usize) -> Self {
+        Self {
+            position: ParticleLocalPosition::new(maxcount),
+            rotation: ParticleLocalRotation::new(maxcount),
+            scalings: ParticleLocalScaling::new(maxcount),
+            speedfector: ParticleSpeedFactor::new(maxcount),
+            colorsanduvs: ParticleColorAndUV::new(maxcount),
+        }
+    }
+}
+
+#[derive(Component, Default)]
+pub struct ParticleVelocityAndForce {
+    pub velocity: ParticleVelocity,
+    pub limitvelocityscalar: ParticleLimitVelocityScalar,
+    pub forces: ParticleForce,
+    pub speedfector: ParticleSpeedFactor,
+    pub gravities: ParticleGravityFactor,
+}
+impl ParticleVelocityAndForce {
+    pub fn new(maxcount: usize, force_is_local_space: bool, force_constant: bool, gravity_calculator: &ParticleCalculatorGravity, simulation_mode: &EParticleSimulationSpace) -> Self {
+        Self {
+            velocity: ParticleVelocity::new(maxcount),
+            limitvelocityscalar: ParticleLimitVelocityScalar::new(maxcount),
+            forces: ParticleForce::new(maxcount, force_is_local_space, force_constant),
+            speedfector: ParticleSpeedFactor::new(maxcount),
+            gravities: ParticleGravityFactor::new(maxcount, gravity_calculator, simulation_mode),
+        }
     }
 }
 
@@ -1279,7 +1270,6 @@ impl Default for ParticleEmitMatrix  {
 }
 
 /// 粒子局部重力影响
-#[derive(Component)]
 pub struct ParticleGravityFactor {
     pub(crate) values: Vec<GravityFactor>,
     pub(crate) _runcall: fn(&mut Vec<GravityFactor>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &ParticleEmitMatrix, &Vec<BaseRandom>, &ParticleSystemTime, &ParticleCalculatorGravity),
@@ -1401,7 +1391,6 @@ impl Default for ParticleGravityFactor {
 }
 
 /// 粒子局部外力影响
-#[derive(Component)]
 pub struct ParticleForce {
     pub(crate) values: Vec<Force>,
     pub(crate) _runcall: fn(&mut Vec<Force>, &Vec<IdxParticle>, &Vec<AgeLifeTime>, &ParticleEmitMatrix, &Vec<BaseRandom>, &ParticleSystemTime, &ForceOverLifetime),
@@ -1514,7 +1503,7 @@ impl Default for ParticleForce {
 }
 
 /// 粒子局部速度向量
-#[derive(Component, Default, Deref)]
+#[derive(Default, Deref)]
 pub struct ParticleVelocity(pub(crate) Vec<Velocity>);
 impl ParticleVelocity {
     pub fn new(maxcount: usize) -> Self {
@@ -1544,7 +1533,7 @@ impl ParticleVelocity {
 }
 
 /// 粒子局部速度因子
-#[derive(Component, Default, Deref)]
+#[derive(Default, Deref)]
 pub struct ParticleSpeedFactor(pub(crate) Vec<SpeedFactor>);
 impl ParticleSpeedFactor {
     pub fn new(maxcount: usize) -> Self {
@@ -1800,7 +1789,7 @@ impl ParticleOrbitRadial {
     }
 }
 
-#[derive(Component, Default, Deref)]
+#[derive(Default, Deref)]
 pub struct ParticleLimitVelocityScalar(pub(crate) Vec<LimitVelocityScalar>);
 impl ParticleLimitVelocityScalar {
     pub fn new(maxcount: usize) -> Self {
@@ -1931,7 +1920,6 @@ impl ParticleDirection {
 }
 
 /// 粒子实时颜色
-#[derive(Component)]
 pub struct ParticleColorAndUV {
     pub(crate) color: ParticleColor,
     pub(crate) uv: ParticleUV,

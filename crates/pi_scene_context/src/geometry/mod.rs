@@ -3,7 +3,7 @@
 use instance::instanced_buffer::*;
 use pi_atom::Atom;
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 ///
 /// 网格信息单独与 GameObject 绑定
 
@@ -35,10 +35,9 @@ pub struct PluginGeometry;
 impl Plugin for PluginGeometry {
 
     fn build(&self, app: &mut App) {
+        let option = app.world.get_resource::<EngineCustomPlugins>().unwrap().clone();
         app.insert_resource(ActionListGeometryCreate::default());
         app.insert_resource(VertexBufferDataMap3D(SingleVertexBufferDataMap::default()));
-        app.insert_resource(InstanceDataCommon::new(1024 * 1024));
-        app.insert_resource(CombineDataCommon::new(512 * 1024));
         
         let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgVertexBuffer3D>() {
             cfg
@@ -57,6 +56,10 @@ impl Plugin for PluginGeometry {
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap();
         let mut allocator = VertexBufferAllocator3D(VertexBufferAllocator::new(vbsize as usize, cfg.0.timeout));
         let instanceallocator = InstanceBufferAllocator::new(insbsize, &mut allocator, device, queue);
+        
+        app.insert_resource(CombineBuffer::new(option.combinebuffersize, &mut allocator, device, queue));
+        app.insert_resource(CombineDataCommon::new(512 * 1024));
+
         app.insert_resource(allocator);
         app.insert_resource(instanceallocator);
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<EVertexBufferRange>();

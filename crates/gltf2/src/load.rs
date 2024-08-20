@@ -916,6 +916,8 @@ pub fn sys_gltf_analy(
     queue: Res<PiRenderQueue>,
     mut _performance: ResMut<Performance>,
 ) {
+    if _performance.debug { _performance.t_gltfanaly = pi_time::Instant::now(); }
+
     let mut base = loader.basesuccess.pop();
     while let Some(temp) = &base {
         let key_u64 = temp.id.asset_u64();
@@ -964,7 +966,7 @@ pub fn sys_gltf_analy(
         item = loader.errorqueue.pop();
     }
 
-    // performance.gltfanaly = (pi_time::Instant::now() - time0).as_micros() as u32;
+    if _performance.debug { _performance.gltfanaly = (pi_time::Instant::now() - _performance.t_gltfanaly).as_micros() as u32; }
 }
 
 

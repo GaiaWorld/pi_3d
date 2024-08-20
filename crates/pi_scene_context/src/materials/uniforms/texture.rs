@@ -1,17 +1,6 @@
 use std::sync::Arc;
 
-use derive_deref::{DerefMut, Deref};
 use pi_scene_shell::prelude::*;
-
-use crate::materials::value::{UniformBind, SlotActiveRequire};
-
-#[derive(Clone, Copy)]
-pub enum ETextureSlot {
-    Slot0,
-    Slot1,
-    Slot2,
-    Slot3,
-}
 
 #[derive(Clone, Component, Default)]
 pub struct UniformTextureWithSamplerParams(pub XHashMap<Atom, Arc<UniformTextureWithSamplerParam>>);

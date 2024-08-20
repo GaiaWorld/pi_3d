@@ -12,10 +12,10 @@ pub fn sys_modify_pass_effect_by_material(
     changes3: ComponentChanged<BindEffectReset>,
     changes4: ComponentChanged<EffectTextureSamplersComp>,
     materials: Query<&MaterialRefs>,
-    mut passes: Query<(Entity, &mut PassBindGroupsDirty)>,
+    mut passes: Query<&mut PassBindGroupsDirty>,
 ) {
     passaddeds.iter().chain(passchanges.iter()).for_each(|entity| {
-        if let Ok((idpass, mut dirty)) = passes.get_mut(*entity) {
+        if let Ok(mut dirty) = passes.get_mut(*entity) {
             *dirty = PassBindGroupsDirty;
         }
     });
@@ -23,7 +23,7 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok(list) = materials.get(*entity) {
             list.iter().for_each(|target| {
-                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
                 }
             });
@@ -33,7 +33,7 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok(list) = materials.get(*entity) {
             list.iter().for_each(|target| {
-                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
                 }
             });
@@ -43,7 +43,7 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok(list) = materials.get(*entity) {
             list.iter().for_each(|target| {
-                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
                 }
             });
@@ -53,67 +53,12 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok(list) = materials.get(*entity) {
             list.iter().for_each(|target| {
-                if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
+                if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
                 }
             });
         }
     });
-    // materials.iter().for_each(|(idmat, effect_key, meta, bind, list, textures)| {
-    //     // log::error!("sys_modify_pass_effect_by_material");
-    //     list.iter().for_each(|target| {
-    //         if let Ok((mut passready, mut dirty)) = passes.get_mut(*target) {
-    //             *dirty = PassBindGroupsDirty;
-    //         }
-    //     });
-    // });
-    // // log::error!("MaterialBind : ");
-    // materials.iter().for_each(|(idmat, effect_key, meta, bind, list, textures)| {
-    //     let (bindvalue, bindtextures, effect) = _pass_effect_ready(
-    //         effect_key, textures, meta, bind
-    //     );
-
-    //     // log::error!("MaterialBind : 1  - {:?}", (bindvalue.is_some(), bindtextures.is_some(), effect.is_some()));
-    //     list.iter().for_each(|target| {
-    //         // log::error!("MaterialBind : 2");
-    //         if let Ok((mut passready, mut passbind, mut set2)) = passes.get_mut(*target) {
-    //             // log::error!("Effect None : 3 {:?}", (effect_key, effect.is_some(), idmat, target));
-    //             if let (Some(old), Some(new)) = (&passready.0, &effect) {
-    //                 if old.0 != new.0 {
-    //                     passready.0 = effect.clone();
-    //                 } else {
-    //                     // log::error!("Effect No Modify");
-    //                 }
-    //             } else {
-    //                 passready.0 = effect.clone();
-    //             }
-
-    //             // log::error!("MaterialBind : PassBindEffectTextures");
-    //             // passtextures.0 = bindtextures.clone();
-    //             if let (Some(effect_texture_samplers), Some((_key_meta, meta))) = (&bindtextures, &passready.0) {
-    //                 let result = _set2_modify(
-    //                     _key_meta,
-    //                     meta,
-    //                     effect_texture_samplers,
-    //                     &device,
-    //                     &asset_mgr_bindgroup_layout,
-    //                     &asset_mgr_bindgroup,
-    //                 );
-    //                 *set2 = PassBindGroupTextureSamplers(result);
-    //             } else {
-    //                 *set2 = PassBindGroupTextureSamplers(None);
-    //             }
-
-    //             match bindvalue {
-    //                 Some(bindvalue) => {
-    //                     passbind.0 = Some(bindvalue.bind())
-    //                 },
-    //                 None =>  passbind.0 = None ,
-    //             }
-                
-    //         }
-    //     });
-    // });
 }
 
 pub fn _pass_effect_ready<'a>(

@@ -35,35 +35,24 @@ impl Plugin for PluginTest {
     fn setup(
         mut commands: Commands,
         mut actions: pi_3d::ActionSets,
-    mut animegroupres: ResourceAnimationGroup,
+        mut animegroupres: ResourceAnimationGroup,
         mut fps: ResMut<SingleFrameTimeCommand>,
         anime_assets: TypeAnimeAssetMgrs,
         mut anime_contexts: TypeAnimeContexts,
         mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
         mut matmetas: ResMut<ShareAssetMgr<ShaderEffectMeta>>,
+        demooption: Res<base::DemoOption>,
     ) {
-
+        let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+            (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+        } else { return; };
 
         let tes_size = 10;
         fps.frame_ms = 100;
-        
-        
-        let orthographic_camera = false;
-        let camera_position = (0., 20., -20.);
+
         let limit = assets.1.limits();
         log::warn!("{:?}", limit);
 
-        // Test Code
-        let demopass = base::DemoScene::new(
-            &mut commands, &mut actions, &mut animegroupres,
-            &mut assets.0, &assets.1, &assets.2, &assets.3,
-            tes_size as f32, 0.7, camera_position, orthographic_camera
-        );
-        let (scene, camera01) = (demopass.scene, demopass.camera);
-
-        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-        actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
-    
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
 
         actions.scene.brdf.push(OpsSceneBRDF::ops(scene, Atom::from("./assets/images/fractal.png"), false));
@@ -236,7 +225,7 @@ impl Plugin for PluginTest {
             let (targets, device, asset_samp, atlas_allocator) = (&mut assets.0, &assets.1, &assets.2, &assets.3);
             let opaquetarget = targets.create(device, KeySampler::linear_repeat(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 128, 128 ); 
             let (opaque_texture_renderer, opaque_texture_renderer_camera) = copy::PluginImageCopy::init(&mut commands, &mut actions, scene,
-                demopass.opaque_renderer, demopass.transparent_renderer, demopass.opaque_target, Some(KeyCustomRenderTarget::Custom(opaquetarget.unwrap()))
+                demopass.opaque_renderer, demopass.transparent_renderer, demopass.opaque_target.clone(), Some(KeyCustomRenderTarget::Custom(opaquetarget.unwrap()))
             );
 
             actions.renderer.connect.push(OpsRendererConnect::ops(demopass.opaque_renderer, demopass.transparent_renderer, true));
@@ -265,6 +254,15 @@ pub fn main() {
     .add_plugins(distortion_material::PluginDistortionMaterial)
     ;
 
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: false,
+        camera_size: 10.,
+        camera_fov: 0.7,
+        camera_position: (0., 20., -20.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
@@ -282,6 +280,6 @@ pub fn main() {
     
     crate::base::run_loop(app, window, event_loop)
     // app.run()
-    // loop { app.update(); }
+    // crate::base::run_loop(app, window, event_loop)
 
 }

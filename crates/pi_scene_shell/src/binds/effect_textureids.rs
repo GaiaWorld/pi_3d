@@ -1,9 +1,8 @@
-use pi_render::{renderer::{bind_buffer::{BindBufferAllocator, BindBufferRange}, texture::EKeyTexture}, rhi::sampler::SamplerDesc};
-use pi_scene_math::Number;
+use pi_render::renderer::{bind_buffer::{BindBufferAllocator, BindBufferRange}, texture::EKeyTexture};
 
 use crate::{assets::texture::{TextureKeyList, TEXTURE_SLOT_COUNT}, shader::ShaderEffectMeta};
 
-use super::{AtlasConfigs, BindAtlas, KeyAtlasFrame, TextureAtlas, TextureAtlasIdx};
+use super::{AtlasConfigs, KeyAtlasFrame, TextureAtlas, TextureAtlasIdx};
 
 
 #[derive(Clone, Hash, PartialEq, Eq)]
@@ -12,7 +11,7 @@ pub struct ShaderBindEffectTextureIDs {
     pub(crate) idxs: [TextureAtlasIdx; TEXTURE_SLOT_COUNT],
 }
 impl ShaderBindEffectTextureIDs {
-    pub fn new(meta: &ShaderEffectMeta, keys: &TextureKeyList, config: &AtlasConfigs, pool: &mut TextureAtlas, alloc: &mut BindBufferAllocator) -> Option<Self> {
+    pub fn new(_meta: &ShaderEffectMeta, keys: &TextureKeyList, config: &AtlasConfigs, pool: &mut TextureAtlas, alloc: &mut BindBufferAllocator) -> Option<Self> {
         let mut data = vec![];
         let mut idxs = [TextureAtlasIdx::zero(), TextureAtlasIdx::zero(), TextureAtlasIdx::zero(), TextureAtlasIdx::zero(), TextureAtlasIdx::zero(), TextureAtlasIdx::zero(), TextureAtlasIdx::zero(), TextureAtlasIdx::zero()];
         for idx in 0..TEXTURE_SLOT_COUNT {

@@ -7,9 +7,8 @@ use super::{command::{ActionListSpriteCreate, ActionListSpriteModify, OpsSpriteC
 pub fn sys_create_sprite(
     mut cmds: ResMut<ActionListSpriteCreate>,
     mut commands: Commands,
-    atlasmgr: Res<TextureFrameAtlasManager>,
 ) {
-    cmds.drain().for_each(|OpsSpriteCreate(mesh, sprite, atlas)| {
+    cmds.drain().for_each(|OpsSpriteCreate(_mesh, sprite, atlas)| {
         if let Some(mut entitycmd) = commands.get_entity(sprite) {
             entitycmd.insert((
                 RenderPoseMatrix::default(),

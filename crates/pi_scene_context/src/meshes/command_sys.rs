@@ -4,7 +4,14 @@ use pi_scene_shell::prelude::*;
 use crate::{
     cullings::prelude::*, geometry::{
         instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer}, prelude::*
-    }, layer_mask::prelude::*, object::ActionEntity, pass::*, prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, renderers::prelude::*, skeleton::prelude::*, state::*, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}
+    },
+    layer_mask::prelude::*,
+    object::ActionEntity,
+    pass::*,
+    prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts},
+    renderers::prelude::*,
+    skeleton::prelude::*,
+    transforms::command_sys::{ActionTransformNode, TransformNodeBundle}
 };
 
 use super::{
@@ -100,7 +107,7 @@ pub fn sys_create_mesh(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
-    mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
+    mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs, ModelStatic), ()>,
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     // mut insert: Insert<PassObjBundle>,
 ) {
@@ -111,7 +118,7 @@ pub fn sys_create_mesh(
         // if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
         if ActionMesh::init(
             entity, &mut commands, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel,
-            &mut altermodel, &mut passinsert
+            &mut altermodel, &mut passinsert 
         ) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
@@ -388,14 +395,14 @@ pub struct ActionMesh;
 impl ActionMesh {
     pub fn init(
         entity: Entity,
-        commands: &mut Commands,
+        _commands: &mut Commands,
         scene: Entity,
         allocator: &mut ResBindBufferAllocator,
         empty: &SingleEmptyEntity,
         mut state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
-        altermodel: &mut Alter<(), (), (BundleModel, BindModel, PassIDs), ()>,
+        altermodel: &mut Alter<(), (), (BundleModel, BindModel, PassIDs, ModelStatic), ()>,
         passinsert: &mut Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     ) -> bool {
         // state.instance_matrix = true;
@@ -430,7 +437,7 @@ impl ActionMesh {
         let passids = PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]);
 
         // let mut entitycmd = commands.get_entity(entity).unwrap();
-        // let instanceattr = meshinstanceattributes.bytes().len() > 0;
+        let instanceattr = meshinstanceattributes.bytes().len() > 0;
 
         let modellightidx = ModelLightingIndexs::new(allocator, lightlimit);
         let lightbundle = (
@@ -452,16 +459,13 @@ impl ActionMesh {
             state,
         );
 
-        // if instanceattr {
-        //     entitycmd.insert((bundle, commonbindmodel.0.clone(), ModelStatic, passids));
-        // } else {
-        //     if let Some(bind) = BindModel::new(allocator) {
-        //         entitycmd.insert((bundle, bind, passids));
-        //     }
-        // }
-        if let Some(bind) = BindModel::new(allocator) {
-            // entitycmd.insert((bundle, bind, passids));
-            let _ = altermodel.alter(entity, (bundle, bind, passids));
+        if instanceattr {
+            let _ = altermodel.alter(entity, (bundle, commonbindmodel.0.clone(), passids, ModelStatic(true)));
+        } else {
+            if let Some(bind) = BindModel::new(allocator) {
+                // entitycmd.insert((bundle, bind, passids));
+                let _ = altermodel.alter(entity, (bundle, bind, passids, ModelStatic(false)));
+            }
         }
 
         return true;
@@ -506,7 +510,7 @@ impl ActionMesh {
             GeometryBounding::default(),
             GeometryCullingMode::default(),
             ItemCullingDirty::default(),
-            InstancedMeshTransparentSortCollection(vec![]),
+            InstancedMeshTransparentSortCollection::default(),
             SkeletonID(None),
         ))
     }

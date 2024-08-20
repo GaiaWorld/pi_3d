@@ -20,18 +20,14 @@ fn setup(
     mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    demooption: Res<base::DemoOption>,
 ) {
-    let tes_size = 20;
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
+    let tes_size = 4;
     fps.frame_ms = 4;
-
-    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        tes_size as f32, 0.7, (0., 0., -10.), true
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
-
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
@@ -48,7 +44,7 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/Q69L5MmgSNC2xbBiAwZcDw.png"),
+        url: EKeyTexture::from("assets/images/Q69L5MmgSNC2xbBiAwZcDw.png"),
     }));
     
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
@@ -65,14 +61,21 @@ impl Plugin for PluginTest {
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins();
-    
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 6.,
+        camera_position: (0., 0., -40.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_plugins(PluginTest);
     
         #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
-    
-    
-    app.run()
+
+    crate::base::run_loop(app, window, event_loop)
 }

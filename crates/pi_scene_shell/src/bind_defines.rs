@@ -59,7 +59,7 @@ impl BindDefines {
         Self::need_effect_textures(val)
     }
 
-    pub fn need_bind_group_set3(val: u32) -> bool {
+    pub fn need_bind_group_set3(_val: u32) -> bool {
         false
         // Self::need_lighting(val) || Self::need_shadowmap(val) || Self::need_screen_opaque(val) || Self::need_screen_depth(val) || Self::need_brdf(val) || Self::need_env(val)
     }

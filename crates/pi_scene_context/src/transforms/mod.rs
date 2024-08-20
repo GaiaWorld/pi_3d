@@ -1,7 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 
-use crate::{object::sys_dispose_ready, scene::StageScene, flags::StageEnable};
+use crate::{scene::StageScene, flags::StageEnable};
 
 use self::{
     command::*,

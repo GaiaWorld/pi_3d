@@ -48,7 +48,7 @@ impl KeyBindGroupScene {
         let mut lighting_enable: bool = false;
         let mut shadow_enable: bool = false;
 
-        let key_set = KeyShaderSetScene::default();
+        // let key_set = KeyShaderSetScene::default();
         let mut key_bindgroup = KeyBindGroup::default();
 
         let mut binding = 0;

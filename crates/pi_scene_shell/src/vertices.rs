@@ -1,5 +1,4 @@
-use pi_assets::asset::{Asset, Handle};
-use pi_render::renderer::vertices::EVerticesBufferUsage;
+use pi_assets::asset::Asset;
 
 pub struct D3Memory(pub Vec<u8>);
 impl pi_assets::asset::Size for D3Memory {

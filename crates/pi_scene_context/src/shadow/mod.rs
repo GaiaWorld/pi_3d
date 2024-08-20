@@ -1,5 +1,4 @@
 
-use crossbeam::channel::after;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 use crate::{
@@ -121,7 +120,6 @@ impl Plugin for PluginShadowGenerator {
 
             #[cfg(not(feature = "use_bevy"))]
             {
-                use pi_scene_shell::prelude::IntoSystemConfigs;
                 app
                 .add_systems(Update, sys_create_shadow_generator.in_set(StageShadowGenerator::Create))
                 .add_systems(Update, sys_light_layermask_to_shadow                                                                           .in_set(StageShadowGenerator::Command),)

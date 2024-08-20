@@ -36,27 +36,15 @@ impl Plugin for PluginTest {
         anime_assets: TypeAnimeAssetMgrs,
         mut anime_contexts: TypeAnimeContexts,
         mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+        demooption: Res<base::DemoOption>,
     ) {
-
+        let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+            (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+        } else { return; };
 
         let tes_size = 10;
         fps.frame_ms = 100;
-        
-        
-        let orthographic_camera = false;
-        let camera_position = (0., 20., -20.);
 
-        // Test Code
-        let demopass = base::DemoScene::new(
-            &mut commands, &mut actions, &mut animegroupres,
-            &mut assets.0, &assets.1, &assets.2, &assets.3,
-            tes_size as f32, 0.7, camera_position, orthographic_camera
-        );
-        let (scene, camera01) = (demopass.scene, demopass.camera);
-
-        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-        actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
-    
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
 
         actions.scene.brdf.push(OpsSceneBRDF::ops(scene, Atom::from("./assets/images/fractal.png"), false));
@@ -229,6 +217,15 @@ pub fn main() {
         pbr_material::PluginPBRMaterial
     );
 
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: false,
+        camera_size: 10.,
+        camera_fov: 0.7,
+        camera_position: (0., 20., -20.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
@@ -245,6 +242,6 @@ pub fn main() {
     
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

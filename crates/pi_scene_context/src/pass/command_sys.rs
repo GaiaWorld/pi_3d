@@ -26,7 +26,7 @@ pub fn sys_create_pass_object(
             }
 
             // if let Some(mut cmd) = commands.get_entity(id_pass) {
-                let bundle = ActionPassObject::reset(idmodel, idmaterial);
+                let bundle = ActionPassObject::reset();
                 // log::warn!("Pass {:?}", (idmodel, pass, idmaterial, id_pass));
                 commands.entity(id_pass).insert(bundle);
                 // alter.alter(id_pass, bundle);
@@ -107,10 +107,7 @@ pub fn sys_act_pass_object(
 }
 
 pub type PassObjInitBundle = (
-    // PassSceneID,
     PassModelID,
-    // PassSceneForSet3,
-    // PassViewerID,
     PassMaterialID,
     PassGeometryID,
     PassRendererID,
@@ -123,14 +120,7 @@ pub type PassObjInitBundle = (
 );
 
 pub type PassObjBundle = (
-        // PassBindEffectValue,
-        // PassBindEffectTextures,
-        // PassBindGroupScene,
-        // PassBindGroupModel,
-        // PassBindGroupTextureSamplers,
-        // PassBindGroupLightingShadow,
         PassBindGroups,
-        // PassEffectReady,
         PassShader,
         PassPipeline,
         PassDraw,
@@ -141,13 +131,10 @@ impl ActionPassObject {
     pub fn init(
         empty: Entity,
         idmodel: Entity,
-        idscene: Entity,
+        _idscene: Entity,
     ) -> PassObjInitBundle {
         (
-            // PassSceneID(idscene),
             PassModelID(idmodel),
-            // PassSceneForSet3(idscene),
-            // PassViewerID(empty),
             PassMaterialID(empty),
             PassGeometryID(empty),
             PassRendererID(empty),
@@ -160,18 +147,9 @@ impl ActionPassObject {
         )
     }
     pub fn reset(
-        idmodel: Entity,
-        material: Entity,
     ) -> PassObjBundle {
             (
-                // PassBindEffectValue(None),
-                // PassBindEffectTextures(None),
-                // PassBindGroupScene(None),
-                // PassBindGroupModel(None),
-                // PassBindGroupTextureSamplers(None),
-                // PassBindGroupLightingShadow(None),
                 PassBindGroups::default(),
-                // PassEffectReady(None),
                 PassShader(None),
                 PassPipeline(None),
                 PassDraw::default(),

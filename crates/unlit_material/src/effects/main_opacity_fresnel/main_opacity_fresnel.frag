@@ -28,7 +28,7 @@
     alpha                   *= opacityChannel(opacityData);
 
     vec3 emissiveColor = emissiveColor();
-    emissiveColor *= emissiveTexture(v_uv3, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
+    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
 
     alpha 					+= opacityFresnel(absNdV);
 

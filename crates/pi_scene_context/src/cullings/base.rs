@@ -1,6 +1,3 @@
-
-use std::{collections::vec_deque::Iter, default};
-
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
 

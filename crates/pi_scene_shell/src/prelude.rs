@@ -264,8 +264,19 @@ impl SingleEmptyEntity {
 }
 
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct Performance {
+    pub debug: bool,
+    pub t_worldmatrix: pi_time::Instant,
+    pub t_culling: pi_time::Instant,
+    pub t_drawobjs: pi_time::Instant,
+    pub t_gltfanaly: pi_time::Instant,
+    pub t_animation: pi_time::Instant,
+    pub t_animationgroup: pi_time::Instant,
+    pub t_particlesystem: pi_time::Instant,
+    pub t_trialcalc: pi_time::Instant,
+    pub t_uniformbufferupdate: pi_time::Instant,
+    pub t_uniformupdate: pi_time::Instant,
     pub worldmatrix: u32,
     pub culling: u32,
     pub drawobjs: u32,
@@ -276,6 +287,33 @@ pub struct Performance {
     pub trialcalc: u32,
     pub uniformbufferupdate: u32,
     pub uniformupdate: u32,
+}
+impl Default for Performance {
+    fn default() -> Self {
+        Self {
+            debug: false,
+            t_worldmatrix: pi_time::Instant::now(),
+            t_culling: pi_time::Instant::now(),
+            t_drawobjs: pi_time::Instant::now(),
+            t_gltfanaly: pi_time::Instant::now(),
+            t_animation: pi_time::Instant::now(),
+            t_animationgroup: pi_time::Instant::now(),
+            t_particlesystem: pi_time::Instant::now(),
+            t_trialcalc: pi_time::Instant::now(),
+            t_uniformbufferupdate: pi_time::Instant::now(),
+            t_uniformupdate: pi_time::Instant::now(),
+            worldmatrix: 0,
+            culling: 0,
+            drawobjs: 0,
+            gltfanaly: 0,
+            animation: 0,
+            animationgroup: 0,
+            particlesystem: 0,
+            trialcalc: 0,
+            uniformbufferupdate: 0,
+            uniformupdate: 0,
+        }
+    }
 }
 
 pub trait TRenderAlignmentCalc {

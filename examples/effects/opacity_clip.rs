@@ -21,20 +21,16 @@ fn setup(
     mut fps: ResMut<SingleFrameTimeCommand>,
     nodematblocks: Res<NodeMaterialBlocks>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
 
     let tes_size = 5;
     fps.frame_ms = 4;
-
-    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        tes_size as f32, 0.7, (0., 0., -10.), true
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
-
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
@@ -53,13 +49,13 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+        url: EKeyTexture::from("assets/images/fractal.png"),
     }));
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_085.png"),
+        url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
     }));
     actions.material.float.push(
         OpsUniformFloat::ops(
@@ -89,7 +85,16 @@ impl Plugin for PluginTest {
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins();
-    
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 5.,
+        camera_fov: 0.7,
+        camera_position: (0., 0., -10.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_plugins(PluginTest);
     
         #[cfg(feature = "use_bevy")]
@@ -99,6 +104,6 @@ pub fn main() {
     
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

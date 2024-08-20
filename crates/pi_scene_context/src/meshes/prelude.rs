@@ -84,7 +84,7 @@ pub struct StateMesh {
 pub type StateMeshQuery = QueryState<(&'static SceneID, &'static GlobalEnable, Option<&'static RenderGeometryEable>, Option<&'static InstanceMesh>), With<AbstructMesh>>;
 
 pub fn sys_state_mesh(
-    mut state: ResMut<StateMesh>,
+    // mut state: ResMut<StateMesh>,
     // meshes: Query<(&SceneID, &GlobalEnable, &RenderGeometryEable), With<AbstructMesh>>,
     // instances: Query<&InstanceMesh>,
 ) {

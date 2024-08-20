@@ -1,12 +1,11 @@
 
-use pi_scene_shell::{prelude::*, run_stage::should_run_with_lighting};
+use pi_scene_shell::prelude::*;
 
 use crate::{
     geometry::prelude::*,
     object::sys_dispose_ready,
     transforms::prelude::*,
     cameras::prelude::StageCamera,
-    materials::prelude::*,
     flags::StageEnable,
     cullings::prelude::*,
     light::prelude::*,

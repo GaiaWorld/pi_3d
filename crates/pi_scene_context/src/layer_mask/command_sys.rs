@@ -32,7 +32,7 @@ impl ActionLayerMask {
         entity: Entity,
         val: LayerMask,
     ) {
-        let mut cmds = app.world.get_resource_mut::<ActionListLayerMask>().unwrap();
+        let cmds = app.world.get_resource_mut::<ActionListLayerMask>().unwrap();
         cmds.push(OpsLayerMask(entity, val));
     }
 }

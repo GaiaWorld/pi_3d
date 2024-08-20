@@ -28,14 +28,14 @@ fn setup(
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     mut graphic: ResMut<PiRenderGraph>,
-    mut resources: ResMut<pi_postprocess::image_effect::SingleImageEffectResource>
+    mut resources: ResMut<pi_postprocess::image_effect::SingleImageEffectResource>,
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     let tes_size = 50;
-    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres,
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        tes_size as f32, 0.7, (0., 10., -50.), true
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
     
     pi_postprocess::image_effect::EffectBlurBokeh::setup(&assets.1, &mut resources, &assets.2);
     pi_postprocess::image_effect::EffectBlurDirect::setup(&assets.1, &mut resources, &assets.2);
@@ -62,7 +62,7 @@ fn setup(
                 depth: 0.,
                 screen: true,
             };
-            match demopass.transparent_target.unwrap() {
+            match demopass.transparent_target.clone().unwrap() {
                 KeyCustomRenderTarget::Custom(key) => {
                     log::error!("PostProcess Ok");
                     let target = assets.0.get(key).unwrap();
@@ -166,7 +166,7 @@ fn setup(
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 
     let mut random = pi_wy_rng::WyRng::default();
-    for idx in 0..10 {
+    for idx in 0..100 {
         // let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
         let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
@@ -231,7 +231,16 @@ impl Plugin for PluginTest {
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins_with_gltf();
-    
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 50.,
+        camera_fov: 0.7,
+        camera_position: (0., 10., -50.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_plugins(PluginTest);
     // app.add_systems(Update, base::sys_nodeinfo);
 
@@ -243,10 +252,8 @@ pub fn main() {
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
-    
-    
-    // app.run()
-    loop { app.update(); }
+
+    crate::base::run_loop(app, window, event_loop)
 
 }
 

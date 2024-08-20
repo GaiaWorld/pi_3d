@@ -31,18 +31,14 @@ pub fn setup(
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     mut items: ResMut<ActionListTestData>,
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     let tes_size = 20;
     // frame.frame_ms = 200;
-
-    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        tes_size as f32, 0.7, (0., 0., -50.), true
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
-
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
@@ -75,7 +71,7 @@ pub fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 5;
+    let temp = 1;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
@@ -218,11 +214,20 @@ impl Plugin for PluginTest {
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins_with_gltf();
-    
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 20.,
+        camera_fov: 0.7,
+        camera_position: (0., 0., -50.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_plugins(PluginTest);
-    // app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
-    // app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
-    // app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     
@@ -235,7 +240,7 @@ pub fn main() {
     
     
     // app.run()
-    // loop { app.update(); }
+    // crate::base::run_loop(app, window, event_loop)
     crate::base::run_loop(app, window, event_loop)
 
 }

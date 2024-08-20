@@ -25,18 +25,14 @@ fn setup(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     let tes_size = 20;
     // frame.frame_ms = 200;
-
-    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        tes_size as f32, 0.7, (0., 0., -50.), true
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
-
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
@@ -197,7 +193,14 @@ impl Plugin for PluginTest {
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins_with_gltf();
-    
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_position: (0., 0., -40.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_plugins(PluginTest);
     app.add_systems(Update, pi_3d::sys_info_node        .run_if(should_run).in_set(StageScene::Create));
     app.add_systems(Update, pi_3d::sys_info_draw        .run_if(should_run).in_set(StageScene::Create));
@@ -212,6 +215,6 @@ pub fn main() {
     
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

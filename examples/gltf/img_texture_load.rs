@@ -9,7 +9,7 @@ mod base;
 fn setup(
     mut loader: ResMut<ImageTextureLoader>,
 ) {
-    loader.create_load(KeyImageTexture { url: Atom::from("E:/Rust/PI/pi_3d/assets/images/eff_ui_ll_0805.png"), file: true, srgb: true, ..Default::default() });
+    loader.create_load(KeyImageTexture { url: Atom::from("assets/images/eff_ui_ll_0805.png"), file: true, srgb: true, ..Default::default() });
 }
 
 fn sys_load_check(
@@ -41,7 +41,16 @@ impl Plugin for PluginTest {
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins_with_gltf();
-    
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 5.,
+        camera_fov: 0.7,
+        camera_position: (0., 0., -10.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_plugins(PluginTest);
     
         #[cfg(feature = "use_bevy")]
@@ -52,6 +61,6 @@ pub fn main() {
     
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

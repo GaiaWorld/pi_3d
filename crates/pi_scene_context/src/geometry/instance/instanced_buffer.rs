@@ -3,8 +3,6 @@ use std::{ops::Range, sync::Arc};
 use pi_scene_shell::prelude::*;
 pub use pi_scene_shell::prelude::InstanceCacheBuffer;
 
-use crate::prelude::TmpInstanceSort;
-
 #[derive(Component, Default)]
 pub struct InstancedInfoComp(pub Option<InstancedInfo>);
 
@@ -72,8 +70,12 @@ pub struct DataPool {
 }
 impl DataPool {
     pub fn new(initmax: usize) -> Self {
+        let mut vec = Vec::with_capacity(initmax);
+        for _ in 0..initmax {
+            vec.push(0);
+        }
         Self {
-            vec: Vec::with_capacity(initmax),
+            vec,
             used: 0,
         }
     }
@@ -83,6 +85,9 @@ impl DataPool {
     pub fn size(&self) -> usize {
         self.vec.capacity()
     }
+    pub fn len(&self) -> usize {
+        self.vec.len()
+    }
     pub fn reset(&mut self) {
         // self.vec.clear();
         self.used = 0;
@@ -91,12 +96,16 @@ impl DataPool {
         let start = self.used;
         let end = self.used + data.len();
 
-        let mutlen = (self.vec.len() - self.used).min(data.len());
-        for idx in 0..mutlen{
-            self.vec[self.used + idx] = data[idx];
+        let mut pushlen = data.len();
+        let mut mutlen = 0;
+        if self.vec.len() > self.used {
+            mutlen = (self.vec.len() - self.used).min(data.len());
+            for idx in 0..mutlen{
+                self.vec[self.used + idx] = data[idx];
+            }
+            pushlen = data.len() - mutlen;
         }
-
-        let pushlen = data.len() - mutlen;
+    
         for idx in 0..pushlen {
             self.vec.push(data[mutlen + idx]);
         }
@@ -111,8 +120,8 @@ impl DataPool {
 }
 
 #[derive(Resource, Deref, DerefMut)]
-pub struct InstanceDataCommon(DataPool);
-impl InstanceDataCommon {
+pub struct CombineDataCommon(DataPool);
+impl CombineDataCommon {
     pub fn new(initmax: usize) -> Self {
         Self(DataPool::new(initmax))
     }
@@ -121,13 +130,78 @@ impl InstanceDataCommon {
     }
 }
 
-#[derive(Resource, Deref, DerefMut)]
-pub struct CombineDataCommon(DataPool);
-impl CombineDataCommon {
-    pub fn new(initmax: usize) -> Self {
-        Self(DataPool::new(initmax))
+#[derive(Resource)]
+pub struct CombineBuffer {
+    pub buffers: Option<Arc<NotUpdatableBufferRange>>,
+    pub data: DataPool,
+    initmax: usize,
+}
+impl CombineBuffer {
+    pub fn new(initmax: usize, allocator: &mut VertexBufferAllocator3D, device: &PiRenderDevice, queue: &PiRenderQueue) -> Self {
+        let data = DataPool::new(initmax);
+        let buffer = allocator.create_not_updatable_buffer_pre(device, queue, data.vec.as_slice(), None);
+        Self {
+            buffers: buffer,
+            initmax,
+            data: DataPool::new(initmax),
+        }
+    }
+    pub fn combinecommon(&self, requestsize: usize) -> bool {
+        if self.data.used < self.initmax {
+            let unuselen = self.initmax - self.data.used;
+            requestsize <= unuselen
+        } else {
+           true
+        }
     }
     pub fn size(&self) -> usize {
-        self.0.size()
+        self.data.size()
+    }
+    pub fn usedsize(&self) -> usize {
+        self.data.used
+    }
+    pub fn reset(&mut self) {
+        // self.vec.clear();
+        self.data.reset();
+    }
+    pub fn record(&mut self, data: &[u8]) -> Range<usize> {
+        if self.data.used < self.initmax {
+            let unuselen = self.initmax - self.data.used;
+            if unuselen < data.len() {
+                let mut temp = Vec::with_capacity(unuselen);
+                for _ in 0..unuselen {
+                    temp.push(0);
+                }
+                self.data.record(&temp);
+            }
+        }
+        self.data.record(data)
+    }
+    pub fn data(&self, range: &Range<usize>, allocator: &mut VertexBufferAllocator3D, device: &PiRenderDevice, queue: &PiRenderQueue) -> Option<EVertexBufferRange> {
+        if range.start < range.end {
+            if range.end <= self.initmax {
+                if let Some(buffer) = &self.buffers {
+                    Some(EVertexBufferRange::NotUpdatable(buffer.clone(), range.start as u32, range.end as u32))
+                } else {
+                    allocator.create_not_updatable_buffer(device, queue, self.data.data(range), None)
+                }
+            } else {
+                allocator.create_not_updatable_buffer(device, queue, self.data.data(range), None)
+            }
+        } else {
+            None
+        }
+    }
+    pub fn apply(&mut self, queue: &PiRenderQueue) {
+        if self.data.used > 0 {
+            if let Some(buffer) = &self.buffers {
+                let mut range = Range { start: 0, end: self.initmax.min(self.data.used) };
+                let size = wgpu::COPY_BUFFER_ALIGNMENT as usize;
+                let temp = (range.end / size) * size;
+                if temp < range.end { range.end = temp + size; }
+                queue.write_buffer(buffer.buffer(), 0, self.data.data(&range));
+            }
+        }
+        self.data.reset();
     }
 }

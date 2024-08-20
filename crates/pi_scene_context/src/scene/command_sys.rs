@@ -2,10 +2,19 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    cullings::prelude::*, flags::*, geometry::prelude::*, meshes::prelude::*, pass::*, renderers::prelude::*, transforms::{command_sys::{ActionTransformNode, BundleTreeNode}, prelude::*}
+    cullings::prelude::*,
+    flags::*,
+    geometry::prelude::*,
+    meshes::prelude::*,
+    renderers::prelude::*,
+    transforms::command_sys::{ActionTransformNode, BundleTreeNode}
 };
 
-use super::{prelude::*, environment::{brdf::*, environment_texture::{EnvIrradiance, EnvTexture, EnvSampler, EnvTextureSlot}}, pass_render_target::*};
+use super::{
+    prelude::*,
+    environment::{brdf::*, environment_texture::{EnvIrradiance, EnvTexture, EnvSampler, EnvTextureSlot}},
+    pass_render_target::*
+};
 
 pub fn sys_create_scene(
     mut cmds: ResMut<ActionListSceneCreate>,
@@ -16,13 +25,7 @@ pub fn sys_create_scene(
     device: Res<PiRenderDevice>,
     asset_samp: Res<ShareAssetMgr<SamplerRes>>, 
     mut meshcreate: ResMut<ActionListMeshCreate>,
-
-    // mut meshpolygin: ResMut<ActionListPolyginMode>,
     mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
-
-    // mut meshdepthwrite: ResMut<ActionListDepthWrite>,
-    // mut meshdepthtest: ResMut<ActionListDepthCompare>,
-    // mut meshdepthstate: ResMut<ActionListDepthState>,
 
     mut meshrenderqueue: ResMut<ActionListRenderQueue>,
     mut geocreate: ResMut<ActionListGeometryCreate>,
@@ -105,7 +108,7 @@ pub fn sys_act_scene_ambient(
             }
         }
     });
-    cmds_anime.drain().for_each(|OpsSceneAnimationEnable(entity, val, count)| {
+    cmds_anime.drain().for_each(|OpsSceneAnimationEnable(entity, val)| {
         if let Ok(mut comp) = scenes_anime.get_mut(entity) {
             *comp = SceneAnimationEnable(val);
         }

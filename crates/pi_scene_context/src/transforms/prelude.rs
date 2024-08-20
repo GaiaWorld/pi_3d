@@ -6,7 +6,6 @@ use crate::flags::*;
 
 pub use super::transform_node::*;
 pub use super::command::*;
-pub use super::tree_left_right::*;
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
@@ -33,8 +32,6 @@ pub struct StateTransform {
     pub count: usize,
     pub enable: usize,
     pub global_enable: usize,
-    pub calc_world_time: u32,
-    pub calc_local_time: u32,
     pub max_level: u32,
 }
 

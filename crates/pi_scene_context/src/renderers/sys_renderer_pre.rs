@@ -84,19 +84,19 @@ fn __sets_modify_by_viewer(
 }
 
 pub fn sys_passrendererid_pass_reset(
-    viewers: Query<(Entity, &SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo)>,
+    viewers: Query<(&SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo)>,
     renderers: Query<(&RendererParam, &PassTag)>,
     model: Query<&SceneID>,
     addeds: ComponentAdded<PassReset>,
     changes: ComponentChanged<PassReset>,
-    mut passes: Query<(Entity, &mut PassRendererID, &PassModelID, &PassTag)>,
+    mut passes: Query<(&mut PassRendererID, &PassModelID, &PassTag)>,
 ) {
     let changes = addeds.iter().chain(changes.iter());
     changes.for_each(|entity| {
-        if let Ok((idpass, mut passrenderer, idmodel, passpasstag)) = passes.get_mut(*entity) {
+        if let Ok((mut passrenderer, idmodel, passpasstag)) = passes.get_mut(*entity) {
             if let Ok(idscene) = model.get(idmodel.0) {
                 // log::error!("BBB 1 ");
-                viewers.iter().for_each(|(_idviewer, viewscene, list0, list1, viewrenderinfos)| {
+                viewers.iter().for_each(|(viewscene, list0, list1, viewrenderinfos)| {
                     // if viewrenderinfos.len() == 0 { log::error!("BBB 2 viewrenderinfos {:?}", (idpass, idviewer, viewrenderinfos.len())); }
                     if idscene.0 == viewscene.0 {
                         viewrenderinfos.renderers().for_each(|idrenderer| {

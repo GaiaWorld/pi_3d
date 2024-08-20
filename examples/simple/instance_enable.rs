@@ -63,18 +63,14 @@ fn setup(
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
     mut testdata: ResMut<ListTestData>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     let tes_size = 6;
     fps.frame_ms = 16;
-
-    let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        tes_size as f32, 1., (0., 10., -40.), true
-    );
-    let (scene, camera01, id_renderer) = (demopass.scene, demopass.camera, demopass.transparent_renderer);
-
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
@@ -118,6 +114,15 @@ pub enum StageTest {
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins();
+    
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: false,
+        camera_size: 10.,
+        camera_fov: 0.7,
+        camera_position: (0., 10., -40.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
     app.add_systems(Update, pi_3d::sys_info_node);
@@ -131,6 +136,6 @@ pub fn main() {
     
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

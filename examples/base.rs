@@ -213,20 +213,55 @@ impl Plugin for PluginSceneTimeFromPluginFrame {
     }
 }
 
-// pub trait AddEvent {
-// 	// 添加事件， 该实现每帧清理一次
-// 	fn add_frame_event<T: Event>(&mut self) -> &mut Self;
-// }
+#[derive(Resource)]
+pub struct DemoOption {
+    pub width: u32,
+    pub height: u32,
+    pub orthographic_camera: bool,
+    pub camera_fov: f32,
+    pub camera_size: f32,
+    pub camera_position: (f32, f32, f32),
+    pub demo: Option<DemoScene>,
+    pub copyrenderer: Option<Entity>,
+    pub copyrendercamera: Option<Entity>,
+}
+impl Default for DemoOption {
+    fn default() -> Self {
+        Self {
+            width: 800,
+            height: 600,
+            orthographic_camera: true,
+            camera_fov: 0.7,
+            camera_size: 1.0,
+            camera_position: (0., 10., -40.),
+            demo: None,
+            copyrenderer: None,
+            copyrendercamera: None,
+        }
+    }
+}
 
-// impl AddEvent for App {
-// 	fn add_frame_event<T: Event>(&mut self) -> &mut Self {
-// 		if !self.world.contains_resource::<Events<T>>() {
-// 			self.init_resource::<Events<T>>()
-// 				.add_systems(Update, Events::<T>::update_system);
-// 		}
-// 		self
-// 	}
-// }
+pub fn setup_demoinit(
+    mut commands: Commands,
+    mut actions: pi_3d::ActionSets,
+    mut animegroupres: ResourceAnimationGroup,
+    mut demooption: ResMut<DemoOption>,
+    mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+) {
+    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
+        &mut assets.0, &assets.1, &assets.2, &assets.3,
+        demooption.camera_size, demooption.camera_fov, demooption.camera_position, demooption.orthographic_camera
+    );
+    let (scene, camera01) = (demopass.scene, demopass.camera);
+
+    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target.clone());
+    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
+
+    demooption.demo = Some(demopass);
+    demooption.copyrenderer = Some(copyrenderer);
+    demooption.copyrendercamera = Some(copyrendercamera);
+    log::warn!("setup_demoinit");
+}
 
 pub fn test_plugins() -> (App, Arc<pi_winit::window::Window>,EventLoop<()>) {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
@@ -318,7 +353,7 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     let height = 600;
 
     let mut opt = PiRenderOptions::default();
-    opt.backends = Backends::GL;
+    // opt.backends = Backends::GL;
     app.insert_resource(opt);
     
 	let (w, event_loop) = {

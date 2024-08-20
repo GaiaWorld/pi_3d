@@ -1,8 +1,8 @@
-use std::{ops::Range, sync::Arc};
+use std::ops::Range;
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 
-use super::{vertex_buffer_useinfo::TVertexBufferUseInfo, EVerteicesInstance};
+use super::vertex_buffer_useinfo::TVertexBufferUseInfo;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageGeometry {
@@ -52,7 +52,7 @@ pub struct RenderGeometry {
     pub vertices: Vec<RenderVertices>,
     pub instances: Vec<RenderVertices>,
     pub indices: Option<RenderIndices>,
-    pub instance_memory: Option<Arc<EVerteicesInstance>>,
+    pub instance_slot: Option<u32>,
 }
 impl RenderGeometry {
 
@@ -94,7 +94,7 @@ impl RenderGeometry {
     pub fn create(
         mut values: Vec<(wgpu::VertexStepMode, RenderVertices)>,
         indices: (Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>),
-        instance_memory: Option<Arc<EVerteicesInstance>>,
+        instance_memory: Option<u32>,
     ) -> Self {
         let mut vertices = vec![];
         let mut instances = vec![];
@@ -111,7 +111,7 @@ impl RenderGeometry {
             vertices,
             instances,
             indices,
-            instance_memory
+            instance_slot: instance_memory
         }
     }
     pub fn vertex_range(&self) -> Range<u32> {

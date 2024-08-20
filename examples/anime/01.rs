@@ -25,18 +25,14 @@ fn setup(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     let tes_size = 10;
     fps.frame_ms = 16;
-
-    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        1., 0.7, (0., 10., -40.), true
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
-
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
@@ -108,48 +104,27 @@ impl Plugin for PluginTest {
 
 
 pub fn main() {
-    
-use pi_winit::event::{Event, WindowEvent};
 
     let (mut app, window, event_loop) = base::test_plugins();
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_position: (0., 0., -40.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
     
     app.add_plugins(PluginTest);
-    
+
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
     #[cfg(feature = "use_bevy")]
-        #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
-    #[cfg(not(feature = "use_bevy"))]
-    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
-    
-
     // app.run()
-    // loop { app.run(); }
-
-    event_loop.run(move |event, _, control_flow| {
-        match event {
-            
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::CloseRequested => {
-                    control_flow.set_exit();
-                }
-                
-                _ => (),
-            },
-            Event::MainEventsCleared => {
-                window.request_redraw();
-            }
-            Event::RedrawRequested(_window_id) => {
-                app.run();
-            }
-            
-            _ => (),
-        }
-    });
+    crate::base::run_loop(app, window, event_loop)
 }

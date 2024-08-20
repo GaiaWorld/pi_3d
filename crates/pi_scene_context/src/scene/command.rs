@@ -72,10 +72,10 @@ impl OpsSceneFogParam {
 }
 pub type ActionListSceneFogParam = ActionList<OpsSceneFogParam>;
 
-pub struct OpsSceneAnimationEnable(pub(crate) Entity, pub(crate) bool, pub(crate) u8);
+pub struct OpsSceneAnimationEnable(pub(crate) Entity, pub(crate) bool);
 impl OpsSceneAnimationEnable {
     pub fn ops(scene: Entity, val: bool) -> Self {
-        Self(scene, val, 0)
+        Self(scene, val)
     }
 }
 pub type ActionListSceneAnimationEnable = ActionList<OpsSceneAnimationEnable>;

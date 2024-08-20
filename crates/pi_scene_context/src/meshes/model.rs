@@ -86,8 +86,13 @@ impl Default for ModelVelocity {
     }
 }
 
-#[derive(Component, Default, Clone)]
-pub struct ModelStatic;
+#[derive(Component, Clone)]
+pub struct ModelStatic(pub bool);
+impl ModelStatic {
+    pub fn default() -> Self {
+        Self(false)
+    }
+}
 
 #[derive(Component, Default, Clone)]
 pub struct BindModel(pub Option<Arc<ShaderBindModelAboutMatrix>>);
@@ -234,18 +239,6 @@ impl Default for VertexRenderRange {
     }
 }
 
-// #[derive(Component, Default)]
-// pub struct RenderMatrixDirty(pub bool);
-// impl TInstanceFlag for RenderMatrixDirty {
-//     fn dirty(&self) -> bool {
-//         self.0
-//     }
-
-//     fn reset(&mut self) {
-//         self.0 = false
-//     }
-// }
-
 #[derive(Component, Default)]
 pub struct FlagRenderWorldMatrix;
 
@@ -295,19 +288,21 @@ impl RenderWorldMatrixInv {
 }
 
 #[derive(Clone, Component, Default)]
-pub struct InstancedMeshTransparentSortCollection(pub Vec<(i32, Range<u32>)>);
-
-// #[derive(Component, Default, Default)]
-// pub struct ModelSpotLightingDirty;
-
-// #[derive(Component, Default, Default)]
-// pub struct ModelPointLightingDirty;
-
-// #[derive(Component, Default, Default)]
-// pub struct ModelHemiLightingDirty;
-
-// #[derive(Component, Default)]
-// pub struct ModelLightingInfosDirty;
+pub struct InstancedMeshTransparentSortCollection {
+    pub ranges: Vec<(i32, Range<u32>)>,
+    pub data: Vec<u8>,
+    pub count: usize,
+    pub sizeperinstance: usize,
+    pub use_single_instancebuffer: bool,
+}
+impl InstancedMeshTransparentSortCollection {
+    pub fn reset(&mut self) {
+        self.ranges.clear();
+        self.data.clear();
+        self.count = 0;
+        self.sizeperinstance = 0;
+    }
+}
 
 #[derive(Component, Default)]
 pub struct ModelForcePointLightings(pub Vec<Entity>);

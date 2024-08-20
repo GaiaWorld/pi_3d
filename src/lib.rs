@@ -74,7 +74,7 @@ pub fn sys_state_resource(
     ),
     mut stateglobal: ResMut<StateResource>,
     res: (
-        Res<InstanceDataCommon>,
+        Res<CombineBuffer>,
         Res<CombineDataCommon>,
         Res<TmpTransformWorldCalc0>,
         Res<TmpTransformWorldCalc1>

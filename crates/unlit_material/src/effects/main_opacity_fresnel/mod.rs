@@ -40,6 +40,7 @@ impl MainOpacityFresnelShader {
         nodemat.include(&Atom::from(BlockTextureChannel::KEY), infos);
         nodemat.include(&Atom::from(BlockUVAtlas::KEY), infos);
         nodemat.include(&Atom::from(BlockFresnel::KEY), infos);
+        nodemat.include(&Atom::from(BlockCutoff::KEY), infos);
         nodemat.include(&Atom::from(BlockViewDirection::KEY), infos);
         nodemat.include(&Atom::from(BlockUVOffsetSpeed::KEY), infos);
         nodemat.include(&Atom::from(BlockMainTexture::KEY), infos);
@@ -49,6 +50,7 @@ impl MainOpacityFresnelShader {
         nodemat.include(&Atom::from(BlockOpacityTextureUVOffsetSpeed::KEY), infos);
         nodemat.include(&Atom::from(BlockOpacityFresnel::KEY), infos);
         nodemat.include(&Atom::from(BlockEmissiveTexture::KEY), infos);
+        nodemat.include(&Atom::from(BlockEmissiveTextureUVOffsetSpeed::KEY), infos);
         nodemat.include(&Atom::from(BlockEmissiveFresnel::KEY), infos);
 
         // log::warn!("MainOpacityFresnelShader Create");

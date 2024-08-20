@@ -1,7 +1,7 @@
 
-use std::{sync::Arc, ops::{Deref, Range}};
+use std::{sync::Arc, ops::Range};
 
-use crate::{bindgroup::*, prelude::{create_bind_group, EVerteicesInstance, GeometryDesc, GeometryResourceHash, IndiceRenderRange, RenderGeometry, VertexRenderRange}};
+use crate::{bindgroup::*, prelude::*};
 
 pub use pi_scene_shell::prelude::*;
 
@@ -22,7 +22,7 @@ pub struct DrawObjInfo {
     pub vertex_range: VertexRenderRange,
 }
 impl DrawObjInfo {
-    pub fn can_batch_instance_memory(&self, other: &Self, debug: bool, max_combine_bytes: usize) -> bool {
+    pub fn can_batch_instance_memory(&self, other: &Self, _debug: bool, max_combine_bytes: usize) -> bool {
         // if debug {
         //     log::warn!(
         //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
@@ -63,12 +63,13 @@ pub struct DrawTmpRef<'w> {
     pub bindgroups: &'w BindGroups3D,
     pub indicerange: &'w IndiceRenderRange,
     pub vertexrange: &'w VertexRenderRange,
+    pub instancessortinfo: &'w InstancedMeshTransparentSortCollection,
     pub inscombinerange: Range<u32>,
     pub vertexhash: u64,
     pub bindgroupshash: u64,
 }
 impl<'w> DrawTmpRef<'w> {
-    pub fn can_batch_instance_memory<'a>(&'a self, other: &'a Self, debug: bool) -> bool {
+    pub fn can_batch_instance_memory<'a>(&'a self, other: &'a Self, _debug: bool) -> bool {
         // if debug {
         //     log::warn!(
         //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
@@ -84,15 +85,21 @@ impl<'w> DrawTmpRef<'w> {
             && self.vertexhash == other.vertexhash
             && self.bindgroupshash == other.bindgroupshash
         {
-            match (&self.rendergeo.instance_memory, &other.rendergeo.instance_memory) {
+            match (&self.rendergeo.instance_slot, &other.rendergeo.instance_slot) {
                 (Some(ins1), Some(ins2)) => {
-                    ins1.slot == ins2.slot
+                    ins1 == ins2
                 },
                 _ => false,
             }
         } else {
             false
         }
+    }
+    pub fn instancecount<'a>(&'a self) -> u32 {
+        self.inscombinerange.end - self.inscombinerange.start
+    }
+    pub fn instancedatasize<'a>(&'a self) -> usize {
+        (self.inscombinerange.end - self.inscombinerange.start) as usize * self.instancessortinfo.sizeperinstance
     }
 }
 
@@ -108,7 +115,7 @@ pub struct DrawObjTmp {
     pub vertex_range: VertexRenderRange,
 }
 impl DrawObjTmp {
-    pub fn can_batch_instance_memory(&self, other: &Self, debug: bool, max_combine_bytes: usize) -> bool {
+    pub fn can_batch_instance_memory(&self, other: &Self, _debug: bool, max_combine_bytes: usize) -> bool {
         // if debug {
         //     log::warn!(
         //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
@@ -150,35 +157,11 @@ pub trait TPassData<T: Clone> {
 #[derive(Component, Default)]
 pub struct PassReset;
 
-// #[derive(Component, Default)]
-// pub struct PassDirtyBindEffectValue(pub PassTagValue);
-
-// #[derive(Component, Default)]
-// pub struct PassDirtyBindEffectTextures(pub PassTagValue);
-
-// #[derive(Component, Default)]
-// pub struct FlagPassDirtyBindEffectValue;
-
-// #[derive(Component, Default)]
-// pub struct FlagPassDirtyBindEffectTextures;
-
-// #[derive(Component, Default)]
-// pub struct PassTransparent(pub bool);
-
 #[derive(Component, Default)]
 pub struct PassModelID(pub Entity);
 
 #[derive(Component, Default)]
 pub struct PassRendererID(pub Entity);
-
-// #[derive(Component, Default)]
-// pub struct PassSceneID(pub Entity);
-
-// #[derive(Component, Default)]
-// pub struct PassSceneForSet3(pub Entity);
-
-// #[derive(Component, Default)]
-// pub struct PassViewerID(pub Entity);
 
 #[derive(Component, Default)]
 pub struct PassMaterialID(pub Entity);
@@ -202,67 +185,6 @@ pub trait TPass: Default {
 
 #[derive(Component, Default)]
 pub struct PassIDs(pub [Entity;8]);
-
-// /// * 标识物体 已准备好的 Passs
-// /// * 材质没有纹理时 在使用材质时即准备好
-// /// * 材质有纹理时 在纹理准备好时才准备好
-// #[derive(Component, Default)]
-// pub struct PassEffectReady(pub Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>);
-// impl TPassData<Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>> for PassEffectReady {
-//     fn new(val: Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)>) -> Self { Self(val) }
-//     fn val(&self) -> &Option<(KeyShaderMeta, Handle<ShaderEffectMeta>)> { &self.0 }
-// }
-
-// #[derive(Component, Default)]
-// pub struct PassBindEffectValue(pub Option<Arc<ShaderBindEffectValue>>);
-// impl TPassData<Option<Arc<ShaderBindEffectValue>>> for PassBindEffectValue {
-//     fn new(val: Option<Arc<ShaderBindEffectValue>>) -> Self { Self(val) }
-//     fn val(&self) -> &Option<Arc<ShaderBindEffectValue>> { &self.0 }
-// }
-
-// #[derive(Component, Default)]
-// pub struct PassBindEffectTextures(pub Option<EffectTextureSamplers>);
-// impl TPassData<Option<EffectTextureSamplers>> for PassBindEffectTextures {
-//     fn new(val: Option<EffectTextureSamplers>) -> Self { Self(val) }
-//     fn val(&self) -> &Option<EffectTextureSamplers> { &self.0 }
-// }
-
-
-// /// * Set0
-// /// * 更新依赖: BindSceneEffect, BindViewer
-// #[derive(Clone, Component, Default)]
-// pub struct PassBindGroupScene(pub Option<Arc<BindGroupScene>>);
-// impl TPassData<Option<Arc<BindGroupScene>>> for PassBindGroupScene {
-//     fn new(val: Option<Arc<BindGroupScene>>) -> Self { Self(val) }
-//     fn val(&self) -> &Option<Arc<BindGroupScene>> { &self.0 }
-// }
-
-// /// * Set1
-// /// * 更新依赖: BindModel, BindEffectValues
-// #[derive(Clone, Component, Default)]
-// pub struct PassBindGroupModel(pub Option<Arc<BindGroupModel>>);
-// impl TPassData<Option<Arc<BindGroupModel>>> for PassBindGroupModel {
-//     fn new(val: Option<Arc<BindGroupModel>>) -> Self { Self(val) }
-//     fn val(&self) -> &Option<Arc<BindGroupModel>> { &self.0 }
-// }
-
-// /// * Set2
-// /// * 更新依赖: BindTextureSamplers
-// #[derive(Clone, Component, Default)]
-// pub struct PassBindGroupTextureSamplers(pub Option<Arc<BindGroupTextureSamplers>>);
-// impl TPassData<Option<Arc<BindGroupTextureSamplers>>> for PassBindGroupTextureSamplers {
-//     fn new(val: Option<Arc<BindGroupTextureSamplers>>) -> Self { Self(val) }
-//     fn val(&self) -> &Option<Arc<BindGroupTextureSamplers>> { &self.0 }
-// }
-
-// /// * Set3
-// /// * 更新依赖: BindGroupLightingShadow
-// #[derive(Clone, Component, Default)]
-// pub struct PassBindGroupLightingShadow(pub Option<Arc<BindGroupSetExtend>>);
-// impl TPassData<Option<Arc<BindGroupSetExtend>>> for PassBindGroupLightingShadow {
-//     fn new(val: Option<Arc<BindGroupSetExtend>>) -> Self { Self(val) }
-//     fn val(&self) -> &Option<Arc<BindGroupSetExtend>> { &self.0 }
-// }
 
 #[derive(Clone, Component, Default)]
 pub struct RecordPassDraw(pub [Option<ObjectID>; 8]);
@@ -346,28 +268,6 @@ impl PassDraw {
     // pub fn new(val: Option<DrawObjTmp>) -> Self { Self(val) }
     pub fn val(&self) -> bool { self.0 }
 }
-
-// #[derive(Deref, DerefMut, Resource)]
-// pub struct AssetDataCenterShader3D(pub AssetDataCenter<KeyShader3D, Shader3D, ()>);
-// impl AssetDataCenterShader3D {
-//     pub fn new(ref_garbage: bool, capacity: usize, timeout: usize) -> Self {
-//         Self(AssetDataCenter::new(ref_garbage, capacity, timeout))
-//     }
-// }
-// #[derive(Default, Deref, DerefMut, Resource)]
-// pub struct AssetLoaderShader3D(pub AssetLoader<KeyShader3D, ObjectID, Shader3D, ()>);
-
-// #[derive(Deref, DerefMut, Resource)]
-// pub struct AssetDataCenterPipeline3D(pub AssetDataCenter<u64, Pipeline3D, ()>);
-// impl AssetDataCenterPipeline3D {
-//     pub fn new(ref_garbage: bool, capacity: usize, timeout: usize) -> Self {
-//         Self(AssetDataCenter::new(ref_garbage, capacity, timeout))
-//     }
-// }
-// #[derive(Default, Deref, DerefMut, Resource)]
-// pub struct AssetLoaderPipeline3D(pub AssetLoader<u64, ObjectID, Pipeline3D, ()>);
-
-
 
 pub fn _set2_modify(
     _key_meta: &Atom,

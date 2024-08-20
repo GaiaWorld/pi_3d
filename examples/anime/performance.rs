@@ -27,18 +27,14 @@ fn setup(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     let tes_size = 100;
     fps.frame_ms = 4;
-
-    let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        tes_size as f32, 0.7, (0., 0., -10.), true
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
-
-    let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-    actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
@@ -54,7 +50,7 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::default(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/bubbles.png"),
+        url: EKeyTexture::from("assets/images/bubbles.png"),
     }));
     actions.material.vec4.push(
         OpsUniformVec4::ops(
@@ -135,7 +131,15 @@ pub fn sys_anime_event(
 
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins();
-    
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 100.,
+        camera_position: (0., 0., -10.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_plugins(PluginTest);
     
         #[cfg(feature = "use_bevy")]
@@ -147,6 +151,6 @@ pub fn main() {
     app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

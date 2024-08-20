@@ -13,7 +13,7 @@ use super::{
         addeds: ComponentAdded<PassBindGroupsDirty>,
         changes: ComponentChanged<PassBindGroupsDirty>,
         mut passes: Query<
-            (ObjectID, &PassModelID, &PassGeometryID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader)
+            (ObjectID, &PassModelID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader)
         >,
         renderers: Query<(&SceneID, &ViewerID)>,
         materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp )>,
@@ -27,7 +27,7 @@ use super::{
         mut errors: ResMut<ErrorRecord>,
     ) {
         addeds.iter().chain(changes.iter()).for_each(|entity| {
-            if let Ok((_id_pass, idmodel, idgeo, idmat, idrenderer, mut bindgroups, mut flag)) = passes.get_mut(*entity) {
+            if let Ok((_id_pass, idmodel, idmat, idrenderer, mut bindgroups, mut flag)) = passes.get_mut(*entity) {
                 let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
                     (idscene.0, idviewer.0)
                 } else {
@@ -55,7 +55,7 @@ use super::{
                         let need_set0 = BindDefines::need_bind_group_set0(meta.binddefines);
                         let need_set1 = BindDefines::need_bind_group_set1(meta.binddefines);
                         let need_set2 = meta.textures.len() > 0;
-                        let need_set3 = BindDefines::need_bind_group_set3(meta.binddefines);
+                        let _need_set3 = BindDefines::need_bind_group_set3(meta.binddefines);
 
                         let set0 = if need_set0 { 
                             let temp = _set0_modify(
@@ -463,16 +463,15 @@ use super::{
         >,
         geometrys: Query<(&RenderGeometryComp, &GeometryResourceHash)>,
         mut instancedcache: ResMut<InstanceBufferAllocator>,
-        mut record: ResMut<Performance>,
+        mut performance: ResMut<Performance>,
         mut allocator: ResMut<VertexBufferAllocator3D>,
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
-        instancedata: Res<InstanceDataCommon>,
-        mut combinedata: ResMut<CombineDataCommon>,
+        mut combinebuffer: ResMut<CombineBuffer>,
         mut opaque_list: ResMut<TmpSortDrawOpaqueVec>,
         mut transparent_list: ResMut<TmpSortDrawTransparentVec>,
     ) {
-        let time1 = pi_time::Instant::now();
+        if performance.debug { performance.t_drawobjs = pi_time::Instant::now(); }
 
         let opaque_list: &mut Vec<TmpSortDrawOpaque> = &mut opaque_list.opaque_list;
         let transparent_list: &mut Vec<TmpSortDrawTransparent> = &mut transparent_list.transparent_list;
@@ -482,10 +481,9 @@ use super::{
             renderer.clear();
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             if param.enable.0 == false {
-                log::warn!("Renderer Disable: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
+                // log::warn!("Renderer Disable: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
                 return;
             }
-            combinedata.reset();
 
             let mut count_vertex = 0;
             let mut countmesh = 0;
@@ -498,8 +496,6 @@ use super::{
                     return;
                 }
                 countmesh = 0;
-
-                // let start = combinedata.usedsize();
 
                 // log::error!("renderer_draws : ModelListAfterCulling: {:?}, ", (list_model.0.len()));
                 renderer.draws.viewport = param.viewport.val();
@@ -577,20 +573,20 @@ use super::{
                     // log::warn!("{:?}", tmp);
                     if let Some(drawinfo) = draws.get(tmp.idx as usize) {
                         if let Some(tempdraw) = &mut lastdraw {
-                            if tempdraw.can_batch_instance_memory(drawinfo, true) {
-                                _combine_instance(&instancedata, &mut combinedata, &mut lastinsdata, drawinfo);
+                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
                             } else {
                                 // lastdraw 转 DrawObj
-                                collect_draw_batch(&combinedata, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
-                                combinedata.reset();
+                                collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
                                 lastinsdata.reset();
-                                _combine_instance(&instancedata, &mut combinedata, &mut lastinsdata, drawinfo);
+                                lastinsdata.data.start = combinebuffer.usedsize();
+                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
                                 lastdraw = Some(drawinfo.clone());
                             }
                         } else {
-                            combinedata.reset();
                             lastinsdata.reset();
-                            _combine_instance(&instancedata, &mut combinedata, &mut lastinsdata, drawinfo);
+                            lastinsdata.data.start = combinebuffer.usedsize();
+                            _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
                             lastdraw = Some(drawinfo.clone());
                         }
                     }
@@ -598,43 +594,39 @@ use super::{
 
                 // lastdraw 转 DrawObj
                 if let Some(tempdraw) = &mut lastdraw {
-                    collect_draw_batch(&combinedata, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
-                    combinedata.reset();
+                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
                     lastinsdata.reset();
+                    lastinsdata.data.start = combinebuffer.usedsize();
                     lastdraw = None;
                 }
                 transparent_list.iter().for_each(|tmp| {
                     if let Some(drawinfo) = draws.get(tmp.idx as usize) {
                         if let Some(tempdraw) = &mut lastdraw {
-                            if tempdraw.can_batch_instance_memory(drawinfo, true) {
-                                _combine_instance(&instancedata, &mut combinedata, &mut lastinsdata, drawinfo);
+                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
                             } else {
                                 // lastdraw 转 DrawObj
-                                collect_draw_batch(&combinedata, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
-                                combinedata.reset();
+                                collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
                                 lastinsdata.reset();
-                                _combine_instance(&instancedata, &mut combinedata, &mut lastinsdata, drawinfo);
+                                lastinsdata.data.start = combinebuffer.usedsize();
+                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
                                 lastdraw = Some(drawinfo.clone());
                             }
                         } else {
-                            combinedata.reset();
                             lastinsdata.reset();
-                            _combine_instance(&instancedata, &mut combinedata, &mut lastinsdata, drawinfo);
+                            lastinsdata.data.start = combinebuffer.usedsize();
+                            _combine_instance( &mut combinebuffer, &mut lastinsdata, drawinfo);
                             lastdraw = Some(drawinfo.clone());
                         }
                     }
                 });
                 // lastdraw 转 DrawObj
                 if let Some(tempdraw) = &mut lastdraw {
-                    collect_draw_batch(&combinedata, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
-                    combinedata.reset();
+                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
                     lastinsdata.reset();
-                    lastdraw = None;
+                    lastinsdata.data.start = combinebuffer.usedsize();
+                    // lastdraw = None;
                 }
-
-                // if countmesh > 5 {
-                //     log::error!("Renderer Draw {:?} ", (_id_renderer, id_viewer.0, countmesh, list_model.0.len(), opaque_list.len(), transparent_list.len(), renderer.draws.list.len(), allocator.total_buffer_size()));
-                // }
             } else {
                 // log::warn!("Renderer Viewer Not Found: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             }
@@ -642,8 +634,9 @@ use super::{
             renderer.vertexs = count_vertex;
         });
 
-        record.drawobjs = (pi_time::Instant::now() - time1).as_micros() as u32;
-        // // log::trace!("SysRendererDraws: {:?}", pi_time::Instant::now() - time1);
+        combinebuffer.apply(&queue);
+
+        if performance.debug { performance.drawobjs = (pi_time::Instant::now() - performance.t_drawobjs).as_micros() as u32; }
     }
 
 
@@ -819,10 +812,10 @@ fn collect_draw<'w>(
 ) {
     let bindgroupshash = BindGroups3DHashResource::from(bindgroups).0;
 
-    if let Some(instance_memory) = &rendergeo.instance_memory {
-        if instancessortinfo.0.len() > 0 {
-            instancessortinfo.0.iter().for_each(|(alphaindex, range)| {
-                if range.start < range.end && range.end <= instance_memory.itemcount {
+    if let Some(instance_memory) = &rendergeo.instance_slot {
+        if instancessortinfo.ranges.len() > 0 {
+            instancessortinfo.ranges.iter().for_each(|(alphaindex, range)| {
+                if range.start < range.end && range.end <= instancessortinfo.count as u32 {
                     let index = draws.len();
                     draws.push(DrawTmpRef {
                         rendergeo,
@@ -833,6 +826,7 @@ fn collect_draw<'w>(
                         vertexhash,
                         bindgroupshash,
                         inscombinerange: range.clone(),
+                        instancessortinfo,
                     });
                     // log::warn!("Range {:?}", range);
                     
@@ -850,7 +844,7 @@ fn collect_draw<'w>(
             });
         } else {
             let index = draws.len();
-            let range = Range { start: 0, end: instance_memory.itemcount };
+            let range = Range { start: 0, end: instancessortinfo.count as u32 };
             draws.push(DrawTmpRef {
                 rendergeo,
                 pipeline,
@@ -860,6 +854,7 @@ fn collect_draw<'w>(
                 vertexhash,
                 bindgroupshash,
                 inscombinerange: range.clone(),
+                instancessortinfo,
             });
             // log::warn!("Range {:?}", range);
             
@@ -882,6 +877,7 @@ fn collect_draw<'w>(
             vertexhash,
             bindgroupshash,
             inscombinerange: Range { start: 0, end: 0 },
+            instancessortinfo,
         });
         if is_transparent == false {
             opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline: pipelinehash, resourcehash: (vertexhash, bindgroupshash) });
@@ -892,28 +888,28 @@ fn collect_draw<'w>(
 }
 
 fn _combine_instance(
-    instancedata: & InstanceDataCommon,
-    combinedata: & mut CombineDataCommon,
+    combinedata: & mut CombineBuffer,
     lastinsdata: &mut EVerteicesInstance,
     drawinfo: &DrawTmpRef
 ) {
-    if let Some(instance_memory) = &drawinfo.rendergeo.instance_memory {
-        if instance_memory.itemcount > 0 {
-            let size = (instance_memory.data.end - instance_memory.data.start) / instance_memory.itemcount as usize;
-            let start = instance_memory.data.start + drawinfo.inscombinerange.start as usize * size;
-            let end = instance_memory.data.start + drawinfo.inscombinerange.end as usize * size;
+    if let Some(slot) = &drawinfo.rendergeo.instance_slot {
+        // log::warn!("_combine_instance {:?}", &drawinfo.inscombinerange);
+        if drawinfo.instancessortinfo.count > 0 && drawinfo.inscombinerange.start < drawinfo.inscombinerange.end {
+            let size = drawinfo.instancessortinfo.data.len() / drawinfo.instancessortinfo.count;
+            let start = drawinfo.inscombinerange.start as usize * size;
+            let end = drawinfo.inscombinerange.end as usize * size;
 
-            combinedata.record(instancedata.data(&Range { start, end }));
+            combinedata.record(&drawinfo.instancessortinfo.data.as_slice()[start..end]);
             lastinsdata.data.end = combinedata.usedsize();
             lastinsdata.itemcount += drawinfo.inscombinerange.end - drawinfo.inscombinerange.start;
-            lastinsdata.slot = instance_memory.slot;
+            lastinsdata.slot = *slot as u8;
         }
     }
 }
 
 #[inline(never)]
 fn collect_draw_batch(
-    combinedata: & CombineDataCommon,
+    combinedata: &mut CombineBuffer,
     tempdraw: &DrawTmpRef,
     instancedata: &EVerteicesInstance,
     renderer: &mut Renderer,
@@ -924,20 +920,37 @@ fn collect_draw_batch(
     count_vertex: &mut usize,
 ) {
     let geo = tempdraw.rendergeo;
-    if tempdraw.rendergeo.instance_memory.is_some() {
-        let mem = instancedata;
+    if tempdraw.rendergeo.instance_slot.is_some() {
+        let mem: &EVerteicesInstance = instancedata;
 
         if mem.itemcount == 0 {
             // log::warn!("mem.itemcount 0 {:?}", (mem.data.len(), &tempdraw.inscombinerange));
             return;
-        } else if mem.data.end - mem.data.start == 0 {
+        } else if mem.data.end <= mem.data.start  {
             // log::warn!("mem.data 0 {:?}", (mem.data.len(), &tempdraw.inscombinerange));
             return;
         };
 
         let size_per_value = (mem.data.end - mem.data.start) as u32 / mem.itemcount;
         let instances = Range { start: 0, end: mem.itemcount, };
-        let data = allocator.create_not_updatable_buffer(device, queue, combinedata.data(&mem.data), None);
+        // log::warn!("Buffer {:?}", (&mem.data, size_per_value, &instances));
+        let range = {
+            let size = wgpu::COPY_BUFFER_ALIGNMENT as usize;
+            let temp = (mem.data.end / size) * size;
+            let start = mem.data.start;
+            let mut end = mem.data.end;
+            if temp < mem.data.end {
+                end = temp + size;
+                let hascount = combinedata.data.len();
+                if hascount < end {
+                    let placehold: [u8;4] = [0, 0, 0, 0];
+                    let count = end - hascount;
+                    combinedata.record(&placehold[0..count]);
+                }
+            }
+            Range { start, end }
+        };
+        let data = combinedata.data(&range, allocator, device, queue);
 
         if let Some(data) = data {
             // log::warn!("Draw Instance {:?}", instances);
@@ -965,21 +978,24 @@ fn collect_draw_batch(
             // EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
         };
     } else {
+        let instances = geo.instances();
+        let vertex = tempdraw.vertexrange.apply(geo);
+        let indices = tempdraw.indicerange.apply(geo);
+        let vertexcount = if let Some(indices) = &indices {
+            indices.value_range().end - indices.value_range().start
+        } else { vertex.end - vertex.start };
+        if vertexcount == 0 || instances.start >= instances.end { return; }
+
         let draw = DrawObj {
             pipeline: Some(tempdraw.pipeline.clone()),
             bindgroups: tempdraw.bindgroups.groups(),
             vertices: tempdraw.rendergeo.vertices(),
-            instances: geo.instances(),
-            vertex: tempdraw.vertexrange.apply(geo),
-            indices: tempdraw.indicerange.apply(geo),
+            instances,
+            vertex,
+            indices,
         };
-        let vertex = if let Some(indices) = &draw.indices {
-            indices.value_range().end - indices.value_range().start
-        } else { draw.vertex.end - draw.vertex.start };
-        if vertex == 0 {
-            return;
-        }
-        *count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
+
+        *count_vertex += (vertexcount * (draw.instances.end - draw.instances.start)) as usize;
         renderer.draws.list.push(Arc::new(draw));
     }
 }

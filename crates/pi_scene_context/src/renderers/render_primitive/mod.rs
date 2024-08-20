@@ -2,8 +2,6 @@
 
 use pi_scene_shell::prelude::*;
 
-use super::*;
-
 #[derive(Clone, Copy)]
 pub struct PrimitiveState {
     pub cull: CullMode,

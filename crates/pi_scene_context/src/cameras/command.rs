@@ -2,14 +2,7 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Number, Vector3};
 
-use crate::{
-    layer_mask::prelude::*, transforms::prelude::BundleTransformNode,
-};
-
-use super::{
-    target_camera::*,
-    camera::*
-};
+use super::camera::*;
 
 pub struct OpsCameraCreation(pub(crate) Entity, pub(crate) Entity);
 impl OpsCameraCreation {
@@ -43,18 +36,3 @@ impl OpsCameraTarget {
     }
 }
 pub type ActionListCameraTarget = ActionList<OpsCameraTarget>;
-
-pub struct BundleCamera(
-    BundleTransformNode,
-    Camera,
-    EFreeCameraMode,
-    EFixedMode,
-    CameraNearFar,
-    CameraFov,
-    CameraOrthSize,
-    RecordCameraFov,
-    RecordCameraOrthSize,
-    LayerMask,
-    CameraUp,
-    CameraTarget,
-);

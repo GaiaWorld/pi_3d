@@ -1,9 +1,6 @@
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, Number};
-
-use super::base::ECullingStrategy;
-
 pub struct OpsCollider(pub(crate) Entity, pub(crate) Vector3, pub(crate) Vector3);
 impl OpsCollider {
     pub fn ops(entity: Entity, min: (Number, Number, Number), max: (Number, Number, Number)) -> Self {

@@ -1,4 +1,4 @@
-use std::{hash::{Hash, Hasher}, sync::Arc};
+use std::hash::{Hash, Hasher};
 
 use pi_scene_shell::prelude::*;
 
@@ -76,18 +76,17 @@ pub fn sys_create_geometry(
         let loader = &mut geoloader.loader_vertices;
         let max: usize = geo_desc.slot_count();
         for slot in 0..max {
-
             if let Some((desc, buff)) = init_geometry_vertices_slot(&geo_desc, &asset_mgr, &mut instanceallocator, &mut instacned, slot) {
-                
-                // datalist.push(None);
-                // keyslist.push(None);
-                // desclist.push(None);
-
                 if let Some(buff) = buff {
                     datalist[slot] = Some(AssetResVBSlot::from(buff));
                     keyslist[slot] = Some(desc.key.clone());
                 } else {
-                    loader.request((entity, slot as u8), &desc.key, None, &mut vb_data_map);
+                    if desc.instance() {
+                        datalist[slot] = Some(AssetResVBSlot(EVerticesBufferTmp::Instance(slot as u32)));
+                        keyslist[slot] = Some(desc.key.clone());
+                    } else {
+                        loader.request((entity, slot as u8), &desc.key, None, &mut vb_data_map);
+                    }
                 }
                 desclist[slot] = Some(AssetDescVBSlot::from(desc));
             }
@@ -172,7 +171,7 @@ fn init_geometry_vertices_slot
 (
     geodesc: &GeometryDesc,
     asset_mgr: &ShareAssetMgr<EVertexBufferRange>,
-    instanceallocator: &mut InstanceBufferAllocator,
+    _instanceallocator: &mut InstanceBufferAllocator,
     instancecomp: &mut InstancedInfoComp,
     // instancestate: u32,
     slot_index: usize,
@@ -189,8 +188,9 @@ fn init_geometry_vertices_slot
         } else {
             let info = InstancedInfo::new(desc.stride() as u32, EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             // log::error!("Geometry Instance: {:?}", EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
-            let data = instanceallocator.instance_initial_buffer();
-            buffer = Some(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2))));
+            // let data = instanceallocator.instance_initial_buffer();
+            // buffer = Some(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2))));
+            buffer = None;
             instancecomp.0 = Some(info);
         }
         Some((desc, buffer))

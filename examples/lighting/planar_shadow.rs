@@ -41,25 +41,16 @@ impl Plugin for PluginTest {
         anime_assets: TypeAnimeAssetMgrs,
         mut anime_contexts: TypeAnimeContexts,
         mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+        demooption: Res<base::DemoOption>,
     ) {
+        let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+            (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+        } else { return; };
 
         ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(PlanarShadow::KEY), PlanarShadow::meta());
 
         let tes_size = 6;
         fps.frame_ms = 100;
-
-        let orthographic_camera = true;
-        let camera_position = (10., 10., -10.);
-
-        // Test Code
-        let demopass = base::DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
-            &mut assets.0, &assets.1, &assets.2, &assets.3,
-            tes_size as f32, 0.7, camera_position, orthographic_camera
-        );
-        let (scene, camera01) = (demopass.scene, demopass.camera);
-
-        let (copyrenderer, copyrendercamera) = copy::PluginImageCopy::toscreen(&mut commands, &mut actions, scene, demopass.transparent_renderer,demopass.transparent_target);
-        actions.renderer.connect.push(OpsRendererConnect::ops(demopass.transparent_renderer, copyrenderer, false));
     
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
         
@@ -102,7 +93,7 @@ impl Plugin for PluginTest {
         //     slotname: Atom::from(BlockMainTexture::KEY_TEX),
         //     filter: true,
         //     sample: KeySampler::linear_repeat(),
-        //     url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/fractal.png"),
+        //     url: EKeyTexture::from("assets/images/fractal.png"),
         // }));
         idmat
     };
@@ -181,6 +172,15 @@ impl Plugin for PluginTest {
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins_with_gltf();
 
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 6.,
+        camera_fov: 0.7,
+        camera_position: (10., 10., -10.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
+
     app.add_systems(Update, pi_3d::sys_info_node);
     app.add_systems(Update, pi_3d::sys_info_resource);
     app.add_systems(Update, pi_3d::sys_info_draw);
@@ -197,6 +197,6 @@ pub fn main() {
     
     
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

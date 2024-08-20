@@ -132,7 +132,7 @@ pub fn sys_tick_culling_box(
     actives: Query<(&GlobalEnable, &GeometryBounding, &RenderWorldMatrix, &AbstructMeshCullingFlag)>,
     mut sources: Query<
         (
-            Entity, &GeometryID, &MeshInstanceState, &mut RenderGeometryEable, &mut InstancedMeshTransparentSortCollection
+            Entity, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
         )
     >,
     dispoeds: Query<&DisposeReady>,
@@ -145,13 +145,14 @@ pub fn sys_tick_culling_box(
 ) {
     scenes.iter().for_each(|(boundingboxs, pool)| {
         if boundingboxs.display == false { return; }
-        if let Ok((_idsource, idgeo, _meshinsstate, mut renderenable, mut instancessortinfos)) = sources.get_mut(boundingboxs.mesh) {
+        if let Ok((_idsource, idgeo, _meshinsstate, mut instancessortinfos)) = sources.get_mut(boundingboxs.mesh) {
             let instances = pool.entities();
             if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
-                if buffer.bytes_per_instance > 0 {
-                    *renderenable = RenderGeometryEable(false);
-                    instancessortinfos.0.clear();
-                }
+                // if buffer.bytes_per_instance > 0 {
+                //     *renderenable = RenderGeometryEable(false);
+                //     instancessortinfos.reset();
+                // }
+                instancessortinfos.reset();
                 // log::error!("Bounding A: {:?}", instances.len());
 
                 if instances.len() > 0 {
@@ -171,7 +172,7 @@ pub fn sys_tick_culling_box(
                         }
                     });
                     // log::error!("Bounding: {:?}", tmp_instance_end);
-                    instancessortinfos.0.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
+                    instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
                     // reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
                     {
                         let instancedinfo = buffer;

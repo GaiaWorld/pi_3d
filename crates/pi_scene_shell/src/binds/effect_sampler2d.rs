@@ -30,7 +30,7 @@ pub fn fs_define_sampler(meta: &ShaderEffectMeta, index: usize, set: u32, bind: 
 
     String::from("")
 }
-fn define_sampler(desc: &UniformTexture2DDesc, index: usize, set: u32, bind: u32) -> String {
+fn define_sampler(desc: &UniformTexture2DDesc, _index: usize, set: u32, bind: u32) -> String {
     let mut result = String::from("");
     // let idx = index.to_string();
     // let slotname = String::from("_Texture") + &idx;

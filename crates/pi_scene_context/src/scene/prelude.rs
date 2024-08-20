@@ -6,7 +6,6 @@ use crate::prelude::ActionListCollider;
 
 pub use super::base::*;
 pub use super::command::*;
-pub use super::passes_cfg::*;
 pub use super::coordinate_system::*;
 pub use super::environment::{
     BindSceneEffect,

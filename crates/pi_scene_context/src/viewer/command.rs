@@ -1,10 +1,6 @@
 
 use pi_scene_shell::prelude::{ActionList, Entity};
 
-use crate::renderers::prelude::*;
-
-use super::base::*;
-
 pub struct OpsViewerForceInclude(pub(crate) Entity, pub(crate) Entity, pub(crate) bool);
 impl OpsViewerForceInclude {
     pub fn ops(viewer: Entity, model: Entity, doadd: bool) -> Self {
@@ -12,16 +8,3 @@ impl OpsViewerForceInclude {
     }
 }
 pub type ActionListViewerForceInclude = ActionList<OpsViewerForceInclude>;
-
-pub struct BundleViewer(
-    ViewerViewMatrix,
-    ViewerProjectionMatrix,
-    ViewerTransformMatrix,
-    ViewerGlobalPosition,
-    ViewerDirection,
-    // ModelList,
-    // FlagModelList,
-    ModelListAfterCulling,
-    // ViewerRenderersInfo,
-    DirtyViewerRenderersInfo,
-);

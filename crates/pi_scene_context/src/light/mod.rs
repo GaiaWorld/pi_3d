@@ -1,5 +1,5 @@
 
-use pi_scene_shell::{prelude::*, run_stage::{should_run_with_lighting, EngineCustomPlugins}};
+use pi_scene_shell::{prelude::*, run_stage::*};
 
 use crate::{
     transforms::prelude::*,

@@ -4,7 +4,6 @@ use pi_scene_shell::prelude::*;
 
 use crate::flags::*;
 use crate::object::ActionEntity;
-use crate::scene::command_sys::ActionScene;
 
 use super::command::*;
 use super::transform_node::*;

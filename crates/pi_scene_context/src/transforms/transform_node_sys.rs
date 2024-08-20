@@ -54,12 +54,13 @@ use super::prelude::*;
     }
 
     pub fn sys_local_matrix_calc(
-        mut state: ResMut<StateTransform>,
+        mut performance: ResMut<Performance>,
         changes: ComponentChanged<FlagLocalMatrix>,
         mut localmatrixs: Query<(Entity, &LocalPosition, &LocalScaling, &LocalRotation, &mut LocalMatrix)>,
     ) {
         // log::warn!("LocalMatrix: ");
-        // let time = pi_time::Instant::now();
+        if performance.debug { performance.t_worldmatrix = pi_time::Instant::now(); }
+
         changes.iter().for_each(|entity| {
             if let Ok((_entity, position, scaling, rotation, mut localmatrix)) = localmatrixs.get_mut(*entity) {
                 // log::warn!("LocalMatrixCalc: {:?}", entity);
@@ -77,8 +78,8 @@ use super::prelude::*;
                 *localmatrix = LocalMatrix::new(matrix);
             }
         });
-        // let time1 = pi_time::Instant::now();
-        // state.calc_local_time = (time1 - time).as_micros() as u32;
+
+        if performance.debug { performance.worldmatrix = (pi_time::Instant::now() - performance.t_worldmatrix).as_micros() as u32; }
     }
 
 #[derive(Clone)]
@@ -154,7 +155,6 @@ fn iter_dirty(
 
     pub fn sys_world_matrix_calc(
         _query_scenes: Query<(Entity, &SceneCoordinateSytem3D)>,
-        // mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, Ref<NodeParent>)>,
         mut nodes: Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
         mut transforms: Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
         mut state: ResMut<StateTransform>,
@@ -163,10 +163,10 @@ fn iter_dirty(
         dirtyflags: Query<&TransformNodeDirty>,
         mut temp0: ResMut<TmpTransformWorldCalc0>,
         mut temp1: ResMut<TmpTransformWorldCalc1>,
+        mut performance: ResMut<Performance>,
     ) {
-        // let time = pi_time::Instant::now();
+        if performance.debug { performance.t_worldmatrix = pi_time::Instant::now(); }
 
-        // log::warn!("Capacity : {:?}", changes.capacity());
         let mut level = 1;
         {
             changes.iter().for_each(|child| {
@@ -216,11 +216,9 @@ fn iter_dirty(
             });
         }
 
-        // let time1 = pi_time::Instant::now();
-
         state.max_level = level as u32;
-        // state.calc_world_time += (time1 - time).as_micros() as u32;
-        // log::warn!("World Matrix Calc: {:?}", time1 - time);
+        
+        if performance.debug { performance.worldmatrix += (pi_time::Instant::now() - performance.t_worldmatrix).as_micros() as u32; }
     }
 
 

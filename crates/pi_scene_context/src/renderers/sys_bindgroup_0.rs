@@ -65,12 +65,9 @@ pub fn _set0_modify(
             },
             (false, _, _) => None,
             (true, _, _) => {
-                return result;
-            },
-            _ => {
                 errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_SHADOW_NONE); 
                 return result;
-            },
+            }
         };
         let brdf = match (BindDefines::need_brdf(meta.binddefines), &brdftexture.0, &brdfsampler.0) {
             (true, Some(v0), Some(v1)) => { Some((v0.clone(), v1.clone())) },

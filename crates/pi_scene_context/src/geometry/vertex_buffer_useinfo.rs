@@ -1,8 +1,7 @@
-use std::{ops::Range, sync::Arc};
+use std::ops::Range;
 
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
-use smallvec::SmallVec;
 
 pub const VB_SLOTS_COUNT: usize = 8;
 
@@ -61,7 +60,7 @@ impl Drop for EVerteicesInstance {
 /// * 每顶点的数据,为Buffer的引用
 #[derive(Clone)]
 pub enum EVerticesBufferTmp {
-    Instance(Arc<EVerteicesInstance>),
+    Instance(u32),
     Buffer(EVerticesBufferUsage),
 }
 
@@ -100,12 +99,12 @@ impl AssetDescVBSlots {
 // pub struct AssetResVBSlots(pub SmallVec<[Option<AssetResVBSlot>;VB_SLOTS_COUNT]>);
 pub struct AssetResVBSlots(pub [Option<AssetResVBSlot>;VB_SLOTS_COUNT]);
 
-#[derive(Deref, DerefMut, Clone, Hash, Component, Default)]
+#[derive(Deref, DerefMut, Clone, Hash, Default)]
 pub struct AssetKeyVBSlot(pub KeyVertexBuffer);
 impl AsKeyVertexBuffer for AssetKeyVBSlot {
     fn create(desc: &VertexBufferDesc) -> Self { Self(desc.bufferkey().clone()) }
 }
-#[derive(Component, Default, Debug)]
+#[derive(Default, Debug)]
 pub struct AssetDescVBSlot(pub(crate) VertexBufferDesc);
 impl From<VertexBufferDesc> for AssetDescVBSlot {
     fn from(value: VertexBufferDesc) -> Self { Self(value) }
@@ -120,13 +119,8 @@ impl AssetDescVBSlot {
     }
 }
 
-#[derive(Deref, DerefMut, Component)]
+#[derive(Deref, DerefMut)]
 pub struct AssetResVBSlot(pub EVerticesBufferTmp);
 impl From<EVerticesBufferUsage> for AssetResVBSlot {
     fn from(value: EVerticesBufferUsage) -> Self { Self(EVerticesBufferTmp::Buffer(value)) }
-}
-impl Default for AssetResVBSlot {
-    fn default() -> Self {
-        Self( EVerticesBufferTmp::Instance(Arc::new(EVerteicesInstance::default())) )
-    }
 }

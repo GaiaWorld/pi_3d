@@ -25,27 +25,15 @@ fn setup(
     anime_assets: TypeAnimeAssetMgrs,
     mut list: ResMut<ActionListTestData>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>, TypeAnimeContexts, ),
+    demooption: Res<base::DemoOption>,
 ) {
+    let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
+        (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
+    } else { return; };
+
     let tes_size = 20;
     fps.frame_ms = 16;
     let mut anime_contexts = assets.4;
-
-    
-
-    let demopass = DemoScene::new(
-        &mut commands,
-        &mut actions,
-        &mut animegroupres,
-        &mut assets.0, &assets.1, &assets.2, &assets.3,
-        1.,
-        0.7,
-        (0., 10., -40.),
-        false,
-    );
-    let (scene, camera01) = (demopass.scene, demopass.camera);
-    actions.camera
-        .target
-        .push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let source = commands.spawn_empty_id();
     actions.transform
@@ -203,6 +191,15 @@ pub fn sys_test(
 }
 pub fn main() {
     let (mut app, window, event_loop) = base::test_plugins();
+
+    app.insert_resource(crate::base::DemoOption {
+        orthographic_camera: true,
+        camera_size: 1.,
+        camera_fov: 0.7,
+        camera_position: (0., 10., -40.),
+        ..Default::default()
+    });
+    app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
 

@@ -56,6 +56,6 @@ pub fn main() {
     
 
     // app.run()
-    loop { app.update(); }
+    crate::base::run_loop(app, window, event_loop)
 
 }

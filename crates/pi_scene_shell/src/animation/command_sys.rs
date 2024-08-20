@@ -1,5 +1,4 @@
 use crate::ecs::*;
-use crate::object::BundleEntity;
 
 use std::ops::Deref;
 
@@ -325,7 +324,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     mut performance: ResMut<Performance>,
     // empty: Res<SingleEmptyEntity>,
 ) {
-    let time0 = pi_time::Instant::now();
+    let time = if performance.debug { Some(pi_time::Instant::now()) } else { None };
 
     let ty = type_ctx.ctx.ty();
     // log::warn!("Anime Run ");
@@ -364,9 +363,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
         // // log::trace!("Not Found Anime Type: {}", ty);
     }
 
-    performance.animation += (pi_time::Instant::now() - time0).as_micros() as u32;
-    // let time1 = pi_time::Instant::now();
-    // log::debug!("sys_calc_type_anime : {:?}", time1 - time0);
+    if performance.debug { performance.animation += (pi_time::Instant::now() - time.unwrap()).as_micros() as u32; }
 }
 
 pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(

@@ -13,7 +13,6 @@ use super::{
 };
 
 pub fn sys_create_renderer(
-    mut commands: Commands,
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
@@ -35,7 +34,7 @@ pub fn sys_create_renderer(
                             ActionRenderer::init(id_viewer, passtag, transparent)
                         );
                         // commands.entity(entity).insert(bundle);
-                        alter.alter(entity, bundle);
+                        let _ = alter.alter(entity, bundle);
 
                     // }
                 },
@@ -217,16 +216,6 @@ pub fn sys_dispose_renderer(
             }
         }
     });
-    // renderers.iter().for_each(|(entity, nodeid, _, flag, idviewer)| {
-    //     if flag.0 == false { return; }
-        
-    //     if let Err(err) = render_graphic.remove_node(nodeid.0) {
-    //         error.graphic(entity, err);
-    //     }
-    //     if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
-    //         renderinfos.remove(entity);
-    //     }
-    // });
 }
 
 pub type RendererBundle = (

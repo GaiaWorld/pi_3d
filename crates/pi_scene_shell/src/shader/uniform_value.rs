@@ -326,7 +326,7 @@ impl Default for MaterialValueBindDesc {
     }
 }
 impl MaterialValueBindDesc {
-    pub const PRE_KEY_FOR_INSTANCE_UNIFORM: &str = "_I";
+    pub const PRE_KEY_FOR_INSTANCE_UNIFORM: &'static str = "_I";
     pub fn none(stage: wgpu::ShaderStages) -> Self {
         Self { stage, 
             mat4_list: vec![],
@@ -509,20 +509,13 @@ impl MaterialValueBindDesc {
             });
             total_num += self.float_list.len();
             
-            // self.int_list.iter().for_each(|name| {
-            //     result += "int ";
-            //     result += &name.0;
-            //     result += ";\r\n";
-            // });
-            // total_num += self.int_list.len();
-            
             self.uint_list.iter().for_each(|name| {
                 result += crate::prelude::S_UINT; result += crate::prelude::S_SPACE;
                 result += &name.0;
                 if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";"; result += crate::prelude::S_BREAK;
             });
-            total_num += self.uint_list.len();
+            // total_num += self.uint_list.len();
             let fill_int_count    = (self.float_list.len() /* + self.int_list.len()*/ + self.uint_list.len()) % 4;
             if fill_int_count > 0 {
                 for i in fill_int_count..4 {
@@ -530,20 +523,9 @@ impl MaterialValueBindDesc {
                     result += &i.to_string();
                     result += ";"; result += crate::prelude::S_BREAK;
                 }
-            // } else {
-            //     // 4 个 占位u32; 对应 ShaderBindEffectValue 中也有处理
-            //     if total_num == 0 {
-            //         for i in 0..4 {
-            //             result += "uint _placeholder_int_";
-            //             result += &i.to_string();
-            //             result += ";\r\n";
-            //         }
-            //     }
             }
     
             result += "};"; result += crate::prelude::S_BREAK;
-            // log::info!("Uniform Count: {}", total_num);
-    
         }
 
         result

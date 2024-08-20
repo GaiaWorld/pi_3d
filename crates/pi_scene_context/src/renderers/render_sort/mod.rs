@@ -85,10 +85,10 @@ impl Ord for TransparentSortParam {
     }
 }
 
-pub struct OpsRenderQueue(pub(crate) Entity, pub(crate) TransparentSortParam, pub(crate) u16);
+pub struct OpsRenderQueue(pub(crate) Entity, pub(crate) TransparentSortParam);
 impl OpsRenderQueue {
     pub fn ops(mesh: Entity, group: i32, index: i32) -> Self {
-        Self(mesh, TransparentSortParam { group, index }, 0)
+        Self(mesh, TransparentSortParam { group, index })
     }
 }
 pub type ActionListRenderQueue = ActionList<OpsRenderQueue>;
@@ -98,7 +98,7 @@ pub fn sys_act_render_queue(
     mut items: Query<&mut TransparentSortParam>,
     mut instances: Query<&mut InstanceTransparentIndex>,
 ) {
-    cmds.drain().for_each(|OpsRenderQueue(entity, val, count)| {
+    cmds.drain().for_each(|OpsRenderQueue(entity, val)| {
         if let Ok(mut item) = items.get_mut(entity) {
             *item = val;
             return;
@@ -107,9 +107,5 @@ pub fn sys_act_render_queue(
             *item = InstanceTransparentIndex(val.index);
             return;
         }
-
-        // if count < ACTION_WAIT_FRAME {
-        //     cmds.push(OpsRenderQueue(entity, val, count + 1));
-        // }
     });
 }

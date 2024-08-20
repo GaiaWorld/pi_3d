@@ -1,5 +1,5 @@
 
-use std::{ops::Range, sync::Arc};
+use std::ops::Range;
 
 use pi_scene_shell::prelude::*;
 
@@ -10,7 +10,7 @@ use super::{
 #[inline(never)]
 fn _sys_vertex_buffer_slots_loaded(
     mut values: Vec<(wgpu::VertexStepMode, RenderVertices)>,
-    mut instance_memory: Option<Arc<EVerteicesInstance>>,
+    mut instance_memory: Option<u32>,
     res: &EVerticesBufferTmp,
     desc: &GeometryDesc,
     geometry: &mut RenderGeometryComp,
@@ -20,7 +20,7 @@ fn _sys_vertex_buffer_slots_loaded(
     buffdesc: &VertexBufferDesc,
     indicesdesc: Option<&IndicesBufferDesc>,
     indices: Option<&AssetResBufferIndices>
-) -> Option<(Vec<(wgpu::VertexStepMode, RenderVertices)>, Option<Arc<EVerteicesInstance>>)> {
+) -> Option<(Vec<(wgpu::VertexStepMode, RenderVertices)>, Option<u32>)> {
     match res {
         EVerticesBufferTmp::Instance(mem) => { instance_memory = Some(mem.clone()); },
         EVerticesBufferTmp::Buffer(buf) => {
@@ -62,7 +62,7 @@ pub fn sys_vertex_buffer_slots_loaded(
         if let Ok((
             idgeo, 
             (idmesh, desc, indicesdesc, indices, indiceskey)
-            , desclist, datalist, keyslist
+            , desclist, datalist, _keyslist
         )) = items.get(*entity) {
             if let (Ok(mut geometry), Ok(mut rendergeo)) = (geometries.get_mut(idgeo), meshes.get_mut(idmesh.0)) {
                 counter += 1;
@@ -105,7 +105,7 @@ pub fn sys_vertex_buffer_slots_loaded(
                     //     log::error!("Geo Ready {:?}", (idgeo, idmesh.0, desclist.get(0)));
                     // }
                     match (&indicesdesc.0, &indiceskey.0, &indices.0) {
-                        (Some(desc), Some(key), Some(data)) => {
+                        (Some(desc), Some(key), Some(_data)) => {
                             if &desc.buffer == key {
                                 geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory));
                                 
@@ -121,7 +121,7 @@ pub fn sys_vertex_buffer_slots_loaded(
                             *rendergeo = RenderGeometryEable(true);
                         },
                         _ => {
-                            isready = false;
+                            // isready = false;
                             if rendergeo.0 == true {
                                 *rendergeo = RenderGeometryEable(false);
                             }

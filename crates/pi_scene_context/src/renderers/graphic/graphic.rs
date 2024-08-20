@@ -97,9 +97,9 @@ impl Node for RenderNode {
         let mut output = SimpleInOut::default();
 
         // let mut param: QueryParam0 = param.get_mut(world);
-        let (atlas_allocator, mut query) = (&param.0, &mut param.1);
+        let (atlas_allocator, query) = (&param.0, &mut param.1);
         if let Ok((
-            param, disposed, renderer, mut to_final_target
+            param, disposed, _renderer, mut to_final_target
         )) = query.get_mut(self.renderer_id) {
     
             // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
@@ -199,7 +199,7 @@ impl Node for RenderNode {
         param: &'a Self::RunParam,
         _: RenderContext,
         mut commands: ShareRefCell<wgpu::CommandEncoder>,
-        input: &'a Self::Input,
+        _input: &'a Self::Input,
         _: &'a ParamUsage,
 		_id: NodeId,
 		_from: &[NodeId],

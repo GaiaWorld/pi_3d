@@ -3,13 +3,13 @@ use pi_scene_shell::prelude::*;
 use super::base::Scene;
 
 pub fn sys_dispose_about_scene(
-    mut scenes: Query<(Entity, &mut DisposeReady, &Scene), Changed<DisposeReady>>,
+    mut scenes: Query<(Entity, &DisposeReady, &Scene), Changed<DisposeReady>>,
     items: Query<(Entity, &SceneID)>,
     mut disposereadylist: ResMut<ActionListDisposeReady>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     tree: EntityTree,
 ) {
-    scenes.iter_mut().for_each(|(entity,  mut state, _)| {
+    scenes.iter().for_each(|(entity, state, _)| {
         if state.0 == false { return; }
 
         items.iter().for_each(|(item, sceneid)| {
