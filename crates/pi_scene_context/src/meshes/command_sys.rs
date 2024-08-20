@@ -461,7 +461,7 @@ impl ActionMesh {
         // }
         if let Some(bind) = BindModel::new(allocator) {
             // entitycmd.insert((bundle, bind, passids));
-            altermodel.alter(entity, (bundle, bind, passids));
+            let _ = altermodel.alter(entity, (bundle, bind, passids));
         }
 
         return true;

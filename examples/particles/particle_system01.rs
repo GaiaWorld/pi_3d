@@ -75,7 +75,7 @@ pub fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 3;
+    let temp = 5;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
