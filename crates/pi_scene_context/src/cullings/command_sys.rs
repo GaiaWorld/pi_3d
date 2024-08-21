@@ -18,24 +18,18 @@ pub fn sys_act_collider(
 pub fn sys_act_mesh_bounding(
     mut cmds: ResMut<ActionListMeshBounding>,
     mut items: Query<(&mut GeometryBounding, &mut ItemCullingDirty)>,
+    mut display_cmds: ResMut<ActionListBoundingBoxDisplay>,
+    mut display_scenes: Query<&mut BoundingBoxDisplay>,
+    mut display_matuse: ResMut<ActionListMaterialUse>,
+    deafultmat: Res<SingleIDBaseDefaultMaterial>,
 ) {
     cmds.drain().for_each(|OpsMeshBounding(entity, min, max)| {
         if let Ok((mut item, mut flag)) = items.get_mut(entity) {
             item.minimum.copy_from(&min);
             item.maximum.copy_from(&max);
             *flag = ItemCullingDirty;
-        // } else if count < 2 {
-        //     cmds.push(OpsMeshBounding(entity, min, max, count + 1))
         }
     });
-}
-
-pub fn sys_act_mesh_bounding_culling_display(
-    mut display_cmds: ResMut<ActionListBoundingBoxDisplay>,
-    mut display_scenes: Query<&mut BoundingBoxDisplay>,
-    mut display_matuse: ResMut<ActionListMaterialUse>,
-    deafultmat: Res<SingleIDBaseDefaultMaterial>,
-) {
     display_cmds.drain().for_each(|OpsBoundingBoxDisplay(entity, mode, pass)| {
         if let Ok(mut item) = display_scenes.get_mut(entity) {
             item.display = mode;

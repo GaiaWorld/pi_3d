@@ -28,6 +28,7 @@ pub fn sys_modify_sprite(
     mut cmdsfloat: ResMut<ActionListInstanceAttr>,
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
 ) {
+    let rotmat = Rotation3::from_euler_angles(0., 0., -std::f32::consts::PI * 0.5);
     let mut tempparent = Matrix::identity();
     let mut tempscaline = Vector3::zeros();
     let mut tempposition = Vector3::zeros();
@@ -81,15 +82,16 @@ pub fn sys_modify_sprite(
             tempscaline.y = sy;
             tempscaline.z = 1.;
             {
-                tempparent.fill_with_identity();
-                tempparent.append_nonuniform_scaling_mut(&tempscaline);
-                tempparent.append_translation_mut(&tempposition);
+                pi_scene_shell::prelude::matrix4_compose_no_rotation(&tempscaline, &tempposition, &mut tempparent);
+                // tempparent.fill_with_identity();
+                // tempparent.append_nonuniform_scaling_mut(&tempscaline);
+                // tempparent.append_translation_mut(&tempposition);
             }
             {
                 posematrix.0.fill_with_identity();
                 if frame.rotated {
-                    let rotmat = Rotation3::from_euler_angles(0., 0., -std::f32::consts::PI * 0.5);
-                    posematrix.0.copy_from(&rotmat.to_homogeneous());
+                    posematrix.0.fixed_view_mut::<3, 3>(0, 0).copy_from(rotmat.matrix());
+                    // posematrix.0.copy_from(&rotmat.to_homogeneous());
                 }
                 tempposition.x = 0.5;tempposition.y = -0.5; tempposition.z = 0.;
                 posematrix.0.append_translation_mut(&tempposition);

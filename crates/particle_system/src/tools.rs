@@ -49,7 +49,6 @@ pub enum EParticleRenderAlignment {
     /**
      * 粒子面向相机平面。
      */
-    #[default]
     View = 0,
     /**
      * 粒子与世界轴对齐
@@ -58,6 +57,7 @@ pub enum EParticleRenderAlignment {
     /**
      * Local 无需额外适配
      */
+    #[default]
     Local = 2,
     /**
      * 粒子面向相机的位置点

@@ -57,7 +57,6 @@ impl Plugin for PluginCulling {
             Update, 
             (
                 sys_act_collider.in_set(StageCulling::Command),
-                sys_act_mesh_bounding_culling_display.in_set(StageCulling::Command),
                 sys_act_mesh_bounding.in_set(StageModel::AbstructMeshCommand),
                 (
                     sys_update_collider,
@@ -77,7 +76,6 @@ impl Plugin for PluginCulling {
 #[cfg(not(feature = "use_bevy"))]
         app
         .add_systems(Update, sys_act_collider                       .in_set(StageCulling::Command))
-        .add_systems(Update, sys_act_mesh_bounding_culling_display   .in_set(StageCulling::Command))
         .add_systems(Update, sys_act_mesh_bounding                   .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_update_collider_by_matrix                                                                  .in_set(StageCulling::CalcBounding))
         .add_systems(Update, sys_update_collider.after(sys_update_collider_by_matrix)                               .in_set(StageCulling::CalcBounding))

@@ -65,7 +65,7 @@ use super::prelude::*;
             if let Ok((_entity, position, scaling, rotation, mut localmatrix)) = localmatrixs.get_mut(*entity) {
                 // log::warn!("LocalMatrixCalc: {:?}", entity);
                 let mut matrix = Matrix::identity();
-                CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
+                pi_scene_shell::prelude::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
     
                 // let mut affine = Matrix::identity();
                 // affine.append_nonuniform_scaling_mut(&scaling.0);

@@ -629,7 +629,7 @@ pub fn sys_update_buffer(
         (Entity, &ParticleAttributes, &ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
     >,
     mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection)>,
-    mut meshrenderenables: Query<&mut RenderGeometryEable>,
+    // mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
     mut performance: ResMut<ParticleSystemPerformance>,
     mut combinedata: ResMut<CombineDataCommon>,
@@ -646,6 +646,10 @@ pub fn sys_update_buffer(
 
         let mut count_particles = 0;
         let mut collectdata: Vec<u8> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16) * 4);
+
+        let mut refwmatrix = Matrix::identity();
+        let mut reflmatrix = Matrix::identity();
+        let mut resultmatrix = Matrix::identity();
 
         particle_sys.iter().for_each(
             |(
@@ -744,24 +748,28 @@ pub fn sys_update_buffer(
 
                                     let matrix = if updatebuffer {
                                         let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(eulers.x, eulers.y, eulers.z);
-                                        let mut matrix = calc_matrix(
+                                        calc_matrix(
                                             &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
-                                            &Vector3::zeros(), &scaling, &l_rotation, &eulers
+                                            &Vector3::zeros(), &scaling, &l_rotation, &eulers,
+                                            &mut refwmatrix, &mut reflmatrix, &mut resultmatrix
                                         );
-                            
+
                                         if let Some(local) = calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
-                                            matrix = matrix * local;
+                                            resultmatrix.mul_to(&local, &mut refwmatrix);
+                                            &refwmatrix
+                                        } else {
+                                            &resultmatrix
                                         }
-                                        matrix
                                     } else {
                                         // let mut matrix = Matrix::identity();
                                         // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
-                                        let matrix = &emitmatrix.matrix;
-                                        let mut local = Matrix::identity();
-                                        CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut local);
+                                        // let mut local = Matrix::identity();
+                                        let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(eulers.x, eulers.y, eulers.z);
+                                        pi_scene_shell::prelude::matrix4_compose_rotation(scaling, &l_rotation, &translation, &mut reflmatrix);
                                         // log::warn!("MAREIX: {:?}", matrix);
                                         // log::warn!("LOCAL: {:?}", local);
-                                        matrix * local
+                                        emitmatrix.matrix.mul_to(&reflmatrix, &mut resultmatrix);
+                                        &resultmatrix
                                     };
         
                                     let color = colorsanduvs.color.0.get(*idx).unwrap();

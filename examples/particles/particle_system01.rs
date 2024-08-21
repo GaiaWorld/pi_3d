@@ -71,7 +71,7 @@ pub fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 1;
+    let temp = 5;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
@@ -90,7 +90,7 @@ pub fn setup(
 
                     //
                     let syskey = String::from("Test");
-                    let syscfg = demo_cfg(40., 20.);
+                    let syscfg = demo_cfg(320., 20.);
                     let calculator = commands.spawn_empty_id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
@@ -225,9 +225,9 @@ pub fn main() {
     app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
-    app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
-    app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
-    app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
+    // app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
+    // app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
+    // app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     

@@ -86,7 +86,7 @@ impl GLTFBin {
                         LoadResult::Ok(r) => Ok(r),
                         LoadResult::Wait(f) => f.await,
                         LoadResult::Receiver(recv) => {
-                            recv.receive(key, Ok(GLTFBin(Share::new(data)))).await
+                            recv.receive(key, Ok(GLTFBin(data))).await
                         }
                     }
                 }).await;

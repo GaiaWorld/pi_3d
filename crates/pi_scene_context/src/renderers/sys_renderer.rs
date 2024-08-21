@@ -631,6 +631,7 @@ use super::{
                 // log::warn!("Renderer Viewer Not Found: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             }
 
+            // log::warn!("Renderer {:?},", (renderer.draws.list.len(), count_vertex, passtag));
             renderer.vertexs = count_vertex;
         });
 
@@ -953,7 +954,7 @@ fn collect_draw_batch(
         let data = combinedata.data(&range, allocator, device, queue);
 
         if let Some(data) = data {
-            // log::warn!("Draw Instance {:?}", instances);
+            // log::warn!("Draw Instance {:?}", (&instances, &range));
             let mut draw = DrawObj {
                 pipeline: Some(tempdraw.pipeline.clone()),
                 bindgroups: tempdraw.bindgroups.groups(),

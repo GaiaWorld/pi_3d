@@ -146,9 +146,16 @@ impl CombineBuffer {
             data: DataPool::new(initmax),
         }
     }
-    pub fn combinecommon(&self, requestsize: usize) -> bool {
+    pub fn combinecommon(&mut self, requestsize: usize) -> bool {
         if self.data.used < self.initmax {
             let unuselen = self.initmax - self.data.used;
+            // if requestsize > unuselen {
+            //     let mut temp = Vec::with_capacity(unuselen);
+            //     for _ in 0..unuselen {
+            //         temp.push(0);
+            //     }
+            //     self.record(&temp);
+            // }
             requestsize <= unuselen
         } else {
            true
@@ -165,16 +172,16 @@ impl CombineBuffer {
         self.data.reset();
     }
     pub fn record(&mut self, data: &[u8]) -> Range<usize> {
-        if self.data.used < self.initmax {
-            let unuselen = self.initmax - self.data.used;
-            if unuselen < data.len() {
-                let mut temp = Vec::with_capacity(unuselen);
-                for _ in 0..unuselen {
-                    temp.push(0);
-                }
-                self.data.record(&temp);
-            }
-        }
+        // if self.data.used < self.initmax {
+        //     let unuselen = self.initmax - self.data.used;
+        //     if unuselen < data.len() {
+        //         let mut temp = Vec::with_capacity(unuselen);
+        //         for _ in 0..unuselen {
+        //             temp.push(0);
+        //         }
+        //         self.data.record(&temp);
+        //     }
+        // }
         self.data.record(data)
     }
     pub fn data(&self, range: &Range<usize>, allocator: &mut VertexBufferAllocator3D, device: &PiRenderDevice, queue: &PiRenderQueue) -> Option<EVertexBufferRange> {

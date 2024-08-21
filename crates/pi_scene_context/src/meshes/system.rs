@@ -39,6 +39,9 @@ pub fn sys_calc_render_matrix(
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
     // let time = pi_time::Instant::now();
+    let mut rotation = Rotation3::identity();
+    let mut tempmatrix = Matrix::identity();
+    let mut tempmatrix2 = Matrix::identity();
     changes.iter().for_each(|entity| {
         if let Ok((
             obj, _,
@@ -52,7 +55,8 @@ pub fn sys_calc_render_matrix(
 
                 _calc_render_matrix(
                     velocity, localscaling, scalingmode, renderalignment, transform,
-                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj)
+                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj),
+                    &mut rotation, &mut tempmatrix, &mut tempmatrix2
                 );
             }
         }
@@ -71,6 +75,10 @@ pub fn sys_calc_render_matrix_for_instance(
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
     pose: Query<&RenderPoseMatrix>,
 ) {
+    let mut rotation = Rotation3::identity();
+    let mut tempmatrix = Matrix::identity();
+    let mut tempmatrix2 = Matrix::identity();
+
     // let time = pi_time::Instant::now();
     changes.iter().for_each(|entity| {
         if let Ok((
@@ -84,7 +92,8 @@ pub fn sys_calc_render_matrix_for_instance(
                 // let mut flag = true;
                 _calc_render_matrix(
                     velocity, localscaling, scalingmode, renderalignment, transform,
-                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj)
+                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj),
+                    &mut rotation, &mut tempmatrix, &mut tempmatrix2
                 );
             }
         }
@@ -126,6 +135,9 @@ fn _calc_render_matrix<T>(
     wm: &mut RenderWorldMatrix,
     wmi: &mut RenderWorldMatrixInv,
     pose: Result<&RenderPoseMatrix, T>,
+    tmprotation: &mut Rotation3,
+    tmpmatrix: &mut Matrix,
+    tmpmatrix2: &mut Matrix,
 ) {
     let pos = transform.position();
     let mut scl = Vector3::new(1., 1., 1.);
@@ -134,12 +146,14 @@ fn _calc_render_matrix<T>(
         crate::prelude::EScalingMode::Hierarchy => {
             if renderalignment.0 == ERenderAlignment::Local {
                 if let Ok(pose) = pose {
-                    let mut m = Matrix::identity();
-                    m.clone_from(&transform.matrix);
-                    m = m * pose.0;
-                    wm.0.clone_from(&m);
-                    m.try_inverse_mut();
-                    wmi.0.clone_from(&m);
+                    // let mut m = Matrix::identity();
+                    // m.clone_from(&transform.matrix);
+                    // m = m * pose.0;
+                    // wm.0.clone_from(&m);
+                    transform.matrix.mul_to(&pose.0, &mut wm.0);
+
+                    wmi.0.clone_from(&wm.0);
+                    wmi.0.try_inverse_mut();
                     // log::warn!("Normal Alignment {:?}", (m, obj));
                     return;
                 }
@@ -161,18 +175,29 @@ fn _calc_render_matrix<T>(
         },
     }
 
-    let mut m = Matrix::identity();
-    let rotation = renderalignment.0.calc_rotation(g_rotation, velocity);
-    CoordinateSytem3::matrix4_compose_rotation(&scl, &rotation, &pos, &mut m);
-    if let Some(local) = renderalignment.0.calc_local(velocity, 1., 0.) {
-        m = m * local;
+    let m0 = &mut wm.0;
+    let m1 = &mut wmi.0;
+    m0.fill_with_identity();
+    m1.fill_with_identity();
+    tmpmatrix.fill_with_identity();
+    tmpmatrix2.fill_with_identity();
+    if renderalignment.0.calc_rotation(g_rotation, velocity, tmprotation) {
+        pi_scene_shell::prelude::matrix4_compose_rotation(&scl, &tmprotation, &pos, m0);
+    } else {
+        pi_scene_shell::prelude::matrix4_compose_no_rotation(&scl, &pos, m0);
+    }
+    if renderalignment.0.calc_local(velocity, 1., 0., tmpmatrix, tmpmatrix2, m1) {
+        m0.mul_to(m1, tmpmatrix);
+        m0.copy_from(tmpmatrix);
     }
 
-    if let Ok(pose) = pose { m = m * pose.0; }
+    if let Ok(pose) = pose {
+        m0.mul_to(&pose.0, tmpmatrix);
+        m0.copy_from(tmpmatrix);
+    }
 
-    wm.0.clone_from(&m);
-    m.try_inverse_mut();
-    wmi.0.clone_from(&m);
+    m1.clone_from(&m0);
+    m1.try_inverse_mut();
 }
 
 pub fn sys_model_for_uniform(

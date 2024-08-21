@@ -357,7 +357,8 @@ impl GlobalMatrix {
     pub fn calc(p_m: &Matrix, l_matrix: &LocalMatrix) -> (Self, bool) {
         let mut flag = true;
         let mut result = Self::default();
-        result.matrix.copy_from(&(p_m * l_matrix.0));
+        // result.matrix.copy_from(&(p_m * l_matrix.0));
+        p_m.mul_to(&l_matrix.0, &mut result.matrix);
 
         if result.matrix.as_slice()[0].is_finite() {
             match result.matrix.try_inverse() {

@@ -58,13 +58,11 @@ impl Plugin for PluginCamera {
                 sys_create_camera.in_set(StageCamera::CameraCreate),
                 (
                     sys_act_camera_mode,
-                    sys_act_camera_aspect,
                 ).in_set(StageCamera::CameraCommand),
                 (
                     sys_update_camera_param,
                     sys_update_target_camera_modify,
-                    // sys_update_camera_renderer,
-                ).after(sys_act_camera_aspect).in_set(StageCamera::CameraCommand),
+                ).after(sys_act_camera_mode).in_set(StageCamera::CameraCommand),
                 (
                     sys_calc_view_matrix_by_viewer::<TargetCameraParam>,
                     sys_calc_proj_matrix::<CameraParam>,
@@ -97,9 +95,8 @@ impl Plugin for PluginCamera {
         app
         .add_systems(Update, sys_create_camera           .in_set(StageCamera::CameraCreate))
         .add_systems(Update, sys_act_camera_mode                                                     .in_set(StageCamera::CameraCommand))
-        .add_systems(Update, sys_act_camera_aspect                                                   .in_set(StageCamera::CameraCommand))
-        .add_systems(Update, sys_update_camera_param                                                 .after(sys_act_camera_aspect).in_set(StageCamera::CameraCommand))
-        .add_systems(Update, sys_update_target_camera_modify                                         .after(sys_act_camera_aspect).in_set(StageCamera::CameraCommand))
+        .add_systems(Update, sys_update_camera_param                                                 .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
+        .add_systems(Update, sys_update_target_camera_modify                                         .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
         .add_systems(Update, sys_calc_view_matrix_by_viewer::<TargetCameraParam>                     .in_set(StageCamera::CameraCalcMatrix))
         .add_systems(Update, sys_calc_proj_matrix::<CameraParam>                                     .after(sys_calc_view_matrix_by_viewer::<TargetCameraParam>).in_set(StageCamera::CameraCalcMatrix))
         .add_systems(Update, sys_calc_transform_matrix::<TargetCameraParam, CameraParam>             .after(sys_calc_proj_matrix::<CameraParam>).in_set(StageCamera::CameraCalcMatrix))

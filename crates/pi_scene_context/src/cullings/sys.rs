@@ -59,11 +59,11 @@ pub fn sys_update_collider(
 }
 
 pub fn sys_update_culling_by_worldmatrix(
-    changes: ComponentChanged<RenderWorldMatrix>,
+    rmchanges: ComponentChanged<RenderWorldMatrix>,
     changes0: ComponentChanged<DisposeReady>,
     mut items: Query<&mut ItemCullingDirty>,
 ) {
-    changes.iter().for_each(|entity| {
+    rmchanges.iter().for_each(|entity| {
         if let Ok(mut flag) = items.get_mut(*entity) {
             *flag = ItemCullingDirty;
         }
