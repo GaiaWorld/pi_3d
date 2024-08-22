@@ -69,7 +69,7 @@ pub use pi_async_rt::prelude::AsyncRuntime;
 pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 pub use pi_share::{Share, ThreadSync, ShareRefCell};
 
-pub use crate::run_stage::ERunStageChap;
+pub use crate::run_stage::{ERunStageChap, runif_3d};
 pub use crate::object::ObjectID;
 pub use crate::engine_shell::*;
 pub use crate::assets::texture::*;

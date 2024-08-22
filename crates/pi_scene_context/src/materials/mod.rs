@@ -117,10 +117,10 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListTargetAnimationUniform::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::Create.after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
-        app.configure_set(Update, StageMaterial::_Init.after(StageMaterial::Create));
-        app.configure_set(Update, StageMaterial::Command.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
-        app.configure_set(Update, StageMaterial::Ready.in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageMaterial::Create .run_if(runif_3d).after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
+        app.configure_set(Update, StageMaterial::_Init  .run_if(runif_3d).after(StageMaterial::Create));
+        app.configure_set(Update, StageMaterial::Command.run_if(runif_3d).after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
+        app.configure_set(Update, StageMaterial::Ready  .run_if(runif_3d).in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
 
 #[cfg(feature = "use_bevy")]
         app.add_systems(
@@ -160,7 +160,7 @@ impl Plugin for PluginMaterial {
         app
             .add_systems(Update, sys_create_material                     .in_set(StageMaterial::Create) )
             .add_systems(Update, sys_act_material_use                                                            .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_act_target_animation_uniform        .after(sys_act_material_use)                    .in_set(StageMaterial::Command) )
+            .add_systems(Update, sys_act_target_animation_uniform        .run_if(crate::run_stage::runif_targetanime).after(sys_act_material_use)                    .in_set(StageMaterial::Command) )
             .add_systems(Update, sys_act_material_texture_from_target    .after(sys_act_target_animation_uniform)        .in_set(StageMaterial::Command) )
             .add_systems(Update, sys_act_material_value                  .after(sys_act_material_texture_from_target)   .in_set(StageMaterial::Command) )
             .add_systems(Update, sys_act_material_texture                .after(sys_act_material_value)                  .in_set(StageMaterial::Command) )

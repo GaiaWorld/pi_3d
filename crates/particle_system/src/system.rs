@@ -1,32 +1,60 @@
 
 use std::{ops::Range, sync::Arc};
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use pi_scene_context::{geometry::instance::{instanced_buffer::*, types::ModelInstanceAttributes}, prelude::*};
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}};
 
-use crate::base::*;
+use crate::{base::*, ActionListCPUParticleSystemState, OpsCPUParticleSystemState};
+
+pub fn runif_particlesystem(
+    items: Query<&ParticleSystemRunningState>,
+    state: Res<EngineCustomPlugins>,
+) -> bool {
+    let mut activenum = 0;
+    items.iter().for_each(|state| {
+        if state.0 {
+            activenum += 1;
+        }
+    });
+    0 < activenum && state.active
+}
 
 pub fn sys_particle_active(
-    mut items: Query<(&GlobalEnable, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState, &mut DirtyInstanceSourceRefs), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
+    mut items: Query<(Entity, &GlobalEnable, &SceneID, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState, &mut DirtyInstanceSourceRefs), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
     performance: Res<ParticleSystemPerformance>,
+    calculators: Query<&ParticleCalculatorBase>,
+    scenes: Query<&SceneTime>,
     mut globalperformance: ResMut<Performance>,
+    mut cmds: ResMut<ActionListCPUParticleSystemState>,
 ) {
     // let time0 = pi_time::Instant::now();
-    items.iter_mut().for_each(|(enable, active, mut state, mut ids, mut time, mut emission, mut instancestate, mut flag)| {
+    items.iter_mut().for_each(|(entity, enable, idscene, active, mut state, mut ids, mut time, mut emission, mut instancestate, mut flag)| {
         if enable.0 == true && active.0 == true {
             if state.0 == false {
-                instancestate.use_single_instancebuffer = true;
-                state.0 = true;
-                *flag = DirtyInstanceSourceRefs;
+                if let (Ok(calculator), Ok(scenetime)) = (calculators.get(ids.calculator.as_ref().unwrap().0), scenes.get(idscene.0)) {
 
-                ids.reset();
-                let timescale = time.time_scale;
-                *time = ParticleSystemTime::new(performance.frame_time_ms); time.time_scale = timescale;
-                *emission = ParticleSystemEmission::new();
+                    if 0 < calculator.delay && state.1 < calculator.delay as u64 {
+                        cmds.push(OpsCPUParticleSystemState::Start(entity));
+                        state.1 += scenetime.delta_ms();
+                        return;
+                    }
+
+                    let timescale = time.time_scale;
+                    *time = ParticleSystemTime::new(performance.frame_time_ms); time.time_scale = timescale;
+                    *emission = ParticleSystemEmission::new();
+                    instancestate.use_single_instancebuffer = true;
+                    *flag = DirtyInstanceSourceRefs;
+                    ids.reset();
+
+                    state.0 = true;
+                    state.1 = 0;
+                }
+
             }
         } else {
             state.0 = false;
+            state.1 = 0;
         }
     });
 

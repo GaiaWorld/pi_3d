@@ -25,7 +25,7 @@ pub struct PluginLayerMask;
 impl Plugin for PluginLayerMask {
     fn build(&self, app: &mut pi_scene_shell::prelude::App) {
         app.insert_resource(ActionListLayerMask::default());
-        app.configure_set(Update, StageLayerMask::Command);
+        app.configure_set(Update, StageLayerMask::Command.run_if(runif_3d));
         app.add_systems(Update, sys_act_layer_mask.in_set(StageLayerMask::Command));
     }
 }

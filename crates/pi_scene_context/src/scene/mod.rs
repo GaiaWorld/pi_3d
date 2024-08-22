@@ -98,11 +98,11 @@ impl Plugin for PluginScene {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .configure_set(Update, StageScene::Create.after(ERunStageChap::_InitialApply))
-            .configure_set(Update, StageScene::_Create.before(EStageAnimation::Create).after(StageScene::Create))
-            .configure_set(Update, StageScene::Command.after(StageScene::_Create))
-            .configure_set(Update, StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
-            .configure_set(Update, StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform))
+            .configure_set(Update, StageScene::Create           .run_if(runif_3d).after(ERunStageChap::_InitialApply))
+            .configure_set(Update, StageScene::_Create          .run_if(runif_3d).before(EStageAnimation::Create).after(StageScene::Create))
+            .configure_set(Update, StageScene::Command          .run_if(runif_3d).after(StageScene::_Create))
+            .configure_set(Update, StageScene::TextureRequest   .run_if(runif_3d).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
+            .configure_set(Update, StageScene::TextureLoaded    .run_if(runif_3d).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform))
             ;
 
 #[cfg(not(feature = "use_bevy"))]

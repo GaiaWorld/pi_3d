@@ -72,7 +72,7 @@ pub fn sys_dispose_ready(
         if let Ok(mut item) = items.get_mut(entity) {
             *item = DisposeReady(true);
         } else {
-            log::warn!("sys_dispose_ready  ====={:?}", entity);
+            // log::warn!("sys_dispose_ready  ====={:?}", entity);
             if let Some(mut commands) = commands.get_entity(entity) {
                 // log::warn!("despawn====={:?}", commands.id());
                 commands.despawn();
@@ -86,7 +86,7 @@ pub fn sys_dispose_ready(
         if let Ok(mut item) = items.get_mut(entity) {
             *item = DisposeReady(true);
         } else {
-            log::warn!("sys_dispose_ready Ref ====={:?}", entity);
+            // log::warn!("sys_dispose_ready Ref ====={:?}", entity);
             if let Some(mut commands) = commands.get_entity(entity) {
                 commands.despawn();
             }

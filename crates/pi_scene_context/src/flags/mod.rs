@@ -123,7 +123,7 @@ pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListNodeEnable::default());
-        app.configure_set(Update, StageEnable::Command.after(StageScene::Create));
+        app.configure_set(Update, StageEnable::Command.run_if(runif_3d).after(StageScene::Create));
         app.add_systems(Update, 
             sys_act_node_enable.in_set(StageEnable::Command)
         );

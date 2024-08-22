@@ -109,7 +109,7 @@ pub fn sys_create_trail_mesh(
                 );
                 // _cmd.insert(bundle);
                 let _ = altertrail.alter(id_mesh, bundle);
-                log::warn!(">>>>>>>>>>>>>>> OKkkkkk");
+                // log::warn!(">>>>>>>>>>>>>>> OKkkkkk");
             // }
         });
     }

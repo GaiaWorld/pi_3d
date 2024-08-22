@@ -72,10 +72,10 @@ impl Plugin for PluginPassObject {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StagePassObject::Create.after(StageMaterial::Command).after(StageModel::AbstructMeshCommand).after(StageMaterial::Use))
-        .configure_set(Update, StagePassObject::_CreateApply.after(StagePassObject::Create))
-        .configure_set(Update, StagePassObject::Command.after(StagePassObject::_CreateApply).before(StageRenderer::RenderStateCommand))
-        .configure_set(Update, StagePassObject::EffectModify.in_set(FrameDataPrepare).after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup))
+        .configure_set(Update, StagePassObject::Create      .run_if(runif_3d).after(StageMaterial::Command).after(StageModel::AbstructMeshCommand).after(StageMaterial::Use))
+        .configure_set(Update, StagePassObject::_CreateApply.run_if(runif_3d).after(StagePassObject::Create))
+        .configure_set(Update, StagePassObject::Command     .run_if(runif_3d).after(StagePassObject::_CreateApply).before(StageRenderer::RenderStateCommand))
+        .configure_set(Update, StagePassObject::EffectModify.run_if(runif_3d).in_set(FrameDataPrepare).after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

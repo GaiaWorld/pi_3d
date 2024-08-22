@@ -9,7 +9,7 @@ mod uint;
 mod int;
 mod mat4;
 
-use crate::ecs::*;
+use crate::{ecs::*, prelude::runif_3d};
 // use bevy_app::{App, Plugin, Update};
 // use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
 
@@ -74,11 +74,11 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAddTargetAnime::default());
         app.insert_resource(ActionListAnimationWeight::default());
 
-        app.configure_set(Update, EStageAnimation::Create);
-        app.configure_set(Update, EStageAnimation::_CreateApply.after(EStageAnimation::Create));
-        app.configure_set(Update, EStageAnimation::Command.after(EStageAnimation::_CreateApply));
-        app.configure_set(Update, EStageAnimation::Running.in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
-        app.configure_set(Update, EStageAnimation::Dispose.after(EStageAnimation::Running).after(ERunStageChap::Dispose));
+        app.configure_set(Update, EStageAnimation::Create       .run_if(runif_3d));
+        app.configure_set(Update, EStageAnimation::_CreateApply .run_if(runif_3d).after(EStageAnimation::Create));
+        app.configure_set(Update, EStageAnimation::Command      .run_if(runif_3d).after(EStageAnimation::_CreateApply));
+        app.configure_set(Update, EStageAnimation::Running      .run_if(runif_3d).in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
+        app.configure_set(Update, EStageAnimation::Dispose      .run_if(runif_3d).after(EStageAnimation::Running).after(ERunStageChap::Dispose));
         
 #[cfg(feature="use_bevy")]
 {

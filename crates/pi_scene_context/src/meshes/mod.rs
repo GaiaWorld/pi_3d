@@ -2,14 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    geometry::prelude::*,
-    object::sys_dispose_ready,
-    transforms::prelude::*,
-    cameras::prelude::StageCamera,
-    flags::StageEnable,
-    cullings::prelude::*,
-    light::prelude::*,
-    layer_mask::StageLayerMask
+    cameras::prelude::StageCamera, cullings::prelude::*, flags::StageEnable, geometry::prelude::*, layer_mask::StageLayerMask, light::prelude::*, object::sys_dispose_ready, run_stage::runif_rendermatrix, transforms::{prelude::*, transform_node_sys::sys_world_matrix_calc}
 };
 
 use self::{
@@ -65,15 +58,15 @@ impl crate::Plugin for PluginMesh {
         );
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageModel::MeshCreate.after(StageCamera::_Create))
-        .configure_set(Update, StageModel::_InitMesh.after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
-        .configure_set(Update, StageModel::InstanceCreate.after(StageModel::_InitMesh))
-        .configure_set(Update, StageModel::_InitInstance.after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand))
-        .configure_set(Update, StageModel::AbstructMeshCommand.in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create))
-        .configure_set(Update, StageModel::RenderMatrix.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageModel::InstanceEffectMesh.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix))
-        .configure_set(Update, StageModel::InstanceEffectGeometry.in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
-        .configure_set(Update, StageModel::LightingCollect.in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageModel::MeshCreate            .run_if(runif_3d).after(StageCamera::_Create))
+        .configure_set(Update, StageModel::_InitMesh             .run_if(runif_3d).after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
+        .configure_set(Update, StageModel::InstanceCreate        .run_if(runif_3d).after(StageModel::_InitMesh))
+        .configure_set(Update, StageModel::_InitInstance         .run_if(runif_3d).after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand))
+        .configure_set(Update, StageModel::AbstructMeshCommand   .run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create))
+        .configure_set(Update, StageModel::RenderMatrix          .run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
+        .configure_set(Update, StageModel::InstanceEffectMesh    .run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix))
+        .configure_set(Update, StageModel::InstanceEffectGeometry.run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageModel::LightingCollect       .run_if(runif_3d).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform))
         ;
 
 #[cfg(feature = "use_bevy")]
@@ -126,22 +119,21 @@ impl crate::Plugin for PluginMesh {
 
         .add_systems(Update, sys_create_abstract_posematrix     .in_set(StageModel::InstanceCreate))
         .add_systems(Update, sys_act_mesh_modify                                                                     .in_set(StageModel::AbstructMeshCommand))
-        .add_systems(Update, sys_act_target_animation_attribute                                                      .in_set(StageModel::AbstructMeshCommand))
+        .add_systems(Update, sys_act_target_animation_attribute .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_act_instance_attribute          .after(sys_act_target_animation_attribute)  .in_set(StageModel::AbstructMeshCommand))
         .add_systems(Update, sys_enable_about_instance               .in_set(StageModel::InstanceEffectMesh))
-        .add_systems(Update, sys_calc_render_matrix_pre.in_set(StageModel::RenderMatrix))
-        .add_systems(Update, sys_calc_render_matrix.after(sys_calc_render_matrix_pre)               .in_set(StageModel::RenderMatrix))
-        .add_systems(Update, sys_calc_render_matrix_for_instance     .after(sys_calc_render_matrix)  .in_set(StageModel::RenderMatrix))
-        .add_systems(Update, sys_calc_render_matrix_instance   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))
+        .add_systems(Update, sys_calc_render_matrix_pre.after(sys_world_matrix_calc).in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(Update, sys_calc_render_matrix.run_if(runif_rendermatrix).after(sys_calc_render_matrix_pre)               .in_set(StageModel::RenderMatrix))
+        .add_systems(Update, sys_calc_render_matrix_for_instance.run_if(runif_rendermatrix)     .after(sys_calc_render_matrix)  .in_set(StageModel::RenderMatrix))
+        .add_systems(Update, sys_calc_render_matrix_instance.run_if(runif_rendermatrix)   .after(sys_calc_render_matrix_for_instance)  .in_set(StageModel::RenderMatrix))
         .add_systems(Update, sys_model_for_uniform       .in_set(ERunStageChap::Uniform))
-        .add_systems(Update, sys_animator_update_instance_attribute                                                        .in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),
+        .add_systems(Update, sys_animator_update_instance_attribute.run_if(crate::run_stage::runif_targetanime).in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),
         .add_systems(Update, sys_tick_instanced_buffer_update       .after(sys_animator_update_instance_attribute ).in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),
         .add_systems(Update, sys_tick_instanced_buffer_update_single.after(sys_tick_instanced_buffer_update       ).in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),
         .add_systems(Update, sys_tick_culling_box                   .after(sys_tick_instanced_buffer_update_single).in_set(StageModel::InstanceEffectGeometry))  // .run_if(should_run),
         .add_systems(Update, sys_model_direct_lighting_modify_by_light                                                                       .in_set(StageModel::LightingCollect)) // .run_if(should_run_with_lighting),
         .add_systems(Update, sys_model_direct_lighting_modify_by_model       .after(sys_model_direct_lighting_modify_by_light       ).in_set(StageModel::LightingCollect)) // .run_if(should_run_with_lighting),
         .add_systems(Update, sys_model_point_lighting_modify_by_model        .after(sys_model_direct_lighting_modify_by_model       ).in_set(StageModel::LightingCollect)) // .run_if(should_run_with_lighting),
-        .add_systems(Update, sys_model_spot_lighting_modify_by_model         .after(sys_model_point_lighting_modify_by_model        ).in_set(StageModel::LightingCollect)) // .run_if(should_run_with_lighting),
         .add_systems(Update, sys_dispose_about_mesh      .after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
         .add_systems(Update, sys_dispose_about_instance  .after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
         .add_systems(Update, sys_dispose_about_pass      .after(sys_dispose_ready).in_set(ERunStageChap::Dispose))

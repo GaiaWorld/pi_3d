@@ -60,25 +60,21 @@ impl Plugin for PluginParticleSystem {
                 StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate),
                 StageParticleSystem::ParticleSysEmission.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand),
                 StageParticleSystem::ParticleSysParamStart.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission),
-                StageParticleSystem::ParticleSysParamOverLifetime.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart),
-                StageParticleSystem::ParticleSysDirection.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamOverLifetime),
-                StageParticleSystem::ParticleSysParamBySpeed.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysDirection),
-                StageParticleSystem::ParticleSysMatrix.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamBySpeed).after(StageTransform::TransformCalcMatrix),
+                StageParticleSystem::ParticleSysCalc.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart),
+                StageParticleSystem::ParticleSysMatrix.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix),
                 StageParticleSystem::ParticleSysUpdate.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform),
             )
         );
         #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageParticleSystem::ParticleSysCreate.after(StageTrail::_TrailCreate))
-        .configure_set(Update, StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set(Update, StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate))
-        .configure_set(Update, StageParticleSystem::ParticleSysEmission.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand))
-        .configure_set(Update, StageParticleSystem::ParticleSysParamStart.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission))
-        .configure_set(Update, StageParticleSystem::ParticleSysParamOverLifetime.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart))
-        .configure_set(Update, StageParticleSystem::ParticleSysDirection.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamOverLifetime))
-        .configure_set(Update, StageParticleSystem::ParticleSysParamBySpeed.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysDirection))
-        .configure_set(Update, StageParticleSystem::ParticleSysMatrix.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamBySpeed).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageParticleSystem::ParticleSysUpdate.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageParticleSystem::ParticleSysCreate   .run_if(runif_3d).after(StageTrail::_TrailCreate))
+        .configure_set(Update, StageParticleSystem::_ParticleSysCreate  .run_if(runif_3d).after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set(Update, StageParticleSystem::ParticleSysCommand  .run_if(runif_3d).after(StageParticleSystem::_ParticleSysCreate))
+        .configure_set(Update, StageParticleSystem::ParticleSysEmission .run_if(runif_3d).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand))
+        .configure_set(Update, StageParticleSystem::ParticleSysParamStart.run_if(runif_3d).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission))
+        .configure_set(Update, StageParticleSystem::ParticleSysCalc     .run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart))
+        .configure_set(Update, StageParticleSystem::ParticleSysMatrix   .run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix))
+        .configure_set(Update, StageParticleSystem::ParticleSysUpdate   .run_if(runif_3d).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform))
         ;
 
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();
@@ -92,16 +88,18 @@ impl Plugin for PluginParticleSystem {
                     sys_create_particle_calculator.in_set(StageScene::Create),
                     sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate),
                     sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand),
+                    sys_particle_active.in_set(StageParticleSystem::ParticleSysParamStart),
                     (
                         sys_ids                 ,
                         sys_emission            ,
                     ).chain().in_set(StageParticleSystem::ParticleSysEmission),
-                    sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart),
-                    sys_over_lifetime.in_set(StageParticleSystem::ParticleSysParamOverLifetime),
-                    sys_direction.in_set(StageParticleSystem::ParticleSysDirection),
-                    sys_by_speed.in_set(StageParticleSystem::ParticleSysParamBySpeed),
                     (
-                        sys_particle_active ,
+                        sys_start,
+                        sys_over_lifetime,
+                        sys_direction,
+                        sys_by_speed,
+                    ).chain().in_set(StageParticleSystem::ParticleSysCalc),
+                    (
                         sys_emitmatrix      ,
                         sys_prewarm         ,
                     ).chain().in_set(StageParticleSystem::ParticleSysMatrix),
@@ -118,13 +116,13 @@ impl Plugin for PluginParticleSystem {
             .add_systems(Update, sys_create_particle_calculator.in_set(StageScene::Create))
             .add_systems(Update, sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate))
             .add_systems(Update, sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand))
+            .add_systems(Update, sys_particle_active .in_set(StageParticleSystem::ParticleSysParamStart))
             .add_systems(Update, sys_ids.in_set(StageParticleSystem::ParticleSysEmission))
             .add_systems(Update, sys_emission.after(sys_ids).in_set(StageParticleSystem::ParticleSysEmission))
-            .add_systems(Update, sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysParamStart))
-            .add_systems(Update, sys_over_lifetime.in_set(StageParticleSystem::ParticleSysParamOverLifetime))
-            .add_systems(Update, sys_direction.in_set(StageParticleSystem::ParticleSysDirection))
-            .add_systems(Update, sys_by_speed.in_set(StageParticleSystem::ParticleSysParamBySpeed))
-            .add_systems(Update, sys_particle_active .in_set(StageParticleSystem::ParticleSysMatrix))
+            .add_systems(Update, sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysCalc))
+            .add_systems(Update, sys_over_lifetime.after(sys_start).in_set(StageParticleSystem::ParticleSysCalc))
+            .add_systems(Update, sys_direction.after(sys_over_lifetime).in_set(StageParticleSystem::ParticleSysCalc))
+            .add_systems(Update, sys_by_speed.after(sys_direction).in_set(StageParticleSystem::ParticleSysCalc))
             .add_systems(Update, sys_emitmatrix      .after(sys_particle_active).in_set(StageParticleSystem::ParticleSysMatrix))
             .add_systems(Update, sys_prewarm         .after(sys_emitmatrix).in_set(StageParticleSystem::ParticleSysMatrix))
             .add_systems(Update, sys_update_buffer           .in_set(StageParticleSystem::ParticleSysUpdate))

@@ -29,11 +29,10 @@ impl Plugin for PluginLighting {
         app.insert_resource(ActionListLightParam::default());
         app.insert_resource(StateLight::default());
         
-        app.configure_set(Update, StageLighting::LightCreate.after(StageScene::_Create));
-        app.configure_set(Update, StageLighting::_LightCreate.after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
-        app.configure_set(Update, StageLighting::LightingCommand.after(StageLighting::_LightCreate));
-        // app.configure_set(Update, StageLighting::LightingUniform.run_if(should_run_with_lighting).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageLighting::LightingUniform.in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageLighting::LightCreate    .run_if(runif_3d).after(StageScene::_Create));
+        app.configure_set(Update, StageLighting::_LightCreate   .run_if(runif_3d).after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
+        app.configure_set(Update, StageLighting::LightingCommand.run_if(runif_3d).after(StageLighting::_LightCreate));
+        app.configure_set(Update, StageLighting::LightingUniform.run_if(runif_3d).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
 
 
         app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 256, max_spot_light_count: 128, max_hemi_light_count: 16 }));

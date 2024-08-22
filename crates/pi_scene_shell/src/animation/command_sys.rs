@@ -297,17 +297,19 @@ pub fn sys_act_reset_while_animationgroup_start(
 
 /// 动画结束后将目标值 重置 为操作修改的值
 pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecord<D>>(
-    mut items: Query<(Entity, &mut D, Option<&R>, Option<&AnimatorableLink>), Changed<FlagAnimationStartResetComp>>,
+    mut items: Query<(Entity, &mut D), Changed<FlagAnimationStartResetComp>>,
+    records: Query<&R>,
+    links: Query<&AnimatorableLink>,
     mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
 ) {
-    items.iter_mut().for_each(|(_entity, mut comp, record, linked)| {
-        if let Some(record) = record {
+    items.iter_mut().for_each(|(_entity, mut comp)| {
+        if let Ok(record) = records.get(_entity) {
             *comp = record.comp();
         } else {
             // log::error!("sys_calc_reset_animatablecomp {:?}", entity);
             *comp = D::default();
         }
-        if let Some(linked) = linked {
+        if let Ok(linked) = links.get(_entity) {
             if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
                 *item = TargetAnimatorableIsRunning;
             }
@@ -319,7 +321,8 @@ pub fn sys_calc_reset_animatablecomp<D: TAnimatableComp, R: TAnimatableCompRecor
 pub fn sys_calc_type_anime<D: TAnimatableComp>(
     type_ctx: Res<TypeAnimeContext<D>>,
     runinfos: Res<GlobalAnimeAbout>,
-    mut items: Query<(&mut D, Option<&AnimatorableLink>)>,
+    mut items: Query<&mut D>,
+    links: Query<&AnimatorableLink>,
     mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
     mut performance: ResMut<Performance>,
     // empty: Res<SingleEmptyEntity>,
@@ -335,7 +338,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
             let mut last_value: D = D::default();
             let mut last_weight: f32 = 0.;
 
-            if let Ok((mut item, linked)) = items.get_mut(*target) {
+            if let Ok(mut item) = items.get_mut(*target) {
                 let mut enable = false;
                 info.iter().for_each(|info| {
                     if let Some(Some(curve)) = curves.get(info.curve_id) {
@@ -349,7 +352,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
                 
                 if enable {
                     *item = last_value;
-                    if let Some(linked) = linked {
+                    if let Ok(linked) = links.get(*target) {
                         if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
                             *item = TargetAnimatorableIsRunning;
                         }

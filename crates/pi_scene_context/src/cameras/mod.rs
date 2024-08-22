@@ -84,16 +84,16 @@ impl Plugin for PluginCamera {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageCamera::CameraCreate.after(StageScene::_Create))
-        .configure_set(Update, StageCamera::_Create.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set(Update, StageCamera::CameraCommand.after(StageCamera::_Create).before(StageRenderer::Create))
-        .configure_set(Update, StageCamera::CameraCalcMatrix.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command))
-        .configure_set(Update, StageCamera::CameraCulling.in_set(FrameDataPrepare).after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageCamera::CameraCreate        .run_if(runif_3d).after(StageScene::_Create))
+        .configure_set(Update, StageCamera::_Create             .run_if(runif_3d).after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set(Update, StageCamera::CameraCommand       .run_if(runif_3d).after(StageCamera::_Create).before(StageRenderer::Create))
+        .configure_set(Update, StageCamera::CameraCalcMatrix    .run_if(runif_3d).in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command))
+        .configure_set(Update, StageCamera::CameraCulling       .run_if(runif_3d).in_set(FrameDataPrepare).after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_create_camera           .in_set(StageCamera::CameraCreate))
+        .add_systems(Update, sys_create_camera                                                       .in_set(StageCamera::CameraCreate))
         .add_systems(Update, sys_act_camera_mode                                                     .in_set(StageCamera::CameraCommand))
         .add_systems(Update, sys_update_camera_param                                                 .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
         .add_systems(Update, sys_update_target_camera_modify                                         .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))

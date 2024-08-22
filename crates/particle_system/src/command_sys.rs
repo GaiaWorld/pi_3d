@@ -95,7 +95,7 @@ pub fn sys_create_cpu_partilce_system(
                 (
                     attributes,
                     ParticleSystemActive(true),
-                    ParticleSystemRunningState(false),
+                    ParticleSystemRunningState(false, 0),
                     ParticleSystemModifyState,
                     ParticleRandom::new(0),
                     ParticleSystemTime::new(performance.frame_time_ms),

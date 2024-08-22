@@ -377,9 +377,9 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
             app.insert_resource(ImageTextureLoader::default());
             app.insert_resource(StateTextureLoader::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest);
-            app.configure_set(Update, StageTextureLoad::TextureLoading.after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.configure_set(Update, StageTextureLoad::TextureRequest  .run_if(runif_3d));
+            app.configure_set(Update, StageTextureLoad::TextureLoading  .run_if(runif_3d).after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded   .run_if(runif_3d).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
 
 #[cfg(feature="use_pi_ecs")]
 {

@@ -16,11 +16,9 @@ pub enum StageParticleSystem {
     ParticleSysCreate,
     _ParticleSysCreate,
     ParticleSysCommand,
-    ParticleSysEmission,
     ParticleSysParamStart,
-    ParticleSysParamOverLifetime,
-    ParticleSysDirection,
-    ParticleSysParamBySpeed,
+    ParticleSysEmission,
+    ParticleSysCalc,
     ParticleSysMatrix,
     ParticleSysUpdate,
 }
@@ -579,7 +577,7 @@ impl ParticleDieWaitTime {
 pub struct ParticleSystemActive(pub bool);
 
 #[derive(Component, Default)]
-pub struct ParticleSystemRunningState(pub(crate) bool);
+pub struct ParticleSystemRunningState(pub(crate) bool, pub(crate) u64);
 
 #[derive(Component, Default)]
 pub struct ParticleSystemModifyState;
