@@ -50,13 +50,13 @@ impl Plugin for PluginShadowGenerator {
 #[cfg(not(feature = "use_bevy"))]
 {
     app
-    .configure_set(Update, StageShadowGenerator::Create         .run_if(runif_3d).after(StageLighting::_LightCreate).after(StageCamera::_Create))
-    .configure_set(Update, StageShadowGenerator::_Create        .run_if(runif_3d).after(StageShadowGenerator::Create).before(StageRenderer::Create))
-    .configure_set(Update, StageShadowGenerator::Command        .run_if(runif_3d).after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command))
-    .configure_set(Update, StageShadowGenerator::CalcMatrix     .run_if(runif_3d).in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix))
-    .configure_set(Update, StageShadowGenerator::ViewerUpdate   .run_if(runif_3d).in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix))
-    .configure_set(Update, StageShadowGenerator::BindUpdate     .run_if(runif_3d).in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate))
-    .configure_set(Update, StageShadowGenerator::Culling        .run_if(runif_3d).in_set(FrameDataPrepare).after(StageShadowGenerator::BindUpdate).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform))
+    .configure_set(Update, StageShadowGenerator::Create         /* .run_if(runif_3d) */.after(StageLighting::_LightCreate).after(StageCamera::_Create))
+    .configure_set(Update, StageShadowGenerator::_Create        /* .run_if(runif_3d) */.after(StageShadowGenerator::Create).before(StageRenderer::Create))
+    .configure_set(Update, StageShadowGenerator::Command        /* .run_if(runif_3d) */.after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command))
+    .configure_set(Update, StageShadowGenerator::CalcMatrix     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix))
+    .configure_set(Update, StageShadowGenerator::ViewerUpdate   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix))
+    .configure_set(Update, StageShadowGenerator::BindUpdate     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate))
+    .configure_set(Update, StageShadowGenerator::Culling        /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::BindUpdate).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform))
     ;
 }
 

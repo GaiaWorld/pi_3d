@@ -48,6 +48,15 @@ pub mod command_sys;
 mod base;
 pub mod prelude;
 
+pub fn sys_custom_render_target(
+    device: Res<PiRenderDevice>,
+    asset_samp: Res<ShareAssetMgr<SamplerRes>>,
+    atlas_allocator: Res<PiSafeAtlasAllocator>,
+    mut customrendertargets: ResMut<CustomRenderTargets>,
+) {
+    customrendertargets.update(&device, &asset_samp, &atlas_allocator);
+}
+
 pub struct PluginRenderer;
 impl Plugin for PluginRenderer {
     fn build(&self, app: &mut App) {
@@ -160,26 +169,26 @@ impl Plugin for PluginRenderer {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageRenderer::Create            .run_if(runif_3d).after(StageCamera::_Create).after(StageShadowGenerator::_Create))
-        .configure_set(Update, StageRenderer::_CreateApply      .run_if(runif_3d).after(StageRenderer::Create))
-        .configure_set(Update, StageRenderer::RenderStateCommand.run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::Create).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply))
-        .configure_set(Update, StageRenderer::RendererCommand   .run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::Create).after(StageRenderer::_CreateApply))
-        .configure_set(Update, StageRenderer::PassBindGroup     .run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform))
-        .configure_set(Update, StageRenderer::PassBindGroups    .run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
-        .configure_set(Update, StageRenderer::PassShader        .run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))
-        .configure_set(Update, StageRenderer::PassPipeline      .run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::PassShader))
-        .configure_set(Update, StageRenderer::PassDraw          .run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::PassPipeline))
-        .configure_set(Update, StageRenderer::DrawList          .run_if(runif_3d).in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(ERunStageChap::Dispose))
+        .configure_set(Update, StageRenderer::Create            /* .run_if(runif_3d) */.after(StageCamera::_Create).after(StageShadowGenerator::_Create))
+        .configure_set(Update, StageRenderer::_CreateApply      /* .run_if(runif_3d) */.after(StageRenderer::Create))
+        .configure_set(Update, StageRenderer::RenderStateCommand/* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::Create).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply))
+        .configure_set(Update, StageRenderer::RendererCommand   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::Create).after(StageRenderer::_CreateApply))
+        .configure_set(Update, StageRenderer::PassBindGroup     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform))
+        .configure_set(Update, StageRenderer::PassBindGroups    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
+        .configure_set(Update, StageRenderer::PassShader        /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))
+        .configure_set(Update, StageRenderer::PassPipeline      /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassShader))
+        .configure_set(Update, StageRenderer::PassDraw          /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassPipeline))
+        .configure_set(Update, StageRenderer::DrawList          /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(ERunStageChap::Dispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
         app
+            .add_systems(Update, sys_custom_render_target               .in_set(ERunStageChap::New))
             .add_systems(Update, sys_create_renderer                 .in_set(StageRenderer::Create))
             // .add_systems(Update, sys_act_model_blend                 .in_set(StageRenderer::RenderStateCommand))
             // .add_systems(Update, sys_act_mesh_primitive_state        .in_set(StageRenderer::RenderStateCommand))
             
             // .add_systems(Update, sys_act_depth_state                 .in_set(StageRenderer::RenderStateCommand))
-            // .add_systems(Update, sys_act_stencil_state               .in_set(StageRenderer::RenderStateCommand))
 
             .add_systems(Update, sys_act_render_queue                .in_set(StageModel::AbstructMeshCommand))
             .add_systems(Update, sys_act_renderer_connect            .in_set(StageRenderer::RenderStateCommand))

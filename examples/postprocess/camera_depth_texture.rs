@@ -215,7 +215,7 @@ impl Plugin for PluginTest {
 
         {
             let (targets, device, asset_samp, atlas_allocator) = (&mut assets.0, &assets.1, &assets.2, &assets.3);
-            let depthtarget = targets.create(device, KeySampler::linear_repeat(), asset_samp, atlas_allocator, ColorFormat::R16Float, DepthStencilFormat::Depth32Float, 256, 256 );
+            let depthtarget = targets.create( KeySampler::linear_repeat(), ColorFormat::R16Float, DepthStencilFormat::Depth32Float, 256, 256 );
 
             let depth_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.index().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(depth_renderer, true));
@@ -230,7 +230,7 @@ impl Plugin for PluginTest {
 
             actions.renderer.connect.push(OpsRendererConnect::ops(shadow_renderer, demopass.opaque_renderer, true));
             
-            let opaquetarget = targets.create(device, KeySampler::linear_repeat(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 128, 128 ); 
+            let opaquetarget = targets.create( KeySampler::linear_repeat(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 128, 128 ); 
             let (opaque_texture_renderer, opaque_texture_renderer_camera) = copy::PluginImageCopy::init(&mut commands, &mut actions, scene,
                 demopass.opaque_renderer, demopass.transparent_renderer, demopass.opaque_target.clone(), Some(KeyCustomRenderTarget::Custom(opaquetarget.unwrap()))
             );

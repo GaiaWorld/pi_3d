@@ -101,12 +101,12 @@ impl Plugin for PluginGeometry {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageGeometry::Create                    .run_if(runif_3d).after(StageModel::_InitMesh))
-        .configure_set(Update, StageGeometry::_GeoCreate                .run_if(runif_3d).after(StageGeometry::Create))
-        .configure_set(Update, StageGeometry::VertexBufferLoaded        .run_if(runif_3d).in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate))
-        .configure_set(Update, StageGeometry::_VertexBufferLoadedApply  .run_if(runif_3d).in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded))
-        .configure_set(Update, StageGeometry::GeometryLoaded            .run_if(runif_3d).in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform))
-        .configure_set(Update, StageGeometry::Upload                    .run_if(runif_3d).in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList))
+        .configure_set(Update, StageGeometry::Create                    /* .run_if(runif_3d) */.after(StageModel::_InitMesh))
+        .configure_set(Update, StageGeometry::_GeoCreate                /* .run_if(runif_3d) */.after(StageGeometry::Create))
+        .configure_set(Update, StageGeometry::VertexBufferLoaded        /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate))
+        .configure_set(Update, StageGeometry::_VertexBufferLoadedApply  /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded))
+        .configure_set(Update, StageGeometry::GeometryLoaded            /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageGeometry::Upload                    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

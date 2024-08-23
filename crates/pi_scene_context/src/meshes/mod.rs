@@ -58,15 +58,15 @@ impl crate::Plugin for PluginMesh {
         );
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageModel::MeshCreate            .run_if(runif_3d).after(StageCamera::_Create))
-        .configure_set(Update, StageModel::_InitMesh             .run_if(runif_3d).after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
-        .configure_set(Update, StageModel::InstanceCreate        .run_if(runif_3d).after(StageModel::_InitMesh))
-        .configure_set(Update, StageModel::_InitInstance         .run_if(runif_3d).after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand))
-        .configure_set(Update, StageModel::AbstructMeshCommand   .run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create))
-        .configure_set(Update, StageModel::RenderMatrix          .run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageModel::InstanceEffectMesh    .run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix))
-        .configure_set(Update, StageModel::InstanceEffectGeometry.run_if(runif_3d).in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
-        .configure_set(Update, StageModel::LightingCollect       .run_if(runif_3d).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageModel::MeshCreate            /* .run_if(runif_3d) */.after(StageCamera::_Create))
+        .configure_set(Update, StageModel::_InitMesh             /* .run_if(runif_3d) */.after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
+        .configure_set(Update, StageModel::InstanceCreate        /* .run_if(runif_3d) */.after(StageModel::_InitMesh))
+        .configure_set(Update, StageModel::_InitInstance         /* .run_if(runif_3d) */.after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand))
+        .configure_set(Update, StageModel::AbstructMeshCommand   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create))
+        .configure_set(Update, StageModel::RenderMatrix          /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
+        .configure_set(Update, StageModel::InstanceEffectMesh    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix))
+        .configure_set(Update, StageModel::InstanceEffectGeometry/* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).after(StageCamera::CameraCulling).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageModel::LightingCollect       /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform))
         ;
 
 #[cfg(feature = "use_bevy")]

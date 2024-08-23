@@ -67,14 +67,14 @@ impl Plugin for PluginParticleSystem {
         );
         #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageParticleSystem::ParticleSysCreate   .run_if(runif_3d).after(StageTrail::_TrailCreate))
-        .configure_set(Update, StageParticleSystem::_ParticleSysCreate  .run_if(runif_3d).after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set(Update, StageParticleSystem::ParticleSysCommand  .run_if(runif_3d).after(StageParticleSystem::_ParticleSysCreate))
-        .configure_set(Update, StageParticleSystem::ParticleSysEmission .run_if(runif_3d).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand))
-        .configure_set(Update, StageParticleSystem::ParticleSysParamStart.run_if(runif_3d).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission))
-        .configure_set(Update, StageParticleSystem::ParticleSysCalc     .run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart))
-        .configure_set(Update, StageParticleSystem::ParticleSysMatrix   .run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageParticleSystem::ParticleSysUpdate   .run_if(runif_3d).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageParticleSystem::ParticleSysCreate    /* .run_if(runif_3d) */.after(StageTrail::_TrailCreate))
+        .configure_set(Update, StageParticleSystem::_ParticleSysCreate   /* .run_if(runif_3d) */.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set(Update, StageParticleSystem::ParticleSysCommand   /* .run_if(runif_3d) */.after(StageParticleSystem::_ParticleSysCreate))
+        .configure_set(Update, StageParticleSystem::ParticleSysEmission  /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand))
+        .configure_set(Update, StageParticleSystem::ParticleSysParamStart/* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission))
+        .configure_set(Update, StageParticleSystem::ParticleSysCalc      .run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart))
+        .configure_set(Update, StageParticleSystem::ParticleSysMatrix    .run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix))
+        .configure_set(Update, StageParticleSystem::ParticleSysUpdate    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform))
         ;
 
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();

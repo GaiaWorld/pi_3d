@@ -75,10 +75,10 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAnimationWeight::default());
 
         app.configure_set(Update, EStageAnimation::Create       .run_if(runif_3d));
-        app.configure_set(Update, EStageAnimation::_CreateApply .run_if(runif_3d).after(EStageAnimation::Create));
-        app.configure_set(Update, EStageAnimation::Command      .run_if(runif_3d).after(EStageAnimation::_CreateApply));
-        app.configure_set(Update, EStageAnimation::Running      .run_if(runif_3d).in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
-        app.configure_set(Update, EStageAnimation::Dispose      .run_if(runif_3d).after(EStageAnimation::Running).after(ERunStageChap::Dispose));
+        app.configure_set(Update, EStageAnimation::_CreateApply /* .run_if(runif_3d) */.after(EStageAnimation::Create));
+        app.configure_set(Update, EStageAnimation::Command      /* .run_if(runif_3d) */.after(EStageAnimation::_CreateApply));
+        app.configure_set(Update, EStageAnimation::Running      /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
+        app.configure_set(Update, EStageAnimation::Dispose      /* .run_if(runif_3d) */.after(EStageAnimation::Running).after(ERunStageChap::Dispose));
         
 #[cfg(feature="use_bevy")]
 {

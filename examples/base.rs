@@ -122,12 +122,12 @@ impl DemoScene {
             EFreeCameraMode::Orthograhic
         } else { EFreeCameraMode::Perspective };
         
-        let keytarget =  match targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
+        let keytarget =  match targets.create(KeySampler::linear_clamp(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
             Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
             None => None,
         };
         
-        let shadowtarget = targets.create(device, KeySampler::linear_clamp(), asset_samp, atlas_allocator, ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
+        let shadowtarget = targets.create(KeySampler::linear_clamp(), ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
 
         let scene = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.init_scene(scene);

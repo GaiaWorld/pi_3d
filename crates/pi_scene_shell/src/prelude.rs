@@ -604,8 +604,11 @@ pub fn calc_local_strentched<'a>(_g_velocity: &'a Vector3, length_scale: Number,
 
 pub fn matrix4_compose_rotation(scaling: &Vector3, rotmat: &Rotation3, translation: &Vector3, result: &mut Matrix) {
     result.fill_with_identity();
+
     result.fixed_view_mut::<3, 3>(0, 0).copy_from(rotmat.matrix());
-    result.append_nonuniform_scaling_mut(scaling);
+    // result.append_nonuniform_scaling_mut(scaling);
+    result.prepend_nonuniform_scaling_mut(scaling);
+
     result.append_translation_mut(translation);
     // CoordinateSytem3::matrix4_compose_rotation(scaling, rotmat, translation, result)
 }

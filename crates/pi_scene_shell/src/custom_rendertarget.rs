@@ -141,26 +141,40 @@ impl CustomRenderTarget {
 }
 
 #[derive(Resource, Default)]
-pub struct CustomRenderTargets(pub SlotMap<KeyRenderTarget, CustomRenderTarget>);
+pub struct CustomRenderTargets(pub SlotMap<KeyRenderTarget, Option<CustomRenderTarget>>, pub Vec<(KeyRenderTarget, KeySampler, ColorFormat, DepthStencilFormat, u32, u32)>);
 impl CustomRenderTargets {
     pub fn create(
         &mut self,
-        device: &RenderDevice, sample: KeySampler,
-        asset_samp: &ShareAssetMgr<SamplerRes>, atlas_allocator: &PiSafeAtlasAllocator,
+        sample: KeySampler,
         color_format: ColorFormat, depth_stencil_format: DepthStencilFormat, width: u32, height: u32
     ) -> Option<KeyRenderTarget> {
-        if let Some(rt) = CustomRenderTarget::new(device, sample, asset_samp, atlas_allocator, color_format, depth_stencil_format, width, height) {
-            Some(self.0.insert(rt))
+        let key = self.0.insert(None);
+        self.1.push((key, sample, color_format, depth_stencil_format, width, height));
+        Some(key)
+    }
+    pub fn get(&self, key: KeyRenderTarget) -> Option<CustomRenderTarget> {
+        if let Some(target) = self.0.get(key) {
+            if let Some(target) = target {
+                Some(target.clone())
+            } else {
+                None
+            }
         } else {
             None
         }
     }
-    pub fn get(&self, key: KeyRenderTarget) -> Option<CustomRenderTarget> {
-        if let Some(target) = self.0.get(key) {
-            Some(target.clone())
-        } else {
-            None
-        }
+    pub fn update(
+        &mut self,
+        device: &RenderDevice,
+        asset_samp: &ShareAssetMgr<SamplerRes>, atlas_allocator: &PiSafeAtlasAllocator,
+    ) {
+        self.1.drain(..).for_each(|(key, sample, color_format, depth_stencil_format, width, height)| {
+            if let Some(item) = self.0.get_mut(key) {
+                if let Some(rt) = CustomRenderTarget::new(device, sample, asset_samp, atlas_allocator, color_format, depth_stencil_format, width, height) {
+                    *item = Some(rt)
+                }
+            }
+        });
     }
     pub fn delete(&mut self, key: KeyRenderTarget) {
         self.0.remove(key);
