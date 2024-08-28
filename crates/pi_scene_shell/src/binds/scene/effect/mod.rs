@@ -64,7 +64,6 @@ impl TShaderBindCode for ShaderBindSceneAboutEffect {
 }
 impl TKeyBind for ShaderBindSceneAboutEffect {
     fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
-        log::error!("Scene Effect : {:?}", (Self::TOTAL_SIZE, self.data.size()));
         Some(
             pi_render::renderer::bind::EKeyBind::Buffer(
                 KeyBindBuffer {

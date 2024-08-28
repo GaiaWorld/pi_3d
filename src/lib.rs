@@ -372,13 +372,13 @@ pub fn sys_info_draw(
         viewer_includes.push(models.0.len() + forcemodels.0.len());
     });
 
-    log::warn!(
-        "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-        entitycount,
-        count_ready_geo, count_ready_geo_mesh,
-        viewer_includes, viewer_cullings, statecamera.culling_time,
-        count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
-    );
+    // log::warn!(
+    //     "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+    //     entitycount,
+    //     count_ready_geo, count_ready_geo_mesh,
+    //     viewer_includes, viewer_cullings, statecamera.culling_time,
+    //     count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
+    // );
 }
 
 pub fn sys_info_resource(
@@ -387,7 +387,7 @@ pub fn sys_info_resource(
     performance: Res<Performance>,
     errors: Res<ErrorRecord>,
 ) {
-    log::warn!("Errors {:?}", errors.0.len());
+    // log::warn!("Errors {:?}", errors.0.len());
     // log::warn!(
     //     "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
     //     states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture

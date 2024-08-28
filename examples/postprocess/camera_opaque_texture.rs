@@ -48,7 +48,7 @@ impl Plugin for PluginTest {
         } else { return; };
 
         let tes_size = 10;
-        fps.frame_ms = 100;
+        fps.frame_ms = 5;
 
         let limit = assets.1.limits();
         log::warn!("{:?}", limit);
