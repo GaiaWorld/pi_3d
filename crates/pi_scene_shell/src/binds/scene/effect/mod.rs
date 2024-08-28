@@ -20,7 +20,7 @@ impl ShaderBindSceneAboutEffect {
     pub const OFFSET_DELTA_TIME:            wgpu::DynamicOffset = Self::OFFSET_TIME + Self::SIZE_TIME;
     pub const SIZE_DELTA_TIME:              wgpu::DynamicOffset = 4 * 4;
 
-    pub const OFFSET_FOG_INFO:              wgpu::DynamicOffset = Self::OFFSET_DELTA_TIME;
+    pub const OFFSET_FOG_INFO:              wgpu::DynamicOffset = Self::OFFSET_DELTA_TIME + Self::SIZE_DELTA_TIME;
     pub const SIZE_FOG_INFO:                wgpu::DynamicOffset = 4 * 4;
     pub const OFFSET_FOG_PARAM:             wgpu::DynamicOffset = Self::OFFSET_FOG_INFO + Self::SIZE_FOG_INFO;
     pub const SIZE_FOG_PARAM:               wgpu::DynamicOffset = 4 * 4;
@@ -37,12 +37,6 @@ impl ShaderBindSceneAboutEffect {
             Some(Self { data })
         } else {
             None
-        }
-    }
-    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
-        KeyBindLayoutBuffer {
-            visibility: EShaderStage::VERTEXFRAGMENT,
-            min_binding_size: self.data.size(),
         }
     }
     pub fn data(&self) -> &BindBufferRange {
@@ -70,13 +64,14 @@ impl TShaderBindCode for ShaderBindSceneAboutEffect {
 }
 impl TKeyBind for ShaderBindSceneAboutEffect {
     fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        log::error!("Scene Effect : {:?}", (Self::TOTAL_SIZE, self.data.size()));
         Some(
             pi_render::renderer::bind::EKeyBind::Buffer(
                 KeyBindBuffer {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: Self::TOTAL_SIZE as u32,
                     }
                 }
             )

@@ -156,12 +156,6 @@ impl ShaderBindEffectValue {
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
-    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
-        KeyBindLayoutBuffer {
-            visibility: EShaderStage::VERTEXFRAGMENT,
-            min_binding_size: self.data.size(),
-        }
-    }
     // pub fn vs_define_code(meta: &ShaderEffectMeta, set: u32, binding: u32) -> String {
     //     meta.uniforms.vs_code(set, binding)
     // }
@@ -208,7 +202,7 @@ impl TKeyBind for ShaderBindEffectValue {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: self.total_size as u32,
                     }
                 }
             )

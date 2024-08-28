@@ -54,12 +54,6 @@ impl ShaderBindModelAboutMatrix {
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
-    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
-        KeyBindLayoutBuffer {
-            visibility: EShaderStage::VERTEXFRAGMENT,
-            min_binding_size: self.data.size(),
-        }
-    }
     pub fn vs_define_code(set: u32, binding: u32) -> String {
         let mut result = String::from("");
         result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
@@ -88,7 +82,7 @@ impl TKeyBind for ShaderBindModelAboutMatrix {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: Self::TOTAL_SIZE as u32,
                     }
                 }
             )

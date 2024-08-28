@@ -31,12 +31,6 @@ impl BindEnvIrradiance {
             }
         } else  { None }
     }
-    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
-        KeyBindLayoutBuffer {
-            visibility: EShaderStage::FRAGMENT,
-            min_binding_size: self.data.size(),
-        }
-    }
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
@@ -93,7 +87,7 @@ impl TKeyBind for BindEnvIrradiance {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::FRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: EnvironmentTextureTools::IRRADIANCE_SIZE as u32,
                     }
                 }
             )

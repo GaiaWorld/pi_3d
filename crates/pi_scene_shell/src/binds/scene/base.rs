@@ -38,12 +38,6 @@ impl ShaderBindViewer {
             None
         }
     }
-    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
-        KeyBindLayoutBuffer {
-            visibility: EShaderStage::VERTEXFRAGMENT,
-            min_binding_size: self.data.size(),
-        }
-    }
     pub fn data(&self) -> &BindBufferRange {
         &self.data
     }
@@ -76,7 +70,7 @@ impl TKeyBind for ShaderBindViewer {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: Self::TOTAL_SIZE as u32,
                     }
                 }
             )

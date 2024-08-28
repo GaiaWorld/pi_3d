@@ -17,6 +17,7 @@ pub struct ShaderBindShadowData{
     pub shadow_count: u32,
     pub(crate) shadow_data_offset: u32,
     pub(crate) max_type_count: u32,
+    pub(crate) totalsize: u32,
 }
 impl ShaderBindShadowData {
     pub const KEY: &'static str                 = "ShadowDatas";
@@ -65,7 +66,7 @@ impl ShaderBindShadowData {
             }
             data.0.write_data( 0, bytemuck::cast_slice(&temp));
             data.0.write_data( shadow_data_offset as usize, bytemuck::cast_slice(&tempf32));
-            Some(Self { data, direct_count, point_count, spot_count, shadow_data_offset, shadow_count, max_type_count })
+            Some(Self { data, direct_count, point_count, spot_count, shadow_data_offset, shadow_count, max_type_count, totalsize: size })
         } else {
             None
         }
@@ -108,7 +109,7 @@ impl TKeyBind for ShaderBindShadowData {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: self.totalsize as u32,
                     }
                 }
             )

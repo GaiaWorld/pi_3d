@@ -19,6 +19,7 @@ pub struct ShaderBindSceneLightInfos {
     pub(crate) point_offset: u32,
     pub(crate) spot_offset: u32,
     pub(crate) hemi_offset: u32,
+    pub(crate) totalsize: u32,
 }
 impl ShaderBindSceneLightInfos {
     pub const MIN_TYPE_LIGHT_COUNT: u32                     = 4;
@@ -102,15 +103,9 @@ impl ShaderBindSceneLightInfos {
         let size = hemi_offset + hemi_count * Self::SIZE_HEMI_LIGHT;
 
         if let Some(data) = allocator.allocate( size as wgpu::DynamicOffset) {
-            Some(Self { data, direct_count, point_count, spot_count, hemi_count, direct_offset, point_offset, spot_offset, hemi_offset })
+            Some(Self { data, direct_count, point_count, spot_count, hemi_count, direct_offset, point_offset, spot_offset, hemi_offset, totalsize: size })
         } else {
             None
-        }
-    }
-    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
-        KeyBindLayoutBuffer {
-            visibility: EShaderStage::VERTEXFRAGMENT,
-            min_binding_size: self.data.size(),
         }
     }
     pub fn data(&self) -> &BindBufferRange {
@@ -172,7 +167,7 @@ impl TKeyBind for ShaderBindSceneLightInfos {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: self.totalsize as u32,
                     }
                 }
             )

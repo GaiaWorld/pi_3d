@@ -19,6 +19,7 @@ pub struct BindModelLightIndexs {
     pub hemi_count: u32,
     pub(crate) meta_offset: u32,
     pub(crate) max_type_count: u32,
+    pub(crate) totalsize: u32,
 }
 impl BindModelLightIndexs {
     pub const KEY: &'static str = "ModelLightings";
@@ -96,15 +97,9 @@ impl BindModelLightIndexs {
                 temp.push(0);
             }
             data.0.write_data( 0, &temp);
-            Some(Self { data, direct_count, point_count, spot_count, hemi_count, meta_offset, max_type_count })
+            Some(Self { data, direct_count, point_count, spot_count, hemi_count, meta_offset, max_type_count, totalsize: size })
         } else {
             None
-        }
-    }
-    pub fn key_layout(&self) -> KeyBindLayoutBuffer {
-        KeyBindLayoutBuffer {
-            visibility: EShaderStage::VERTEXFRAGMENT,
-            min_binding_size: self.data.size(),
         }
     }
     pub fn data(&self) -> &BindBufferRange {
@@ -155,7 +150,7 @@ impl TKeyBind for BindModelLightIndexs {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
-                        min_binding_size: self.data.size()
+                        min_binding_size: self.totalsize as u32,
                     }
                 }
             )
