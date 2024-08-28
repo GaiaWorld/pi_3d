@@ -106,6 +106,7 @@ impl BindEffectValues {
     ) -> Option<Self> {
         
         if let Some(bind) = ShaderBindEffectValue::new(device, key_meta, meta.clone(), allocator) {
+
             let mut bytes: Vec<u8> = vec![];
             let mut offsets: Vec<(Atom, UniformOffset)> = vec![];
             // let mut offsets: XHashMap<Atom, UniformOffset> = XHashMap::default();
@@ -137,7 +138,7 @@ impl BindEffectValues {
             bind.data().write_data(0, &bytes);
             offsets.sort_by(|a, b| a.0.cmp(&b.0) );
 
-            // log::error!("MEAT: {:?}", meta.uniforms);
+            // log::error!("MEAT: {:?}", (key_meta, bind.total_size, bytes.len(), bind.data().0.size()));
     
             Some(
                 BindEffectValues { bytes, offsets, bind: Arc::new(bind), }

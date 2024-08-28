@@ -61,6 +61,7 @@ impl ShaderBindEffectValue {
         let mat4_count      = uniforms.mat4_list.len() as u8;
         // let mat2_count      = uniforms.mat2_list.len() as u8;
         let vec4_count      = uniforms.vec4_list.len() as u8;
+        let vec3_count      = uniforms.vec3_list.len() as u8;
         let vec2_count      = uniforms.vec2_list.len() as u8;
         let float_count     = uniforms.float_list.len() as u8;
         let int_count       = 0; // uniforms.int_list.len() as u8;
@@ -82,6 +83,9 @@ impl ShaderBindEffectValue {
 
         let vec4_begin: u32  = total_size;
         total_size += vec4_count as u32 * Self::VEC4_BYTES;
+        
+        // let vec4_begin: u32  = total_size;
+        total_size += vec3_count as u32 * Self::VEC4_BYTES;
 
         let vec2_begin: u32  = total_size;
         total_size += (vec2_count as u32 + fill_vec2_count as u32) * Self::VEC2_BYTES;
