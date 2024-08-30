@@ -48,8 +48,8 @@ pub fn setup(
 
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
 
-        actions.scene.brdf.push(OpsSceneBRDF::ops(scene, Atom::from("./assets/images/fractal.png"), false));
-        actions.scene.env.push(OpsSceneEnvTexture::ops(scene, Some(Atom::from("./assets/images/01.env")), false));
+        actions.scene.options.push(OpsSceneOption::brdf(scene, Atom::from("./assets/images/fractal.png"), false));
+        actions.scene.options.push(OpsSceneOption::envtexture(scene, Some(Atom::from("./assets/images/01.env")), false));
         
         let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
@@ -57,7 +57,7 @@ pub fn setup(
         let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
-        actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
+        actions.scene.options.push(OpsSceneOption::shadowmap(scene, demopass.shadowtarget));
         {
             let light = light::DemoLight::directlight(&mut commands, scene, lightroot, &mut actions,);
             log::warn!("Light: {:?}", light);

@@ -56,7 +56,7 @@ pub struct ImageTextureLoader {
     pub fails: Share<SegQueue<IDImageTextureLoad>>,
     pub fail_reason: XHashMap<KeyImageTexture, EErrorImageLoad>,
     pub fail_imgtex: Share<SegQueue<(KeyImageTexture, EErrorImageLoad)>>,
-    pub success: XHashMap<IDImageTextureLoad, Handle<ImageTexture>>,
+    pub success: XHashMap<IDImageTextureLoad, Handle<ResImageTexture>>,
     pub failrecord: XHashMap<IDImageTextureLoad, EErrorImageLoad>,
     pub query_counter: IDImageTextureLoad,
 }
@@ -101,7 +101,7 @@ impl ImageTextureLoader {
     /// 加载成功 返回资源引用
     /// 加载失败 返回 Err(true)
     /// 加载中 返回 Err(false)
-    pub fn query_imgtex(&self, key: &KeyImageTexture, asset: &AssetMgr<ImageTexture>) -> Result<Handle<ImageTexture>, bool> {
+    pub fn query_imgtex(&self, key: &KeyImageTexture, asset: &AssetMgr<ResImageTexture>) -> Result<Handle<ResImageTexture>, bool> {
         if let Some(res) = asset.get(key) {
             Ok(res)
         } else {
@@ -115,14 +115,14 @@ impl ImageTextureLoader {
             None
         }
     }
-    pub fn query_success(&mut self, id: IDImageTextureLoad) -> Option<Handle<ImageTexture>> {
+    pub fn query_success(&mut self, id: IDImageTextureLoad) -> Option<Handle<ResImageTexture>> {
         self.success.remove(&id)
     }
 }
 
 pub fn sys_image_texture_load_launch(
     mut loader: ResMut<ImageTextureLoader>,
-    image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
+    image_assets_mgr: Res<ShareAssetMgr<ResImageTexture>>,
     queue: Res<PiRenderQueue>,
     device: Res<PiRenderDevice>,
     mut state: ResMut<StateTextureLoader>,
@@ -165,17 +165,32 @@ pub fn sys_image_texture_load_launch(
                                 let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
                                 let param = param.clone();
                                 RENDER_RUNTIME.spawn(async move {
-                                    let desc = ImageTexture2DDesc { url: param.clone(), device, queue, };
-                                    match param.compressed {
-                                        true => match ImageTexture::async_load_compressed(desc, imageresult).await {
-                                            Ok(_) => {},
-                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                    
+                                    match imageresult {
+                                        LoadResult::Ok(r) => {},
+                                        LoadResult::Wait(f) => match f.await {
+                                            Ok(result) => {},
+                                            Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
                                         },
-                                        false => match ImageTexture::async_load_image(desc, imageresult).await {
-                                            Ok(_) => {},
-                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
-                                        },
-                                    };
+                                        LoadResult::Receiver(recv) => {
+                                            let haldesc = pi_hal::texture::ImageTextureDesc {
+                                                url: param.url.clone(),
+                                                srgb: param.srgb,
+                                                useage: param.useage,
+                                            };
+                                            match pi_hal::image_texture_load::load_from_url(&haldesc, &device, &queue).await {
+                                                Ok(data) => {
+                                                    match recv.receive(param.clone(), Ok(ResImageTexture::new(data))).await {
+                                                        Ok(result) => {},
+                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                                                    }
+                                                },
+                                                Err(_) => {
+                                                    failquene.push((param.clone(), EErrorImageLoad::LoadFail));
+                                                },
+                                            };
+                                        }
+                                    }
                                 })
                                 .unwrap();
                             },

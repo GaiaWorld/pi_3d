@@ -1,6 +1,6 @@
 
 use pi_scene_shell::prelude::*;
-use pi_scene_math::{Matrix, coordiante_system::CoordinateSytem3, vector::TToolMatrix, Vector3};
+use pi_scene_math::{Matrix, Vector3};
 
 use crate::{
     geometry::{
@@ -32,9 +32,10 @@ pub fn sys_calc_render_matrix_pre(
 pub fn sys_calc_render_matrix(
     changes: ComponentChanged<FlagRenderWorldMatrix>,
     mut meshes: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &RenderAlignment, &ModelVelocity, &mut AbsoluteTransform),
-        Without<InstanceMesh>
+        (&AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &ModelVelocity, &mut AbsoluteTransform)
     >,
+    instances: Query<&InstanceMesh>,
+    renderalignments: Query<&RenderAlignment>,
     pose: Query<&RenderPoseMatrix>,
     mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
 ) {
@@ -44,20 +45,27 @@ pub fn sys_calc_render_matrix(
     let mut tempmatrix2 = Matrix::identity();
     changes.iter().for_each(|entity| {
         if let Ok((
-            obj, _,
-            localscaling, transform, scalingmode, renderalignment, velocity, mut abstransform
+            _,
+            localscaling, transform, scalingmode, velocity, mut abstransform
         )) = meshes.get_mut(*entity) {
-            if let Ok((mut wm, mut wmi)) = matrixs.get_mut(obj) {
+            let renderalignment = if let Ok(instance) = instances.get(*entity) {
+                renderalignments.get(instance.0)
+            } else {
+                renderalignments.get(*entity)
+            };
+            if let Ok(renderalignment) = renderalignment {
+                if let Ok((mut wm, mut wmi)) = matrixs.get_mut(*entity) {
+        
+                    // log::warn!("calc_render_matrix:");
+                    // render_wm.0.clone_from(&worldmatrix.0);
+                    // render_wminv.0.clone_from(&worldmatrix_inv.0);
     
-                // log::warn!("calc_render_matrix:");
-                // render_wm.0.clone_from(&worldmatrix.0);
-                // render_wminv.0.clone_from(&worldmatrix_inv.0);
-
-                _calc_render_matrix(
-                    velocity, localscaling, scalingmode, renderalignment, transform,
-                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj),
-                    &mut rotation, &mut tempmatrix, &mut tempmatrix2
-                );
+                    _calc_render_matrix(
+                        velocity, localscaling, scalingmode, renderalignment, transform,
+                        &mut abstransform, &mut wm, &mut wmi, pose.get(*entity),
+                        &mut rotation, &mut tempmatrix, &mut tempmatrix2
+                    );
+                }
             }
         }
     });
@@ -66,44 +74,7 @@ pub fn sys_calc_render_matrix(
     // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
 }
 
-pub fn sys_calc_render_matrix_for_instance(
-    changes: ComponentChanged<FlagRenderWorldMatrix>,
-    meshes: Query<&RenderAlignment>,
-    mut instances: Query<
-        (ObjectID, &AbstructMesh, &LocalScaling, &ScalingMode, &ModelVelocity, &GlobalMatrix, &InstanceMesh, &mut AbsoluteTransform),
-    >,
-    mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
-    pose: Query<&RenderPoseMatrix>,
-) {
-    let mut rotation = Rotation3::identity();
-    let mut tempmatrix = Matrix::identity();
-    let mut tempmatrix2 = Matrix::identity();
-
-    // let time = pi_time::Instant::now();
-    changes.iter().for_each(|entity| {
-        if let Ok((
-            obj, _,
-            localscaling, scalingmode, velocity, transform, id_source, mut abstransform
-        )) = instances.get_mut(*entity) {
-            if let (
-                Ok((mut wm, mut wmi)),
-                Ok(renderalignment)
-            ) = (matrixs.get_mut(obj), meshes.get(id_source.0)) {
-                // let mut flag = true;
-                _calc_render_matrix(
-                    velocity, localscaling, scalingmode, renderalignment, transform,
-                    &mut abstransform, &mut wm, &mut wmi, pose.get(obj),
-                    &mut rotation, &mut tempmatrix, &mut tempmatrix2
-                );
-            }
-        }
-    });
-    
-    // let time1 = pi_time::Instant::now();
-    // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
-}
-
-pub fn sys_calc_render_matrix_instance(
+pub fn sys_render_matrix_dirty(
     changes: ComponentChanged<RenderWorldMatrix>,
     mut instances: Query<(&InstanceMesh, &RenderWorldMatrix, &RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,

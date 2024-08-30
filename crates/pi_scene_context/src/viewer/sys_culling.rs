@@ -185,10 +185,9 @@ fn _sys_update_viewer_model_list_by_model(
     }
 }
 
-pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component, R: TCullingPerformance + Resource>(
+pub fn sys_tick_viewer_culling(
     mut viewers: Query<
-        (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling),
-        (With<T>, With<T2>)
+        (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling)
     >,
     items: Query<
         (&'static GlobalEnable, Option<&'static InstanceSourceRefs>),
@@ -198,10 +197,7 @@ pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProj
     scenes: Query<
         &SceneBoundingPool
     >,
-    mut performance: ResMut<R>
 ) {
-    // let time1 = pi_time::Instant::now();
-    // log::warn!("SysModelListAfterCullinUpdateByCamera: ");
     viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
         // log::warn!("SysViewerCulling: {:?}", vieweractive);
         _sys_tick_viewer_culling(
@@ -209,10 +205,6 @@ pub fn sys_tick_viewer_culling<T: TViewerViewMatrix + Component, T2: TViewerProj
             &scenes, &mut flags, &items
         );
     });
-
-    // performance.culling_time((pi_time::Instant::now() - time1).as_micros() as u32);
-    
-    // log::debug!("SysModelListAfterCullingTick: {:?}", pi_time::Instant::now() - time1);
 }
 
 #[inline(never)]

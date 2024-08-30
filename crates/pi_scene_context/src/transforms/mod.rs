@@ -59,7 +59,6 @@ impl Plugin for PluginTransformNode {
             (
                 apply_deferred.in_set(StageTransform::_TransformCreate),
                 sys_create_transform_node.in_set(StageTransform::TransformCreate),
-                sys_act_transform_parent.in_set(StageTransform::TransformCommand),
                 (
                     sys_act_local,
                 ).in_set(StageTransform::TransformCommand),
@@ -79,7 +78,6 @@ impl Plugin for PluginTransformNode {
 {
     app
         .add_systems(Update, sys_create_transform_node   .in_set(StageTransform::TransformCreate))
-        .add_systems(Update, sys_act_transform_parent    .in_set(StageTransform::TransformCommand))
         .add_systems(Update, sys_act_local               .in_set(StageTransform::TransformCommand))
         .add_systems(Update, sys_local_euler_calc_rotation                                                           .in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_act_local_rotation              .after(sys_local_euler_calc_rotation)       .in_set(StageTransform::TransformCalcMatrix))

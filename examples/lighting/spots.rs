@@ -60,7 +60,7 @@ impl Plugin for PluginTest {
 
         let mut lights: Vec<Entity> = vec![];
 
-        actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
+        actions.scene.options.push(OpsSceneOption::shadowmap(scene, demopass.shadowtarget));
         {
             let light = light::DemoLight::directlight(&mut commands, scene, lightroot, &mut actions,);
 

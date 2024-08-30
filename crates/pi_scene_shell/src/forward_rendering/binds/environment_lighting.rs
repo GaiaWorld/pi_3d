@@ -3,7 +3,7 @@ use std::sync::Arc;
 use derive_deref::Deref;
 use pi_assets::asset::Handle;
 use pi_render::renderer::{
-    texture::{BindDataTexture2D, ImageTexture}, sampler::BindDataSampler, shader::TShaderBindCode,
+    texture::{BindDataTexture2D, ResImageTexture}, sampler::BindDataSampler, shader::TShaderBindCode,
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer},
     shader_stage::EShaderStage, bind_buffer::{BindBufferRange, BindBufferAllocator}
 };
@@ -19,7 +19,7 @@ impl BindEnvIrradiance {
     const KEY: &'static str = "IBL";
     pub fn new(
         allocator: &mut BindBufferAllocator,
-        texture: &Handle<ImageTexture>,
+        texture: &Handle<ResImageTexture>,
     ) -> Option<Self> {
         let size = texture.extend.len();
         if size == EnvironmentTextureTools::IRRADIANCE_SIZE {

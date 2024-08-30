@@ -44,15 +44,7 @@ impl Plugin for PluginScene {
         app.insert_resource(SingleEmptyEntity::new(Entity::default()));
 
         app.insert_resource(ActionListSceneCreate::default());
-        app.insert_resource(ActionListSceneTime::default());
-        app.insert_resource(ActionListSceneAmbientColor::default());
-        app.insert_resource(ActionListSceneFogParam::default());
-        app.insert_resource(ActionListSceneAnimationEnable::default());
-        app.insert_resource(ActionListSceneBRDF::default());
-        app.insert_resource(ActionListSceneOpaqueTexture::default());
-        app.insert_resource(ActionListSceneDepthTexture::default());
-        app.insert_resource(ActionListSceneEnvTexture::default());
-        app.insert_resource(ActionListSceneShadowMap::default());
+        app.insert_resource(ActionListSceneOption::default());
         
         app.insert_resource(ImageTextureViewLoader::<BRDFTextureSlot>::default());
         app.insert_resource(ImageTextureViewLoader::<EnvTextureSlot>::default());
@@ -87,7 +79,6 @@ impl Plugin for PluginScene {
                 sys_create_scene.in_set(StageScene::Create),
                 (
                     sys_act_scene_ambient,
-                    sys_act_scene_render,
                 ).in_set(StageScene::Command),
                 (
                     sys_bind_update_scene_ambient,
@@ -113,7 +104,6 @@ impl Plugin for PluginScene {
             .add_systems(Update, sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture> .in_set(StageScene::TextureLoaded))
             .add_systems(Update, sys_create_scene                .in_set(StageScene::Create))
             .add_systems(Update, sys_act_scene_ambient           .in_set(StageScene::Command))
-            .add_systems(Update, sys_act_scene_render            .in_set(StageScene::Command))
             .add_systems(Update, sys_bind_update_scene_ambient   .in_set(ERunStageChap::Uniform))
             .add_systems(Update, sys_dispose_about_scene             .after(sys_dispose_ready)       .in_set(ERunStageChap::Dispose))
             ;

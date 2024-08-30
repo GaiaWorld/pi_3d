@@ -43,7 +43,6 @@ impl Plugin for PluginShadowGenerator {
                 StageShadowGenerator::CalcMatrix.in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix),
                 StageShadowGenerator::ViewerUpdate.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix),
                 StageShadowGenerator::BindUpdate.in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate),
-                StageShadowGenerator::Culling.in_set(FrameDataPrepare).after(StageShadowGenerator::BindUpdate).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform),
             )
         );
 
@@ -54,9 +53,8 @@ impl Plugin for PluginShadowGenerator {
     .configure_set(Update, StageShadowGenerator::_Create        /* .run_if(runif_3d) */.after(StageShadowGenerator::Create).before(StageRenderer::Create))
     .configure_set(Update, StageShadowGenerator::Command        /* .run_if(runif_3d) */.after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command))
     .configure_set(Update, StageShadowGenerator::CalcMatrix     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix))
-    .configure_set(Update, StageShadowGenerator::ViewerUpdate   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix))
-    .configure_set(Update, StageShadowGenerator::BindUpdate     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate))
-    .configure_set(Update, StageShadowGenerator::Culling        /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::BindUpdate).before(StageViewer::ForceInclude).before(ERunStageChap::Uniform))
+    .configure_set(Update, StageShadowGenerator::ViewerUpdate   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix).before(StageViewer::TransformCalcMatrix))
+    .configure_set(Update, StageShadowGenerator::BindUpdate     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate).before(StageViewer::Culling))
     ;
 }
 
@@ -81,12 +79,11 @@ impl Plugin for PluginShadowGenerator {
                             sys_act_shadow_generator,
                             sys_shadow_param_update,
                             // sys_shadow_direction_modify_by_directlight,
-                            sys_shadow_project_modify_by_direction_light,
+                            sys_shadow_project_modify,
                             sys_shadow_project_modify_by_spot_light,
                         ).chain().in_set(StageShadowGenerator::Command),
                         (
                             sys_shadow_enabled_modify,
-                            sys_shadow_param_update_while_mat_create,
                             sys_calc_view_matrix_by_light,
                         ).in_set(StageShadowGenerator::CalcMatrix),
                         (
@@ -102,15 +99,7 @@ impl Plugin for PluginShadowGenerator {
                             sys_update_shadow_viewer_model_list_by_model::<DirectionalShadowDirection, SpotShadowProjection>,
                         ).chain().in_set(StageShadowGenerator::ViewerUpdate),
                         sys_shadow_bind_modify.in_set(StageShadowGenerator::BindUpdate),
-                        (
-                            sys_shadow_generator_apply_while_shadow_modify,
-                            sys_tick_viewer_culling::<DirectionalShadowDirection, DirectionalShadowProjection, StateShadow>     , //.run_if(should_run),
-                            sys_tick_viewer_culling::<DirectionalShadowDirection, SpotShadowProjection, StateShadow>            , // .run_if(should_run)
-                        ).chain().in_set(StageShadowGenerator::Culling),
-                        (
-                            sys_update_viewer_uniform::<DirectionalShadowDirection, DirectionalShadowProjection>,
-                            sys_update_viewer_uniform::<DirectionalShadowDirection, SpotShadowProjection>,
-                        ).chain().in_set(ERunStageChap::Uniform),
+                        sys_shadow_generator_apply_while_shadow_modify.before(sys_tick_viewer_culling).in_set(StageViewer::Culling),
                         (
                             sys_dispose_about_shadowcaster
                         ).after(sys_dispose_ready).in_set(ERunStageChap::Dispose),
@@ -125,25 +114,17 @@ impl Plugin for PluginShadowGenerator {
                 .add_systems(Update, sys_light_layermask_to_shadow                                                                           .in_set(StageShadowGenerator::Command),)
                 .add_systems(Update, sys_act_shadow_generator                        .after(sys_light_layermask_to_shadow)                   .in_set(StageShadowGenerator::Command),)
                 .add_systems(Update, sys_shadow_param_update                         .after(sys_act_shadow_generator)                        .in_set(StageShadowGenerator::Command),)
-                .add_systems(Update, sys_shadow_project_modify_by_direction_light    .after(sys_shadow_param_update)                         .in_set(StageShadowGenerator::Command),)
-                .add_systems(Update, sys_shadow_project_modify_by_spot_light         .after(sys_shadow_project_modify_by_direction_light)    .in_set(StageShadowGenerator::Command),)
+                .add_systems(Update, sys_shadow_project_modify    .after(sys_shadow_param_update)                         .in_set(StageShadowGenerator::Command),)
                 .add_systems(Update, sys_shadow_enabled_modify               .in_set(StageShadowGenerator::CalcMatrix))
-                .add_systems(Update, sys_shadow_param_update_while_mat_create.in_set(StageShadowGenerator::CalcMatrix))
                 .add_systems(Update, sys_calc_view_matrix_by_light           .in_set(StageShadowGenerator::CalcMatrix))
                 .add_systems(Update, sys_calc_proj_matrix::<DirectionalShadowProjection>                                                                                                                                                                     .in_set(StageShadowGenerator::ViewerUpdate))
-                .add_systems(Update, sys_calc_transform_matrix::<DirectionalShadowDirection, DirectionalShadowProjection>                    .after(sys_calc_proj_matrix::<DirectionalShadowProjection>)                                                     .in_set(StageShadowGenerator::ViewerUpdate))
-                .add_systems(Update, sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, DirectionalShadowProjection>.after(sys_calc_transform_matrix::<DirectionalShadowDirection, DirectionalShadowProjection>)                    .in_set(StageShadowGenerator::ViewerUpdate))
+                .add_systems(Update, sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, DirectionalShadowProjection>.in_set(StageShadowGenerator::ViewerUpdate))
                 .add_systems(Update, sys_update_shadow_viewer_model_list_by_model::<DirectionalShadowDirection, DirectionalShadowProjection> .after(sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, DirectionalShadowProjection>).in_set(StageShadowGenerator::ViewerUpdate))
                 .add_systems(Update, sys_calc_proj_matrix::<SpotShadowProjection>                                                                                                                                                                            .in_set(StageShadowGenerator::ViewerUpdate))
-                .add_systems(Update, sys_calc_transform_matrix::<DirectionalShadowDirection, SpotShadowProjection>                           .after(sys_calc_proj_matrix::<SpotShadowProjection>)                                                            .in_set(StageShadowGenerator::ViewerUpdate))
-                .add_systems(Update, sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, SpotShadowProjection>       .after(sys_calc_transform_matrix::<DirectionalShadowDirection, SpotShadowProjection>)                           .in_set(StageShadowGenerator::ViewerUpdate))
+                .add_systems(Update, sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, SpotShadowProjection>       .in_set(StageShadowGenerator::ViewerUpdate))
                 .add_systems(Update, sys_update_shadow_viewer_model_list_by_model::<DirectionalShadowDirection, SpotShadowProjection>        .after(sys_update_shadow_viewer_model_list_by_viewer::<DirectionalShadowDirection, SpotShadowProjection>)       .in_set(StageShadowGenerator::ViewerUpdate))
                 .add_systems(Update, sys_shadow_bind_modify                  .in_set(StageShadowGenerator::BindUpdate))
-                .add_systems(Update, sys_shadow_generator_apply_while_shadow_modify                                                                                                                                                          .in_set(StageShadowGenerator::Culling))
-                .add_systems(Update, sys_tick_viewer_culling::<DirectionalShadowDirection, DirectionalShadowProjection, StateShadow> .after(sys_shadow_generator_apply_while_shadow_modify)                                                  .in_set(StageShadowGenerator::Culling))
-                .add_systems(Update, sys_tick_viewer_culling::<DirectionalShadowDirection, SpotShadowProjection, StateShadow>        .after(sys_tick_viewer_culling::<DirectionalShadowDirection, DirectionalShadowProjection, StateShadow>) .in_set(StageShadowGenerator::Culling))
-                .add_systems(Update, sys_update_viewer_uniform::<DirectionalShadowDirection, DirectionalShadowProjection>                                                                                                .in_set(ERunStageChap::Uniform))
-                .add_systems(Update, sys_update_viewer_uniform::<DirectionalShadowDirection, SpotShadowProjection>       .after(sys_update_viewer_uniform::<DirectionalShadowDirection, DirectionalShadowProjection>)    .in_set(ERunStageChap::Uniform))
+                .add_systems(Update, sys_shadow_generator_apply_while_shadow_modify.before(sys_tick_viewer_culling).in_set(StageViewer::Culling))
                 .add_systems(Update, sys_dispose_about_shadowcaster.after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
                 ;
             }

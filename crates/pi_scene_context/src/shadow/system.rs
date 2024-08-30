@@ -22,6 +22,8 @@ use super::{
 pub fn sys_shadow_enabled_modify(
     lights: Query<(&GlobalEnable, &LightLinkedShadowID), Changed<GlobalEnable>>,
     mut shadows: Query<(&ShadowLinkedLightID, &mut ViewerActive)>,
+
+    mut matshadows: Query<(Entity, &mut LinkedMaterialID), Changed<BindEffectReset>>,
 ) {
     lights.iter().for_each(|(enable, linkedshadow)| {
         if let Some(linkedshadow) = linkedshadow.0 {
@@ -30,21 +32,11 @@ pub fn sys_shadow_enabled_modify(
             }
         }
     });
-}
 
-pub fn sys_shadow_param_update_while_mat_create(
-    mut shadows: Query<
-        &mut LinkedMaterialID
-    >,
-    addeds: ComponentChanged<BindEffectReset>,
-    changes: ComponentChanged<BindEffectReset>,
-) {
-    addeds.iter().chain(changes.iter()).for_each(|entity| {
-        shadows.iter_mut().for_each(|mut id_mat| {
-            if id_mat.0 == *entity {
-                id_mat.0 = *entity;
-            }
-        });
+    matshadows.iter_mut().for_each(|(entity, mut id_mat)| {
+        if id_mat.0 == entity {
+            id_mat.0 = entity;
+        }
     });
 }
 
@@ -115,22 +107,20 @@ pub fn sys_light_layermask_to_shadow(
     });
 }
 
-pub fn sys_shadow_project_modify_by_direction_light(
-    mut shadows: Query<(&ShadowParam, &mut DirectionalShadowProjection), Changed<ShadowParam>>,
+pub fn sys_shadow_project_modify(
+    mut directshadows: Query<(&ShadowParam, &mut DirectionalShadowProjection), Changed<ShadowParam>>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
+    
+    spotlights: Query<(&SpotLightAngle, &LightLinkedShadowID)>,
+    mut spotshadows: Query<(&ShadowLinkedLightID, &ShadowParam, &mut SpotShadowProjection)>,
 ) {
     // record.0.push(String::from("sys_shadow_project_modify_by_direction_light"));
-    shadows.iter_mut().for_each(|(shaow, mut project)| {
+    directshadows.iter_mut().for_each(|(shaow, mut project)| {
         *project = DirectionalShadowProjection { minz: shaow.minz, maxz: shaow.maxz, frustum_size: shaow.frustum };
     });
-}
-
-pub fn sys_shadow_project_modify_by_spot_light(
-    lights: Query<(&SpotLightAngle, &LightLinkedShadowID)>,
-    mut shadows: Query<(&ShadowLinkedLightID, &ShadowParam, &mut SpotShadowProjection)>,
-) {
-    shadows.iter_mut().for_each(|(idlight, shadow, mut project)| {
-        if let Ok((outangle, _)) = lights.get(idlight.0) {
+    
+    spotshadows.iter_mut().for_each(|(idlight, shadow, mut project)| {
+        if let Ok((outangle, _)) = spotlights.get(idlight.0) {
             *project = SpotShadowProjection { minz: shadow.minz, maxz: shadow.maxz, fov: outangle.out_value };
             // log::warn!("Spot {:?}", maxz.0);
         }

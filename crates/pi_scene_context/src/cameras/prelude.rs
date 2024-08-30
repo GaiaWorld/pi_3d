@@ -17,7 +17,6 @@ pub enum StageCamera {
     CameraCommand,
     CameraRenderer,
     CameraCalcMatrix,
-    CameraCulling,
 }
 
 

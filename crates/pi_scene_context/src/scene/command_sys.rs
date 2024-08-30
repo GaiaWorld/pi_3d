@@ -78,86 +78,59 @@ pub fn sys_create_scene(
 }
 
 pub fn sys_act_scene_ambient(
-    mut cmds: ResMut<ActionListSceneTime>,
     mut scenes: Query<&mut SceneTime>,
-    mut cmds_ambient: ResMut<ActionListSceneAmbientColor>,
+    mut cmds_ambient: ResMut<ActionListSceneOption>,
     mut scenes_ambient: Query<&mut AmbientColor>,
-    mut cmds_fog: ResMut<ActionListSceneFogParam>,
     mut scenes_fog: Query<&mut SceneFog>,
-    mut cmds_anime: ResMut<ActionListSceneAnimationEnable>,
     mut scenes_anime: Query<&mut SceneAnimationEnable>,
-) {
-    cmds.drain().for_each(|OpsSceneTime(entity, val)| {
-        if let Ok(mut comp) = scenes.get_mut(entity) {
-            comp.reset(val as u64);
-        }
-    });
-    cmds_ambient.drain().for_each(|OpsSceneAmbientColor(entity, val)| {
-        if let Ok(mut comp) = scenes_ambient.get_mut(entity) {
-            match val {
-                ESceneAmbientOps::Color(r, g, b) => { comp.0 = r; comp.1 = g; comp.2 = b; },
-                ESceneAmbientOps::Intensity(val) => { comp.3 = val; },
-            }
-        }
-    });
-    cmds_fog.drain().for_each(|OpsSceneFogParam(entity, val)| {
-        if let Ok(mut comp) = scenes_fog.get_mut(entity) {
-            match val {
-                EFogOps::Color(r, g, b) =>  { comp.r = r; comp.g = g; comp.b = b; },
-                EFogOps::Param(param) => comp.param = param,
-            }
-        }
-    });
-    cmds_anime.drain().for_each(|OpsSceneAnimationEnable(entity, val)| {
-        if let Ok(mut comp) = scenes_anime.get_mut(entity) {
-            *comp = SceneAnimationEnable(val);
-        }
-    });
-}
-
-pub fn sys_act_scene_render(
-    mut cmds: ResMut<ActionListSceneBRDF>,
-    mut scenes: Query<&mut BRDFTextureSlot>,
-    mut opaquetarget_cmds: ResMut<ActionListSceneOpaqueTexture>,
+    mut scenes_brdf: Query<&mut BRDFTextureSlot>,
     mut opaquetarget_scenes: Query<&mut MainCameraOpaqueTarget>,
-    mut depthtarget_cmds: ResMut<ActionListSceneDepthTexture>,
     mut depthtarget_scenes: Query<&mut MainCameraDepthTarget>,
     targets: Res<CustomRenderTargets>,
-    mut env_cmds: ResMut<ActionListSceneEnvTexture>,
     mut env_scenes: Query<&mut EnvTextureSlot>,
-    mut shadow_cmds: ResMut<ActionListSceneShadowMap>,
     mut shadow_scenes: Query<&mut SceneShadowRenderTarget>,
 ) {
-    cmds.drain().for_each(|OpsSceneBRDF(entity, val, compressed)| {
-        if let Ok(mut comp) = scenes.get_mut(entity) {
-            *comp = BRDFTextureSlot(EKeyTexture::Image(KeyImageTextureView::new( KeyImageTexture { url: val, srgb: false, file: true, compressed, ..Default::default() }, TextureViewDesc::default() ) ));
-        // } else {
-        //     cmds.push(OpsSceneBRDF(entity, val, compressed));
-        }
-    });
-    opaquetarget_cmds.drain().for_each(|OpsSceneOpaqueTexture(entity, key)| {
-        if let Ok(mut comp) = opaquetarget_scenes.get_mut(entity) {
-            comp.0 = targets.get(key);
-        }
-    });
-    depthtarget_cmds.drain().for_each(|OpsSceneDepthTexture(entity, key)| {
-        if let Ok(mut comp) = depthtarget_scenes.get_mut(entity) {
-            comp.0 = targets.get(key);
-        }
-    });
-    env_cmds.drain().for_each(|OpsSceneEnvTexture(entity, path, data_is_image)| {
-        if let Ok(mut comp) = env_scenes.get_mut(entity) {
-            comp.0 = path;
-            comp.1 = data_is_image;
-        }
-    });
-    shadow_cmds.drain().for_each(|OpsSceneShadowMap(entity, path)| {
-        if let Ok(mut comp) = shadow_scenes.get_mut(entity) {
-            comp.0 = path;
+    cmds_ambient.drain().for_each(|OpsSceneOption(entity, val)| {
+        match val {
+            ESceneOps::AmbientColor(r, g, b) => if let Ok(mut comp) = scenes_ambient.get_mut(entity) {
+                comp.0 = r; comp.1 = g; comp.2 = b;
+            },
+            ESceneOps::AmbientIntensity(val) => if let Ok(mut comp) = scenes_ambient.get_mut(entity) {
+                comp.3 = val;
+            },
+            ESceneOps::Time(val) => if let Ok(mut comp) = scenes.get_mut(entity) {
+                comp.reset(val as u64);
+            },
+            ESceneOps::FogColor(r, g, b) => if let Ok(mut comp) = scenes_fog.get_mut(entity) {
+                comp.r = r; comp.g = g; comp.b = b;
+            },
+            ESceneOps::FogParam(param) => if let Ok(mut comp) = scenes_fog.get_mut(entity) {
+                comp.param = param;
+            },
+            ESceneOps::AnimEnable(val) => if let Ok(mut comp) = scenes_anime.get_mut(entity) {
+                *comp = SceneAnimationEnable(val);
+            },
+            ESceneOps::BRDF(val, compressed) => if let Ok(mut comp) = scenes_brdf.get_mut(entity) {
+                *comp = BRDFTextureSlot(EKeyTexture::Image(KeyImageTextureView::new( KeyImageTexture { url: val, srgb: false, file: true, compressed, ..Default::default() }, TextureViewDesc::default() ) ));
+            // } else {
+            //     cmds.push(OpsSceneBRDF(entity, val, compressed));
+            },
+            ESceneOps::OpaqueTexture(key) => if let Ok(mut comp) = opaquetarget_scenes.get_mut(entity) {
+                comp.0 = targets.get(key);
+            },
+            ESceneOps::DepthTexture(key) => if let Ok(mut comp) = depthtarget_scenes.get_mut(entity) {
+                comp.0 = targets.get(key);
+            },
+            ESceneOps::EnvTexture(path, data_is_image) => if let Ok(mut comp) = env_scenes.get_mut(entity) {
+                comp.0 = path;
+                comp.1 = data_is_image;
+            },
+            ESceneOps::ShadowMap(path) => if let Ok(mut comp) = shadow_scenes.get_mut(entity) {
+                comp.0 = path;
+            },
         }
     });
 }
-
 
 pub type BundleScene = (
     BundleTreeNode,

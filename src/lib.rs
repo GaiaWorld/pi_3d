@@ -60,7 +60,7 @@ pub fn sys_state_resource(
     vertexbuffers: Res<VertexBufferAllocator3D>,
     shaders: Res<ShareAssetMgr<Shader3D>>,
     pipelines: Res<ShareAssetMgr<Pipeline3D>>,
-    imagetextures: Res<ShareAssetMgr<ImageTexture>>,
+    imagetextures: Res<ShareAssetMgr<ResImageTexture>>,
     shadermetas: Res<ShareAssetMgr<ShaderEffectMeta>>,
     passes: (
         // Query<&PassBindGroupScene>,
@@ -372,13 +372,13 @@ pub fn sys_info_draw(
         viewer_includes.push(models.0.len() + forcemodels.0.len());
     });
 
-    // log::warn!(
-    //     "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-    //     entitycount,
-    //     count_ready_geo, count_ready_geo_mesh,
-    //     viewer_includes, viewer_cullings, statecamera.culling_time,
-    //     count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
-    // );
+    log::warn!(
+        "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+        entitycount,
+        count_ready_geo, count_ready_geo_mesh,
+        viewer_includes, viewer_cullings, statecamera.culling_time,
+        count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
+    );
 }
 
 pub fn sys_info_resource(
@@ -509,7 +509,7 @@ pub struct ResourceSets<'w> {
     pub node_material_blocks: ResMut<'w, NodeMaterialBlocks>,
     pub imgtex_loader: ResMut<'w, ImageTextureLoader>,
     pub imgtex_loader_state: ResMut<'w, StateTextureLoader>,
-    pub imgtex_asset: Res<'w, ShareAssetMgr<ImageTexture>>,
+    pub imgtex_asset: Res<'w, ShareAssetMgr<ResImageTexture>>,
     pub imgtexview_asset: Res<'w, ShareAssetMgr<ImageTextureView>>,
     pub gltf2_asset: Res<'w, ShareAssetMgr<GLTF>>,
     pub gltf2_loader: ResMut<'w, GLTFResLoader>,

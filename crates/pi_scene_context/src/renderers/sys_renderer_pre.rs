@@ -128,7 +128,7 @@ pub fn sys_passrendererid_pass_reset(
 
 pub fn sys_sets_modify_by_scene_extend(
     scenes: Query<(Entity, &MainCameraOpaqueTarget), Or<(Changed<BRDFTexture>, Changed<MainCameraOpaqueTarget>, Changed<MainCameraDepthTarget>, Changed<EnvTexture>, Changed<SceneShadowRenderTarget>)>>,
-    mut passes: Query<(&mut PassBindGroupsDirty, &PassModelID)>,
+    mut passes: Query<&mut PassBindGroupsDirty>,
     models: Query<(&SceneID, &PassIDs)>,
 ) {
     // let time1 = pi_time::Instant::now();
@@ -139,7 +139,7 @@ pub fn sys_sets_modify_by_scene_extend(
         models.iter().for_each(|(sceneid, passids)| {
             if sceneid.0 == scene {
                 passids.0.iter().for_each(|idpass| {
-                    if let Ok((mut dirty, _idmodel)) = passes.get_mut(*idpass) {
+                    if let Ok(mut dirty) = passes.get_mut(*idpass) {
                         // log::error!("sys_sets_modify_by_scene_extend");
                         *dirty = PassBindGroupsDirty;
                     }

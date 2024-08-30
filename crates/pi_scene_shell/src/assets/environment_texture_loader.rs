@@ -1,7 +1,7 @@
 
 use pi_assets::{asset::{Garbageer, Handle}, mgr::{Receiver, LoadResult}};
 use pi_futures::BoxFuture;
-use pi_render::renderer::texture::{ImageTexture, ImageTexture2DDesc, ErrorImageTexture};
+use pi_render::renderer::texture::{ResImageTexture, ImageTexture2DDesc, ErrorImageTexture};
 use serde::Deserialize;
 
 use crate::prelude::{EError, ErrorRecord};
@@ -131,7 +131,7 @@ impl EnvironmentTextureTools {
         }
     }
 
-    pub fn async_load<'a, G: Garbageer<ImageTexture>>(desc: ImageTexture2DDesc, result: LoadResult<'a, ImageTexture, G>) -> BoxFuture<'a, Result<Handle<ImageTexture>, ErrorImageTexture>> {
+    pub fn async_load<'a, G: Garbageer<ResImageTexture>>(desc: ImageTexture2DDesc, result: LoadResult<'a, ResImageTexture, G>) -> BoxFuture<'a, Result<Handle<ResImageTexture>, ErrorImageTexture>> {
         Box::pin(async move { 
             match result {
                 LoadResult::Ok(r) => Ok(r),
@@ -152,11 +152,11 @@ impl EnvironmentTextureTools {
 }
 
 
-pub async fn create_environment_texture_from_file<G: Garbageer<ImageTexture>>(
+pub async fn create_environment_texture_from_file<G: Garbageer<ResImageTexture>>(
     data: &Vec<u8>,
     desc: ImageTexture2DDesc,
-    recv: Receiver<ImageTexture, G>
-) -> Result<Handle<ImageTexture>, ErrorImageTexture> {
+    recv: Receiver<ResImageTexture, G>
+) -> Result<Handle<ResImageTexture>, ErrorImageTexture> {
     
     // log::error!("Analy ");
 
@@ -229,8 +229,10 @@ pub async fn create_environment_texture_from_file<G: Garbageer<ImageTexture>>(
             // log::error!("Success ");
 
             let dimension = wgpu::TextureViewDimension::Cube;
-        
-            let mut texture = ImageTexture::new(width, height, data.len() as usize, texture, format, dimension, is_opacity);
+            let haltex = pi_hal::texture::ImageTexture {
+                width, height, size: data.len() as usize, texture, format, view_dimension: dimension, is_opacity
+            };
+            let mut texture = ResImageTexture::new(haltex);
             texture.extend = info.infodata;
             match recv.receive(desc.url, Ok(texture)).await {
                 Ok(result) => Ok(result),

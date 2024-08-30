@@ -58,7 +58,7 @@ impl Plugin for PluginTest {
         let lightroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(lightroot, scene));
         actions.transform.create.push(OpsTransformNode::ops(scene, lightroot));
 
-        actions.scene.shadowmap.push(OpsSceneShadowMap::ops(scene, demopass.shadowtarget));
+        actions.scene.options.push(OpsSceneOption::shadowmap(scene, demopass.shadowtarget));
         // {
         //     let light = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(light, scene));
         //     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(light, 0., 10., -10.));

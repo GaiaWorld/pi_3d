@@ -77,10 +77,10 @@ impl Plugin for PluginMaterial {
                 ShareAssetMgr::<TextureRes>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
-        if app.world.get_resource::<ShareAssetMgr<ImageTexture>>().is_none() {
-            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ImageTexture>();
+        if app.world.get_resource::<ShareAssetMgr<ResImageTexture>>().is_none() {
+            let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResImageTexture>();
             app.insert_resource(
-                ShareAssetMgr::<ImageTexture>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
+                ShareAssetMgr::<ResImageTexture>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
         if app.world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {

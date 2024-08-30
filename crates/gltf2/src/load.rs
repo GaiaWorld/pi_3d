@@ -129,7 +129,7 @@ pub struct GLTFBase{
 }
 
 pub struct GLTF {
-    pub textures: Vec<Handle<ImageTexture>>,
+    pub textures: Vec<Handle<ResImageTexture>>,
     pub vbs: Vec<Handle<AssetVertexBuffer>>,
     pub position: Vec<Handle<TypeFrameCurve<LocalPosition>>>,
     pub euler: Vec<Handle<TypeFrameCurve<LocalEulerAngles>>>,

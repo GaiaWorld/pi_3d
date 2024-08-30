@@ -28,36 +28,6 @@ pub fn sys_create_transform_node(
     });
 }
 
-pub fn sys_act_transform_parent(
-    mut cmds: ResMut<ActionListTransformNodeParent>,
-    // mut parents: Query<&mut NodeChilds>,
-    // mut childrens: Query<(&SceneID, &mut NodeParent)>,
-    nodes: Query<&DisposeReady, (With<Layer>, With<Down>, With<Up>)>,
-    mut flags: Query<&mut TransformNodeDirty>,
-    mut tree: EntityTreeMut,
-) {
-    cmds.drain().for_each(|OpsTransformNodeParent(entity, val)| {
-        if let Ok(mut flag) = flags.get_mut(entity) {
-            *flag = TransformNodeDirty(true);
-        }
-        if let (Some(_down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
-            // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
-            // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
-            if let (Ok(state0), Ok(state1)) = (nodes.get(entity), nodes.get(val)) {
-                if state0.0 == false && state1.0 == false {
-                    if nodes.contains(up.parent()) {
-                        tree.remove(entity);
-                    }
-                    // log::warn!("AAA insert_child=====child: {:?}, parent: {:?}",entity, val);
-                    // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
-                    tree.insert_child(entity, val, 0);
-                    // ActionTransformNode::tree_modify(&mut tree, entity, val);
-                }
-            }
-        }
-    });
-}
-
 pub fn sys_act_local_rotation(
     mut cmds: ResMut<ActionListTransformNodeLocalRotationQuaternion>,
     mut nodes: Query<(&mut LocalRotationQuaternion, &mut RecordLocalRotationQuaternion)>,
@@ -73,11 +43,39 @@ pub fn sys_act_local_rotation(
 }
 
 pub fn sys_act_local(
+    mut treecmds: ResMut<ActionListTransformNodeParent>,
+    // mut parents: Query<&mut NodeChilds>,
+    // mut childrens: Query<(&SceneID, &mut NodeParent)>,
+    treenodes: Query<&DisposeReady, (With<Layer>, With<Down>, With<Up>)>,
+    mut flags: Query<&mut TransformNodeDirty>,
+    mut tree: EntityTreeMut,
+
     mut cmds: ResMut<ActionListTransformNodeLocal>,
     mut nodes: Query<(&mut LocalPosition, &mut RecordLocalPosition)>,
     mut nodes_euler: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles)>,
     mut nodes_scaling: Query<(&mut LocalScaling, &mut RecordLocalScaling)>,
 ) {
+    treecmds.drain().for_each(|OpsTransformNodeParent(entity, val)| {
+        if let Ok(mut flag) = flags.get_mut(entity) {
+            *flag = TransformNodeDirty(true);
+        }
+        if let (Some(_down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
+            // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
+            // log::warn!("Tree {:?}, Parent: {:?}", entity, val);
+            if let (Ok(state0), Ok(state1)) = (treenodes.get(entity), treenodes.get(val)) {
+                if state0.0 == false && state1.0 == false {
+                    if treenodes.contains(up.parent()) {
+                        tree.remove(entity);
+                    }
+                    // log::warn!("AAA insert_child=====child: {:?}, parent: {:?}",entity, val);
+                    // log::warn!("Tree insert_child {:?} Parent: {:?}", child, parent);
+                    tree.insert_child(entity, val, 0);
+                    // ActionTransformNode::tree_modify(&mut tree, entity, val);
+                }
+            }
+        }
+    });
+
     cmds.drain().for_each(|OpsTransformNodeLocal(entity, val)| {
         match val {
             ETransformSRT::Euler(x, y, z) => {

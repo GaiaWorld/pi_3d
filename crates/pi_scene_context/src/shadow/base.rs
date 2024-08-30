@@ -12,7 +12,6 @@ pub enum StageShadowGenerator {
     CalcMatrix,
     ViewerUpdate,
     BindUpdate,
-    Culling,
 }
 
 #[derive(Deref, Component, Default)]

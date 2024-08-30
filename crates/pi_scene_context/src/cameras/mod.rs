@@ -47,8 +47,7 @@ impl Plugin for PluginCamera {
                 StageCamera::CameraCreate.after(StageScene::_Create),
                 StageCamera::_Create.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command),
                 StageCamera::CameraCommand.after(StageCamera::_Create).before(StageRenderer::Create),
-                StageCamera::CameraCalcMatrix.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command),
-                StageCamera::CameraCulling.in_set(FrameDataPrepare).after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform),
+                StageCamera::CameraCalcMatrix.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command).before(StageViewer::TransformCalcMatrix),
             )
         );
 #[cfg(feature = "use_bevy")]
@@ -66,7 +65,6 @@ impl Plugin for PluginCamera {
                 (
                     sys_calc_view_matrix_by_viewer::<TargetCameraParam>,
                     sys_calc_proj_matrix::<CameraParam>,
-                    sys_calc_transform_matrix::<TargetCameraParam, CameraParam>,
                 ).chain().in_set(StageCamera::CameraCalcMatrix),
                 (
                     sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>,
@@ -87,8 +85,7 @@ impl Plugin for PluginCamera {
         .configure_set(Update, StageCamera::CameraCreate        /* .run_if(runif_3d) */.after(StageScene::_Create))
         .configure_set(Update, StageCamera::_Create             /* .run_if(runif_3d) */.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command))
         .configure_set(Update, StageCamera::CameraCommand       /* .run_if(runif_3d) */.after(StageCamera::_Create).before(StageRenderer::Create))
-        .configure_set(Update, StageCamera::CameraCalcMatrix    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command))
-        .configure_set(Update, StageCamera::CameraCulling       /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageCamera::CameraCalcMatrix).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageCamera::CameraCalcMatrix    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command).before(StageViewer::TransformCalcMatrix))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
@@ -99,11 +96,8 @@ impl Plugin for PluginCamera {
         .add_systems(Update, sys_update_target_camera_modify                                         .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
         .add_systems(Update, sys_calc_view_matrix_by_viewer::<TargetCameraParam>                     .in_set(StageCamera::CameraCalcMatrix))
         .add_systems(Update, sys_calc_proj_matrix::<CameraParam>                                     .after(sys_calc_view_matrix_by_viewer::<TargetCameraParam>).in_set(StageCamera::CameraCalcMatrix))
-        .add_systems(Update, sys_calc_transform_matrix::<TargetCameraParam, CameraParam>             .after(sys_calc_proj_matrix::<CameraParam>).in_set(StageCamera::CameraCalcMatrix))
         .add_systems(Update, sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>.in_set(StageCamera::CameraCalcMatrix))
         .add_systems(Update, sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam> .after(sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>).in_set(StageCamera::CameraCalcMatrix))
-        .add_systems(Update, sys_tick_viewer_culling::<TargetCameraParam, CameraParam, StateCamera>  .in_set(StageCamera::CameraCulling))
-        .add_systems(Update, sys_update_viewer_uniform::<TargetCameraParam, CameraParam>             .in_set(ERunStageChap::Uniform))
         .add_systems(Update, sys_dispose_about_camera                                                .after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
         ;
     }

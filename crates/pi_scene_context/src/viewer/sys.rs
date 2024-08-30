@@ -60,10 +60,10 @@ use super::base::*;
         });
     }
 
-    pub fn sys_calc_transform_matrix<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
-        mut viewers: Query<(&T, &T2, &ViewerViewMatrix, &ViewerProjectionMatrix, &mut ViewerTransformMatrix), Or<(Changed<ViewerViewMatrix>, Changed<ViewerProjectionMatrix>)>>,
+    pub fn sys_calc_transform_matrix(
+        mut viewers: Query<(&ViewerViewMatrix, &ViewerProjectionMatrix, &mut ViewerTransformMatrix), Or<(Changed<ViewerViewMatrix>, Changed<ViewerProjectionMatrix>)>>,
     ) {
-        viewers.iter_mut().for_each(|(_, _, view_matrix, project_matrix, mut transform)| {
+        viewers.iter_mut().for_each(|(view_matrix, project_matrix, mut transform)| {
             // log::debug!("SysCamera Transform Matrix: p = {:?}, v = {:?}", project_matrix.0, view_matrix.0);
 
             // transform_matrix.0 = project_matrix.0 * view_matrix.0;
@@ -71,15 +71,12 @@ use super::base::*;
         });
     }
 
-    pub fn sys_update_viewer_uniform<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
+    pub fn sys_update_viewer_uniform(
         viewers: Query<
             (&BindViewer, &ViewerViewMatrix, &ViewerProjectionMatrix, &ViewerTransformMatrix, &ViewerGlobalPosition, &ViewerDirection),
-            (
-                Or<(
-                    Changed<BindViewer>, Changed<ViewerTransformMatrix>, 
-                )>,
-                With<T>, With<T2>
-            )
+            Or<(
+                Changed<BindViewer>, Changed<ViewerTransformMatrix>, 
+            )>
         >
     ) {
         viewers.iter().for_each(

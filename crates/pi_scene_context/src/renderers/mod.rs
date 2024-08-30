@@ -6,7 +6,7 @@ use crate::{
     bindgroup::*,
     cameras::prelude::*,
     object::sys_dispose_can,
-    prelude::StageModel,
+    prelude::{StageModel, StageViewer},
     shadow::prelude::StageShadowGenerator,
     transforms::prelude::*
 };
@@ -108,7 +108,7 @@ impl Plugin for PluginRenderer {
                 StageRenderer::_CreateApply.after(StageRenderer::Create),
                 StageRenderer::RenderStateCommand.in_set(FrameDataPrepare).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply),
                 StageRenderer::RendererCommand.in_set(FrameDataPrepare).after(StageRenderer::_CreateApply),
-                StageRenderer::PassBindGroup.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform),
+                StageRenderer::PassBindGroup.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageViewer::Culling).after(ERunStageChap::Uniform),
                 StageRenderer::PassBindGroups.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup),
                 StageRenderer::PassShader.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups),
                 StageRenderer::PassPipeline.in_set(FrameDataPrepare).after(StageRenderer::PassShader),
@@ -173,7 +173,7 @@ impl Plugin for PluginRenderer {
         .configure_set(Update, StageRenderer::_CreateApply      /* .run_if(runif_3d) */.after(StageRenderer::Create))
         .configure_set(Update, StageRenderer::RenderStateCommand/* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::Create).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply))
         .configure_set(Update, StageRenderer::RendererCommand   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::Create).after(StageRenderer::_CreateApply))
-        .configure_set(Update, StageRenderer::PassBindGroup     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageCamera::CameraCulling).after(ERunStageChap::Uniform))
+        .configure_set(Update, StageRenderer::PassBindGroup     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageViewer::Culling).after(ERunStageChap::Uniform))
         .configure_set(Update, StageRenderer::PassBindGroups    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
         .configure_set(Update, StageRenderer::PassShader        /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))
         .configure_set(Update, StageRenderer::PassPipeline      /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassShader))

@@ -222,6 +222,8 @@ pub trait TViewerProjectMatrix {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageViewer {
     ForceInclude,
+    TransformCalcMatrix,
+    Culling,
 }
 
 pub trait TCullingPerformance {

@@ -20,13 +20,7 @@ pub use super::pass_render_target::*;
 #[derive(SystemParam)]
 pub struct ActionSetScene<'w> {
     pub create: ResMut<'w, ActionListSceneCreate>,
-    pub time: ResMut<'w, ActionListSceneTime>,
-    pub fogparam: ResMut<'w, ActionListSceneFogParam>,
-    pub ambientcolor: ResMut<'w, ActionListSceneAmbientColor>,
-    pub animeenable: ResMut<'w, ActionListSceneAnimationEnable>,
-    pub brdf: ResMut<'w, ActionListSceneBRDF>,
-    pub env: ResMut<'w, ActionListSceneEnvTexture>,
-    pub shadowmap: ResMut<'w, ActionListSceneShadowMap>,
+    pub options: ResMut<'w, ActionListSceneOption>,
     pub boundingboxdisplay: ResMut<'w, ActionListBoundingBoxDisplay>,
     pub collider: ResMut<'w, ActionListCollider>,
 }
