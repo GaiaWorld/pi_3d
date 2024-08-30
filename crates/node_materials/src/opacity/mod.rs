@@ -17,7 +17,7 @@ float opacity() {
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_ALPHA), 1.0, true)
+            UniformPropertyFloat(Atom::from(Self::KEY_ALPHA), 1.0, false)
         ]
     }
 }
@@ -39,13 +39,13 @@ impl TNodeMaterialBlock for BlockOpacityTexture {
 
     fn vec4() -> Vec<UniformPropertyVec4> {
         vec![
-            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.], true)
+            UniformPropertyVec4(Atom::from(Self::KEY_TILLOFF), [1., 1., 0., 0.], false)
         ]
     }
 
     fn float() -> Vec<UniformPropertyFloat> {
         vec![
-            UniformPropertyFloat(Atom::from(Self::KEY_LEVEL), 1.0, true)
+            UniformPropertyFloat(Atom::from(Self::KEY_LEVEL), 1.0, false)
         ]
     }
 

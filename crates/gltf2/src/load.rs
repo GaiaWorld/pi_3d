@@ -629,6 +629,8 @@ pub struct GLTFResLoader {
     pub successed: XHashMap<QueryKey, Handle<GLTF>>,
     pub failed: XHashMap<QueryKey, EError>,
     pub baseloader: GLTFBaseLoader,
+    pub successquerys: SegQueue<QueryKey>,
+    pub failquerys: SegQueue<QueryKey>,
 }
 impl GLTFResLoader {
     pub fn new() -> Self {
@@ -641,6 +643,8 @@ impl GLTFResLoader {
             successed: XHashMap::default(),
             failed: XHashMap::default(),
             baseloader: GLTFBaseLoader::new(),
+            successquerys: SegQueue::default(),
+            failquerys: SegQueue::default(),
         }
     }
     pub fn create_load(&self, key: QueryKey, param: Atom) {
@@ -654,6 +658,7 @@ impl GLTFResLoader {
             let key_u64 = key.asset_u64();
             if let Some(gltf) = gltfassets.get(&key_u64) {
                 self.successed.insert(query, gltf);
+                self.successquerys.push(query);
             } else {
                 self.baseloader.load(key.clone());
                 if self.querys.contains_key(&key) == false {
@@ -686,10 +691,12 @@ impl GLTFResLoader {
         self.baseloader.errors.drain().for_each(|(key, error)| {
             self.errors.insert(key, error);
         });
+
         self.loaded.drain().for_each(|(key, gltf)| {
             if let Some(mut querys) = self.querys.remove(&key) {
                 querys.drain(..).for_each(|query| {
                     self.successed.insert(query, gltf.clone());
+                    self.successquerys.push(query);
                 });
             }
         });
@@ -697,6 +704,7 @@ impl GLTFResLoader {
             if let Some(mut querys) = self.querys.remove(&key) {
                 querys.drain(..).for_each(|query| {
                     self.failed.insert(query, error);
+                    self.failquerys.push(query);
                 });
             }
         });

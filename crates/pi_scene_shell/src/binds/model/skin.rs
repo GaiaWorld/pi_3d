@@ -18,6 +18,7 @@ use crate::shader::*;
 pub struct ShaderBindModelAboutSkinValue {
     pub(crate) skin: ESkinCode,
     pub(crate) data: BindBufferRange,
+    pub(crate) totalsize: usize,
 }
 impl ShaderBindModelAboutSkinValue {
 
@@ -42,6 +43,7 @@ impl ShaderBindModelAboutSkinValue {
             Some(Self {
                 skin: skin.clone(),
                 data: cache,
+                totalsize: size,
             })
         } else {
             // log::error!("Skin bind size  {:?}", size);
@@ -50,6 +52,7 @@ impl ShaderBindModelAboutSkinValue {
                     Some(Self {
                         skin: skin.clone(),
                         data: buffer,
+                        totalsize: size,
                     })
                 } else {
                     None
@@ -118,7 +121,7 @@ impl TKeyBind for ShaderBindModelAboutSkinValue {
                             data: self.data.clone(),
                             layout: KeyBindLayoutBuffer {
                                 visibility: EShaderStage::VERTEXFRAGMENT,
-                                min_binding_size: Self::TOTAL_SIZE as u32,
+                                min_binding_size: self.totalsize as u32,
                             }
                         }
                     )

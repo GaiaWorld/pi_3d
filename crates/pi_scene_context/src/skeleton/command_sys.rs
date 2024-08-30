@@ -62,6 +62,10 @@ pub fn sys_act_skin_use(
     // mut bones: Query<&mut BoneParent>,
     mut skinlinks: Query<&mut SkeletonID>,
     mut bonelinks: Query<&mut BoneLinked>,
+ 
+    mut cmdsbonepose: ResMut<ActionListBonePose>,
+    mut skinsinitbase: Query<&mut SkeletonInitBaseMatrix>,
+    mut bones: Query<&mut BoneBaseMatrix>,
 ) {
     cmds.drain().for_each(|ops| {
         match ops {
@@ -100,6 +104,19 @@ pub fn sys_act_skin_use(
             },
         }
     });
+    
+    cmdsbonepose.drain().for_each(|OpsBonePose(bone, matrix)| {
+        if let (Ok(mut basematrix), Ok(skeleton)) = (bones.get_mut(bone), skinlinks.get(bone)) {
+            *basematrix = BoneBaseMatrix(matrix);
+            if let Some(idskin) = skeleton.0 {
+                if let Ok(mut flag) = skinsinitbase.get_mut(idskin) {
+                    *flag = SkeletonInitBaseMatrix;
+                }
+            }
+        // } else {
+        //     cmds.push(OpsBonePose::ops(bone, matrix));
+        }
+    });
 }
 
 pub fn sys_create_bone(
@@ -122,24 +139,24 @@ pub fn sys_create_bone(
     });
 }
 
-pub fn sys_act_bone_pose(
-    mut cmds: ResMut<ActionListBonePose>,
-    mut skins: Query<&mut SkeletonInitBaseMatrix>,
-    mut bones: Query<(&SkeletonID, &mut BoneBaseMatrix)>,
-) {
-    cmds.drain().for_each(|OpsBonePose(bone, matrix)| {
-        if let Ok((skeleton, mut basematrix)) = bones.get_mut(bone) {
-            *basematrix = BoneBaseMatrix(matrix);
-            if let Some(idskin) = skeleton.0 {
-                if let Ok(mut flag) = skins.get_mut(idskin) {
-                    *flag = SkeletonInitBaseMatrix;
-                }
-            }
-        // } else {
-        //     cmds.push(OpsBonePose::ops(bone, matrix));
-        }
-    });
-}
+// pub fn sys_act_bone_pose(
+//     mut cmdsbonepose: ResMut<ActionListBonePose>,
+//     mut skins: Query<&mut SkeletonInitBaseMatrix>,
+//     mut bones: Query<(&SkeletonID, &mut BoneBaseMatrix)>,
+// ) {
+//     cmdsbonepose.drain().for_each(|OpsBonePose(bone, matrix)| {
+//         if let Ok((skeleton, mut basematrix)) = bones.get_mut(bone) {
+//             *basematrix = BoneBaseMatrix(matrix);
+//             if let Some(idskin) = skeleton.0 {
+//                 if let Ok(mut flag) = skins.get_mut(idskin) {
+//                     *flag = SkeletonInitBaseMatrix;
+//                 }
+//             }
+//         // } else {
+//         //     cmds.push(OpsBonePose::ops(bone, matrix));
+//         }
+//     });
+// }
 
 pub type SkeletonBundle = (
     Skeleton,

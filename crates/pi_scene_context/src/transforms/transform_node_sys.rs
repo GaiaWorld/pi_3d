@@ -106,7 +106,7 @@ impl TmpTransformWorldCalc1 {
     }
 }
 
-pub fn sys_tree_layer_changed(
+pub fn sys_transform_dirty(
     changes0: ComponentChanged<Layer>,
     changes1: ComponentChanged<Enable>,
     changes2: ComponentChanged<LocalMatrix>,

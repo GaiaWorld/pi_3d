@@ -68,7 +68,7 @@ impl Plugin for PluginTransformNode {
                     sys_act_local_rotation,
                     sys_local_quaternion_calc_rotation,
                     sys_local_matrix_calc,
-                    sys_tree_layer_changed,
+                    sys_transform_dirty,
                     sys_world_matrix_calc,
                 ).chain().in_set(StageTransform::TransformCalcMatrix),
                 sys_dispose_about_transform_node.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
@@ -85,8 +85,8 @@ impl Plugin for PluginTransformNode {
         .add_systems(Update, sys_act_local_rotation              .after(sys_local_euler_calc_rotation)       .in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_local_quaternion_calc_rotation  .after(sys_act_local_rotation)                      .in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_local_matrix_calc               .after(sys_local_quaternion_calc_rotation)          .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_tree_layer_changed              .after(sys_local_matrix_calc)                       .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_world_matrix_calc               .after(sys_tree_layer_changed).in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(Update, sys_transform_dirty              .after(sys_local_matrix_calc)                       .in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(Update, sys_world_matrix_calc               .after(sys_transform_dirty).in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_dispose_about_transform_node    .in_set(StageTransform::TransformCreate))
         ;
 }

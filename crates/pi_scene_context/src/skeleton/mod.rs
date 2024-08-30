@@ -55,7 +55,7 @@ impl Plugin for PluginSkeleton {
                     ).chain().in_set(StageSkeleton::SkinCreate),
                     (
                         sys_act_skin_use,
-                        sys_act_bone_pose,
+                        // sys_act_bone_pose,
                         sys_bones_absolute
                     ).chain().in_set(StageSkeleton::Command),
                     (
@@ -72,8 +72,8 @@ impl Plugin for PluginSkeleton {
             .add_systems(Update, sys_create_bone.after(sys_create_mesh).in_set(StageSkeleton::SkinCreate))
             .add_systems(Update, sys_create_skin.after(sys_create_bone).in_set(StageSkeleton::SkinCreate))
             .add_systems(Update, sys_act_skin_use.in_set(StageSkeleton::Command))
-            .add_systems(Update, sys_act_bone_pose.after(sys_act_skin_use).in_set(StageSkeleton::Command))
-            .add_systems(Update, sys_bones_absolute.after(sys_act_bone_pose).in_set(StageSkeleton::Command))
+            // .add_systems(Update, sys_act_bone_pose.after(sys_act_skin_use).in_set(StageSkeleton::Command))
+            .add_systems(Update, sys_bones_absolute.after(sys_act_skin_use).in_set(StageSkeleton::Command))
             .add_systems(Update, sys_bones_local_dirty.in_set(StageSkeleton::Calc))
             .add_systems(Update, sys_bones_worldmatrix.after(sys_bones_local_dirty).in_set(StageSkeleton::Calc))
             .add_systems(Update, sys_skin_dirty_by_bone.after(sys_bones_worldmatrix).in_set(StageSkeleton::Calc))
