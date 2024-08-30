@@ -47,7 +47,7 @@ impl ShaderWater {
     
         baseColor.rgb           *= mainColor();
         
-        vec4 mainTextureColor   = mainTexture(vUV * 20., applyUVOffsetSpeed(uMainUVOS) + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762), Random1DTo1D(screenUV.y * 200., PI_Time.y, .762)));
+        vec4 mainTextureColor   = mainTexture(vUV * 10., applyUVOffsetSpeed(uMainUVOS) + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762) * 2., Random1DTo1D(screenUV.y * 200., PI_Time.y, .762) * 2.));
     
         vec4 emissiveTexture    = emissiveTexture(screenUV, vec2(0., 0.));
         float dDepth            = emissiveTexture.r + mainTextureColor.r * 0.01 * mainStrength();
@@ -59,7 +59,7 @@ impl ShaderWater {
         // dDepth += (sin(v_pos_SS.x * 10. + PI_Time.y) * sin(v_pos_SS.y * 10. + PI_Time.y) + 0.5) * 0.5;
 
         vec4 finalColor = vec4(baseColor.rgb, alpha);
-        finalColor = mix(finalColor, vec4(0.1, 0.5, 0.6, 0.2), smoothstep(0., 0.15, dDepth));
+        finalColor = mix(finalColor, vec4(0.1, 0.5, 0.6, 0.2), smoothstep(0., 0.5, dDepth));
         // finalColor = vec4(dDepth, 0., 0., 1.);
     
         gl_FragColor = finalColor + mainTextureColor * 0.5;

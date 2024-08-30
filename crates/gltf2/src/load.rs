@@ -1,4 +1,4 @@
-use std::hash::{Hash, Hasher};
+use std::{hash::{Hash, Hasher}, sync::Arc};
 
 use crossbeam::queue::SegQueue;
 use pi_scene_shell::prelude::*;
@@ -13,215 +13,120 @@ pub type KeyGLTFBase = Atom;
 pub type GLTFJson = String;
 pub type GLTFDynamicJson = Atom;
 
-pub struct GLTFBin(Share<Vec<u8>>);
-impl pi_assets::asset::Asset for GLTFBin {
-    type Key = u64;
-    // const TYPE: &'static str = "GLTFBin";
+pub struct GLTFBaseLoader {
+    pub fail: Share<SegQueue<(Atom, EError)>>,
+    pub success: Share<SegQueue<(Atom, GLTFBase)>>,
+    pub loading: XHashSet<Atom>,
+    pub loaded: XHashMap<Atom, GLTFBase>,
+    pub errors: XHashMap<Atom, EError>,
 }
-impl pi_assets::asset::Size for GLTFBin {
-    fn size(&self) -> usize {
-        self.0.len()
-    }
-}
-impl TAssetCapacity for GLTFBin {
-    const ASSET_TYPE: &'static str = "RES_GLTF2_BIN";
-
-    fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 512 * 1024, max: 1, timeout: 1000 }
-    }
-}
-impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, Atom, G> for GLTFBin  {
-    #[inline(never)]
-	fn async_load(desc: Atom, result: LoadResult<'a, Self, G>) -> BoxFuture<'a, std::io::Result<Handle<Self>>> {
-		Box::pin(async move { 
-			match result {
-				LoadResult::Ok(r) => Ok(r),
-				LoadResult::Wait(f) => f.await,
-				LoadResult::Receiver(recv) => {
-					let file = pi_hal::file::load_from_url(&desc ).await;
-					let file = match file {
-						Ok(r) => r,
-						Err(_e) =>  {
-							// log::warn!("load gltf bin fail: {:?}", desc.as_str());
-							return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
-						},
-					};
-
-                    recv.receive(desc.asset_u64(), Ok(GLTFBin(file))).await
-				}
-			}
-		})
-	}
-}
-impl GLTFBin {
-    #[inline(never)]
-    pub async fn load(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>) -> Result<Handle<GLTFBin>, EErorr> {
-
-        let key = path.asset_u64();
-        let result = AssetMgr::load(&bin_assets, &key);
-        match result {
-            LoadResult::Ok(res) => {
-                return Ok(res);
-            },
-            _ => {
-                match GLTFBin::async_load(path.clone(), result).await {
-                    Ok(res) => Ok(res),
-                    Err(_) => Err(ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL),
-                }
-            }
+impl GLTFBaseLoader {
+    pub fn new() -> Self {
+        Self {
+            fail: Share::new(SegQueue::default()),
+            success: Share::new(SegQueue::default()),
+            loading: XHashSet::default(),
+            loaded: XHashMap::default(),
+            errors: XHashMap::default(),
         }
     }
-    #[inline(never)]
-    pub async fn load_with_data(path: &Atom, bin_assets: &ShareAssetMgr<GLTFBin>, data: Share<Vec<u8>>) -> Result<Handle<GLTFBin>, EErorr> {
-
-        let key = path.asset_u64();
-        let result = AssetMgr::load(&bin_assets, &key);
-        match result {
-            LoadResult::Ok(res) => {
-                return Ok(res);
-            },
-            _ => {
-                let loading = Box::pin(async move { 
-                    match result {
-                        LoadResult::Ok(r) => Ok(r),
-                        LoadResult::Wait(f) => f.await,
-                        LoadResult::Receiver(recv) => {
-                            recv.receive(key, Ok(GLTFBin(data))).await
-                        }
-                    }
-                }).await;
-
-                match loading {
-                    Ok(res) => Ok(res),
-                    Err(_) => Err(ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL),
-                }
-            }
+    pub fn load(&mut self, key: Atom) {
+        if self.loading.contains(&key) || self.loaded.contains_key(&key) || self.errors.contains_key(&key) {
+            return;
         }
-    }
-}
-
-pub struct GLTFBase{
-    gltf: Gltf,
-    size: usize,
-    buffers: Vec<Handle<GLTFBin>>,
-    textures: Vec<Handle<ImageTexture>>,
-}
-impl pi_assets::asset::Asset for GLTFBase {
-    type Key = u64;
-    // const TYPE: &'static str = "GLTFBase";
-}
-impl pi_assets::asset::Size for GLTFBase {
-    fn size(&self) -> usize {
-        self.size
-    }
-}
-impl AsRef<Gltf> for GLTFBase {
-    fn as_ref(&self) -> &Gltf {
-        &self.gltf
-    }
-}
-impl TAssetCapacity for GLTFBase {
-    const ASSET_TYPE: &'static str = "RES_GLTF2_FILE";
-
-    fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 256 * 1024, max: 1, timeout: 1000 }
-    }
-}
-impl GLTFBase {
-    
-    #[inline(never)]
-    async fn load_buffers(gltf: &Gltf, base_path: &Atom, bin_assets: ShareAssetMgr<GLTFBin>) -> std::io::Result<Vec<Handle<GLTFBin>>> {
-        let mut result = vec![];
-        for buffer in gltf.buffers() {
-            match buffer.source() {
-                pi_gltf::buffer::Source::Bin => {
-                    return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, ""));
-                },
-                pi_gltf::buffer::Source::Uri(path) => {
-                    if path.starts_with("data:") {
-                        // if let Some(index) = path.find(',') {
-                        //     let mut path = String::from(base_path.as_str()) + "#";
-                        //     path += buffer.index().to_string().as_str();
-                        //     let path = Atom::from(path);
-                        //     let base64_buffer = path.split_at(index + 1).1;
-                        //     let data = base64::decode(base64_buffer).unwrap();
-                        //     match GLTFBin::load_with_data(&path, &bin_assets, data).await {
-                        //         Ok(val) => {
-                        //             result.push(val);
-                        //         },
-                        //         Err(_e) => {
-                        //             return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
-                        //         },
-                        //     }
-                        // } else {
-                        //     return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Buffer Data Error."));
-                        // }
-                        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, ""));
-                    } else {
-                        let path = relative_path(path, base_path.as_str());
-                        let path = Atom::from(path);
-                        match GLTFBin::load(&path, &bin_assets).await {
-                            Ok(val) => {
-                                result.push(val);
-                            },
-                            Err(_e) => {
-                                return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
-                            },
-                        }
-                    }
-                },
-            }
-        }
-        return Ok(result);
-    }
-}
-pub struct GLTFBaseDesc {
-    path: Atom,
-    bin_assets: ShareAssetMgr<GLTFBin>
-}
-impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, GLTFBaseDesc, G> for GLTFBase  {
-    
-    #[inline(never)]
-	fn async_load(desc: GLTFBaseDesc, result: LoadResult<'a, Self, G>) -> BoxFuture<'a, std::io::Result<Handle<Self>>> {
-		Box::pin(async move {
-            let key_u64 = desc.path.asset_u64();
-			match result {
-				LoadResult::Ok(r) => Ok(r),
-				LoadResult::Wait(f) => f.await,
-				LoadResult::Receiver(recv) => {
-					let file = pi_hal::file::load_from_url(&desc.path).await;
-					let file = match file {
-						Ok(r) => r,
-						Err(_e) =>  {
-							// log::debug!("load file fail: {:?}", desc.path.as_str());
-							return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
-						},
-					};
-                    
-                    let gltf = match Gltf::from_slice(&file) {
+        self.loading.insert(key.clone());
+        let fail = self.fail.clone();
+        let success = self.success.clone();
+        RENDER_RUNTIME
+        .spawn(async move {
+            match pi_hal::file::load_from_url(&key).await {
+                Ok(gltffile) => {
+                    match Gltf::from_slice(&gltffile) {
                         Ok(gltf) => {
-                            let buffers = match GLTFBase::load_buffers(&gltf, &desc.path, desc.bin_assets.clone()).await {
-                                Ok(buffers) => buffers,
-                                Err(e) => return Err(e),
+                            let mut buffers = vec![];
+                            let mut haserror = false;
+                            for buffer in gltf.buffers() {
+                                match buffer.source() {
+                                    pi_gltf::buffer::Source::Bin => {
+                                        haserror = true;
+                                        fail.push((key.clone(), ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL));
+                                    },
+                                    pi_gltf::buffer::Source::Uri(bufferpath) => {
+                                        if bufferpath.starts_with("data:") {
+                                            // if let Some(index) = path.find(',') {
+                                            //     let mut path = String::from(base_path.as_str()) + "#";
+                                            //     path += buffer.index().to_string().as_str();
+                                            //     let path = Atom::from(path);
+                                            //     let base64_buffer = path.split_at(index + 1).1;
+                                            //     let data = base64::decode(base64_buffer).unwrap();
+                                            //     match GLTFBin::load_with_data(&path, &bin_assets, data).await {
+                                            //         Ok(val) => {
+                                            //             result.push(val);
+                                            //         },
+                                            //         Err(_e) => {
+                                            //             return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
+                                            //         },
+                                            //     }
+                                            // } else {
+                                            //     return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Buffer Data Error."));
+                                            // }
+                                            // Err(std::io::Error::new(std::io::ErrorKind::InvalidData, ""));
+                                            haserror = true;
+                                            fail.push((key.clone(), ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL));
+                                        } else {
+                                            let bufferpath = relative_path(bufferpath, key.as_str());
+                                            match pi_hal::file::load_from_url(&Atom::from(bufferpath) ).await {
+                                                Ok(bufferfile) => {
+                                                    buffers.push(bufferfile);
+                                                },
+                                                Err(_e) =>  {
+                                                    haserror = true;
+                                                    // log::warn!("load gltf bin fail: {:?}", desc.as_str());
+                                                    fail.push((key.clone(), ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL));
+                                                    // Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
+                                                },
+                                            };
+                                        }
+                                    },
+                                }
+                                if haserror { break; }
                             };
-                            let textures = vec![] ; // GLTFBase::load_images(&gltf, &desc.path, desc.textures_mgr.clone(), desc.device.clone(), desc.queue.clone()).await;
-                            let mut size = 0;
-                            buffers.iter().for_each(|val| { size += val.size(); });
-                            // textures.iter().for_each(|val| { size += val.size(); });
-                            GLTFBase { gltf, buffers, textures, size }
+                            if haserror == false {
+                                let mut size = 0;
+                                buffers.iter().for_each(|val| { size += val.len(); });
+                                let result = GLTFBase { gltf: Arc::new(gltf), size, buffers };
+                                success.push((key, result));
+                            }
                         },
                         Err(_e) => {
-                            return Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
-                        },
+                            fail.push((key, ErrorRecord::ERROR_GLTF_BUFFER));
+                        }
                     };
-                    let result = recv.receive(key_u64, Ok(gltf)).await;
-					result
-				}
-			}
-		})
-	}
+                },
+                Err(_e) =>  {
+                    fail.push((key, ErrorRecord::ERROR_GLTF_GLTF_LOAD));
+                },
+            };
+        }).unwrap();
+    }
+    pub fn check(&mut self) {
+        while let Some((key, error)) = self.fail.pop() {
+            self.loading.remove(&key);
+            self.errors.insert(key, error);
+        }
+        while let Some((key, gltf)) = self.success.pop() {
+            self.loading.remove(&key);
+            self.loaded.insert(key, gltf);
+        }
+    }
 }
 
+#[derive(Clone)]
+pub struct GLTFBase{
+    gltf: Arc<Gltf>,
+    size: usize,
+    buffers: Vec<Share<Vec<u8>>>,
+}
 
 pub struct GLTF {
     pub textures: Vec<Handle<ImageTexture>>,
@@ -244,10 +149,10 @@ pub struct GLTF {
 
     pub particlesys_calculators: XHashMap<usize, Handle<ParticleSystemCalculatorID>>,
     pub output: String,
-    pub errors: Vec<EErorr>,
+    pub errors: Vec<EError>,
     pub animecount: usize,
     pub path: String,
-    // pub base: Handle<GLTFBase>,
+    pub gltf: GLTFBase,
 }
 impl  GLTF {
     pub fn key_accessor(&self, index: usize) -> String {
@@ -274,7 +179,7 @@ impl  GLTF {
 
         key
     }
-    pub fn new(_base: Handle<GLTFBase>, path: String) -> Self {
+    pub fn new(_base: GLTFBase, path: String) -> Self {
         Self {
             textures:               vec![],
             vbs:                    vec![],
@@ -299,7 +204,7 @@ impl  GLTF {
             errors: vec![],
             animecount: 0,
             path,
-            // base
+            gltf: _base
         }
     }
 }
@@ -354,7 +259,6 @@ impl<'a, G: Garbageer<Self>> AsyncLoader<'a, Self, (GLTF, u64), G> for GLTF  {
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct KeyGLTF {
     pub base_url: KeyGLTFBase,
-    pub dyn_desc: GLTFDynamicJson,
 }
 impl TAssetKeyU64 for KeyGLTF {
     fn asset_u64(&self) -> u64 {
@@ -370,17 +274,10 @@ pub type ImageID = usize;
 pub type BufferViewID = usize;
 pub type AccessorID = usize;
 
-pub struct GLTFTempLoaded {
-    gltf: Handle<GLTFBase>,
-    id: KeyGLTF,
-    entity: QueryKey,
-}
+pub struct GLTFTempLoaded;
 impl GLTFTempLoaded {
-    pub fn new(id: KeyGLTF, base: Handle<GLTFBase>, entity: QueryKey) -> Self {
-        Self { id, gltf: base, entity }
-    }
     pub fn analy(
-        gltf: Handle<GLTFBase>,
+        gltf: GLTFBase,
         base_url: Atom,
         commands: &mut Commands,
         vb_assets_mgr: &ShareAssetMgr<AssetVertexBuffer>, 
@@ -407,7 +304,7 @@ impl GLTFTempLoaded {
                     } else {
                         let view = accessor.view().unwrap();
                         if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
-                            let bufferdata = &bufferdata.0;
+                            let bufferdata = &bufferdata;
                             let start = view.offset() + accessor.offset();
                             let end = start + accessor.count() * accessor.size();
                             let data = &bufferdata[start..end];
@@ -431,7 +328,7 @@ impl GLTFTempLoaded {
                     } else {
                         let view = accessor.view().unwrap();
                         if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
-                            let bufferdata = &bufferdata.0;
+                            let bufferdata = &bufferdata;
                             let start = view.offset() + accessor.offset();
                             let end = start + accessor.count() * accessor.size();
                             let data = &bufferdata[start..end];
@@ -481,7 +378,7 @@ impl GLTFTempLoaded {
                         let accessor = channel.sampler().input();
                         let view = accessor.view().unwrap();
                         if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
-                            let bufferdata = &bufferdata.0;
+                            let bufferdata = &bufferdata;
                             let start = view.offset() + accessor.offset();
                             let end = start + accessor.count() * accessor.size();
                             let times = bytemuck::try_cast_slice(&bufferdata[start..end]);
@@ -496,7 +393,7 @@ impl GLTFTempLoaded {
                             let accessor = channel.sampler().output();
                             let view = accessor.view().unwrap();
                             if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
-                                let bufferdata = &bufferdata.0;
+                                let bufferdata = &bufferdata;
                                 let start = view.offset() + accessor.offset();
                                 let end = start + accessor.count() * accessor.size();
                                 let values = bytemuck::try_cast_slice(&bufferdata[start..end]);
@@ -717,7 +614,7 @@ impl GLTFTempLoaded {
             }
         }
 
-        result.textures = gltf.textures.clone();
+        // result.textures = gltf.textures.clone();
 
         result
     }
@@ -725,182 +622,95 @@ impl GLTFTempLoaded {
 
 #[derive(Resource)]
 pub struct GLTFResLoader {
-    // pub query_counter: QueryKey,
-    pub wait: Share<SegQueue<(QueryKey, KeyGLTF)>>,
-    pub waitmap: XHashSet<(QueryKey, KeyGLTF)>,
-    /// 需要加载 GLTF 基础文件
-    pub waitbase: Share<SegQueue<(QueryKey, KeyGLTF)>>,
-    pub success: Share<SegQueue<QueryKey>>,
-    pub fails: Share<SegQueue<QueryKey>>,
-    pub basesuccess: Share<SegQueue<GLTFTempLoaded>>,
-    pub basefail: Share<SegQueue<KeyGLTF>>,
-    // pub bufferqueue: Share<SegQueue<GLTFBuffer>>,
-    // pub imagequeue: Share<SegQueue<GLTFImage>>,
-    pub errorqueue: Share<SegQueue<(KeyGLTF, EErorr)>>,
-    pub fail_reason: XHashMap<KeyGLTF, Vec<EErorr>>,
+    pub waiting: SegQueue<(QueryKey, Atom)>,
+    pub querys: XHashMap<Atom, Vec<QueryKey>>,
+    pub loaded: XHashMap<Atom, Handle<GLTF>>,
+    pub errors: XHashMap<Atom, EError>,
     pub successed: XHashMap<QueryKey, Handle<GLTF>>,
-    pub successed_temp: Share<SegQueue<Handle<GLTF>>>,
-    pub failed: XHashMap<QueryKey, KeyGLTF>,
-    // pub temp: XHashMap<KeyGLTF, GLTFTempLoaded>,
+    pub failed: XHashMap<QueryKey, EError>,
+    pub baseloader: GLTFBaseLoader,
 }
 impl GLTFResLoader {
     pub fn new() -> Self {
         Self {
             // query_counter: 0,
-            wait: Share::new(SegQueue::default()),
-            waitmap: XHashSet::default(),
-            waitbase: Share::new(SegQueue::default()),
-            success: Share::new(SegQueue::default()),
-            fails: Share::new(SegQueue::default()),
-            basesuccess: Share::new(SegQueue::default()),
-            basefail: Share::new(SegQueue::default()),
-            // bufferqueue: Share::new(SegQueue::default()),
-            // imagequeue: Share::new(SegQueue::default()),
-            errorqueue: Share::new(SegQueue::default()),
-            fail_reason: XHashMap::default(),
-            // temp: XHashMap::default(),
+            waiting: SegQueue::default(),
+            querys: XHashMap::default(),
+            loaded: XHashMap::default(),
+            errors: XHashMap::default(),
             successed: XHashMap::default(),
-            successed_temp: Share::new(SegQueue::default()),
             failed: XHashMap::default(),
+            baseloader: GLTFBaseLoader::new(),
         }
     }
-    pub fn create_load(&self, key: QueryKey, param: KeyGLTF) {
-        self.wait.push((key, param));
+    pub fn create_load(&self, key: QueryKey, param: Atom) {
+        self.waiting.push((key, param));
+    }
+    pub fn load(
+        &mut self,
+        gltfassets: &ShareAssetMgr<GLTF>,
+    ) {
+        while let Some((query, key)) = self.waiting.pop() {
+            let key_u64 = key.asset_u64();
+            if let Some(gltf) = gltfassets.get(&key_u64) {
+                self.successed.insert(query, gltf);
+            } else {
+                self.baseloader.load(key.clone());
+                if self.querys.contains_key(&key) == false {
+                    self.querys.insert(key.clone(), vec![]);
+                }
+                self.querys.get_mut(&key).unwrap().push(query);
+            }
+        }
+    }
+    pub fn check(
+        &mut self,
+        commands: &mut Commands,
+        vb_assets_mgr: &ShareAssetMgr<AssetVertexBuffer>, 
+        vballocator: &mut VertexBufferAllocator3D,
+        device: &RenderDevice,
+        queue: &RenderQueue,
+        anime_assets: &TypeAnimeAssetMgrs,
+        particlesys_cmds: &mut ActionSetParticleSystem,
+        particlesys_res: &mut ResourceParticleSystem,
+        gltfassets: &ShareAssetMgr<GLTF>,
+    ) {
+        self.baseloader.check();
+        self.baseloader.loaded.drain().for_each(|(key, gltfbase)|{
+            let gltf = GLTFTempLoaded::analy(gltfbase, key.clone(), commands, vb_assets_mgr, vballocator, device, queue, anime_assets, particlesys_cmds, particlesys_res);
+            let key_u64 = key.asset_u64();
+            if let Ok(gltf) = gltfassets.insert(key_u64, gltf) {
+                self.loaded.insert(key, gltf);
+            }
+        });
+        self.baseloader.errors.drain().for_each(|(key, error)| {
+            self.errors.insert(key, error);
+        });
+        self.loaded.drain().for_each(|(key, gltf)| {
+            if let Some(mut querys) = self.querys.remove(&key) {
+                querys.drain(..).for_each(|query| {
+                    self.successed.insert(query, gltf.clone());
+                });
+            }
+        });
+        self.errors.drain().for_each(|(key, error)| {
+            if let Some(mut querys) = self.querys.remove(&key) {
+                querys.drain(..).for_each(|query| {
+                    self.failed.insert(query, error);
+                });
+            }
+        });
     }
     pub fn get_success(&mut self, key: QueryKey) -> Option<Handle<GLTF>> {
         self.successed.remove(&key)
     }
     pub fn get_fail_reason(&mut self, key: QueryKey) -> Option<String> {
-        if let Some(key) = self.failed.remove(&key) {
-            if let Some(errors) = self.fail_reason.get(&key) {
-                let mut str = String::from("");
-                errors.iter().for_each(|err| {
-                    str += err.to_string().as_str();
-                });
-                Some(str)
-            } else {
-                Some(ErrorRecord::ERROR_UNKOWN.to_string())
-            }
+        if let Some(err) = self.failed.remove(&key) {
+            Some(err.to_string())
         } else {
             None
         }
     }
-}
-
-pub fn sys_load_gltf_launch(
-    mut loader: ResMut<GLTFResLoader>,
-    assets_mgr: Res<ShareAssetMgr<GLTF>>,
-    _base_assets_mgr: Res<ShareAssetMgr<GLTFBase>>,
-) {
-    let mut waitagain = vec![];
-    // log::warn!("Len: {:?}", loader.wait.len());
-    let mut item = loader.wait.pop();
-    while let Some((id, param)) = item {
-        item = loader.wait.pop();
-
-        let key_u64 = param.asset_u64();
-        if let Some(res) = assets_mgr.get(&key_u64) {
-            loader.success.push(id);
-            loader.successed.insert(id, res);
-            loader.waitmap.remove(&(id, param));
-        } else if loader.fail_reason.contains_key(&param) {
-            // log::error!("Failed: {:?}", id);
-            loader.fails.push(id);
-            loader.failed.insert(id, param.clone());
-            loader.waitmap.remove(&(id, param));
-        } else {
-            let param = (id, param.clone());
-            if loader.waitmap.contains(&param) == false {
-                loader.waitmap.insert(param.clone());
-                loader.waitbase.push(param.clone());
-            }
-            waitagain.push(param);
-
-            // // 是否正在等待 buffer文件 、 图片
-            // if loader.temp.contains_key(&param) == false {
-            //     let base_key = param.base_url.clone();
-            //     let base_key_u64 = base_key.asset_u64();
-                // if let Some(base) = base_assets_mgr.get(&base_key_u64) {
-                //     loader.temp.insert(param.clone(), GLTFTempLoaded::new(param, base));
-                // } else {
-                //     loader.waitbase.push(param);
-                // }
-            // }
-        }
-    }
-    waitagain.drain(..).for_each(|item| {
-        loader.wait.push(item);
-    });
-
-    let mut temp = loader.successed_temp.pop();
-    while let Some(_) = temp {
-        temp = loader.successed_temp.pop();
-    }
-}
-
-pub fn sys_gltf_base_loaded_launch(
-    loader: Res<GLTFResLoader>,
-    base_assets_mgr: Res<ShareAssetMgr<GLTFBase>>,
-    bin_assets_mgr: Res<ShareAssetMgr<GLTFBin>>,
-) {
-    let mut item = loader.waitbase.pop();
-    while let Some((id, param)) = item {
-        let base_key = param.base_url.clone();
-        let base_key_u64 = base_key.asset_u64();
-        if let Some(base) = base_assets_mgr.get(&base_key_u64) {
-            // loader.temp.insert(param.clone(), GLTFTempLoaded::new(param, base));
-            loader.basesuccess.push(GLTFTempLoaded::new(param, base, id));
-        } else {
-            let base_key = param.base_url.clone();
-            let base_key_u64 = base_key.asset_u64();
-            let basesuccess = loader.basesuccess.clone();
-            let errorqueue = loader.errorqueue.clone();
-            let result = AssetMgr::load(&base_assets_mgr, &base_key_u64);
-            match result {
-                LoadResult::Ok(data) => {
-                    // log::warn!("Base: 1");
-                    basesuccess.push(GLTFTempLoaded::new(param, data, id));
-                },
-                _ => {
-                    let desc = GLTFBaseDesc{
-                        path: param.base_url.clone(),
-                        bin_assets: bin_assets_mgr.clone()
-                    };
-                    RENDER_RUNTIME
-                    .spawn(async move {
-                        match GLTFBase::async_load(desc, result).await {
-                            Ok(data) => {
-                                // log::warn!("Base: 2");
-                                basesuccess.push(GLTFTempLoaded::new(param, data, id));
-                            },
-                            Err(_e) => {
-                                // log::warn!("Base: 3");
-                                errorqueue.push((param.clone(), ErrorRecord::ERROR_GLTF_GLTF_PARSE));
-                            },
-                        }
-                    }).unwrap();
-                },
-            }
-        }
-
-        item = loader.waitbase.pop();
-    }
-}
-
-pub fn sys_gltf_base_loaded_check(
-    // mut loader: ResMut<GLTFResLoader>,
-    // image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
-    // device: Res<PiRenderDevice>,
-    // queue: Res<PiRenderQueue>,
-) {
-    // let mut item = loader.basesuccess.pop();
-    // while let Some(param) = item {
-    //     param.load_buffers(loader.bufferqueue.clone(), loader.errorqueue.clone());
-    //     // param.load_images(loader.imagequeue.clone(), loader.errorqueue.clone(), &image_assets_mgr, device.clone(), queue.clone());
-
-    //     loader.temp.insert(param.id.clone(), param);
-    //     item = loader.basesuccess.pop();
-    // }
 }
 
 pub fn sys_gltf_analy(
@@ -918,53 +728,8 @@ pub fn sys_gltf_analy(
 ) {
     if _performance.debug { _performance.t_gltfanaly = pi_time::Instant::now(); }
 
-    let mut base = loader.basesuccess.pop();
-    while let Some(temp) = &base {
-        let key_u64 = temp.id.asset_u64();
-        let result = AssetMgr::load(&assets_mgr, &key_u64);
-        // log::warn!("OK -1");
-        match result {
-            LoadResult::Ok(data) => {
-                loader.successed_temp.push(data);
-                // log::warn!("OK 0");
-            },
-            _ => {
-                let fails = loader.fails.clone();
-                let successed_temp = loader.successed_temp.clone();
-                let res = GLTFTempLoaded::analy(temp.gltf.clone(), temp.id.base_url.clone(), &mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys, &mut particlesys_res);
-                let result = GLTF::async_load((res, key_u64), result);
-                let id = temp.entity;
-                RENDER_RUNTIME
-                .spawn(async move {
-                    match result.await {
-                        Ok(data) => {
-                            // log::warn!("OK 1");
-                            successed_temp.push(data);
-                        },
-                        Err(_) => {
-                            // log::warn!("Fail 0");
-                            fails.push(id);
-                        },
-                    }
-                }).unwrap();
-            },
-        }
-
-        base = loader.basesuccess.pop();
-    }
-    
-    let mut item = loader.errorqueue.pop();
-    while let Some(temp) = item {
-        // log::error!("Error: {:?}", temp.1);
-
-        if loader.fail_reason.get_mut(&temp.0).is_none() {
-            loader.fail_reason.insert(temp.0.clone(), vec![]);
-        }
-        let record = loader.fail_reason.get_mut(&temp.0).unwrap();
-        record.push(temp.1);
-
-        item = loader.errorqueue.pop();
-    }
+    loader.load(&assets_mgr);
+    loader.check(&mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys, &mut particlesys_res, &assets_mgr);
 
     if _performance.debug { _performance.gltfanaly = (pi_time::Instant::now() - _performance.t_gltfanaly).as_micros() as u32; }
 }

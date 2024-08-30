@@ -11,49 +11,44 @@ fn setup(
     loader: Res<pi_gltf2_load::GLTFResLoader>,
 ) {
     let id = commands.spawn_empty_id();
-    loader.create_load(id, pi_gltf2_load::KeyGLTF { base_url: Atom::from("assets/gltf/AnMiaoYi_YeYueZouQinQu_Cast_ff/AnMiaoYi_YeYueZouQinQu_Cast_ff.gltf"), dyn_desc: Atom::from("")  });
+    loader.create_load(id, Atom::from("assets/gltf/AnMiaoYi_YeYueZouQinQu_Cast_ff/AnMiaoYi_YeYueZouQinQu_Cast_ff.gltf") );
 }
 
 fn sys_load_check(
     mut loader: ResMut<pi_gltf2_load::GLTFResLoader>,
 ) {
-    let mut item = loader.fails.pop();
-    while let Some(param) = item {
-        // log::warn!("Failed: {:?}, Error: {:?}", param, loader.get_fail_reason(param));
-        item = loader.fails.pop();
-    }
-    let mut item = loader.success.pop();
-    while let Some(param) = item {
-        if let Some(gltf) = loader.get_success(param) {
-            gltf.position.iter().for_each(|curve| {
-                // log::warn!("position: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-            gltf.euler.iter().for_each(|curve| {
-                // log::warn!("euler: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-            gltf.scaling.iter().for_each(|curve| {
-                // log::warn!("scaling: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-            gltf.quaternion.iter().for_each(|curve| {
-                // log::warn!("quaternion: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-            gltf.float.iter().for_each(|curve| {
-                // log::warn!("float: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-            gltf.vec2s.iter().for_each(|curve| {
-                // log::warn!("vec2s: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-            gltf.vec3s.iter().for_each(|curve| {
-                // log::warn!("vec3s: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-            gltf.vec4s.iter().for_each(|curve| {
-                // log::warn!("vec4s: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
-            });
-        }
-        log::warn!("Successed: {:?}, {:?}", param, loader.get_success(param).is_some());
+    loader.failed.drain().for_each(|(query, error)| {
+        log::warn!("Failed: {:?}, Error: {:?}", query, error);
+    });
+    loader.successed.drain().for_each(|(query, gltf)| {
+        gltf.position.iter().for_each(|curve| {
+            // log::warn!("position: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+        gltf.euler.iter().for_each(|curve| {
+            // log::warn!("euler: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+        gltf.scaling.iter().for_each(|curve| {
+            // log::warn!("scaling: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+        gltf.quaternion.iter().for_each(|curve| {
+            // log::warn!("quaternion: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+        gltf.float.iter().for_each(|curve| {
+            // log::warn!("float: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+        gltf.vec2s.iter().for_each(|curve| {
+            // log::warn!("vec2s: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+        gltf.vec3s.iter().for_each(|curve| {
+            // log::warn!("vec3s: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+        gltf.vec4s.iter().for_each(|curve| {
+            // log::warn!("vec4s: {:?}", (&curve.0.frames, &curve.0.values, &curve.0.cubic_spline_values));
+        });
+
+        log::warn!("Successed: {:?}, {:?}", query, gltf.path);
         // log::error!("Successed: {:?}", param.1.errors.len());
-        item = loader.success.pop();
-    }
+    });
 }
 
 

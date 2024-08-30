@@ -318,7 +318,7 @@ impl ViewerRenderersInfo {
     pub fn len(&self) -> usize {
         self.0.len()
     }
-    pub fn remove(&mut self, renderer: Entity) -> Result<(), EErorr> {
+    pub fn remove(&mut self, renderer: Entity) -> Result<(), EError> {
         // log::error!("Remove Renderer");
         match self.0.binary_search(&renderer) {
             Ok(idx) => {

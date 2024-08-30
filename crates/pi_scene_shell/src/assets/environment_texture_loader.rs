@@ -4,7 +4,7 @@ use pi_futures::BoxFuture;
 use pi_render::renderer::texture::{ImageTexture, ImageTexture2DDesc, ErrorImageTexture};
 use serde::Deserialize;
 
-use crate::prelude::{EErorr, ErrorRecord};
+use crate::prelude::{EError, ErrorRecord};
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
@@ -66,7 +66,7 @@ impl EnvironmentTextureTools {
     ///   this._activeEffect.setFloat3("vSphericalYZ", polynomials.yz.x, polynomials.yz.y, polynomials.yz.z);
     ///   this._activeEffect.setFloat3("vSphericalZX", polynomials.zx.x, polynomials.zx.y, polynomials.zx.z);
     /// ```
-    pub fn get_env_info(data: &[u8]) -> Result<Self, EErorr> {
+    pub fn get_env_info(data: &[u8]) -> Result<Self, EError> {
         let len = Self::MAGIC_BYTES.len();
         let mut pos = 0;
         for i in 0..len {
