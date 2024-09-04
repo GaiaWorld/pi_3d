@@ -982,6 +982,7 @@ impl ParticleLocalPosition {
         time: &ParticleSystemTime,
         emitter: &TypeShapeEmitter,
         startspeed: &ParticleCalculatorStartSpeed,
+        tempvec3: &mut Vector3,
     ) {
         let emission_total = newids.len() as f32;
         let mut emission_index = 0;
@@ -991,10 +992,10 @@ impl ParticleLocalPosition {
             let randoms = randomlist.get(*idx).unwrap();
             let mut random = Random::new(randoms.seed);
 
-            emitter.start_position_function(position_to_update, time.emission_loop as f32, time.emission_progress, emission_index as f32, emission_total, &mut random);
+            emitter.start_position_function(position_to_update, time.emission_loop as f32, time.emission_progress, emission_index as f32, emission_total, &mut random, tempvec3);
 
             let local_position = &position_to_update;
-            emitter.start_direction_function(&mut direction_to_update.velocity_start, local_position, &mut random);
+            emitter.start_direction_function(&mut direction_to_update.velocity_start, local_position, &mut random, tempvec3);
 
             let startspeed = startspeed.0.interpolate(time.emission_progress, randoms.base);
             direction_to_update.velocity_start.scale_mut(startspeed);

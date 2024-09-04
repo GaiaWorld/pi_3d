@@ -9,7 +9,7 @@ use pi_scene_context::prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
 use pi_scene_math::*;
-use pi_mesh_builder::cube::*;
+use pi_mesh_builder::{cube::*, quad::QuadBuilder};
 use pi_trail_renderer::{ActionSetTrailRenderer, OpsTrail, OpsTrailAgeControl};
 use rand::Rng;
 use unlit_material::*;
@@ -110,19 +110,43 @@ fn setup(
     actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
-        sample: KeySampler::linear_repeat(),
+        sample: KeySampler::linear_clamp(),
         url: EKeyTexture::from("assets/images/eff_daoguang_lf_004.png"),
     }));
-
-    let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
-    actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState::default()));
-    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(0., 10., 0.)));
-    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
-    let id_geo = commands.spawn_empty_id();
-    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
+    
+    let idmat2 = commands.spawn_empty_id();
+    actions.material.create.push(OpsMaterialCreate::ops(idmat2, UnlitShader::KEY));
+    actions.material.texture.push(OpsUniformTexture::ops(idmat2, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockMainTexture::KEY_TEX),
+        filter: true,
+        sample: KeySampler::linear_clamp(),
+        url: EKeyTexture::from("assets/images/icon_city.png"),
+    }));
     
     let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
+    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node, ETransformSRT::Scaling(1., 1., 1.)));
+    // actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node, ETransformSRT::Euler(0., 0., 0.3)));
+
+    let vertices = QuadBuilder::attrs_meta();
+    let indices = Some(QuadBuilder::indices_meta());
+    let state = MeshInstanceState::default();
+    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
+    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
+    let mut blend = ModelBlend::default(); blend.combine();
+    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.depth_state.push(OpsDepthState::ops(source, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
+
+    let vertices = QuadBuilder::attrs_meta();
+    let indices = Some(QuadBuilder::indices_meta());
+    let state = MeshInstanceState::default();
+    let source2 = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    actions.transform.tree.push(OpsTransformNodeParent::ops(source2, node));
+    actions.material.usemat.push(OpsMaterialUse::ops(source2, idmat2, DemoScene::PASS_TRANSPARENT));
+    let mut blend = ModelBlend::default(); blend.combine();
+    actions.mesh.blend.push(OpsRenderBlend::ops(source2, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.depth_state.push(OpsDepthState::ops(source2, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
 
     // let key_group = pi_atom::Atom::from("key_group");
     let id_group = commands.spawn_empty_id();
@@ -130,26 +154,52 @@ fn setup(
     // animegroupres.global.record_group(source, id_group);
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
     // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
-    {
-        let key_curve0 =  pi_atom::Atom::from("test2"); 
-        let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 0.)), LocalEulerAngles(Vector3::new(0., 3.1415926 * 4., 3.1415926 * 2.)), (5. * 60.) as FrameIndex, 30, EEasingMode::None);
+    // {
+    //     let key_curve0 =  pi_atom::Atom::from("test2"); 
+    //     let key_curve0 = key_curve0.asset_u64();
+    //     let curve = FrameCurve::<LocalEulerAngles>::curve_easing(LocalEulerAngles(Vector3::new(0., 0., 0.)), LocalEulerAngles(Vector3::new(0., 3.1415926 * 4., 3.1415926 * 2.)), (5. * 60.) as FrameIndex, 30, EEasingMode::None);
         
-        let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) { curve } else {
-            match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
-                Ok(value) => { value  },
-                Err(_) => { return; },
-            }
-        };
+    //     let asset_curve = if let Some(curve) = anime_assets.euler.get(&key_curve0) { curve } else {
+    //         match anime_assets.euler.insert(key_curve0, TypeFrameCurve(curve)) {
+    //             Ok(value) => { value  },
+    //             Err(_) => { return; },
+    //         }
+    //     };
 
-        let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
-    }
+    //     let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+    //     actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+    // }
+    // 总位移距离
+    // d = 2.;
+    // 拖尾最大长度
+    // a = 1.;
+    // 整个过程总时间
+    // time = 120;
+    // 位移帧
+    // 时间: 0,    位置: x: 0, y: 0, z:
+    // 时间: time, 位置: x: d, y: 0, z:
+    // 缩放帧
+    // 时间: 0,                           缩放: x: 0.0001, y: 1, z: 1
+    // 时间: (0. + a / d * 0.5) * time,   缩放: x: a,      y: 1, z: 1
+    // 时间: (1. - a / d * 0.5) * time,   缩放: x: a,      y: 1, z: 1
+    // 时间: time,                        缩放: x: 0.0001, y: 1, z: 1
+
+    /// 总位移距离
+    let d = 40.;
+    /// 拖尾最大长度
+    let a = 20.;
+    /// 整个过程总时间
+    let total = 120;
+    let td = (total as f32 * (a / (d + a))) as FrameIndex;
     {
         let key_curve0 =  pi_atom::Atom::from("test0"); 
         let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(-10., -10., 0.)), LocalPosition(Vector3::new(0., 20., 0.)), (300.) as FrameIndex, 30, EEasingMode::SineInOut);
-        
+        let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(30);
+        curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0.00, 0.00, 0.00)));
+        curve.curve_frame_values_frame(0 + td, LocalPosition(Vector3::new(a * 0.5, 0., 0.)));
+        curve.curve_frame_values_frame(total - td, LocalPosition(Vector3::new(d - a * 0.5, 0., 0.)));
+        curve.curve_frame_values_frame(total, LocalPosition(Vector3::new(d, 0., 0.)));
+
         let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) { curve } else {
             match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
                 Ok(value) => { value  },
@@ -158,12 +208,16 @@ fn setup(
         };
 
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test1"); 
         let key_curve0 = key_curve0.asset_u64();
-        let curve = FrameCurve::<LocalScaling>::curve_easing(LocalScaling(Vector3::new(0.2, 0.2, 0.2)), LocalScaling(Vector3::new(2., 2., 2.)), (300.) as FrameIndex, 30, EEasingMode::SineInOut);
+        let mut curve = FrameCurve::<LocalScaling>::curve_frame_values(30);
+        curve.curve_frame_values_frame(0, LocalScaling(Vector3::new(0.001, 1., 1.)));
+        curve.curve_frame_values_frame(0 + td, LocalScaling(Vector3::new(a, 1., 1.)));
+        curve.curve_frame_values_frame(total - td, LocalScaling(Vector3::new(a, 1., 1.)));
+        curve.curve_frame_values_frame(total, LocalScaling(Vector3::new(0.001, 1., 1.)));
         
         let asset_curve = if let Some(curve) = anime_assets.scaling.get(&key_curve0) { curve } else {
             match anime_assets.scaling.insert(key_curve0, TypeFrameCurve(curve)) {
@@ -173,40 +227,30 @@ fn setup(
         };
 
         let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
+    }
+    {
+        let key_curve0 =  pi_atom::Atom::from("test3"); 
+        let key_curve0 = key_curve0.asset_u64();
+        let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(30);
+        curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
+        curve.curve_frame_values_frame(0 + td, LocalPosition(Vector3::new(a, 0., 0.)));
+        curve.curve_frame_values_frame(total - td, LocalPosition(Vector3::new(d, 0., 0.)));
+        curve.curve_frame_values_frame(total, LocalPosition(Vector3::new(d, 0., 0.)));
+        
+        let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) { curve } else {
+            match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => { value  },
+                Err(_) => { return; },
+            }
+        };
+        let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source2, animation));
     }
 
 
-    let mut random = pi_wy_rng::WyRng::default();
-    for idx in 0..1000 {
-        // let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
-        let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
-        // if idx == 0 {
-        //     actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
-        //     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
-        //     let id_geo = commands.spawn_empty_id();
-        //     let instancestate = 0;
-        //     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()), instancestate));
-        // } else {
-            actions.transform.create.push(OpsTransformNode::ops(scene, source));
-        // }
-        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0), random.gen_range(-20.0..20.0))));
-        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(4., 4., 4.)));
-        actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Euler(3., 0., 0.)));
-
-        let trail = commands.spawn_empty_id();
-        actions.transform.tree.push(OpsTransformNodeParent::ops(trail, scene));
-        actions.mesh.create.push(OpsMeshCreation::ops(scene, trail, MeshInstanceState::default()));
-        actions.trail.create.push(OpsTrail::ops(scene, source, trail));
-        actions.trail.age.push(OpsTrailAgeControl::ops(trail, 500));
-        actions.material.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));
-        let mut blend = ModelBlend::default(); blend.combine();
-        actions.mesh.blend.push(OpsRenderBlend::ops(trail, DemoScene::PASS_TRANSPARENT, blend));
-        actions.mesh.depth_state.push(OpsDepthState::ops(trail, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
-    }
-    
-    let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;param.loop_mode = ELoopMode::PositivePly(None);
+    let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 10.;param.loop_mode = ELoopMode::Positive(None);
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
     // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
 }

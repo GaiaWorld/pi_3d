@@ -143,6 +143,21 @@ impl CustomRenderTarget {
 #[derive(Resource, Default)]
 pub struct CustomRenderTargets(pub SlotMap<KeyRenderTarget, Option<CustomRenderTarget>>, pub Vec<(KeyRenderTarget, KeySampler, ColorFormat, DepthStencilFormat, u32, u32)>);
 impl CustomRenderTargets {
+    pub fn create_sync(
+        &mut self,
+        device: &RenderDevice,
+        asset_samp: &ShareAssetMgr<SamplerRes>, atlas_allocator: &PiSafeAtlasAllocator,
+        sample: KeySampler,
+        color_format: ColorFormat, depth_stencil_format: DepthStencilFormat, width: u32, height: u32
+    ) -> Option<KeyRenderTarget> {
+        if let Some(rt) = CustomRenderTarget::new(device, sample, asset_samp, atlas_allocator, color_format, depth_stencil_format, width, height) {
+            let key = self.0.insert(Some(rt));
+            Some(key)
+        } else{
+            None
+        }
+
+    }
     pub fn create(
         &mut self,
         sample: KeySampler,

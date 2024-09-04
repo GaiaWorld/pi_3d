@@ -334,15 +334,15 @@ pub fn sys_act_instance_attribute(
         if let Ok((inssource, mut attributes)) = instances.get_mut(instance) {
             if let Some(offset) = attributes.offset(&attr) {
                 if let Some(target) = offset.entity() {
-                    log::error!("Push 。。。。");
+                    // log::error!("Push 。。。。");
                     match val {
-                        EInstanceAttr::Float(val) => animator_float.push(OpsAnimatorableFloat::ops(target, instance, AnimatorableFloat(val), EAnimatorableEntityType::Attribute)),
-                        EInstanceAttr::Int(val) => animator_sint.push(OpsAnimatorableSint::ops(target, instance, AnimatorableSint(val), EAnimatorableEntityType::Attribute)),
-                        EInstanceAttr::Uint(val) => animator_uint.push(OpsAnimatorableUint::ops(target, instance, AnimatorableUint(val), EAnimatorableEntityType::Attribute)),
-                        EInstanceAttr::Vec4(val) => animator_vec4.push(OpsAnimatorableVec4::ops(target, instance, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Attribute)),
-                        EInstanceAttr::Vec3(val) => animator_vec3.push(OpsAnimatorableVec3::ops(target, instance, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Attribute)),
-                        EInstanceAttr::Vec2(val) => animator_vec2.push(OpsAnimatorableVec2::ops(target, instance, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Attribute)),
-                    }
+                        EInstanceAttr::Float(val)   => { animator_float.push(OpsAnimatorableFloat::ops(target, instance, AnimatorableFloat(val), EAnimatorableEntityType::Attribute)); },
+                        EInstanceAttr::Int (val)    => { animator_sint.push(OpsAnimatorableSint::ops(target, instance, AnimatorableSint(val), EAnimatorableEntityType::Attribute)); },
+                        EInstanceAttr::Uint(val)    => { animator_uint.push(OpsAnimatorableUint::ops(target, instance, AnimatorableUint(val), EAnimatorableEntityType::Attribute)); },
+                        EInstanceAttr::Vec4(val) => { animator_vec4.push(OpsAnimatorableVec4::ops(target, instance, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
+                        EInstanceAttr::Vec3(val) => { animator_vec3.push(OpsAnimatorableVec3::ops(target, instance, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
+                        EInstanceAttr::Vec2(val) => { animator_vec2.push(OpsAnimatorableVec2::ops(target, instance, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
+                    };
                 } else {
                     let mut offset = offset.offset() as usize;
                     match val {

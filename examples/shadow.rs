@@ -20,11 +20,11 @@ impl DemoShadow {
     ) -> Entity {
         let shadow = commands.spawn_empty_id(); 
         actions.shadow.create.push(OpsShadowGenerator::ops(shadow, scene, light, pass));
-        actions.shadow.param.push(OpsShadowGeneratorParam::Bias(shadow, 0.005));
-        actions.shadow.param.push(OpsShadowGeneratorParam::NormalBias(shadow, 0.005));
-        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowFrustumSize(shadow, 10.0));
-        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMinz(shadow, -100.0));
-        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMaxz(shadow, 100.));
+        actions.shadow.param.push(OpsShadowGeneratorParam::Bias(shadow, 0.0008));
+        actions.shadow.param.push(OpsShadowGeneratorParam::NormalBias(shadow, 0.0008));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowFrustumSize(shadow, 20.0));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMinz(shadow, -50.0));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMaxz(shadow, 50.));
 
         actions.renderer.create.push(OpsRendererCreate::ops(shadow, String::from("Shadow01"), shadow, pass, false));
         if let Some(pre_renderer) = pre_renderer {

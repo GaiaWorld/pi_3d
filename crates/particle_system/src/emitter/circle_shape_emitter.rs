@@ -127,16 +127,15 @@ impl CircleShapeEmitter {
         direction_to_update: &'a mut Vector3,
         local_position: &'a Vector3,
         random: &'a mut Random,
+        temp: &'a mut Vector3,
     ) {
-        let mut direction = normalize(local_position);
+        normalize(local_position, temp);
 
-        direction[0] += random.random() * shape.base.randomize_direction;
-        direction[1] += random.random() * shape.base.randomize_direction;
-        direction[2] += random.random() * shape.base.randomize_direction;
+        temp.x += random.random() * shape.base.randomize_direction;
+        temp.y += random.random() * shape.base.randomize_direction;
+        temp.z += random.random() * shape.base.randomize_direction;
 
-        direction = normalize(&direction);
-
-        *direction_to_update = direction;
+        normalize(&temp, direction_to_update);
     }
 
     pub fn start_position_function<'a>(
@@ -147,6 +146,7 @@ impl CircleShapeEmitter {
         emission_index: f32,
         emission_total: f32,
         random: &'a mut Random,
+        temp: &'a mut Vector3,
     ) {
         let radius = shape.param[Self::IDX_RADIUS];
         let radius_range = shape.param[Self::IDX_RADIUS_RANGE];
@@ -177,7 +177,8 @@ impl CircleShapeEmitter {
         rand_z += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
         rand_y += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
 
-        CoordinateSytem3::transform_coordinates(&Vector3::new(rand_x, rand_y, rand_z), &shape.base.local_matrix, position_to_update);
+        temp.x = rand_x; temp.y = rand_y; temp.z = rand_z;
+        CoordinateSytem3::transform_coordinates(&temp, &shape.base.local_matrix, position_to_update);
     }
     pub fn orbit_center<'a>(_local_position: &'a Vector3, offset: &'a Vector3, result: &'a mut Vector3) {
         result.copy_from(offset);
@@ -191,7 +192,7 @@ impl CircleShapeEmitter {
         // let serializationObject: any = {};
 
         SerializationObject {
-            _type: CircleShapeEmitter::get_class_name(),
+            _type: String::from("CircleShapeEmitter"),
             radius: self.radius,
             direction_randomizer: self.direction_randomizer,
             radius_range: self.radius_range,
@@ -210,135 +211,6 @@ impl CircleShapeEmitter {
             1.
         };
         self.direction_randomizer = serialization_object.direction_randomizer;
-    }
-}
-
-impl IShapeEmitterType for CircleShapeEmitter {
-    fn start_direction_function(
-        &self,
-        direction_to_update: &mut Vector3,
-        local_position: &Vector3,
-        random: &mut Random,
-    ) {
-        let mut direction = normalize(local_position);
-
-        direction[0] += random.random() * self.base.randomize_direction;
-        direction[1] += random.random() * self.base.randomize_direction;
-        direction[2] += random.random() * self.base.randomize_direction;
-
-        direction = normalize(&direction);
-
-            *direction_to_update = direction;
-    }
-
-    fn start_position_function(
-        &self,
-        position_to_update: &mut Vector3,
-        emission_loop: f32,
-        emission_progress: f32,
-        emission_index: f32,
-        emission_total: f32,
-        random: &mut Random,
-    ) {
-        let s = compute_radians(
-            emission_loop,
-            emission_progress,
-            emission_index,
-            emission_total,
-            std::f32::consts::PI * 2.,
-            self.arc_value,
-            self.arc_spread,
-            self.arc_speed,
-            self.arc_mode,
-            random
-        );
-        let rand_radius = self.radius - random.random() * (self.radius * self.radius_range);
-        let mut rand_x = rand_radius * s.cos();
-        let mut rand_y = rand_radius * s.sin();
-        let mut rand_z = 0.;
-
-        rand_x += (random.random() * 2.0 - 1.0) * self.base.randomize_position;
-        rand_z += (random.random() * 2.0 - 1.0) * self.base.randomize_position;
-        rand_y += (random.random() * 2.0 - 1.0) * self.base.randomize_position;
-
-        CoordinateSytem3::transform_coordinates(&Vector3::new(rand_x, rand_y, rand_z), &self.base.local_matrix, position_to_update);
-    }
-
-    fn get_class_name() -> String
-    where
-        Self: Sized,
-    {
-        return "CircleParticleEmitter".to_string();
-    }
-
-    fn dispose()
-    where
-        Self: Sized,
-    {
-    }
-
-    fn set_position(&mut self, position: Vector3) {
-        self.base.position = position;
-    }
-
-    fn set_rotation(&mut self, rotation: Vector3) {
-        self.base.rotation = rotation;
-    }
-
-    fn set_scaling(&mut self, scaling: Vector3) {
-        self.base.scaling = scaling;
-    }
-
-    fn get_postion(&self) -> Vector3 {
-        self.base.position.clone()
-    }
-
-    fn get_rotation(&self) -> Vector3 {
-        self.base.rotation.clone()
-    }
-
-    fn get_scaling(&self) -> Vector3 {
-        self.base.scaling.clone()
-    }
-
-    fn set_local_matrix(&mut self, local_matrix: Matrix) {
-        self.base.local_matrix = local_matrix;
-    }
-
-    fn set_align_direction(&mut self, align_direction: bool) {
-        self.base.align_direction = align_direction;
-    }
-
-    fn set_randomize_direction(&mut self, randomize_direction: f32) {
-        self.base.randomize_direction = randomize_direction;
-    }
-
-    fn set_spherize_direction(&mut self, spherize_direction: f32) {
-        self.base.spherize_direction = spherize_direction;
-    }
-
-    fn set_randomize_position(&mut self, randomize_position: f32) {
-        self.base.randomize_position = randomize_position;
-    }
-
-    fn get_local_matrix(& self) -> Matrix {
-        self.base.local_matrix.clone()
-    }
-
-    fn get_align_direction(& self) -> bool {
-        self.base.align_direction.clone()
-    }
-
-    fn get_randomize_direction(& self) -> f32 {
-        self.base.randomize_direction.clone()
-    }
-
-    fn get_spherize_direction(& self) -> f32 {
-        self.base.spherize_direction.clone()
-    }
-
-    fn get_randomize_position(& self) -> f32 {
-        self.base.randomize_position.clone()
     }
 }
 

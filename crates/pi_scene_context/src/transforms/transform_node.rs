@@ -358,7 +358,8 @@ impl GlobalMatrix {
         let mut flag = true;
         let mut result = Self::default();
         // result.matrix.copy_from(&(p_m * l_matrix.0));
-        p_m.mul_to(&l_matrix.0, &mut result.matrix);
+        CoordinateSytem3::mul_to(p_m, &l_matrix.0, &mut result.matrix);
+        // p_m.mul_to(&l_matrix.0, &mut result.matrix);
 
         if result.matrix.as_slice()[0].is_finite() {
             match result.matrix.try_inverse() {

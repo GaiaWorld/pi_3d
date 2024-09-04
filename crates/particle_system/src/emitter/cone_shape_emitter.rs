@@ -158,42 +158,26 @@ impl ConeShapeEmitter {
         direction_to_update: &'a mut Vector3,
         local_position: &'a Vector3,
         random: &'a mut Random,
+        temp: &'a mut Vector3,
     ) {
-        // println!(
-        //     "ConeShapeEmitter::start_direction_function: {}",
-        //     direction_to_update
-        // );
-        
-
         let _base_height = shape.param[Self::IDX_BASE_HEIGHT];
-        let mut direction = normalize(&(local_position + Vector3::new(0., 0., _base_height)));
-        // println!("ConeShapeEmitter::start_direction_function1: {:?}, local_position: {:?}, Self::spherizeDirection: {:?}", direction, local_position, Self::spherizeDirection);
+        direction_to_update.copy_from(local_position);
+        direction_to_update.z += _base_height;
+        normalize(&direction_to_update, temp);
 
-        let local_position = normalize(local_position);
-        // println!("ConeShapeEmitter local_position: {:?}", local_position);
-        let x = direction.x * (1.0 - shape.base.spherize_direction) + local_position[0] * shape.base.spherize_direction;
-        // println!("=============x : {:?}", x);
-        direction.x = x;
-        // println!(
-        //     "ConeShapeEmitter::start_direction_function111: {}",
-        //     direction
-        // );
-        direction.y = direction.y * (1.0 - shape.base.spherize_direction) + local_position.y * shape.base.spherize_direction;
-        direction.z = direction.z * (1.0 - shape.base.spherize_direction) + local_position.z * shape.base.spherize_direction;
-        // println!(
-        //     "ConeShapeEmitter::start_direction_function11: {}",
-        //     direction
-        // );
-        direction = normalize(&direction);
+        normalize(local_position, direction_to_update);
+        let t = shape.base.spherize_direction;
+        temp.axpy(t, &direction_to_update, 1.0 - t);
+
+        normalize(&temp, direction_to_update);
+        temp.copy_from(&direction_to_update);
+
         // println!("ConeShapeEmitter::start_direction_function2: {}", direction);
-        direction[0] += random.random() * shape.base.randomize_direction;
-        direction[1] += random.random() * shape.base.randomize_direction;
-        direction[2] += random.random() * shape.base.randomize_direction;
-        // println!("ConeShapeEmitter::start_direction_function3: {}", direction);
-        // *direction_to_update = direction;
-        *direction_to_update = normalize(&direction);
+        temp.x += random.random() * shape.base.randomize_direction;
+        temp.y += random.random() * shape.base.randomize_direction;
+        temp.z += random.random() * shape.base.randomize_direction;
         
-        // log::error!("start_direction_function: {:?}", (local_position, direction));
+        normalize(&temp, direction_to_update);
     }
 
     pub fn start_position_function<'a>(
@@ -204,6 +188,7 @@ impl ConeShapeEmitter {
         emission_index: f32,
         emission_total: f32,
         random: &'a mut Random,
+        temp: &'a mut Vector3,
     ) {
         // let angle = shape.param[Self::IDX_ANGLE];
         let radius_range = shape.param[Self::IDX_RADIUS_RANGE];
@@ -269,7 +254,8 @@ impl ConeShapeEmitter {
         
         // log::warn!("Position: {:?}", (_rand_x, _rand_y, _rand_z));
 
-        CoordinateSytem3::transform_coordinates(&Vector3::new(_rand_x, _rand_y, _rand_z), &shape.base.local_matrix, position_to_update);
+        temp.x = _rand_x; temp.y = _rand_y; temp.z = _rand_z;
+        CoordinateSytem3::transform_coordinates(&temp, &shape.base.local_matrix, position_to_update);
     }
     pub fn orbit_center<'a>(local_position: &'a Vector3, offset: &'a Vector3, result: &'a mut Vector3) {
         result.copy_from(offset);
@@ -334,7 +320,7 @@ impl ConeShapeEmitter {
      */
     pub fn serialize(&self) -> SerializationObject {
         SerializationObject {
-            _type: Some(ConeShapeEmitter::get_class_name()),
+            _type: Some(String::from("ConeShapeEmitter")),
             radius: Some(self._start_radius),
             angle: Some(self._angle),
             direction_randomizer: Some(self.direction_randomizer),
@@ -373,187 +359,6 @@ impl ConeShapeEmitter {
 
     // const alignDirection: bool = false;
 
-}
-
-impl IShapeEmitterType for ConeShapeEmitter {
-    fn start_direction_function(
-        &self,
-        direction_to_update: &mut pi_scene_math::Vector3,
-        local_position: &Vector3,
-        random: &mut Random,
-    ) {
-        // println!(
-        //     "ConeShapeEmitter::start_direction_function: {}",
-        //     direction_to_update
-        // );
-        let mut direction = normalize(&(local_position + Vector3::new(0., 0., self._base_height)));
-        // println!("ConeShapeEmitter::start_direction_function1: {:?}, local_position: {:?}, Self::spherizeDirection: {:?}", direction, local_position, Self::spherizeDirection);
-
-        let local_position = normalize(local_position);
-        // println!("ConeShapeEmitter local_position: {:?}", local_position);
-        let x = direction.x * (1.0 - Self::SPHERIZE_DIRECTION) + local_position[0] * Self::SPHERIZE_DIRECTION;
-        // println!("=============x : {:?}", x);
-        direction.x = x;
-        // println!(
-        //     "ConeShapeEmitter::start_direction_function111: {}",
-        //     direction
-        // );
-        direction.y = direction.y * (1.0 - Self::SPHERIZE_DIRECTION) + local_position.y * Self::SPHERIZE_DIRECTION;
-        direction.z = direction.z * (1.0 - Self::SPHERIZE_DIRECTION) + local_position.z * Self::SPHERIZE_DIRECTION;
-        // println!(
-        //     "ConeShapeEmitter::start_direction_function11: {}",
-        //     direction
-        // );
-        direction = normalize(&direction);
-        // println!("ConeShapeEmitter::start_direction_function2: {}", direction);
-        direction[0] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[1] += random.random() * Self::RANDOMIZE_DIRECTION;
-        direction[2] += random.random() * Self::RANDOMIZE_DIRECTION;
-        // println!("ConeShapeEmitter::start_direction_function3: {}", direction);
-        // *direction_to_update = direction;
-        *direction_to_update = normalize(&direction);
-    }
-
-    fn start_position_function(
-        &self,
-        position_to_update: &mut pi_scene_math::Vector3,
-        emission_loop: f32,
-        emission_progress: f32,
-        emission_index: f32,
-        emission_total: f32,
-        random: &mut Random,
-    ) {
-        let s = compute_radians(
-            emission_loop,
-            emission_progress,
-            emission_index,
-            emission_total,
-            std::f32::consts::PI * 2.,
-            self.arc_value,
-            self.arc_spread,
-            self.arc_speed,
-            self.arc_mode,
-            random,
-        );
-
-        let mut h: f32 = 0.;
-
-        if !self.emit_from_spawn_point_only {
-            h = random.random() * self.height_range;
-        }
-        h = h * h;
-        h = h.max(0.00001);
-
-        let t = random.random() * self.radius_range;
-        let mut radius = self._start_radius - self._start_radius * t * t;
-        if self._base_height > 0.00001 {
-            radius = radius * (h * self._height + self._base_height) / self._base_height;
-        }
-
-        // log::warn!("_base_height: {:?}", self._base_height);
-
-        let mut _rand_x = 0.;
-        let mut _rand_z = 0.;
-        let mut _rand_y = 0.;
-
-        // if Self::DIRECTION_MODE == EShapeEmitterDirectionMode::Unity {
-        //     _rand_x = radius * (s).cos();
-        //     _rand_y = radius * (s).sin();
-        //     _rand_z = h * self._height;
-        // } else {
-        //     _rand_x = radius * s.sin();
-        //     _rand_z = radius * s.cos();
-        //     _rand_y = h * self._height;
-        // }
-        _rand_x = radius * (s).cos();
-        _rand_y = radius * (s).sin();
-        _rand_z = h * self._height;
-
-        _rand_x += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        _rand_z += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        _rand_y += (random.random() * 2.0 - 1.0) * Self::RANDOMIZE_POSITION;
-        
-        // log::warn!("Position: {:?}", (_rand_x, _rand_y, _rand_z));
-
-        CoordinateSytem3::transform_coordinates(&Vector3::new(_rand_x, _rand_y, _rand_z), &self.base.local_matrix, position_to_update);
-    }
-
-    fn get_class_name() -> String
-    where
-        Self: Sized,
-    {
-        return "ConeParticleEmitter".to_string();
-    }
-
-    fn dispose()
-    where
-        Self: Sized,
-    {
-    }
-
-    fn set_position(&mut self, position: Vector3) {
-        self.base.position = position;
-    }
-
-    fn set_rotation(&mut self, rotation: Vector3) {
-        self.base.rotation = rotation;
-    }
-
-    fn set_scaling(&mut self, scaling: Vector3) {
-        self.base.scaling = scaling;
-    }
-
-    fn get_postion(&self) -> Vector3 {
-        self.base.position.clone()
-    }
-
-    fn get_rotation(&self) -> Vector3 {
-        self.base.rotation.clone()
-    }
-
-    fn get_scaling(&self) -> Vector3 {
-        self.base.scaling.clone()
-    }
-
-    fn set_local_matrix(&mut self, local_matrix: Matrix) {
-        self.base.local_matrix = local_matrix;
-    }
-
-    fn set_align_direction(&mut self, align_direction: bool) {
-        self.base.align_direction = align_direction;
-    }
-
-    fn set_randomize_direction(&mut self, randomize_direction: f32) {
-        self.base.randomize_direction = randomize_direction;
-    }
-
-    fn set_spherize_direction(&mut self, spherize_direction: f32) {
-        self.base.spherize_direction = spherize_direction;
-    }
-
-    fn set_randomize_position(&mut self, randomize_position: f32) {
-        self.base.randomize_position = randomize_position;
-    }
-
-    fn get_local_matrix(& self) -> Matrix {
-        self.base.local_matrix.clone()
-    }
-
-    fn get_align_direction(& self) -> bool {
-        self.base.align_direction.clone()
-    }
-
-    fn get_randomize_direction(& self) -> f32 {
-        self.base.randomize_direction.clone()
-    }
-
-    fn get_spherize_direction(& self) -> f32 {
-        self.base.spherize_direction.clone()
-    }
-
-    fn get_randomize_position(& self) -> f32 {
-        self.base.randomize_position.clone()
-    }
 }
 
 // impl IShapeEmitterTypeValue for ConeShapeEmitter{

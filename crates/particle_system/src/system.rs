@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use pi_scene_context::{geometry::instance::{instanced_buffer::*, types::ModelInstanceAttributes}, prelude::*};
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3, TToolRotation}};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Vector4};
 
 use crate::{base::*, ActionListCPUParticleSystemState, OpsCPUParticleSystemState};
 
@@ -80,6 +80,7 @@ pub fn sys_prewarm(
 ) {
     if performance.debug { performance.time = pi_time::Instant::now(); }
 
+    let mut tempvec3 = Vector3::zeros();
     items.iter_mut().for_each(|(
         (disposestate, state, localscl, gmatrix, mut gravities, mut ids, mut time, mut modifystate),
         (mut emission, mut random, mut randoms, mut emitmatrix, mut abstransform, mut directions),
@@ -105,7 +106,7 @@ pub fn sys_prewarm(
 
                     fn_emission(base, &modifiers.emission, &mut random, &mut ids, &mut time, &mut emission, &mut randoms, &mut modifystate);
                     fn_emitmatrix(localscl, gmatrix, &ids, &mut emitmatrix, &mut abstransform, &global_position);
-                    fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut particlelocal.position, &mut directions, &ids, &time, &randoms);
+                    fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut particlelocal.position, &mut directions, &ids, &time, &randoms, &mut tempvec3);
                     if let (Ok(trailmodifier), Some(trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), trails.as_deref_mut()) {
                         fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut particlestart.ages, &mut diewaittimes, Some(trailmodifier), Some(trails));
                     } else {
@@ -198,6 +199,7 @@ pub fn fn_ids(
             ids.unactives.push(*idx);
         }
     });
+    ids.actives.sort();
     // log::warn!("actives: {:?}", ids.actives);
 }
 pub fn sys_emission(
@@ -311,6 +313,7 @@ pub fn sys_start(
 ) {
     if performance.debug { performance.time = pi_time::Instant::now(); }
 
+    let mut tempvec3 = Vector3::zeros();
     particle_sys.iter_mut().for_each(|(
         entity, ids, time, randoms
         , mut particlelocal, mut directions
@@ -319,7 +322,7 @@ pub fn sys_start(
         if time.running_delta_ms <= 0 { return; }
 
         if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-            fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut particlelocal.position, &mut directions, &ids, &time, &randoms);
+            fn_emitter(&calculator.shapeemitter, &calculator.startspeed, &mut particlelocal.position, &mut directions, &ids, &time, &randoms, &mut tempvec3);
 
             if let (Ok(trailmodifier), Ok(mut trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), particle_sys_trail.get_mut(entity)) {
                 fn_start_lifetime(&calculator.startlifetime, &ids, &time, &randoms, &mut particlestart.ages, &mut diewaittimes, Some(trailmodifier), Some(&mut trails));
@@ -344,13 +347,14 @@ pub fn sys_start(
 
 fn fn_emitter(
     emitter: &ParticleCalculatorShapeEmitter, startspeed: &ParticleCalculatorStartSpeed,
-    locpos: &mut ParticleLocalPosition, directions: &mut ParticleDirection, ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom
+    locpos: &mut ParticleLocalPosition, directions: &mut ParticleDirection, ids: &ParticleIDs, time: &ParticleSystemTime, randoms: &ParticleBaseRandom,
+    tempvec3: &mut Vector3,
 ) {
     let emitter = &emitter.0;
     let newids = &ids.newids;
     // let activeids = &ids.actives;
 
-    locpos.start(newids, directions, randoms, time, emitter, startspeed);
+    locpos.start(newids, directions, randoms, time, emitter, startspeed, tempvec3);
 }
 
 fn fn_start_lifetime(
@@ -666,6 +670,7 @@ pub fn sys_update_buffer(
     let time0 = pi_time::Instant::now();
     if performance.debug { performance.time = time0; }
 
+    let mut count = 0;
     let currms = (time0 - instant.0).as_millis() as u64;
     performance.update_buffer = true; // (performance.last_running_time + performance.update_frame_time_ms as u64) < currms;
     if performance.update_buffer {
@@ -678,6 +683,15 @@ pub fn sys_update_buffer(
         let mut refwmatrix = Matrix::identity();
         let mut reflmatrix = Matrix::identity();
         let mut resultmatrix = Matrix::identity();
+        let mut localmatrix = Matrix::identity();
+        let mut l_rotation = Rotation3::identity();
+        let v3zero = Vector3::zeros();
+        let mut h = Vector4::zeros();
+        let mut hh = Vector4::zeros();
+        let mut emitposition = Vector3::zeros();
+        let mut g_velocity = Vector3::zeros();
+        let mut f_v = false;
+        let mut f_lc = false;
 
         particle_sys.iter().for_each(
             |(
@@ -716,35 +730,23 @@ pub fn sys_update_buffer(
                         if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
                             collectdata.clear();
                             // let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
-                            
                             let renderalign = calculator.render_align();
                             let updatebuffer = renderalign.is_some();
                             // log::warn!("ActiveCount: {:?}", ids.actives.len());
-
+                            f_v = false;
+                            f_lc = false;
                             if let Some(renderalign) = renderalign {
-                                let calc_local = match renderalign {
-                                    ERenderAlignment::View                  => calc_local_other,
-                                    ERenderAlignment::World                 => calc_local_other,
-                                    ERenderAlignment::Local                 => calc_local_other,
-                                    ERenderAlignment::Facing                => calc_local_other,
-                                    ERenderAlignment::Velocity              => calc_local_other,
-                                    ERenderAlignment::StretchedBillboard    => calc_local_strentched,
-                                    ERenderAlignment::HorizontalBillboard   => calc_local_other,
-                                    ERenderAlignment::VerticalBillboard     => calc_local_other,
-                                };
+                                f_lc = renderalign == ERenderAlignment::StretchedBillboard;
                                 let calc_matrix = match renderalign {
-                                    ERenderAlignment::View                  => calc_matrix_view  ,
-                                    ERenderAlignment::World                 => calc_matrix_world ,
-                                    ERenderAlignment::Local                 => calc_matrix_local ,
-                                    ERenderAlignment::Facing                => calc_matrix_facing    ,
-                                    ERenderAlignment::Velocity              => calc_matrix_velocity  ,
-                                    ERenderAlignment::StretchedBillboard    => calc_matrix_strentched    ,
-                                    ERenderAlignment::HorizontalBillboard   => calc_matrix_horizontal    ,
-                                    ERenderAlignment::VerticalBillboard     => calc_matrix_vertical  ,
+                                    ERenderAlignment::View                  => { calc_matrix_view  },
+                                    ERenderAlignment::World                 => { calc_matrix_world },
+                                    ERenderAlignment::Local                 => { calc_matrix_local },
+                                    ERenderAlignment::Facing                => { calc_matrix_facing    },
+                                    ERenderAlignment::Velocity              => { f_v = true; calc_matrix_velocity  },
+                                    ERenderAlignment::StretchedBillboard    => { f_v = true; calc_matrix_strentched    },
+                                    ERenderAlignment::HorizontalBillboard   => { calc_matrix_horizontal    },
+                                    ERenderAlignment::VerticalBillboard     => { calc_matrix_vertical  },
                                 };
-                                let mut emitposition = Vector3::zeros();
-                                // let zero = Vector3::zeros();
-                                let mut g_velocity = Vector3::zeros();
 
                                 // let mut str: i32ipe = (16 + 4 + 4);
                                 // let mut collect_common: Vec<u8> = Vec::with_capacity(ids.actives.len() * (16 + 4 + 4) * 4);
@@ -754,19 +756,31 @@ pub fn sys_update_buffer(
                                 combinedata.reset();
                                 let mut index = 0;
                                 ids.actives.iter().for_each(|idx| {
+                                    count += 1;
                                     let scaling = scalings.get(*idx).unwrap();
                                     let eulers = rotations.get(*idx).unwrap();
         
-                                    let mut translation = positions.get(*idx).unwrap().clone();
+                                    let translation = positions.get(*idx).unwrap();
                                     // log::warn!("LOCAL: {:?}", translation);
         
-                                    translation = translation + calculator.pivot.clone();
-        
+                                    let tx = translation.x + calculator.pivot.x;
+                                    let ty = translation.y + calculator.pivot.y;
+                                    let tz = translation.z + calculator.pivot.z;
+
                                     let direction = directions.get(*idx).unwrap();
                                     let emitmatrix = emitmatrixs.get(*idx).unwrap();
         
-                                    CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
-                                    CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
+                                    if f_v {
+                                        h.x = direction.value.x; h.y = direction.value.y; h.z = direction.value.z; h.w = 0.;
+                                        CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
+                                        g_velocity.x = hh.x; g_velocity.y = hh.y; g_velocity.z = hh.z;
+                                        // CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
+                                    }
+
+                                    h.x = tx; h.y = ty; h.z = tz; h.w = 1.;
+                                    CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
+                                    emitposition.x = hh.x; emitposition.y = hh.y; emitposition.z = hh.z;
+                                    // CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
     
                                     // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
                                     let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
@@ -775,28 +789,32 @@ pub fn sys_update_buffer(
                                     // let matrix = emitmatrix.matrix.clone();
 
                                     let matrix = if updatebuffer {
-                                        let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(eulers.x, eulers.y, eulers.z);
+                                        CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
+                                        refwmatrix.copy_from(&emitmatrix.matrix);
                                         calc_matrix(
                                             &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
-                                            &Vector3::zeros(), &scaling, &l_rotation, &eulers,
+                                            &v3zero, &scaling, &l_rotation, &eulers,
                                             &mut refwmatrix, &mut reflmatrix, &mut resultmatrix
                                         );
 
-                                        if let Some(local) = calc_local(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen) {
-                                            resultmatrix.mul_to(&local, &mut refwmatrix);
+                                        if f_lc {
+                                            calc_local_strentched_call(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
+                                            CoordinateSytem3::mul_to(&resultmatrix, &localmatrix, &mut refwmatrix);
                                             &refwmatrix
                                         } else {
                                             &resultmatrix
                                         }
+                                        // &resultmatrix
                                     } else {
                                         // let mut matrix = Matrix::identity();
                                         // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
                                         // let mut local = Matrix::identity();
-                                        let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(eulers.x, eulers.y, eulers.z);
-                                        pi_scene_shell::prelude::matrix4_compose_rotation(scaling, &l_rotation, &translation, &mut reflmatrix);
+                                        CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
+                                        pi_scene_shell::prelude::matrix4_compose_rotation(scaling, &l_rotation, translation, &mut reflmatrix);
                                         // log::warn!("MAREIX: {:?}", matrix);
                                         // log::warn!("LOCAL: {:?}", local);
-                                        emitmatrix.matrix.mul_to(&reflmatrix, &mut resultmatrix);
+                                        CoordinateSytem3::mul_to(&emitmatrix.matrix, &reflmatrix, &mut resultmatrix);
+                                        // emitmatrix.matrix.mul_to(&reflmatrix, &mut resultmatrix);
                                         &resultmatrix
                                     };
         
@@ -809,7 +827,7 @@ pub fn sys_update_buffer(
                                         // log::warn!("LOCAL: {:?}", ([uv.uscale, uv.vscale, uv.uoffset, uv.voffset], color));
                                         bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
                                         bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
-                                        bytemuck::cast_slice(&[uv.uscale, uv.vscale, uv.uoffset, uv.voffset]).iter().for_each(|v| { instancesort.data.push(*v); });
+                                        bytemuck::cast_slice(&uv.data).iter().for_each(|v| { instancesort.data.push(*v); });
                                     }
 
                                     index += 1;
@@ -828,6 +846,7 @@ pub fn sys_update_buffer(
     }
 
     if performance.debug { performance.sys_update_buffer = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
+    // log::error!("Particle Sytem: {:?} ms", ((pi_time::Instant::now() - time0).as_millis() as u32, count));
 }
 
 pub fn sys_update_buffer_trail(

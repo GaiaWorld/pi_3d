@@ -54,8 +54,8 @@ pub struct TypeShapeEmitter {
     pub(crate) arc_mode: EShapeEmitterArcMode,
     pub(crate) base: ShapeEmitter,
     pub(crate) param: Vec<f32>,
-    pub(crate) fn_direction: fn(&TypeShapeEmitter, &mut Vector3, &Vector3, &mut Random),
-    pub(crate) fn_position: fn(&TypeShapeEmitter, &mut Vector3, f32, f32, f32, f32, &mut Random),
+    pub(crate) fn_direction: fn(&TypeShapeEmitter, &mut Vector3, &Vector3, &mut Random, & mut Vector3),
+    pub(crate) fn_position: fn(&TypeShapeEmitter, &mut Vector3, f32, f32, f32, f32, &mut Random, & mut Vector3),
     pub(crate) fn_orbit_center: fn(&Vector3, &Vector3, &mut Vector3),
 }
 impl TypeShapeEmitter {
@@ -79,8 +79,9 @@ impl TypeShapeEmitter {
         direction_to_update: & mut Vector3,
         local_position: & Vector3,
         random: & mut Random,
+        temp: & mut Vector3,
     ) {
-        (self.fn_direction)(&self, direction_to_update, local_position, random);
+        (self.fn_direction)(&self, direction_to_update, local_position, random, temp);
     }
     pub fn start_position_function(
         &self,
@@ -90,8 +91,9 @@ impl TypeShapeEmitter {
         _emission_index: f32,
         _emission_total: f32,
         random: & mut Random,
+        temp: & mut Vector3,
     ) {
-        (self.fn_position)(&self, position_to_update, _emission_loop, _emission_progress, _emission_index, _emission_total, random);
+        (self.fn_position)(&self, position_to_update, _emission_loop, _emission_progress, _emission_index, _emission_total, random, temp);
     }
 }
 impl Default for TypeShapeEmitter {
@@ -112,6 +114,7 @@ pub trait IShapeEmitterType {
         direction_to_update: &mut Vector3,
         local_position: &Vector3,
         random: &mut Random,
+        temp: & mut Vector3,
     );
 
     /**
@@ -132,6 +135,7 @@ pub trait IShapeEmitterType {
         emission_index: f32,
         emission_total: f32,
         random: &mut Random,
+        temp: & mut Vector3,
     );
 
     /**

@@ -110,14 +110,14 @@ impl TextureSheet {
                 _cell_y = (_cell_id / self._tiles_x).floor();
             }
 
-            particle.uoffset = _cell_x / self._tiles_x;
-            particle.voffset = (self._tiles_y - _cell_y - 1.) / self._tiles_y;
+            particle.data[2] = _cell_x / self._tiles_x;
+            particle.data[3] = (self._tiles_y - _cell_y - 1.) / self._tiles_y;
         } else {
-            particle.uoffset = 0.;
-            particle.voffset = (self._tiles_y - 0. - 1.) / self._tiles_y;
+            particle.data[2] = 0.;
+            particle.data[3] = (self._tiles_y - 0. - 1.) / self._tiles_y;
         }
 
-        particle.uscale = 1. / self._tiles_x;
-        particle.vscale = 1. / self._tiles_y;
+        particle.data[0] = 1. / self._tiles_x;
+        particle.data[1] = 1. / self._tiles_y;
     }
 }

@@ -212,20 +212,14 @@ impl Default for LimitVelocityScalar {
 pub struct TextureUV {
     pub(crate) start_frame: f32,
     pub(crate) row: f32,
-    pub(crate) uscale: f32,
-    pub(crate) vscale: f32,
-    pub(crate) uoffset: f32,
-    pub(crate) voffset: f32,
+    pub(crate) data: [f32;4],
 }
 impl Default for TextureUV {
     fn default() -> Self {
         Self {
             start_frame: 0.,
             row: 0.,
-            uscale: 1.,
-            vscale: 1.,
-            uoffset: 0.,
-            voffset: 0.,
+            data: [1., 1., 0., 0.],
         }
     }
 }
@@ -263,11 +257,15 @@ pub fn direction_to_quaternion(direction: Vector3, result: &mut Vector4) {
 
 
 // 适配xyz都为0的情况
-pub fn normalize(v: &Vector3) -> Vector3 {
-    if v[0] != 0.0 || v[1] != 0.0 || v[2] != 0.0 {
-        return v.normalize();
+pub fn normalize(v: &Vector3, result: &mut Vector3) {
+    if v.x != 0.0 || v.y != 0.0 || v.z != 0.0 {
+        *result = v.normalize();
+    } else {
+        result.x = 0.;
+        result.y = 0.;
+        result.z = 0.;
     }
-    Vector3::new(0.0, 0.0, 0.0)
+    // Vector3::new(0.0, 0.0, 0.0)
 }
 
 pub fn multiply(v1: &Vector3, v2: &Vector3) -> Vector3 {

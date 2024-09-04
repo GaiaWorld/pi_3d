@@ -7,7 +7,7 @@ use pi_scene_shell::prelude::*;
 use pi_scene_context::{prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts}, scene::StageScene};
 use pi_node_materials::prelude::BlockMainTexture;
 use pi_scene_context::prelude::*;
-use pi_mesh_builder::cube::*;
+use pi_mesh_builder::{cube::*, quad::QuadBuilder};
 use rand::Rng;
 use unlit_material::*;
 use pi_particle_system::prelude::*;
@@ -71,7 +71,7 @@ pub fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 5;
+    let temp = 2;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
@@ -79,18 +79,19 @@ pub fn setup(
             for _k in 0..temp {
                 let item = {
                     
-                    let vertices = CubeBuilder::attrs_meta();
-                    let indices = Some(CubeBuilder::indices_meta());
-                    let state = base::particelsystem_mesh_state();
+                    let vertices = QuadBuilder::attrs_meta();
+                    let indices = Some(QuadBuilder::indices_meta());
+                    let state = base::particelsystem_mesh_state_single();
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
                     actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
                     actions.mesh.render_queue.push(OpsRenderQueue::ops(source, 0, _k % 2));
+                    actions.mesh.primitive_state.push(OpsPrimitiveState::ops(source, DemoScene::PASS_TRANSPARENT, EPrimitiveState::CCullMode(CullMode::Off)));
 
                     //
                     let syskey = String::from("Test");
-                    let syscfg = demo_cfg(320., 20.);
+                    let syscfg = demo_cfg(10000., 10.);
                     let calculator = commands.spawn_empty_id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
@@ -178,7 +179,8 @@ fn demo_cfg(count: f32, speed: f32) -> IParticleSystemConfig {
     cfg.start_size = ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(1.));
     // cfg.color_over_lifetime = Some(FourGradientInfo::TInterpolateRandom);
     cfg.lifetime = OneParamInfo::TInterpolateConstant(1.);
-    cfg.shape = IShape::ShapeCone(IShapeCone::default());
+    cfg.render_alignment = EParticleRenderAlignment::World;
+    // cfg.shape = IShape::ShapeCone(IShapeCone::default());
     // cfg.trail = Some(ITrail {
     //     ratio: 1.,
     //     mode: ETrailMode::Particles,

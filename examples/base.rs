@@ -81,6 +81,13 @@ pub fn particelsystem_mesh_state() -> MeshInstanceState {
         use_single_instancebuffer: false,
     }
 }
+pub fn particelsystem_mesh_state_single() -> MeshInstanceState {
+    MeshInstanceState {
+        instances: vec![instance_color(), instance_tilloff()],
+        instance_matrix: true,
+        use_single_instancebuffer: true,
+    }
+}
 pub fn particelsystem_attrs() -> Vec<ParticleAttribute> {
     vec![
         ParticleAttribute { vtype: EParticleAttributeType::Matrix, attr: Atom::from("") },
@@ -93,6 +100,7 @@ pub struct DemoScene {
     pub scene: Entity,
     pub camera: Entity,
     pub opaque_renderer: Entity,
+    pub skywater_renderer: Entity,
     pub transparent_renderer: Entity,
     pub opaque_target: Option<KeyCustomRenderTarget>,
     pub transparent_target: Option<KeyCustomRenderTarget>,
@@ -122,7 +130,7 @@ impl DemoScene {
             EFreeCameraMode::Orthograhic
         } else { EFreeCameraMode::Perspective };
         
-        let keytarget =  match targets.create(KeySampler::linear_clamp(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
+        let keytarget =  match targets.create_sync(device, asset_samp, atlas_allocator, KeySampler::linear_clamp(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
             Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
             None => None,
         };
@@ -152,16 +160,23 @@ impl DemoScene {
         actions.renderer.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
         actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
         // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
+        
+        let skywater_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(skywater_renderer, String::from("TestCameraSkyWater"), camera, DemoScene::PASS_SKY_WATER, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(skywater_renderer, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(skywater_renderer, false));
+        actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(skywater_renderer, false));
+        actions.renderer.target.push(OpsRendererTarget::Custom(skywater_renderer, keytarget.clone().unwrap()));
+        actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, skywater_renderer, false));
 
         let transparent_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(transparent_renderer, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
-        actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, transparent_renderer, false));
+        actions.renderer.connect.push(OpsRendererConnect::ops(skywater_renderer, transparent_renderer, false));
         actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
         // actions.camera.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
-        Self { scene, camera, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
+        Self { scene, camera, skywater_renderer, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }
     }
 
     pub fn mesh(

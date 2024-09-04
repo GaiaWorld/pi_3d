@@ -573,7 +573,7 @@ use super::{
                     // log::warn!("{:?}", tmp);
                     if let Some(drawinfo) = draws.get(tmp.idx as usize) {
                         if let Some(tempdraw) = &mut lastdraw {
-                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
                                 _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
                             } else {
                                 // lastdraw 转 DrawObj
@@ -602,7 +602,7 @@ use super::{
                 transparent_list.iter().for_each(|tmp| {
                     if let Some(drawinfo) = draws.get(tmp.idx as usize) {
                         if let Some(tempdraw) = &mut lastdraw {
-                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
                                 _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
                             } else {
                                 // lastdraw 转 DrawObj

@@ -135,6 +135,7 @@ pub struct CombineBuffer {
     pub buffers: Option<Arc<NotUpdatableBufferRange>>,
     pub data: DataPool,
     initmax: usize,
+    pub maxcombinesize: usize,
 }
 impl CombineBuffer {
     pub fn new(initmax: usize, allocator: &mut VertexBufferAllocator3D, device: &PiRenderDevice, queue: &PiRenderQueue) -> Self {
@@ -144,6 +145,7 @@ impl CombineBuffer {
             buffers: buffer,
             initmax,
             data: DataPool::new(initmax),
+            maxcombinesize: initmax,
         }
     }
     pub fn combinecommon(&mut self, requestsize: usize) -> bool {
