@@ -197,8 +197,8 @@ impl TrailPoints {
                     datavertices.push(width * 1.); datavertices.push(item.distance_percent);
                     // datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
                     unsafe_vec_append_slice(datavertices, pos.as_slice());
-                    datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(color.w);
-                    unsafe_vec_append_slice(datavertices, &color.as_slice()[0..3]); datavertices.push(0.);
+                    // datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(color.w);
+                    unsafe_vec_append_slice(datavertices, &color.as_slice());
                     // datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
                     unsafe_vec_append_slice(datavertices, axisx.as_slice());
                     // datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
