@@ -100,7 +100,46 @@ pub type ActionListAnimeGroupDispose = ActionList<OpsAnimationGroupDispose>;
 pub enum OpsAnimationGroupAction {
     Start(Entity, AnimationGroupParam, pi_animation::base::TimeMS, pi_animation::base::EFillMode),
     Pause(Entity),
-    Stop(Entity)
+    Stop(Entity),
+    AddTarget(Entity, Entity, AnimationInfo),
+    FrameEvent(Entity, f32, AnimeFrameEventData),
+    ListenFrame(Entity),
+    ListenStart(Entity),
+    ListenLoop(Entity),
+    ListenEnd(Entity),
+    Weight(Entity, f32),
+}
+impl OpsAnimationGroupAction {
+    pub fn start(group: Entity, param: AnimationGroupParam, time: pi_animation::base::TimeMS, fillmode: pi_animation::base::EFillMode) -> Self {
+        Self::Start(group, param, time, fillmode)
+    }
+    pub fn addtarget(group: Entity, terget: Entity, info: AnimationInfo) -> Self {
+        Self::AddTarget(group, terget, info)
+    }
+    pub fn frameevent(group: Entity, terget: f32, data: AnimeFrameEventData) -> Self {
+        Self::FrameEvent(group, terget, data)
+    }
+    pub fn pause(group: Entity) -> Self {
+        Self::Pause(group)
+    }
+    pub fn stop(group: Entity) -> Self {
+        Self::Stop(group)
+    }
+    pub fn listen_start(group: Entity) -> Self {
+        Self::ListenStart(group)
+    }
+    pub fn listen_frame(group: Entity) -> Self {
+        Self::ListenFrame(group)
+    }
+    pub fn listen_loop(group: Entity) -> Self {
+        Self::ListenLoop(group)
+    }
+    pub fn listen_end(group: Entity) -> Self {
+        Self::ListenEnd(group)
+    }
+    pub fn weight(group: Entity, weight: f32) -> Self {
+        Self::Weight(group, weight)
+    }
 }
 pub type ActionListAnimationGroupAction = ActionList<OpsAnimationGroupAction>;
 
@@ -111,38 +150,6 @@ impl OpsAnimationGroupStartReset {
     }
 }
 pub type ActionListAnimeGroupStartReset = ActionList<OpsAnimationGroupStartReset>;
-
-pub struct OpsAddTargetAnimation(pub(crate) Entity, pub(crate) Entity, pub(crate) AnimationInfo);
-impl OpsAddTargetAnimation {
-    pub fn ops(group: Entity, anime_target: Entity, anime: AnimationInfo) -> Self {
-        Self(group, anime_target, anime)
-    }
-}
-pub type ActionListAddTargetAnime = ActionList<OpsAddTargetAnimation>;
-
-pub struct OpsAddAnimationFrameEvent(pub(crate) Entity, pub(crate) f32, pub(crate) AnimeFrameEventData);
-impl OpsAddAnimationFrameEvent {
-    pub fn ops(group: Entity, progress: f32, data: AnimeFrameEventData) -> Self {
-        Self(group, progress, data)
-    }
-}
-pub type ActionListAddAnimationFrameEvent = ActionList<OpsAddAnimationFrameEvent>;
-
-pub struct OpsAnimationWeight(pub(crate) Entity, pub(crate) f32);
-impl OpsAnimationWeight {
-    pub fn ops(group: Entity, weight: f32) -> Self {
-        Self(group, weight)
-    }
-}
-pub type ActionListAnimationWeight = ActionList<OpsAnimationWeight>;
-
-pub enum OpsAddAnimationListen {
-    Frame(Entity),
-    Start(Entity),
-    Loop(Entity),
-    End(Entity),
-}
-pub type ActionListAddAnimationListen = ActionList<OpsAddAnimationListen>;
 
 pub struct AnimationGroupParam {
     pub speed: KeyFrameCurveValue,
@@ -187,13 +194,9 @@ impl AnimationGroupParam {
 #[derive(SystemParam)]
 pub struct ActionSetAnimationGroup<'w> {
     pub create: ResMut<'w, ActionListAnimeGroupCreate>,
-    pub add_target_anime: ResMut<'w, ActionListAddTargetAnime>,
     pub action: ResMut<'w, ActionListAnimationGroupAction>,
     pub dispose: ResMut<'w, ActionListAnimeGroupDispose>,
     pub reset_while_start: ResMut<'w, ActionListAnimeGroupStartReset>,
-    pub listens: ResMut<'w, ActionListAddAnimationListen>,
-    pub frameevents: ResMut<'w, ActionListAddAnimationFrameEvent>,
-    pub weight: ResMut<'w, ActionListAnimationWeight>,
 }
 
 #[derive(SystemParam)]

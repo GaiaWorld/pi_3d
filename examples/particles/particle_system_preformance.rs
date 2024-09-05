@@ -76,7 +76,7 @@ fn setup(
         }
     }
 
-    // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from("_MainTex"),
     //     filter: true,
     //     sample: KeySampler::default(),
@@ -107,7 +107,7 @@ fn setup(
         };
 
         let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 0.1;

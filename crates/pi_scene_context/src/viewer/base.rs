@@ -125,11 +125,13 @@ impl ViewerTransformMatrix {
         range.write_data(ShaderBindViewer::OFFSET_VIEW_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
     pub fn ray(&self, x: f32, y: f32) -> (Vector3, Vector3) {
-        let invtransform = if let Some(invtransform) = self.0.try_inverse() {
-            invtransform
-        } else {
-            Matrix::identity()
-        };
+        let mut invtransform = self.0.clone();
+        CoordinateSytem3::try_inverse_mut(&mut invtransform);
+        // let invtransform = if let Some(invtransform) = self.0.try_inverse() {
+        //     invtransform
+        // } else {
+        //     Matrix::identity()
+        // };
 
         let near_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), -1.0);
         let far_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), 1.0);

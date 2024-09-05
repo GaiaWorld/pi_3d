@@ -76,7 +76,7 @@ fn setup(
         };
 
         let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), source, animation));
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test2"); 
@@ -97,7 +97,7 @@ fn setup(
         };
 
         let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), root, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), root, animation));
     }
 
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));

@@ -75,7 +75,7 @@ fn setup(
 
     actions.mesh.value_state.push(OpsAbstructMeshValueStateModify::ops(source, EMeshValueStateModify::IndiceRange(Some((3, 12)))));
     // actions.mesh.vertexrange.push(OpsMeshRenderVertexRange::ops(cube, Some(0), Some(12)));
-    actions.mesh.primitive_state.push(OpsPrimitiveState::ops(source, DemoScene::PASS_OPAQUE, EPrimitiveState::CCullMode(CullMode::Off)));
+    actions.mesh.render_state.push(OpsRenderState::primitive_state(source, DemoScene::PASS_OPAQUE, EPrimitiveState::CCullMode(CullMode::Off)));
 
     actions.material.usemat.push(OpsMaterialUse::ops(source, defaultmat.0, DemoScene::PASS_OPAQUE));
 

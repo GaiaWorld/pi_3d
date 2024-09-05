@@ -75,7 +75,7 @@ fn setup(
                 };
 
                 let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cube,  animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), cube,  animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }

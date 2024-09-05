@@ -33,7 +33,7 @@ pub fn sys_light_update(
     items.iter().for_each(|(_, idscene, lidx, direction, param, layer, enabled, wm)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let mut gdirection = Vector3::zeros();
-            CoordinateSytem3::transform_normal(&direction.0, &wm.matrix, &mut gdirection);
+            CoordinateSytem3::transform_normal_floats(direction.0.x, direction.0.y, direction.0.z, &wm.matrix, &mut gdirection);
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
             info.0.as_ref().unwrap().direct_light_data(lidx.val(), enabled.0, layer.0 as f32, gdirection.x, gdirection.y, gdirection.z, r, g, b)
         }

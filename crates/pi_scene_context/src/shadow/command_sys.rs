@@ -106,57 +106,33 @@ pub fn sys_act_shadow_generator(
             OpsShadowGeneratorParam::ShadowMinz(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.minz = val;
-                // } else {
-                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::ShadowMaxz(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.maxz = val;
-                // } else {
-                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::ShadowFrustumSize(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.frustum = val;
-                // } else {
-                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::Bias(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.bias = val;
-                // } else {
-                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::NormalBias(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.normalbias  = val;
-                // } else {
-                //     cmds.push(cmd);
                 }
             },
             OpsShadowGeneratorParam::DepthScale(entity, val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.depthscale = val;
-                // } else {
-                //     cmds.push(cmd);
                 }
             },
-            // OpsShadowGeneratorParam::AtlasSize(entity, val) => {
-            //     if let Ok(mut item) = atlassize.get_mut(entity) {
-            //         *item = ShadowAtlasSize(val);
-            //     } else {
-            //         cmds.push(cmd);
-            //     }
-            // },
-            // OpsShadowGeneratorParam::ShadowEnable(entity, val) => {
-            //     // if let Ok(mut item) = items.get_mut(entity) {
-            //     //     *item.0 = val;
-            //     // }
-            // },
         }
     });
 }

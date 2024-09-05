@@ -78,7 +78,7 @@ fn setup(
                 };
 
                 let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cube, animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), cube, animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
@@ -98,8 +98,8 @@ fn setup(
             }
         };
 
-        // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), idmat, animation));
-        actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
+        // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), idmat, animation));
+        actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
     }
 
     let q = LocalRotationQuaternion::create(0., -0.9, 0., 0.1);

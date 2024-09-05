@@ -255,7 +255,7 @@ impl ConeShapeEmitter {
         // log::warn!("Position: {:?}", (_rand_x, _rand_y, _rand_z));
 
         temp.x = _rand_x; temp.y = _rand_y; temp.z = _rand_z;
-        CoordinateSytem3::transform_coordinates(&temp, &shape.base.local_matrix, position_to_update);
+        CoordinateSytem3::transform_coordinates_floats(_rand_x, _rand_y, _rand_z, &shape.base.local_matrix, position_to_update);
     }
     pub fn orbit_center<'a>(local_position: &'a Vector3, offset: &'a Vector3, result: &'a mut Vector3) {
         result.copy_from(offset);

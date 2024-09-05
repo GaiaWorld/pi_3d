@@ -291,6 +291,7 @@ impl RenderWorldMatrixInv {
 pub struct InstancedMeshTransparentSortCollection {
     pub ranges: Vec<(i32, Range<u32>)>,
     pub data: Vec<u8>,
+    pub dataidx: usize,
     pub count: usize,
     pub sizeperinstance: usize,
     pub use_single_instancebuffer: bool,
@@ -301,6 +302,16 @@ impl InstancedMeshTransparentSortCollection {
         self.data.clear();
         self.count = 0;
         self.sizeperinstance = 0;
+        self.dataidx = 0;
+    }
+    pub fn push_val(&mut self, val: u8) {
+        // if self.dataidx < self.data.len() {
+        //     self.data[self.dataidx] = val;
+        // } else {
+        //     self.data.push(val);
+        // }
+        // self.dataidx += 1;
+        self.data.push(val);
     }
 }
 

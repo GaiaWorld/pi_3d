@@ -2,12 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    cullings::prelude::*,
-    flags::*,
-    geometry::prelude::*,
-    meshes::prelude::*,
-    renderers::prelude::*,
-    transforms::command_sys::{ActionTransformNode, BundleTreeNode}
+    cullings::prelude::*, flags::*, geometry::prelude::*, meshes::prelude::*, pass::{ActionListRenderState, OpsRenderState}, renderers::prelude::*, transforms::command_sys::{ActionTransformNode, BundleTreeNode}
 };
 
 use super::{
@@ -25,9 +20,7 @@ pub fn sys_create_scene(
     device: Res<PiRenderDevice>,
     asset_samp: Res<ShareAssetMgr<SamplerRes>>, 
     mut meshcreate: ResMut<ActionListMeshCreate>,
-    mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
-
-    mut meshrenderqueue: ResMut<ActionListRenderQueue>,
+    mut meshrenderstate: ResMut<ActionListRenderState>,
     mut geocreate: ResMut<ActionListGeometryCreate>,
     mut meshstate: ResMut<ActionListMeshStateModify>,
     // mut alter: Alter<(), (), (BundleScene, SceneBoundingPool, SceneColliderPool, SceneAnimationContext, BoundingBoxDisplay), ()>,
@@ -44,16 +37,16 @@ pub fn sys_create_scene(
             meshstate.push(OpsMeshStateModify::ops(bounding, EMeshStateModify::BoundingCullingMode( ECullingStrategy::None )));
 
             // meshpolygin.push(OpsPolygonMode::ops(bounding, PolygonMode::Line));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_01, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_02, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_03, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_04, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_05, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_06, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_07, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
-            meshprimitivestate.push(OpsPrimitiveState::ops(bounding, PassTag::PASS_TAG_08, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_01, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_02, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_03, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_04, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_05, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_06, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_07, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+            meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_08, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
 
-            meshrenderqueue.push(OpsRenderQueue::ops(bounding, i32::MAX, i32::MAX));
+            meshrenderstate.push(OpsRenderState::render_queue(bounding, i32::MAX, i32::MAX));
             geocreate.push(OpsGeomeryCreate::ops(bounding, boundinggeo, pi_mesh_builder::cube::CubeBuilder::attrs_meta(), Some(pi_mesh_builder::cube::CubeBuilder::indices_meta())));
 
             if let Some(bundle) = ActionScene::init(lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp) {

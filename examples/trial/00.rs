@@ -107,7 +107,7 @@ fn setup(
 
     let idmat = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_clamp(),
@@ -116,7 +116,7 @@ fn setup(
     
     let idmat2 = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat2, UnlitShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat2, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat2, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_clamp(),
@@ -135,8 +135,8 @@ fn setup(
     actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
-    actions.mesh.depth_state.push(OpsDepthState::ops(source, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
+    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.render_state.push(OpsRenderState::depth_state(source, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
 
     let vertices = QuadBuilder::attrs_meta();
     let indices = Some(QuadBuilder::indices_meta());
@@ -145,8 +145,8 @@ fn setup(
     actions.transform.tree.push(OpsTransformNodeParent::ops(source2, node));
     actions.material.usemat.push(OpsMaterialUse::ops(source2, idmat2, DemoScene::PASS_TRANSPARENT));
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source2, DemoScene::PASS_TRANSPARENT, blend));
-    actions.mesh.depth_state.push(OpsDepthState::ops(source2, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
+    actions.mesh.render_state.push(OpsRenderState::blend(source2, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.render_state.push(OpsRenderState::depth_state(source2, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
 
     // let key_group = pi_atom::Atom::from("key_group");
     let id_group = commands.spawn_empty_id();
@@ -167,7 +167,7 @@ fn setup(
     //     };
 
     //     let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    //     actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+    //     actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node, animation));
     // }
     // 总位移距离
     // d = 2.;
@@ -208,7 +208,7 @@ fn setup(
         };
 
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), source, animation));
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test1"); 
@@ -227,7 +227,7 @@ fn setup(
         };
 
         let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), source, animation));
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test3"); 
@@ -245,7 +245,7 @@ fn setup(
             }
         };
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source2, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), source2, animation));
     }
 
 

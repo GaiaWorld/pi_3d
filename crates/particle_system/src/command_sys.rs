@@ -61,14 +61,14 @@ pub fn sys_create_cpu_partilce_system(
     mut performance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
-    mut meshprimitivestate: ResMut<ActionListPrimitiveState>,
+    mut meshprimitivestate: ResMut<ActionListRenderState>,
     mut cmdps: Alter<(), (), ParticleBundle, ()>,
     mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs, ModelStatic), ()>,
     
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     mut altergeo: Alter<(), (), BundleGeometry, ()>,
 ) {
-    cmds.drain().for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes)| {
+    cmds.drain().for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, update_buffer_interval_frame)| {
         let mut _entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
         } else {
@@ -95,7 +95,7 @@ pub fn sys_create_cpu_partilce_system(
                 (
                     attributes,
                     ParticleSystemActive(true),
-                    ParticleSystemRunningState(false, 0),
+                    ParticleSystemRunningState { isrunning: false, deltatime: 0, update_buffer_interval_frame, waitframe: 0, updatebuffer: false },
                     ParticleSystemModifyState,
                     ParticleRandom::new(0),
                     ParticleSystemTime::new(performance.frame_time_ms),
@@ -130,22 +130,22 @@ pub fn sys_create_cpu_partilce_system(
                         id_mesh, &mut commands, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel,
                         &mut altermodel, &mut passinsert
                     );
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_04, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_05, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_06, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_07, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_08, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off)));
-                    meshprimitivestate.push(OpsPrimitiveState::ops(id_mesh, PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_04, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_05, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_06, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_07, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_08, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off)));
+                    meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off)));
 
                     if let Some(mut cmd) = commands.get_entity(id_mesh) {
                         // log::warn!("Mesh Ok");

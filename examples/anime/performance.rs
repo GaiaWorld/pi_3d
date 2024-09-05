@@ -46,14 +46,13 @@ fn setup(
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::default(),
         url: EKeyTexture::from("assets/images/bubbles.png"),
     }));
-    actions.material.vec4.push(
-        OpsUniformVec4::ops(
+    actions.material.val.push(OpsUniformVal::vec4(
             idmat, 
             Atom::from(BlockEmissiveTexture::KEY_INFO), 
             1., 0., 0., 1.
@@ -98,7 +97,7 @@ fn setup(
                 };
 
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, cube, animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, cube, animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }

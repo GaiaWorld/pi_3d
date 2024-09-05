@@ -125,7 +125,8 @@ fn _calc_render_matrix<T>(
                     // transform.matrix.mul_to(&pose.0, &mut wm.0);
 
                     wmi.0.clone_from(&wm.0);
-                    wmi.0.try_inverse_mut();
+                    // wmi.0.try_inverse_mut();
+                    CoordinateSytem3::try_inverse_mut(&mut wmi.0);
                     // log::warn!("Normal Alignment {:?}", (m, obj));
                     return;
                 }
@@ -171,7 +172,8 @@ fn _calc_render_matrix<T>(
     }
 
     m1.clone_from(&m0);
-    m1.try_inverse_mut();
+    // m1.try_inverse_mut();
+    CoordinateSytem3::try_inverse_mut(m1);
 }
 
 pub fn sys_model_for_uniform(

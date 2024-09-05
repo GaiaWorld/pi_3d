@@ -493,7 +493,6 @@ pub struct ActionSets<'w> {
     pub geometry: ActionSetGeometry<'w>,
     pub material: ActionSetMaterial<'w>,
     pub anime: ActionSetAnimationGroup<'w>,
-    pub anime_uniform: ResMut<'w, ActionListTargetAnimationUniform>,
     pub anime_instance: ResMut<'w, ActionListTargetAnimationAttribute>,
     pub renderer: ActionSetRenderer<'w>,
     pub trail: ActionSetTrailRenderer<'w>,

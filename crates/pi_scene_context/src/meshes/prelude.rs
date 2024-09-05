@@ -2,11 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    renderers::prelude::*,
-    cullings::prelude::*,
-    flags::*,
-    geometry::prelude::*,
-    layer_mask::prelude::*,
+    cullings::prelude::*, flags::*, geometry::prelude::*, layer_mask::prelude::*, pass::ActionListRenderState, renderers::prelude::*
 };
 
 pub use super::{
@@ -26,30 +22,11 @@ pub use super::{
 pub struct ActionSetMesh<'w> {
     pub create: ResMut<'w, ActionListMeshCreate>,
     pub state: ResMut<'w, ActionListMeshStateModify>,
-    pub blend: ResMut<'w, ActionListBlend>,
     pub pose: ResMut<'w, ActionListAbstractMeshPose>,
-    
-    pub primitive_state: ResMut<'w, ActionListPrimitiveState>,
-    // pub cullmode: ResMut<'w, ActionListCullMode>,
-    // pub polygonmode: ResMut<'w, ActionListPolyginMode>,
-    // pub frontface: ResMut<'w, ActionListFrontFace>,
-    // pub topology: ResMut<'w, ActionListTopology>,
-    // pub unclip_depth: ResMut<'w, ActionListUnClipDepth>,
 
-    pub depth_state: ResMut<'w, ActionListDepthState>,
-    pub stencil_state: ResMut<'w, ActionListStencilState>,
-    // pub depth_write: ResMut<'w, ActionListDepthWrite>,
-    // pub depth_compare: ResMut<'w, ActionListDepthCompare>,
-    // pub depth_bias: ResMut<'w, ActionListDepthBias>,
-    // pub stencil_front: ResMut<'w, ActionListStencilFront>,
-    // pub stencil_back: ResMut<'w, ActionListStencilBack>,
-    // pub stencil_read: ResMut<'w, ActionListStencilRead>,
-    // pub stencil_write: ResMut<'w, ActionListStencilWrite>,
-
-    pub render_queue: ResMut<'w, ActionListRenderQueue>,
+    pub render_state: ResMut<'w, ActionListRenderState>,
     pub value_state: ResMut<'w, ActionListAbstructMeshValueStateModify>,
-    // pub indexrange: ResMut<'w, ActionListMeshRenderIndiceRange>,
-    // pub vertexrange: ResMut<'w, ActionListMeshRenderVertexRange>,
+
     pub bounding: ResMut<'w, ActionListMeshBounding>,
     pub layermask: ResMut<'w, ActionListLayerMask>,
     pub forcelighting: ResMut<'w, ActionListMeshForceLighting>,

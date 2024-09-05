@@ -42,58 +42,54 @@ fn setup(
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, TwoOpacityMixShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
     }));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
     }));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacity2Texture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_uv_lf_002.png"),
     }));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMixTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
     }));
-    actions.material.vec4.push(
-        OpsUniformVec4::ops(
+    actions.material.val.push(OpsUniformVal::vec4(
             idmat, 
             Atom::from(BlockEmissiveTexture::KEY_INFO), 
             1., 1., 1., 1.
         )
     );
-    actions.material.vec2.push(
-        OpsUniformVec2::ops(
+    actions.material.val.push(OpsUniformVal::vec2(
             idmat, 
             Atom::from(BlockOpacityTextureUVOffsetSpeed::KEY_PARAM), 
             1., 1.
         )
     );
-    actions.material.vec2.push(
-        OpsUniformVec2::ops(
+    actions.material.val.push(OpsUniformVal::vec2(
             idmat, 
             Atom::from(BlockOpacity2TextureUVOffsetSpeed::KEY_PARAM), 
             1., 1.
         )
     );
-    actions.material.float.push(
-        OpsUniformFloat::ops(
+    actions.material.val.push(OpsUniformVal::float(
             idmat, 
             Atom::from(TwoOpacityMixShader::KEY_MIX_CONTROL), 
             1.0,

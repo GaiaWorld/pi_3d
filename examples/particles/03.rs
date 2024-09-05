@@ -112,7 +112,7 @@ fn setup(
         UnlitShader::KEY,
         EPassTag::Opaque,
     ));
-    actions.material.texture.push(OpsUniformTexture::ops(
+    actions.material.valb.push(OpsUniformValB::texture(
         idmat,
         UniformTextureWithSamplerParam {
             slotname: Atom::from("_MainTex"),
@@ -121,7 +121,7 @@ fn setup(
             url: EKeyTexture::from("assets/images/bubbles.png"),
         },
     ));
-    actions.material.vec4.push(OpsUniformVec4::ops(
+    actions.material.val.push(OpsUniformVal::vec4(
         idmat,
         Atom::from(BlockMainTexture::KEY_COLOR),
         1.,

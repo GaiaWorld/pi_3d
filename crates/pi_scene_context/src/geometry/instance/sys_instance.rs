@@ -189,7 +189,8 @@ impl Ord for TmpInstanceSort {
                                     }
                                     tmp_instance_end += 1;
 
-                                    instancedata.bytes().iter().for_each(|v| { instancessortinfos.data.push(*v); });
+                                    unsafe_vec_append_slice(&mut instancessortinfos.data, instancedata.bytes());
+                                    // instancedata.bytes().iter().for_each(|v| { instancessortinfos.data.push(*v); });
                                 }
                                 idx += 0;
                             });

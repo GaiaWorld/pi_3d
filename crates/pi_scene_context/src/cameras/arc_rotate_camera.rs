@@ -32,7 +32,8 @@ impl ArcRotateCamera {
         let mut computation_vec = Vector3::new(radius * cosa * sinb, radius * cosb, radius * sina * sinb);
 
         if camera.up.x != 0. || camera.up.y != 0. || camera.up.z != 0. {
-            CoordinateSytem3::transform_coordinates(&computation_vec.clone(), &self.y_to_up, &mut computation_vec);
+            let x = computation_vec.x; let y = computation_vec.y; let z = computation_vec.z;
+            CoordinateSytem3::transform_coordinates_floats(x, y, z, &self.y_to_up, &mut computation_vec);
         }
 
         // let mut position: Vector3 = camera.target + computation_vec;

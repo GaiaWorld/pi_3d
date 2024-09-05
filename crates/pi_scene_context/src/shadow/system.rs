@@ -50,15 +50,15 @@ pub fn sys_shadow_param_update(
     // mut materails: Query<
     //     (&mut BindEffect, &mut BindEffectValueDirty)
     // >,
-    mut cmds: ResMut<ActionListUniformFloat>,
+    mut cmds: ResMut<ActionListUniformVal>,
 ) {
     shadows.iter().for_each(|(id_mat, shaow)| {
 
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_BIAS), shaow.bias));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_NORMAL_BIAS), shaow.normalbias));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_SCALE), shaow.depthscale));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_MINZ), shaow.minz));
-        cmds.push(OpsUniformFloat::ops(id_mat.0, Atom::from(KEY_SHADOW_MAXZ), shaow.maxz));
+        cmds.push(OpsUniformVal::float(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_BIAS), shaow.bias));
+        cmds.push(OpsUniformVal::float(id_mat.0, Atom::from(KEY_SHADOW_NORMAL_BIAS), shaow.normalbias));
+        cmds.push(OpsUniformVal::float(id_mat.0, Atom::from(KEY_SHADOW_DEPTH_SCALE), shaow.depthscale));
+        cmds.push(OpsUniformVal::float(id_mat.0, Atom::from(KEY_SHADOW_MINZ), shaow.minz));
+        cmds.push(OpsUniformVal::float(id_mat.0, Atom::from(KEY_SHADOW_MAXZ), shaow.maxz));
     });
 }
 

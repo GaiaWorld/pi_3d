@@ -89,26 +89,28 @@ impl DataPool {
         self.vec.len()
     }
     pub fn reset(&mut self) {
-        // self.vec.clear();
+        self.vec.clear();
         self.used = 0;
     }
     pub fn record(&mut self, data: &[u8]) -> Range<usize> {
+
         let start = self.used;
         let end = self.used + data.len();
 
-        let mut pushlen = data.len();
-        let mut mutlen = 0;
-        if self.vec.len() > self.used {
-            mutlen = (self.vec.len() - self.used).min(data.len());
-            for idx in 0..mutlen{
-                self.vec[self.used + idx] = data[idx];
-            }
-            pushlen = data.len() - mutlen;
-        }
+        // let mut pushlen = data.len();
+        // let mut mutlen = 0;
+        // if self.vec.len() > self.used {
+        //     mutlen = (self.vec.len() - self.used).min(data.len());
+        //     for idx in 0..mutlen{
+        //         self.vec[self.used + idx] = data[idx];
+        //     }
+        //     pushlen = data.len() - mutlen;
+        // }
     
-        for idx in 0..pushlen {
-            self.vec.push(data[mutlen + idx]);
-        }
+        // for idx in 0..pushlen {
+        //     self.vec.push(data[mutlen + idx]);
+        // }
+        unsafe_vec_append_slice(&mut self.vec, data);
 
         self.used += data.len();
 

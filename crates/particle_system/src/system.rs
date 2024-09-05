@@ -1,6 +1,7 @@
 
 use std::{ops::Range, sync::Arc};
 
+use pi_render::rhi::std140::Std140;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use pi_scene_context::{geometry::instance::{instanced_buffer::*, types::ModelInstanceAttributes}, prelude::*};
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Vector4};
@@ -13,7 +14,7 @@ pub fn runif_particlesystem(
 ) -> bool {
     let mut activenum = 0;
     items.iter().for_each(|state| {
-        if state.0 {
+        if state.isrunning {
             activenum += 1;
         }
     });
@@ -31,12 +32,12 @@ pub fn sys_particle_active(
     // let time0 = pi_time::Instant::now();
     items.iter_mut().for_each(|(entity, enable, idscene, active, mut state, mut ids, mut time, mut emission, mut instancestate, mut flag)| {
         if enable.0 == true && active.0 == true {
-            if state.0 == false {
+            if state.isrunning == false {
                 if let (Ok(calculator), Ok(scenetime)) = (calculators.get(ids.calculator.as_ref().unwrap().0), scenes.get(idscene.0)) {
 
-                    if 0 < calculator.delay && state.1 < calculator.delay as u64 {
+                    if 0 < calculator.delay && state.deltatime < calculator.delay as u64 {
                         cmds.push(OpsCPUParticleSystemState::Start(entity));
-                        state.1 += scenetime.delta_ms();
+                        state.deltatime += scenetime.delta_ms();
                         return;
                     }
 
@@ -47,14 +48,14 @@ pub fn sys_particle_active(
                     *flag = DirtyInstanceSourceRefs;
                     ids.reset();
 
-                    state.0 = true;
-                    state.1 = 0;
+                    state.isrunning = true;
+                    state.deltatime = 0;
                 }
 
             }
         } else {
-            state.0 = false;
-            state.1 = 0;
+            state.isrunning = false;
+            state.deltatime = 0;
         }
     });
 
@@ -81,6 +82,9 @@ pub fn sys_prewarm(
     if performance.debug { performance.time = pi_time::Instant::now(); }
 
     let mut tempvec3 = Vector3::zeros();
+    let mut orbit_center: Vector3 = Vector3::zeros();
+    let mut orbit_direction: Vector3 = Vector3::zeros();
+
     items.iter_mut().for_each(|(
         (disposestate, state, localscl, gmatrix, mut gravities, mut ids, mut time, mut modifystate),
         (mut emission, mut random, mut randoms, mut emitmatrix, mut abstransform, mut directions),
@@ -92,7 +96,7 @@ pub fn sys_prewarm(
         )) = calculators.get(ids.calculator.as_ref().unwrap().0) {
             let delta_ms = 66 as u32;
 
-            if state.0 && disposestate.0 == false && base.prewarm {
+            if state.isrunning && disposestate.0 == false && base.prewarm {
                 // log::error!("Prewarm!!!");
                 let global_position = Vector3::zeros();
 
@@ -142,7 +146,7 @@ pub fn sys_prewarm(
                     if let Some(calculator) = &overlifetime.speed {
                         fn_speed_modifier_over_life_time(calculator, &ids, &time, &particlestart.ages, &randoms, &mut particlevelocityforce.speedfector);
                     }
-                    fn_direction(&modifiers.shapeemitter, &ids, &time, &particlevelocityforce.velocity, &particlevelocityforce.gravities, &particlevelocityforce.forces, &particlevelocityforce.speedfector, &particlevelocityforce.limitvelocityscalar, &orbitoffset, &orbitvelocity, &orbitradial, &mut directions, &mut particlelocal.position);
+                    fn_direction(&modifiers.shapeemitter, &ids, &time, &particlevelocityforce.velocity, &particlevelocityforce.gravities, &particlevelocityforce.forces, &particlevelocityforce.speedfector, &particlevelocityforce.limitvelocityscalar, &orbitoffset, &orbitvelocity, &orbitradial, &mut directions, &mut particlelocal.position, &mut tempvec3, &mut orbit_center, &mut orbit_direction);
 
                     if let Some(calculator) = &overlifetime.sizebyspeed {
                         fn_size_by_speed(calculator, &ids, &time, &directions, &randoms, &mut particlelocal.scalings);
@@ -217,7 +221,7 @@ pub fn sys_emission(
 
             // log::warn!("{:?}, {:?}, {:?}, ", delta_ms, state.playing, disposestate.0);
 
-            if state.0 && disposestate.0 == false {
+            if state.isrunning && disposestate.0 == false {
                 particlesystime.run(delta_ms, 1000, base.duration);
             } else {
                 particlesystime.run(0, 1000, base.duration);
@@ -553,6 +557,9 @@ pub fn sys_direction(
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
     if performance.debug { performance.time = pi_time::Instant::now(); }
+    let mut temp = Vector3::zeros();
+    let mut orbit_center: Vector3 = Vector3::zeros();
+    let mut orbit_direction: Vector3 = Vector3::zeros();
 
     particle_sys.iter_mut().for_each(
         |(
@@ -569,7 +576,7 @@ pub fn sys_direction(
             let speedfactors = &particlevelocityforce.speedfector;
 
             if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-                fn_direction(&calculator.shapeemitter, ids, time, velocities, gravities, forces, speedfactors, limitscalars, orbitsoffset, orbitsvelocity, orbitsradial, &mut direction, &mut particlelocal.position);
+                fn_direction(&calculator.shapeemitter, ids, time, velocities, gravities, forces, speedfactors, limitscalars, orbitsoffset, orbitsvelocity, orbitsradial, &mut direction, &mut particlelocal.position, &mut temp, &mut orbit_center, &mut orbit_direction);
                 // let emitter = &calculator.0;
                 // // let newids = &ids.newids;
                 // let activeids = &ids.actives;
@@ -584,12 +591,15 @@ pub fn fn_direction(
     ids: &ParticleIDs, time: &ParticleSystemTime,
     velocities: &ParticleVelocity, gravities: &ParticleGravityFactor, forces: &ParticleForce, speedfactors: &ParticleSpeedFactor, limitscalars: &ParticleLimitVelocityScalar,
     orbitsoffset: &ParticleOrbitOffset, orbitsvelocity: &ParticleOrbitVelocity, orbitsradial: &ParticleOrbitRadial,
-    direction: &mut ParticleDirection, positions: &mut ParticleLocalPosition
+    direction: &mut ParticleDirection, positions: &mut ParticleLocalPosition,
+    temp: &mut Vector3,
+    orbit_center: &mut Vector3,
+    orbit_direction: &mut Vector3,
 ) {
     let emitter = &calculator.0;
     // let newids = &ids.newids;
     let activeids = &ids.actives;
-    direction.run(activeids, forces, gravities, velocities, limitscalars, orbitsvelocity, orbitsoffset, orbitsradial, speedfactors, positions, emitter, time);
+    direction.run(activeids, forces, gravities, velocities, limitscalars, orbitsvelocity, orbitsoffset, orbitsradial, speedfactors, positions, emitter, time, temp, orbit_center, orbit_direction);
 }
 
 // ========================== by speed
@@ -657,196 +667,197 @@ pub fn fn_texturesheet(
 
 pub fn sys_update_buffer(
     calculators: Query<&ParticleCalculatorBase>,
-    particle_sys: Query<
-        (Entity, &ParticleAttributes, &ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
+    mut particle_sys: Query<
+        (Entity, &ParticleAttributes, &mut ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
     >,
     mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection)>,
     // mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
     mut performance: ResMut<ParticleSystemPerformance>,
-    mut combinedata: ResMut<CombineDataCommon>,
-    instant: Res<EngineInstant>,
 ) {
+    performance.debug = true;
     let time0 = pi_time::Instant::now();
     if performance.debug { performance.time = time0; }
 
-    let mut count = 0;
-    let currms = (time0 - instant.0).as_millis() as u64;
-    performance.update_buffer = true; // (performance.last_running_time + performance.update_frame_time_ms as u64) < currms;
-    if performance.update_buffer {
-        performance.last_running_time = currms;
-        // log::warn!("ParticleBuffer: ");
+    let mut count_particles = 0;
 
-        let mut count_particles = 0;
-        let mut collectdata: Vec<u8> = Vec::with_capacity(performance.maxparticles as usize * (4 + 4 + 16) * 4);
+    let mut refwmatrix = Matrix::identity();
+    let mut reflmatrix = Matrix::identity();
+    let mut resultmatrix = Matrix::identity();
+    let mut localmatrix = Matrix::identity();
+    let mut l_rotation = Rotation3::identity();
+    let v3zero = Vector3::zeros();
+    let mut h = Vector4::zeros();
+    let mut hh = Vector4::zeros();
+    let mut emitposition = Vector3::zeros();
+    let mut g_velocity = Vector3::zeros();
+    let mut f_v = false;
+    let mut f_lc = false;
 
-        let mut refwmatrix = Matrix::identity();
-        let mut reflmatrix = Matrix::identity();
-        let mut resultmatrix = Matrix::identity();
-        let mut localmatrix = Matrix::identity();
-        let mut l_rotation = Rotation3::identity();
-        let v3zero = Vector3::zeros();
-        let mut h = Vector4::zeros();
-        let mut hh = Vector4::zeros();
-        let mut emitposition = Vector3::zeros();
-        let mut g_velocity = Vector3::zeros();
-        let mut f_v = false;
-        let mut f_lc = false;
+    let stripe = 16 + 4 + 4;
+    let mut temp: [f32; 24] = [0f32;16 + 4 + 4];
+    particle_sys.iter_mut().for_each(
+        |(
+            entity, _attributes, mut state, _time, ids, particlelocal, directions, emitmatrixs
+        )| {
+            let particle_count = ids.actives.len();
+            // log::warn!("sys_update_buffer A {:?}", particle_count);
 
-        particle_sys.iter().for_each(
-            |(
-                entity, _attributes, state, _time, ids, particlelocal, directions, emitmatrixs
-            )| {
-                let particle_count = ids.actives.len();
+            // if time.running_delta_ms <= 0 { return; }
+            if let Ok((enable, idgeo, _instanceattributes, mut instancesort)) = meshes.get_mut(entity) {
 
-                // log::warn!("sys_update_buffer A {:?}", particle_count);
-
-                // if time.running_delta_ms <= 0 { return; }
-                if let Ok((enable, idgeo, _instanceattributes, mut instancesort)) = meshes.get_mut(entity) {
+                if state.isrunning == false || particle_count == 0 {
+                    // if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
+                    //     *rendergeometry = RenderGeometryEable(false);
+                    //     return;
+                    // }
                     instancesort.reset();
+                    return;
+                }
 
-                    if state.0 == false || particle_count == 0 {
-                        // if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
-                        //     *rendergeometry = RenderGeometryEable(false);
-                        //     return;
-                        // }
-                        return;
-                    }
+                if enable.0 == false { 
+                    instancesort.reset();
+                    return;
+                }
 
-                    if enable.0 == false { return; }
+                state.updatebuffer = state.waitframe >= state.update_buffer_interval_frame;
+                if state.updatebuffer == false {
+                    state.waitframe += 1;
+                    return;
+                }
 
-                    let positions = &particlelocal.position;
-                    let rotations = &particlelocal.rotation;
-                    let scalings = &particlelocal.scalings;
-                    let colorsanduvs = &particlelocal.colorsanduvs;
-                    
-                    let id_geo = idgeo.0;
-                    if let Ok(InstancedInfoComp(Some(instanceinfo))) = instanceinfos.get(id_geo) {
-                        instancesort.sizeperinstance = instanceinfo.bytes_per_instance as usize;
+                instancesort.reset();
+                state.waitframe = 0;
 
-                        count_particles += particle_count;
+                let positions = &particlelocal.position;
+                let rotations = &particlelocal.rotation;
+                let scalings = &particlelocal.scalings;
+                let colorsanduvs = &particlelocal.colorsanduvs;
+                
+                let id_geo = idgeo.0;
+                if let Ok(InstancedInfoComp(Some(instanceinfo))) = instanceinfos.get(id_geo) {
+                    instancesort.sizeperinstance = instanceinfo.bytes_per_instance as usize;
 
-                        // log::warn!("sys_update_buffer B");
-                        if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
-                            collectdata.clear();
-                            // let mut collectdata: Vec<f32> = Vec::with_capacity(length * (4 + 4 + 16));
-                            let renderalign = calculator.render_align();
-                            let updatebuffer = renderalign.is_some();
-                            // log::warn!("ActiveCount: {:?}", ids.actives.len());
-                            f_v = false;
-                            f_lc = false;
-                            if let Some(renderalign) = renderalign {
-                                f_lc = renderalign == ERenderAlignment::StretchedBillboard;
-                                let calc_matrix = match renderalign {
-                                    ERenderAlignment::View                  => { calc_matrix_view  },
-                                    ERenderAlignment::World                 => { calc_matrix_world },
-                                    ERenderAlignment::Local                 => { calc_matrix_local },
-                                    ERenderAlignment::Facing                => { calc_matrix_facing    },
-                                    ERenderAlignment::Velocity              => { f_v = true; calc_matrix_velocity  },
-                                    ERenderAlignment::StretchedBillboard    => { f_v = true; calc_matrix_strentched    },
-                                    ERenderAlignment::HorizontalBillboard   => { calc_matrix_horizontal    },
-                                    ERenderAlignment::VerticalBillboard     => { calc_matrix_vertical  },
-                                };
+                    count_particles += particle_count;
 
-                                // let mut str: i32ipe = (16 + 4 + 4);
-                                // let mut collect_common: Vec<u8> = Vec::with_capacity(ids.actives.len() * (16 + 4 + 4) * 4);
+                    // log::warn!("sys_update_buffer B");
+                    if let Ok(calculator) = calculators.get(ids.calculator.as_ref().unwrap().0) {
+                        let renderalign = calculator.render_align();
+                        let updatebuffer = renderalign.is_some();
+                        // log::warn!("ActiveCount: {:?}", ids.actives.len());
+                        f_v = false;
+                        f_lc = false;
+                        if let Some(renderalign) = renderalign {
+                            f_lc = renderalign == ERenderAlignment::StretchedBillboard;
+                            let calc_matrix = match renderalign {
+                                ERenderAlignment::View                  => { calc_matrix_view  },
+                                ERenderAlignment::World                 => { calc_matrix_world },
+                                ERenderAlignment::Local                 => { calc_matrix_local },
+                                ERenderAlignment::Facing                => { calc_matrix_facing    },
+                                ERenderAlignment::Velocity              => { f_v = true; calc_matrix_velocity  },
+                                ERenderAlignment::StretchedBillboard    => { f_v = true; calc_matrix_strentched    },
+                                ERenderAlignment::HorizontalBillboard   => { calc_matrix_horizontal    },
+                                ERenderAlignment::VerticalBillboard     => { calc_matrix_vertical  },
+                            };
 
-                                // let mut collect_float: Vec<f32> = Vec::with_capacity(ids.actives.len() * stripe);
-                                // unsafe { collect_float.set_len(ids.actives.len() * stripe); }
-                                combinedata.reset();
-                                let mut index = 0;
-                                ids.actives.iter().for_each(|idx| {
-                                    count += 1;
-                                    let scaling = scalings.get(*idx).unwrap();
-                                    let eulers = rotations.get(*idx).unwrap();
-        
-                                    let translation = positions.get(*idx).unwrap();
-                                    // log::warn!("LOCAL: {:?}", translation);
-        
-                                    let tx = translation.x + calculator.pivot.x;
-                                    let ty = translation.y + calculator.pivot.y;
-                                    let tz = translation.z + calculator.pivot.z;
+                            // unsafe { collect_float.set_len(ids.actives.len() * stripe); }
 
-                                    let direction = directions.get(*idx).unwrap();
-                                    let emitmatrix = emitmatrixs.get(*idx).unwrap();
-        
-                                    if f_v {
-                                        h.x = direction.value.x; h.y = direction.value.y; h.z = direction.value.z; h.w = 0.;
-                                        CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
-                                        g_velocity.x = hh.x; g_velocity.y = hh.y; g_velocity.z = hh.z;
-                                        // CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
-                                    }
-
-                                    h.x = tx; h.y = ty; h.z = tz; h.w = 1.;
-                                    CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
-                                    emitposition.x = hh.x; emitposition.y = hh.y; emitposition.z = hh.z;
-                                    // CoordinateSytem3::transform_coordinates(&translation, &emitmatrix.matrix, &mut emitposition);
+                            let mut index = 0;
+                            ids.actives.iter().for_each(|idx| {
+                                let scaling = scalings.get(*idx).unwrap();
+                                let eulers = rotations.get(*idx).unwrap();
     
-                                    // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
-                                    let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
-                                    // log::warn!("Velocity: {:?}", (g_velocity, direction.value));
-                                    // log::warn!("Translation: {:?}", emitposition);
-                                    // let matrix = emitmatrix.matrix.clone();
+                                let translation = positions.get(*idx).unwrap();
+                                // log::warn!("LOCAL: {:?}", translation);
+    
+                                let tx = translation.x + calculator.pivot.x;
+                                let ty = translation.y + calculator.pivot.y;
+                                let tz = translation.z + calculator.pivot.z;
 
-                                    let matrix = if updatebuffer {
-                                        CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
-                                        refwmatrix.copy_from(&emitmatrix.matrix);
-                                        calc_matrix(
-                                            &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
-                                            &v3zero, &scaling, &l_rotation, &eulers,
-                                            &mut refwmatrix, &mut reflmatrix, &mut resultmatrix
-                                        );
+                                let direction = directions.get(*idx).unwrap();
+                                let emitmatrix = emitmatrixs.get(*idx).unwrap();
+    
+                                if f_v {
+                                    h.x = direction.value.x; h.y = direction.value.y; h.z = direction.value.z; h.w = 0.;
+                                    CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
+                                    g_velocity.x = hh.x; g_velocity.y = hh.y; g_velocity.z = hh.z;
+                                    // CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
+                                }
 
-                                        if f_lc {
-                                            calc_local_strentched_call(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
-                                            CoordinateSytem3::mul_to(&resultmatrix, &localmatrix, &mut refwmatrix);
-                                            &refwmatrix
-                                        } else {
-                                            &resultmatrix
-                                        }
-                                        // &resultmatrix
+                                h.x = tx; h.y = ty; h.z = tz; h.w = 1.;
+                                CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
+                                emitposition.x = hh.x; emitposition.y = hh.y; emitposition.z = hh.z;
+                                // CoordinateSytem3::transform_coordinates_floats(tx, ty, tz, &emitmatrix.matrix, &mut emitposition);
+
+                                // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
+                                let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
+                                // log::warn!("Velocity: {:?}", (g_velocity, direction.value));
+                                // log::warn!("Translation: {:?}", emitposition);
+                                // let matrix = emitmatrix.matrix.clone();
+
+                                let matrix = if updatebuffer {
+                                    CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
+                                    refwmatrix.copy_from(&emitmatrix.matrix);
+                                    calc_matrix(
+                                        &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
+                                        &v3zero, &scaling, &l_rotation, &eulers,
+                                        &mut refwmatrix, &mut reflmatrix, &mut resultmatrix
+                                    );
+
+                                    if f_lc {
+                                        calc_local_strentched_call(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
+                                        CoordinateSytem3::mul_to(&resultmatrix, &localmatrix, &mut refwmatrix);
+                                        &refwmatrix
                                     } else {
-                                        // let mut matrix = Matrix::identity();
-                                        // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
-                                        // let mut local = Matrix::identity();
-                                        CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
-                                        pi_scene_shell::prelude::matrix4_compose_rotation(scaling, &l_rotation, translation, &mut reflmatrix);
-                                        // log::warn!("MAREIX: {:?}", matrix);
-                                        // log::warn!("LOCAL: {:?}", local);
-                                        CoordinateSytem3::mul_to(&emitmatrix.matrix, &reflmatrix, &mut resultmatrix);
-                                        // emitmatrix.matrix.mul_to(&reflmatrix, &mut resultmatrix);
                                         &resultmatrix
-                                    };
-        
-                                    let color = colorsanduvs.color.0.get(*idx).unwrap();
-                                    let uv = colorsanduvs.uv.0.get(*idx).unwrap();
-
-                                    // let offset = idx * stripe;
-                                    // 获取粒子的网格实例化属性写入顶点Buffer
-                                    {
-                                        // log::warn!("LOCAL: {:?}", ([uv.uscale, uv.vscale, uv.uoffset, uv.voffset], color));
-                                        bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
-                                        bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
-                                        bytemuck::cast_slice(&uv.data).iter().for_each(|v| { instancesort.data.push(*v); });
                                     }
+                                } else {
+                                    // let mut matrix = Matrix::identity();
+                                    // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
+                                    // let mut local = Matrix::identity();
+                                    CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
+                                    pi_scene_shell::prelude::matrix4_compose_rotation(scaling, &l_rotation, translation, &mut reflmatrix);
+                                    // log::warn!("MAREIX: {:?}", matrix);
+                                    // log::warn!("LOCAL: {:?}", local);
+                                    CoordinateSytem3::mul_to(&emitmatrix.matrix, &reflmatrix, &mut resultmatrix);
+                                    // emitmatrix.matrix.mul_to(&reflmatrix, &mut resultmatrix);
+                                    &resultmatrix
+                                };
+    
+                                let color = colorsanduvs.color.0.get(*idx).unwrap();
+                                let uv = colorsanduvs.uv.0.get(*idx).unwrap();
 
-                                    index += 1;
-                                });
+                                // 获取粒子的网格实例化属性写入顶点Buffer
+                                {
+                                    // log::warn!("LOCAL: {:?}", ([uv.uscale, uv.vscale, uv.uoffset, uv.voffset], color));
+                                    let m = matrix.as_slice();
+                                    temp.as_mut_slice()[0..16].copy_from_slice(m);
+                                    temp.as_mut_slice()[16..20].copy_from_slice(color.as_slice());
+                                    temp.as_mut_slice()[20..24].copy_from_slice(&uv.data);
+                                    unsafe_vec_append_slice(&mut instancesort.data, bytemuck::cast_slice(temp.as_slice()));
 
-                                instancesort.ranges.push((0, Range { start: 0, end: index as u32 }));
-                                instancesort.count = index;
-                            }
+                                    // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
+                                    // bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
+                                    // bytemuck::cast_slice(&uv.data).iter().for_each(|v| { instancesort.data.push(*v); });
+                                }
+
+                                index += 1;
+                            });
+
+                            // bytemuck::cast_slice(&collect_float.as_slice()[0..(index * stripe)]).iter().for_each(|v| { instancesort.data.push(*v); });
+                            instancesort.ranges.push((0, Range { start: 0, end: index as u32 }));
+                            instancesort.count = index;
                         }
                     }
                 }
             }
-        );
+        }
+    );
 
-        performance.particles = count_particles as u32;
-    }
+    performance.particles = count_particles as u32;
 
     if performance.debug { performance.sys_update_buffer = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
-    // log::error!("Particle Sytem: {:?} ms", ((pi_time::Instant::now() - time0).as_millis() as u32, count));
+    // log::error!("Particle Sytem: UpdateBuffer {:?} ms, direction {:?}, byspeed {:?}, overlife {:?}", ((pi_time::Instant::now() - time0).as_millis() as u32, count_particles), performance.sys_direction, performance.sys_by_speed, (performance.sys_over_life_time, performance.sys_emission, performance.sys_emitmatrix, performance.sys_ids, performance.sys_prewarm, performance.sys_start));
 }
 
 pub fn sys_update_buffer_trail(
@@ -875,12 +886,13 @@ pub fn sys_update_buffer_trail(
 
                     // log::warn!("Trail Update: 00");
                     if let Ok(mut geometry) = geometries.get_mut(trailmesh.geo){
-                        if state.0 == false {
+                        if state.isrunning == false {
                             if let Ok(mut rendergeometry) = meshes.get_mut(trailmesh.mesh) {
                                 *rendergeometry = RenderGeometryEable(false);
                             }
                             return;
                         }
+                        if state.updatebuffer == false { return; }
                         if let Ok(ParticleCalculatorTrail(Some(trailmodifier))) = trailmodifiers.get(ids.calculator.as_ref().unwrap().0) {
                             let newids = &ids.newids;
                             trails.run_new(newids, randoms, &colors.color.0, positions, scalings, rotations, emitmatrixs, directions, &trailmodifier);

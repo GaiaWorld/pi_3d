@@ -107,7 +107,7 @@ fn setup(
 
     let idmat = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
@@ -143,7 +143,7 @@ fn setup(
         };
 
         let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node, animation));
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test0"); 
@@ -158,7 +158,7 @@ fn setup(
         };
 
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node, animation));
     }
     {
         let key_curve0 =  pi_atom::Atom::from("test1"); 
@@ -173,7 +173,7 @@ fn setup(
         };
 
         let animation = anime_contexts.scaling.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node, animation));
     }
 
 
@@ -202,8 +202,8 @@ fn setup(
         actions.trail.age.push(OpsTrailAgeControl::ops(trail, 500));
         actions.material.usemat.push(OpsMaterialUse::ops(trail, idmat, DemoScene::PASS_TRANSPARENT));
         let mut blend = ModelBlend::default(); blend.combine();
-        actions.mesh.blend.push(OpsRenderBlend::ops(trail, DemoScene::PASS_TRANSPARENT, blend));
-        actions.mesh.depth_state.push(OpsDepthState::ops(trail, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
+        actions.mesh.render_state.push(OpsRenderState::blend(trail, DemoScene::PASS_TRANSPARENT, blend));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(trail, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
     }
     
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;param.loop_mode = ELoopMode::PositivePly(None);

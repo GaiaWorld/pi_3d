@@ -362,16 +362,18 @@ impl GlobalMatrix {
         // p_m.mul_to(&l_matrix.0, &mut result.matrix);
 
         if result.matrix.as_slice()[0].is_finite() {
-            match result.matrix.try_inverse() {
-                Some(val) => {
-                    result.matrix_inv = val;
-                }
-                None => {
-                    flag = false;
-                    result.matrix = Matrix::identity();
-                    result.matrix_inv = Matrix::identity(); 
-                }
-            }
+            result.matrix_inv.clone_from(&result.matrix);
+            CoordinateSytem3::try_inverse_mut(&mut result.matrix_inv);
+            // match result.matrix.try_inverse() {
+            //     Some(val) => {
+            //         result.matrix_inv = val;
+            //     }
+            //     None => {
+            //         flag = false;
+            //         result.matrix = Matrix::identity();
+            //         result.matrix_inv = Matrix::identity(); 
+            //     }
+            // }
         } else {
             flag = false;
             result.matrix = Matrix::identity();

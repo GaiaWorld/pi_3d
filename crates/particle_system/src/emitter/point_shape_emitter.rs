@@ -102,7 +102,7 @@ impl PointShapeEmitter {
         temp: &'a mut Vector3,
     ) {
         temp.x = 0.; temp.y = 0.; temp.z = 0.;
-        CoordinateSytem3::transform_coordinates(&temp, &_shape.base.local_matrix, position_to_update);
+        CoordinateSytem3::transform_coordinates_floats(0., 0., 0., &_shape.base.local_matrix, position_to_update);
     }
     
     pub fn orbit_center<'a>(_local_position: &'a Vector3, offset: &'a Vector3, result: &'a mut Vector3) {

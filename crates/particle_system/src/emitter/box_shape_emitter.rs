@@ -135,8 +135,8 @@ impl BoxShapeEmitter {
         rand_z += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
         rand_y += (random.random() * 2.0 - 1.0) * shape.base.randomize_position;
 
-        temp.x = rand_x; temp.y = rand_y; temp.z = rand_z;
-        CoordinateSytem3::transform_coordinates(&temp, &shape.base.local_matrix, position_to_update);
+        // temp.x = rand_x; temp.y = rand_y; temp.z = rand_z;
+        CoordinateSytem3::transform_coordinates_floats(rand_x, rand_y, rand_z, &shape.base.local_matrix, position_to_update);
     }
     pub fn orbit_center<'a>(_local_position: &'a Vector3, offset: &'a Vector3, result: &'a mut Vector3) {
         result.copy_from(offset);

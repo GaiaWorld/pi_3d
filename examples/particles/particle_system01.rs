@@ -49,7 +49,7 @@ pub fn setup(
     {
         let idmattrail = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
-        actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
+        actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
@@ -61,7 +61,7 @@ pub fn setup(
     {
         let idmattrail = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
-        actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
+        actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
@@ -85,20 +85,20 @@ pub fn setup(
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
-                    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
-                    actions.mesh.render_queue.push(OpsRenderQueue::ops(source, 0, _k % 2));
-                    actions.mesh.primitive_state.push(OpsPrimitiveState::ops(source, DemoScene::PASS_TRANSPARENT, EPrimitiveState::CCullMode(CullMode::Off)));
+                    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
+                    actions.mesh.render_state.push(OpsRenderState::render_queue(source, 0, _k % 2));
+                    actions.mesh.render_state.push(OpsRenderState::primitive_state(source, DemoScene::PASS_TRANSPARENT, EPrimitiveState::CCullMode(CullMode::Off)));
 
                     //
                     let syskey = String::from("Test");
-                    let syscfg = demo_cfg(320., 10.);
+                    let syscfg = demo_cfg(1000., 10.);
                     let calculator = commands.spawn_empty_id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());
                     let calculator = particlesys_res.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
                     let trailmesh = commands.spawn_empty_id();
                     let trailgeo = commands.spawn_empty_id();
-                    actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator, base::particelsystem_attrs()));
+                    actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator, base::particelsystem_attrs(), 0));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_start(source));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
@@ -120,7 +120,7 @@ pub fn setup(
         }
     }
 
-    // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from("_MainTex"),
     //     filter: true,
     //     sample: KeySampler::default(),
@@ -147,7 +147,7 @@ pub fn setup(
             }
         };
         let animation = anime_contexts.quaternion.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;

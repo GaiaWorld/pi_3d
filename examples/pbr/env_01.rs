@@ -121,7 +121,7 @@ impl Plugin for PluginTest {
         let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
-        actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+        actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
@@ -187,7 +187,7 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cameraroot, animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), cameraroot, animation));
             }
         }
         {
@@ -202,7 +202,7 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), lightroot, animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), lightroot, animation));
             }
         }
         actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));

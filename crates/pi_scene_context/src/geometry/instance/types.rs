@@ -78,7 +78,8 @@ impl ModelInstanceAttributes {
         let mut offset = 0;
 
         if worldmatrix {
-            bytemuck::cast_slice(Matrix::identity().as_slice()).iter().for_each(|byte| { bytes.push(*byte) });
+            unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(Matrix::identity().as_slice()));
+            // bytemuck::cast_slice(Matrix::identity().as_slice()).iter().for_each(|byte| { bytes.push(*byte) });
             offset += 64;
         }
 
@@ -89,32 +90,38 @@ impl ModelInstanceAttributes {
             match atype {
                 EAnimatorableType::Vec4     => {
                     // animatorablevec4s.push(OpsAnimatorableVec4::ops(entity, linked, AnimatorableVec4::from(&tmp)));
-                    bytemuck::cast_slice(&tmp[0..4]).iter().for_each(|byte| { bytes.push(*byte) });
+                    // bytemuck::cast_slice(&tmp[0..4]).iter().for_each(|byte| { bytes.push(*byte) });
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..4]));
                     offset += 16;
                 },
                 EAnimatorableType::Vec3     => {
                     // animatorablevec3s.push(OpsAnimatorableVec3::ops(entity, linked, AnimatorableVec3::from(&[0., 0., 0.])));
-                    bytemuck::cast_slice(&tmp[0..3]).iter().for_each(|byte| { bytes.push(*byte) });
+                    // bytemuck::cast_slice(&tmp[0..3]).iter().for_each(|byte| { bytes.push(*byte) });
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..3]));
                     offset += 12;
                 },
                 EAnimatorableType::Vec2     => {
                     // animatorablevec2s.push(OpsAnimatorableVec2::ops(entity, linked, AnimatorableVec2::from(&[0., 0.])));
-                    bytemuck::cast_slice(&tmp[0..2]).iter().for_each(|byte| { bytes.push(*byte) });
+                    // bytemuck::cast_slice(&tmp[0..2]).iter().for_each(|byte| { bytes.push(*byte) });
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..2]));
                     offset += 8;
                 },
                 EAnimatorableType::Float    => {
                     // animatorablefloats.push(OpsAnimatorableFloat::ops(entity, linked, AnimatorableFloat(0.)));
-                    bytemuck::cast_slice(&[0.]).iter().for_each(|byte| { bytes.push(*byte) });
+                    // bytemuck::cast_slice(&[0.]).iter().for_each(|byte| { bytes.push(*byte) });
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..1]));
                     offset += 4;
                 },
                 EAnimatorableType::Uint     => {
                     // animatorableuints.push(OpsAnimatorableUint::ops(entity, linked, AnimatorableUint(0)));
-                    bytemuck::cast_slice(&[0u32]).iter().for_each(|byte| { bytes.push(*byte) });
+                    // bytemuck::cast_slice(&[0u32]).iter().for_each(|byte| { bytes.push(*byte) });
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u32]));
                     offset += 4;
                 },
                 EAnimatorableType::Int      => {
                     // animatorablesints.push(OpsAnimatorableSint::ops(entity, linked, AnimatorableInt(0)));
-                    bytemuck::cast_slice(&[0i32]).iter().for_each(|byte| { bytes.push(*byte) });
+                    // bytemuck::cast_slice(&[0i32]).iter().for_each(|byte| { bytes.push(*byte) });
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0i32]));
                     offset += 4;
                 },
             }

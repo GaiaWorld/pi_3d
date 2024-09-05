@@ -106,15 +106,8 @@ impl Plugin for PluginMaterial {
 
         app.insert_resource(ActionListMaterialCreate::default());
         app.insert_resource(ActionListMaterialUse::default());
-        app.insert_resource(ActionListUniformFloat::default());
-        app.insert_resource(ActionListUniformUint::default());
-        app.insert_resource(ActionListUniformVec2::default());
-        app.insert_resource(ActionListUniformVec3::default());
-        app.insert_resource(ActionListUniformVec4::default());
-        app.insert_resource(ActionListUniformMat4::default());
-        app.insert_resource(ActionListUniformTexture::default());
-        app.insert_resource(ActionListUniformTextureFromRenderTarget::default());
-        app.insert_resource(ActionListTargetAnimationUniform::default());
+        app.insert_resource(ActionListUniformVal::default());
+        app.insert_resource(ActionListUniformValB::default());
         app.insert_resource(StateMaterial::default());
 
         app.configure_set(Update, StageMaterial::Create /* .run_if(runif_3d) */.after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
@@ -132,20 +125,7 @@ impl Plugin for PluginMaterial {
                 apply_deferred.in_set(StageMaterial::_Init),
                 (
                     sys_act_material_use,
-                    sys_act_target_animation_uniform,
-                    sys_act_material_texture_from_target,
-
-                    // sys_act_uniform,
-                    // sys_act_uniform_by_name,
                     sys_act_material_value,
-                    // sys_act_material_mat2.run_if(should_run),
-                    // sys_act_material_vec4,
-                    // sys_act_material_vec2,
-                    // sys_act_material_float,
-                    // sys_act_material_int.run_if(should_run),
-                    // sys_act_material_uint,
-
-                    sys_act_material_texture,
                     sys_material_textures_modify,
                 ).chain().in_set(StageMaterial::Command),
                 (
@@ -160,11 +140,8 @@ impl Plugin for PluginMaterial {
         app
             .add_systems(Update, sys_create_material                     .in_set(StageMaterial::Create) )
             .add_systems(Update, sys_act_material_use                                                            .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_act_target_animation_uniform        .run_if(crate::run_stage::runif_targetanime).after(sys_act_material_use)                    .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_act_material_texture_from_target    .after(sys_act_target_animation_uniform)        .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_act_material_value                  .after(sys_act_material_texture_from_target)   .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_act_material_texture                .after(sys_act_material_value)                  .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_material_textures_modify            .after(sys_act_material_texture)                .in_set(StageMaterial::Command) )
+            .add_systems(Update, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::Command) )
+            .add_systems(Update, sys_material_textures_modify            .after(sys_act_material_value)                .in_set(StageMaterial::Command) )
             .add_systems(Update, sys_texture_ready                 .in_set(StageMaterial::Ready) )
             .add_systems(Update, sys_material_uniform_apply          .in_set(ERunStageChap::Uniform) )
             .add_systems(Update, sys_dispose_about_material          .after(sys_dispose_ready)   .in_set(ERunStageChap::Dispose) )

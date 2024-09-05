@@ -113,7 +113,7 @@ fn setup(
         UnlitShader::KEY,
         EPassTag::Opaque,
     ));
-    actions.material.texture.push(OpsUniformTexture::ops(
+    actions.material.valb.push(OpsUniformValB::texture(
         idmat,
         UniformTextureWithSamplerParam {
             slotname: Atom::from("_MainTex"),

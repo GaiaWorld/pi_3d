@@ -17,12 +17,8 @@ use self::{
     renderer::*,
     sys_renderer_pre::*,
     sys_renderer::*,
-    render_primitive::*,
-    render_blend::ActionListBlend,
-    render_depth_and_stencil::*,
     command::*,
     command_sys::*,
-    render_sort::*,
     base::StageRenderer
 };
 
@@ -90,11 +86,6 @@ impl Plugin for PluginRenderer {
         }
 
         app.insert_resource(CustomRenderTargets::default());
-        app.insert_resource(ActionListBlend::default());
-        app.insert_resource(ActionListPrimitiveState::default());
-        app.insert_resource(ActionListDepthState::default());
-        app.insert_resource(ActionListStencilState::default());
-        app.insert_resource(ActionListRenderQueue::default());
         app.insert_resource(ActionListRendererCreate::default());
         app.insert_resource(ActionListRendererConnect::default());
         app.insert_resource(ActionListRendererModify::default());
@@ -129,8 +120,6 @@ impl Plugin for PluginRenderer {
                     
                     // sys_act_depth_state,
                     // sys_act_stencil_state,
-    
-                    sys_act_render_queue,
                     sys_act_renderer_connect,
                 ).in_set(StageRenderer::RenderStateCommand),
                 (
@@ -190,7 +179,6 @@ impl Plugin for PluginRenderer {
             
             // .add_systems(Update, sys_act_depth_state                 .in_set(StageRenderer::RenderStateCommand))
 
-            .add_systems(Update, sys_act_render_queue                .in_set(StageModel::AbstructMeshCommand))
             .add_systems(Update, sys_act_renderer_connect            .in_set(StageRenderer::RenderStateCommand))
             .add_systems(Update, sys_act_renderer_modify             .in_set(StageRenderer::RendererCommand))
             .add_systems(Update, sys_bind_buffer_apply                  .in_set(ERunStageChap::Uniform))

@@ -1,6 +1,4 @@
 use std::{hash::Hash, mem::{replace, size_of}, ops::Range, vec::Drain};
-use std::ops::Mul;
-use nalgebra::{base::storage::RawStorage, RawStorageMut};
 
 pub use parry3d::{
     bounding_volume::Aabb,
@@ -28,7 +26,7 @@ pub use pi_bevy_render_plugin::{
 };
 pub use pi_null::Null;
 pub use pi_map::smallvecmap::SmallVecMap;
-use pi_scene_math::Vector4;
+use pi_scene_math::{Quaternion, Vector4};
 pub use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
 pub use pi_render::{
     asset::*,
@@ -234,6 +232,10 @@ impl<T: Send + Sync> Default for ActionList<T> {
 impl<T: Send + Sync> ActionList<T> {
     pub fn capacity(&self) -> usize {
         self.0.capacity() * size_of::<T>()
+    }
+    pub fn append(&mut self, val: &mut Self) -> &mut Self {
+        self.0.append(&mut val.0);
+        self
     }
     pub fn push_some(&mut self, val: impl IntoIterator<Item = T>) -> &mut Self {
         self.0.extend(val);
@@ -538,7 +540,7 @@ pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g
         // matrix = matrix * &lookat.to_matrix();
     } else {
         let cood = CoordinateSytem3::left();
-        CoordinateSytem3::transform_normal(&look_target.clone(), &result, &mut look_target);
+        CoordinateSytem3::transform_normal_floats(look_target.x, look_target.y, look_target.z, &result, &mut look_target);
         CoordinateSytem3::lookat(&cood, &Vector3::zeros(), g_velocity, &Vector3::new(0., 1., 0.), &mut lookat);
         CoordinateSytem3::mul_to(&result, &lookat.to_matrix(), refwmatrix);
         result.copy_from(&refwmatrix);
@@ -657,6 +659,43 @@ pub fn matrix4_compose_no_rotation(scaling: &Vector3, translation: &Vector3, res
     // CoordinateSytem3::matrix4_compose_rotation(scaling, rotmat, translation, result)
 }
 
+pub fn matrix4_compose_quaternion(scale: &Vector3, rotation: &Quaternion, translation: &Vector3, result: &mut Matrix) {
+    let x = rotation.i; let y = rotation.j; let z = rotation.k; let w = rotation.w;
+    let x2 = x + x; let y2 = y + y; let z2 = z + z;
+    let xx = x * x2; let xy = x * y2; let xz = x * z2;
+    let yy = y * y2; let yz = y * z2; let zz = z * z2;
+    let wx = w * x2; let wy = w * y2; let wz = w * z2;
+    let sx = scale.x; let sy = scale.y; let sz = scale.z;
+    result[0] = (1. - (yy + zz)) * sx;
+    result[1] = (xy + wz) * sx;
+    result[2] = (xz - wy) * sx;
+    result[3] = 0.;
+    result[4] = (xy - wz) * sy;
+    result[5] = (1. - (xx + zz)) * sy;
+    result[6] = (yz + wx) * sy;
+    result[7] = 0.;
+    result[8] = (xz + wy) * sz;
+    result[9] = (yz - wx) * sz;
+    result[10] = (1. - (xx + yy)) * sz;
+    result[11] = 0.;
+    result[12] = translation.x;
+    result[13] = translation.y;
+    result[14] = translation.z;
+    result[15] = 1.;
+}
+
+
 pub fn calc_local_other<'a>(_g_velocity: &'a Vector3, _length_scale: Number, _length_modify: Number) -> Option<Matrix> {
     None
+}
+
+pub fn unsafe_vec_append_slice<T>(vec: &mut Vec<T>, slice: &[T]) {
+    unsafe {
+        let other = slice as *const [T];
+        let count = (*other).len();
+        vec.reserve(count);
+        let len = vec.len();
+        std::ptr::copy_nonoverlapping(other as *const T, vec.as_mut_ptr().add(len), count);
+        vec.set_len(len + count);
+    }
 }

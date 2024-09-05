@@ -45,6 +45,7 @@ pub struct PluginPassObject;
 impl Plugin for PluginPassObject {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListPassObject::default());
+        app.insert_resource(ActionListRenderState::default());
         
 #[cfg(feature = "use_bevy")]
         app.configure_sets(

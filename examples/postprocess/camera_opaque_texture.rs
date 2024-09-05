@@ -116,7 +116,7 @@ impl Plugin for PluginTest {
         let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
-        actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+        actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
@@ -156,7 +156,7 @@ impl Plugin for PluginTest {
     };
     actions.material.usemat.push(OpsMaterialUse::Use(source, planarmat, DemoScene::PASS_TRANSPARENT));
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::Blend(source, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
     // actions.mesh.stencil_state.push(OpsStencilState::ops(source, DemoScene::PASS_TRANSPARENT, EStencilState::Write(1)));
     // actions.mesh.stencil_state.push(OpsStencilState::ops(source, DemoScene::PASS_TRANSPARENT, EStencilState::Front(StencilFaceState{
     //     compare: CompareFunction::NotEqual,
@@ -164,7 +164,7 @@ impl Plugin for PluginTest {
     //     depth_fail_op: StencilOperation::Keep,
     //     pass_op: StencilOperation::Keep,
     // })));
-    actions.mesh.depth_state.push(OpsDepthState::ops(source, DemoScene::PASS_TRANSPARENT, EDepthState::Write(false)));
+    actions.mesh.render_state.push(OpsRenderState::depth_state(source, DemoScene::PASS_TRANSPARENT, EDepthState::Write(false)));
 
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
     actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
@@ -201,7 +201,7 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), cameraroot, animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), cameraroot, animation));
             }
         }
         {
@@ -216,7 +216,7 @@ impl Plugin for PluginTest {
             };
             if let Some(asset_curve) = asset_curve {
                 let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), lightroot, animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), lightroot, animation));
             }
         }
         actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
@@ -240,9 +240,9 @@ impl Plugin for PluginTest {
             let distortiommat = commands.spawn_empty_id();
             actions.material.create.push(OpsMaterialCreate::ops(distortiommat, distortion_material::ShaderDistortion::KEY));
             actions.material.usemat.push(OpsMaterialUse::Use(source, distortiommat, DemoScene::PASS_TRANSPARENT));
-            actions.material.texture.push(OpsUniformTexture::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
-            actions.material.vec2.push(OpsUniformVec2::ops(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
-            actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
+            actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
+            actions.material.val.push(OpsUniformVal::vec2(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
+            actions.material.valb.push(OpsUniformValB::texture_from_target(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
         }
 }
 

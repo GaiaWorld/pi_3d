@@ -29,7 +29,7 @@ impl PluginImageCopy {
             if let Some(pre_render_target) = source_render_target {
                 match pre_render_target {
                     KeyCustomRenderTarget::Custom(pre_render_target) => {
-                        actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
+                        actions.material.valb.push(OpsUniformValB::texture_from_target(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
                     },
                     KeyCustomRenderTarget::FinalRender => {},
                 }
@@ -43,14 +43,14 @@ impl PluginImageCopy {
             actions.mesh.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
 
             // actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
 
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
@@ -88,7 +88,7 @@ impl PluginImageCopy {
             if let Some(pre_render_target) = source_render_target {
                 match pre_render_target {
                     KeyCustomRenderTarget::Custom(pre_render_target) => {
-                        actions.material.texturefromtarget.push(OpsUniformTextureFromRenderTarget::ops(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
+                        actions.material.valb.push(OpsUniformValB::texture_from_target(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
                     },
                     KeyCustomRenderTarget::FinalRender => {},
                 }
@@ -102,14 +102,14 @@ impl PluginImageCopy {
             actions.mesh.create.push(OpsMeshCreation::ops(scene, plane, MeshInstanceState { ..Default::default() }));
 
             // actions.mesh.depth_compare.push(OpsDepthCompare::ops(plane, CompareFunction::Always));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.depth_state.push(OpsDepthState::ops(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
 
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));

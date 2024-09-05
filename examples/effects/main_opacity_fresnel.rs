@@ -40,46 +40,42 @@ fn setup(
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_OPAQUE, blend));
+    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_OPAQUE, blend));
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, MainOpacityFresnelShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
     }));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
     }));
-    actions.material.vec4.push(
-        OpsUniformVec4::ops(
+    actions.material.val.push(OpsUniformVal::vec4(
             idmat, 
             Atom::from(BlockEmissiveTexture::KEY_INFO), 
             1., 1., 1., 1.
         )
     );
-    actions.material.vec2.push(
-        OpsUniformVec2::ops(
+    actions.material.val.push(OpsUniformVal::vec2(
             idmat, 
             Atom::from(BlockOpacityTextureUVOffsetSpeed::KEY_PARAM), 
             1., 1.
         )
     );
-    actions.material.vec4.push(
-        OpsUniformVec4::ops(
+    actions.material.val.push(OpsUniformVal::vec4(
             idmat, 
             Atom::from(BlockEmissiveFresnel::KEY_RIGHT), 
             0.2, 0., 0., 1.
         )
     );
-    actions.material.vec2.push(
-        OpsUniformVec2::ops(
+    actions.material.val.push(OpsUniformVal::vec2(
             idmat, 
             Atom::from(BlockEmissiveFresnel::KEY_PARAM), 
             0.2, 4.

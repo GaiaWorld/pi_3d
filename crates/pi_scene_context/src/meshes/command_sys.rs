@@ -186,7 +186,7 @@ pub fn sys_act_target_animation_attribute(
     mut animatorablesints: ResMut<ActionListAnimatorableSint>,
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
-    mut targetanimations: ResMut<ActionListAddTargetAnime>,
+    mut targetanimations: ResMut<ActionListAnimationGroupAction>,
     instances: Query<&InstanceMesh>,
     mut meshes: Query<&mut DirtyInstanceSourceRefs>,
 ) {
@@ -203,27 +203,27 @@ pub fn sys_act_target_animation_attribute(
                         match offset.atype() {
                             EAnimatorableType::Vec4 => if let Some(curve) = anime_assets.vec4s.get(&curve) {
                                 let anime = anime_contexts.vec4s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
                             },
                             EAnimatorableType::Vec3 => if let Some(curve) = anime_assets.vec3s.get(&curve) {
                                 let anime = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
                             },
                             EAnimatorableType::Vec2 => if let Some(curve) = anime_assets.vec2s.get(&curve) {
                                 let anime = anime_contexts.vec2s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
                             },
                             EAnimatorableType::Float => if let Some(curve) = anime_assets.float.get(&curve) {
                                 let anime = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
                             },
                             EAnimatorableType::Uint => if let Some(curve) = anime_assets.uints.get(&curve) {
                                 let anime = anime_contexts.uints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
                             },
                             EAnimatorableType::Int => if let Some(curve) = anime_assets._ints.get(&curve) {
                                 let anime = anime_contexts._ints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAddTargetAnimation::ops(group, target, anime));
+                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
                             },
                         }
                     },

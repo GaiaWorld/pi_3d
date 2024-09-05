@@ -53,7 +53,7 @@ fn setup(
     let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
 
     // actions.transform.enable.push(OpsNodeEnable::ops(source, false));
 
@@ -63,27 +63,25 @@ fn setup(
     let idmat = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat, OpacityClipShader::KEY));
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("./assets/images/fractal.png"),
     }));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("./assets/images/eff_ui_ll_085.png"),
     }));
-    actions.material.float.push(
-        OpsUniformFloat::ops(
+    actions.material.val.push(OpsUniformVal::float(
             idmat, 
             Atom::from(BlockCutoff::KEY_VALUE), 
             0.8
         )
     );
-    actions.material.vec3.push(
-        OpsUniformVec3::ops(
+    actions.material.val.push(OpsUniformVal::vec3(
             idmat, 
             Atom::from(BlockEmissiveTexture::KEY_INFO), 
             1., 1., 1.,
@@ -114,8 +112,8 @@ fn setup(
         };
     
         let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, idmat, animation));
-        actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), key_curve0));
+        // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
+        actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), key_curve0));
     }
     // {
     //     let key_curve0 = pi_atom::Atom::from("tilloff");
@@ -134,8 +132,8 @@ fn setup(
     //     };
     
     //     let animation = anime_contexts.vec4s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    //     // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, idmat, animation));
-    //     actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockMainTexture::KEY_TILLOFF), id_group.clone(), key_curve0));
+    //     // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
+    //     actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockMainTexture::KEY_TILLOFF), id_group.clone(), key_curve0));
     // }
     {
         let key_curve0 = pi_atom::Atom::from("Pos");
@@ -154,7 +152,7 @@ fn setup(
         };
     
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group, root, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, root, animation));
     }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Not;
@@ -163,8 +161,8 @@ fn setup(
 
     // animegroupres.global.add_frame_event_listen(id_group);
     // animegroupres.global.add_frame_event(id_group, 0.5, 100);
-    actions.anime.listens.push(OpsAddAnimationListen::Start(id_group));
-    actions.anime.listens.push(OpsAddAnimationListen::End(id_group));
+    actions.anime.action.push(OpsAnimationGroupAction::listen_start(id_group));
+    actions.anime.action.push(OpsAnimationGroupAction::listen_end(id_group));
 }
 
 pub fn sys_anime_event(

@@ -77,7 +77,7 @@ fn setup(
         };
 
         let animation = anime_contexts.quaternion.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), source, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.speed = 0.2;

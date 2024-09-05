@@ -66,13 +66,9 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAnimatorableVec4::default());
         app.insert_resource(ActionListAnimatorableUint::default());
         app.insert_resource(ActionListAnimatorableSint::default());
-        app.insert_resource(ActionListAddAnimationListen::default());
-        app.insert_resource(ActionListAddAnimationFrameEvent::default());
         app.insert_resource(ActionListAnimeGroupCreate::default());
         app.insert_resource(ActionListAnimeGroupDispose::default());
         app.insert_resource(ActionListAnimationGroupAction::default());
-        app.insert_resource(ActionListAddTargetAnime::default());
-        app.insert_resource(ActionListAnimationWeight::default());
 
         app.configure_set(Update, EStageAnimation::Create       .run_if(runif_3d));
         app.configure_set(Update, EStageAnimation::_CreateApply /* .run_if(runif_3d) */.after(EStageAnimation::Create));

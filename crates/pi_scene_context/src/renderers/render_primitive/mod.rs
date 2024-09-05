@@ -42,11 +42,3 @@ pub enum EPrimitiveState {
     CUnClipDepth(bool),
     Topology    (PrimitiveTopology),
 }
-
-pub struct OpsPrimitiveState(pub(crate) Entity, pub(crate) PassTag, pub(crate)EPrimitiveState);
-impl OpsPrimitiveState {
-    pub fn ops(model: Entity, passtag: PassTag, cmd: EPrimitiveState) -> Self {
-        Self(model, passtag, cmd)
-    }
-}
-pub type ActionListPrimitiveState = ActionList<OpsPrimitiveState>;

@@ -50,16 +50,8 @@ pub struct StateMaterial {
 pub struct ActionSetMaterial<'w> {
     pub usemat: ResMut<'w, ActionListMaterialUse>,
     pub create: ResMut<'w, ActionListMaterialCreate>,
-    pub float: ResMut<'w, ActionListUniformFloat>,
-    // pub int: ResMut<'w, ActionListUniformInt>,
-    pub uint: ResMut<'w, ActionListUniformUint>,
-    pub vec2: ResMut<'w, ActionListUniformVec2>,
-    pub vec3: ResMut<'w, ActionListUniformVec3>,
-    pub vec4: ResMut<'w, ActionListUniformVec4>,
-    // pub mat2: ResMut<'w, ActionListUniformMat2>,
-    pub mat4: ResMut<'w, ActionListUniformMat4>,
-    pub texture: ResMut<'w, ActionListUniformTexture>,
-    pub texturefromtarget: ResMut<'w, ActionListUniformTextureFromRenderTarget>,
+    pub val: ResMut<'w, ActionListUniformVal>,
+    pub valb: ResMut<'w, ActionListUniformValB>,
 }
 
 #[cfg(feature = "use_bevy")]

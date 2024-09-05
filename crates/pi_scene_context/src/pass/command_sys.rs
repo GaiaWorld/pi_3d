@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-use crate::renderers::prelude::*;
+use crate::{prelude::InstanceTransparentIndex, renderers::prelude::*};
 
 use super::{command::*, pass_object::*};
 
@@ -38,48 +38,21 @@ pub fn sys_create_pass_object(
 pub fn sys_act_pass_object(
     models: Query<&PassIDs>,
     mut items: Query<&mut RenderState>,
-    mut primivite_cmds: ResMut<ActionListPrimitiveState>,
-    mut depth_cmds: ResMut<ActionListDepthState>,
-    mut blend_cmds: ResMut<ActionListBlend>,
-    mut stencil_cmds: ResMut<ActionListStencilState>,
+    mut cmds: ResMut<ActionListRenderState>,
+    mut itemsqueue: Query<&mut TransparentSortParam>,
+    mut instances: Query<&mut InstanceTransparentIndex>,
 ) {
-    primivite_cmds.drain().for_each(|OpsPrimitiveState(entity, tag, cmd)| {
-        if let Ok(passids) = models.get(entity) {
-            let passid = passids.0[tag.index()];
-
-            if let Ok(mut item) = items.get_mut(passid) {
-                match cmd {
-                    EPrimitiveState::CCullMode      (val) => item.primitive.cull = val ,
-                    EPrimitiveState::CPolygonMode   (val) => item.primitive.polygon = val ,
-                    EPrimitiveState::CFrontFace     (val) => item.primitive.frontface = val ,
-                    EPrimitiveState::CUnClipDepth   (val) => item.primitive.unclip_depth = val ,
-                    EPrimitiveState::Topology       (val) => item.primitive.topology = val ,
-                }
-            // } else {
-            //     log::error!("Not Found RenderState {:?}", passid);
-            }
-        // } else {
-        //     log::error!("Not Found Mesh {:?}", entity);
-        }
-    });
-
-    depth_cmds.drain().for_each(|OpsDepthState(entity, tag, cmd)| {
-        if let Ok(passids) = models.get(entity) {
-            let passid = passids.0[tag.index()];
-
-            if let Ok(mut item) = items.get_mut(passid) {
-                match cmd {
-                    EDepthState::Write(val)         => item.depth.depth_write = val,
-                    EDepthState::Compare(val)   => item.depth.compare = val,
-                    EDepthState::Bias(val)      => item.depth.bias = val,
-                }
-            }
-        }
-    });
-    blend_cmds.drain().for_each(|cmd| {
+    cmds.drain().for_each(|cmd| {
         match cmd {
-            OpsRenderBlend::Disable(_) => todo!(),
-            OpsRenderBlend::Blend(entity, tag, value) => {
+            OpsRenderState::RenderQueue(entity, val) => {
+                if let Ok(mut item) = itemsqueue.get_mut(entity) {
+                    *item = val;
+                }
+                if let Ok(mut item) = instances.get_mut(entity) {
+                    *item = InstanceTransparentIndex(val.index);
+                }
+            },
+            OpsRenderState::Blend(entity, tag, value) => {
                 if let Ok(passids) = models.get(entity) {
                     let passid = passids.0[tag.index()];
         
@@ -88,20 +61,51 @@ pub fn sys_act_pass_object(
                     }
                 }
             },
-        }
-    });
-    stencil_cmds.drain().for_each(|OpsStencilState(entity, tag, cmd)| {
-        if let Ok(passids) = models.get(entity) {
-            let passid = passids.0[tag.index()];
-
-            if let Ok(mut item) = items.get_mut(passid) {
-                match cmd {
-                    EStencilState::Front(val)   => item.stencil.stencil_front = val,
-                    EStencilState::Back(val)    => item.stencil.stencil_back = val,
-                    EStencilState::Read(val)    => item.stencil.stencil_read = val,
-                    EStencilState::Write(val)   => item.stencil.stencil_write = val,
+            OpsRenderState::DepthState(entity, tag, cmd) => {
+                if let Ok(passids) = models.get(entity) {
+                    let passid = passids.0[tag.index()];
+        
+                    if let Ok(mut item) = items.get_mut(passid) {
+                        match cmd {
+                            EDepthState::Write(val)         => item.depth.depth_write = val,
+                            EDepthState::Compare(val)   => item.depth.compare = val,
+                            EDepthState::Bias(val)      => item.depth.bias = val,
+                        }
+                    }
                 }
-            }
+            },
+            OpsRenderState::PrimitiveState(entity, tag, cmd) => {
+                if let Ok(passids) = models.get(entity) {
+                    let passid = passids.0[tag.index()];
+        
+                    if let Ok(mut item) = items.get_mut(passid) {
+                        match cmd {
+                            EPrimitiveState::CCullMode      (val) => item.primitive.cull = val ,
+                            EPrimitiveState::CPolygonMode   (val) => item.primitive.polygon = val ,
+                            EPrimitiveState::CFrontFace     (val) => item.primitive.frontface = val ,
+                            EPrimitiveState::CUnClipDepth   (val) => item.primitive.unclip_depth = val ,
+                            EPrimitiveState::Topology       (val) => item.primitive.topology = val ,
+                        }
+                    // } else {
+                    //     log::error!("Not Found RenderState {:?}", passid);
+                    }
+                // } else {
+                //     log::error!("Not Found Mesh {:?}", entity);
+                }
+            },
+            OpsRenderState::StencilState(entity, tag, cmd) => {
+                if let Ok(passids) = models.get(entity) {
+                    let passid = passids.0[tag.index()];
+                    if let Ok(mut item) = items.get_mut(passid) {
+                        match cmd {
+                            EStencilState::Front(val) => item.stencil.stencil_front = val,
+                            EStencilState::Back(val) => item.stencil.stencil_back = val,
+                            EStencilState::Read(val) => item.stencil.stencil_read = val,
+                            EStencilState::Write(val) => item.stencil.stencil_write = val,
+                        }
+                    }
+                }
+            },
         }
     });
 }

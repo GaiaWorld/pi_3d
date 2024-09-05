@@ -26,14 +26,6 @@ pub enum EDepthState {
     Compare(CompareFunction),
     Bias(DepthBiasState),
 }
-pub struct OpsDepthState(pub(crate) Entity, pub(crate) PassTag, pub(crate) EDepthState);
-impl OpsDepthState {
-    pub fn ops(mesh: Entity, pass: PassTag, val: EDepthState) -> Self {
-        Self(mesh, pass, val)
-    }
-}
-pub type ActionListDepthState = ActionList<OpsDepthState>;
-
 
 #[derive(Clone)]
 pub struct StencilState {
@@ -58,13 +50,6 @@ pub enum EStencilState {
     Read(u32),
     Write(u32),
 }
-pub struct OpsStencilState(pub(crate) Entity, pub(crate) PassTag, pub(crate) EStencilState);
-impl OpsStencilState {
-    pub fn ops(mesh: Entity, pass: PassTag, val: EStencilState) -> Self {
-        Self(mesh, pass, val)
-    }
-}
-pub type ActionListStencilState = ActionList<OpsStencilState>;
 
 pub fn depth_stencil_state(
     format: wgpu::TextureFormat,

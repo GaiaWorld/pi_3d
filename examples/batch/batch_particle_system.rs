@@ -43,7 +43,7 @@ fn setup(
     {
         let idmattrail = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
-        actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
+        actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
@@ -55,7 +55,7 @@ fn setup(
     {
         let idmattrail = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
-        actions.material.texture.push(OpsUniformTexture::ops(idmattrail, UniformTextureWithSamplerParam {
+        actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             filter: true,
             sample: KeySampler::linear_repeat(),
@@ -79,8 +79,8 @@ fn setup(
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
                     let mut blend = ModelBlend::default(); blend.combine();
-                    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
-                    actions.mesh.render_queue.push(OpsRenderQueue::ops(source, 0, _k % 2));
+                    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
+                    actions.mesh.render_state.push(OpsRenderState::render_queue(source, 0, _k % 2));
 
                     //
                     let syskey = String::from("Test");
@@ -109,7 +109,7 @@ fn setup(
         }
     }
 
-    // actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from("_MainTex"),
     //     filter: true,
     //     sample: KeySampler::default(),
@@ -136,7 +136,7 @@ fn setup(
             }
         };
         let animation = anime_contexts.quaternion.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node, animation));
     }
 
     let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;

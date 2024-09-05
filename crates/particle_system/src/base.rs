@@ -468,7 +468,7 @@ impl ParticleTrail {
             let width: f32 = if trailmodifier.size_affects_width {
                 1.
             } else {
-                CoordinateSytem3::transform_normal(&Vector3::new(1., 0., 0.), &localmatrix, &mut localscaling);
+                CoordinateSytem3::transform_normal_floats(1., 0., 0., &localmatrix, &mut localscaling);
                 let len = CoordinateSytem3::length(&localscaling);
                 if len < PARTICLE_MIN_VALUE { 0. } else { 1. / len }
             };
@@ -525,7 +525,7 @@ impl ParticleTrail {
             let width: f32 = if trailmodifier.size_affects_width {
                 1.
             } else {
-                CoordinateSytem3::transform_normal(&basesize, &localmatrix, &mut localscaling);
+                CoordinateSytem3::transform_normal_floats(basesize.x, basesize.y, basesize.z, &localmatrix, &mut localscaling);
                 let len = CoordinateSytem3::length(&localscaling);
                 if len < PARTICLE_MIN_VALUE { 0. } else { 1. / len }
             };
@@ -577,7 +577,13 @@ impl ParticleDieWaitTime {
 pub struct ParticleSystemActive(pub bool);
 
 #[derive(Component, Default)]
-pub struct ParticleSystemRunningState(pub(crate) bool, pub(crate) u64);
+pub struct ParticleSystemRunningState {
+    pub isrunning: bool,
+    pub deltatime: u64,
+    pub update_buffer_interval_frame: u8,
+    pub waitframe: u8,
+    pub updatebuffer: bool,
+}
 
 #[derive(Component, Default)]
 pub struct ParticleSystemModifyState;
@@ -1226,11 +1232,14 @@ impl ParticleEmitMatrix {
 
         result_world_matrix.clone_from(&_iso.to_matrix()); // Matrix::identity();
         result_world_matrix.append_nonuniform_scaling_mut(local_scaling);
-        if let Some(temp) = result_world_matrix.try_inverse() {
-            result_world_matrix_inv.clone_from(&temp);
-        } else {
-            result_world_matrix_inv.fill_with_identity();
-        };
+
+        result_world_matrix_inv.clone_from(&result_world_matrix);
+        CoordinateSytem3::try_inverse_mut(result_world_matrix_inv);
+        // if let Some(temp) = result_world_matrix.try_inverse() {
+        //     result_world_matrix_inv.clone_from(&temp);
+        // } else {
+        //     result_world_matrix_inv.fill_with_identity();
+        // };
     }
     pub fn scaling_mode_shape<'a>(_iso: &'a Isometry3, global_scaling: &'a Vector3, _local_scaling: &'a Vector3, _world_matrix: &'a Matrix, _world_matrix_inv: &'a Matrix, resultscale: &'a mut Vector3, result_world_matrix: &'a mut Matrix, result_world_matrix_inv: &'a mut Matrix) {
         
@@ -1238,11 +1247,14 @@ impl ParticleEmitMatrix {
 
         result_world_matrix.clone_from(&_iso.to_matrix()); // Matrix::identity();
         result_world_matrix.append_nonuniform_scaling_mut(global_scaling);
-        if let Some(temp) = result_world_matrix.try_inverse() {
-            result_world_matrix_inv.clone_from(&temp);
-        } else {
-            result_world_matrix_inv.fill_with_identity();
-        };
+        
+        result_world_matrix_inv.clone_from(&result_world_matrix);
+        CoordinateSytem3::try_inverse_mut(result_world_matrix_inv);
+        // if let Some(temp) = result_world_matrix.try_inverse() {
+        //     result_world_matrix_inv.clone_from(&temp);
+        // } else {
+        //     result_world_matrix_inv.fill_with_identity();
+        // };
     }
     pub fn simulation_local<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a Rotation3, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
 
@@ -1310,22 +1322,6 @@ impl ParticleGravityFactor {
         time: &ParticleSystemTime,
         calculator: &ParticleCalculatorGravity,
     ) {
-        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
-        // ids.iter().for_each(|idx| {
-        //     let item = self.values.get_mut(*idx).unwrap();
-        //     let randoms = randomlist.get(*idx).unwrap();
-        //     let age = ages.get(*idx).unwrap();
-            
-        //     let mut factor = 0.;
-        //     calculator.0.modify(&mut factor, age.progress, delta_seconds, randoms);
-
-        //     if factor.abs() < MIN_VALUE {
-        //         item.value.copy_from_slice(&[0., 0., 0.]);
-        //     } else {
-        //         let emitmatrix = emitmatrixs.get(*idx).unwrap();
-        //         CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
-        //     }
-        // });
         (self._runcall)(&mut self.values, ids, ages, emitmatrixs, randomlist, time, calculator);
     }
     pub fn get(&self, idx: usize) -> Option<&GravityFactor> {
@@ -1354,7 +1350,10 @@ impl ParticleGravityFactor {
             item.value.copy_from_slice(&[0., 0., 0.]);
         } else {
             // item.value.copy_from(&calculator.1.scale(factor));
-            CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
+            let x = calculator.1.x * factor;
+            let y = calculator.1.y * factor;
+            let z = calculator.1.z * factor;
+            CoordinateSytem3::transform_normal_floats(x, y, z, &emitmatrix.matrix_invert, &mut item.value);
             // log::warn!("Gravity {:?}", (1, &item.value));
         }
     }
@@ -1378,7 +1377,10 @@ impl ParticleGravityFactor {
             calculator.0.modify(&mut factor, age.progress, delta_seconds, randoms);
 
             // item.value.copy_from(&calculator.1.scale(factor));
-            CoordinateSytem3::transform_normal(&calculator.1.scale(factor), &emitmatrix.matrix_invert, &mut item.value);
+            let x = calculator.1.x * factor;
+            let y = calculator.1.y * factor;
+            let z = calculator.1.z * factor;
+            CoordinateSytem3::transform_normal_floats(x, y, z, &emitmatrix.matrix_invert, &mut item.value);
             // log::warn!("Gravity {:?}", (0, &item.value));
         });
     }
@@ -1435,19 +1437,6 @@ impl ParticleForce {
         time: &ParticleSystemTime,
         calculator: &ForceOverLifetime,
     ) {
-        // let delta_seconds = time.running_delta_ms as f32 / 1000.0;
-        // ids.iter().for_each(|idx| {
-        //     let item = self.0.get_mut(*idx).unwrap();
-        //     let randoms = randomlist.get(*idx).unwrap();
-        //     let age = ages.get(*idx).unwrap();
-        //     let emitmatrix = emitmatrixs.get(*idx).unwrap();
-
-        //     calculator.modify(item, age.progress, delta_seconds, randoms);
-
-        //     if calculator.is_local_space == false {
-        //         CoordinateSytem3::transform_normal(&item.value.clone(), &emitmatrix.matrix_invert, &mut item.value);
-        //     }
-        // });
         (self._runcall)(&mut self.values, ids, ages, emitmatrixs, randomlist, time, calculator);
     }
     fn _run_local_constant<'a>(
@@ -1468,7 +1457,7 @@ impl ParticleForce {
         calculator.modify(item, age.progress, delta_seconds, randoms);
 
         if calculator.is_local_space == false {
-            CoordinateSytem3::transform_normal(&item.value.clone(), &emitmatrix.matrix_invert, &mut item.value);
+            CoordinateSytem3::transform_normal_floats(item.value.x, item.value.y, item.value.z, &emitmatrix.matrix_invert, &mut item.value);
         }
     }
     fn _run<'a>(
@@ -1490,7 +1479,7 @@ impl ParticleForce {
             calculator.modify(item, age.progress, delta_seconds, randoms);
 
             if calculator.is_local_space == false {
-                CoordinateSytem3::transform_normal(&item.value.clone(), &emitmatrix.matrix_invert, &mut item.value);
+                CoordinateSytem3::transform_normal_floats(item.value.x, item.value.y, item.value.z, &emitmatrix.matrix_invert, &mut item.value);
             }
         });
     }
@@ -1847,11 +1836,15 @@ impl ParticleDirection {
         positions: &mut Vec<Vector3>,
         emitter: &TypeShapeEmitter,
         time: &ParticleSystemTime,
+        temp: &mut Vector3,
+        orbit_center: &mut Vector3,
+        orbit_direction: &mut Vector3,
     ) {
         // log::warn!("Direction: ");
         let delta_seconds = time.running_delta_ms as f32 / 1000.0;
+        let inv_delta_seconds = 1. / delta_seconds;
         let half_delta_seconds = delta_seconds * 0.5;
-        let origin = Vector3::zeros();
+        // let origin = Vector3::zeros();
         ids.iter().for_each(|idx| {
             let force: &Force = forces.get(*idx).unwrap();
             let gravity: &GravityFactor = gravities.get(*idx).unwrap();
@@ -1865,54 +1858,96 @@ impl ParticleDirection {
             let position = positions.get_mut(*idx).unwrap();
 
             // 力 -> 加速度
-            let a = force.value + gravity.value; //  / 1.; // 质量为 1
-            direction.velocity_force += a.scale(half_delta_seconds);
+            // let a = force.value + gravity.value; //  / 1.; // 质量为 1
+            // direction.velocity_force += a.scale(half_delta_seconds);
+            direction.velocity_force.x += (force.value.x + gravity.value.x) * half_delta_seconds;
+            direction.velocity_force.y += (force.value.y + gravity.value.y) * half_delta_seconds;
+            direction.velocity_force.z += (force.value.z + gravity.value.z) * half_delta_seconds;
 
-            let mut velocity = velocity.value + direction.velocity_force + direction.velocity_start;
+            // let mut velocity = velocity.value + direction.velocity_force + direction.velocity_start;
+            let temp = temp.as_mut_slice();
+            temp[0] = velocity.value.x + direction.velocity_force.x + direction.velocity_start.x;
+            temp[1] = velocity.value.y + direction.velocity_force.y + direction.velocity_start.y;
+            temp[2] = velocity.value.z + direction.velocity_force.z + direction.velocity_start.z;
 
+            let velocity = temp;
             // log::error!("Velocity: {:?}", (velocity, force.value, gravity.value, direction.velocity_start));
 
             // 轨道速度
-            let mut orbit_direction = Vector3::zeros();
-            let mut orbit_center: Vector3 = Vector3::zeros();
-            emitter.orbit_center(&position, orbit_offset, &mut orbit_center);
-            let radial_vec: Vector3 = position.sub(&orbit_center);
-            if orbit_velocity.1 < PARTICLE_MIN_VALUE {
+            emitter.orbit_center(&position, orbit_offset, orbit_center);
+            // let radial_vec: Vector3 = position.sub(&orbit_center);
+            orbit_center.x = position.x - orbit_center.x;
+            orbit_center.y = position.y - orbit_center.y;
+            orbit_center.z = position.z - orbit_center.z;
+            orbit_direction.x = 0.; orbit_direction.y = 0.; orbit_direction.z = 0.;
+            let radial_vec = &orbit_center;
+            if PARTICLE_MIN_VALUE < orbit_velocity.1 {
                 let temp = delta_seconds * speedfactor.value;
                 let orbit_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(orbit_velocity.0.x * temp, orbit_velocity.0.y * temp, orbit_velocity.0.z * temp);
-                orbit_direction = orbit_rotation.transform_vector(&radial_vec) - radial_vec;
+                
+                // orbit_direction = orbit_rotation.transform_vector(&radial_vec) - radial_vec;
+                orbit_rotation.matrix().mul_to(&radial_vec, orbit_direction);
+                orbit_direction.x -= radial_vec.x;
+                orbit_direction.y -= radial_vec.y;
+                orbit_direction.z -= radial_vec.z;
             };
             if PARTICLE_MIN_VALUE < orbit_radial.abs() {
                 let radial_len = CoordinateSytem3::length(&radial_vec);
                 if PARTICLE_MIN_VALUE < radial_len {
-                    velocity += radial_vec.scale(1. / radial_len).scale(*orbit_radial);
+                    let scl = 1. / radial_len * orbit_radial;
+                    // velocity += radial_vec.scale(1. / radial_len).scale(*orbit_radial);
+                    velocity[0] += radial_vec.x * scl;
+                    velocity[1] += radial_vec.y * scl;
+                    velocity[2] += radial_vec.z * scl;
                 };
             }
 
-            velocity.scale_mut(speedfactor.value);
+            // velocity.scale_mut(speedfactor.value);
+            velocity[0] *= speedfactor.value;
+            velocity[1] *= speedfactor.value;
+            velocity[2] *= speedfactor.value;
 
-            let mut new_direction = velocity.scale( delta_seconds) + orbit_direction;
+            // let mut new_direction = velocity.scale( delta_seconds) + orbit_direction;
+            velocity[0] *= delta_seconds;
+            velocity[1] *= delta_seconds;
+            velocity[2] *= delta_seconds;
+            velocity[0] += orbit_direction.x;
+            velocity[1] += orbit_direction.y;
+            velocity[2] += orbit_direction.z;
             // log::warn!("velocity: {:?}, {:?}, {:?}", velocity, new_direction, delta_seconds);
 
-            let mut directionscalar = new_direction.metric_distance(&origin);
+            let mut directionscalar = (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]).sqrt(); // new_direction.metric_distance(&origin);
             if limitscalar.value < Number::MAX {
                 let limitscalarval = limitscalar.value * delta_seconds;
                 let delta = directionscalar - limitscalarval;
                 if PARTICLE_MIN_VALUE < delta {
                     let factor = limitscalarval + (delta) * Number::exp(Number::ln(delta + 1.0) * (0. - limitscalar.dampen));
                     // let factor = 1.0 - limitscalar.dampen * (directionscalar - limitscalar.value * delta_seconds) / directionscalar * (0.66);
-                    new_direction.scale_mut(factor / directionscalar);
+
+                    // new_direction.scale_mut(factor / directionscalar);
+                    let scl = factor / directionscalar;
+                    velocity[0] *= scl;
+                    velocity[1] *= scl;
+                    velocity[2] *= scl;
+
                     directionscalar = factor;
                     // log::warn!("Limit: {:?}, {:?}, {:?}", limitscalarval, directionscalar, factor);
                 }
             }
 
-            direction.value = new_direction.scale(1. / delta_seconds);
+            // direction.value = new_direction.scale(inv_delta_seconds);
+            direction.value.x = velocity[0] * inv_delta_seconds;
+            direction.value.y = velocity[1] * inv_delta_seconds;
+            direction.value.z = velocity[2] * inv_delta_seconds;
+
             direction.length = directionscalar / delta_seconds;
 
             // log::warn!("Direction: {:?}, {:?}, {:?}", direction.value, new_direction, delta_seconds);
 
-            *position += new_direction;
+            // *position += new_direction;
+            position.x += velocity[0];
+            position.y += velocity[1];
+            position.z += velocity[2];
         });
         // log::warn!("Direction: End");
     }

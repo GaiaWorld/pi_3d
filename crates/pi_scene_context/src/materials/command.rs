@@ -29,92 +29,52 @@ pub type ActionListMaterialUse = ActionList<OpsMaterialUse>;
 /// 材质属性操作 当没有找到目标材质时,最多等待 MATERIAL_UNIFORM_OPS_WAIT_FRAME 帧, 便抛弃该操作
 pub const MATERIAL_UNIFORM_OPS_WAIT_FRAME: u16 = 8;
 
-pub struct OpsUniformMat4(pub(crate) Entity, pub(crate) Atom, pub(crate) [f32;16]);
-impl OpsUniformMat4 {
-    pub fn ops(mat: Entity, uniformname: Atom, value: [f32;16]) -> Self {
-        Self(mat, uniformname, value)
+pub enum OpsUniformValB{
+    Mat4(Entity, Atom, [f32;16]),
+    Texture(Entity, UniformTextureWithSamplerParam),
+    TextureFromRenderTarget(Entity, UniformTextureWithSamplerParam, KeyRenderTarget, Atom),
+    TargetAnimation(Entity, EAnimeUniform, Entity, u64),
+}
+impl OpsUniformValB {
+    pub fn mat4(mat: Entity, uniformname: Atom, value: [f32;16]) -> Self {
+        Self::Mat4(mat, uniformname, value)
+    }
+    pub fn texture(mat: Entity, val: UniformTextureWithSamplerParam) -> Self {
+        Self::Texture(mat, val)
+    }
+    pub fn texture_from_target(mat: Entity, val: UniformTextureWithSamplerParam, keytarget: KeyRenderTarget, tilloffslot: Atom) -> Self {
+        Self::TextureFromRenderTarget(mat, val, keytarget, tilloffslot)
+    }
+    pub fn targetanim(target: Entity, tatype: EAnimeUniform, group: Entity, curve: u64) -> Self {
+        Self::TargetAnimation(target, tatype, group, curve)
     }
 }
-pub type ActionListUniformMat4 = ActionList<OpsUniformMat4>;
+pub type ActionListUniformValB = ActionList<OpsUniformValB>;
 
-// pub struct OpsUniformMat2(pub(crate) Entity, pub(crate) Atom, pub(crate) [f32;4]);
-// impl OpsUniformMat2 {
-//     pub fn ops(mat: Entity, uniformname: Atom, value: [f32;4]) -> Self {
-//         Self(mat, uniformname, value)
-//     }
-// }
-// pub type ActionListUniformMat2 = ActionList<OpsUniformMat2>;
-
-
-pub struct OpsUniformVec4(pub(crate) Entity, pub(crate) Atom, pub(crate) f32, pub(crate) f32, pub(crate) f32, pub(crate) f32);
-impl OpsUniformVec4 {
-    pub fn ops(mat: Entity, uniformname: Atom, x: f32, y: f32, z: f32, w: f32) -> Self {
-        Self(mat, uniformname, x, y, z, w)
+pub enum OpsUniformVal {
+    Vec4(Entity, Atom, f32, f32, f32, f32),
+    Vec3(Entity, Atom, f32, f32, f32),
+    Vec2(Entity, Atom, f32, f32),
+    Float(Entity, Atom, f32),
+    Uint(Entity, Atom, u32),
+}
+impl OpsUniformVal {
+    pub fn vec4(mat: Entity, uniformname: Atom, x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self::Vec4(mat, uniformname, x, y, z, w)
+    }
+    pub fn vec3(mat: Entity, uniformname: Atom, x: f32, y: f32, z: f32) -> Self {
+        Self::Vec3(mat, uniformname, x, y, z)
+    }
+    pub fn vec2(mat: Entity, uniformname: Atom, x: f32, y: f32) -> Self {
+        Self::Vec2(mat, uniformname, x, y)
+    }
+    pub fn float(mat: Entity, uniformname: Atom, x: f32) -> Self {
+        Self::Float(mat, uniformname, x)
+    }
+    pub fn uint(mat: Entity, uniformname: Atom, x: u32) -> Self {
+        Self::Uint(mat, uniformname, x)
     }
 }
-pub type ActionListUniformVec4 = ActionList<OpsUniformVec4>;
-
-pub struct OpsUniformVec3(pub(crate) Entity, pub(crate) Atom, pub(crate) f32, pub(crate) f32, pub(crate) f32);
-impl OpsUniformVec3 {
-    pub fn ops(mat: Entity, uniformname: Atom, x: f32, y: f32, z: f32) -> Self {
-        Self(mat, uniformname, x, y, z)
-    }
-}
-pub type ActionListUniformVec3 = ActionList<OpsUniformVec3>;
-
-pub struct OpsUniformVec2(pub(crate) Entity, pub(crate) Atom, pub(crate) f32, pub(crate) f32);
-impl OpsUniformVec2 {
-    pub fn ops(mat: Entity, uniformname: Atom, x: f32, y: f32) -> Self {
-        Self(mat, uniformname, x, y)
-    }
-}
-pub type ActionListUniformVec2 = ActionList<OpsUniformVec2>;
-
-pub struct OpsUniformFloat(pub(crate) Entity, pub(crate) Atom, pub(crate) f32);
-impl OpsUniformFloat {
-    pub fn ops(mat: Entity, uniformname: Atom, x: f32) -> Self {
-        Self(mat, uniformname, x)
-    }
-}
-pub type ActionListUniformFloat = ActionList<OpsUniformFloat>;
-
-// pub struct OpsUniformInt(pub(crate) Entity, pub(crate) Atom, pub(crate) i32);
-// impl OpsUniformInt {
-//     pub fn ops(mat: Entity, uniformname: Atom, x: i32) -> Self {
-//         Self(mat, uniformname, x)
-//     }
-// }
-// pub type ActionListUniformInt = ActionList<OpsUniformInt>;
-
-pub struct OpsUniformUint(pub(crate) Entity, pub(crate) Atom, pub(crate) u32);
-impl OpsUniformUint {
-    pub fn ops(mat: Entity, uniformname: Atom, x: u32) -> Self {
-        Self(mat, uniformname, x)
-    }
-}
-pub type ActionListUniformUint = ActionList<OpsUniformUint>;
-
-pub struct OpsUniformTexture(pub(crate) Entity, pub(crate) UniformTextureWithSamplerParam);
-impl OpsUniformTexture {
-    pub fn ops(mat: Entity, val: UniformTextureWithSamplerParam) -> Self {
-        Self(mat, val)
-    }
-}
-pub type ActionListUniformTexture = ActionList<OpsUniformTexture>;
-
-pub struct OpsUniformTextureFromRenderTarget(pub(crate) Entity, pub(crate) UniformTextureWithSamplerParam, pub(crate) KeyRenderTarget, pub(crate) Atom);
-impl OpsUniformTextureFromRenderTarget {
-    pub fn ops(mat: Entity, val: UniformTextureWithSamplerParam, keytarget: KeyRenderTarget, tilloffslot: Atom) -> Self {
-        Self(mat, val, keytarget, tilloffslot)
-    }
-}
-pub type ActionListUniformTextureFromRenderTarget = ActionList<OpsUniformTextureFromRenderTarget>;
+pub type ActionListUniformVal = ActionList<OpsUniformVal>;
 
 pub type EAnimeUniform = Atom;
-pub struct OpsTargetAnimationUniform(pub(crate) Entity, pub(crate) EAnimeUniform, pub(crate) Entity, pub(crate) u64);
-impl OpsTargetAnimationUniform {
-    pub fn ops(target: Entity, tatype: EAnimeUniform, group: Entity, curve: u64) -> Self {
-        Self(target, tatype, group, curve)
-    }
-}
-pub type ActionListTargetAnimationUniform = ActionList<OpsTargetAnimationUniform>;

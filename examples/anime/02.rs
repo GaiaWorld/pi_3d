@@ -68,7 +68,7 @@ fn setup(
         }
     };
     let animation = anime_contexts.euler.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), root, animation));
+    actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), root, animation));
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
 
     let temproot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(temproot, root));

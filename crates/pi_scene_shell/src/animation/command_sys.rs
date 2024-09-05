@@ -195,37 +195,13 @@ pub fn sys_create_animation_group(
 }
 /// 顺序严格的
 pub fn sys_act_animation_group_action(
-    mut cmds: ResMut<ActionListAnimationGroupAction>,
-    mut addtargetanime_cmds: ResMut<ActionListAddTargetAnime>,
-    mut frameevent_cmds: ResMut<ActionListAddAnimationFrameEvent>,
-    mut listen_cmds: ResMut<ActionListAddAnimationListen>,
+    mut cmdsaction: ResMut<ActionListAnimationGroupAction>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
     mut errors: ResMut<ErrorRecord>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
-    addtargetanime_cmds.drain().for_each(|OpsAddTargetAnimation(entity, target, animation)| {
-        if let Ok( (groupkey, idscene) ) = items.get(entity) {
-            if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
-                    Ok(_) => {},
-                    Err(_) => { errors.record(entity, ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
-                }
-            }
-        }
-    });
-    frameevent_cmds.drain().for_each(|OpsAddAnimationFrameEvent(entity, percent, data)| {
-        if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event(groupkey.0, percent, data); }
-    });
-    listen_cmds.drain().for_each(|listen| {
-        match listen {
-            OpsAddAnimationListen::Frame(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event_listen(groupkey.0); } },
-            OpsAddAnimationListen::Start(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_start_listen(groupkey.0); } },
-            OpsAddAnimationListen::Loop(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_loop_listen(groupkey.0); } },
-            OpsAddAnimationListen::End(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_end_listen(groupkey.0); } },
-        }
-    });
-    cmds.drain().for_each(|act| {
+    cmdsaction.drain().for_each(|act| {
         match act {
             OpsAnimationGroupAction::Start(entity, param, delay_time_ms, fillmode) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
                 if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
@@ -251,18 +227,38 @@ pub fn sys_act_animation_group_action(
                     }
                 }
             },
+            OpsAnimationGroupAction::AddTarget(entity, target, animation) => {
+                if let Ok( (groupkey, idscene) ) = items.get(entity) {
+                    if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+                        match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
+                            Ok(_) => {},
+                            Err(_) => { errors.record(entity, ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
+                        }
+                    }
+                }
+            },
+            OpsAnimationGroupAction::FrameEvent(entity, percent, data) => {
+                if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event(groupkey.0, percent, data); }
+            },
+            OpsAnimationGroupAction::ListenFrame(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event_listen(groupkey.0); } },
+            OpsAnimationGroupAction::ListenStart(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_start_listen(groupkey.0); } },
+            OpsAnimationGroupAction::ListenLoop(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_loop_listen(groupkey.0); } },
+            OpsAnimationGroupAction::ListenEnd(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_end_listen(groupkey.0); } },
+            OpsAnimationGroupAction::Weight(entity, weight) => {
+                // todo!()
+            },
         }
     });
 }
 
 pub fn sys_act_dispose_animation_group(
-    mut cmds: ResMut<ActionListAnimeGroupDispose>,
+    mut cmdsdispose: ResMut<ActionListAnimeGroupDispose>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
     mut disposecan: ResMut<ActionListDisposeCan>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
-    cmds.drain().for_each(|OpsAnimationGroupDispose(entity)| {
+    cmdsdispose.drain().for_each(|OpsAnimationGroupDispose(entity)| {
         if let Ok( (groupkey, idscene) ) = items.get(entity) {
             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
                 ctx.0.del_animation_group(groupkey.0);
@@ -275,12 +271,12 @@ pub fn sys_act_dispose_animation_group(
 }
 
 pub fn sys_act_reset_while_animationgroup_start(
-    mut cmds: ResMut<ActionListAnimeGroupStartReset>,
+    mut cmdsresetwhilestart: ResMut<ActionListAnimeGroupStartReset>,
     groups: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     scenes: Query<&SceneAnimationContext>,
     mut items: Query<&mut FlagAnimationStartResetComp>,
 ) {
-    cmds.drain().for_each(|OpsAnimationGroupStartReset(entity)| {
+    cmdsresetwhilestart.drain().for_each(|OpsAnimationGroupStartReset(entity)| {
         if let Ok((groupkey, idscene)) = groups.get(entity) {
             if let Ok(ctx) = scenes.get(idscene.0) {
                 if let Some(animationgroup) = ctx.0.animation_group(groupkey.0) {

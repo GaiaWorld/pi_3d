@@ -120,7 +120,7 @@ fn setup(
                     .scaling
                     .ctx
                     .create_animation(0, AssetTypeFrameCurve::from(asset_curve));
-                actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), source, animation));
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), source, animation));
                 // engine.create_target_animation(source, cube, &key_group, animation);
             }
         }
@@ -155,12 +155,8 @@ pub fn sys_test(
     let mut temp = replace(&mut list.0, vec![]);
     temp.drain(..).for_each(|(scene, viewer, x, y)| {
         if let (Ok((colliderpool, boundingpool)), Ok((transformatrix, viewmatrix, worldmatrix))) = (scenes.get(scene), viewers.get(viewer)) {
-            let mut matrix = Matrix::identity();
-            let invtransform = if let Some(invtransform) = transformatrix.0.try_inverse() {
-                invtransform
-            } else {
-                Matrix::identity()
-            };
+            let mut invtransform = transformatrix.0.clone();
+            CoordinateSytem3::try_inverse_mut(&mut invtransform);
 
             let near_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), -1.0);
             let far_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), 1.0);

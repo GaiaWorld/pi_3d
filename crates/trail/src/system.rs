@@ -34,9 +34,12 @@ pub fn sys_trail_update(
             if let (Ok(scenetime), Ok((worldmatrix, localmatrix))) = (scenes.get(idscene.0), transforms.get(param.linked)) {
                 base.update(scenetime.delta_ms() as u32);
 
-                let parentmatrix = if let Some(local) = localmatrix.0.try_inverse() {
-                    worldmatrix.matrix * local
-                } else { worldmatrix.matrix.clone() };
+                let mut local = localmatrix.0.clone();
+                let mut parentmatrix = worldmatrix.matrix.clone();
+                if CoordinateSytem3::try_inverse_mut(&mut local) {
+                    CoordinateSytem3::mul_to(&worldmatrix.matrix, &local, &mut parentmatrix);
+                };
+
                 let worldmatrix = &worldmatrix.matrix;
 
                 let randoms = BaseRandom { seed: random.0.gen_range(0..u64::MAX), base: random.0.gen_range(0.0..1.0), x: random.0.gen_range(0.0..1.0), y: random.0.gen_range(0.0..1.0), z: random.0.gen_range(0.0..1.0), w: random.0.gen_range(0.0..1.0) };

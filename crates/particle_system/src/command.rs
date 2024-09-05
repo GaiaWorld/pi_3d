@@ -12,10 +12,10 @@ impl OpsCPUParticleCalculator {
 }
 pub type ActionListCPUParticleCalculator = ActionList<OpsCPUParticleCalculator>;
 
-pub struct OpsCPUParticleSystem(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Handle<ParticleSystemCalculatorID>, pub(crate) ParticleAttributes);
+pub struct OpsCPUParticleSystem(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) Handle<ParticleSystemCalculatorID>, pub(crate) ParticleAttributes, pub(crate) u8);
 impl OpsCPUParticleSystem {
-    pub fn ops(scene: Entity, node: Entity, trailmesh: Entity, trailgeo: Entity, calculator: Handle<ParticleSystemCalculatorID>, atrts: Vec<ParticleAttribute>) -> Self {
-        Self(scene, node, trailmesh, trailgeo, calculator, ParticleAttributes(atrts))
+    pub fn ops(scene: Entity, node: Entity, trailmesh: Entity, trailgeo: Entity, calculator: Handle<ParticleSystemCalculatorID>, atrts: Vec<ParticleAttribute>, update_buffer_interval_frame: u8) -> Self {
+        Self(scene, node, trailmesh, trailgeo, calculator, ParticleAttributes(atrts), update_buffer_interval_frame)
     }
 }
 pub type ActionListCPUParticleSystem = ActionList<OpsCPUParticleSystem>;

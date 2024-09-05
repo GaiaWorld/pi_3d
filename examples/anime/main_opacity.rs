@@ -45,25 +45,24 @@ fn setup(
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
     let mut blend = ModelBlend::default(); blend.combine();
-    actions.mesh.blend.push(OpsRenderBlend::ops(source, DemoScene::PASS_TRANSPARENT, blend));
+    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, MainOpacityShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
     }));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
     }));
-    actions.material.vec3.push(
-        OpsUniformVec3::ops(
+    actions.material.val.push(OpsUniformVal::vec3(
             idmat, 
             Atom::from(BlockMainTexture::KEY_COLOR), 
             1., 1., 0.,
@@ -85,8 +84,8 @@ fn setup(
             Err(_) => { return; },
         };
         let animation = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), idmat, animation));
-        actions.anime_uniform.push(OpsTargetAnimationUniform::ops( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
+        // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), idmat, animation));
+        actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
     }
     // {
     //     let key_curve0 = pi_atom::Atom::from("mainuo");
@@ -97,8 +96,8 @@ fn setup(
     //         Err(_) => { return; },
     //     };
     //     let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    //     // actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), idmat, animation));
-    //     actions.anime_uniform.push(OpsTargetAnimationUniform::ops(scene, idmat, Atom::from(BlockEmissiveTexture::KEY_INFO), id_group.clone(), animation));
+    //     // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), idmat, animation));
+    //     actions.material.valb.push(OpsUniformValB::targetanim(scene, idmat, Atom::from(BlockEmissiveTexture::KEY_INFO), id_group.clone(), animation));
     // }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Positive(Some(5));

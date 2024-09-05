@@ -54,7 +54,7 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node1, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node1, animation));
     }
     let node2 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node2, node0));
     let key_curve0 = pi_atom::Atom::from((2).to_string());
@@ -62,7 +62,7 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(-1., 0., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node2, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node2, animation));
     }
     let node3 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node3, node0));
     let key_curve0 = pi_atom::Atom::from((3).to_string());
@@ -70,7 +70,7 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., 1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node3, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node3, animation));
     }
     let node4 = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node4, node0));
     let key_curve0 = pi_atom::Atom::from((4).to_string());
@@ -78,7 +78,7 @@ fn setup(
     let curve = FrameCurve::<LocalPosition>::curve_easing(LocalPosition(Vector3::new(0., 0., 0.)), LocalPosition(Vector3::new(0., -1., 0.)), 30, 30, EEasingMode::None);
     if let Ok(asset_curve) = anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
         let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.add_target_anime.push(OpsAddTargetAnimation::ops(id_group.clone(), node4, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), node4, animation));
     }
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
     
@@ -136,7 +136,7 @@ fn setup(
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-    actions.material.texture.push(OpsUniformTexture::ops(idmat, UniformTextureWithSamplerParam {
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from("_MainTex"),
         filter: true,
         sample: KeySampler::default(),
@@ -148,7 +148,7 @@ fn setup(
     actions.skin.skin_use.push(OpsSkinUse::ops(source, skeleton));
 
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Euler(1. as f32 * 0.2, 1. as f32 * 0.2, 1. as f32 * 0.2)));
-    actions.mesh.primitive_state.push(OpsPrimitiveState::ops(source, DemoScene::PASS_TRANSPARENT, EPrimitiveState::CCullMode( CullMode::Off )) );
+    actions.mesh.render_state.push(OpsRenderState::primitive_state(source, DemoScene::PASS_TRANSPARENT, EPrimitiveState::CCullMode( CullMode::Off )) );
 }
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 

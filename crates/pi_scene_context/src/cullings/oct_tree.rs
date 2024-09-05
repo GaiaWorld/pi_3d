@@ -133,7 +133,9 @@ fn intersects(a: &Aabb, b: &Aabb) -> bool {
 }
 
 pub fn compute_frustum(view_projection: &Matrix) -> Option<ConvexPolyhedron> {
-    let t = view_projection.try_inverse().unwrap();
+    // let t = view_projection.try_inverse().unwrap();
+    let mut t = view_projection.clone();
+    CoordinateSytem3::try_inverse_mut(&mut t);
 
     let p0 = t * Vector4::new(1., 1., 1., 1.);
     let p1 = t * Vector4::new(1., 1., -1., 1.);

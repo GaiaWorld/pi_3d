@@ -66,14 +66,14 @@ impl TrailPoints {
             let mut newsize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
 
             if trailworldspace {
-                coordiante_system::CoordinateSytem3::transform_coordinates(&newpos.clone(), &worldmatrix, &mut newpos);
-                coordiante_system::CoordinateSytem3::transform_normal(&newaxisx.clone(), &worldmatrix, &mut newaxisx);
-                coordiante_system::CoordinateSytem3::transform_normal(&newsize.clone(), &worldmatrix, &mut newsize);
+                coordiante_system::CoordinateSytem3::transform_coordinates_floats(newpos.x, newpos.y, newpos.z, &worldmatrix, &mut newpos);
+                coordiante_system::CoordinateSytem3::transform_normal_floats(newaxisx.x, newaxisx.y, newaxisx.z, &worldmatrix, &mut newaxisx);
+                coordiante_system::CoordinateSytem3::transform_normal_floats(newsize.x, newsize.y, newsize.z, &worldmatrix, &mut newsize);
                 // log::warn!("New Point 1: {:?}  {:?}", newaxisx, newpos);
             } else {
-                coordiante_system::CoordinateSytem3::transform_coordinates(&newpos.clone(), localmatrix, &mut newpos);
-                coordiante_system::CoordinateSytem3::transform_normal(&newaxisx.clone(), localmatrix, &mut newaxisx);
-                coordiante_system::CoordinateSytem3::transform_normal(&newsize.clone(), localmatrix, &mut newsize);
+                coordiante_system::CoordinateSytem3::transform_coordinates_floats(newpos.x, newpos.y, newpos.z, localmatrix, &mut newpos);
+                coordiante_system::CoordinateSytem3::transform_normal_floats(newaxisx.x, newaxisx.y, newaxisx.z, localmatrix, &mut newaxisx);
+                coordiante_system::CoordinateSytem3::transform_normal_floats(newsize.x, newsize.y, newsize.z, localmatrix, &mut newsize);
                 // log::warn!("New Point 2: {:?}  {:?}", localmatrix, newpos);
             }
             let xlen = coordiante_system::CoordinateSytem3::length(&newaxisx);
@@ -151,11 +151,11 @@ impl TrailPoints {
                 let mut sizetemp = 1.;
                 if trailworldspace == false {
                     // log::warn!("World");
-                    coordiante_system::CoordinateSytem3::transform_coordinates(&item.pos, parentmatrix, &mut pos);
-                    coordiante_system::CoordinateSytem3::transform_normal(&item.zaxis, parentmatrix, &mut axisz);
-                    coordiante_system::CoordinateSytem3::transform_normal(&item.xaxis, parentmatrix, &mut axisx);
+                    coordiante_system::CoordinateSytem3::transform_coordinates_floats(item.pos.x, item.pos.y, item.pos.z, parentmatrix, &mut pos);
+                    coordiante_system::CoordinateSytem3::transform_normal_floats(item.zaxis.x, item.zaxis.z, item.zaxis.z, parentmatrix, &mut axisz);
+                    coordiante_system::CoordinateSytem3::transform_normal_floats(item.xaxis.x, item.xaxis.y, item.xaxis.z, parentmatrix, &mut axisx);
                     let mut newsize = Vector3::zeros();
-                    coordiante_system::CoordinateSytem3::transform_normal(&basesize, parentmatrix, &mut newsize);
+                    coordiante_system::CoordinateSytem3::transform_normal_floats(basesize.x, basesize.y, basesize.z, parentmatrix, &mut newsize);
                     sizetemp = coordiante_system::CoordinateSytem3::length(&newsize);
                 } else {
                     // log::warn!("Collect {:?} {:?}", item.xaxis, item.pos);
@@ -166,39 +166,63 @@ impl TrailPoints {
                 color.copy_from(&self.1[index]);
                 width = self.2[index] * sizetemp;
                 if idx == 0 {
-                    datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
-                    datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
-                    datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
-                    datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    // datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
+                    unsafe_vec_append_slice(datavertices, pos.as_slice());
+                    // datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
+                    unsafe_vec_append_slice(datavertices, &color.as_slice()[0..3]); datavertices.push(0.);
+                    // datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
+                    unsafe_vec_append_slice(datavertices, axisx.as_slice());
+                    // datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    unsafe_vec_append_slice(datavertices, axisz.as_slice());
                     datavertices.push(0.); datavertices.push(item.distance_percent);
-                    datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
-                    datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
-                    datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
-                    datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    // datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
+                    unsafe_vec_append_slice(datavertices, pos.as_slice());
+                    // datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
+                    unsafe_vec_append_slice(datavertices, &color.as_slice()[0..3]); datavertices.push(0.);
+                    // datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
+                    unsafe_vec_append_slice(datavertices, axisx.as_slice());
+                    // datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    unsafe_vec_append_slice(datavertices, axisz.as_slice());
                     datavertices.push(0.); datavertices.push(item.distance_percent);
                 }
                 {
-                    datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
-                    datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(color.w);
-                    datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
-                    datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    // datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
+                    unsafe_vec_append_slice(datavertices, pos.as_slice());
+                    // datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(color.w);
+                    unsafe_vec_append_slice(datavertices, &color.as_slice());
+                    // datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
+                    unsafe_vec_append_slice(datavertices, axisx.as_slice());
+                    // datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    unsafe_vec_append_slice(datavertices, axisz.as_slice());
                     datavertices.push(width * 1.); datavertices.push(item.distance_percent);
-                    datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
+                    // datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
+                    unsafe_vec_append_slice(datavertices, pos.as_slice());
                     datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(color.w);
-                    datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
-                    datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    unsafe_vec_append_slice(datavertices, &color.as_slice()[0..3]); datavertices.push(0.);
+                    // datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
+                    unsafe_vec_append_slice(datavertices, axisx.as_slice());
+                    // datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    unsafe_vec_append_slice(datavertices, axisz.as_slice());
                     datavertices.push(width * -1.); datavertices.push(item.distance_percent);
                 }
                 if idx == count-1 {
-                    datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
-                    datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
-                    datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
-                    datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    // datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
+                    unsafe_vec_append_slice(datavertices, pos.as_slice());
+                    // datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
+                    unsafe_vec_append_slice(datavertices, &color.as_slice()[0..3]); datavertices.push(0.);
+                    // datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
+                    unsafe_vec_append_slice(datavertices, axisx.as_slice());
+                    // datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    unsafe_vec_append_slice(datavertices, axisz.as_slice());
                     datavertices.push(0.); datavertices.push(item.distance_percent);
-                    datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
-                    datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
-                    datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
-                    datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    // datavertices.push(pos.x); datavertices.push(pos.y); datavertices.push(pos.z);
+                    unsafe_vec_append_slice(datavertices, pos.as_slice());
+                    // datavertices.push(color.x); datavertices.push(color.y); datavertices.push(color.z); datavertices.push(0.);
+                    unsafe_vec_append_slice(datavertices, &color.as_slice()[0..3]); datavertices.push(0.);
+                    // datavertices.push(axisx.x); datavertices.push(axisx.y); datavertices.push(axisx.z);
+                    unsafe_vec_append_slice(datavertices, axisx.as_slice());
+                    // datavertices.push(axisz.x); datavertices.push(axisz.y); datavertices.push(axisz.z);
+                    unsafe_vec_append_slice(datavertices, axisz.as_slice());
                     datavertices.push(0.); datavertices.push(item.distance_percent);
                 }
             }

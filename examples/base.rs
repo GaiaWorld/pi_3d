@@ -194,14 +194,14 @@ impl DemoScene {
         actions.geometry.create.push(OpsGeomeryCreate::ops(mesh, id_geo, vertices, indices));
 
         // actions.mesh.depth_compare.push(OpsDepthCompare::ops(mesh, CompareFunction::LessEqual));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::LessEqual)));
-        actions.mesh.depth_state.push(OpsDepthState::ops(mesh, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_01, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_02, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_03, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_04, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_05, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::LessEqual)));
+        actions.mesh.render_state.push(OpsRenderState::depth_state(mesh, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::LessEqual)));
 
         mesh
     }
